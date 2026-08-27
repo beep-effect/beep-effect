@@ -23,14 +23,17 @@ import { cosineSimilarity } from "./EmbeddingProvider.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/NomicNlp");
 
 /**
- * Nomic NLP Errors
+ * Failure while loading a Nomic model or generating embeddings.
  *
- * **Example** (Inspect nomic nlp error)
+ * **Example** (Construct a Nomic NLP error)
  *
  * ```ts
  * import { NomicNlpError } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpError)
+ * const error = NomicNlpError.make({
+ *   message: "Failed to load Nomic model Xenova/nomic-embed-text-v1"
+ * })
+ * console.log(error._tag) // "NomicNlpError"
  * ```
  *
  * @category errors
@@ -110,14 +113,28 @@ export interface NomicNlpServiceMethods {
 }
 
 /**
- * Service Tag
+ * Context tag for local Nomic embed, batch-embed, and cosine-similarity calls.
  *
- * **Example** (Inspect nomic nlp service)
+ * **Example** (Score vectors through a test Nomic service)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
+ * import { cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicNlpService } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpService)
+ * const TestNlp = Layer.succeed(NomicNlpService, {
+ *   embed: () => Effect.succeed([1, 0]),
+ *   embedBatch: (texts) => Effect.succeed(texts.map(() => [1, 0])),
+ *   cosineSimilarity
+ * })
+ *
+ * const score = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const nlp = yield* NomicNlpService
+ *     return nlp.cosineSimilarity([1, 0], [1, 0])
+ *   }).pipe(Effect.provide(TestNlp))
+ * )
+ * console.log(score) // 1
  * ```
  *
  * @category services
@@ -126,17 +143,18 @@ export interface NomicNlpServiceMethods {
 export class NomicNlpService extends Context.Service<NomicNlpService, NomicNlpServiceMethods>()($I`NomicNlpService`) {}
 
 /**
- * Live Implementation
+ * Model identifier and quantization flags supplied to {@link NomicNlpConfig}.
  *
- *
- * **Example** (Use the NomicNlpConfigValue contract)
+ * **Example** (Describe a quantized local model)
  *
  * ```ts
  * import type { NomicNlpConfigValue } from "@effect-ontology/Service/NomicNlp"
  *
- * const acceptsNomicNlpConfigValue = (_value: NomicNlpConfigValue): void => undefined
- *
- * console.log(acceptsNomicNlpConfigValue)
+ * const config: NomicNlpConfigValue = {
+ *   modelId: "Xenova/nomic-embed-text-v1",
+ *   quantized: true
+ * }
+ * console.log(config.quantized) // true
  * ```
  *
  * @category type-level
@@ -148,14 +166,26 @@ export interface NomicNlpConfigValue {
 }
 
 /**
- * Provides the nomic nlp config service capability.
+ * Context tag for the Nomic model identifier and quantization setting.
  *
- * **Example** (Inspect nomic nlp config)
+ * **Example** (Read Nomic config from a test layer)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
  * import { NomicNlpConfig } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpConfig)
+ * const ConfigLive = Layer.succeed(NomicNlpConfig, {
+ *   modelId: "Xenova/nomic-embed-text-v1",
+ *   quantized: true
+ * })
+ *
+ * const modelId = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* NomicNlpConfig
+ *     return config.modelId
+ *   }).pipe(Effect.provide(ConfigLive))
+ * )
+ * console.log(modelId) // "Xenova/nomic-embed-text-v1"
  * ```
  *
  * @category services
@@ -164,14 +194,28 @@ export interface NomicNlpConfigValue {
 export class NomicNlpConfig extends Context.Service<NomicNlpConfig, NomicNlpConfigValue>()($I`NomicNlpConfig`) {}
 
 /**
- * Provides the Effect layer for nomic nlp service live dependencies.
+ * Live Transformers.js layer for {@link NomicNlpService}.
  *
- * **Example** (Inspect nomic nlp service live)
+ * **Example** (Compose embed against the live layer)
  *
  * ```ts
- * import { NomicNlpServiceLive } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect, Layer } from "effect"
+ * import { NomicNlpConfig, NomicNlpService, NomicNlpServiceLive } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpServiceLive)
+ * const layer = Layer.provide(
+ *   NomicNlpServiceLive,
+ *   Layer.succeed(NomicNlpConfig, {
+ *     modelId: "Xenova/nomic-embed-text-v1",
+ *     quantized: true
+ *   })
+ * )
+ *
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NomicNlpService
+ *   return yield* nlp.embed("Ada founded Acme.", "search_document", 256)
+ * }).pipe(Effect.provide(layer))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -267,18 +311,25 @@ export const NomicNlpServiceLive = Layer.effect(
 );
 
 /**
- * Default NomicNlpService layer
+ * Default Nomic NLP layer using {@link NomicNlpServiceLive} without extra config.
  *
  * **Details**
  *
- * Uses NomicNlpServiceLive with default configuration.
+ * Equivalent to {@link NomicNlpServiceLive}; the model falls back to
+ * `Xenova/nomic-embed-text-v1` when {@link NomicNlpConfig} is absent.
  *
- * **Example** (Inspect nomic nlp service default)
+ * **Example** (Compose similarity against the default layer)
  *
  * ```ts
- * import { NomicNlpServiceDefault } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect } from "effect"
+ * import { NomicNlpService, NomicNlpServiceDefault } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpServiceDefault)
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NomicNlpService
+ *   return nlp.cosineSimilarity([1, 0], [0, 1])
+ * }).pipe(Effect.provide(NomicNlpServiceDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -287,18 +338,29 @@ export const NomicNlpServiceLive = Layer.effect(
 export const NomicNlpServiceDefault = NomicNlpServiceLive;
 
 /**
- * Create NomicNlpConfig from ConfigService embedding settings.
+ * Layer that copies embedding model settings from {@link ConfigService}.
  *
  * **Details**
  *
- * Uses EMBEDDING_TRANSFORMERS_MODEL_ID from config (or ConfigService.embedding.transformersModelId).
+ * Reads `config.embedding.transformersModelId` and always enables quantization.
  *
- * **Example** (Inspect nomic nlp config from config service)
+ * **Example** (Provide Nomic config from application config)
  *
  * ```ts
- * import { NomicNlpConfigFromConfigService } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect, Layer } from "effect"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
+ * import { NomicNlpConfig, NomicNlpConfigFromConfigService } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpConfigFromConfigService)
+ * const modelId = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* NomicNlpConfig
+ *     return config.modelId
+ *   }).pipe(
+ *     Effect.provide(NomicNlpConfigFromConfigService),
+ *     Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG))
+ *   )
+ * )
+ * console.log(modelId)
  * ```
  *
  * @category layers
@@ -316,19 +378,28 @@ export const NomicNlpConfigFromConfigService: Layer.Layer<NomicNlpConfig, never,
 );
 
 /**
- * NomicNlpService with configuration from ConfigService.
+ * Nomic NLP layer that reads model settings from {@link ConfigService}.
  *
  * **Details**
  *
- * Reads embedding model settings from environment:
- * - EMBEDDING_TRANSFORMERS_MODEL_ID (default: "Xenova/nomic-embed-text-v1")
+ * Merges {@link NomicNlpServiceLive} with {@link NomicNlpConfigFromConfigService}.
  *
- * **Example** (Inspect nomic nlp service from config)
+ * **Example** (Wire Nomic through application config)
  *
  * ```ts
- * import { NomicNlpServiceFromConfig } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect, Layer } from "effect"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
+ * import { NomicNlpService, NomicNlpServiceFromConfig } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpServiceFromConfig)
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NomicNlpService
+ *   return yield* nlp.embed("Ada founded Acme.")
+ * }).pipe(
+ *   Effect.provide(NomicNlpServiceFromConfig),
+ *   Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG))
+ * )
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

@@ -7,6 +7,7 @@
  * handle multiple events from one entry file — it reads stdin once,
  * peeks `hook_event_name`, and routes to the matching handler.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -52,11 +53,14 @@ const $I = $ScratchpadId.create("claudecode/Hook/Runner");
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * const output = Hook.TaskCompleted.block("Task is not ready")
- * console.log(output.exitCode)
+ * const output = Hook.processOutput({ stderr: "Task is not ready", exitCode: 2 })
+ * console.log(output.exitCode) // 2
+ * console.log(O.isSome(output.stderr)) // true
  * ```
  *
+ * @see {@link processOutput} to construct this response from optional stdio and an exit code.
  * @category models
  * @since 0.0.0
  */
@@ -73,19 +77,27 @@ export class HookProcessOutput extends S.TaggedClass<HookProcessOutput>($I`HookP
 ) {}
 
 /**
- * Constructor for `processOutput`.
+ * Build a raw stdio and exit-code response the runner writes instead of JSON.
+ *
+ * **Details**
+ *
+ * Missing `exitCode` defaults to `0`. Omitted streams become `Option.none`.
  *
  * **Example** (Construct process output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * const output = Hook.WorktreeCreate.created("/tmp/new-worktree")
- * console.log(output.exitCode)
+ * const output = Hook.processOutput({ stdout: "ok\n" })
+ * console.log(output.exitCode) // 0
+ * console.log(O.isSome(output.stdout)) // true
+ * console.log(O.isNone(output.stderr)) // true
  * ```
  *
+ * @see {@link stderrExit} to write an error message and exit non-zero.
+ * @see {@link rawStdout} to write a success string to stdout.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const processOutput = (options: {
@@ -100,38 +112,46 @@ export const processOutput = (options: {
   });
 
 /**
- * Constructor for `stderrExit`.
+ * Build a process-output response that writes a message to stderr and exits
+ * with a non-zero code (default 2).
  *
  * **Example** (Write an error and exit)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * const output = Hook.TaskCompleted.block("Task is not ready")
- * console.log(output.exitCode)
+ * const output = Hook.stderrExit("blocked", 2)
+ * console.log(output.exitCode) // 2
+ * console.log(O.getOrUndefined(output.stderr)) // "blocked"
  * ```
  *
+ * @see {@link processOutput} for the general stdio constructor this wraps.
+ * @see {@link rawStdout} to write a success string to stdout instead.
  * @category constructors
- *
  * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const stderrExit = (stderr: string, exitCode = 2): HookProcessOutput => processOutput({ stderr, exitCode });
 
 /**
- * Constructor for `rawStdout`.
+ * Build a process-output response that writes a raw string to stdout and
+ * exits 0.
  *
  * **Example** (Write raw stdout)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * const output = Hook.WorktreeCreate.created("/tmp/new-worktree")
- * console.log(output.exitCode)
+ * const output = Hook.rawStdout("/tmp/wt\n")
+ * console.log(output.exitCode) // 0
+ * console.log(O.getOrUndefined(output.stdout)) // "/tmp/wt\n"
  * ```
  *
+ * @see {@link processOutput} for the general stdio constructor this wraps.
+ * @see {@link stderrExit} to write an error message and exit non-zero.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const rawStdout = (stdout: string): HookProcessOutput => processOutput({ stdout });
@@ -141,7 +161,10 @@ const isHookProcessOutput = S.is(HookProcessOutput);
 type HookInputEnvelope = Pick<HookEnvelope, "session_id" | "transcript_path" | "cwd" | "hook_event_name">;
 
 /**
- * Type-level model for `HookDefinition`.
+ * Runnable contract returned by each event `define()`: the event name,
+ * stdin/stdout codecs, and the handler Effect, which may succeed with
+ * either the event's structured output or a {@link HookProcessOutput}
+ * stdio payload.
  *
  * **Example** (Describe a session-start hook)
  *
@@ -157,7 +180,6 @@ type HookInputEnvelope = Pick<HookEnvelope, "session_id" | "transcript_path" | "
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export interface HookDefinition<In extends HookInputEnvelope, Out, E, R> {
@@ -330,10 +352,13 @@ const runHookFromParsed = Effect.fn("Hook.runHookFromParsed")(function* <In exte
  *   handler: () => Effect.succeed(Hook.PreToolUse.allow())
  * })
  * const program = Hook.runHookProgram(hook)
- * console.log(program)
+ * console.log(hook.event) // "PreToolUse"
+ * console.log(typeof program) // "object"
  * ```
  *
  * @effects Requires `Stdio.Stdio`, reads stdin, invokes the handler, and writes its encoded response to stdout.
+ * @see {@link runMain} for the process-main wrapper that reads stdin and exits.
+ * @see {@link hookTeardown} for how runner errors map to process exit codes.
  * @category workflows
  * @since 0.0.0
  */
@@ -359,15 +384,19 @@ export const runHookProgram = Effect.fn("Hook.runHookProgram")(function* <In ext
  * import { Hook } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Hook.runDispatchProgram({
+ * const hooks = {
  *   PreToolUse: Hook.PreToolUse.define({
  *     handler: () => Effect.succeed(Hook.PreToolUse.allow())
  *   })
- * })
- * console.log(program)
+ * }
+ * const program = Hook.runDispatchProgram(hooks)
+ * console.log(Object.keys(hooks)) // ["PreToolUse"]
+ * console.log(typeof program) // "object"
  * ```
  *
  * @effects Requires `Stdio.Stdio`, reads stdin, dispatches the selected handler, and writes its encoded response.
+ * @see {@link dispatch} for the process-main wrapper that reads stdin and exits.
+ * @see {@link hookTeardown} for how runner errors map to process exit codes.
  * @category workflows
  * @since 0.0.0
  */
@@ -447,7 +476,7 @@ export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onEx
  * Run a single-event hook definition as the main program of the current
  * process.
  *
- * **Example** (Run one hook process)
+ * **Example** (Define a single-event hook process)
  *
  * ```ts
  * import * as Effect from "effect/Effect"
@@ -458,10 +487,11 @@ export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onEx
  * })
  *
  * console.log(hook.event) // "PreToolUse"
- * Hook.runMain(hook)
  * ```
  *
  * @effects Reads process stdin, writes the hook response to stdout, and exits according to {@link hookTeardown}.
+ * @see {@link runHookProgram} for the testable Effect form that does not take over the process.
+ * @see {@link hookTeardown} for how runner errors map to process exit codes.
  * @category workflows
  * @since 0.0.0
  */
@@ -481,6 +511,11 @@ export const runMain = <In extends HookInputEnvelope, Out, E>(
  * process. The map's keys are hook event names and values are
  * `HookDefinition`s produced by each event's `define()` factory.
  *
+ * **Gotchas**
+ *
+ * An unregistered `hook_event_name` succeeds with no stdout and exit 0, which
+ * Claude Code treats as passthrough.
+ *
  * **Example** (Dispatch multiple hook events)
  *
  * ```ts
@@ -495,11 +530,12 @@ export const runMain = <In extends HookInputEnvelope, Out, E>(
  *     handler: () => Effect.succeed(Hook.PostToolUse.passthrough())
  *   })
  * }
- * console.log(Object.keys(hooks))
- * Hook.dispatch(hooks)
+ * console.log(Object.keys(hooks)) // ["PreToolUse", "PostToolUse"]
  * ```
  *
  * @effects Reads process stdin, dispatches one handler, writes stdout, and exits according to {@link hookTeardown}.
+ * @see {@link runDispatchProgram} for the testable Effect form that does not take over the process.
+ * @see {@link hookTeardown} for how runner errors map to process exit codes.
  * @category workflows
  * @since 0.0.0
  */
@@ -520,8 +556,8 @@ export const dispatch = <E>(hooks: DispatchMap<E, HookContext.Service>): void =>
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * const output = Hook.TaskCompleted.block("Task is not ready")
- * console.log(output.exitCode)
+ * const output = Hook.processOutput({ stderr: "Task is not ready", exitCode: 2 })
+ * console.log(output.exitCode) // 2
  * ```
  *
  * @category type-level

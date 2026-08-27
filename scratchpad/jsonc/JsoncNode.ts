@@ -1,21 +1,32 @@
-// The recursive JSONC AST node and the path vocabulary used to navigate it.
-//
-// `JsoncNode` is a `Schema.Class` with a `Schema.suspend` self-reference for
-// `children`; it deliberately carries no parent pointers (circular references
-// would break structural equality, serialization and Schema encode/decode).
-// Navigation methods (`find`, `findAtOffset`, `pathAt`) walk `children`
-// locally and return `Option`, never a `NotFound` error. Value extraction
-// (`toValue`) is a pure total function per the package Effect-wrapping
-// policy.
+/**
+ * The recursive JSONC AST node and the path vocabulary used to navigate it.
+ *
+ * `JsoncNode` is a `Schema.Class` with a `Schema.suspend` self-reference for
+ * `children`; it deliberately carries no parent pointers (circular references
+ * would break structural equality, serialization and Schema encode/decode).
+ * Navigation methods (`find`, `findAtOffset`, `pathAt`) walk `children`
+ * locally and return `Option`, never a `NotFound` error. Value extraction
+ * (`toValue`) is a pure total function per the package Effect-wrapping
+ * policy.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Option, Schema } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
+
+const $I = $ScratchpadId.create("jsonc/JsoncNode");
 
 /**
  * A single path segment: a `string` for object property keys or a `number`
  * for array indices.
  *
+ * @see {@link JsoncPath} for the ordered sequence of these segments.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncSegment = string | number;
 
@@ -23,7 +34,10 @@ export type JsoncSegment = string | number;
  * An ordered sequence of {@link JsoncSegment} values describing a location
  * within a JSONC document tree.
  *
+ * @see {@link JsoncNode.find} for resolving a path against a tree.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncPath = ReadonlyArray<JsoncSegment>;
 
@@ -32,14 +46,42 @@ export type JsoncPath = ReadonlyArray<JsoncSegment>;
  * (`string`/`number`/`boolean`/`null`), the structural types
  * (`object`/`array`) and the `property` key-value pair type.
  *
+ * **Example** (Narrow a node type literal)
+ *
+ * ```ts
+ * import { JsoncNodeType } from "@beep/scratchpad/jsonc";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(JsoncNodeType)("object")); // true
+ * console.log(S.is(JsoncNodeType)("property")); // true
+ * console.log(S.is(JsoncNodeType)("comment")); // false
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
-export const JsoncNodeType = Schema.Literals(["object", "array", "property", "string", "number", "boolean", "null"]);
+export const JsoncNodeType = Schema.Literals([
+	"object",
+	"array",
+	"property",
+	"string",
+	"number",
+	"boolean",
+	"null",
+]).pipe(
+	$I.annoteSchema("JsoncNodeType", {
+		description: "Discriminator literals for JSONC AST nodes: JSON values, object/array, and property.",
+	}),
+);
 
 /**
  * The union of all JSONC AST node type string literals.
  *
+ * @see {@link JsoncNodeType} for the runtime literals schema.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncNodeType = typeof JsoncNodeType.Type;
 
@@ -60,16 +102,47 @@ export type JsoncNodeType = typeof JsoncNodeType.Type;
  *
  * Construct via `JsoncNode.make(...)`, never `new JsoncNode(...)`.
  *
+ * **Gotchas**
+ *
+ * Parser-built trees cannot exceed {@link MAX_NESTING_DEPTH}. A tree assembled
+ * via `JsoncNode.make` may nest past that cap; walkers then return a bounded
+ * placeholder instead of overflowing — {@link JsoncNode.toValue} yields `{}` /
+ * `[]` / `null`, and {@link JsoncNode.findAtOffset} / {@link JsoncNode.pathAt}
+ * stop descending. That truncation is silent: there is no typed error.
+ *
+ * **Example** (Parse a tree, find a key, extract a value)
+ *
+ * ```ts
+ * import { Jsonc } from "@beep/scratchpad/jsonc";
+ * import { Result } from "effect";
+ * import * as O from "effect/Option";
+ *
+ * const root = Result.getOrThrow(Jsonc.parseTreeResult('{ "port": 3000 // dev\n }'));
+ * if (O.isSome(root)) {
+ *   const port = root.value.find(["port"]);
+ *   console.log(O.isSome(port) ? port.value.toValue() : undefined); // 3000
+ *   console.log(root.value.toValue());
+ * }
+ * ```
+ *
+ * @see {@link MAX_NESTING_DEPTH} for the walker depth cap that hand-built trees can exceed.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class JsoncNode extends Schema.Class<JsoncNode>("JsoncNode")({
-	type: JsoncNodeType,
-	offset: Schema.Number,
-	length: Schema.Number,
-	value: Schema.optionalKey(Schema.Unknown),
-	colonOffset: Schema.optionalKey(Schema.Number),
-	children: Schema.optionalKey(Schema.Array(Schema.suspend((): Schema.Schema<JsoncNode> => JsoncNode))),
-}) {
+export class JsoncNode extends Schema.Class<JsoncNode>($I`JsoncNode`)(
+	{
+		type: JsoncNodeType,
+		offset: Schema.Number,
+		length: Schema.Number,
+		value: Schema.optionalKey(Schema.Unknown),
+		colonOffset: Schema.optionalKey(Schema.Number),
+		children: Schema.optionalKey(Schema.Array(Schema.suspend((): Schema.Schema<JsoncNode> => JsoncNode))),
+	},
+	$I.annote("JsoncNode", {
+		description: "An immutable JSONC AST node with source spans and no parent pointers.",
+	}),
+) {
 	/**
 	 * Find a descendant node by path. String segments navigate object
 	 * properties; number segments navigate array indices. Returns
@@ -130,6 +203,12 @@ export class JsoncNode extends Schema.Class<JsoncNode>("JsoncNode")({
 	 * Reconstruct the plain JavaScript value represented by this subtree. Pure
 	 * and total — never fails, so no `Effect` wrapper.
 	 *
+	 * **Gotchas**
+	 *
+	 * A `"__proto__"` property is defined as an own data property
+	 * (`Object.defineProperty`), matching `JSON.parse` — it never mutates
+	 * `Object.prototype`.
+	 *
 	 * @returns The plain JavaScript value (object, array, string, number,
 	 *   boolean or `null`) this subtree represents.
 	 */
@@ -139,28 +218,34 @@ export class JsoncNode extends Schema.Class<JsoncNode>("JsoncNode")({
 }
 
 /**
- * Validation-free construction path for the trusted tree builder in
- * `internal/parser.ts` — NOT part of the public surface (not re-exported from
- * `index.ts`); external callers construct via the fully validating
- * `JsoncNode.make`.
+ * Validation-free constructor used by the trusted tree builder in
+ * `internal/parser.ts`. Not re-exported from the package barrel; external
+ * callers construct via the validating {@link JsoncNode.make}.
  *
- * Constructing a `JsoncNode` through `make`/`new` re-parses the recursive
- * `children` field, and each element parse re-runs the class transformation,
- * which re-parses ITS children — construction cost doubles per nesting level
- * (issue #13; measured ~4s at depth 20, effectively hanging past 25). The
- * parser guarantees validity by construction — every field comes straight off
- * a scanner token — so it skips schema construction entirely.
+ * Assigns props onto `JsoncNode.prototype` so methods, branding and
+ * structural equality match a `make`-built instance without re-parsing the
+ * recursive `children` field.
  *
- * A `Schema.Class` instance is its props assigned onto the class prototype:
- * the base `Data.Class` constructor is exactly `Object.assign(this, props)`,
- * and the prototype chain carries the methods, the class brand getter and
- * structural equality (verified against effect@4.0.0-beta.97). Mirroring that
- * with `Object.create` + `Object.assign` yields an instance identical to a
- * `make`-built one, minus the validating parse.
+ * **Gotchas**
  *
- * Contract: absent optional fields must be OMITTED, never passed as an
- * explicit `undefined` (a present `undefined` would create an own property
- * that `make` would have rejected).
+ * Omit missing optional fields; never pass explicit `undefined` (that would
+ * create an own property `make` would have rejected). Only the parser should
+ * call this.
+ *
+ * **Example** (Build a trusted string leaf)
+ *
+ * ```ts
+ * import { makeNodeUnsafe } from "../../jsonc/JsoncNode.ts";
+ *
+ * const leaf = makeNodeUnsafe({ type: "string", offset: 0, length: 5, value: "hello" });
+ *
+ * console.log(leaf.toValue()); // hello
+ * ```
+ *
+ * @see {@link JsoncNode} for the validating constructor.
+ * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeNodeUnsafe = (props: {
 	readonly type: JsoncNodeType;

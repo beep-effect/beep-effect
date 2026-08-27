@@ -1,0 +1,1797 @@
+{
+  "pack": "schemastore",
+  "modules": [
+    {
+      "file": "schemastore/AnnotationCarriers.ts",
+      "pack": "schemastore",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CanonicalJson.ts",
+      "pack": "schemastore",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CatalogEntry.ts",
+      "pack": "schemastore",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/DocumentDiff.ts",
+      "pack": "schemastore",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/DocumentLint.ts",
+      "pack": "schemastore",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/KeywordFamilies.ts",
+      "pack": "schemastore",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "pack": "schemastore",
+      "exportCount": 10,
+      "owningExportCount": 10,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "pack": "schemastore",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaTarget.ts",
+      "pack": "schemastore",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaValidator.ts",
+      "pack": "schemastore",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaVersioning.ts",
+      "pack": "schemastore",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/StoreDocument.ts",
+      "pack": "schemastore",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/index.ts",
+      "pack": "schemastore",
+      "exportCount": 12,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": true,
+      "findings": []
+    },
+    {
+      "file": "schemastore/internal/limits.ts",
+      "pack": "schemastore",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "schemastore/AnnotationCarriers.ts",
+      "name": "CarrierDepthExceededError",
+      "line": 14,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/AnnotationCarriers.ts",
+      "name": "AnnotationCarriers",
+      "line": 173,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CanonicalJson.ts",
+      "name": "NonJsonValueError",
+      "line": 16,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CanonicalJson.ts",
+      "name": "JsonDepthExceededError",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CanonicalJson.ts",
+      "name": "CanonicalJsonError",
+      "line": 52,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CanonicalJson.ts",
+      "name": "CanonicalJsonOptions",
+      "line": 59,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CanonicalJson.ts",
+      "name": "CanonicalJson",
+      "line": 101,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CatalogEntry.ts",
+      "name": "CatalogLintFinding",
+      "line": 12,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/CatalogEntry.ts",
+      "name": "CatalogEntry",
+      "line": 90,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/DocumentDiff.ts",
+      "name": "SchemaChange",
+      "line": 29,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/DocumentDiff.ts",
+      "name": "DocumentDiff",
+      "line": 272,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/DocumentLint.ts",
+      "name": "DocumentLintFinding",
+      "line": 13,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/DocumentLint.ts",
+      "name": "DocumentLint",
+      "line": 227,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/KeywordFamilies.ts",
+      "name": "KeywordFamilies",
+      "line": 40,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "SchemaFileReadError",
+      "line": 21,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "SchemaFileNotFoundError",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "SchemaFileWriteError",
+      "line": 54,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "WriteOutcome",
+      "line": 72,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "WriteChange",
+      "line": 81,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "WriteResult",
+      "line": 97,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "CheckResult",
+      "line": 119,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "SchemaWriteOptions",
+      "line": 134,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "SchemaFileShape",
+      "line": 160,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaFile.ts",
+      "name": "SchemaFile",
+      "line": 236,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@effect",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "name": "PipelineFinding",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "name": "SchemaGateError",
+      "line": 68,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "name": "PipelineResult",
+      "line": 84,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "name": "PipelineCheckResult",
+      "line": 107,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "name": "SchemaPipelineOptions",
+      "line": 131,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaPipeline.ts",
+      "name": "SchemaPipeline",
+      "line": 238,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@example",
+        "@effected",
+        "@effect",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaTarget.ts",
+      "name": "SchemaTarget",
+      "line": 15,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaTarget.ts",
+      "name": "SchemaTarget",
+      "line": 42,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaValidator.ts",
+      "name": "SchemaValidatorError",
+      "line": 18,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaValidator.ts",
+      "name": "ValidationFinding",
+      "line": 34,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaValidator.ts",
+      "name": "SchemaValidatorOptions",
+      "line": 48,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaValidator.ts",
+      "name": "SchemaValidatorShape",
+      "line": 63,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaValidator.ts",
+      "name": "SchemaValidator",
+      "line": 152,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaVersioning.ts",
+      "name": "InvalidSchemaVersionError",
+      "line": 40,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaVersioning.ts",
+      "name": "SchemaVersion",
+      "line": 67,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "schemastore",
+      "tags": [
+        "@effected",
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaVersioning.ts",
+      "name": "SchemaVersion",
+      "line": 76,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaVersioning.ts",
+      "name": "CatalogUrls",
+      "line": 112,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/SchemaVersioning.ts",
+      "name": "SchemaVersioning",
+      "line": 134,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/StoreDocument.ts",
+      "name": "DRAFT_07_META_SCHEMA",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "schemastore",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/StoreDocument.ts",
+      "name": "SchemaConversionError",
+      "line": 29,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/StoreDocument.ts",
+      "name": "StoreDocumentOptions",
+      "line": 45,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/StoreDocument.ts",
+      "name": "StoreDocument",
+      "line": 134,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "schemastore",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "AnnotationCarriers, CarrierDepthExceededError",
+      "line": 47,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [
+        "@example",
+        "@effected",
+        "@see",
+        "@link",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-carrier",
+          "detail": "Re-export JSDoc uses a retired @example or @remarks carrier."
+        }
+      ]
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "CanonicalJson, CanonicalJsonError, CanonicalJsonOptions, JsonDepthExceededError, NonJsonValueError",
+      "line": 48,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "CatalogEntry, CatalogLintFinding",
+      "line": 55,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "DocumentDiff, SchemaChange",
+      "line": 56,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "DocumentLint, DocumentLintFinding",
+      "line": 57,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "KeywordFamilies",
+      "line": 58,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "CheckResult, SchemaFile, SchemaFileNotFoundError, SchemaFileReadError, SchemaFileShape, SchemaFileWriteError, SchemaWriteOptions, WriteChange, WriteOutcome, WriteResult",
+      "line": 59,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "PipelineCheckResult, PipelineFinding, PipelineResult, SchemaGateError, SchemaPipeline, SchemaPipelineOptions",
+      "line": 71,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "SchemaTarget",
+      "line": 79,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "SchemaValidator, SchemaValidatorError, SchemaValidatorOptions, SchemaValidatorShape, ValidationFinding",
+      "line": 80,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "CatalogUrls, InvalidSchemaVersionError, SchemaVersion, SchemaVersioning",
+      "line": 87,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/index.ts",
+      "name": "DRAFT_07_META_SCHEMA, SchemaConversionError, StoreDocument, StoreDocumentOptions",
+      "line": 93,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "schemastore",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "schemastore/internal/limits.ts",
+      "name": "MAX_NESTING_DEPTH",
+      "line": 11,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "schemastore",
+      "tags": [
+        "@effected"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}

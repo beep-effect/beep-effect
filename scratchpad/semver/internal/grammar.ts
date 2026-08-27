@@ -1,22 +1,28 @@
-// Strict SemVer 2.0.0 recursive-descent parser and printer.
-//
-// Ported from semver-effect's Effect-based grammar as plain synchronous code:
-// parsing is pure and total, so the Effect wrapper added ceremony without
-// value. Failures propagate as a private exception carrying the failure
-// position and are converted to `ParseResult` at the three entry points; the
-// concept modules (`SemVer`, `Range`, `Comparator`) construct their own
-// domain errors from that result. This replaces the v3 `FailFn<E>`
-// parameterized fail-constructor — the same low-level parsers serve every
-// entry point without threading error constructors through.
-//
-// Rejects `v`/`V` prefixes, `=` prefixes on versions, leading zeros on
-// numeric identifiers, and unsafe integers. Input must be fully consumed.
-
+/**
+ * Strict SemVer 2.0.0 recursive-descent parser and printer.
+ *
+ * Parsing is pure and total: failures propagate as a private exception
+ * carrying the failure position and are converted to `ParseResult` at the
+ * three entry points. The concept modules (`SemVer`, `Range`, `Comparator`)
+ * construct their own domain errors from that result. Rejects `v`/`V`
+ * prefixes, `=` prefixes on versions, leading zeros on numeric identifiers,
+ * and unsafe integers. Input must be fully consumed.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { PartialParts } from "./desugar.ts";
 import { desugarCaret, desugarHyphen, desugarTilde, desugarXRange } from "./desugar.ts";
 import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.ts";
 
-/** Outcome of a grammar entry point: parsed value or input + failure position. */
+/**
+ * Outcome of a grammar entry point: parsed value or input plus failure
+ * position. Domain modules wrap `ok: false` into their tagged errors;
+ * `ParseFailure` itself never escapes these entry points.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseResult<A> =
 	| { readonly ok: true; readonly value: A }
 	| { readonly ok: false; readonly input: string; readonly position: number };
@@ -236,7 +242,40 @@ const parseVersionCore = (s: ParserState): VersionParts => {
 	return { major, minor, patch, prerelease, build };
 };
 
-/** Parse a strict SemVer 2.0.0 version string. */
+/**
+ * Parse a strict SemVer 2.0.0 version string. Rejects `v`/`V` and `=`
+ * prefixes, leading zeros on numeric identifiers, unsafe integers, partial
+ * versions (`1`, `1.2`), dist-tags, and leftover input. Range sugar
+ * (`^`, `~`, `x`, hyphen, `||`) is not accepted — that is {@link parseRange}.
+ *
+ * **Gotchas**
+ *
+ * Surrounding whitespace is trimmed before parsing (`" 1.2.3"` succeeds),
+ * matching node-semver's constructor. {@link SemVer.isValid} and
+ * {@link SemVer.ExactVersionString} reject the same padded string. There is
+ * no `coerce` / loose mode: `v1.2.3`, `=1.0.0`, `01.2.3`, and `1.2` all
+ * fail.
+ *
+ * **Example** (Accept a canonical version and reject a `v` prefix)
+ *
+ * ```ts
+ * import { parseVersion } from "../../semver/internal/grammar.ts";
+ *
+ * const ok = parseVersion("1.2.3");
+ * console.log(ok.ok ? ok.value.major : 0);
+ * // => 1
+ *
+ * const prefixed = parseVersion("v1.2.3");
+ * console.log(prefixed.ok);
+ * // => false
+ * ```
+ *
+ * @see {@link parseRange} when the input may contain range sugar rather than a single version.
+ * @see {@link parseComparator} when the input is an operator plus a complete version.
+ * @see {@link SemVer.parseResult} for the domain Result wrapper around this entry point.
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseVersion = (raw: string): ParseResult<VersionParts> => {
 	const trimmed = raw.trim();
 
@@ -440,6 +479,33 @@ const parseRangeComparators = (s: ParserState): ReadonlyArray<ComparatorParts> =
 /**
  * Parse a range expression into comparator sets (OR of ANDs). The empty
  * string parses as the match-all range.
+ *
+ * **Gotchas**
+ *
+ * Input is trimmed before parsing. `""` (and whitespace-only) is match-all
+ * (`>=0.0.0`), while {@link parseVersion} rejects an empty string. Ruby `~>`
+ * is rejected. Caret, tilde, X-range, hyphen, and `||` are desugared here —
+ * they are not accepted by {@link parseVersion} or {@link parseComparator}.
+ *
+ * **Example** (Desugar a caret range and reject Ruby `~>`)
+ *
+ * ```ts
+ * import { formatRange, parseRange } from "../../semver/internal/grammar.ts";
+ *
+ * const ok = parseRange("^1.0.0");
+ * console.log(ok.ok ? formatRange(ok.value) : "");
+ * // => ">=1.0.0 <2.0.0-0"
+ *
+ * const ruby = parseRange("~>1.0.0");
+ * console.log(ruby.ok);
+ * // => false
+ * ```
+ *
+ * @see {@link parseVersion} for strict versions with no range sugar.
+ * @see {@link parseComparator} for a single operator plus a complete version.
+ * @see {@link Range.FromString} for the schema codec that wraps this parser.
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseRange = (raw: string): ParseResult<ReadonlyArray<ReadonlyArray<ComparatorParts>>> => {
 	const trimmed = raw.trim();
@@ -535,6 +601,32 @@ const parseComparatorCore = (s: ParserState): ComparatorParts => {
 /**
  * Parse a single comparator string (optional operator + complete version).
  * Wildcards and range sugar are not allowed; a missing operator means `=`.
+ *
+ * **Gotchas**
+ *
+ * Input is trimmed before parsing. `^1.2.3`, `~1.2.3`, `1.x`, and hyphen
+ * ranges fail here and belong on {@link parseRange}. A missing operator is
+ * stored as `=`; {@link formatComparator} omits that `=` on the way out.
+ *
+ * **Example** (Parse an inequality and reject range sugar)
+ *
+ * ```ts
+ * import { parseComparator } from "../../semver/internal/grammar.ts";
+ *
+ * const ok = parseComparator(">=1.2.3");
+ * console.log(ok.ok ? ok.value.operator : "");
+ * // => ">="
+ *
+ * const sugar = parseComparator("^1.2.3");
+ * console.log(sugar.ok);
+ * // => false
+ * ```
+ *
+ * @see {@link parseVersion} for a version with no operator prefix.
+ * @see {@link parseRange} for wildcards and range sugar.
+ * @see {@link formatComparator} for the matching printer, which drops `=`.
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseComparator = (raw: string): ParseResult<ComparatorParts> => {
 	const trimmed = raw.trim();
@@ -558,7 +650,30 @@ export const parseComparator = (raw: string): ParseResult<ComparatorParts> => {
 // Printers (the encode direction of the FromString schemas)
 // ---------------------------------------------------------------------------
 
-/** Print a version as `major.minor.patch[-prerelease][+build]`. */
+/**
+ * Print a version as `major.minor.patch[-prerelease][+build]`.
+ *
+ * **Example** (Round-trip a prerelease with build metadata)
+ *
+ * ```ts
+ * import { formatVersion } from "../../semver/internal/grammar.ts";
+ *
+ * const printed = formatVersion({
+ *   major: 1,
+ *   minor: 2,
+ *   patch: 3,
+ *   prerelease: ["rc", 1],
+ *   build: ["build"],
+ * });
+ * console.log(printed);
+ * // => "1.2.3-rc.1+build"
+ * ```
+ *
+ * @see {@link parseVersion} for the matching parser.
+ * @see {@link SemVer.FromString} for the schema codec whose encode direction uses this printer.
+ * @category formatting
+ * @since 0.0.0
+ */
 export const formatVersion = (v: VersionParts): string => {
 	let s = `${v.major}.${v.minor}.${v.patch}`;
 	if (v.prerelease.length > 0) {
@@ -570,12 +685,70 @@ export const formatVersion = (v: VersionParts): string => {
 	return s;
 };
 
-/** Print a comparator; the `=` operator is implicit. */
+/**
+ * Print a comparator; the `=` operator is implicit.
+ *
+ * **Gotchas**
+ *
+ * `=1.2.3` round-trips as `1.2.3`. The parse still stores `operator: "="`.
+ *
+ * **Example** (Drop implicit `=` and keep an inequality)
+ *
+ * ```ts
+ * import { formatComparator } from "../../semver/internal/grammar.ts";
+ *
+ * const eq = formatComparator({
+ *   operator: "=",
+ *   version: { major: 1, minor: 2, patch: 3, prerelease: [], build: [] },
+ * });
+ * console.log(eq);
+ * // => "1.2.3"
+ *
+ * const gte = formatComparator({
+ *   operator: ">=",
+ *   version: { major: 1, minor: 2, patch: 3, prerelease: [], build: [] },
+ * });
+ * console.log(gte);
+ * // => ">=1.2.3"
+ * ```
+ *
+ * @see {@link parseComparator} for the matching parser, which treats a missing operator as `=`.
+ * @category formatting
+ * @since 0.0.0
+ */
 export const formatComparator = (c: ComparatorParts): string => {
 	const op = c.operator === "=" ? "" : c.operator;
 	return `${op}${formatVersion(c.version)}`;
 };
 
-/** Print comparator sets as `a b || c d`. */
+/**
+ * Print comparator sets as `a b || c d`.
+ *
+ * **Example** (Print an OR of two AND-sets)
+ *
+ * ```ts
+ * import { formatRange } from "../../semver/internal/grammar.ts";
+ *
+ * const printed = formatRange([
+ *   [
+ *     {
+ *       operator: ">=",
+ *       version: { major: 1, minor: 0, patch: 0, prerelease: [], build: [] },
+ *     },
+ *     {
+ *       operator: "<",
+ *       version: { major: 2, minor: 0, patch: 0, prerelease: [0], build: [] },
+ *     },
+ *   ],
+ * ]);
+ * console.log(printed);
+ * // => ">=1.0.0 <2.0.0-0"
+ * ```
+ *
+ * @see {@link parseRange} for the matching parser.
+ * @see {@link Range.FromString} for the schema codec whose encode direction uses this printer.
+ * @category formatting
+ * @since 0.0.0
+ */
 export const formatRange = (sets: ReadonlyArray<ReadonlyArray<ComparatorParts>>): string =>
 	sets.map((set) => set.map(formatComparator).join(" ")).join(" || ");

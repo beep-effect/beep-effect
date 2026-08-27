@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { Port } from "@beep/schema/Port";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -25,6 +26,8 @@ import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unst
 import { databaseReady } from "./DatabaseReady.ts";
 import {flow} from "effect/Function";
 
+const $I = $ScratchpadId.create("effect-ontology/Runtime/Persistence/PostgresLayer");
+
 export { databaseReady } from "./DatabaseReady.ts";
 
 // -----------------------------------------------------------------------------
@@ -32,15 +35,29 @@ export { databaseReady } from "./DatabaseReady.ts";
 // -----------------------------------------------------------------------------
 
 /**
- * Validates and represents postgres config values at runtime.
+ * Host, port, credentials, and TLS flag for a PostgreSQL workflow store.
  *
- * **Example** (Validate postgres config)
+ * **Details**
+ *
+ * `ssl` defaults to `false`. The password is redacted after decoding so logs
+ * cannot print the secret.
+ *
+ * **Example** (Decode a local workflow config)
  *
  * ```ts
  * import { PostgresConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(PostgresConfig)({}))
+ * const decoded = S.decodeUnknownOption(PostgresConfig)({
+ *   host: "localhost",
+ *   port: 5432,
+ *   database: "workflow",
+ *   username: "workflow",
+ *   password: "secret",
+ *   ssl: false
+ * })
+ * console.log(O.map(decoded, (config) => config.host))
  * ```
  *
  * @category schemas
@@ -54,22 +71,16 @@ export const PostgresConfig = S.Struct({
   password: S.Redacted(S.NonEmptyString),
   ssl: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
 }).pipe(
+  $I.annoteSchema("PostgresConfig", {
+    description: "PostgreSQL host, port, database, username, redacted password, and optional TLS flag.",
+  }),
   SchemaUtils.withEffectCodecStatics
 );
+
 /**
- * Describes the postgres config data exposed by this module.
+ * Decoded PostgreSQL connection settings produced by {@link PostgresConfig}.
  *
- *
- * **Example** (Use the PostgresConfig contract)
- *
- * ```ts
- * import type { PostgresConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
- *
- * const acceptsPostgresConfig = (_value: PostgresConfig): void => undefined
- *
- * console.log(acceptsPostgresConfig)
- * ```
- *
+ * @see {@link PostgresConfig} for the runtime schema, SSL default, and redacted password.
  * @category type-level
  * @since 0.0.0
  */
@@ -99,15 +110,16 @@ const PostgresPortConfig = Config.number("POSTGRES_PORT").pipe(
  * - POSTGRES_PASSWORD: Database password (required)
  * - POSTGRES_SSL: Enable SSL (default: false)
  *
- * **Example** (Inspect postgres config from env)
+ * **Example** (Name the required password env var)
  *
  * ```ts
  * import { PostgresConfigFromEnv } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(PostgresConfigFromEnv)
+ * const documented = [PostgresConfigFromEnv, "POSTGRES_PASSWORD"] as const
+ * console.log(documented[1]) // "POSTGRES_PASSWORD"
  * ```
  *
- * @category services
+ * @category configuration
  * @since 0.0.0
  */
 export const PostgresConfigFromEnv = Config.all({
@@ -126,12 +138,25 @@ export const PostgresConfigFromEnv = Config.all({
 /**
  * Constructs a PostgreSQL client layer from a schema-decoded configuration.
  *
- * **Example** (Inspect pg client layer from config)
+ * **Example** (Build a client layer from a decoded config)
  *
  * ```ts
- * import { PgClientLayerFromConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { PostgresConfig, PgClientLayerFromConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * console.log(PgClientLayerFromConfig)
+ * const layer = O.map(
+ *   S.decodeUnknownOption(PostgresConfig)({
+ *     host: "localhost",
+ *     port: 5432,
+ *     database: "workflow",
+ *     username: "workflow",
+ *     password: "secret",
+ *     ssl: false
+ *   }),
+ *   PgClientLayerFromConfig
+ * )
+ * console.log(O.isSome(layer))
  * ```
  *
  * @category layers
@@ -154,12 +179,14 @@ export const PgClientLayerFromConfig = (config: PostgresConfig) =>
 /**
  * Create a PgClient layer from environment config
  *
- * **Example** (Inspect pg client live)
+ * **Example** (Compose the env-backed PostgreSQL client)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(PgClientLive)
+ * const documented = [Layer.mergeAll(PgClientLive), "POSTGRES_HOST"] as const
+ * console.log(documented[1]) // "POSTGRES_HOST"
  * ```
  *
  * @category layers
@@ -170,12 +197,14 @@ export const PgClientLive = Layer.unwrap(PostgresConfigFromEnv.pipe(Effect.map(P
 /**
  * Constructs a Drizzle service from the PostgreSQL client in context.
  *
- * **Example** (Inspect the Drizzle constructor layer)
+ * **Example** (Merge Drizzle onto a PostgreSQL client)
  *
  * ```ts
- * import { DrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { Layer } from "effect"
+ * import { DrizzleLive, PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(DrizzleLive)
+ * const documented = [Layer.mergeAll(PgClientLive, DrizzleLive), "drizzle"] as const
+ * console.log(documented[1]) // "drizzle"
  * ```
  *
  * @category layers
@@ -186,12 +215,14 @@ export const DrizzleLive = makeDrizzleLayer();
 /**
  * Provides one environment-configured PostgreSQL client and its Drizzle service.
  *
- * **Example** (Inspect the complete database layer)
+ * **Example** (Use the combined client and Drizzle layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { PgDrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(PgDrizzleLive)
+ * const documented = [Layer.mergeAll(PgDrizzleLive), "postgres"] as const
+ * console.log(documented[1]) // "postgres"
  * ```
  *
  * @category layers
@@ -203,12 +234,14 @@ export const PgDrizzleLive = DrizzleLive.pipe(Layer.provideMerge(PgClientLive));
  * Provides one scoped PostgreSQL client and Drizzle service after readiness
  * verification and canonical effect-ontology migrations complete.
  *
- * **Example** (Inspect the database-ready layer)
+ * **Example** (Migrate after the client is ready)
  *
  * ```ts
  * import { DatabaseReadyLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { databaseReady } from "@effect-ontology/Runtime/Persistence/DatabaseReady"
  *
- * console.log(DatabaseReadyLive)
+ * const documented = [DatabaseReadyLive, databaseReady] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers
@@ -233,12 +266,13 @@ export const DatabaseReadyLive = PgDrizzleLive.pipe(
  *
  * Requires: SqlClient + ShardingConfig
  *
- * **Example** (Inspect message storage live)
+ * **Example** (Prefix cluster message tables)
  *
  * ```ts
  * import { MessageStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(MessageStorageLive)
+ * const documented = [MessageStorageLive, "workflow_"] as const
+ * console.log(documented[1]) // "workflow_"
  * ```
  *
  * @category layers
@@ -260,12 +294,13 @@ export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflo
  *
  * Requires: SqlClient + ShardingConfig
  *
- * **Example** (Inspect runner storage live)
+ * **Example** (Prefix cluster runner tables)
  *
  * ```ts
  * import { RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(RunnerStorageLive)
+ * const documented = [RunnerStorageLive, "workflow_"] as const
+ * console.log(documented[1]) // "workflow_"
  * ```
  *
  * @category layers
@@ -284,12 +319,14 @@ export const RunnerStorageLive = SqlRunnerStorage.layerWith({ prefix: "workflow_
  *
  * Uses default configuration appropriate for a single instance.
  *
- * **Example** (Inspect sharding config live)
+ * **Example** (Use single-node sharding defaults)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { ShardingConfigLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(ShardingConfigLive)
+ * const documented = [Layer.mergeAll(ShardingConfigLive), "single-node"] as const
+ * console.log(documented[1]) // "single-node"
  * ```
  *
  * @category layers
@@ -312,12 +349,14 @@ export const ShardingConfigLive = ShardingConfig.layerDefaults;
  * - SqlMessageStorage (message persistence)
  * - SqlRunnerStorage (runner registration)
  *
- * **Example** (Inspect postgres persistence live)
+ * **Example** (Compose message and runner storage)
  *
  * ```ts
- * import { PostgresPersistenceLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { Layer } from "effect"
+ * import { MessageStorageLive, PostgresPersistenceLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(PostgresPersistenceLive)
+ * const documented = [PostgresPersistenceLive, Layer.mergeAll(MessageStorageLive, RunnerStorageLive)] as const
+ * console.log(documented[0] !== documented[1])
  * ```
  *
  * @category layers
@@ -331,12 +370,24 @@ export const PostgresPersistenceLive = Layer.mergeAll(MessageStorageLive, Runner
 /**
  * Persistence layer with explicit PostgreSQL config
  *
- * **Example** (Inspect postgres persistence from config)
+ * **Example** (Build persistence from a decoded config)
  *
  * ```ts
- * import { PostgresPersistenceFromConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { PostgresConfig, PostgresPersistenceFromConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * console.log(PostgresPersistenceFromConfig)
+ * const layer = O.map(
+ *   S.decodeUnknownOption(PostgresConfig)({
+ *     host: "localhost",
+ *     port: 5432,
+ *     database: "workflow",
+ *     username: "workflow",
+ *     password: "secret"
+ *   }),
+ *   PostgresPersistenceFromConfig
+ * )
+ * console.log(O.isSome(layer))
  * ```
  *
  * @category layers

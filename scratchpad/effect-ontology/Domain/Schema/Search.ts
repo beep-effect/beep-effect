@@ -79,10 +79,20 @@ const ClaimSearchFacets = S.Struct({
  *
  * **Example** (Use ClaimSearchResponse)
  * ```ts
- * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClaimSearchResponse } from "@effect-ontology/Schema/Search"
  *
- * const count = (response: ClaimSearchResponse) => response.claims.length
- * console.log(count)
+ * const response = S.decodeUnknownOption(ClaimSearchResponse)({
+ *   query: "appointed director",
+ *   claims: [],
+ *   total: 0,
+ *   limit: 20,
+ *   offset: 0,
+ *   hasMore: false
+ * })
+ * console.log(O.map(response, (value) => value.claims.length)) // Some(0)
+ * console.log(O.map(response, (value) => value.total)) // Some(0)
  * ```
  *
  * @category dtos
@@ -142,10 +152,17 @@ const EntityTopClaim = S.Struct({
  *
  * **Example** (Use EntitySearchResult)
  * ```ts
- * import type { EntitySearchResult } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntitySearchResult } from "@effect-ontology/Schema/Search"
  *
- * const claimCount = (result: EntitySearchResult) => result.claimCount
- * console.log(claimCount)
+ * const result = S.decodeUnknownOption(EntitySearchResult)({
+ *   iri: "https://example.com/alice",
+ *   label: "Alice",
+ *   claimCount: 0
+ * })
+ * console.log(O.flatMap(result, (value) => value.label)) // Some("Alice")
+ * console.log(O.map(result, (value) => value.claimCount)) // Some(0)
  * ```
  *
  * @category models
@@ -226,10 +243,15 @@ export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery
  *
  * **Example** (Use Suggestion)
  * ```ts
- * import type { Suggestion } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Suggestion } from "@effect-ontology/Schema/Search"
  *
- * const label = (suggestion: Suggestion) => suggestion.label
- * console.log(label)
+ * const suggestion = S.decodeUnknownOption(Suggestion)({
+ *   label: "Alice",
+ *   iri: "https://example.com/alice"
+ * })
+ * console.log(O.map(suggestion, (value) => value.label)) // Some("Alice")
  * ```
  *
  * @category models
@@ -306,10 +328,21 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
  *
  * **Example** (Use ArticleSearchResult)
  * ```ts
- * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ArticleSearchResult } from "@effect-ontology/Schema/Search"
  *
- * const conflicts = (result: ArticleSearchResult) => result.conflictCount
- * console.log(conflicts)
+ * const result = S.decodeUnknownOption(ArticleSearchResult)({
+ *   article: {
+ *     id: "article-42",
+ *     uri: "https://example.com/news/42",
+ *     publishedAt: "2026-07-25T10:00:00.000Z",
+ *     ingestedAt: "2026-07-25T10:05:00.000Z"
+ *   },
+ *   claimCount: 0,
+ *   conflictCount: 0
+ * })
+ * console.log(O.map(result, (value) => value.conflictCount)) // Some(0)
  * ```
  *
  * @category models

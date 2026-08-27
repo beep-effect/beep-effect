@@ -1,29 +1,55 @@
-// The non-mutating text-edit vocabulary shared by the formatter and modifier:
-// `JsoncEdit`, `JsoncRange` and `JsoncFormattingOptions`.
-//
-// Edits describe replacements as `offset`/`length`/`content`; applying them in
-// reverse-offset order is byte-minimal and preserves comments and whitespace —
-// the core value proposition over `JSON.parse`/`JSON.stringify` round-trips.
-//
-// `JsoncEdit`, `JsoncRange`, `JsoncPath`, `JsoncSegment` and
-// `JsoncFormattingOptions` are bound by the jsonc/yaml parity convention:
-// their future `Yaml*` counterparts must be structurally identical (same
-// field names, types, optionality and semantics) so consumer code can be
-// written once over "a document codec's Edit/Range/Path".
+/**
+ * The non-mutating text-edit vocabulary shared by the formatter and modifier:
+ * `JsoncEdit`, `JsoncRange` and `JsoncFormattingOptions`.
+ *
+ * Edits describe replacements as `offset`/`length`/`content`; applying them in
+ * reverse-offset order is byte-minimal and preserves comments and whitespace —
+ * the core value proposition over `JSON.parse`/`JSON.stringify` round-trips.
+ *
+ * `JsoncEdit`, `JsoncRange`, `JsoncPath`, `JsoncSegment` and
+ * `JsoncFormattingOptions` are bound by the jsonc/yaml parity convention:
+ * their future `Yaml*` counterparts must be structurally identical (same
+ * field names, types, optionality and semantics) so consumer code can be
+ * written once over "a document codec's Edit/Range/Path".
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
+
+const $I = $ScratchpadId.create("jsonc/JsoncEdit");
 
 /**
  * A range within a JSONC document, expressed as a zero-based character
  * `offset` and a `length` in UTF-16 code units. Pass to `JsoncFormatter.format`
  * to restrict formatting to a region.
  *
+ * **Example** (Build a formatting range)
+ *
+ * ```ts
+ * import { JsoncRange } from "@beep/scratchpad/jsonc";
+ *
+ * const range = JsoncRange.make({ offset: 0, length: 16 });
+ *
+ * console.log(range.offset); // 0
+ * console.log(range.length); // 16
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class JsoncRange extends Schema.Class<JsoncRange>("JsoncRange")({
-	offset: Schema.Number,
-	length: Schema.Number,
-}) {}
+export class JsoncRange extends Schema.Class<JsoncRange>($I`JsoncRange`)(
+	{
+		offset: Schema.Number,
+		length: Schema.Number,
+	},
+	$I.annote("JsoncRange", {
+		description: "A zero-based UTF-16 offset/length window used to restrict JSONC formatting.",
+	}),
+) {}
 
 /**
  * Options controlling JSONC formatting. All fields are omissible.
@@ -40,15 +66,32 @@ export class JsoncRange extends Schema.Class<JsoncRange>("JsoncRange")({
  *   between tokens instead of collapsing each gap to the canonical single
  *   `eol`. Defaults to `false`.
  *
+ * **Example** (Request tab indentation)
+ *
+ * ```ts
+ * import { JsoncFormattingOptions } from "@beep/scratchpad/jsonc";
+ *
+ * const options = JsoncFormattingOptions.make({ insertSpaces: false, tabSize: 2 });
+ *
+ * console.log(options.insertSpaces); // false
+ * ```
+ *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class JsoncFormattingOptions extends Schema.Class<JsoncFormattingOptions>("JsoncFormattingOptions")({
-	tabSize: Schema.optionalKey(Schema.Number),
-	insertSpaces: Schema.optionalKey(Schema.Boolean),
-	eol: Schema.optionalKey(Schema.String),
-	insertFinalNewline: Schema.optionalKey(Schema.Boolean),
-	keepLines: Schema.optionalKey(Schema.Boolean),
-}) {}
+export class JsoncFormattingOptions extends Schema.Class<JsoncFormattingOptions>($I`JsoncFormattingOptions`)(
+	{
+		tabSize: Schema.optionalKey(Schema.Number),
+		insertSpaces: Schema.optionalKey(Schema.Boolean),
+		eol: Schema.optionalKey(Schema.String),
+		insertFinalNewline: Schema.optionalKey(Schema.Boolean),
+		keepLines: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("JsoncFormattingOptions", {
+		description: "Omissible JSONC formatting knobs for indent, EOL, final newline, and keep-lines.",
+	}),
+) {}
 
 /**
  * Formatting options accepted at call sites: either a
@@ -58,7 +101,10 @@ export class JsoncFormattingOptions extends Schema.Class<JsoncFormattingOptions>
  * caller can pass `{ insertSpaces: false, tabSize: 2 }` without constructing
  * the class. `JsoncFormattingOptions` remains the canonical decoded form.
  *
+ * @see {@link JsoncFormattingOptions} for the canonical decoded options class.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncFormattingOptionsLike =
 	| JsoncFormattingOptions
@@ -74,22 +120,59 @@ export type JsoncFormattingOptionsLike =
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
  * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
  *
+ * **Example** (Apply two non-overlapping edits)
+ *
+ * ```ts
+ * import { JsoncEdit } from "@beep/scratchpad/jsonc";
+ *
+ * const source = '{ "port": 3000 }';
+ * const portKey = '"port"';
+ * const portValue = "3000";
+ * const edited = JsoncEdit.applyAll(source, [
+ *   JsoncEdit.make({
+ *     offset: source.indexOf(portValue),
+ *     length: portValue.length,
+ *     content: "8080",
+ *   }),
+ *   JsoncEdit.make({
+ *     offset: source.indexOf(portKey),
+ *     length: portKey.length,
+ *     content: '"host"',
+ *   }),
+ * ]);
+ *
+ * console.log(edited); // { "host": 8080 }
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class JsoncEdit extends Schema.Class<JsoncEdit>("JsoncEdit")({
-	offset: Schema.Number,
-	length: Schema.Number,
-	content: Schema.String,
-}) {
+export class JsoncEdit extends Schema.Class<JsoncEdit>($I`JsoncEdit`)(
+	{
+		offset: Schema.Number,
+		length: Schema.Number,
+		content: Schema.String,
+	},
+	$I.annote("JsoncEdit", {
+		description: "A non-mutating text splice replacing [offset, offset + length) with content.",
+	}),
+) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`
-	 * array is not mutated. Overlapping edits are a programmer error and throw
-	 * as a defect — `JsoncFormatter` never produces them.
+	 * array is not mutated.
+	 *
+	 * **Gotchas**
+	 *
+	 * Input order is irrelevant because application is reverse-offset. Overlapping
+	 * spans throw: synthesizing edits (not just formatter output) can hit this
+	 * untyped defect. {@link JsoncFormatter} never produces overlapping edits.
 	 *
 	 * @param text - The source text to edit.
 	 * @param edits - The edits to apply, in any order.
-	 * @returns The edited text.
+	 * @throws Overlapping edits throw an `Error` (a defect), not a tagged schema error.
+	 * @see {@link JsoncFormatter.format} for a producer that never overlaps.
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<JsoncEdit>): string {
 		const sorted = [...edits].sort((a, b) => b.offset - a.offset);

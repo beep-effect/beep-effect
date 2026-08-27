@@ -89,12 +89,16 @@ const EmbeddingVector768Codec = S.String.pipe(
 /**
  * Decodes PostgreSQL `vector(768)` text into a finite 768-coordinate embedding.
  *
- * **Example** (Inspect the vector column metadata)
+ * **Example** (Decode a 768-d vector and reject a short one)
  *
  * ```ts
  * import { EmbeddingVector768 } from "@effect-ontology/Repository/schema"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * console.log(EmbeddingVector768.meta.column?.ident)
+ * const encoded = `[${Array.from({ length: 768 }, () => 0).join(",")}]`
+ * console.log(O.isSome(S.decodeUnknownOption(EmbeddingVector768)(encoded))) // true
+ * console.log(O.isNone(S.decodeUnknownOption(EmbeddingVector768)("[0,1]"))) // true
  * ```
  *
  * @category schemas
@@ -114,38 +118,23 @@ const NullableEmbeddingVector768 = VariantField({
   jsonUpdate: OptionalNullableEmbeddingVector768Codec,
 }).pipe(pg.unsafeCustom("vector(768)"));
 
-/**
- * Custom type for pgvector embedding columns (512-dimensional).
- * Used by Voyage-3-lite.
- *
- * @since 0.0.0
- * @category tables
- */
-
-/**
- * Custom type for pgvector embedding columns (1024-dimensional).
- * Used by Voyage-3, Voyage-code-3, Voyage-law-2.
- *
- * @since 0.0.0
- * @category tables
- */
-
 // =============================================================================
 // Articles Table
 // =============================================================================
 
 /**
- * Provides repository access for articles.
+ * Schema-first PostgreSQL table for ontology-scoped source articles.
  *
- * **Example** (Inspect articles)
+ * **Example** (Name the ontology-scoped unique key)
  *
  * ```ts
  * import { Articles } from "@effect-ontology/Repository/schema"
  *
- * console.log(Articles.fields.ontologyId)
+ * console.log("uri" in Articles.fields) // true
+ * console.log("ontologyId" in Articles.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class Articles extends Model<Articles>("Articles")(
@@ -181,10 +170,10 @@ export class Articles extends Model<Articles>("Articles")(
  * ```ts
  * import { articles } from "@effect-ontology/Repository/schema"
  *
- * console.log(articles.ontologyId.name)
+ * console.log(articles.ontologyId.name) // "ontology_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const articles = pg.toPgTable(Articles);
@@ -207,17 +196,17 @@ const ClaimsReference: { readonly tableName: "claims"; readonly entityType: "Cla
 };
 
 /**
- * Provides repository access for corrections.
+ * Schema-first PostgreSQL table for claim corrections.
  *
- * **Example** (Inspect corrections)
+ * **Example** (Name the correction-type column)
  *
  * ```ts
  * import { Corrections } from "@effect-ontology/Repository/schema"
  *
- * console.log(Corrections.fields.correctionType)
+ * console.log("correctionType" in Corrections.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class Corrections extends Model<Corrections>("Corrections")(
@@ -254,17 +243,19 @@ export class Corrections extends Model<Corrections>("Corrections")(
 // =============================================================================
 
 /**
- * Provides repository access for claims.
+ * Schema-first PostgreSQL table for persisted RDF claims.
  *
- * **Example** (Inspect claims)
+ * **Example** (Name the claim triple columns)
  *
  * ```ts
  * import { Claims } from "@effect-ontology/Repository/schema"
  *
- * console.log(Claims.fields.ontologyId)
+ * console.log("subjectIri" in Claims.fields) // true
+ * console.log("predicateIri" in Claims.fields) // true
+ * console.log("objectValue" in Claims.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class Claims extends Model<Claims>("Claims")(
@@ -334,17 +325,18 @@ export class Claims extends Model<Claims>("Claims")(
 // =============================================================================
 
 /**
- * Provides repository access for correction claims.
+ * Junction table linking a correction to the original and replacement claims.
  *
- * **Example** (Inspect correction claims)
+ * **Example** (Name the original-claim foreign key)
  *
  * ```ts
  * import { CorrectionClaims } from "@effect-ontology/Repository/schema"
  *
- * console.log(CorrectionClaims.fields.originalClaimId)
+ * console.log("originalClaimId" in CorrectionClaims.fields) // true
+ * console.log("newClaimId" in CorrectionClaims.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class CorrectionClaims extends Model<CorrectionClaims>("CorrectionClaims")(
@@ -369,17 +361,18 @@ export class CorrectionClaims extends Model<CorrectionClaims>("CorrectionClaims"
 // =============================================================================
 
 /**
- * Provides repository access for conflicts.
+ * Schema-first PostgreSQL table for ordered claim-conflict pairs.
  *
- * **Example** (Inspect conflicts)
+ * **Example** (Name the conflict-status column)
  *
  * ```ts
  * import { Conflicts } from "@effect-ontology/Repository/schema"
  *
- * console.log(Conflicts.fields.status)
+ * console.log("status" in Conflicts.fields) // true
+ * console.log("claimAId" in Conflicts.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class Conflicts extends Model<Conflicts>("Conflicts")(
@@ -450,10 +443,10 @@ const ClaimFamilySchema = pg.schema({
  * ```ts
  * import { corrections } from "@effect-ontology/Repository/schema"
  *
- * console.log(corrections.correctionType.name)
+ * console.log(corrections.correctionType.name) // "correction_type"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const corrections = ClaimFamilySchema.tables.corrections;
@@ -466,10 +459,10 @@ export const corrections = ClaimFamilySchema.tables.corrections;
  * ```ts
  * import { claims } from "@effect-ontology/Repository/schema"
  *
- * console.log(claims.ontologyId.name)
+ * console.log(claims.ontologyId.name) // "ontology_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const claims = ClaimFamilySchema.tables.claims;
@@ -482,10 +475,10 @@ export const claims = ClaimFamilySchema.tables.claims;
  * ```ts
  * import { correctionClaims } from "@effect-ontology/Repository/schema"
  *
- * console.log(correctionClaims.originalClaimId.name)
+ * console.log(correctionClaims.originalClaimId.name) // "original_claim_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const correctionClaims = ClaimFamilySchema.tables.correction_claims;
@@ -498,10 +491,10 @@ export const correctionClaims = ClaimFamilySchema.tables.correction_claims;
  * ```ts
  * import { conflicts } from "@effect-ontology/Repository/schema"
  *
- * console.log(conflicts.status.name)
+ * console.log(conflicts.status.name) // "status"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const conflicts = ClaimFamilySchema.tables.conflicts;
@@ -511,17 +504,18 @@ export const conflicts = ClaimFamilySchema.tables.conflicts;
 // =============================================================================
 
 /**
- * Provides repository access for batch runs.
+ * Schema-first PostgreSQL table for extraction batch-run progress.
  *
- * **Example** (Inspect batch runs)
+ * **Example** (Name the batch identifier)
  *
  * ```ts
  * import { BatchRuns } from "@effect-ontology/Repository/schema"
  *
- * console.log(BatchRuns.fields.status)
+ * console.log("batchId" in BatchRuns.fields) // true
+ * console.log("status" in BatchRuns.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class BatchRuns extends Model<BatchRuns>("BatchRuns")(
@@ -559,15 +553,16 @@ export class BatchRuns extends Model<BatchRuns>("BatchRuns")(
  * The "golden" entity records. Each unique real-world entity has one canonical entry.
  * Enables cross-batch entity linking by persisting resolved entities with embeddings.
  *
- * **Example** (Inspect canonical entities)
+ * **Example** (Name the canonical IRI and embedding)
  *
  * ```ts
  * import { CanonicalEntities } from "@effect-ontology/Repository/schema"
  *
- * console.log(CanonicalEntities.fields.ontologyId)
+ * console.log("iri" in CanonicalEntities.fields) // true
+ * console.log("embedding" in CanonicalEntities.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class CanonicalEntities extends Model<CanonicalEntities>("CanonicalEntities")(
@@ -631,15 +626,16 @@ const canonicalEntityReferenceId = S.String.pipe(pg.uuid());
  * Alternative mentions mapped to canonical entities.
  * Preserves provenance of how each mention was resolved.
  *
- * **Example** (Inspect entity aliases)
+ * **Example** (Name the alias mention and canonical entity)
  *
  * ```ts
  * import { EntityAliases } from "@effect-ontology/Repository/schema"
  *
- * console.log(EntityAliases.fields.canonicalEntityId)
+ * console.log("mentionNormalized" in EntityAliases.fields) // true
+ * console.log("canonicalEntityId" in EntityAliases.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
@@ -689,15 +685,16 @@ export class EntityAliases extends Model<EntityAliases>("EntityAliases")(
  * Inverted index for fast candidate retrieval during entity resolution.
  * Avoids O(n) scan by pre-indexing tokens from entity mentions.
  *
- * **Example** (Inspect entity blocking tokens)
+ * **Example** (Name the blocking token)
  *
  * ```ts
  * import { EntityBlockingTokens } from "@effect-ontology/Repository/schema"
  *
- * console.log(EntityBlockingTokens.fields.token)
+ * console.log("token" in EntityBlockingTokens.fields) // true
+ * console.log("canonicalEntityId" in EntityBlockingTokens.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class EntityBlockingTokens extends Model<EntityBlockingTokens>("EntityBlockingTokens")(
@@ -741,10 +738,10 @@ const EntityRegistrySchema = pg.schema({
  * ```ts
  * import { batchRuns } from "@effect-ontology/Repository/schema"
  *
- * console.log(batchRuns.batchId.name)
+ * console.log(batchRuns.batchId.name) // "batch_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const batchRuns = EntityRegistrySchema.tables.batch_runs;
@@ -757,10 +754,10 @@ export const batchRuns = EntityRegistrySchema.tables.batch_runs;
  * ```ts
  * import { canonicalEntities } from "@effect-ontology/Repository/schema"
  *
- * console.log(canonicalEntities.ontologyId.name)
+ * console.log(canonicalEntities.ontologyId.name) // "ontology_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const canonicalEntities = EntityRegistrySchema.tables.canonical_entities;
@@ -773,10 +770,10 @@ export const canonicalEntities = EntityRegistrySchema.tables.canonical_entities;
  * ```ts
  * import { entityAliases } from "@effect-ontology/Repository/schema"
  *
- * console.log(entityAliases.canonicalEntityId.name)
+ * console.log(entityAliases.canonicalEntityId.name) // "canonical_entity_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const entityAliases = EntityRegistrySchema.tables.entity_aliases;
@@ -789,10 +786,10 @@ export const entityAliases = EntityRegistrySchema.tables.entity_aliases;
  * ```ts
  * import { entityBlockingTokens } from "@effect-ontology/Repository/schema"
  *
- * console.log(entityBlockingTokens.token.name)
+ * console.log(entityBlockingTokens.token.name) // "token"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const entityBlockingTokens = EntityRegistrySchema.tables.entity_blocking_tokens;
@@ -802,315 +799,153 @@ export const entityBlockingTokens = EntityRegistrySchema.tables.entity_blocking_
 // =============================================================================
 
 /**
- * Describes the article row data exposed by this module.
+ * Select row decoded from {@link Articles}.
  *
- * **Example** (Reference ArticleRow columns)
- *
- * ```ts
- * import type { ArticleRow } from "@effect-ontology/Repository/schema"
- *
- * const articleRowFields: ReadonlyArray<keyof ArticleRow> = ["id", "uri", "ontologyId"]
- *
- * console.log(articleRowFields)
- * ```
- *
+ * @see {@link Articles} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type ArticleRow = Articles;
 /**
- * Describes the article insert row data exposed by this module.
+ * Insert payload accepted by {@link Articles}.
  *
- * **Example** (Reference ArticleInsertRow columns)
- *
- * ```ts
- * import type { ArticleInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const articleInsertRowFields: ReadonlyArray<keyof ArticleInsertRow> = ["id", "uri", "ontologyId"]
- *
- * console.log(articleInsertRowFields)
- * ```
- *
+ * @see {@link Articles} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type ArticleInsertRow = typeof Articles.insert.Type;
 
 /**
- * Describes the claim row data exposed by this module.
+ * Select row decoded from {@link Claims}.
  *
- * **Example** (Reference ClaimRow columns)
- *
- * ```ts
- * import type { ClaimRow } from "@effect-ontology/Repository/schema"
- *
- * const claimRowFields: ReadonlyArray<keyof ClaimRow> = ["id", "articleId", "ontologyId"]
- *
- * console.log(claimRowFields)
- * ```
- *
+ * @see {@link Claims} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type ClaimRow = Claims;
 /**
- * Describes the claim insert row data exposed by this module.
+ * Insert payload accepted by {@link Claims}.
  *
- * **Example** (Reference ClaimInsertRow columns)
- *
- * ```ts
- * import type { ClaimInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const claimInsertRowFields: ReadonlyArray<keyof ClaimInsertRow> = ["id", "articleId", "ontologyId"]
- *
- * console.log(claimInsertRowFields)
- * ```
- *
+ * @see {@link Claims} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type ClaimInsertRow = typeof Claims.insert.Type;
 
 /**
- * Describes the correction row data exposed by this module.
+ * Select row decoded from {@link Corrections}.
  *
- * **Example** (Reference CorrectionRow columns)
- *
- * ```ts
- * import type { CorrectionRow } from "@effect-ontology/Repository/schema"
- *
- * const correctionRowFields: ReadonlyArray<keyof CorrectionRow> = ["id", "correctionType", "sourceArticleId"]
- *
- * console.log(correctionRowFields)
- * ```
- *
+ * @see {@link Corrections} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type CorrectionRow = Corrections;
 /**
- * Describes the correction insert row data exposed by this module.
+ * Insert payload accepted by {@link Corrections}.
  *
- * **Example** (Reference CorrectionInsertRow columns)
- *
- * ```ts
- * import type { CorrectionInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const correctionInsertRowFields: ReadonlyArray<keyof CorrectionInsertRow> = ["id", "correctionType", "sourceArticleId"]
- *
- * console.log(correctionInsertRowFields)
- * ```
- *
+ * @see {@link Corrections} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type CorrectionInsertRow = typeof Corrections.insert.Type;
 
 /**
- * Describes the correction claim row data exposed by this module.
+ * Select row decoded from {@link CorrectionClaims}.
  *
- * **Example** (Reference CorrectionClaimRow columns)
- *
- * ```ts
- * import type { CorrectionClaimRow } from "@effect-ontology/Repository/schema"
- *
- * const correctionClaimRowFields: ReadonlyArray<keyof CorrectionClaimRow> = ["correctionId", "originalClaimId", "newClaimId"]
- *
- * console.log(correctionClaimRowFields)
- * ```
- *
+ * @see {@link CorrectionClaims} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type CorrectionClaimRow = CorrectionClaims;
 /**
- * Describes the correction claim insert row data exposed by this module.
+ * Insert payload accepted by {@link CorrectionClaims}.
  *
- * **Example** (Reference CorrectionClaimInsertRow columns)
- *
- * ```ts
- * import type { CorrectionClaimInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const correctionClaimInsertRowFields: ReadonlyArray<keyof CorrectionClaimInsertRow> = ["correctionId", "originalClaimId", "newClaimId"]
- *
- * console.log(correctionClaimInsertRowFields)
- * ```
- *
+ * @see {@link CorrectionClaims} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type CorrectionClaimInsertRow = typeof CorrectionClaims.insert.Type;
 
 /**
- * Describes the conflict row data exposed by this module.
+ * Select row decoded from {@link Conflicts}.
  *
- * **Example** (Reference ConflictRow columns)
- *
- * ```ts
- * import type { ConflictRow } from "@effect-ontology/Repository/schema"
- *
- * const conflictRowFields: ReadonlyArray<keyof ConflictRow> = ["id", "conflictType", "claimAId"]
- *
- * console.log(conflictRowFields)
- * ```
- *
+ * @see {@link Conflicts} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type ConflictRow = Conflicts;
 /**
- * Describes the conflict insert row data exposed by this module.
+ * Insert payload accepted by {@link Conflicts}.
  *
- * **Example** (Reference ConflictInsertRow columns)
- *
- * ```ts
- * import type { ConflictInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const conflictInsertRowFields: ReadonlyArray<keyof ConflictInsertRow> = ["id", "conflictType", "claimAId"]
- *
- * console.log(conflictInsertRowFields)
- * ```
- *
+ * @see {@link Conflicts} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type ConflictInsertRow = typeof Conflicts.insert.Type;
 
 /**
- * Describes the batch run row data exposed by this module.
+ * Select row decoded from {@link BatchRuns}.
  *
- * **Example** (Reference BatchRunRow columns)
- *
- * ```ts
- * import type { BatchRunRow } from "@effect-ontology/Repository/schema"
- *
- * const batchRunRowFields: ReadonlyArray<keyof BatchRunRow> = ["id", "batchId", "status"]
- *
- * console.log(batchRunRowFields)
- * ```
- *
+ * @see {@link BatchRuns} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type BatchRunRow = BatchRuns;
 /**
- * Describes the batch run insert row data exposed by this module.
+ * Insert payload accepted by {@link BatchRuns}.
  *
- * **Example** (Reference BatchRunInsertRow columns)
- *
- * ```ts
- * import type { BatchRunInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const batchRunInsertRowFields: ReadonlyArray<keyof BatchRunInsertRow> = ["id", "batchId", "status"]
- *
- * console.log(batchRunInsertRowFields)
- * ```
- *
+ * @see {@link BatchRuns} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type BatchRunInsertRow = typeof BatchRuns.insert.Type;
 
 /**
- * Describes the canonical entity row data exposed by this module.
+ * Select row decoded from {@link CanonicalEntities}.
  *
- * **Example** (Reference CanonicalEntityRow columns)
- *
- * ```ts
- * import type { CanonicalEntityRow } from "@effect-ontology/Repository/schema"
- *
- * const canonicalEntityRowFields: ReadonlyArray<keyof CanonicalEntityRow> = ["id", "ontologyId", "iri"]
- *
- * console.log(canonicalEntityRowFields)
- * ```
- *
+ * @see {@link CanonicalEntities} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type CanonicalEntityRow = CanonicalEntities;
 /**
- * Describes the canonical entity insert row data exposed by this module.
+ * Insert payload accepted by {@link CanonicalEntities}.
  *
- * **Example** (Reference CanonicalEntityInsertRow columns)
- *
- * ```ts
- * import type { CanonicalEntityInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const canonicalEntityInsertRowFields: ReadonlyArray<keyof CanonicalEntityInsertRow> = ["id", "ontologyId", "iri"]
- *
- * console.log(canonicalEntityInsertRowFields)
- * ```
- *
+ * @see {@link CanonicalEntities} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type CanonicalEntityInsertRow = typeof CanonicalEntities.insert.Type;
 
 /**
- * Describes the entity alias row data exposed by this module.
+ * Select row decoded from {@link EntityAliases}.
  *
- * **Example** (Reference EntityAliasRow columns)
- *
- * ```ts
- * import type { EntityAliasRow } from "@effect-ontology/Repository/schema"
- *
- * const entityAliasRowFields: ReadonlyArray<keyof EntityAliasRow> = ["id", "ontologyId", "canonicalEntityId"]
- *
- * console.log(entityAliasRowFields)
- * ```
- *
+ * @see {@link EntityAliases} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type EntityAliasRow = EntityAliases;
 /**
- * Describes the entity alias insert row data exposed by this module.
+ * Insert payload accepted by {@link EntityAliases}.
  *
- * **Example** (Reference EntityAliasInsertRow columns)
- *
- * ```ts
- * import type { EntityAliasInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const entityAliasInsertRowFields: ReadonlyArray<keyof EntityAliasInsertRow> = ["id", "ontologyId", "canonicalEntityId"]
- *
- * console.log(entityAliasInsertRowFields)
- * ```
- *
+ * @see {@link EntityAliases} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type EntityAliasInsertRow = typeof EntityAliases.insert.Type;
 
 /**
- * Describes the entity blocking token row data exposed by this module.
+ * Select row decoded from {@link EntityBlockingTokens}.
  *
- * **Example** (Reference EntityBlockingTokenRow columns)
- *
- * ```ts
- * import type { EntityBlockingTokenRow } from "@effect-ontology/Repository/schema"
- *
- * const entityBlockingTokenRowFields: ReadonlyArray<keyof EntityBlockingTokenRow> = ["id", "ontologyId", "canonicalEntityId"]
- *
- * console.log(entityBlockingTokenRowFields)
- * ```
- *
+ * @see {@link EntityBlockingTokens} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type EntityBlockingTokenRow = EntityBlockingTokens;
 /**
- * Describes the entity blocking token insert row data exposed by this module.
+ * Insert payload accepted by {@link EntityBlockingTokens}.
  *
- * **Example** (Reference EntityBlockingTokenInsertRow columns)
- *
- * ```ts
- * import type { EntityBlockingTokenInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const entityBlockingTokenInsertRowFields: ReadonlyArray<keyof EntityBlockingTokenInsertRow> = ["id", "ontologyId", "canonicalEntityId"]
- *
- * console.log(entityBlockingTokenInsertRowFields)
- * ```
- *
+ * @see {@link EntityBlockingTokens} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
@@ -1133,15 +968,16 @@ const UnknownRecordJson = S.Record(S.String, S.Unknown);
  * Tracks URLs fetched via Jina Reader API for extraction.
  * Content is stored in GCS/local; this table holds metadata.
  *
- * **Example** (Inspect ingested links)
+ * **Example** (Name the content-addressed hash)
  *
  * ```ts
  * import { IngestedLinks } from "@effect-ontology/Repository/schema"
  *
- * console.log(IngestedLinks.fields.status)
+ * console.log("contentHash" in IngestedLinks.fields) // true
+ * console.log("status" in IngestedLinks.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class IngestedLinks extends Model<IngestedLinks>("IngestedLinks")(
@@ -1218,15 +1054,16 @@ export class IngestedLinks extends Model<IngestedLinks>("IngestedLinks")(
  *
  * Groups ingested links for batch extraction.
  *
- * **Example** (Inspect link batches)
+ * **Example** (Name the link-batch status)
  *
  * ```ts
  * import { LinkBatches } from "@effect-ontology/Repository/schema"
  *
- * console.log(LinkBatches.fields.status)
+ * console.log("batchId" in LinkBatches.fields) // true
+ * console.log("status" in LinkBatches.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class LinkBatches extends Model<LinkBatches>("LinkBatches")(
@@ -1274,15 +1111,16 @@ const IngestedLinksReference: { readonly tableName: "ingested_links"; readonly e
  *
  * Links ingested_links to batches.
  *
- * **Example** (Inspect link batch items)
+ * **Example** (Name the batch and link foreign keys)
  *
  * ```ts
  * import { LinkBatchItems } from "@effect-ontology/Repository/schema"
  *
- * console.log(LinkBatchItems.fields.status)
+ * console.log("batchId" in LinkBatchItems.fields) // true
+ * console.log("linkId" in LinkBatchItems.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class LinkBatchItems extends Model<LinkBatchItems>("LinkBatchItems")(
@@ -1339,10 +1177,10 @@ const LinkPersistenceSchema = pg.schema({
  * ```ts
  * import { ingestedLinks } from "@effect-ontology/Repository/schema"
  *
- * console.log(ingestedLinks.contentHash.name)
+ * console.log(ingestedLinks.contentHash.name) // "content_hash"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const ingestedLinks = LinkPersistenceSchema.tables.ingested_links;
@@ -1355,10 +1193,10 @@ export const ingestedLinks = LinkPersistenceSchema.tables.ingested_links;
  * ```ts
  * import { linkBatches } from "@effect-ontology/Repository/schema"
  *
- * console.log(linkBatches.status.name)
+ * console.log(linkBatches.status.name) // "status"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const linkBatches = LinkPersistenceSchema.tables.link_batches;
@@ -1371,114 +1209,60 @@ export const linkBatches = LinkPersistenceSchema.tables.link_batches;
  * ```ts
  * import { linkBatchItems } from "@effect-ontology/Repository/schema"
  *
- * console.log(linkBatchItems.linkId.name)
+ * console.log(linkBatchItems.linkId.name) // "link_id"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const linkBatchItems = LinkPersistenceSchema.tables.link_batch_items;
 
 /**
- * Describes the ingested link row data exposed by this module.
+ * Select row decoded from {@link IngestedLinks}.
  *
- * **Example** (Reference IngestedLinkRow columns)
- *
- * ```ts
- * import type { IngestedLinkRow } from "@effect-ontology/Repository/schema"
- *
- * const ingestedLinkRowFields: ReadonlyArray<keyof IngestedLinkRow> = ["id", "contentHash", "ontologyId"]
- *
- * console.log(ingestedLinkRowFields)
- * ```
- *
+ * @see {@link IngestedLinks} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type IngestedLinkRow = IngestedLinks;
 /**
- * Describes the ingested link insert row data exposed by this module.
+ * Insert payload accepted by {@link IngestedLinks}.
  *
- * **Example** (Reference IngestedLinkInsertRow columns)
- *
- * ```ts
- * import type { IngestedLinkInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const ingestedLinkInsertRowFields: ReadonlyArray<keyof IngestedLinkInsertRow> = ["id", "contentHash", "ontologyId"]
- *
- * console.log(ingestedLinkInsertRowFields)
- * ```
- *
+ * @see {@link IngestedLinks} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type IngestedLinkInsertRow = typeof IngestedLinks.insert.Type;
 
 /**
- * Describes the link batch row data exposed by this module.
+ * Select row decoded from {@link LinkBatches}.
  *
- * **Example** (Reference LinkBatchRow columns)
- *
- * ```ts
- * import type { LinkBatchRow } from "@effect-ontology/Repository/schema"
- *
- * const linkBatchRowFields: ReadonlyArray<keyof LinkBatchRow> = ["id", "batchId", "status"]
- *
- * console.log(linkBatchRowFields)
- * ```
- *
+ * @see {@link LinkBatches} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type LinkBatchRow = LinkBatches;
 /**
- * Describes the link batch insert row data exposed by this module.
+ * Insert payload accepted by {@link LinkBatches}.
  *
- * **Example** (Reference LinkBatchInsertRow columns)
- *
- * ```ts
- * import type { LinkBatchInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const linkBatchInsertRowFields: ReadonlyArray<keyof LinkBatchInsertRow> = ["id", "batchId", "status"]
- *
- * console.log(linkBatchInsertRowFields)
- * ```
- *
+ * @see {@link LinkBatches} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type LinkBatchInsertRow = typeof LinkBatches.insert.Type;
 
 /**
- * Describes the link batch item row data exposed by this module.
+ * Select row decoded from {@link LinkBatchItems}.
  *
- * **Example** (Reference LinkBatchItemRow columns)
- *
- * ```ts
- * import type { LinkBatchItemRow } from "@effect-ontology/Repository/schema"
- *
- * const linkBatchItemRowFields: ReadonlyArray<keyof LinkBatchItemRow> = ["batchId", "linkId", "status"]
- *
- * console.log(linkBatchItemRowFields)
- * ```
- *
+ * @see {@link LinkBatchItems} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type LinkBatchItemRow = LinkBatchItems;
 /**
- * Describes the link batch item insert row data exposed by this module.
+ * Insert payload accepted by {@link LinkBatchItems}.
  *
- * **Example** (Reference LinkBatchItemInsertRow columns)
- *
- * ```ts
- * import type { LinkBatchItemInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const linkBatchItemInsertRowFields: ReadonlyArray<keyof LinkBatchItemInsertRow> = ["batchId", "linkId", "status"]
- *
- * console.log(linkBatchItemInsertRowFields)
- * ```
- *
+ * @see {@link LinkBatchItems} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
@@ -1500,15 +1284,16 @@ const LlmPromptMessagesJson = S.Struct({ role: S.String, content: S.String }).pi
  * Stores curated examples for few-shot prompting. Examples are scoped per-ontology
  * and support hybrid retrieval (vector similarity + lexical search).
  *
- * **Example** (Inspect llm examples)
+ * **Example** (Name the few-shot task type)
  *
  * ```ts
  * import { LlmExamples } from "@effect-ontology/Repository/schema"
  *
- * console.log(LlmExamples.fields.exampleType)
+ * console.log("exampleType" in LlmExamples.fields) // true
+ * console.log("inputText" in LlmExamples.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class LlmExamples extends Model<LlmExamples>("LlmExamples")(
@@ -1569,44 +1354,26 @@ export class LlmExamples extends Model<LlmExamples>("LlmExamples")(
  * ```ts
  * import { llmExamples } from "@effect-ontology/Repository/schema"
  *
- * console.log(llmExamples.exampleType.name)
+ * console.log(llmExamples.exampleType.name) // "example_type"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const llmExamples = pg.toPgTable(LlmExamples);
 
 /**
- * Describes the llm example row data exposed by this module.
+ * Select row decoded from {@link LlmExamples}.
  *
- * **Example** (Reference LlmExampleRow columns)
- *
- * ```ts
- * import type { LlmExampleRow } from "@effect-ontology/Repository/schema"
- *
- * const llmExampleRowFields: ReadonlyArray<keyof LlmExampleRow> = ["id", "ontologyId", "exampleType"]
- *
- * console.log(llmExampleRowFields)
- * ```
- *
+ * @see {@link LlmExamples} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type LlmExampleRow = LlmExamples;
 /**
- * Describes the llm example insert row data exposed by this module.
+ * Insert payload accepted by {@link LlmExamples}.
  *
- * **Example** (Reference LlmExampleInsertRow columns)
- *
- * ```ts
- * import type { LlmExampleInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const llmExampleInsertRowFields: ReadonlyArray<keyof LlmExampleInsertRow> = ["id", "ontologyId", "exampleType"]
- *
- * console.log(llmExampleInsertRowFields)
- * ```
- *
+ * @see {@link LlmExamples} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
@@ -1630,15 +1397,16 @@ export type LlmExampleInsertRow = typeof LlmExamples.insert.Type;
  * - tsvector for BM25-like full-text search
  * - RRF fusion via hybrid_search() function
  *
- * **Example** (Inspect embeddings)
+ * **Example** (Name the vector and owner columns)
  *
  * ```ts
  * import { Embeddings } from "@effect-ontology/Repository/schema"
  *
- * console.log(Embeddings.fields.embedding)
+ * console.log("embedding" in Embeddings.fields) // true
+ * console.log("entityType" in Embeddings.fields) // true
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export class Embeddings extends Model<Embeddings>("Embeddings")(
@@ -1672,44 +1440,26 @@ export class Embeddings extends Model<Embeddings>("Embeddings")(
  * ```ts
  * import { embeddings } from "@effect-ontology/Repository/schema"
  *
- * console.log(embeddings.embedding.name)
+ * console.log(embeddings.embedding.name) // "embedding"
  * ```
  *
- * @category repositories
+ * @category tables
  * @since 0.0.0
  */
 export const embeddings = pg.toPgTable(Embeddings);
 
 /**
- * Describes the embedding row data exposed by this module.
+ * Select row decoded from {@link Embeddings}.
  *
- * **Example** (Reference EmbeddingRow columns)
- *
- * ```ts
- * import type { EmbeddingRow } from "@effect-ontology/Repository/schema"
- *
- * const embeddingRowFields: ReadonlyArray<keyof EmbeddingRow> = ["id", "entityType", "entityId"]
- *
- * console.log(embeddingRowFields)
- * ```
- *
+ * @see {@link Embeddings} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */
 export type EmbeddingRow = Embeddings;
 /**
- * Describes the embedding insert row data exposed by this module.
+ * Insert payload accepted by {@link Embeddings}.
  *
- * **Example** (Reference EmbeddingInsertRow columns)
- *
- * ```ts
- * import type { EmbeddingInsertRow } from "@effect-ontology/Repository/schema"
- *
- * const embeddingInsertRowFields: ReadonlyArray<keyof EmbeddingInsertRow> = ["id", "entityType", "entityId"]
- *
- * console.log(embeddingInsertRowFields)
- * ```
- *
+ * @see {@link Embeddings} for the schema-first table model.
  * @category type-level
  * @since 0.0.0
  */

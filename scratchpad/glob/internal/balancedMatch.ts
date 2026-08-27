@@ -1,3 +1,14 @@
+/**
+ * Iterative balanced-delimiter search for brace expansion.
+ *
+ * Fully iterative: this module has no recursion surface and therefore no
+ * depth guard. Do not add one.
+ *
+ * Ported from balanced-match@4.0.4.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // Ported from balanced-match@4.0.4 (https://github.com/juliangruber/balanced-match)
 // Copyright (c) 2013 Julian Gruber <julian@juliangruber.com>
 //
@@ -23,7 +34,14 @@
 // single-variable declarations). Fully ITERATIVE — this module has NO recursion
 // surface and therefore NO depth guard. Do not add one.
 
-/** The balanced section found by {@link balanced}. */
+/**
+ * The balanced section found by {@link balanced}: delimiter offsets and the
+ * text before, inside, and after the pair.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface BalancedResult {
 	readonly start: number;
 	readonly end: number;
@@ -40,6 +58,22 @@ const maybeMatch = (reg: RegExp, str: string): string | null => {
 /**
  * The first balanced `a ... b` section of `str`: its delimiter offsets and the
  * text before, inside and after it. `false` when no balanced pair exists.
+ *
+ * **Example** (Split a brace body)
+ *
+ * ```ts
+ * import { balanced } from "../../glob/internal/balancedMatch.ts"
+ *
+ * const found = balanced("{", "}", "a{b,c}d")
+ * console.log(found && found.pre) // "a"
+ * console.log(found && found.body) // "b,c"
+ * console.log(found && found.post) // "d"
+ * console.log(balanced("{", "}", "abc")) // false
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const balanced = (a: string | RegExp, b: string | RegExp, str: string): BalancedResult | false => {
 	const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
@@ -58,7 +92,22 @@ export const balanced = (a: string | RegExp, b: string | RegExp, str: string): B
 	};
 };
 
-/** Offsets of the first balanced `a ... b` pair in `str`, or `undefined`. */
+/**
+ * Offsets of the first balanced `a ... b` pair in `str`, or `undefined`.
+ *
+ * **Example** (Locate a balanced delimiter pair)
+ *
+ * ```ts
+ * import { range } from "../../glob/internal/balancedMatch.ts"
+ *
+ * console.log(range("{", "}", "a{b,c}d")) // [1, 5]
+ * console.log(range("{", "}", "abc")) // undefined
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const range = (a: string, b: string, str: string): undefined | [number, number] => {
 	let beg: number | undefined;
 	let left: number;

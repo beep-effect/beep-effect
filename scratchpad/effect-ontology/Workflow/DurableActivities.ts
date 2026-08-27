@@ -11,8 +11,10 @@
  * - Activities are automatically retried and journaled
  * - Each activity has typed success/error schemas for serialization
  *
- * Note: These activities require WorkflowEngine and WorkflowInstance context.
- * For standalone execution (e.g., ActivityRunner), use Activities.ts instead.
+ * **Gotchas**
+ *
+ * These activities require WorkflowEngine and WorkflowInstance context. For
+ * standalone execution (for example ActivityRunner), use Activities.ts instead.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -110,15 +112,25 @@ const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`)
 // -----------------------------------------------------------------------------
 
 /**
- * Validates and represents resolution output values at runtime.
+ * Journaled success payload for {@link makeResolutionActivity}.
  *
- * **Example** (Validate resolution output)
+ * **Example** (Decode a resolution output)
  *
  * ```ts
  * import { ResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ResolutionOutput)({}))
+ * const decoded = S.decodeUnknownOption(ResolutionOutput)({
+ *   resolvedUri: "gs://beep-ontology-state/graphs/resolved.ttl",
+ *   entitiesTotal: 4,
+ *   clustersFormed: 3,
+ *   relationsTotal: 2,
+ *   compressionRatio: 0.25,
+ *   provenanceMap: { eze: ["gs://beep-ontology-state/docs/doc-deadbeefcafe.ttl"] },
+ *   durationMs: 42
+ * })
+ * console.log(O.map(decoded, (output) => output.clustersFormed))
  * ```
  *
  * @category schemas
@@ -137,34 +149,71 @@ export const ResolutionOutput = S.Struct({
   /** Maps canonical entity ID to source document URIs */
   provenanceMap: S.Record(S.String, S.Array(S.String)),
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("ResolutionOutput", {
+    description: "Resolved graph URI, cluster counts, compression ratio, and provenance map for entity resolution.",
+  })
+);
 
 /**
- * Exposes validation output for composition by callers of this module.
+ * Decoded resolution activity output produced by {@link ResolutionOutput}.
  *
- * **Example** (Inspect validation output)
+ * @see {@link ResolutionOutput} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ResolutionOutput = typeof ResolutionOutput.Type;
+
+/**
+ * Journaled success payload for {@link makeValidationActivity}.
+ *
+ * **Example** (Construct a conforming validation output)
  *
  * ```ts
  * import { ValidationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import { GcsUri } from "@effect-ontology/Identity"
+ * import * as S from "effect/Schema"
  *
- * console.log(ValidationOutput)
+ * const output = ValidationOutput.make({
+ *   validatedUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/validated.ttl"),
+ *   conforms: true,
+ *   violations: 0,
+ *   reportUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/reports/shacl.json"),
+ *   durationMs: 18
+ * })
+ * console.log(output.conforms) // true
  * ```
  *
- * @category workflows
+ * @category schemas
  * @since 0.0.0
  */
 export const ValidationOutput = ValidationActivityOutput;
 
 /**
- * Validates and represents ingestion output values at runtime.
+ * Decoded validation activity output produced by {@link ValidationOutput}.
  *
- * **Example** (Validate ingestion output)
+ * @see {@link ValidationOutput} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ValidationOutput = typeof ValidationOutput.Type;
+
+/**
+ * Journaled success payload for {@link makeIngestionActivity}.
+ *
+ * **Example** (Decode an ingestion output)
  *
  * ```ts
  * import { IngestionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(IngestionOutput)({}))
+ * const decoded = S.decodeUnknownOption(IngestionOutput)({
+ *   canonicalUri: "gs://beep-ontology-state/graphs/canonical.ttl",
+ *   triplesIngested: 12,
+ *   durationMs: 9
+ * })
+ * console.log(O.map(decoded, (output) => output.triplesIngested))
  * ```
  *
  * @category schemas
@@ -174,18 +223,38 @@ export const IngestionOutput = S.Struct({
   canonicalUri: GcsUri,
   triplesIngested: NonNegativeInt,
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("IngestionOutput", {
+    description: "Canonical graph URI, ingested triple count, and elapsed milliseconds for ingestion.",
+  })
+);
 
 /**
- * Validates and represents claim persistence output values at runtime.
+ * Decoded ingestion activity output produced by {@link IngestionOutput}.
  *
- * **Example** (Validate claim persistence output)
+ * @see {@link IngestionOutput} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IngestionOutput = typeof IngestionOutput.Type;
+
+/**
+ * Journaled success payload for {@link makeClaimPersistenceActivity}.
+ *
+ * **Example** (Decode a claim-persistence output)
  *
  * ```ts
  * import { ClaimPersistenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ClaimPersistenceOutput)({}))
+ * const decoded = S.decodeUnknownOption(ClaimPersistenceOutput)({
+ *   claimsPersisted: 8,
+ *   documentsProcessed: 2,
+ *   documentsFailed: 0,
+ *   durationMs: 21
+ * })
+ * console.log(O.map(decoded, (output) => output.claimsPersisted))
  * ```
  *
  * @category schemas
@@ -199,18 +268,38 @@ export const ClaimPersistenceOutput = S.Struct({
   /** Number of documents that failed claim persistence */
   documentsFailed: NonNegativeInt,
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("ClaimPersistenceOutput", {
+    description: "Persisted claim counts, document totals, failures, and elapsed milliseconds.",
+  })
+);
 
 /**
- * Validates and represents cross batch resolution output values at runtime.
+ * Decoded claim-persistence output produced by {@link ClaimPersistenceOutput}.
  *
- * **Example** (Validate cross batch resolution output)
+ * @see {@link ClaimPersistenceOutput} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimPersistenceOutput = typeof ClaimPersistenceOutput.Type;
+
+/**
+ * Cross-batch resolution counts and an Effect Duration execution measurement.
+ *
+ * **Example** (Construct a cross-batch resolution output)
  *
  * ```ts
+ * import { Duration } from "effect"
  * import { CrossBatchResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
- * import * as S from "effect/Schema"
  *
- * console.log(S.is(CrossBatchResolutionOutput)({}))
+ * const output = CrossBatchResolutionOutput.make({
+ *   entitiesTotal: 10,
+ *   matchedToExisting: 6,
+ *   newCanonicals: 4,
+ *   candidatesEvaluated: 12,
+ *   duration: Duration.millis(40)
+ * })
+ * console.log(output.matchedToExisting) // 6
  * ```
  *
  * @category schemas
@@ -230,20 +319,25 @@ export class CrossBatchResolutionOutput extends S.Class<CrossBatchResolutionOutp
 ) {}
 
 /**
- * Describes the cross batch resolution input data exposed by this module.
+ * Validated batch, graph, enablement, and ontology scope for cross-batch entity resolution.
  *
- *
- * **Example** (Use the CrossBatchResolutionInput contract)
+ * **Example** (Construct a cross-batch resolution input)
  *
  * ```ts
- * import type { CrossBatchResolutionInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import { BatchId, GcsUri, OntologyName } from "@effect-ontology/Identity"
+ * import { CrossBatchResolutionInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * const acceptsCrossBatchResolutionInput = (_value: CrossBatchResolutionInput): void => undefined
- *
- * console.log(acceptsCrossBatchResolutionInput)
+ * const input = CrossBatchResolutionInput.make({
+ *   batchId: BatchId.make("batch-deadbeefcafe"),
+ *   resolvedGraphUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/resolved.ttl"),
+ *   enabled: true,
+ *   ontologyId: OntologyName.make("foaf")
+ * })
+ * console.log(input.enabled) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CrossBatchResolutionInput extends S.Class<CrossBatchResolutionInput>($I`CrossBatchResolutionInput`)(
@@ -438,12 +532,21 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
  * 4. Rewrite entity IRIs to use canonical IDs
  * 5. Serialize resolved graph back to Turtle
  *
- * **Example** (Inspect make resolution activity)
+ * **Example** (Name a resolution activity)
  *
  * ```ts
+ * import { BatchId, GcsUri } from "@effect-ontology/Identity"
+ * import { ResolutionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { makeResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeResolutionActivity)
+ * const activity = makeResolutionActivity(
+ *   ResolutionActivityInput.make({
+ *     batchId: BatchId.make("batch-deadbeefcafe"),
+ *     documentGraphUris: [S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/docs/doc-deadbeefcafe.ttl")]
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -599,12 +702,22 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
  * Validates the resolved graph against SHACL shapes (if provided).
  * Journaled by WorkflowEngine for crash recovery.
  *
- * **Example** (Inspect make validation activity)
+ * **Example** (Name a validation activity)
  *
  * ```ts
+ * import { BatchId, GcsUri } from "@effect-ontology/Identity"
+ * import { ValidationActivityInput } from "@effect-ontology/Schema/Batch"
  * import { makeValidationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeValidationActivity)
+ * const activity = makeValidationActivity(
+ *   ValidationActivityInput.make({
+ *     batchId: BatchId.make("batch-deadbeefcafe"),
+ *     resolvedGraphUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/resolved.ttl"),
+ *     ontologyUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/ontologies/foaf.ttl")
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -751,12 +864,22 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
  * Ingests the validated graph into the canonical store.
  * Journaled by WorkflowEngine for crash recovery.
  *
- * **Example** (Inspect make ingestion activity)
+ * **Example** (Name an ingestion activity)
  *
  * ```ts
+ * import { BatchId, GcsUri, Namespace } from "@effect-ontology/Identity"
+ * import { IngestionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { makeIngestionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeIngestionActivity)
+ * const activity = makeIngestionActivity(
+ *   IngestionActivityInput.make({
+ *     batchId: BatchId.make("batch-deadbeefcafe"),
+ *     validatedGraphUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/validated.ttl"),
+ *     targetNamespace: Namespace.make("foaf")
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -978,13 +1101,20 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
 /**
  * Input for ClaimPersistence activity
  *
- * **Example** (Validate claim persistence input)
+ * **Example** (Decode a claim-persistence input)
  *
  * ```ts
  * import { ClaimPersistenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ClaimPersistenceInput)({}))
+ * const decoded = S.decodeUnknownOption(ClaimPersistenceInput)({
+ *   batchId: "batch-deadbeefcafe",
+ *   ontologyId: "foaf",
+ *   documentGraphUris: ["gs://beep-ontology-state/docs/doc-deadbeefcafe.ttl"],
+ *   targetNamespace: "foaf"
+ * })
+ * console.log(O.map(decoded, (input) => input.ontologyId))
  * ```
  *
  * @category schemas
@@ -1008,11 +1138,16 @@ export const ClaimPersistenceInput = S.Struct({
       headline: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     })
   ).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  $I.annoteSchema("ClaimPersistenceInput", {
+    description: "Batch, ontology, document graph URIs, and namespace used to persist validated claims.",
+  })
+);
+
 /**
- * Describes the claim persistence input data exposed by this module.
+ * Decoded claim-persistence input produced by {@link ClaimPersistenceInput}.
  *
- *
+ * @see {@link ClaimPersistenceInput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1032,12 +1167,21 @@ export type ClaimPersistenceInput = typeof ClaimPersistenceInput.Type;
  * 3. Convert to claims using knowledgeGraphToClaims
  * 4. Persist to PostgreSQL via ClaimPersistenceService
  *
- * **Example** (Inspect make claim persistence activity)
+ * **Example** (Name a claim-persistence activity)
  *
  * ```ts
- * import { makeClaimPersistenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import { ClaimPersistenceInput, makeClaimPersistenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeClaimPersistenceActivity)
+ * const activity = makeClaimPersistenceActivity(
+ *   S.decodeUnknownSync(ClaimPersistenceInput)({
+ *     batchId: "batch-deadbeefcafe",
+ *     ontologyId: "foaf",
+ *     documentGraphUris: ["gs://beep-ontology-state/docs/doc-deadbeefcafe.ttl"],
+ *     targetNamespace: "foaf"
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -1240,12 +1384,22 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
  * 4. Update registry with new/merged entities
  * 5. Return resolution statistics
  *
- * **Example** (Inspect make cross batch resolution activity)
+ * **Example** (Name a cross-batch resolution activity)
  *
  * ```ts
- * import { makeCrossBatchResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import { BatchId, GcsUri, OntologyName } from "@effect-ontology/Identity"
+ * import { CrossBatchResolutionInput, makeCrossBatchResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeCrossBatchResolutionActivity)
+ * const activity = makeCrossBatchResolutionActivity(
+ *   CrossBatchResolutionInput.make({
+ *     batchId: BatchId.make("batch-deadbeefcafe"),
+ *     resolvedGraphUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/resolved.ttl"),
+ *     enabled: true,
+ *     ontologyId: OntologyName.make("foaf")
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -1346,13 +1500,20 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
 /**
  * Input for Inference activity
  *
- * **Example** (Validate inference input)
+ * **Example** (Decode an inference input)
  *
  * ```ts
  * import { InferenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(InferenceInput)({}))
+ * const decoded = S.decodeUnknownOption(InferenceInput)({
+ *   batchId: "batch-deadbeefcafe",
+ *   resolvedGraphUri: "gs://beep-ontology-state/graphs/resolved.ttl",
+ *   profile: "rdfs",
+ *   enabled: true
+ * })
+ * console.log(O.map(decoded, (input) => input.profile))
  * ```
  *
  * @category schemas
@@ -1370,11 +1531,16 @@ export const InferenceInput = S.Struct({
   ),
   /** Whether inference is enabled (default: true) */
   enabled: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  $I.annoteSchema("InferenceInput", {
+    description: "Batch, resolved graph URI, reasoning profile, and enablement flag for RDFS inference.",
+  })
+);
+
 /**
- * Describes the inference input data exposed by this module.
+ * Decoded inference activity input produced by {@link InferenceInput}.
  *
- *
+ * @see {@link InferenceInput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1383,13 +1549,22 @@ export type InferenceInput = typeof InferenceInput.Type;
 /**
  * Output for Inference activity
  *
- * **Example** (Validate inference output)
+ * **Example** (Decode an inference output)
  *
  * ```ts
  * import { InferenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(InferenceOutput)({}))
+ * const decoded = S.decodeUnknownOption(InferenceOutput)({
+ *   enrichedGraphUri: "gs://beep-ontology-state/graphs/enriched.ttl",
+ *   inferredTripleCount: 3,
+ *   totalTripleCount: 15,
+ *   provenanceQuadCount: 3,
+ *   rulesApplied: 2,
+ *   durationMs: 11
+ * })
+ * console.log(O.map(decoded, (output) => output.inferredTripleCount))
  * ```
  *
  * @category schemas
@@ -1408,11 +1583,16 @@ export const InferenceOutput = S.Struct({
   rulesApplied: NonNegativeInt,
   /** Duration in milliseconds */
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("InferenceOutput", {
+    description: "Enriched graph URI, inferred triple counts, provenance quads, and elapsed milliseconds.",
+  })
+);
+
 /**
- * Describes the inference output data exposed by this module.
+ * Decoded inference activity output produced by {@link InferenceOutput}.
  *
- *
+ * @see {@link InferenceOutput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1435,12 +1615,19 @@ export type InferenceOutput = typeof InferenceOutput.Type;
  * 5. Save enriched graph
  * 6. Return statistics
  *
- * **Example** (Inspect make inference activity)
+ * **Example** (Name an inference activity)
  *
  * ```ts
- * import { makeInferenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import { InferenceInput, makeInferenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeInferenceActivity)
+ * const activity = makeInferenceActivity(
+ *   S.decodeUnknownSync(InferenceInput)({
+ *     batchId: "batch-deadbeefcafe",
+ *     resolvedGraphUri: "gs://beep-ontology-state/graphs/resolved.ttl"
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -1593,13 +1780,18 @@ export const makeInferenceActivity = (input: InferenceInput) =>
 /**
  * Input for ComputeOntologyEmbeddings activity
  *
- * **Example** (Validate compute embeddings input)
+ * **Example** (Decode a compute-embeddings input)
  *
  * ```ts
  * import { ComputeEmbeddingsInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ComputeEmbeddingsInput)({}))
+ * const decoded = S.decodeUnknownOption(ComputeEmbeddingsInput)({
+ *   ontologyUri: "gs://beep-ontology-state/ontologies/foaf.ttl",
+ *   model: "nomic-embed-text"
+ * })
+ * console.log(O.map(decoded, (input) => input.ontologyUri))
  * ```
  *
  * @category schemas
@@ -1610,11 +1802,16 @@ export const ComputeEmbeddingsInput = S.Struct({
   ontologyUri: S.String,
   /** Embedding model to use */
   model: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  $I.annoteSchema("ComputeEmbeddingsInput", {
+    description: "Ontology URI and optional embedding model used to pre-compute class and property vectors.",
+  })
+);
+
 /**
- * Describes the compute embeddings input data exposed by this module.
+ * Decoded compute-embeddings input produced by {@link ComputeEmbeddingsInput}.
  *
- *
+ * @see {@link ComputeEmbeddingsInput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1623,13 +1820,22 @@ export type ComputeEmbeddingsInput = typeof ComputeEmbeddingsInput.Type;
 /**
  * Output for ComputeOntologyEmbeddings activity
  *
- * **Example** (Validate compute embeddings output)
+ * **Example** (Decode a compute-embeddings output)
  *
  * ```ts
  * import { ComputeEmbeddingsOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ComputeEmbeddingsOutput)({}))
+ * const decoded = S.decodeUnknownOption(ComputeEmbeddingsOutput)({
+ *   embeddingsUri: "gs://beep-ontology-state/ontologies/foaf.embeddings.json",
+ *   version: "e3b0c44298fc",
+ *   classCount: 12,
+ *   propertyCount: 8,
+ *   dimension: 768,
+ *   durationMs: 90
+ * })
+ * console.log(O.map(decoded, (output) => output.dimension))
  * ```
  *
  * @category schemas
@@ -1648,11 +1854,16 @@ export const ComputeEmbeddingsOutput = S.Struct({
   dimension: NonNegativeInt,
   /** Duration in milliseconds */
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("ComputeEmbeddingsOutput", {
+    description: "Stored embeddings URI, ontology version, class/property counts, vector dimension, and duration.",
+  })
+);
+
 /**
- * Describes the compute embeddings output data exposed by this module.
+ * Decoded compute-embeddings output produced by {@link ComputeEmbeddingsOutput}.
  *
- *
+ * @see {@link ComputeEmbeddingsOutput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1676,12 +1887,18 @@ export type ComputeEmbeddingsOutput = typeof ComputeEmbeddingsOutput.Type;
  *
  * Idempotent: Same ontology content produces same embeddings blob.
  *
- * **Example** (Inspect make compute embeddings activity)
+ * **Example** (Name a compute-embeddings activity)
  *
  * ```ts
- * import { makeComputeEmbeddingsActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import { ComputeEmbeddingsInput, makeComputeEmbeddingsActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeComputeEmbeddingsActivity)
+ * const activity = makeComputeEmbeddingsActivity(
+ *   S.decodeUnknownSync(ComputeEmbeddingsInput)({
+ *     ontologyUri: "gs://beep-ontology-state/ontologies/foaf.ttl"
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -1811,13 +2028,23 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
 /**
  * Entity pair for LLM verification
  *
- * **Example** (Validate entity pair)
+ * **Example** (Decode an entity pair)
  *
  * ```ts
  * import { EntityPair } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(EntityPair)({}))
+ * const decoded = S.decodeUnknownOption(EntityPair)({
+ *   entityA: "eze",
+ *   entityB: "eberechi_eze",
+ *   mentionA: "Eze",
+ *   mentionB: "Eberechi Eze",
+ *   typesA: ["https://schema.org/Person"],
+ *   typesB: ["https://schema.org/Person"],
+ *   similarity: 0.62
+ * })
+ * console.log(O.map(decoded, (pair) => pair.mentionB))
  * ```
  *
  * @category schemas
@@ -1838,11 +2065,16 @@ export const EntityPair = S.Struct({
   typesB: S.Array(S.String),
   /** Initial similarity score from embedding/string matching */
   similarity: UnitInterval,
-});
+}).pipe(
+  $I.annoteSchema("EntityPair", {
+    description: "Two entity mentions, types, and a similarity score presented to the LLM verifier.",
+  })
+);
+
 /**
- * Describes the entity pair data exposed by this module.
+ * Decoded entity pair produced by {@link EntityPair}.
  *
- *
+ * @see {@link EntityPair} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1851,13 +2083,27 @@ export type EntityPair = typeof EntityPair.Type;
 /**
  * Input for LLM verification activity
  *
- * **Example** (Validate llm verification input)
+ * **Example** (Decode an LLM verification input)
  *
  * ```ts
  * import { LlmVerificationInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(LlmVerificationInput)({}))
+ * const decoded = S.decodeUnknownOption(LlmVerificationInput)({
+ *   batchId: "batch-deadbeefcafe",
+ *   entityPairs: [{
+ *     entityA: "eze",
+ *     entityB: "eberechi_eze",
+ *     mentionA: "Eze",
+ *     mentionB: "Eberechi Eze",
+ *     typesA: ["https://schema.org/Person"],
+ *     typesB: ["https://schema.org/Person"],
+ *     similarity: 0.62
+ *   }],
+ *   verificationThreshold: 0.7
+ * })
+ * console.log(O.map(decoded, (input) => input.entityPairs.length))
  * ```
  *
  * @category schemas
@@ -1870,11 +2116,16 @@ export const LlmVerificationInput = S.Struct({
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
   verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  $I.annoteSchema("LlmVerificationInput", {
+    description: "Batch identity, uncertain entity pairs, and optional similarity threshold for LLM verification.",
+  })
+);
+
 /**
- * Describes the llm verification input data exposed by this module.
+ * Decoded LLM verification input produced by {@link LlmVerificationInput}.
  *
- *
+ * @see {@link LlmVerificationInput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1883,13 +2134,21 @@ export type LlmVerificationInput = typeof LlmVerificationInput.Type;
 /**
  * Verified entity pair result
  *
- * **Example** (Validate verified pair)
+ * **Example** (Decode a verified pair)
  *
  * ```ts
  * import { VerifiedPair } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(VerifiedPair)({}))
+ * const decoded = S.decodeUnknownOption(VerifiedPair)({
+ *   entityA: "eze",
+ *   entityB: "eberechi_eze",
+ *   sameEntity: true,
+ *   confidence: 0.91,
+ *   originalSimilarity: 0.62
+ * })
+ * console.log(O.map(decoded, (pair) => pair.sameEntity))
  * ```
  *
  * @category schemas
@@ -1906,11 +2165,16 @@ export const VerifiedPair = S.Struct({
   confidence: Confidence,
   /** Original similarity score */
   originalSimilarity: UnitInterval,
-});
+}).pipe(
+  $I.annoteSchema("VerifiedPair", {
+    description: "LLM same-entity decision, confidence, and original similarity for one candidate pair.",
+  })
+);
+
 /**
- * Describes the verified pair data exposed by this module.
+ * Decoded verified pair produced by {@link VerifiedPair}.
  *
- *
+ * @see {@link VerifiedPair} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -1919,13 +2183,21 @@ export type VerifiedPair = typeof VerifiedPair.Type;
 /**
  * Output for LLM verification activity
  *
- * **Example** (Validate llm verification output)
+ * **Example** (Decode an LLM verification output)
  *
  * ```ts
  * import { LlmVerificationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(LlmVerificationOutput)({}))
+ * const decoded = S.decodeUnknownOption(LlmVerificationOutput)({
+ *   verified: [],
+ *   rejected: [],
+ *   skipped: 1,
+ *   totalProcessed: 1,
+ *   durationMs: 30
+ * })
+ * console.log(O.map(decoded, (output) => output.skipped))
  * ```
  *
  * @category schemas
@@ -1942,11 +2214,15 @@ export const LlmVerificationOutput = S.Struct({
   totalProcessed: NonNegativeInt,
   /** Duration in milliseconds */
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("LlmVerificationOutput", {
+    description: "Verified, rejected, and skipped pair counts produced by LLM entity verification.",
+  })
+);
 /**
- * Describes the llm verification output data exposed by this module.
+ * Decoded LLM verification output produced by {@link LlmVerificationOutput}.
  *
- *
+ * @see {@link LlmVerificationOutput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -2074,12 +2350,19 @@ const VERIFICATION_BATCH_SIZE = 5;
  * - Catch false negatives from pure string/embedding matching
  * - Improve recall for entities with very different surface forms
  *
- * **Example** (Inspect make llm verification activity)
+ * **Example** (Name an LLM verification activity)
  *
  * ```ts
- * import { makeLlmVerificationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import { LlmVerificationInput, makeLlmVerificationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeLlmVerificationActivity)
+ * const activity = makeLlmVerificationActivity(
+ *   S.decodeUnknownSync(LlmVerificationInput)({
+ *     batchId: "batch-deadbeefcafe",
+ *     entityPairs: []
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors
@@ -2235,13 +2518,23 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
 /**
  * Output schema for preprocessing activity
  *
- * **Example** (Validate preprocessing output)
+ * **Example** (Decode a preprocessing output)
  *
  * ```ts
  * import { PreprocessingOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(PreprocessingOutput)({}))
+ * const decoded = S.decodeUnknownOption(PreprocessingOutput)({
+ *   enrichedManifestUri: "gs://beep-ontology-state/batches/batch-deadbeefcafe/enriched.json",
+ *   totalDocuments: 3,
+ *   classifiedCount: 3,
+ *   failedCount: 0,
+ *   totalEstimatedTokens: 1200,
+ *   averageComplexity: 0.4,
+ *   durationMs: 55
+ * })
+ * console.log(O.map(decoded, (output) => output.classifiedCount))
  * ```
  *
  * @category schemas
@@ -2255,11 +2548,16 @@ export const PreprocessingOutput = S.Struct({
   totalEstimatedTokens: NonNegativeInt,
   averageComplexity: UnitInterval,
   durationMs: NonNegNum,
-});
+}).pipe(
+  $I.annoteSchema("PreprocessingOutput", {
+    description: "Enriched manifest URI, classification counts, token estimates, complexity, and duration.",
+  })
+);
+
 /**
- * Describes the preprocessing output data exposed by this module.
+ * Decoded preprocessing output produced by {@link PreprocessingOutput}.
  *
- *
+ * @see {@link PreprocessingOutput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -2312,12 +2610,21 @@ Respond with classifications for each document by index.`;
  * - Computes chunking strategies and priorities
  * - Creates EnrichedManifest for downstream processing
  *
- * **Example** (Inspect make preprocessing activity)
+ * **Example** (Name a preprocessing activity)
  *
  * ```ts
+ * import { BatchId, GcsUri } from "@effect-ontology/Identity"
+ * import { PreprocessingActivityInput } from "@effect-ontology/Schema/DocumentMetadata"
  * import { makePreprocessingActivity } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
  *
- * console.log(makePreprocessingActivity)
+ * const activity = makePreprocessingActivity(
+ *   PreprocessingActivityInput.make({
+ *     batchId: BatchId.make("batch-deadbeefcafe"),
+ *     manifestUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/batches/batch-deadbeefcafe/manifest.json")
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @category constructors

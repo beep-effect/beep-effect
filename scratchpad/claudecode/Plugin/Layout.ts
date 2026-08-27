@@ -1,6 +1,7 @@
 /**
  * Internal helpers for plugin layout and manifest path normalization.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -310,15 +311,26 @@ export const isSkillFilePath = (path: string): boolean => path === "SKILL.md" ||
 /**
  * Synchronizes manifest path fields with a plugin definition's materialized components.
  *
- * **Example** (Synchronize a manifest)
+ * **Example** (Synchronize command and hook path specs)
  *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
  * const manifest = Plugin.Layout.syncManifest(
- *   Plugin.define({ manifest: { name: "example-plugin" } })
+ *   Plugin.define({
+ *     manifest: {
+ *       name: "review-tools",
+ *       commands: "./slash",
+ *       hooks: ["./hooks/a.json", "./hooks/b.json"]
+ *     },
+ *     commands: [Plugin.command({ name: "hi", body: "# /hi\n" })],
+ *     hooksConfig: { PostToolUse: [] }
+ *   })
  * )
- * console.log(manifest.name)
+ *
+ * console.log(O.getOrUndefined(manifest.commands)) // "./slash"
+ * console.log(O.getOrUndefined(manifest.hooks)) // "./hooks/hooks.json"
  * ```
  *
  * @internal

@@ -1,3 +1,11 @@
+/**
+ * Guest Math constants and numeric methods, with `random` and `sumPrecise`
+ * dispatched outside the direct method table.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $ScratchpadId } from "@beep/identity";
 import {LiteralKit} from "@beep/schema";
 import {Effect} from "effect";
 import {A, P} from "@beep/utils";
@@ -13,6 +21,7 @@ import {
 import { type MathMethod, mathMethods } from "../Codemode.method-names.ts";
 
 export { mathMethods } from "../Codemode.method-names.ts";
+const $I = $ScratchpadId.create("codemode/stdlib/StdLib.math");
 // Bun exposes ES2026 Math.sumPrecise before TypeScript's standard library types.
 declare global {
   interface Math {
@@ -20,13 +29,68 @@ declare global {
   }
 }
 
-export const mathConstants = LiteralKit(["PI", "E", "LN2", "LN10", "LOG2E", "LOG10E", "SQRT2", "SQRT1_2"]);
+/**
+ * Closed kit of guest-visible `Math` numeric constants.
+ *
+ * **Example** (Confirm PI membership)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { mathConstants } from "../../../codemode/stdlib/StdLib.math.ts"
+ *
+ * console.log(S.is(mathConstants)("PI"))
+ * console.log(S.is(mathConstants)("random"))
+ * ```
+ *
+ * @see {@link invokeMathMethod} for numeric methods that are not constants.
+ * @category constants
+ * @since 0.0.0
+ */
+export const mathConstants = LiteralKit(["PI", "E", "LN2", "LN10", "LOG2E", "LOG10E", "SQRT2", "SQRT1_2"]).pipe(
+  $I.annoteSchema("mathConstants", {
+    description: "Guest-visible Math numeric constant names.",
+  })
+);
+
+/**
+ * Decoded value produced by {@link mathConstants}.
+ *
+ * @see {@link mathConstants} for the runtime kit of Math constant names.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mathConstants = typeof mathConstants.Type;
 
 const DirectMathMethod = LiteralKit(
   mathMethods.omitOptions(["random", "sumPrecise"])
 );
 type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
 
+/**
+ * Dispatches guest Math methods that consume numbers and return a number.
+ *
+ * **Gotchas**
+ *
+ * Extra arguments are ignored so built-ins still work as `(element, index,
+ * array)` callbacks. Missing consumed arguments become `NaN`. `"random"` and
+ * `"sumPrecise"` are omitted from this dispatcher: `Math.random` is sourced
+ * elsewhere (Clock/random, like `Date.now`), and precise summation uses
+ * {@link invokeMathSumPrecise}.
+ *
+ * **Example** (Take the absolute value of a number)
+ *
+ * ```ts
+ * import { invokeMathMethod } from "../../../codemode/stdlib/StdLib.math.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(invokeMathMethod("abs", [-3], node))
+ * ```
+ *
+ * @see {@link invokeMathSumPrecise} for `Math.sumPrecise` over a sync iterable.
+ * @see {@link mathConstants} for PI and related constant names.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number => {
   // Validate only the arguments the method consumes; like JS, extras are ignored
@@ -83,6 +147,45 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
   });
 };
 
+/**
+ * Sums a synchronous iterable of numbers using host `Math.sumPrecise`.
+ *
+ * **Gotchas**
+ *
+ * The source must be a synchronous iterable of numbers. Async iterables and
+ * non-number items throw `TypeError`. Do not pass `"sumPrecise"` to
+ * {@link invokeMathMethod}; that table omits it.
+ *
+ * **Example** (Sum a synchronous array of numbers)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { invokeMathSumPrecise } from "../../../codemode/stdlib/StdLib.math.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const runner = {
+ *   syncIterator: (value: unknown) => {
+ *     if (!Array.isArray(value)) return Effect.succeed(undefined)
+ *     let index = 0
+ *     return Effect.succeed({
+ *       next: Effect.sync(() => {
+ *         if (index >= value.length) return { done: true, value: undefined }
+ *         const current = value[index]
+ *         index += 1
+ *         return { done: false, value: current }
+ *       }),
+ *       close: Effect.void,
+ *     })
+ *   },
+ * }
+ * const total = await Effect.runPromise(invokeMathSumPrecise(runner, [1, 2, 3], node))
+ * console.log(total)
+ * ```
+ *
+ * @see {@link invokeMathMethod} for the other numeric Math methods.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeMathSumPrecise = <R>(
   runner: SyncIteratorRunner<R>,

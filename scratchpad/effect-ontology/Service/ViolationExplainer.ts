@@ -41,7 +41,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
  * ```ts
  * import { ExplanationError } from "@effect-ontology/Service/ViolationExplainer"
  *
- * console.log(ExplanationError)
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
+ * import { ExplanationError } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * const error = ExplanationError.make({
+ *   message: "The model returned an empty explanation",
+ *   violation: ShaclValidationViolation.make({
+ *     focusNode: "https://example.org/Ada",
+ *     path: makeNamedNode("https://example.org/founded"),
+ *     message: "Expected at least 1 value.",
+ *     severity: "violation"
+ *   })
+ * })
+ * console.log(error._tag) // "ExplanationError"
  * ```
  *
  * @category errors
@@ -79,13 +92,14 @@ export class ExplanationError extends S.TaggedError<ExplanationError>($I`Explana
  * ```ts
  * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
  *
- * console.log(ExplanationContext)
+ * const context = ExplanationContext.empty()
+ * console.log(context.maxTokens)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class ExplanationContext extends S.Class<ExplanationContext>("ExplanationContext")({
+export class ExplanationContext extends S.Class<ExplanationContext>($I`ExplanationContext`)({
   /** The canonical RDF dataset containing the data graph */
   dataStore: S.OptionFromOptionalKey(Dataset).pipe(
     SchemaUtils.withNoneDefault,
@@ -99,7 +113,11 @@ export class ExplanationContext extends S.Class<ExplanationContext>("Explanation
   domainDescription: S.String.pipe(SchemaUtils.withKeyDefaults("")),
   /** Maximum tokens for the explanation */
   maxTokens: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(500))),
-}) {
+  },
+  $I.annote("ExplanationContext", {
+    description: "Neighborhood triples, domain description, and token bound for a SHACL explanation.",
+  })
+) {
   /**
    * Create empty context
    *
@@ -108,7 +126,8 @@ export class ExplanationContext extends S.Class<ExplanationContext>("Explanation
    * ```ts
    * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
    *
-   * console.log(ExplanationContext)
+   * const context = ExplanationContext.empty()
+ * console.log(context.maxTokens)
    * ```
    *
    * @returns Result produced by this operation.
@@ -125,7 +144,8 @@ export class ExplanationContext extends S.Class<ExplanationContext>("Explanation
    * ```ts
    * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
    *
-   * console.log(ExplanationContext)
+   * const context = ExplanationContext.empty()
+ * console.log(context.maxTokens)
    * ```
    *
    * @param turtle - Input consumed by this operation.
@@ -144,13 +164,20 @@ export class ExplanationContext extends S.Class<ExplanationContext>("Explanation
  * ```ts
  * import { LlmViolationExplanation } from "@effect-ontology/Service/ViolationExplainer"
  *
- * console.log(LlmViolationExplanation)
+ * const explanation = LlmViolationExplanation.make({
+ *   focusNode: "https://example.org/Ada",
+ *   explanation: "The founder relation is missing.",
+ *   suggestion: "Add a founded triple.",
+ *   severity: "violation",
+ *   affectedEntities: ["https://example.org/Ada"]
+ * })
+ * console.log(explanation.isCritical) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>("LlmViolationExplanation")({
+export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I`LlmViolationExplanation`)({
   /** Original violation */
   focusNode: S.String,
   /** Path that was violated (if any) */
@@ -165,7 +192,11 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>("L
   affectedEntities: S.Array(S.String),
   /** Confidence in the explanation (0-1) */
   confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(0.8))),
-}) {
+  },
+  $I.annote("LlmViolationExplanation", {
+    description: "Human-readable SHACL explanation, suggested fix, severity, and confidence.",
+  })
+) {
   /**
    * True if this is a critical violation
    *
@@ -174,7 +205,14 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>("L
    * ```ts
    * import { LlmViolationExplanation } from "@effect-ontology/Service/ViolationExplainer"
    *
-   * console.log(LlmViolationExplanation)
+   * const explanation = LlmViolationExplanation.make({
+ *   focusNode: "https://example.org/Ada",
+ *   explanation: "The founder relation is missing.",
+ *   suggestion: "Add a founded triple.",
+ *   severity: "violation",
+ *   affectedEntities: ["https://example.org/Ada"]
+ * })
+ * console.log(explanation.isCritical) // true
    * ```
    *
    * @returns Result produced by this operation.
@@ -192,18 +230,33 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>("L
  * ```ts
  * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
  *
- * console.log(BatchExplanationResult)
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegNum } from "@beep/schema/Number"
+ * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * const batch = BatchExplanationResult.make({
+ *   explanations: [],
+ *   totalViolations: NonNegativeInt.make(1),
+ *   explainedCount: NonNegativeInt.make(0),
+ *   durationMs: NonNegNum.make(20)
+ * })
+ * console.log(batch.explainedCount) // 0
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class BatchExplanationResult extends S.Class<BatchExplanationResult>("BatchExplanationResult")({
-  explanations: S.Array(LlmViolationExplanation),
-  totalViolations: NonNegativeInt,
-  explainedCount: NonNegativeInt,
-  durationMs: NonNegNum,
-}) {
+export class BatchExplanationResult extends S.Class<BatchExplanationResult>($I`BatchExplanationResult`)(
+  {
+    explanations: S.Array(LlmViolationExplanation),
+    totalViolations: NonNegativeInt,
+    explainedCount: NonNegativeInt,
+    durationMs: NonNegNum,
+  },
+  $I.annote("BatchExplanationResult", {
+    description: "Per-violation explanations plus explained and elapsed counters.",
+  })
+) {
   /**
    * True if all violations were explained
    *
@@ -212,7 +265,17 @@ export class BatchExplanationResult extends S.Class<BatchExplanationResult>("Bat
    * ```ts
    * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
    *
-   * console.log(BatchExplanationResult)
+   * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegNum } from "@beep/schema/Number"
+ * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * const batch = BatchExplanationResult.make({
+ *   explanations: [],
+ *   totalViolations: NonNegativeInt.make(1),
+ *   explainedCount: NonNegativeInt.make(0),
+ *   durationMs: NonNegNum.make(20)
+ * })
+ * console.log(batch.explainedCount) // 0
    * ```
    *
    * @returns Result produced by this operation.
@@ -267,9 +330,15 @@ const ExplanationResponseSchema = S.Struct({
  *
  * ```ts
  * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { ViolationExplainer } from "@effect-ontology/Service/ViolationExplainer"
  *
- * console.log(Layer.isLayer(ViolationExplainer.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const explainer = yield* ViolationExplainer
+ *   return explainer
+ * }).pipe(Effect.provide(ViolationExplainer.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

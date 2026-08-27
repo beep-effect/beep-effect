@@ -1,3 +1,10 @@
+/**
+ * Formats guest `console` method arguments into host log lines for the
+ * CodeMode interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Unknown } from "@beep/schema/Unknown";
 import {
   containsOpaqueReference,
@@ -20,11 +27,37 @@ import {
 import {boundedData, coerceToString} from "./StdLib.value.ts";
 import { ConsoleMethod } from "../Codemode.method-names.ts";
 
-export { ConsoleMethod };
+export { ConsoleMethod } from "../Codemode.method-names.ts";
 
 const MAX_CONSOLE_DEPTH = 32;
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
+/**
+ * Renders one guest `console` call as a single host-visible log line.
+ *
+ * **Gotchas**
+ *
+ * `warn`, `error`, and `debug` prefix the line with `[warn]`, `[error]`, or
+ * `[debug]`. `dir` formats only the first argument (or `"undefined"` when none
+ * are supplied) and drops the rest. `table` emits TSV with an `(index)` column
+ * plus optional named columns. Nesting deeper than 32 levels becomes `"..."`;
+ * cycles render as `"[Circular]"`; runtime references as `"[opaque reference]"`;
+ * and promises as `"[Promise (await it to get its value)]"`.
+ *
+ * **Example** (Format log, warn, and table output)
+ *
+ * ```ts
+ * import { formatConsoleMessage } from "../../../codemode/stdlib/StdLib.console.ts"
+ *
+ * console.log(formatConsoleMessage("log", ["ready"]))
+ * console.log(formatConsoleMessage("warn", ["slow query"]))
+ * console.log(formatConsoleMessage("table", [[{ name: "Ada" }]]))
+ * ```
+ *
+ * @see {@link ConsoleMethod} for the closed set of guest console methods.
+ * @category formatting
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);

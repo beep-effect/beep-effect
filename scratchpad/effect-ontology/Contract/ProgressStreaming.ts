@@ -100,40 +100,6 @@ export type ProgressEventTag = typeof ProgressEventTag.Type;
 // =============================================================================
 
 /**
- * Validates the stable document-derived identifier shared by every event in an
- * extraction run.
- *
- * **Example** (Validate a run identifier)
- *
- * ```ts
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const isRunId = S.decodeUnknownOption(S.String.pipe(S.check(S.isPattern(/^doc-[a-f0-9]{12}$/))))
- * console.log(O.isSome(isRunId("doc-0123456789ab"))) // true
- * ```
- *
- * @category identifiers
- * @since 0.0.0
- */
-/**
- * Accepts the UTC-oriented ISO 8601 timestamp representation carried by the
- * streaming protocol.
- *
- * **Example** (Validate an event timestamp)
- *
- * ```ts
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const timestamp = S.String.pipe(S.check(S.isPattern(/^\d{4}-\d{2}-\d{2}T/)))
- * console.log(O.isSome(S.decodeUnknownOption(timestamp)("2026-08-11T12:00:00Z"))) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-/**
  * Constrains protocol progress to an integer percentage from zero through one
  * hundred.
  *
@@ -1067,14 +1033,23 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
 ) {}
 
 /**
- * Validates and represents extraction failed retry strategy values at runtime.
+ * Optional retry policy for a recoverable extraction failure: exponential
+ * backoff, fixed delay, or none.
  *
- * **Example** (Inspect extraction failed retry strategy)
+ * **Example** (Construct exponential and no-retry strategies)
  *
  * ```ts
  * import { ExtractionFailedRetryStrategy } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as S from "effect/Schema"
  *
- * console.log(ExtractionFailedRetryStrategy)
+ * const backoff = S.decodeUnknownSync(ExtractionFailedRetryStrategy)({
+ *   type: "exponential_backoff",
+ *   delayMs: 250,
+ *   maxAttempts: 3
+ * })
+ * const none = S.decodeUnknownSync(ExtractionFailedRetryStrategy)({ type: "none" })
+ * console.log(backoff.type) // "exponential_backoff"
+ * console.log(none.type) // "none"
  * ```
  *
  * @category schemas
@@ -1149,20 +1124,9 @@ export const ExtractionFailedRetryStrategy = pipe(
 );
 
 /**
- * Describes the extraction failed retry strategy data exposed by this module.
+ * Runtime value decoded by {@link ExtractionFailedRetryStrategy}.
  *
- * **Example** (Decode ExtractionFailedRetryStrategy)
- *
- * ```ts
- * import { ExtractionFailedRetryStrategy } from "@effect-ontology/Contract/ProgressStreaming"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExtractionFailedRetryStrategy = (_value: ExtractionFailedRetryStrategy): string => "valid extraction failed retry strategy"
- *
- * console.log(O.map(S.decodeUnknownOption(ExtractionFailedRetryStrategy)({}), summarizeExtractionFailedRetryStrategy))
- * ```
- *
+ * @see {@link ExtractionFailedRetryStrategy} for the tagged-union schema and retry cases.
  * @category type-level
  * @since 0.0.0
  */
@@ -1806,7 +1770,7 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
  *
  * **When to use**
  *
- * Use when use at rpc and websocket boundaries that must decode any progress event before.
+ * Use when decoding any progress event at RPC or WebSocket boundaries before
  * dispatching on `_tag`.
  *
  * **Example** (Identify a progress event)
@@ -1864,15 +1828,6 @@ export const ProgressEvent = S.Union([
 /**
  * Decoded event value produced by {@link ProgressEvent}.
  *
- * **Example** (Narrow a progress event)
- *
- * ```ts
- * import type { ProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
- *
- * const tagOf = (event: ProgressEvent): string => event._tag
- * console.log(typeof tagOf) // "function"
- * ```
- *
  * @see {@link ProgressEvent} for the runtime schema and tagged-union helpers.
  * @category type-level
  * @since 0.0.0
@@ -1882,6 +1837,37 @@ export type ProgressEvent = typeof ProgressEvent.Type;
 // =============================================================================
 // Backpressure Strategy
 // =============================================================================
+
+/**
+ * Queue-overflow strategy used by progress streaming.
+ *
+ * **Example** (Recognize overflow policies)
+ *
+ * ```ts
+ * import { BackpressureStrategy } from "@effect-ontology/Contract/ProgressStreaming"
+ *
+ * console.log(BackpressureStrategy.is.drop_oldest("drop_oldest")) // true
+ * console.log(BackpressureStrategy.is.drop_oldest("block_producer")) // false
+ * ```
+ *
+ * @see {@link BackpressureConfig} for the queue policy that selects one of these strategies.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BackpressureStrategy = LiteralKit(["drop_oldest", "drop_newest", "block_producer", "close_stream"]).pipe(
+  $I.annoteSchema("BackpressureStrategy", {
+    description: "Deterministic queue-overflow policies supported by progress streaming.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link BackpressureStrategy}.
+ *
+ * @see {@link BackpressureStrategy} for the closed literal set and guards.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BackpressureStrategy = typeof BackpressureStrategy.Type;
 
 /**
  * Configuration that bounds the server event queue and selects an overflow
@@ -1906,59 +1892,10 @@ export type ProgressEvent = typeof ProgressEvent.Type;
  *   detailedEventSampleRate: 0.25
  * })
  * console.log(config.strategy) // "block_producer"
+ * console.log(BackpressureConfig.make({}).maxQueueSize) // 1000
  * ```
  *
- * @category configuration
- * @since 0.0.0
- */
-/**
- * Queue-overflow strategy used by progress streaming.
- *
- * **Example** (Inspect overflow strategies)
- *
- * ```ts
- * import { BackpressureStrategy } from "@effect-ontology/Contract/ProgressStreaming"
- *
- * console.log(BackpressureStrategy.Options)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const BackpressureStrategy = LiteralKit(["drop_oldest", "drop_newest", "block_producer", "close_stream"]).pipe(
-  $I.annoteSchema("BackpressureStrategy", {
-    description: "Deterministic queue-overflow policies supported by progress streaming.",
-  })
-);
-
-/**
- * Runtime value accepted by {@link BackpressureStrategy}.
- *
- * **Example** (Use an overflow strategy)
- *
- * ```ts
- * import type { BackpressureStrategy } from "@effect-ontology/Contract/ProgressStreaming"
- *
- * const strategy: BackpressureStrategy = "drop_oldest"
- * console.log(strategy)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type BackpressureStrategy = typeof BackpressureStrategy.Type;
-
-/**
- * Schema-defaulted queue capacity, warning, overflow, blocking, and sampling policy.
- *
- * **Example** (Use the default queue policy)
- *
- * ```ts
- * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
- *
- * console.log(BackpressureConfig.make({}).maxQueueSize)
- * ```
- *
+ * @see {@link BackpressureStrategy} for the overflow policies this config selects.
  * @category configuration
  * @since 0.0.0
  */
@@ -1978,16 +1915,7 @@ export class BackpressureConfig extends S.Class<BackpressureConfig>($I`Backpress
 /**
  * Constructor input accepted by {@link BackpressureConfig}.
  *
- * **Example** (Configure event delivery)
- *
- * ```ts
- * import { PosInt } from "@beep/schema/Int"
- * import type { BackpressureConfigInput } from "@effect-ontology/Contract/ProgressStreaming"
- *
- * const config: BackpressureConfigInput = { maxQueueSize: PosInt.make(500) }
- * console.log(config)
- * ```
- *
+ * @see {@link BackpressureConfig} for the runtime schema and constructor defaults.
  * @category type-level
  * @since 0.0.0
  */

@@ -1,3 +1,11 @@
+/**
+ * Schema-first port of OntoSkills extraction and compiler models: requirements,
+ * execution payloads, knowledge nodes, SKILL.md frontmatter, and Phase 1
+ * content blocks.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $ScratchpadId } from "@beep/identity";
 import { NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
@@ -26,9 +34,15 @@ const RequirementTypeBase = LiteralKit(["EnvVar", "Tool", "Hardware", "API", "Kn
 /**
  * Requirement categories accepted by an OntoSkills skill.
  *
- * **Example** (Tool requirement)
+ * **Example** (Guard a tool requirement)
  *
- * `"Tool"` identifies a required executable or integration.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RequirementType } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(RequirementType)(RequirementType.Enum.Tool)) // true
+ * console.log(S.is(RequirementType)("Plugin")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -38,19 +52,35 @@ export const RequirementType = RequirementTypeBase.pipe(
   SchemaUtils.withLiteralKitStatics(RequirementTypeBase)
 );
 
-/** Decoded requirement category. */
+/**
+ * Decoded value produced by {@link RequirementType}.
+ *
+ * @see {@link RequirementType} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RequirementType = typeof RequirementType.Type;
 
 /**
  * One prerequisite declared by a skill.
  *
- * **Example** (Optional environment variable)
- *
- * `Requirement.make({ type: "EnvVar", value: "API_KEY", optional: true })`.
- *
  * **Details**
  *
  * Missing `optional` values decode to `false`.
+ *
+ * **Example** (Optional environment variable)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Requirement } from "./OntoSkills.models.ts"
+ *
+ * const requirement = S.decodeUnknownSync(Requirement)({
+ *   type: "EnvVar",
+ *   value: "API_KEY",
+ *   optional: true,
+ * })
+ * console.log(requirement.optional) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -71,9 +101,15 @@ const ExecutionPayloadExecutorBase = LiteralKit(["shell", "python", "node", "cla
 /**
  * Supported execution engines for executable skills.
  *
- * **Example** (Python executor)
+ * **Example** (Guard a Python executor)
  *
- * `"python"` selects Python source execution.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ExecutionPayloadExecutor } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(ExecutionPayloadExecutor)(ExecutionPayloadExecutor.Enum.python)) // true
+ * console.log(S.is(ExecutionPayloadExecutor)("ruby")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -85,21 +121,34 @@ export const ExecutionPayloadExecutor = ExecutionPayloadExecutorBase.pipe(
   SchemaUtils.withLiteralKitStatics(ExecutionPayloadExecutorBase)
 );
 
-/** Decoded execution-engine name. */
+/**
+ * Decoded value produced by {@link ExecutionPayloadExecutor}.
+ *
+ * @see {@link ExecutionPayloadExecutor} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExecutionPayloadExecutor = typeof ExecutionPayloadExecutor.Type;
 
 /**
  * Integer seconds transformed into an Effect Duration.
  *
- * **Example** (Thirty-second timeout)
- *
- * Decoding `30` yields `Duration.seconds(30)`.
- *
  * **Details**
  *
  * OntoSkills serializes timeout numbers as seconds, not milliseconds.
  *
- * @category transformations
+ * **Example** (Thirty-second timeout)
+ *
+ * ```ts
+ * import * as Duration from "effect/Duration"
+ * import * as S from "effect/Schema"
+ * import { DurationFromSeconds } from "./OntoSkills.models.ts"
+ *
+ * const timeout = S.decodeUnknownSync(DurationFromSeconds)(30)
+ * console.log(Duration.toSeconds(timeout)) // 30
+ * ```
+ *
+ * @category codecs
  * @since 0.0.0
  */
 export const DurationFromSeconds = NonNegativeInt.pipe(
@@ -115,7 +164,13 @@ export const DurationFromSeconds = NonNegativeInt.pipe(
   })
 );
 
-/** Decoded Effect Duration whose wire unit is seconds. */
+/**
+ * Decoded value produced by {@link DurationFromSeconds}.
+ *
+ * @see {@link DurationFromSeconds} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DurationFromSeconds = typeof DurationFromSeconds.Type;
 
 /**
@@ -123,7 +178,18 @@ export type DurationFromSeconds = typeof DurationFromSeconds.Type;
  *
  * **Example** (Shell payload)
  *
- * `ExecutionPayload.make({ executor: "shell", code: "pwd" })` uses no timeout.
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExecutionPayload } from "./OntoSkills.models.ts"
+ *
+ * const payload = S.decodeUnknownSync(ExecutionPayload)({
+ *   executor: "shell",
+ *   code: "pwd",
+ * })
+ * console.log(payload.executor) // "shell"
+ * console.log(O.isNone(payload.timeout)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -142,13 +208,19 @@ export class ExecutionPayload extends S.Class<ExecutionPayload>($I`ExecutionPayl
 /**
  * Branded OntoSkills state URI.
  *
- * **Example** (Parameterized state)
- *
- * `"oc:Authenticated:admin"` is a valid state URI.
- *
  * **Details**
  *
  * The grammar is `oc:StateName` with an optional alphanumeric, underscore, or hyphen suffix.
+ *
+ * **Example** (Parameterized state)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StateUri } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(StateUri)("oc:Authenticated:admin")) // true
+ * console.log(S.is(StateUri)("ready")) // false
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -168,7 +240,13 @@ export const StateUri = S.String.check(
   SchemaUtils.withCodecStatics
 );
 
-/** Decoded branded OntoSkills state URI. */
+/**
+ * Decoded value produced by {@link StateUri}.
+ *
+ * @see {@link StateUri} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StateUri = typeof StateUri.Type;
 
 /**
@@ -176,7 +254,17 @@ export type StateUri = typeof StateUri.Type;
  *
  * **Example** (Authentication transition)
  *
- * A transition may require `oc:SystemAuthenticated` and yield `oc:DocumentCreated`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StateTransition } from "./OntoSkills.models.ts"
+ *
+ * const transition = S.decodeUnknownSync(StateTransition)({
+ *   requiresState: ["oc:SystemAuthenticated"],
+ *   yieldsState: ["oc:DocumentCreated"],
+ * })
+ * console.log(transition.requiresState) // ["oc:SystemAuthenticated"]
+ * console.log(transition.handlesFailure) // []
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -208,9 +296,17 @@ const StateTransitionWire = StateTransition.pipe(
  *
  * **Example** (JSON ingress)
  *
- * `'{"requires_state":["oc:Ready"]}'` decodes to `StateTransition`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StateTransitionFromWire } from "./OntoSkills.models.ts"
  *
- * @category transformations
+ * const transition = S.decodeUnknownSync(StateTransitionFromWire)(
+ *   '{"requires_state":["oc:Ready"]}'
+ * )
+ * console.log(transition.requiresState) // ["oc:Ready"]
+ * ```
+ *
+ * @category decoding
  * @since 0.0.0
  */
 export const StateTransitionFromWire = S.Union([
@@ -222,7 +318,13 @@ export const StateTransitionFromWire = S.Union([
   })
 );
 
-/** Decoded state transition accepted by the wire codec. */
+/**
+ * Decoded value produced by {@link StateTransitionFromWire}.
+ *
+ * @see {@link StateTransitionFromWire} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StateTransitionFromWire = typeof StateTransitionFromWire.Type;
 
 const ExecutionPayloadWire = ExecutionPayload.pipe(
@@ -236,9 +338,17 @@ const ExecutionPayloadWire = ExecutionPayload.pipe(
  *
  * **Example** (JSON ingress)
  *
- * `'{"executor":"shell","code":"pwd","timeout":30}'` decodes to an execution payload.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ExecutionPayloadFromWire } from "./OntoSkills.models.ts"
  *
- * @category transformations
+ * const payload = S.decodeUnknownSync(ExecutionPayloadFromWire)(
+ *   '{"executor":"shell","code":"pwd","timeout":30}'
+ * )
+ * console.log(payload.executor) // "shell"
+ * ```
+ *
+ * @category decoding
  * @since 0.0.0
  */
 export const ExecutionPayloadFromWire = S.Union([
@@ -250,7 +360,13 @@ export const ExecutionPayloadFromWire = S.Union([
   })
 );
 
-/** Decoded execution payload accepted by the wire codec. */
+/**
+ * Decoded value produced by {@link ExecutionPayloadFromWire}.
+ *
+ * @see {@link ExecutionPayloadFromWire} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExecutionPayloadFromWire = typeof ExecutionPayloadFromWire.Type;
 
 const SeverityLevelBase = LiteralKit(["CRITICAL", "HIGH", "MEDIUM", "LOW"]);
@@ -258,9 +374,15 @@ const SeverityLevelBase = LiteralKit(["CRITICAL", "HIGH", "MEDIUM", "LOW"]);
 /**
  * Optional severity metadata attached to knowledge nodes.
  *
- * **Example** (Critical guidance)
+ * **Example** (Guard critical guidance)
  *
- * `"CRITICAL"` marks guidance whose violation has the highest impact.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SeverityLevel } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(SeverityLevel)(SeverityLevel.Enum.CRITICAL)) // true
+ * console.log(S.is(SeverityLevel)("INFO")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -272,7 +394,13 @@ export const SeverityLevel = SeverityLevelBase.pipe(
   SchemaUtils.withLiteralKitStatics(SeverityLevelBase)
 );
 
-/** Decoded knowledge-node severity. */
+/**
+ * Decoded value produced by {@link SeverityLevel}.
+ *
+ * @see {@link SeverityLevel} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SeverityLevel = typeof SeverityLevel.Type;
 
 const KnowledgeNodeTypeBase = LiteralKit([
@@ -303,9 +431,15 @@ const KnowledgeNodeTypeBase = LiteralKit([
 /**
  * Thirty-one epistemic and operational knowledge-node kinds.
  *
- * **Example** (Operational procedure)
+ * **Example** (Guard an operational procedure)
  *
- * `"Procedure"` identifies ordered operational guidance.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { KnowledgeNodeType } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(KnowledgeNodeType)(KnowledgeNodeType.Enum.Procedure)) // true
+ * console.log(S.is(KnowledgeNodeType)("Note")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -317,19 +451,34 @@ export const KnowledgeNodeType = KnowledgeNodeTypeBase.pipe(
   SchemaUtils.withLiteralKitStatics(KnowledgeNodeTypeBase)
 );
 
-/** Decoded knowledge-node taxonomy member. */
+/**
+ * Decoded value produced by {@link KnowledgeNodeType}.
+ *
+ * @see {@link KnowledgeNodeType} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type KnowledgeNodeType = typeof KnowledgeNodeType.Type;
 
 /**
  * One strict epistemic or operational fact extracted from a skill.
  *
- * **Example** (Directive node)
- *
- * `KnowledgeNode.make({ nodeType: "Standard", directiveContent: "Validate input." })`.
- *
  * **Details**
  *
  * `nodeType` and `directiveContent` are non-empty. Optional Python fields accept both null and omission.
+ *
+ * **Example** (Directive node)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { KnowledgeNode } from "./OntoSkills.models.ts"
+ *
+ * const node = S.decodeUnknownSync(KnowledgeNode)({
+ *   nodeType: "Standard",
+ *   directiveContent: "Validate input.",
+ * })
+ * console.log(node.nodeType) // "Standard"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -387,16 +536,26 @@ const KnowledgeNodeList = S.Array(KnowledgeNode).pipe(
 /**
  * LLM ingress codec that drops invalid knowledge-node elements.
  *
- * **Example** (Partial extraction)
- *
- * A valid node beside malformed JSON decodes to a one-element array.
- *
  * **Gotchas**
  *
  * This codec has no logging side effect. The owning service boundary should compare inputs with retained nodes and emit
  * warnings with request context.
  *
- * @category transformations
+ * **Example** (Partial extraction)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { KnowledgeNodesFromLLM } from "./OntoSkills.models.ts"
+ *
+ * const nodes = S.decodeUnknownSync(KnowledgeNodesFromLLM)([
+ *   { node_type: "Standard", directive_content: "Validate input." },
+ *   "{not-json",
+ * ])
+ * console.log(nodes.length) // 1
+ * console.log(nodes[0]?.nodeType) // "Standard"
+ * ```
+ *
+ * @category decoding
  * @since 0.0.0
  */
 export const KnowledgeNodesFromLLM = S.Array(S.Unknown).pipe(
@@ -412,7 +571,13 @@ export const KnowledgeNodesFromLLM = S.Array(S.Unknown).pipe(
   })
 );
 
-/** Decoded strict nodes retained from an LLM response. */
+/**
+ * Decoded value produced by {@link KnowledgeNodesFromLLM}.
+ *
+ * @see {@link KnowledgeNodesFromLLM} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type KnowledgeNodesFromLLM = typeof KnowledgeNodesFromLLM.Type;
 
 /**
@@ -420,7 +585,17 @@ export type KnowledgeNodesFromLLM = typeof KnowledgeNodesFromLLM.Type;
  *
  * **Example** (First code block)
  *
- * `CodeAnnotation.make({ index: 0, purpose: "Setup", context: "Before execution" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CodeAnnotation } from "./OntoSkills.models.ts"
+ *
+ * const annotation = S.decodeUnknownSync(CodeAnnotation)({
+ *   index: 0,
+ *   purpose: "Setup",
+ *   context: "Before execution",
+ * })
+ * console.log(annotation.purpose) // "Setup"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -437,7 +612,16 @@ export class CodeAnnotation extends S.Class<CodeAnnotation>($I`CodeAnnotation`)(
  *
  * **Example** (Table purpose)
  *
- * `TableAnnotation.make({ index: 0, purpose: "Compatibility matrix" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableAnnotation } from "./OntoSkills.models.ts"
+ *
+ * const annotation = S.decodeUnknownSync(TableAnnotation)({
+ *   index: 0,
+ *   purpose: "Compatibility matrix",
+ * })
+ * console.log(annotation.purpose) // "Compatibility matrix"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -454,7 +638,16 @@ export class TableAnnotation extends S.Class<TableAnnotation>($I`TableAnnotation
  *
  * **Example** (Flow description)
  *
- * `FlowchartAnnotation.make({ index: 0, description: "Retry lifecycle" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FlowchartAnnotation } from "./OntoSkills.models.ts"
+ *
+ * const annotation = S.decodeUnknownSync(FlowchartAnnotation)({
+ *   index: 0,
+ *   description: "Retry lifecycle",
+ * })
+ * console.log(annotation.description) // "Retry lifecycle"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -471,9 +664,15 @@ const TemplateAnnotationTypeBase = LiteralKit(["prompt", "output", "boilerplate"
 /**
  * Roles an extracted template may serve.
  *
- * **Example** (Prompt template)
+ * **Example** (Guard a prompt template)
  *
- * `"prompt"` identifies text intended as model input.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TemplateAnnotationType } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(TemplateAnnotationType)(TemplateAnnotationType.Enum.prompt)) // true
+ * console.log(S.is(TemplateAnnotationType)("system")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -485,7 +684,13 @@ export const TemplateAnnotationType = TemplateAnnotationTypeBase.pipe(
   SchemaUtils.withLiteralKitStatics(TemplateAnnotationTypeBase)
 );
 
-/** Decoded template annotation role. */
+/**
+ * Decoded value produced by {@link TemplateAnnotationType}.
+ *
+ * @see {@link TemplateAnnotationType} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type TemplateAnnotationType = typeof TemplateAnnotationType.Type;
 
 /**
@@ -493,7 +698,16 @@ export type TemplateAnnotationType = typeof TemplateAnnotationType.Type;
  *
  * **Example** (Output template)
  *
- * `TemplateAnnotation.make({ index: 0, templateType: "output" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TemplateAnnotation } from "./OntoSkills.models.ts"
+ *
+ * const annotation = S.decodeUnknownSync(TemplateAnnotation)({
+ *   index: 0,
+ *   templateType: "output",
+ * })
+ * console.log(annotation.templateType) // "output"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -510,9 +724,15 @@ const ReferenceFilePurposeBase = LiteralKit(["api-reference", "examples", "guide
 /**
  * Progressive-disclosure roles for reference files.
  *
- * **Example** (API reference)
+ * **Example** (Guard a guide purpose)
  *
- * `"api-reference"` identifies detailed callable documentation.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ReferenceFilePurpose } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(ReferenceFilePurpose)(ReferenceFilePurpose.Enum.guide)) // true
+ * console.log(S.is(ReferenceFilePurpose)("readme")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -524,7 +744,13 @@ export const ReferenceFilePurpose = ReferenceFilePurposeBase.pipe(
   SchemaUtils.withLiteralKitStatics(ReferenceFilePurposeBase)
 );
 
-/** Decoded reference-file purpose. */
+/**
+ * Decoded value produced by {@link ReferenceFilePurpose}.
+ *
+ * @see {@link ReferenceFilePurpose} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ReferenceFilePurpose = typeof ReferenceFilePurpose.Type;
 
 /**
@@ -532,7 +758,16 @@ export type ReferenceFilePurpose = typeof ReferenceFilePurpose.Type;
  *
  * **Example** (Guide reference)
  *
- * `ReferenceFile.make({ relativePath: "references/guide.md", purpose: "guide" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ReferenceFile } from "./OntoSkills.models.ts"
+ *
+ * const reference = S.decodeUnknownSync(ReferenceFile)({
+ *   relativePath: "references/guide.md",
+ *   purpose: "guide",
+ * })
+ * console.log(reference.purpose) // "guide"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -549,7 +784,17 @@ export class ReferenceFile extends S.Class<ReferenceFile>($I`ReferenceFile`)(
  *
  * **Example** (Named example)
  *
- * `Example.make({ name: "CSV", inputDescription: "Rows", outputExample: "a,b" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Example } from "./OntoSkills.models.ts"
+ *
+ * const sample = S.decodeUnknownSync(Example)({
+ *   name: "CSV",
+ *   inputDescription: "Rows",
+ *   outputExample: "a,b",
+ * })
+ * console.log(sample.outputExample) // "a,b"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -571,7 +816,17 @@ export class Example extends S.Class<Example>($I`Example`)(
  *
  * **Example** (First workflow step)
  *
- * `WorkflowStep.make({ stepId: "prepare", description: "Prepare input" })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WorkflowStep } from "./OntoSkills.models.ts"
+ *
+ * const step = S.decodeUnknownSync(WorkflowStep)({
+ *   stepId: "prepare",
+ *   description: "Prepare input",
+ * })
+ * console.log(step.stepId) // "prepare"
+ * console.log(step.dependsOn) // []
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -593,7 +848,19 @@ export class WorkflowStep extends S.Class<WorkflowStep>($I`WorkflowStep`)(
  *
  * **Example** (Single-step workflow)
  *
- * `Workflow.make({ workflowId: "build", name: "Build", description: "Build output", steps: [] })`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Workflow } from "./OntoSkills.models.ts"
+ *
+ * const workflow = S.decodeUnknownSync(Workflow)({
+ *   workflowId: "build",
+ *   name: "Build",
+ *   description: "Build output",
+ *   steps: [{ stepId: "prepare", description: "Prepare input" }],
+ * })
+ * console.log(workflow.steps.length) // 1
+ * console.log(workflow.steps[0]?.stepId) // "prepare"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -615,7 +882,13 @@ export class Workflow extends S.Class<Workflow>($I`Workflow`)(
  *
  * **Example** (Skill slug)
  *
- * `"docx-review"` is a valid skill identifier.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SkillId } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(SkillId)("docx-review")) // true
+ * console.log(S.is(SkillId)("Docx Review")) // false
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -635,7 +908,13 @@ export const SkillId = NonEmptyTrimmedStr.check(
   SchemaUtils.withCodecStatics
 );
 
-/** Decoded branded skill identifier. */
+/**
+ * Decoded value produced by {@link SkillId}.
+ *
+ * @see {@link SkillId} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SkillId = typeof SkillId.Type;
 
 const isRelationUri = (value: string): boolean =>
@@ -691,15 +970,21 @@ const RelationValue = S.String.check(
 /**
  * Relation reference normalized to a URI or final bare skill-id segment.
  *
- * **Example** (Qualified relation)
- *
- * Decoding `"author/package/office"` yields `"office"`.
- *
  * **Details**
  *
  * HTTP, HTTPS, and `oc:` URIs pass through after trimming.
  *
- * @category transformations
+ * **Example** (Qualified relation)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RelationId } from "./OntoSkills.models.ts"
+ *
+ * const relation = S.decodeUnknownSync(RelationId)("author/package/office")
+ * console.log(relation) // "office"
+ * ```
+ *
+ * @category codecs
  * @since 0.0.0
  */
 export const RelationId = RelationInput.pipe(
@@ -719,7 +1004,13 @@ export const RelationId = RelationInput.pipe(
   SchemaUtils.withCodecStatics
 );
 
-/** Decoded branded relation target. */
+/**
+ * Decoded value produced by {@link RelationId}.
+ *
+ * @see {@link RelationId} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RelationId = typeof RelationId.Type;
 
 const BooleanFromOntoSkillsString = S.String.pipe(
@@ -740,9 +1031,15 @@ const BooleanFromOntoSkillsString = S.String.pipe(
  *
  * **Example** (Truthy string)
  *
- * `"yes"` decodes to `true`; strings outside `true`, `yes`, and `1` decode to `false`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { IsUserInvocable } from "./OntoSkills.models.ts"
  *
- * @category transformations
+ * console.log(S.decodeUnknownSync(IsUserInvocable)("yes")) // true
+ * console.log(S.decodeUnknownSync(IsUserInvocable)("no")) // false
+ * ```
+ *
+ * @category codecs
  * @since 0.0.0
  */
 export const IsUserInvocable = S.Union([S.Boolean, BooleanFromOntoSkillsString]).pipe(
@@ -751,7 +1048,13 @@ export const IsUserInvocable = S.Union([S.Boolean, BooleanFromOntoSkillsString])
   })
 );
 
-/** Decoded invocation flag. */
+/**
+ * Decoded value produced by {@link IsUserInvocable}.
+ *
+ * @see {@link IsUserInvocable} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IsUserInvocable = typeof IsUserInvocable.Type;
 
 const SkillTypeBase = LiteralKit(["executable", "declarative"]);
@@ -759,9 +1062,15 @@ const SkillTypeBase = LiteralKit(["executable", "declarative"]);
 /**
  * Derived execution character of a skill.
  *
- * **Example** (Executable skill)
+ * **Example** (Guard an executable skill type)
  *
- * A present execution payload derives `"executable"`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SkillType } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(SkillType)(SkillType.Enum.executable)) // true
+ * console.log(S.is(SkillType)("script")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -773,20 +1082,39 @@ export const SkillType = SkillTypeBase.pipe(
   SchemaUtils.withLiteralKitStatics(SkillTypeBase)
 );
 
-/** Decoded derived skill type. */
+/**
+ * Decoded value produced by {@link SkillType}.
+ *
+ * @see {@link SkillType} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SkillType = typeof SkillType.Type;
 
 /**
  * Flat schema-first equivalent of the Python `ExtractedSkill` model.
  *
- * **Example** (Declarative skill)
- *
- * An extracted skill without `executionPayload` has `skillType === "declarative"`.
- *
  * **Details**
  *
  * Relation identifiers normalize during decode. Hashes are SHA-256 and optional Python values become `Option`.
  * The computed `skillType` getter is decoded behavior and is not an encoded field.
+ *
+ * **Example** (Declarative skill)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ExtractedSkill } from "./OntoSkills.models.ts"
+ *
+ * const skill = S.decodeUnknownSync(ExtractedSkill)({
+ *   id: "docx-review",
+ *   hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   nature: "review",
+ *   genus: "document",
+ *   differentia: "DOCX-specific comments",
+ *   intents: ["review-docx"],
+ * })
+ * console.log(skill.skillType) // "declarative"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -876,16 +1204,22 @@ const SkillNameValue = S.String.check(
 /**
  * Lossy canonical name codec for skill frontmatter.
  *
- * **Example** (Scoped name)
- *
- * Decoding `"CKM:Banner Design"` yields `"ckm-banner-design"`.
- *
  * **Details**
  *
  * The normalization law is idempotence: normalizing an already normalized name returns the same name. Raw spelling is
  * intentionally not recoverable, so raw decode/encode equality is not a law for this codec.
  *
- * @category transformations
+ * **Example** (Scoped name)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SkillName } from "./OntoSkills.models.ts"
+ *
+ * const name = S.decodeUnknownSync(SkillName)("CKM:Banner Design")
+ * console.log(name) // "ckm-banner-design"
+ * ```
+ *
+ * @category codecs
  * @since 0.0.0
  */
 export const SkillName = S.String.pipe(
@@ -898,7 +1232,13 @@ export const SkillName = S.String.pipe(
   })
 );
 
-/** Decoded branded canonical skill name. */
+/**
+ * Decoded value produced by {@link SkillName}.
+ *
+ * @see {@link SkillName} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SkillName = typeof SkillName.Type;
 
 /**
@@ -906,7 +1246,13 @@ export type SkillName = typeof SkillName.Type;
  *
  * **Example** (Plain description)
  *
- * `"Reviews DOCX files"` is valid; an HTML opening tag is rejected.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FrontmatterDescription } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(FrontmatterDescription)("Reviews DOCX files")) // true
+ * console.log(S.is(FrontmatterDescription)("<p>nope</p>")) // false
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -930,7 +1276,13 @@ export const FrontmatterDescription = S.String.check(
   })
 );
 
-/** Decoded frontmatter description text. */
+/**
+ * Decoded value produced by {@link FrontmatterDescription}.
+ *
+ * @see {@link FrontmatterDescription} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FrontmatterDescription = typeof FrontmatterDescription.Type;
 
 /**
@@ -938,7 +1290,16 @@ export type FrontmatterDescription = typeof FrontmatterDescription.Type;
  *
  * **Example** (Minimal frontmatter)
  *
- * A minimal value provides canonical `name` and validated `description` fields.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Frontmatter } from "./OntoSkills.models.ts"
+ *
+ * const frontmatter = S.decodeUnknownSync(Frontmatter)({
+ *   name: "CKM:Banner Design",
+ *   description: "Reviews DOCX files",
+ * })
+ * console.log(frontmatter.name) // "ckm-banner-design"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -960,7 +1321,18 @@ export class Frontmatter extends S.Class<Frontmatter>($I`Frontmatter`)(
  *
  * **Example** (Text file)
  *
- * A file record includes its relative path, SHA-256 content hash, byte size, and MIME type.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FileInfo } from "./OntoSkills.models.ts"
+ *
+ * const file = S.decodeUnknownSync(FileInfo)({
+ *   relativePath: "SKILL.md",
+ *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   fileSize: 128,
+ *   mimeType: "text/markdown",
+ * })
+ * console.log(file.relativePath) // "SKILL.md"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -982,9 +1354,15 @@ const FlowchartTypeBase = LiteralKit(["graphviz", "mermaid"]);
 /**
  * Supported flowchart source languages.
  *
- * **Example** (Mermaid chart)
+ * **Example** (Guard a Mermaid chart)
  *
- * `"mermaid"` identifies Mermaid source.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FlowchartType } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(FlowchartType)(FlowchartType.Enum.mermaid)) // true
+ * console.log(S.is(FlowchartType)("plantuml")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -996,7 +1374,13 @@ export const FlowchartType = FlowchartTypeBase.pipe(
   SchemaUtils.withLiteralKitStatics(FlowchartTypeBase)
 );
 
-/** Decoded flowchart source language. */
+/**
+ * Decoded value produced by {@link FlowchartType}.
+ *
+ * @see {@link FlowchartType} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FlowchartType = typeof FlowchartType.Type;
 
 const ContentBlockTypeBase = LiteralKit([
@@ -1016,9 +1400,15 @@ const ContentBlockTypeBase = LiteralKit([
 /**
  * Discriminator values for all Phase 1 content blocks.
  *
- * **Example** (Code block)
+ * **Example** (Guard a code-block discriminator)
  *
- * `"code_block"` selects the code-block member schema.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ContentBlockType } from "./OntoSkills.models.ts"
+ *
+ * console.log(S.is(ContentBlockType)(ContentBlockType.Enum.code_block)) // true
+ * console.log(S.is(ContentBlockType)("image")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1030,7 +1420,13 @@ export const ContentBlockType = ContentBlockTypeBase.pipe(
   SchemaUtils.withLiteralKitStatics(ContentBlockTypeBase)
 );
 
-/** Decoded content-block discriminator. */
+/**
+ * Decoded value produced by {@link ContentBlockType}.
+ *
+ * @see {@link ContentBlockType} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ContentBlockType = typeof ContentBlockType.Type;
 
 /**
@@ -1038,7 +1434,18 @@ export type ContentBlockType = typeof ContentBlockType.Type;
  *
  * **Example** (Code block member)
  *
- * The `blockType` discriminator is canonically `"code_block"`.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CodeBlock } from "./OntoSkills.models.ts"
+ *
+ * const block = S.decodeUnknownSync(CodeBlock)({
+ *   language: "ts",
+ *   content: "export const x = 1",
+ *   sourceLineStart: 1,
+ *   sourceLineEnd: 1,
+ * })
+ * console.log(block.blockType) // "code_block"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1064,7 +1471,18 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
  *
  * **Example** (Uncaptioned table)
  *
- * A required `caption: null` decodes to `Option.none()`.
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { MarkdownTable } from "./OntoSkills.models.ts"
+ *
+ * const table = S.decodeUnknownSync(MarkdownTable)({
+ *   markdownSource: "| a | b |\n| --- | --- |\n| 1 | 2 |",
+ *   caption: null,
+ *   rowCount: 1,
+ * })
+ * console.log(O.isNone(table.caption)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1089,7 +1507,16 @@ export class MarkdownTable extends S.Class<MarkdownTable>($I`MarkdownTable`)(
  *
  * **Example** (Flowchart member)
  *
- * `chartType: "graphviz"` selects Graphviz interpretation.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FlowchartBlock } from "./OntoSkills.models.ts"
+ *
+ * const chart = S.decodeUnknownSync(FlowchartBlock)({
+ *   source: "digraph { A -> B }",
+ *   chartType: "graphviz",
+ * })
+ * console.log(chart.chartType) // "graphviz"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1108,7 +1535,13 @@ export class FlowchartBlock extends S.Class<FlowchartBlock>($I`FlowchartBlock`)(
   static readonly thunkThis = () => FlowchartBlock;
 }
 
-/** Recursive procedure-step decoded and encoded shapes. */
+/**
+ * Recursive procedure-step decoded and encoded shapes.
+ *
+ * @see {@link ProcedureStep} for the runtime codec that validates those shapes.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ProcedureStep {
   export type Type = {
     readonly text: NonEmptyTrimmedStr;
@@ -1139,13 +1572,23 @@ const ProcedureStepChildren: S.Codec<
 /**
  * One one-based step in an ordered procedure.
  *
- * **Example** (First step)
- *
- * `position: 1` identifies the first procedure item.
- *
  * **Details**
  *
  * This is an annotated recursive struct codec because a self-referential class base expression is not representable.
+ *
+ * **Example** (First step)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ProcedureStep } from "./OntoSkills.models.ts"
+ *
+ * const step = S.decodeUnknownSync(ProcedureStep)({
+ *   text: "Install dependencies",
+ *   position: 1,
+ * })
+ * console.log(step.position) // 1
+ * console.log(step.children.length) // 0
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -1160,7 +1603,13 @@ export const ProcedureStep: S.Codec<ProcedureStep.Type, ProcedureStep.Encoded> =
   })
 );
 
-/** Decoded recursive procedure step. */
+/**
+ * Decoded value produced by {@link ProcedureStep}.
+ *
+ * @see {@link ProcedureStep} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ProcedureStep = typeof ProcedureStep.Type;
 
 /**
@@ -1168,7 +1617,16 @@ export type ProcedureStep = typeof ProcedureStep.Type;
  *
  * **Example** (Procedure member)
  *
- * The `items` array holds one-based `ProcedureStep` values.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OrderedProcedure } from "./OntoSkills.models.ts"
+ *
+ * const procedure = S.decodeUnknownSync(OrderedProcedure)({
+ *   items: [{ text: "Install dependencies", position: 1 }],
+ * })
+ * console.log(procedure.blockType) // "ordered_procedure"
+ * console.log(procedure.items[0]?.position) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1193,7 +1651,16 @@ export class OrderedProcedure extends S.Class<OrderedProcedure>($I`OrderedProced
  *
  * **Example** (Template member)
  *
- * `detectedVariables` lists placeholders found in the template content.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TemplateBlock } from "./OntoSkills.models.ts"
+ *
+ * const template = S.decodeUnknownSync(TemplateBlock)({
+ *   content: "Hello {{name}}",
+ *   detectedVariables: ["name"],
+ * })
+ * console.log(template.detectedVariables) // ["name"]
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1217,7 +1684,16 @@ export class TemplateBlock extends S.Class<TemplateBlock>($I`TemplateBlock`)(
  *
  * **Example** (Paragraph member)
  *
- * `textContent` preserves the paragraph text.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Paragraph } from "./OntoSkills.models.ts"
+ *
+ * const paragraph = S.decodeUnknownSync(Paragraph)({
+ *   textContent: "Reviews DOCX files.",
+ *   contentOrder: 0,
+ * })
+ * console.log(paragraph.blockType) // "paragraph"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1235,7 +1711,13 @@ export class Paragraph extends S.Class<Paragraph>($I`Paragraph`)(
   static readonly thunkThis = () => Paragraph;
 }
 
-/** Recursive bullet-item decoded and encoded shapes. */
+/**
+ * Recursive bullet-item decoded and encoded shapes.
+ *
+ * @see {@link BulletItem} for the runtime codec that validates those shapes.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace BulletItem {
   export type Type = {
     readonly text: NonEmptyTrimmedStr;
@@ -1266,13 +1748,23 @@ const BulletItemChildren: S.Codec<
 /**
  * One item in an unordered list.
  *
- * **Example** (Nested bullet)
- *
- * `children` may contain any content-block member.
- *
  * **Details**
  *
  * This is an annotated recursive struct codec because a self-referential class base expression is not representable.
+ *
+ * **Example** (Nested bullet)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BulletItem } from "./OntoSkills.models.ts"
+ *
+ * const item = S.decodeUnknownSync(BulletItem)({
+ *   text: "Prefer schema-first models",
+ *   order: 0,
+ * })
+ * console.log(item.order) // 0
+ * console.log(item.children.length) // 0
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -1287,7 +1779,13 @@ export const BulletItem: S.Codec<BulletItem.Type, BulletItem.Encoded> = S.Struct
   })
 );
 
-/** Decoded recursive bullet item. */
+/**
+ * Decoded value produced by {@link BulletItem}.
+ *
+ * @see {@link BulletItem} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BulletItem = typeof BulletItem.Type;
 
 /**
@@ -1295,7 +1793,17 @@ export type BulletItem = typeof BulletItem.Type;
  *
  * **Example** (Bullet-list member)
  *
- * `items` contains ordered `BulletItem` records despite unordered visual markers.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BulletListBlock } from "./OntoSkills.models.ts"
+ *
+ * const list = S.decodeUnknownSync(BulletListBlock)({
+ *   items: [{ text: "Prefer schema-first models", order: 0 }],
+ *   contentOrder: 2,
+ * })
+ * console.log(list.blockType) // "bullet_list"
+ * console.log(list.items[0]?.text) // "Prefer schema-first models"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1318,7 +1826,18 @@ export class BulletListBlock extends S.Class<BulletListBlock>($I`BulletListBlock
  *
  * **Example** (Anonymous quote)
  *
- * `attribution: null` decodes to `Option.none()`.
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BlockQuoteBlock } from "./OntoSkills.models.ts"
+ *
+ * const quote = S.decodeUnknownSync(BlockQuoteBlock)({
+ *   content: "Ship the simplest codec that holds.",
+ *   attribution: null,
+ *   contentOrder: 3,
+ * })
+ * console.log(O.isNone(quote.attribution)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1342,7 +1861,16 @@ export class BlockQuoteBlock extends S.Class<BlockQuoteBlock>($I`BlockQuoteBlock
  *
  * **Example** (HTML member)
  *
- * `content` preserves the raw HTML source.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HTMLBlock } from "./OntoSkills.models.ts"
+ *
+ * const html = S.decodeUnknownSync(HTMLBlock)({
+ *   content: "<div class=\"callout\">Note</div>",
+ *   contentOrder: 4,
+ * })
+ * console.log(html.blockType) // "html_block"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1365,7 +1893,16 @@ export class HTMLBlock extends S.Class<HTMLBlock>($I`HTMLBlock`)(
  *
  * **Example** (Empty properties)
  *
- * Omitted `properties` decode to an empty string record.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FrontmatterBlock } from "./OntoSkills.models.ts"
+ *
+ * const yaml = S.decodeUnknownSync(FrontmatterBlock)({
+ *   rawYaml: "name: docx-review",
+ *   contentOrder: 0,
+ * })
+ * console.log(yaml.properties) // {}
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1389,7 +1926,17 @@ export class FrontmatterBlock extends S.Class<FrontmatterBlock>($I`FrontmatterBl
  *
  * **Example** (Second-level heading)
  *
- * `level: 2` identifies an H2 heading.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeadingBlock } from "./OntoSkills.models.ts"
+ *
+ * const heading = S.decodeUnknownSync(HeadingBlock)({
+ *   text: "Usage",
+ *   level: 2,
+ *   contentOrder: 1,
+ * })
+ * console.log(heading.level) // 2
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1413,7 +1960,17 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
  *
  * **Example** (Paragraph branch)
  *
- * A value with `blockType: "paragraph"` is decoded by the `Paragraph` member.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ContentBlock } from "./OntoSkills.models.ts"
+ *
+ * const block = S.decodeUnknownSync(ContentBlock)({
+ *   blockType: "paragraph",
+ *   textContent: "Reviews DOCX files.",
+ *   contentOrder: 0,
+ * })
+ * console.log(block.blockType) // "paragraph"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1439,10 +1996,22 @@ export const ContentBlock: S.Codec<ContentBlock.Type, ContentBlock.Encoded> = Co
   })
 );
 
-/** Decoded member of the content-block union. */
+/**
+ * Decoded value produced by {@link ContentBlock}.
+ *
+ * @see {@link ContentBlock} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ContentBlock = typeof ContentBlock.Type;
 
-/** Recursive content-block type and encoded form used by suspended child references. */
+/**
+ * Recursive content-block type and encoded form used by suspended child references.
+ *
+ * @see {@link ContentBlock} for the runtime codec that validates those shapes.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ContentBlock {
   export type Type =
     | Paragraph
@@ -1525,7 +2094,13 @@ export declare namespace ContentBlock {
       };
 }
 
-/** Recursive section decoded and encoded shapes. */
+/**
+ * Recursive section decoded and encoded shapes.
+ *
+ * @see {@link Section} for the runtime codec that validates those shapes.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace Section {
   export type Type = {
     readonly title: NonEmptyTrimmedStr;
@@ -1570,13 +2145,24 @@ const SectionSubsections: S.Codec<ReadonlyArray<Section.Type>, ReadonlyArray<Sec
 /**
  * Heading-led section in a markdown document.
  *
- * **Example** (Empty section)
- *
- * Omitted `content` and `subsections` decode to empty arrays.
- *
  * **Details**
  *
  * This is an annotated recursive struct codec so nested sections share one suspended schema source of truth.
+ *
+ * **Example** (Empty section)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Section } from "./OntoSkills.models.ts"
+ *
+ * const section = S.decodeUnknownSync(Section)({
+ *   title: "Usage",
+ *   level: 2,
+ *   order: 0,
+ * })
+ * console.log(section.content.length) // 0
+ * console.log(section.subsections.length) // 0
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -1593,7 +2179,13 @@ export const Section: S.Codec<Section.Type, Section.Encoded> = S.Struct({
   })
 );
 
-/** Decoded recursive document section. */
+/**
+ * Decoded value produced by {@link Section}.
+ *
+ * @see {@link Section} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Section = typeof Section.Type;
 
 /**
@@ -1601,7 +2193,14 @@ export type Section = typeof Section.Type;
  *
  * **Example** (Empty extraction)
  *
- * All six omitted collections decode to empty arrays.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ContentExtraction } from "./OntoSkills.models.ts"
+ *
+ * const extraction = S.decodeUnknownSync(ContentExtraction)({})
+ * console.log(extraction.sections.length) // 0
+ * console.log(extraction.codeBlocks.length) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1625,7 +2224,25 @@ export class ContentExtraction extends S.Class<ContentExtraction>($I`ContentExtr
  *
  * **Example** (Root block)
  *
- * `parentBlockId: null` represents a top-level block.
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { FlatBlock } from "./OntoSkills.models.ts"
+ *
+ * const flat = S.decodeUnknownSync(FlatBlock)({
+ *   blockId: "p-1",
+ *   blockType: "paragraph",
+ *   content: {
+ *     blockType: "paragraph",
+ *     textContent: "Reviews DOCX files.",
+ *     contentOrder: 0,
+ *   },
+ *   lineStart: 1,
+ *   lineEnd: 1,
+ *   parentBlockId: null,
+ * })
+ * console.log(O.isNone(flat.parentBlockId)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1644,7 +2261,13 @@ export class FlatBlock extends S.Class<FlatBlock>($I`FlatBlock`)(
   })
 ) {}
 
-/** Recursive document-skeleton node decoded and encoded shapes. */
+/**
+ * Recursive document-skeleton node decoded and encoded shapes.
+ *
+ * @see {@link SkeletonNode} for the runtime codec that validates those shapes.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SkeletonNode {
   export type Type = {
     readonly blockId: NonEmptyTrimmedStr;
@@ -1673,13 +2296,22 @@ const SkeletonNodeChildren: S.Codec<
 /**
  * Recursive node in an LLM-produced document skeleton.
  *
- * **Example** (Leaf node)
- *
- * Omitted `children` decode to an empty array.
- *
  * **Details**
  *
  * This is an annotated recursive struct codec so every child is decoded through the same node schema.
+ *
+ * **Example** (Leaf node)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SkeletonNode } from "./OntoSkills.models.ts"
+ *
+ * const node = S.decodeUnknownSync(SkeletonNode)({
+ *   blockId: "heading-1",
+ * })
+ * console.log(node.blockId) // "heading-1"
+ * console.log(node.children.length) // 0
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -1693,7 +2325,13 @@ export const SkeletonNode: S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> = S.
   })
 );
 
-/** Decoded recursive document-skeleton node. */
+/**
+ * Decoded value produced by {@link SkeletonNode}.
+ *
+ * @see {@link SkeletonNode} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SkeletonNode = typeof SkeletonNode.Type;
 
 /**
@@ -1701,7 +2339,15 @@ export type SkeletonNode = typeof SkeletonNode.Type;
  *
  * **Example** (Leaf list item)
  *
- * Omitted child block identifiers decode to an empty array.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SkeletonListItem } from "./OntoSkills.models.ts"
+ *
+ * const item = S.decodeUnknownSync(SkeletonListItem)({
+ *   textBlockId: "li-1",
+ * })
+ * console.log(item.children) // []
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1721,7 +2367,16 @@ export class SkeletonListItem extends S.Class<SkeletonListItem>($I`SkeletonListI
  *
  * **Example** (Section-only skeleton)
  *
- * Omitted `listItems` decode to an empty record.
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DocumentSkeleton } from "./OntoSkills.models.ts"
+ *
+ * const skeleton = S.decodeUnknownSync(DocumentSkeleton)({
+ *   sections: [{ blockId: "heading-1" }],
+ * })
+ * console.log(skeleton.listItems) // {}
+ * console.log(skeleton.sections[0]?.blockId) // "heading-1"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1741,7 +2396,27 @@ export class DocumentSkeleton extends S.Class<DocumentSkeleton>($I`DocumentSkele
  *
  * **Example** (Deferred extraction)
  *
- * `contentExtraction: null` records a scan performed without structural parsing.
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { DirectoryScan } from "./OntoSkills.models.ts"
+ *
+ * const scan = S.decodeUnknownSync(DirectoryScan)({
+ *   frontmatter: {
+ *     name: "docx-review",
+ *     description: "Reviews DOCX files",
+ *   },
+ *   skillId: "docx-review",
+ *   qualifiedId: "acme/office/docx-review",
+ *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   provenancePath: "skills/office",
+ *   files: [],
+ *   skillMdContent: "# DOCX Review",
+ *   fileTree: "SKILL.md",
+ *   contentExtraction: null,
+ * })
+ * console.log(O.isNone(scan.contentExtraction)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1768,7 +2443,22 @@ export class DirectoryScan extends S.Class<DirectoryScan>($I`DirectoryScan`)(
  *
  * **Example** (Compiled output)
  *
- * Omitted artifact collections decode to empty arrays and absent aggregates decode to `Option.none()`.
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CompiledSkill } from "./OntoSkills.models.ts"
+ *
+ * const compiled = S.decodeUnknownSync(CompiledSkill)({
+ *   id: "docx-review",
+ *   hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   nature: "review",
+ *   genus: "document",
+ *   differentia: "DOCX-specific comments",
+ *   intents: ["review-docx"],
+ * })
+ * console.log(compiled.files.length) // 0
+ * console.log(O.isNone(compiled.frontmatter)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0

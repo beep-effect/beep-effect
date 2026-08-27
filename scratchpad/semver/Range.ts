@@ -1,3 +1,11 @@
+/**
+ * Range expressions as an OR of AND comparator sets. Node-semver sugar
+ * (caret, tilde, X-range, hyphen, `||`) is desugared at parse time into
+ * primitive comparators and then normalized.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Effect, Function as Fn, Option, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { Comparator } from "./Comparator.ts";
 import { formatRange, parseRange } from "./internal/grammar.ts";
@@ -12,7 +20,23 @@ import { SemVer } from "./SemVer.ts";
  * reports the same failure through a generic `Schema` parse error instead of
  * this class, carrying the same message.
  *
+ * **Example** (Read the tag from a failed range parse)
+ *
+ * ```ts
+ * import { Range } from "@beep/scratchpad/semver";
+ * import { Result } from "effect";
+ *
+ * const parsed = Range.parseResult("not a range");
+ * if (Result.isFailure(parsed)) {
+ *   console.log(parsed.failure._tag);
+ *   // => "InvalidRangeError"
+ * }
+ * ```
+ *
+ * @see {@link Range.FromString} when the same failure should surface as a SchemaIssue.InvalidValue instead of this tagged error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidRangeError extends Schema.TaggedError<InvalidRangeError>()("InvalidRangeError", {
 	/** The raw input string that failed to parse. */
@@ -28,9 +52,12 @@ export class InvalidRangeError extends Schema.TaggedError<InvalidRangeError>()("
 
 /**
  * A comparator set: comparators combined with AND semantics. A version must
- * satisfy every comparator in the set to match.
+ * satisfy every comparator in the set to match. A {@link Range} is an OR of
+ * these sets.
  *
- * @public
+ * @see {@link Range} for the union type that owns these sets.
+ * @category type-level
+ * @since 0.0.0
  */
 export type ComparatorSet = ReadonlyArray<Comparator>;
 
@@ -40,22 +67,48 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  * (`1.x`, `*`), tilde (`~1.2.3`), caret (`^1.2.3`) and `||` unions — which
  * parsing desugars into primitive comparators and normalizes.
  *
- * @example
+ * **Gotchas**
+ *
+ * Dual data-first order is `(version, range)` / `(versions, range)`.
+ * `Range.satisfies(range, version)` at an untyped probe throws
+ * `TypeError: range.test is not a function`. The same order applies to
+ * {@link Range.filter}, {@link Range.maxSatisfying}, and
+ * {@link Range.minSatisfying}.
+ *
+ * Prerelease versions match only when some comparator in the matching set
+ * carries a prerelease on the same `major.minor.patch` tuple, so `^1.2.3`
+ * does not match `1.2.4-alpha`.
+ *
+ * {@link Range.isSubset} is conservative: `>=1.0.0 <3.0.0` versus
+ * `>=1.0.0 <2.0.0 || >=2.0.0 <3.0.0` returns `false` even though the first
+ * is a subset. False negatives are safe.
+ *
+ * `Range.parse("")` is match-all (`>=0.0.0`); an empty string is not a
+ * valid {@link SemVer}.
+ *
+ * **Example** (Parse a caret range and test)
+ *
  * ```ts
- * import { Range, SemVer } from "@effected/semver";
+ * import { Range, SemVer } from "@beep/scratchpad/semver";
  * import { Effect } from "effect";
  *
  * const program = Effect.gen(function* () {
  *   const range = yield* Range.parse("^1.0.0");
  *   const version = yield* SemVer.parse("1.5.0");
- *   return range.test(version);
+ *   return Range.satisfies(version, range);
  * });
  *
  * console.log(Effect.runSync(program));
  * // => true
  * ```
  *
+ * @see {@link Range.satisfies} for the dual static whose data-first order is `(version, range)`.
+ * @see {@link Range.isSubset} for the conservative subset check.
+ * @see {@link SemVer.parse} for strict versions; empty string is not a version.
+ * @see {@link Comparator} for a single operator plus a complete version, with no range sugar.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class Range extends Schema.Class<Range>("Range")({
 	/** Comparator sets combined with OR semantics; a version matches when it satisfies any set. */
@@ -94,15 +147,17 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * Parse a range expression and normalize its comparator sets,
 	 * synchronously, returning a `Result` instead of an `Effect`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Range.parse} is defined in terms of this function; the two never
 	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
 	 * the `Range.parse` tracing span — and for this one at synchronous
 	 * boundaries.
 	 *
-	 * @example
+	 * **Example** (Inspect the desugared caret window)
+	 *
 	 * ```ts
-	 * import { Range } from "@effected/semver";
+	 * import { Range } from "@beep/scratchpad/semver";
 	 * import { Result } from "effect";
 	 *
 	 * const ok = Range.parseResult("^1.0.0");
@@ -114,6 +169,7 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * @param input - the range expression to parse
 	 * @returns a `Result` succeeding with the parsed {@link Range}, or failing
 	 * with {@link InvalidRangeError}.
+	 * @see {@link Range.parse} for the Effect variant with a tracing span.
 	 */
 	static parseResult(input: string): Result.Result<Range, InvalidRangeError> {
 		const result = parseRange(input);
@@ -145,22 +201,22 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * Test whether a version satisfies a range; see {@link Range.test} for the
 	 * prerelease matching rule. Dual API.
 	 *
-	 * @remarks
-	 * **Data-first order is `(version, range)`** — the version being tested
-	 * comes first, the range it is tested against second. The data-last form
-	 * takes the range: `Range.satisfies(range)` applied to a version.
+	 * **Gotchas**
 	 *
-	 * Worth stating because the two parameters are distinct classes and the
-	 * order is not recoverable from the call site. TypeScript rejects a flipped
-	 * call outright, so this only bites callers without type checking — which
-	 * includes the untyped `node --input-type=module` probes this repo's own
-	 * evidence ladder calls for. There, `Range.satisfies(range, version)`
-	 * dispatches data-first, binds the `Range` to `version`, and dies with
+	 * Data-first order is `(version, range)` — the version being tested comes
+	 * first, the range it is tested against second. The data-last form takes
+	 * the range: `Range.satisfies(range)` applied to a version.
+	 *
+	 * The two parameters are distinct classes and the order is not recoverable
+	 * from the call site. TypeScript rejects a flipped call outright, so this
+	 * only bites callers without type checking. There,
+	 * `Range.satisfies(range, version)` dispatches data-first, binds the
+	 * `Range` to `version`, and dies with
 	 * `TypeError: range.test is not a function` — a message naming the
-	 * parameter that received the *version*, so it reads as a defect inside
-	 * this package rather than a caller error.
+	 * parameter that received the version, so it reads as a defect inside this
+	 * package rather than a caller error.
 	 *
-	 * The same order and the same hazard apply to `Range.filter`,
+	 * The same order and the same hazard apply to {@link Range.filter},
 	 * {@link Range.maxSatisfying} and {@link Range.minSatisfying}: subject
 	 * first, range second.
 	 */
@@ -172,7 +228,8 @@ export class Range extends Schema.Class<Range>("Range")({
 	/**
 	 * Filter versions that satisfy a range, preserving order. Dual API.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
 	 * for why the order is spelled out.
 	 */
@@ -184,7 +241,8 @@ export class Range extends Schema.Class<Range>("Range")({
 	/**
 	 * Highest satisfying version, or `Option.none()`. Dual API.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
 	 * for why the order is spelled out.
 	 */
@@ -202,7 +260,8 @@ export class Range extends Schema.Class<Range>("Range")({
 	/**
 	 * Lowest satisfying version, or `Option.none()`. Dual API.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
 	 * for why the order is spelled out.
 	 */
@@ -235,15 +294,17 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * {@link UnsatisfiableConstraintError} when no satisfiable set remains —
 	 * an honest typed failure instead of an unsatisfiable range. Dual API.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Range.intersect} is defined in terms of this function; the two
 	 * never diverge. Reach for the `Effect` variant inside Effect code — it
 	 * carries the `Range.intersect` tracing span — and for this one at
 	 * synchronous boundaries.
 	 *
-	 * @example
+	 * **Example** (Intersect overlapping caret and lower-bound ranges)
+	 *
 	 * ```ts
-	 * import { Range } from "@effected/semver";
+	 * import { Range } from "@beep/scratchpad/semver";
 	 * import { Result } from "effect";
 	 *
 	 * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
@@ -253,6 +314,8 @@ export class Range extends Schema.Class<Range>("Range")({
 	 *   console.log(merged.success.toString()); // => ">=1.0.0 <2.0.0-0 >=1.5.0"
 	 * }
 	 * ```
+	 *
+	 * @see {@link Range.intersect} for the Effect variant with a tracing span.
 	 */
 	static readonly intersectResult: {
 		(that: Range): (self: Range) => Result.Result<Range, UnsatisfiableConstraintError>;
@@ -297,14 +360,15 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * Check whether every version matched by `sub` is also matched by `sup`.
 	 * Dual API.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * This check is a conservative approximation: it may return `false` for
 	 * ranges that are technically subsets when the sub-range straddles
 	 * comparator-set boundaries in the sup-range. For example,
 	 * `>=1.0.0 <3.0.0` is a subset of `>=1.0.0 <2.0.0 || >=2.0.0 <3.0.0`,
 	 * but `isSubset` returns `false` because no single sup-set fully implies
-	 * the sub-set. This is a known limitation; false negatives are safe
-	 * (they prevent incorrect simplification).
+	 * the sub-set. False negatives are safe (they prevent incorrect
+	 * simplification).
 	 */
 	static readonly isSubset: {
 		(sup: Range): (sub: Range) => boolean;
@@ -345,7 +409,8 @@ export class Range extends Schema.Class<Range>("Range")({
 	/**
 	 * Test whether a version satisfies this range.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Matches node-semver's prerelease restriction: a prerelease version only
 	 * satisfies the range when at least one comparator in the matching set
 	 * carries a prerelease on the same `major.minor.patch` tuple. This keeps
@@ -377,7 +442,25 @@ export class Range extends Schema.Class<Range>("Range")({
  * Raised by {@link Range.intersect} when the constraints are mutually
  * exclusive. Carries the conflicting ranges.
  *
+ * **Example** (Intersect disjoint ranges)
+ *
+ * ```ts
+ * import { Range } from "@beep/scratchpad/semver";
+ * import { Result } from "effect";
+ *
+ * const lower = Result.getOrThrow(Range.parseResult(">=2.0.0"));
+ * const upper = Result.getOrThrow(Range.parseResult("<1.0.0"));
+ * const merged = Range.intersectResult(lower, upper);
+ * if (Result.isFailure(merged)) {
+ *   console.log(merged.failure._tag);
+ *   // => "UnsatisfiableConstraintError"
+ * }
+ * ```
+ *
+ * @see {@link Range.intersectResult} for the synchronous intersection that raises this error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class UnsatisfiableConstraintError extends Schema.TaggedError<UnsatisfiableConstraintError>()(
 	"UnsatisfiableConstraintError",

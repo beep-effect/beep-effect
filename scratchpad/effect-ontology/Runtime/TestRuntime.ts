@@ -93,15 +93,19 @@ const LlmControlTestLayers = Layer.mergeAll(
  * Provides default config values for all tests so they don't need
  * environment variables to be set.
  *
- * **Example** (Inspect test config provider)
+ * **Example** (Read a test LLM model from the provider)
  *
  * ```ts
+ * import { Config, ConfigProvider, Effect } from "effect"
  * import { TestConfigProvider } from "@effect-ontology/Runtime/TestRuntime"
  *
- * console.log(TestConfigProvider)
+ * const model = Effect.runSync(
+ *   Effect.provide(Config.string("LLM_MODEL"), ConfigProvider.layer(TestConfigProvider))
+ * )
+ * console.log(model) // "claude-haiku-4-5"
  * ```
  *
- * @category services
+ * @category testing
  * @since 0.0.0
  */
 export const TestConfigProvider = ConfigProvider.fromUnknown({
@@ -122,12 +126,18 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
  *
  * Provides deterministic SHACL validation behaviour for unit/integration tests.
  *
- * **Example** (Inspect mock shacl service)
+ * **Example** (Fail SHACL validation in tests)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { MockShaclService } from "@effect-ontology/Runtime/TestRuntime"
  *
- * console.log(MockShaclService)
+ * const mock = MockShaclService({
+ *   conforms: false,
+ *   violations: [{ severity: "violation", message: "missing name" }]
+ * })
+ * const program = Effect.succeed("validated").pipe(Effect.provide(mock))
+ * console.log(Effect.runSync(program)) // "validated"
  * ```
  *
  * @category layers
@@ -251,14 +261,16 @@ const ontologyLayer = OntologyService.Default.pipe(
 const NlpBundle = NlpService.Default.pipe(Layer.provide(EmbeddingInfraLayer));
 
 /**
- * Exposes test layers for composition by callers of this module.
+ * Merged mock extraction, language-model, embedding, and config layers for tests.
  *
- * **Example** (Inspect test layers)
+ * **Example** (Provide TestLayers around a tiny effect)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { TestLayers } from "@effect-ontology/Runtime/TestRuntime"
  *
- * console.log(TestLayers)
+ * const program = Effect.succeed("ready").pipe(Effect.provide(TestLayers))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @category layers
@@ -285,15 +297,17 @@ export const TestLayers = Layer.mergeAll(
  *
  * Managed runtime for testing with all test layers provided.
  *
- * **Example** (Inspect test runtime)
+ * **Example** (Run a tiny effect on the test runtime)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { TestRuntime } from "@effect-ontology/Runtime/TestRuntime"
  *
- * console.log(TestRuntime)
+ * const ready = TestRuntime.runPromise(Effect.succeed("ready"))
+ * console.log(ready)
  * ```
  *
- * @category services
+ * @category testing
  * @since 0.0.0
  */
 export const TestRuntime = ManagedRuntime.make(TestLayers);

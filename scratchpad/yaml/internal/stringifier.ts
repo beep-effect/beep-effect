@@ -1,12 +1,15 @@
-// YAML stringifier engine — converts JavaScript values and AST nodes to YAML
-// text, including the canonical-output logic exercised by the
-// yaml-test-suite byte-equality assertion family.
-//
-// Sync throughout; the two v3 `Effect.try` failure wrappers become the
-// thrown `StringifyFailure`, which the public facade catches and
-// materializes into the public error type. Implements configurable
-// formatting with support for block/flow styles, scalar quoting rules, and
-// round-trip preservation of AST node styles.
+/**
+ * YAML stringifier engine — converts JavaScript values and AST nodes to YAML
+ * text, including the canonical-output logic exercised by the yaml-test-suite
+ * byte-equality assertion family.
+ *
+ * Sync throughout; circular references throw `StringifyFailure` and nesting
+ * overflow throws `StringifyDepthExceeded`. The public facade catches both
+ * and materializes typed errors. Nothing in the engine imports the facade.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type {
   CollectionStyle,
@@ -38,6 +41,22 @@ import type {RawDirective, RawYamlDocument} from "./raw-document.ts";
 /**
  * Thrown by the stringifier on its failure paths (circular references). The
  * facade catches this and materializes the public stringify error.
+ *
+ * **Example** (Circular object fails the public stringify)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const cyclic: { self?: unknown } = {}
+ * cyclic.self = cyclic
+ * console.log(Result.isFailure(Yaml.stringifyResult(cyclic))) // true
+ * ```
+ *
+ * @see {@link stringifyValue} for the entry point that throws this class.
+ * @internal
+ * @category errors
+ * @since 0.0.0
  */
 export class StringifyFailure extends Error {
 	readonly reason: string;
@@ -56,6 +75,25 @@ export class StringifyFailure extends Error {
  * `YamlStringifyError` (a `NestingDepthExceeded` diagnostic), keeping the
  * failure on the typed error channel — the stringify mirror of the composer's
  * nesting-depth guard.
+ *
+ * **Gotchas**
+ *
+ * Parsed ASTs are already composer-bounded and never trip this guard.
+ * Hand-built trees and deep JS values can. The throw is typed
+ * `StringifyDepthExceeded`, not `RangeError`.
+ *
+ * **Example** (Public fatality of NestingDepthExceeded)
+ *
+ * ```ts
+ * import { YamlDiagnostic } from "@beep/scratchpad/yaml"
+ *
+ * console.log(YamlDiagnostic.isFatal("NestingDepthExceeded")) // true
+ * ```
+ *
+ * @see {@link MAX_NESTING_DEPTH} for the shared 256 budget.
+ * @internal
+ * @category errors
+ * @since 0.0.0
  */
 export class StringifyDepthExceeded extends Error {
 	constructor() {
@@ -281,6 +319,22 @@ function hasNonAscii(s: string): boolean {
  * When `canonical` is true, non-ASCII characters are escaped as `\uXXXX`
  * (or `\UXXXXXXXX` for supplementary plane) and C0 control characters use
  * named escapes where YAML 1.2 defines them (`\b`, `\0`, `\a`, `\v`, `\e`).
+ *
+ * **Example** (Escapes a quote)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml, YamlStringifyOptions } from "@beep/scratchpad/yaml"
+ *
+ * const text = Effect.runSync(
+ *   Yaml.stringify("say \"hi\"", YamlStringifyOptions.make({ defaultScalarStyle: "double-quoted" })),
+ * )
+ * console.log(text.includes('\\"')) // true
+ * ```
+ *
+ * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderDoubleQuoted(s: string, canonical = false): string {
 	let escaped = s
@@ -332,6 +386,22 @@ export function renderDoubleQuoted(s: string, canonical = false): string {
 
 /**
  * Renders a string scalar using single-quote style.
+ *
+ * **Example** (Apostrophe doubles)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml, YamlStringifyOptions } from "@beep/scratchpad/yaml"
+ *
+ * const text = Effect.runSync(
+ *   Yaml.stringify("it's", YamlStringifyOptions.make({ defaultScalarStyle: "single-quoted" })),
+ * )
+ * console.log(text.includes("it''s")) // true
+ * ```
+ *
+ * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderSingleQuoted(s: string): string {
 	return `'${s.replace(/'/g, "''")}'`;
@@ -948,6 +1018,20 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 /**
  * Recursively strips all comment fields from AST nodes.
  * Used when forceDefaultStyles is true to produce canonical output.
+ *
+ * **Example** (Canonical stringify drops comments)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const text = Effect.runSync(Yaml.stringify({ a: 1 }))
+ * console.log(text.includes("#") === false) // true
+ * ```
+ *
+ * @internal
+ * @category mapping
+ * @since 0.0.0
  */
 export function stripNodeComments(node: YamlNode): YamlNode {
 	if (node instanceof YamlScalar) {
@@ -1874,6 +1958,32 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
  * Handles all primitive types, arrays, and plain objects. Special numbers
  * (`Infinity`, `-Infinity`, `NaN`) are rendered as `.inf`, `-.inf`, and
  * `.nan` respectively. Circular references throw {@link StringifyFailure}.
+ *
+ * **Gotchas**
+ *
+ * The facade maps `StringifyFailure` → `CircularReference` and
+ * `StringifyDepthExceeded` → `NestingDepthExceeded`. Nesting overflow is
+ * not in `YAML_STRINGIFY_ERROR_CODES`. Parsed ASTs never trip the node-path
+ * depth guard; hand-built trees can.
+ *
+ * **Example** (NaN rendering and circular throw)
+ *
+ * ```ts
+ * import { Effect, Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.stringify(Number.NaN)).includes(".nan")) // true
+ * const cyclic: { self?: unknown } = {}
+ * cyclic.self = cyclic
+ * console.log(Result.isFailure(Yaml.stringifyResult(cyclic))) // true
+ * ```
+ *
+ * @throws StringifyFailure when the value graph contains a circular reference.
+ * @throws StringifyDepthExceeded when nesting exceeds {@link MAX_NESTING_DEPTH}.
+ * @see {@link Yaml.stringify} for the public Effect wrapper.
+ * @internal
+ * @category encoding
+ * @since 0.0.0
  */
 export function stringifyValue(value: unknown, options?: StringifyOptionsInput): string {
 	const ctx = createContext(options);
@@ -1888,6 +1998,29 @@ export function stringifyValue(value: unknown, options?: StringifyOptionsInput):
  * Scalar nodes use their `style` field to control rendering; collection
  * nodes use their `style` field (`"block"` or `"flow"`). Nodes without an
  * explicit style fall back to the defaults in `options`.
+ *
+ * **Gotchas**
+ *
+ * Sync throws the same classes as {@link stringifyValue}. The facade maps
+ * them to public diagnostics. `lineWidth` is a value-path feature; this
+ * document path does not fold.
+ *
+ * **Example** (Document stringify preserves source spelling)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlDocument } from "@beep/scratchpad/yaml"
+ *
+ * const doc = Effect.runSync(YamlDocument.parse("a: 0x10\n"))
+ * console.log(Effect.runSync(doc.stringify()).includes("a: 0x10")) // true
+ * ```
+ *
+ * @throws StringifyFailure when a synthetic AST introduces a circular reference.
+ * @throws StringifyDepthExceeded when a synthetic AST exceeds {@link MAX_NESTING_DEPTH}.
+ * @see {@link YamlDocument.stringify} for the public Effect wrapper.
+ * @internal
+ * @category encoding
+ * @since 0.0.0
  */
 export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptionsInput): string {
 	const ctx = createContext(options);

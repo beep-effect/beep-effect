@@ -1,21 +1,29 @@
-// The `JsoncFingerprint` facade: canonical JSON serialization (RFC 8785, JSON
-// Canonicalization Scheme) and SHA-256 content fingerprints over it.
-//
-// The pure core is the JCS emitter — compact output, object keys sorted by
-// UTF-16 code units, ES number serialization — with the package's usual
-// `Result` primitive / spanned `Effect` twin arrangement. Hashing is the one
-// effectful edge: it requires core's `Crypto.Crypto` service in `R` and owns
-// no backend, so consumers provide `@effect/platform-node`'s
-// `NodeCrypto.layer` (or any `Crypto` layer) at the application edge.
-//
-// This is a deliberately different contract from `Jsonc.stringify` (plain
-// `JSON.stringify` semantics — nested unrepresentables dropped or nulled):
-// fingerprints must never silently alter the document, so every non-JSON
-// value is a typed failure carrying the JSON-pointer path to fix.
+/**
+ * The `JsoncFingerprint` facade: canonical JSON serialization (RFC 8785, JSON
+ * Canonicalization Scheme) and SHA-256 content fingerprints over it.
+ *
+ * The pure core is the JCS emitter — compact output, object keys sorted by
+ * UTF-16 code units, ES number serialization — with the package's usual
+ * `Result` primitive / spanned `Effect` twin arrangement. Hashing is the one
+ * effectful edge: it requires core's `Crypto.Crypto` service in `R` and owns
+ * no backend, so consumers provide `@effect/platform-node`'s
+ * `NodeCrypto.layer` (or any `Crypto` layer) at the application edge.
+ *
+ * This is a deliberately different contract from `Jsonc.stringify` (plain
+ * `JSON.stringify` semantics — nested unrepresentables dropped or nulled):
+ * fingerprints must never silently alter the document, so every non-JSON
+ * value is a typed failure carrying the JSON-pointer path to fix.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import type { PlatformError } from "effect";
 import { Crypto, Effect, Encoding, Result, Schema } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
+
+const $I = $ScratchpadId.create("jsonc/JsoncFingerprint");
 
 /**
  * The public canonicalize-error code vocabulary, appearing as the `code` field
@@ -43,7 +51,20 @@ import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
  *   hardening cap, which also intercepts cyclic values before they can
  *   recurse forever.
  *
+ * **Example** (Recognize a canonicalize-error code)
+ *
+ * ```ts
+ * import { JsoncCanonicalizeErrorCode } from "@beep/scratchpad/jsonc";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(JsoncCanonicalizeErrorCode)("UnrepresentableValue")); // true
+ * console.log(S.is(JsoncCanonicalizeErrorCode)("NonFiniteNumber")); // true
+ * ```
+ *
+ * @see {@link JsoncCanonicalizeError} for the tagged error that carries this code.
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const JsoncCanonicalizeErrorCode = Schema.Literals([
 	"UnrepresentableValue",
@@ -52,12 +73,19 @@ export const JsoncCanonicalizeErrorCode = Schema.Literals([
 	"LoneSurrogate",
 	"NonPlainObject",
 	"NestingDepthExceeded",
-]);
+]).pipe(
+	$I.annoteSchema("JsoncCanonicalizeErrorCode", {
+		description: "The public canonicalize-error code vocabulary carried by JsoncCanonicalizeError.",
+	}),
+);
 
 /**
  * The union of all canonicalize-error code string literals.
  *
+ * @see {@link JsoncCanonicalizeErrorCode} for the runtime literals schema.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncCanonicalizeErrorCode = typeof JsoncCanonicalizeErrorCode.Type;
 
@@ -69,13 +97,38 @@ export type JsoncCanonicalizeErrorCode = typeof JsoncCanonicalizeErrorCode.Type;
  * {@link JsoncFingerprint.canonicalizeResult} and
  * {@link JsoncFingerprint.hash}.
  *
+ * **Example** (Construct a path-bearing canonicalize error)
+ *
+ * ```ts
+ * import { JsoncCanonicalizeError } from "@beep/scratchpad/jsonc";
+ *
+ * const error = JsoncCanonicalizeError.make({
+ *   code: "UnrepresentableValue",
+ *   path: "/a/b",
+ *   detail: "undefined values have no JSON representation",
+ * });
+ *
+ * console.log(error._tag); // "JsoncCanonicalizeError"
+ * console.log(error.path); // "/a/b"
+ * ```
+ *
+ * @see {@link JsoncCanonicalizeErrorCode} for the failure-mode vocabulary.
+ * @see {@link JsoncFingerprint.canonicalizeResult} for the Result twin that raises this error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class JsoncCanonicalizeError extends Schema.TaggedError<JsoncCanonicalizeError>()("JsoncCanonicalizeError", {
-	code: JsoncCanonicalizeErrorCode,
-	path: Schema.String,
-	detail: Schema.String,
-}) {
+export class JsoncCanonicalizeError extends Schema.TaggedError<JsoncCanonicalizeError>($I`JsoncCanonicalizeError`)(
+	"JsoncCanonicalizeError",
+	{
+		code: JsoncCanonicalizeErrorCode,
+		path: Schema.String,
+		detail: Schema.String,
+	},
+	$I.annote("JsoncCanonicalizeError", {
+		description: "Canonical JSON serialization failure naming the mode, JSON-pointer path, and detail.",
+	}),
+) {
 	override get message(): string {
 		return `Canonical JSON serialization failed: ${this.code} at "${this.path}" — ${this.detail}`;
 	}
@@ -90,11 +143,29 @@ export class JsoncCanonicalizeError extends Schema.TaggedError<JsoncCanonicalize
  *   checkout line-ending settings. Defaults to `false` — by default the bytes
  *   hashed are exactly the UTF-8 encoding of the text given.
  *
+ * **Example** (Enable line-ending normalization)
+ *
+ * ```ts
+ * import { JsoncTextHashOptions } from "@beep/scratchpad/jsonc";
+ *
+ * const options = JsoncTextHashOptions.make({ normalizeEol: true });
+ *
+ * console.log(options.normalizeEol); // true
+ * ```
+ *
+ * @see {@link JsoncFingerprint.hashText} for the hasher these options control.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class JsoncTextHashOptions extends Schema.Class<JsoncTextHashOptions>("JsoncTextHashOptions")({
-	normalizeEol: Schema.optionalKey(Schema.Boolean),
-}) {}
+export class JsoncTextHashOptions extends Schema.Class<JsoncTextHashOptions>($I`JsoncTextHashOptions`)(
+	{
+		normalizeEol: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("JsoncTextHashOptions", {
+		description: "Omissible hashText knobs; normalizeEol rewrites CR/CRLF to LF before hashing.",
+	}),
+) {}
 
 // ── Internal: the JCS emitter ───────────────────────────────────────────────
 
@@ -268,22 +339,30 @@ const digestHex = (text: string): Effect.Effect<string, PlatformError.PlatformEr
  * `@effect/platform-node`'s `NodeCrypto.layer` (or any `Crypto` layer, e.g.
  * one built with `Crypto.make` over WebCrypto) at the application edge.
  *
- * @example
- * ```ts
- * import { JsoncFingerprint } from "@effected/jsonc";
- * import { Effect } from "effect";
+ * **Details**
  *
- * const program = Effect.gen(function* () {
- *   // Key order never matters: both values fingerprint identically.
- *   const a = yield* JsoncFingerprint.hash({ b: 2, a: 1 });
- *   const b = yield* JsoncFingerprint.hash({ a: 1, b: 2 });
- *   return a === b; // true
- * });
- * // Provide a Crypto layer at the edge, e.g. NodeCrypto.layer from
- * // "@effect/platform-node".
+ * `hash` and `hashText` require `Crypto.Crypto` in `R` and are not shown as
+ * runnable examples here. Canonicalization is the pure core: equal JSON
+ * values (key order ignored) emit equal strings, which is what a later hash
+ * would digest.
+ *
+ * **Example** (Canonicalize key order)
+ *
+ * ```ts
+ * import { JsoncFingerprint } from "@beep/scratchpad/jsonc";
+ * import { Result } from "effect";
+ *
+ * const left = JsoncFingerprint.canonicalizeResult({ b: 2, a: 1 });
+ * const right = JsoncFingerprint.canonicalizeResult({ a: 1, b: 2 });
+ *
+ * console.log(Result.getOrThrow(left)); // {"a":1,"b":2}
+ * console.log(Result.getOrThrow(left) === Result.getOrThrow(right)); // true
  * ```
  *
+ * @see {@link Jsonc.stringify} for drop/null JSON emission, which this API refuses.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class JsoncFingerprint {
 	private constructor() {}
@@ -300,33 +379,34 @@ export class JsoncFingerprint {
 	 * non-JSON value fails typed here, carrying the JSON-pointer path to fix:
 	 * a fingerprint of a silently altered document would be a lie.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link JsoncFingerprint.canonicalize} is defined in terms of this
-	 * function; the two never diverge. Reach for the `Effect` variant inside
+	 * function; the two never diverge. Reach for the Effect variant inside
 	 * Effect code — it carries the `JsoncFingerprint.canonicalize` tracing
 	 * span — and for this one at synchronous boundaries.
 	 *
-	 * @example
+	 * **Example** (Canonicalize success and an unrepresentable nested value)
+	 *
 	 * ```ts
-	 * import { JsoncFingerprint } from "@effected/jsonc";
+	 * import { JsoncFingerprint } from "@beep/scratchpad/jsonc";
 	 * import { Result } from "effect";
 	 *
 	 * const ok = JsoncFingerprint.canonicalizeResult({ b: 2, a: 1 });
 	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => '{"a":1,"b":2}'
+	 *   console.log(ok.success); // {"a":1,"b":2}
 	 * }
 	 *
 	 * const bad = JsoncFingerprint.canonicalizeResult({ a: { b: undefined } });
 	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure.code); // => "UnrepresentableValue"
-	 *   console.log(bad.failure.path); // => "/a/b"
+	 *   console.log(bad.failure.code); // "UnrepresentableValue"
+	 *   console.log(bad.failure.path); // "/a/b"
 	 * }
 	 * ```
 	 *
 	 * @param value - The plain JSON value (`null`, booleans, finite numbers,
 	 *   strings, arrays, plain objects) to serialize.
-	 * @returns A `Result` succeeding with the canonical JSON text, or failing
-	 *   with a {@link JsoncCanonicalizeError}.
+	 * @see {@link JsoncCanonicalizeError} for path-bearing typed failures.
 	 */
 	static canonicalizeResult(value: unknown): Result.Result<string, JsoncCanonicalizeError> {
 		try {
@@ -413,25 +493,16 @@ export class JsoncFingerprint {
 	 * fingerprints flow into attestation subjects downstream without this
 	 * package taking any edge on `sbom`.
 	 *
-	 * @example
-	 * ```ts
-	 * import { JsoncFingerprint, JsoncTextHashOptions } from "@effected/jsonc";
-	 * import { Effect } from "effect";
+	 * **Details**
 	 *
-	 * const program = Effect.gen(function* () {
-	 *   const options = JsoncTextHashOptions.make({ normalizeEol: true });
-	 *   const a = yield* JsoncFingerprint.hashText("line one\r\nline two", options);
-	 *   const b = yield* JsoncFingerprint.hashText("line one\nline two", options);
-	 *   return a === b; // true
-	 * });
-	 * ```
+	 * `R` includes `Crypto.Crypto`. Provide a Crypto layer at the application
+	 * edge before running; this method is composition, not a synchronous hash.
 	 *
 	 * @param text - The text content to fingerprint.
 	 * @param options - Optional {@link JsoncTextHashOptions}; defaults apply
 	 *   for omitted fields.
-	 * @returns An `Effect` requiring `Crypto.Crypto` that succeeds with the
-	 *   64-character lowercase-hex SHA-256, or fails with the platform's
-	 *   `PlatformError` if the digest itself fails.
+	 * @see {@link JsoncTextHashOptions} for opt-in line-ending normalization.
+	 * @see {@link JsoncFingerprint.normalizeEol} for the shared EOL rewrite.
 	 */
 	static readonly hashText = Effect.fn("JsoncFingerprint.hashText")(
 		(text: string, options?: JsoncTextHashOptions): Effect.Effect<string, PlatformError.PlatformError, Crypto.Crypto> =>

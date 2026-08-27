@@ -42,17 +42,18 @@ const buildETag = (hash: string): string => `"${hash}"`;
 // =============================================================================
 
 /**
- * Exposes image router for composition by callers of this module.
+ * HTTP surface for serving content-addressed images by hash.
  *
- * **Example** (Inspect image router)
+ * **Example** (Name the image GET route)
  *
  * ```ts
  * import { ImageRouter } from "@effect-ontology/Runtime/ImageRouter"
  *
- * console.log(ImageRouter)
+ * const documented = [ImageRouter, "GET /v1/images/:hash"] as const
+ * console.log(documented[1]) // "GET /v1/images/:hash"
  * ```
  *
- * @category services
+ * @category endpoints
  * @since 0.0.0
  */
 export const ImageRouter = HttpRouter.addAll([

@@ -1,6 +1,22 @@
+/**
+ * Re-graft language-server annotation keywords that Draft-07 lowering drops.
+ *
+ * Core's `JsonSchema.toDocumentDraft07` copies a fixed keyword subset, so
+ * vscode / taplo / tombi / IntelliJ keys admitted into the Draft 2020-12
+ * document never survive lowering on their own. This module walks the two
+ * trees in lockstep and copies only {@link KeywordFamilies.isDeclared} keys
+ * onto the lowered node.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Result, Schema } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { KeywordFamilies } from "./KeywordFamilies.ts";
+
+const $I = $ScratchpadId.create("schemastore/AnnotationCarriers");
 
 /**
  * Indicates that the carrier re-graft walk nested past the package's
@@ -9,9 +25,26 @@ import { KeywordFamilies } from "./KeywordFamilies.ts";
  *
  * Raised by {@link AnnotationCarriers.carry}.
  *
+ * **Example** (Construct the depth-cap error)
+ *
+ * ```ts
+ * import { CarrierDepthExceededError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = CarrierDepthExceededError.make({ path: "/items/0", maxDepth: 256 })
+ *
+ * console.log(error._tag)
+ * // => "CarrierDepthExceededError"
+ * console.log(error.maxDepth)
+ * // => 256
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class CarrierDepthExceededError extends Schema.TaggedError<CarrierDepthExceededError>()(
+export class CarrierDepthExceededError extends Schema.TaggedError<CarrierDepthExceededError>(
+	$I`CarrierDepthExceededError`,
+)(
 	"CarrierDepthExceededError",
 	{
 		/** JSON pointer (in the lowered document's coordinates) where the cap was hit. */
@@ -19,6 +52,10 @@ export class CarrierDepthExceededError extends Schema.TaggedError<CarrierDepthEx
 		/** The nesting cap that was exceeded. */
 		maxDepth: Schema.Number,
 	},
+	$I.annote("CarrierDepthExceededError", {
+		description:
+			"Raised when the annotation-carrier re-graft walk nests past the 256-level hardening cap, including cyclic schema nodes.",
+	}),
 ) {
 	override get message(): string {
 		return `Carrier re-graft nesting exceeds ${this.maxDepth} levels at "${this.path}"`;
@@ -168,7 +205,44 @@ const graft = (source: unknown, target: unknown, path: string, depth: number): u
  * `$ref` node nor the pool entry, even in the 2020-12 document, so there is
  * nothing to carry.
  *
+ * **Details**
+ *
+ * {@link AnnotationCarriers.carryResult} is the synchronous primitive;
+ * {@link AnnotationCarriers.carry} wraps the same walk in an Effect span.
+ *
+ * **Gotchas**
+ *
+ * The walk maps 2020-12 `prefixItems` onto Draft-07 `items` and a trailing
+ * `items` schema onto `additionalItems`. Positions the lowering drops are
+ * never visited, so a carrier on those nodes is not copied. Nesting past
+ * 256 levels — including cycles — fails with
+ * {@link CarrierDepthExceededError}. Only {@link KeywordFamilies.isDeclared}
+ * keys are copied; nothing else about the target changes.
+ *
+ * **Example** (Graft x-taplo from a 2020-12 node onto Draft-07)
+ *
+ * ```ts
+ * import { AnnotationCarriers } from "@beep/scratchpad/schemastore"
+ * import { Result } from "effect"
+ *
+ * const source = { type: "string", "x-taplo": { hidden: true } }
+ * const target = { type: "string" }
+ * const carried = AnnotationCarriers.carryResult(source, target)
+ *
+ * console.log(Result.isSuccess(carried))
+ * // => true
+ * if (Result.isSuccess(carried) && typeof carried.success === "object" && carried.success !== null) {
+ *   console.log(Object.hasOwn(carried.success, "x-taplo"))
+ *   // => true
+ * }
+ * ```
+ *
+ * @see {@link KeywordFamilies.isDeclared} for the admission predicate that decides which keys are copied.
+ * @see {@link StoreDocument.fromSchema} for the pipeline that applies this walk automatically.
+ * @see {@link CarrierDepthExceededError} for the typed failure when nesting exceeds 256 levels.
  * @public
+ * @category combinators
+ * @since 0.0.0
  */
 export class AnnotationCarriers {
 	private constructor() {}

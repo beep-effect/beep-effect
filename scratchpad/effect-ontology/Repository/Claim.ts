@@ -56,59 +56,32 @@ const decodeClaimCountRows = (rows: unknown) =>
 // =============================================================================
 
 /**
- * Describes the database UUID used to identify a persisted claim row.
+ * Database UUID identifying a persisted claim row.
  *
- * **Example** (Reference a persisted claim identifier)
- *
- * ```ts
- * import type { PersistedClaimId } from "@effect-ontology/Repository/Claim"
- *
- * const printClaimId = (claimId: PersistedClaimId) => console.log(claimId)
- *
- * console.log(printClaimId)
- * ```
- *
+ * @see {@link ClaimRepository} for lookups that consume this identifier.
  * @category type-level
  * @since 0.0.0
  */
 export type PersistedClaimId = ClaimRow["id"];
 /**
- * Describes the article id data exposed by this module.
+ * Article identifier stored on a persisted claim row.
  *
- * **Example** (Create ArticleId)
- *
- * ```ts
- * import type { ArticleId } from "@effect-ontology/Repository/Claim"
- *
- * const articleId: ArticleId = "article-id-1"
- *
- * console.log(articleId)
- * ```
- *
+ * @see {@link ClaimFilter} for querying claims by this article identifier.
  * @category type-level
  * @since 0.0.0
  */
 export type ArticleId = ClaimRow["articleId"];
 /**
- * Describes the database UUID used to identify a persisted correction row.
+ * Database UUID identifying a persisted correction row.
  *
- * **Example** (Reference a persisted correction identifier)
- *
- * ```ts
- * import type { PersistedCorrectionId } from "@effect-ontology/Repository/Claim"
- *
- * const printCorrectionId = (correctionId: PersistedCorrectionId) => console.log(correctionId)
- *
- * console.log(printCorrectionId)
- * ```
- *
+ * @see {@link ClaimRepository} for correction-chain lookups that consume this identifier.
  * @category type-level
  * @since 0.0.0
  */
 export type PersistedCorrectionId = CorrectionRow["id"];
 
 /**
- * Describes the claim filter data exposed by this module.
+ * Ontology-scoped query input for listing and counting persisted claims.
  *
  * **Example** (Create an ontology-scoped filter)
  *
@@ -119,6 +92,7 @@ export type PersistedCorrectionId = CorrectionRow["id"];
  * console.log(filter.ontologyId) // "claims"
  * ```
  *
+ * @see {@link ClaimRepository} for `countClaims` / listing methods that consume this filter.
  * @category models
  * @since 0.0.0
  */
@@ -139,7 +113,8 @@ export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
 ) {}
 
 /**
- * Describes the conflict candidate data exposed by this module.
+ * Persisted claim paired with the detected conflict kind, returned as a
+ * conflict-detection candidate.
  *
  * **Example** (Reject an incomplete conflict candidate)
  *
@@ -150,6 +125,7 @@ export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
  * console.log(S.is(ConflictCandidate)({ conflictType: "position" })) // false
  * ```
  *
+ * @see {@link ClaimRepository} for `findConflictingClaims` that produces this payload.
  * @category models
  * @since 0.0.0
  */
@@ -280,17 +256,22 @@ interface ClaimRepositoryShape {
 }
 
 /**
- * Provides repository access for claim repository.
+ * Persists claims, corrections, and conflict-candidate lookups.
  *
- * **Example** (Inspect the default claim repository layer)
+ * **Example** (Count claims in an ontology)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { ClaimRepository } from "@effect-ontology/Repository/Claim"
+ * import { ClaimFilter, ClaimRepository } from "@effect-ontology/Repository/Claim"
+ * import { Effect } from "effect"
  *
- * console.log(Layer.isLayer(ClaimRepository.Default)) // true
+ * const countClaims = Effect.gen(function* () {
+ *   const claims = yield* ClaimRepository
+ *   return yield* claims.countClaims(ClaimFilter.make({ ontologyId: "people" }))
+ * })
+ * console.log(typeof countClaims) // "object"
  * ```
  *
+ * @see {@link ClaimFilter} for the query input accepted by `countClaims`.
  * @category repositories
  * @since 0.0.0
  */

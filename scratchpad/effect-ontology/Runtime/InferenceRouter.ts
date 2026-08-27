@@ -44,10 +44,23 @@ interface InferenceJobState {
 /**
  * Scoped storage used by one inference-router runtime.
  *
- * **Example** (Inspect the inference job store service)
+ * **Example** (Put and get a processing job)
+ *
  * ```ts
- * import { InferenceJobStore } from "@effect-ontology/Runtime/InferenceRouter"
- * console.log(InferenceJobStore)
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference"
+ * import { InferenceJobStore, InferenceJobStoreLive } from "@effect-ontology/Runtime/InferenceRouter"
+ *
+ * const jobId = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const store = yield* InferenceJobStore
+ *     yield* store.put(InferenceRunResponse.make({ jobId: "infer-1", status: "processing" }))
+ *     const found = yield* store.get("infer-1")
+ *     return O.map(found, (value) => value.jobId)
+ *   }).pipe(Effect.provide(InferenceJobStoreLive))
+ * )
+ * console.log(jobId)
  * ```
  *
  * @category services
@@ -64,10 +77,22 @@ export class InferenceJobStore extends Context.Service<
 /**
  * Ref-backed bounded inference-job storage isolated per layer instance.
  *
- * **Example** (Inspect the inference job store layer)
+ * **Example** (Provide bounded in-memory job storage)
+ *
  * ```ts
- * import { InferenceJobStoreLive } from "@effect-ontology/Runtime/InferenceRouter"
- * console.log(InferenceJobStoreLive)
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference"
+ * import { InferenceJobStore, InferenceJobStoreLive } from "@effect-ontology/Runtime/InferenceRouter"
+ *
+ * const status = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const store = yield* InferenceJobStore
+ *     yield* store.put(InferenceRunResponse.make({ jobId: "infer-1", status: "complete" }))
+ *     return O.map(yield* store.get("infer-1"), (value) => value.status)
+ *   }).pipe(Effect.provide(InferenceJobStoreLive))
+ * )
+ * console.log(status)
  * ```
  *
  * @category layers
@@ -109,10 +134,17 @@ const InferenceFailureStage = LiteralKit(["parse", "reason", "serialize", "stati
 /**
  * Typed failure raised while executing an inference request.
  *
- * **Example** (Inspect the typed inference failure)
+ * **Example** (Construct a parse-stage failure)
+ *
  * ```ts
  * import { InferenceExecutionError } from "@effect-ontology/Runtime/InferenceRouter"
- * console.log(InferenceExecutionError.make)
+ *
+ * const error = InferenceExecutionError.make({
+ *   stage: "parse",
+ *   message: "Turtle parse failed.",
+ *   cause: new Error("unexpected token")
+ * })
+ * console.log(error.stage) // "parse"
  * ```
  *
  * @category errors
@@ -145,15 +177,16 @@ const generateJobId = Random.nextIntBetween(0, 0x7fffffff).pipe(Effect.map((valu
  * - POST /v1/inference/run - Run RDFS reasoning on a graph
  * - GET /v1/inference/:id - Get inference job result
  *
- * **Example** (Inspect inference router)
+ * **Example** (Name the inference run route)
  *
  * ```ts
  * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
  *
- * console.log(InferenceRouter)
+ * const documented = [InferenceRouter, "POST /v1/inference/run"] as const
+ * console.log(documented[1]) // "POST /v1/inference/run"
  * ```
  *
- * @category layers
+ * @category endpoints
  * @since 0.0.0
  */
 const InferenceRouterDefinition = HttpRouter.addAll([
@@ -355,13 +388,16 @@ const InferenceRouterDefinition = HttpRouter.addAll([
 /**
  * Inference router with runtime-local bounded job storage.
  *
- * **Example** (Inspect the inference router layer)
+ * **Example** (Export the inference HTTP surface)
+ *
  * ```ts
  * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
- * console.log(InferenceRouter)
+ *
+ * const documented = [InferenceRouter, "GET /v1/inference/:id"] as const
+ * console.log(documented[1]) // "GET /v1/inference/:id"
  * ```
  *
- * @category layers
+ * @category endpoints
  * @since 0.0.0
  */
 export const InferenceRouter = InferenceRouterDefinition;

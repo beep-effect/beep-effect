@@ -1,3 +1,11 @@
+/**
+ * Guest Number constants plus instance and static method dispatch for the
+ * CodeMode interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $ScratchpadId } from "@beep/identity";
 import {
   type AstNode,
   InterpreterRuntimeError
@@ -18,6 +26,25 @@ export {
   numberStatics,
 } from "../Codemode.method-names.ts";
 
+const $I = $ScratchpadId.create("codemode/stdlib/StdLib.number");
+
+/**
+ * Closed kit of guest-visible `Number` constants including NaN and infinities.
+ *
+ * **Example** (Confirm MAX_SAFE_INTEGER membership)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { numberConstants } from "../../../codemode/stdlib/StdLib.number.ts"
+ *
+ * console.log(S.is(numberConstants)("MAX_SAFE_INTEGER"))
+ * console.log(S.is(numberConstants)("parseInt"))
+ * ```
+ *
+ * @see {@link invokeNumberStatic} for Number.parseInt and related statics.
+ * @category constants
+ * @since 0.0.0
+ */
 export const numberConstants = LiteralKit([
   "MAX_SAFE_INTEGER",
   "MIN_SAFE_INTEGER",
@@ -27,8 +54,39 @@ export const numberConstants = LiteralKit([
   "NaN",
   "POSITIVE_INFINITY",
   "NEGATIVE_INFINITY",
-]);
+]).pipe(
+  $I.annoteSchema("numberConstants", {
+    description: "Guest-visible Number constant names.",
+  })
+);
 
+/**
+ * Decoded value produced by {@link numberConstants}.
+ *
+ * @see {@link numberConstants} for the runtime kit of Number constant names.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type numberConstants = typeof numberConstants.Type;
+
+/**
+ * Dispatches guest Number instance methods and bounds the rendered result.
+ *
+ * **Example** (Format with toFixed and a binary toString)
+ *
+ * ```ts
+ * import { invokeNumberMethod } from "../../../codemode/stdlib/StdLib.number.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(invokeNumberMethod(1.25, "toFixed", [1], node))
+ * console.log(invokeNumberMethod(2, "toString", [2], node))
+ * ```
+ *
+ * @see {@link invokeNumberStatic} for Number.isFinite and parseInt.
+ * @see {@link boundedData} for the copy applied to every result.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeNumberMethod = (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown => {
   const optNum = (index: number): number | undefined => {
@@ -56,6 +114,24 @@ export const invokeNumberMethod = (value: number, name: NumberMethod, args: Arra
   return boundedData(result, `Number.${name} result`);
 };
 
+/**
+ * Dispatches guest Number statics such as `isFinite` and `parseInt`.
+ *
+ * **Example** (Guard finiteness and parse a decimal string)
+ *
+ * ```ts
+ * import { invokeNumberStatic } from "../../../codemode/stdlib/StdLib.number.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(invokeNumberStatic("isFinite", [1], node))
+ * console.log(invokeNumberStatic("parseInt", ["10", 10], node))
+ * ```
+ *
+ * @see {@link invokeNumberMethod} for instance formatting such as toFixed.
+ * @see {@link numberConstants} for MAX_SAFE_INTEGER and related names.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown => {
   const value = args[0];

@@ -41,9 +41,10 @@ export const SubagentColor = LiteralKit(["red", "blue", "green", "yellow", "purp
 );
 
 /**
- * Type for {@link SubagentColor}. {@inheritDoc SubagentColor}
+ * Decoded value produced by {@link SubagentColor}.
  *
- * @category models
+ * @see {@link SubagentColor} for the runtime schema and decoding behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type SubagentColor = typeof SubagentColor.Type;
@@ -62,14 +63,14 @@ export type SubagentColor = typeof SubagentColor.Type;
  * import * as S from "effect/Schema"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const agent = yield* S.decodeUnknownEffect(Frontmatter.SubagentFrontmatter)({
+ * const agent = Effect.runSync(
+ *   S.decodeUnknownEffect(Frontmatter.SubagentFrontmatter)({
  *     name: "reviewer",
  *     description: "Reviews changes",
  *     model: "sonnet"
  *   })
- *   console.log(O.getOrNull(agent.model)) // "sonnet"
- * })
+ * )
+ * console.log(O.getOrNull(agent.model)) // "sonnet"
  * ```
  *
  * @category models
@@ -101,6 +102,19 @@ export class SubagentFrontmatter extends S.Class<SubagentFrontmatter>($I`Subagen
 
 /**
  * Encoded input accepted at the Claude Code subagent-frontmatter boundary.
+ *
+ * **Example** (Describe encoded subagent frontmatter)
+ *
+ * ```ts
+ * import type { Frontmatter } from "effect-claudecode"
+ *
+ * const input: Frontmatter.SubagentFrontmatter.Encoded = {
+ *   name: "reviewer",
+ *   description: "Reviews changes",
+ *   model: "sonnet"
+ * }
+ * console.log(input.name)
+ * ```
  *
  * @category dtos
  * @since 0.0.0

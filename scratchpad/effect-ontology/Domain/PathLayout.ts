@@ -233,14 +233,6 @@ export const OntologyFilePath = S.TemplateLiteral([
 /**
  * Runtime value decoded by {@link OntologyFilePath}.
  *
- * **Example** (Use OntologyFilePath)
- * ```ts
- * import { type OntologyFilePath } from "@effect-ontology/PathLayout"
- *
- * const accept = (path: OntologyFilePath) => path
- * console.log(accept)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -249,14 +241,6 @@ export type OntologyFilePath = typeof OntologyFilePath.Type;
 /**
  * Tuple decoded from the ontology-file path parser.
  *
- * **Example** (Use OntologyFilePathTuple)
- * ```ts
- * import { type OntologyFilePathTuple } from "@effect-ontology/PathLayout"
- *
- * const accept = (parts: OntologyFilePathTuple) => parts
- * console.log(accept)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -264,14 +248,6 @@ export type OntologyFilePathTuple = typeof OntologyFilePathParts.Type;
 
 /**
  * Encoded representation accepted by {@link OntologyFilePath}.
- *
- * **Example** (Use OntologyFilePathEncoded)
- * ```ts
- * import { type OntologyFilePathEncoded } from "@effect-ontology/PathLayout"
- *
- * const accept = (path: OntologyFilePathEncoded) => path
- * console.log(accept)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -316,14 +292,6 @@ export const OntologyManifestPath = S.TemplateLiteral([
 /**
  * Runtime value decoded by {@link OntologyManifestPath}.
  *
- * **Example** (Use OntologyManifestPath)
- * ```ts
- * import { type OntologyManifestPath } from "@effect-ontology/PathLayout"
- *
- * const accept = (path: OntologyManifestPath) => path
- * console.log(accept)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -352,12 +320,6 @@ export const BatchStatusPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchStatusPath}.
  *
- * **Example** (Use BatchStatusPath)
- * ```ts
- * import { type BatchStatusPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchStatusPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -386,12 +348,6 @@ export const BatchManifestPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchManifestPath}.
  *
- * **Example** (Use BatchManifestPath)
- * ```ts
- * import { type BatchManifestPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchManifestPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -420,12 +376,6 @@ export const BatchResolutionPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchResolutionPath}.
  *
- * **Example** (Use BatchResolutionPath)
- * ```ts
- * import { type BatchResolutionPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchResolutionPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -454,12 +404,6 @@ export const BatchValidationGraphPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchValidationGraphPath}.
  *
- * **Example** (Use BatchValidationGraphPath)
- * ```ts
- * import { type BatchValidationGraphPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchValidationGraphPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -488,12 +432,6 @@ export const BatchValidationReportPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchValidationReportPath}.
  *
- * **Example** (Use BatchValidationReportPath)
- * ```ts
- * import { type BatchValidationReportPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchValidationReportPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -522,12 +460,6 @@ export const BatchCanonicalPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchCanonicalPath}.
  *
- * **Example** (Use BatchCanonicalPath)
- * ```ts
- * import { type BatchCanonicalPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchCanonicalPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -556,12 +488,6 @@ export const BatchEnrichedManifestPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchEnrichedManifestPath}.
  *
- * **Example** (Use BatchEnrichedManifestPath)
- * ```ts
- * import { type BatchEnrichedManifestPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchEnrichedManifestPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -590,12 +516,6 @@ export const BatchIngestManifestPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchIngestManifestPath}.
  *
- * **Example** (Use BatchIngestManifestPath)
- * ```ts
- * import { type BatchIngestManifestPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchIngestManifestPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -624,12 +544,6 @@ export const BatchFinalOutputPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchFinalOutputPath}.
  *
- * **Example** (Use BatchFinalOutputPath)
- * ```ts
- * import { type BatchFinalOutputPath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchFinalOutputPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -658,12 +572,6 @@ export const BatchInferencePath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchInferencePath}.
  *
- * **Example** (Use BatchInferencePath)
- * ```ts
- * import { type BatchInferencePath } from "@effect-ontology/PathLayout"
- * const accept = (path: BatchInferencePath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -692,12 +600,6 @@ export const DocumentMetadataPath = makeDocumentPathSchema(
 
 /** Runtime value decoded by {@link DocumentMetadataPath}.
  *
- * **Example** (Use DocumentMetadataPath)
- * ```ts
- * import { type DocumentMetadataPath } from "@effect-ontology/PathLayout"
- * const accept = (path: DocumentMetadataPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -726,12 +628,6 @@ export const DocumentInputPath = makeDocumentPathSchema(
 
 /** Runtime value decoded by {@link DocumentInputPath}.
  *
- * **Example** (Use DocumentInputPath)
- * ```ts
- * import { type DocumentInputPath } from "@effect-ontology/PathLayout"
- * const accept = (path: DocumentInputPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -760,12 +656,6 @@ export const DocumentGraphPath = makeDocumentPathSchema(
 
 /** Runtime value decoded by {@link DocumentGraphPath}.
  *
- * **Example** (Use DocumentGraphPath)
- * ```ts
- * import { type DocumentGraphPath } from "@effect-ontology/PathLayout"
- * const accept = (path: DocumentGraphPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -807,12 +697,6 @@ export const RunMetadataPath = S.TemplateLiteral(["runs/", DocumentId, "/metadat
 
 /** Runtime value decoded by {@link RunMetadataPath}.
  *
- * **Example** (Use RunMetadataPath)
- * ```ts
- * import { type RunMetadataPath } from "@effect-ontology/PathLayout"
- * const accept = (path: RunMetadataPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -844,12 +728,6 @@ export const RunInputPath = S.TemplateLiteral(["runs/", DocumentId, "/input/docu
 
 /** Runtime value decoded by {@link RunInputPath}.
  *
- * **Example** (Use RunInputPath)
- * ```ts
- * import { type RunInputPath } from "@effect-ontology/PathLayout"
- * const accept = (path: RunInputPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -923,12 +801,6 @@ export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chun
 
 /** Runtime value decoded by {@link RunChunkPath}.
  *
- * **Example** (Use RunChunkPath)
- * ```ts
- * import { type RunChunkPath } from "@effect-ontology/PathLayout"
- * const accept = (path: RunChunkPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -983,12 +855,6 @@ export const RunOutputPath = S.TemplateLiteral(["runs/", DocumentId, "/outputs/"
 
 /** Runtime value decoded by {@link RunOutputPath}.
  *
- * **Example** (Use RunOutputPath)
- * ```ts
- * import { type RunOutputPath } from "@effect-ontology/PathLayout"
- * const accept = (path: RunOutputPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1095,12 +961,6 @@ export const ImageOriginalPath = makeImageHashPathSchema(
 
 /** Runtime value decoded by {@link ImageOriginalPath}.
  *
- * **Example** (Use ImageOriginalPath)
- * ```ts
- * import { type ImageOriginalPath } from "@effect-ontology/PathLayout"
- * const accept = (path: ImageOriginalPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1129,12 +989,6 @@ export const ImageMetadataPath = makeImageHashPathSchema(
 
 /** Runtime value decoded by {@link ImageMetadataPath}.
  *
- * **Example** (Use ImageMetadataPath)
- * ```ts
- * import { type ImageMetadataPath } from "@effect-ontology/PathLayout"
- * const accept = (path: ImageMetadataPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1163,12 +1017,6 @@ export const ImageLabelsPath = makeImageHashPathSchema(
 
 /** Runtime value decoded by {@link ImageLabelsPath}.
  *
- * **Example** (Use ImageLabelsPath)
- * ```ts
- * import { type ImageLabelsPath } from "@effect-ontology/PathLayout"
- * const accept = (path: ImageLabelsPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1207,12 +1055,6 @@ export const ImageVariantPath = S.TemplateLiteral([
 
 /** Runtime value decoded by {@link ImageVariantPath}.
  *
- * **Example** (Use ImageVariantPath)
- * ```ts
- * import { type ImageVariantPath } from "@effect-ontology/PathLayout"
- * const accept = (path: ImageVariantPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1243,12 +1085,6 @@ export const ImageOwnerBasePath = makeImageOwnerPathSchema(
 
 /** Runtime value decoded by {@link ImageOwnerBasePath}.
  *
- * **Example** (Use ImageOwnerBasePath)
- * ```ts
- * import { type ImageOwnerBasePath } from "@effect-ontology/PathLayout"
- * const accept = (path: ImageOwnerBasePath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1279,12 +1115,6 @@ export const ImageManifestPath = makeImageOwnerPathSchema(
 
 /** Runtime value decoded by {@link ImageManifestPath}.
  *
- * **Example** (Use ImageManifestPath)
- * ```ts
- * import { type ImageManifestPath } from "@effect-ontology/PathLayout"
- * const accept = (path: ImageManifestPath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */
@@ -1316,12 +1146,6 @@ export const CanonicalNamespacePath = S.TemplateLiteral(["canonical/", Namespace
 
 /** Runtime value decoded by {@link CanonicalNamespacePath}.
  *
- * **Example** (Use CanonicalNamespacePath)
- * ```ts
- * import { type CanonicalNamespacePath } from "@effect-ontology/PathLayout"
- * const accept = (path: CanonicalNamespacePath) => path
- * console.log(accept)
- * ```
  * @category type-level
  * @since 0.0.0
  */

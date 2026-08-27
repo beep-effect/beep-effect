@@ -1,16 +1,16 @@
-// SAX-style AST visitor: a demand-driven `Stream` of typed events over a
-// parsed YAML document, enabling early termination (`Stream.take`) without
-// building a full in-memory result beyond the AST itself.
-//
-// The event union is a `Data.TaggedEnum` — serializable tagged values with
-// structural equality, consistent with the rest of the library — replacing
-// v3's eleven `Schema.TaggedClass` event classes and its 24 `is*` guards
-// (`_tag` narrowing suffices). v3's `visitCollect` is dropped: `Stream.filter`
-// + `Stream.runCollect` cover it (and in v4 `runCollect` already yields an
-// `Array`, so no `Chunk.toReadonlyArray` step is needed).
-//
-// This is the AST-level visitor only — the CST/token layers stay internal
-// per the design's deferral of a public tokenizer/CST surface.
+/**
+ * SAX-style YAML AST visitor: a demand-driven `Stream` of typed events over a
+ * parsed document, enabling early termination (`Stream.take`) without building
+ * a full in-memory result beyond the AST itself.
+ *
+ * The event union is a `Data.TaggedEnum` — serializable tagged values with
+ * structural equality. v3's `visitCollect` is dropped: `Stream.filter` +
+ * `Stream.runCollect` cover it. Lexical tokens are public via {@link YamlTokens};
+ * this visitor stays at the AST layer.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Data, Stream } from "effect";
 import { composeAllDocuments } from "./internal/composer/document.ts";
@@ -28,7 +28,11 @@ import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
  * `tag`/`anchor`. `Error` carries a materialized {@link YamlDiagnostic} for
  * every diagnostic recorded while composing the document — fatal or not.
  *
+ * @see {@link YamlVisitor.visit} for the stream that yields these events.
+ * @see {@link (YamlVisitorEvent:variable)} for the constructors and `$is` matchers.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlVisitorEvent = Data.TaggedEnum<{
 	DocumentStart: {
@@ -79,14 +83,54 @@ export type YamlVisitorEvent = Data.TaggedEnum<{
  * `YamlVisitorEvent.Scalar({ path, depth, value, style })`,
  * `YamlVisitorEvent.$is("MapStart")`).
  *
+ * **Example** (Construct and narrow an event)
+ *
+ * ```ts
+ * import { YamlVisitorEvent } from "@beep/scratchpad/yaml"
+ *
+ * const start = YamlVisitorEvent.DocumentStart({ path: [], depth: 0, directives: [] })
+ *
+ * console.log(start._tag) // "DocumentStart"
+ * console.log(YamlVisitorEvent.$is("DocumentStart")(start)) // true
+ * ```
+ *
+ * @see {@link (YamlVisitorEvent:type)} for the discriminated union these constructors inhabit.
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
 
 /**
- * SAX-style YAML AST visitor statics. Not instantiable.
+ * Walk a YAML document as a demand-driven stream of SAX-style AST events.
  *
+ * **Gotchas**
+ *
+ * The stream is type-level infallible: fatal and non-fatal compose diagnostics
+ * (including `AliasCountExceeded`) are `Error` events in-band. Do not `Stream.run`
+ * expecting failure on bad YAML — you get a successful stream of `Error` events.
+ * {@link YamlVisitorEvent} `Pair` resolves only scalar key/value (`null` for
+ * complex keys) but still walks nested nodes. Comments live on key/value nodes
+ * and are not re-emitted on the pair.
+ *
+ * **Example** (Take DocumentStart and match in-band errors)
+ *
+ * ```ts
+ * import { Effect, Stream } from "effect"
+ * import { YamlVisitor } from "@beep/scratchpad/yaml"
+ *
+ * const prefix = Effect.runSync(Stream.runCollect(Stream.take(YamlVisitor.visit("name: Alice\n"), 1)))
+ * console.log(prefix[0]?._tag) // "DocumentStart"
+ *
+ * const events = Effect.runSync(Stream.runCollect(YamlVisitor.visit("a: 1\na: 2\n")))
+ * console.log(events.some((event) => event._tag === "Error")) // true
+ * ```
+ *
+ * @see {@link YamlTokens.tokenize} for the lexical token stream used by lint/LSP.
+ * @see {@link YamlDocument.parse} for a fully materialized AST plus recovered diagnostics.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class YamlVisitor {
 	private constructor() {}
@@ -98,7 +142,8 @@ export class YamlVisitor {
 	 * demand, so combining with `Stream.take` allows efficient partial scans
 	 * of large documents without materializing the whole event sequence.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Infallible at the type level: diagnostics recorded while composing
 	 * (fatal or not, including an exceeded `maxAliasCount`, recorded as
 	 * `AliasCountExceeded`) surface as `Error` events inside the stream rather

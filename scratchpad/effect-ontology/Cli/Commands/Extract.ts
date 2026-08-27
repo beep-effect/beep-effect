@@ -255,17 +255,27 @@ const makeExtractLayer = (ontologyPath: string, noExternalVocabs: boolean) => {
 // =============================================================================
 
 /**
- * Exposes extract command for composition by callers of this module.
+ * Runs ad-hoc ontology-guided extraction from inline text, a file, or stdin
+ * without starting the HTTP server.
  *
- * **Example** (Inspect extract command)
+ * **Details**
+ *
+ * The positional `ontology` argument is a Turtle file. Supply `--text` /
+ * `-t` for inline source, `--file` / `-f` for a document path, `--format`
+ * `json|turtle`, and `--concurrency` for parallel chunk work.
+ *
+ * **Example** (Compose extract with ontology and inline text)
  *
  * ```ts
  * import { extractCommand } from "@effect-ontology/Cli/Commands/Extract"
  *
- * console.log(extractCommand)
+ * console.log(extractCommand.name) // "extract"
+ * console.log(extractCommand.description)
+ * // effect-onto extract ontologies/people.ttl --text "Ada Lovelace was a mathematician"
+ * // effect-onto extract ontologies/people.ttl --file ./article.txt
  * ```
  *
- * @category layers
+ * @category cli-commands
  * @since 0.0.0
  */
 export const extractCommand = Command.make(

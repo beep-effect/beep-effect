@@ -1,3 +1,10 @@
+/**
+ * Guest Date statics and instance methods, with Clock-backed `Date.now` left
+ * to the interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
 import { CodeModeDate } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
@@ -22,8 +29,32 @@ export {
 const DirectDateStatic = LiteralKit(dateStatics.omitOptions(["now"]))
 type DirectDateStatic = Exclude<DateStatic, "now">;
 
-// Date.parse / Date.UTC are guest JavaScript semantic adapters. Date.now is
-// dispatched effectfully by Interpreter through the Clock-backed DateTime.now.
+/**
+ * Dispatches guest `Date.parse` and `Date.UTC` through host Date semantics.
+ *
+ * **Gotchas**
+ *
+ * `Date.now` is not handled here. `DirectDateStatic` omits `"now"` so the
+ * interpreter can dispatch it effectfully through the Clock-backed
+ * `DateTime.now`. Routing `Date.now` through this function is a type error.
+ *
+ * **Example** (Parse an ISO string and build a UTC timestamp)
+ *
+ * ```ts
+ * import { invokeDateStatic } from "../../../codemode/stdlib/StdLib.date.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const parsed = invokeDateStatic("parse", ["2020-01-01T00:00:00.000Z"], node)
+ * const utc = invokeDateStatic("UTC", [2020, 0, 1], node)
+ * console.log(parsed)
+ * console.log(utc)
+ * ```
+ *
+ * @see {@link invokeDateMethod} for instance getters and in-place setters.
+ * @see {@link dateSetterArgumentCount} for setter arity used by the interpreter.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number =>
   DirectDateStatic.$match(name, {
@@ -31,11 +62,60 @@ export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _
     UTC: () => Reflect.apply(Date.UTC, Date, args.map(coerceToNumber)),
   });
 
+/**
+ * Returns how many numeric arguments a Date setter consumes, when the method is
+ * a setter.
+ *
+ * **Example** (Distinguish setter arity from getters)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { dateSetterArgumentCount } from "../../../codemode/stdlib/StdLib.date.ts"
+ *
+ * console.log(O.getOrThrow(dateSetterArgumentCount("setHours")))
+ * console.log(O.isNone(dateSetterArgumentCount("getTime")))
+ * ```
+ *
+ * @see {@link invokeDateMethod} for the setters that consume that arity.
+ * @see {@link invokeDateStatic} for Date.parse and Date.UTC.
+ * @category getters
+ * @since 0.0.0
+ */
 export const dateSetterArgumentCount = (name: DateMethod): O.Option<1 | 2 | 3 | 4> =>
   S.is(DateSetterName)(name)
     ? O.some(DateSetterArity[name])
     : O.none();
 
+/**
+ * Dispatches a guest Date instance method against a {@link CodeModeDate}.
+ *
+ * **Gotchas**
+ *
+ * Setters mutate `value.time` in place and return the new epoch milliseconds.
+ * `toISOString` throws `RangeError` when `time` is non-finite; `toJSON`
+ * returns `null` for the same invalid time instead of throwing.
+ *
+ * **Example** (Mutate time and inspect ISO versus JSON)
+ *
+ * ```ts
+ * import { CodeModeDate } from "../../../codemode/Codemode.values.ts"
+ * import { invokeDateMethod } from "../../../codemode/stdlib/StdLib.date.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const date = CodeModeDate.new(0)
+ * const next = invokeDateMethod(date, "setTime", [1_577_836_800_000], node)
+ * console.log(next)
+ * console.log(date.time)
+ * console.log(invokeDateMethod(date, "toISOString", [], node))
+ * date.time = Number.NaN
+ * console.log(invokeDateMethod(date, "toJSON", [], node))
+ * ```
+ *
+ * @see {@link invokeDateStatic} for Date.parse and Date.UTC (not Date.now).
+ * @see {@link dateSetterArgumentCount} for how many arguments each setter reads.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeDateMethod = (
   value: CodeModeDate,

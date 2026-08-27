@@ -1,11 +1,10 @@
 /**
- * InstructionsLoaded hook event.
+ * Fires when a CLAUDE.md or `.claude/rules/*.md` instruction file is
+ * loaded into session context. Observability-only: JSON output is not
+ * acted on. Matcher is on `load_reason`. See
+ * https://code.claude.com/docs/en/hooks#instructionsloaded.
  *
- * Fires when a CLAUDE.md or .claude/rules/*.md instruction file is loaded
- * into the session context. Observability-only — the hook's output is not
- * acted on. Supports a matcher on `load_reason`.
- * See https://code.claude.com/docs/en/hooks#instructionsloaded.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -27,18 +26,21 @@ const GlobPatterns = S.String.pipe(
 );
 
 /**
- * Schema for `MemoryType`.
+ * Instruction-memory scope for the loaded file (`User`, `Project`,
+ * `Local`, or `Managed`).
  *
- * **Example** (Inspect the MemoryType schema)
+ * **Example** (Decode a memory scope)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.InstructionsLoaded.MemoryType)
+ * const memory = S.decodeUnknownSync(Hook.InstructionsLoaded.MemoryType)("Project")
+ * console.log(memory) // "Project"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this scope.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const MemoryType = LiteralKit(["User", "Project", "Local", "Managed"]).pipe(
@@ -48,35 +50,29 @@ export const MemoryType = LiteralKit(["User", "Project", "Local", "Managed"]).pi
 );
 
 /**
- * Type-level model for `MemoryType`.
+ * Decoded value produced by {@link MemoryType}.
  *
- * **Example** (Use MemoryType as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.InstructionsLoaded.MemoryType
- * ```
- *
+ * @see {@link MemoryType} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type MemoryType = typeof MemoryType.Type;
 
 /**
- * Schema for `LoadReason`.
+ * Why Claude Code loaded the instruction file.
  *
- * **Example** (Inspect the LoadReason schema)
+ * **Example** (Decode a load reason)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.InstructionsLoaded.LoadReason)
+ * const reason = S.decodeUnknownSync(Hook.InstructionsLoaded.LoadReason)("session_start")
+ * console.log(reason) // "session_start"
  * ```
  *
+ * @see {@link onMatcher} for filtering on this reason.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const LoadReason = LiteralKit([
@@ -92,35 +88,39 @@ export const LoadReason = LiteralKit([
 );
 
 /**
- * Type-level model for `LoadReason`.
+ * Decoded value produced by {@link LoadReason}.
  *
- * **Example** (Use LoadReason as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.InstructionsLoaded.LoadReason
- * ```
- *
+ * @see {@link LoadReason} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type LoadReason = typeof LoadReason.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for an InstructionsLoaded hook, including the file path,
+ * memory scope, and load reason.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a session-start load)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.InstructionsLoaded.Input)
+ * const input = S.decodeUnknownSync(Hook.InstructionsLoaded.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "InstructionsLoaded",
+ *   file_path: "/repo/CLAUDE.md",
+ *   memory_type: "Project",
+ *   load_reason: "session_start",
+ * })
+ *
+ * console.log(input.load_reason) // "session_start"
  * ```
  *
+ * @see {@link LoadReason} for the matcher field on this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`InstructionsLoadedInput`)(
@@ -140,18 +140,25 @@ export class Input extends S.Class<Input>($I`InstructionsLoadedInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response an InstructionsLoaded handler may return. Claude Code
+ * ignores it; the file is already in context.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * Returning Output does not unload or rewrite the instruction file.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.InstructionsLoaded.Output)
+ * const output = Hook.InstructionsLoaded.Output.make()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`InstructionsLoadedOutput`)(
@@ -168,35 +175,50 @@ export class Output extends S.Class<Output>($I`InstructionsLoadedOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.InstructionsLoaded.passthrough)
+ * const output = Hook.InstructionsLoaded.passthrough()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link define} for wrapping this result in a handler.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `define`.
+ * Build a runnable InstructionsLoaded hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores the JSON response.
+ *
+ * **Example** (Define an InstructionsLoaded hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.InstructionsLoaded.define)
+ * const hook = Hook.InstructionsLoaded.define({
+ *   handler: () => Effect.succeed(Hook.InstructionsLoaded.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "InstructionsLoaded"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `load_reason`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -209,17 +231,24 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Build an InstructionsLoaded hook that only handles matching `load_reason`
- * values.
+ * Build an InstructionsLoaded hook that only handles matching
+ * `load_reason` values.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Observe session-start loads)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.InstructionsLoaded.onMatcher)
+ * const hook = Hook.InstructionsLoaded.onMatcher({
+ *   matcher: "session_start",
+ *   handler: () => Effect.succeed(Hook.InstructionsLoaded.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "InstructionsLoaded"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

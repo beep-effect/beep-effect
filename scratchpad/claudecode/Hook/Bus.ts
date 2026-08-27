@@ -5,6 +5,7 @@
  * pipelines over decoded hook events without inventing their own subscription
  * plumbing.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -25,14 +26,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Bus");
 /**
  * Shape of the typed in-process hook event bus.
  *
- * **Example** (Name the bus interface)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.Bus.Interface
- * ```
- *
+ * @see {@link layer} for the layer that provides this service.
+ * @see {@link publish} to emit events to {@link Interface.stream} subscribers.
  * @category services
  * @since 0.0.0
  */
@@ -47,18 +42,31 @@ export interface Interface {
 /**
  * Typed in-process hook event bus service.
  *
- * **Example** (Access the event stream)
+ * **Example** (Publish through the provided service)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const events = Effect.service(Hook.Bus.Service).pipe(
- *   Effect.map((bus) => bus.events)
- * )
- * console.log(events)
+ * const event = Hook.SessionStart.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SessionStart",
+ *   source: "startup"
+ * })
+ * const program = Effect.gen(function* () {
+ *   const bus = yield* Hook.Bus.Service
+ *   yield* bus.publish(event)
+ *   return event.hook_event_name
+ * })
+ * Effect.runPromise(program.pipe(Effect.provide(Hook.Bus.layer))).then((eventName) =>
+ *   console.log(eventName)
+ * ) // "SessionStart"
  * ```
  *
+ * @see {@link layer} for the layer that must be provided.
+ * @see {@link publish} for the accessor that publishes without yielding the service.
  * @category services
  * @since 0.0.0
  */
@@ -84,15 +92,26 @@ const make = Effect.gen(function* () {
 /**
  * Construct an in-process hook bus layer.
  *
- * **Example** (Construct an event bus layer)
+ * **Example** (Provide the bus and publish)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
- * import * as Layer from "effect/Layer"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Layer.isLayer(Hook.Bus.layer)) // true
+ * const event = Hook.SessionStart.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SessionStart",
+ *   source: "startup"
+ * })
+ * Effect.runPromise(Hook.Bus.publish(event).pipe(Effect.provide(Hook.Bus.layer))).then(() =>
+ *   console.log(event.hook_event_name)
+ * ) // "SessionStart"
  * ```
  *
+ * @see {@link bus} for the accessor that requires this layer.
+ * @see {@link publish} to emit events once this layer is provided.
  * @category layers
  * @since 0.0.0
  */
@@ -117,6 +136,8 @@ export const layer = Layer.effect(Service, make);
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link publish} to emit events onto this bus.
+ * @see {@link layer} for the layer that must be provided.
  * @category getters
  * @since 0.0.0
  */
@@ -141,7 +162,9 @@ export const bus: Effect.Effect<Interface, never, Service> = Effect.service(Serv
  * ```
  *
  * @effects Requires {@link Service} and publishes the event to all active subscribers.
- * @category getters
+ * @see {@link bus} for Effectful access to the same service.
+ * @see {@link layer} for the layer that must be provided.
+ * @category events
  * @since 0.0.0
  */
 export const publish = Effect.fn("Hook.Bus.publishEvent")(

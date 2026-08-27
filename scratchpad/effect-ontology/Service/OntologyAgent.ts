@@ -95,7 +95,11 @@ type OntologyQueryError =
  * ```ts
  * import { OntologyAgentError } from "@effect-ontology/Service/OntologyAgent"
  *
- * console.log(OntologyAgentError)
+ * const error = OntologyAgentError.make({
+ *   operation: "loadOntology",
+ *   message: "Ontology file is missing"
+ * })
+ * console.log(error._tag) // "OntologyAgentError"
  * ```
  *
  * @category errors
@@ -159,13 +163,18 @@ const makeExtractionMetrics = (outcome: ExtractionOutcome, duration: Duration.Du
  * - `validateWithPolicy` - Policy-based validation for workflow control
  * - `explainViolations` - Convert SHACL violations to LLM-friendly explanations
  *
- * **Example** (Inspect the ontology-agent layer)
+ * **Example** (Compose ontology extraction)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { OntologyAgent } from "@effect-ontology/Service/OntologyAgent"
  *
- * console.log(Layer.isLayer(OntologyAgent.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const agent = yield* OntologyAgent
+ *   return yield* agent.extract("Ada founded Acme.")
+ * }).pipe(Effect.provide(OntologyAgent.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

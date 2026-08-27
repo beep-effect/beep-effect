@@ -101,12 +101,20 @@ Generate a corrected response that follows the requested schema exactly.`);
  * output additionally updates the prompt stored in a `Ref`, while transport
  * and timeout failures retry the unchanged prompt.
  *
- * **Example** (Inspect the feedback generator)
+ * **Example** (Compose generation with schema feedback)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { generateObjectWithFeedback } from "@effect-ontology/Service/GenerateWithFeedback"
  *
- * console.log(generateObjectWithFeedback)
+ * const Founder = S.Struct({ founder: S.String })
+ * const program = generateObjectWithFeedback({
+ *   objectName: "Founder",
+ *   serviceName: "EntityExtractor",
+ *   prompt: "Extract the founder from: Ada founded Acme.",
+ *   schema: Founder
+ * })
+ * console.log(program)
  * ```
  *
  * @category utilities

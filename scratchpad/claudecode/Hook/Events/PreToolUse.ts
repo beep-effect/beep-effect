@@ -1,11 +1,10 @@
 /**
- * PreToolUse hook event.
- *
  * Fires before Claude Code executes a tool call. A handler can return
  * `allow`, `deny`, `ask`, or `defer` to control whether the tool is run.
- * Supports a regex matcher on `tool_name`. See
+ * Matcher is on `tool_name`. See
  * https://code.claude.com/docs/en/hooks#pretooluse.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -27,16 +26,29 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PreToolUse");
 // ---------------------------------------------------------------------------
 
 /**
- * Decoded PreToolUse hook input received on stdin.
+ * Stdin payload for a PreToolUse hook, including `tool_name` and the
+ * raw `tool_input` record.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Decode a pending Bash call)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PreToolUse.Input)
+ * const input = S.decodeUnknownSync(Hook.PreToolUse.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PreToolUse",
+ *   tool_name: "Bash",
+ *   tool_input: { command: "ls" },
+ * })
+ *
+ * console.log(input.tool_name) // "Bash"
  * ```
  *
+ * @see {@link deny} for blocking this tool call.
+ * @see {@link onTool} for decoding a supported tool's input.
  * @category schemas
  * @since 0.0.0
  */
@@ -58,17 +70,23 @@ export class Input extends S.Class<Input>($I`PreToolUseInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Valid `permissionDecision` values. `defer` suspends a headless tool call
- * for later resumption; omit output entirely for a neutral no-op.
+ * Valid `permissionDecision` values. `defer` suspends a headless tool
+ * call for later resumption; {@link passthrough} is the neutral no-op
+ * (omit output entirely is equivalent).
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Decode a permission decision)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PreToolUse.PermissionDecision)
+ * const decision = S.decodeUnknownSync(Hook.PreToolUse.PermissionDecision)("deny")
+ * console.log(decision) // "deny"
  * ```
  *
+ * @see {@link allow} for proceeding with the tool call.
+ * @see {@link deny} for blocking it.
+ * @see {@link defer} for the headless resume protocol.
  * @category schemas
  * @since 0.0.0
  */
@@ -79,18 +97,10 @@ export const PermissionDecision = LiteralKit(["allow", "deny", "ask", "defer"]).
 );
 
 /**
- * Type-level model for `PermissionDecision`.
+ * Decoded value produced by {@link PermissionDecision}.
  *
- * **Example** (Use PermissionDecision as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PreToolUse.PermissionDecision
- * ```
- *
+ * @see {@link PermissionDecision} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type PermissionDecision = typeof PermissionDecision.Type;
@@ -99,14 +109,22 @@ export type PermissionDecision = typeof PermissionDecision.Type;
  * `hookSpecificOutput` payload for a PreToolUse hook. This is where the
  * permission decision lives.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Inspect a deny payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.HookSpecificOutput)
+ * const specific = Hook.PreToolUse.HookSpecificOutput.make({
+ *   hookEventName: "PreToolUse",
+ *   permissionDecision: "deny",
+ *   permissionDecisionReason: O.some("no network in this session"),
+ * })
+ *
+ * console.log(specific.permissionDecision) // "deny"
  * ```
  *
+ * @see {@link deny} for the constructor that fills this payload.
  * @category schemas
  * @since 0.0.0
  */
@@ -124,16 +142,20 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PreToolUs
 ) {}
 
 /**
- * Full PreToolUse hook output, including universal fields.
+ * Full PreToolUse hook output, including universal fields. The
+ * permission decision lives on `hookSpecificOutput`.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.Output)
+ * const output = Hook.PreToolUse.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
  * @since 0.0.0
  */
@@ -158,14 +180,19 @@ export class Output extends S.Class<Output>($I`PreToolUseOutput`)(
 /**
  * Build an `allow` decision. The tool call proceeds.
  *
- * **Example** (Build `allow` decision)
+ * **Example** (Allow a tool call)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.allow)
+ * const output = Hook.PreToolUse.allow("trusted read")
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.permissionDecision) // "allow"
  * ```
  *
+ * @see {@link deny} for blocking the tool call.
+ * @see {@link allowWithUpdatedInput} for allowing with rewritten input.
+ * @see {@link passthrough} for a neutral no-op.
  * @category constructors
  * @since 0.0.0
  */
@@ -181,33 +208,44 @@ export const allow = (reason?: string): Output =>
   });
 
 /**
- * Build a no-op output. The tool proceeds through normal permission flow.
+ * Build a no-op output. The tool proceeds through normal permission
+ * flow.
  *
- * **Example** (Build no-op output)
+ * **Example** (Skip a permission decision)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.passthrough)
+ * const output = Hook.PreToolUse.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link defer} for the headless resume protocol, which is not a no-op.
+ * @see {@link allow} for an explicit allow decision.
  * @category constructors
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Build a `deny` decision with a required explanation. The tool call
- * is blocked and the reason is fed back to Claude.
+ * Build a `deny` decision with a required explanation. The tool call is
+ * blocked and the reason is fed back to Claude.
  *
- * **Example** (Build `deny` decision with a required explanation)
+ * **Example** (Deny a tool call)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.deny)
+ * const output = Hook.PreToolUse.deny("no network in this session")
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.permissionDecision) // "deny"
+ * const reason = O.flatMap(output.hookSpecificOutput, (specific) => specific.permissionDecisionReason)
+ * console.log(O.getOrUndefined(reason)) // "no network in this session"
  * ```
  *
+ * @see {@link allow} for proceeding with the tool call.
+ * @see {@link ask} for showing a permission prompt instead.
  * @category constructors
  * @since 0.0.0
  */
@@ -226,14 +264,18 @@ export const deny = (reason: string): Output =>
  * Build an `ask` decision. Claude Code shows the user a permission
  * prompt for the tool call.
  *
- * **Example** (Build `ask` decision)
+ * **Example** (Ask the user)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.ask)
+ * const output = Hook.PreToolUse.ask("confirm this write")
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.permissionDecision) // "ask"
  * ```
  *
+ * @see {@link deny} for blocking without a prompt.
+ * @see {@link allow} for proceeding without a prompt.
  * @category constructors
  * @since 0.0.0
  */
@@ -251,16 +293,23 @@ export const ask = (reason?: string): Output =>
 /**
  * Build a `defer` decision. In headless mode, Claude Code exits with
  * `stop_reason: "tool_deferred"` so an outer process can resume later.
- * Use `passthrough()` for a neutral no-op.
  *
- * **Example** (Build `defer` decision)
+ * **Gotchas**
+ *
+ * `defer` is not a no-op. Interactive sessions may treat it like deny or
+ * ask. Use {@link passthrough} for a neutral skip.
+ *
+ * **Example** (Defer a headless tool call)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.defer)
+ * const output = Hook.PreToolUse.defer("wait for operator approval")
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.permissionDecision) // "defer"
  * ```
  *
+ * @see {@link passthrough} for a neutral no-op.
  * @category constructors
  * @since 0.0.0
  */
@@ -279,14 +328,18 @@ export const defer = (reason?: string): Output =>
  * Build an `allow` decision that replaces the tool input with a
  * modified version.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Rewrite Bash input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreToolUse.allowWithUpdatedInput)
+ * const output = Hook.PreToolUse.allowWithUpdatedInput({ command: "ls -la" }, "normalized flags")
+ * const updated = O.flatMap(output.hookSpecificOutput, (specific) => specific.updatedInput)
+ * console.log(O.getOrUndefined(updated)) // { command: "ls -la" }
  * ```
  *
+ * @see {@link allow} for allowing without rewriting input.
  * @category constructors
  * @since 0.0.0
  */
@@ -323,6 +376,8 @@ export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unkn
  * console.log(hook.event) // "PreToolUse"
  * ```
  *
+ * @see {@link onTool} for handling a single supported tool.
+ * @see {@link onMatcher} for filtering on `tool_name`.
  * @category constructors
  * @since 0.0.0
  */
@@ -336,18 +391,11 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Build a PreToolUse hook that only handles a specific supported tool.
- * Non-matching tool invocations default to `passthrough()`.
+ * Configuration for {@link onTool}: a supported tool name plus a handler
+ * that receives the decoded tool payload.
  *
- * **Example** (Build PreToolUse hook that only handles a specific supported tool)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type BashHook = Hook.PreToolUse.OnToolConfig<"Bash", never, never>
- * ```
- *
- * @category constructors
+ * @see {@link onTool} for the constructor that consumes this config.
+ * @category type-level
  * @since 0.0.0
  */
 export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
@@ -358,18 +406,32 @@ export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
 };
 
 /**
- * Constructor for `onTool`.
+ * Build a PreToolUse hook that only handles a specific supported tool.
+ * Non-matching tool invocations default to `passthrough()`.
  *
- * **Example** (Use onTool)
+ * **Gotchas**
+ *
+ * Omitted `onDecodeError` fails closed with `HookToolDecodeError`.
+ * Omitted `onMismatch` passthroughs.
+ *
+ * **Example** (Deny Bash)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PreToolUse.onTool)
+ * const hook = Hook.PreToolUse.onTool({
+ *   toolName: "Bash",
+ *   handler: () => Effect.succeed(Hook.PreToolUse.deny("no bash in this session")),
+ * })
+ *
+ * console.log(hook.event) // "PreToolUse"
  * ```
  *
+ * @see {@link OnToolConfig} for the config shape.
+ * @see {@link onAdapter} for a custom typed adapter.
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const onTool = <const T extends Tool.SupportedToolName, E, R>(
@@ -392,14 +454,22 @@ export const onTool = <const T extends Tool.SupportedToolName, E, R>(
  * Build a PreToolUse hook that only handles matching `tool_name` values.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * **Example** (Build PreToolUse hook that only handles matching `tool_name` values)
+ * **Example** (Deny matching writes)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PreToolUse.onMatcher)
+ * const hook = Hook.PreToolUse.onMatcher({
+ *   matcher: "Write",
+ *   handler: () => Effect.succeed(Hook.PreToolUse.deny("writes are frozen")),
+ * })
+ *
+ * console.log(hook.event) // "PreToolUse"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link onTool} for typed decoding of a supported tool.
  * @category constructors
  * @since 0.0.0
  */
@@ -421,14 +491,27 @@ export const onMatcher = <E, R>(config: {
  * Build a PreToolUse hook from a custom typed tool adapter.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * **Example** (Build PreToolUse hook from a custom typed tool adapter)
+ * **Gotchas**
+ *
+ * Omitted `onDecodeError` fails closed with `HookToolDecodeError`.
+ * Omitted `onMismatch` passthroughs.
+ *
+ * **Example** (Handle Bash through its adapter)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PreToolUse.onAdapter)
+ * const hook = Hook.PreToolUse.onAdapter({
+ *   adapter: Hook.Tool.BashAdapter,
+ *   handler: () => Effect.succeed(Hook.PreToolUse.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PreToolUse"
  * ```
  *
+ * @see {@link onTool} for the built-in supported-tool entry.
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

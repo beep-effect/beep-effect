@@ -1,11 +1,10 @@
 /**
- * SubagentStart hook event.
- *
  * Fires when a subagent is spawned. A handler can inject additional
- * context the subagent will see. Supports a matcher on `agent_type`.
- * The subagent cannot be blocked from starting.
- * See https://code.claude.com/docs/en/hooks#subagentstart.
+ * context the subagent will see; the spawn itself cannot be blocked.
+ * Matcher is on `agent_type`. See
+ * https://code.claude.com/docs/en/hooks#subagentstart.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -21,18 +20,29 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/SubagentStart");
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a SubagentStart hook, including `agent_id` and
+ * `agent_type`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a spawned Explore agent)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.SubagentStart.Input)
+ * const input = S.decodeUnknownSync(Hook.SubagentStart.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SubagentStart",
+ *   agent_id: "agent-1",
+ *   agent_type: "Explore",
+ * })
+ *
+ * console.log(input.agent_type) // "Explore"
  * ```
  *
+ * @see {@link addContext} for injecting context the subagent will see.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`SubagentStartInput`)(
@@ -48,18 +58,25 @@ export class Input extends S.Class<Input>($I`SubagentStartInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that injects `additionalContext` into the
+ * spawned subagent.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect additional context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStart.HookSpecificOutput)
+ * const specific = Hook.SubagentStart.HookSpecificOutput.make({
+ *   hookEventName: "SubagentStart",
+ *   additionalContext: O.some("Prefer bun test"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "Prefer bun test"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentStartHookSpecificOutput`)(
@@ -73,18 +90,27 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentS
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a SubagentStart handler returns. Only additional
+ * context is honored.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * There is no `block` helper. The subagent always starts; stuffing
+ * `continue: false` into Output does not cancel spawn.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStart.Output)
+ * const output = Hook.SubagentStart.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for starting without extra context.
+ * @see {@link addContext} for injecting context the subagent will see.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`SubagentStartOutput`)(
@@ -102,35 +128,49 @@ export class Output extends S.Class<Output>($I`SubagentStartOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Let the subagent start without extra context.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * Spawn always proceeds. This is not a cancel.
+ *
+ * **Example** (Start without extra context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStart.passthrough)
+ * const output = Hook.SubagentStart.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link addContext} for injecting context the subagent will see.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `addContext`.
+ * Inject additional context the spawned subagent will see.
  *
- * **Example** (Use addContext)
+ * **Gotchas**
+ *
+ * Spawn always proceeds; only additional context is honored. Look at
+ * SubagentStop if you need to keep a running subagent going.
+ *
+ * **Example** (Inject a test runner hint)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStart.addContext)
+ * const output = Hook.SubagentStart.addContext("Prefer bun test")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "Prefer bun test"
  * ```
  *
+ * @see {@link passthrough} for starting without extra context.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
@@ -144,18 +184,23 @@ export const addContext = (additionalContext: string): Output =>
   });
 
 /**
- * Constructor for `define`.
+ * Build a runnable SubagentStart hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a SubagentStart hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SubagentStart.define)
+ * const hook = Hook.SubagentStart.define({
+ *   handler: () => Effect.succeed(Hook.SubagentStart.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "SubagentStart"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `agent_type`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -168,16 +213,25 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Build a SubagentStart hook that only handles matching `agent_type` values.
+ * Build a SubagentStart hook that only handles matching `agent_type`
+ * values.
  *
- * **Example** (Build SubagentStart hook that only handles matching `agent_type` values)
+ * **Example** (Inject context for Explore agents)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SubagentStart.onMatcher)
+ * const hook = Hook.SubagentStart.onMatcher({
+ *   matcher: "Explore",
+ *   handler: () => Effect.succeed(Hook.SubagentStart.addContext("Prefer bun test")),
+ * })
+ *
+ * console.log(hook.event) // "SubagentStart"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link addContext} for the matched-handler result used here.
  * @category constructors
  * @since 0.0.0
  */

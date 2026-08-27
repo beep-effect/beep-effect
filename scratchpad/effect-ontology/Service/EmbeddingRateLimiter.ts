@@ -142,14 +142,23 @@ export interface EmbeddingRateLimiterMethods {
 }
 
 /**
- * EmbeddingRateLimiter service tag
+ * Context tag for RPM and concurrency limits around embedding calls.
  *
- * **Example** (Inspect embedding rate limiter)
+ * **Example** (Acquire a no-op permit)
  *
  * ```ts
- * import { EmbeddingRateLimiter } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ * import { Effect } from "effect"
+ * import { EmbeddingRateLimiter, EmbeddingRateLimiterNoop } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
- * console.log(EmbeddingRateLimiter)
+ * const metrics = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const limiter = yield* EmbeddingRateLimiter
+ *     yield* limiter.acquire
+ *     yield* limiter.release
+ *     return yield* limiter.getMetrics
+ *   }).pipe(Effect.provide(EmbeddingRateLimiterNoop), Effect.orDie)
+ * )
+ * console.log(metrics.requestsThisMinute) // 0
  * ```
  *
  * @category services
@@ -160,18 +169,41 @@ export class EmbeddingRateLimiter extends Context.Service<EmbeddingRateLimiter, 
 ) {}
 
 /**
- * Create a rate limiter layer with the given configuration
+ * Build an embedding rate-limiter layer from explicit RPM and concurrency caps.
  *
- * **Example** (Inspect make embedding rate limiter)
+ * **Example** (Count one acquired request)
  *
  * ```ts
- * import { makeEmbeddingRateLimiter } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ * import { Effect } from "effect"
+ * import {
+ *   EmbeddingRateLimiter,
+ *   EmbeddingRateLimiterConfig,
+ *   makeEmbeddingRateLimiter
+ * } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
- * console.log(makeEmbeddingRateLimiter)
+ * const metrics = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const limiter = yield* EmbeddingRateLimiter
+ *     yield* limiter.acquire
+ *     yield* limiter.release
+ *     return yield* limiter.getMetrics
+ *   }).pipe(
+ *     Effect.provide(
+ *       makeEmbeddingRateLimiter(
+ *         EmbeddingRateLimiterConfig.make({
+ *           provider: "nomic",
+ *           requestsPerMinute: 100,
+ *           maxConcurrent: 4
+ *         })
+ *       )
+ *     ),
+ *     Effect.orDie
+ *   )
+ * )
+ * console.log(metrics.requestsThisMinute) // 1
  * ```
  *
  * @param config - Rate limiter configuration
- * @returns Layer providing EmbeddingRateLimiter
  * @category layers
  * @since 0.0.0
  */
@@ -222,46 +254,72 @@ export const makeEmbeddingRateLimiter = (config: EmbeddingRateLimiterConfig): La
   );
 
 /**
- * Default rate limiter for Voyage AI
+ * Voyage RPM/concurrency limiter using {@link VOYAGE_RATE_LIMITS}.
  *
- * **Example** (Inspect embedding rate limiter voyage)
+ * **Example** (Acquire under Voyage limits)
  *
  * ```ts
- * import { EmbeddingRateLimiterVoyage } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ * import { Effect } from "effect"
+ * import { EmbeddingRateLimiter, EmbeddingRateLimiterVoyage } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
- * console.log(EmbeddingRateLimiterVoyage)
+ * const metrics = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const limiter = yield* EmbeddingRateLimiter
+ *     yield* limiter.acquire
+ *     yield* limiter.release
+ *     return yield* limiter.getMetrics
+ *   }).pipe(Effect.provide(EmbeddingRateLimiterVoyage), Effect.orDie)
+ * )
+ * console.log(metrics.requestsThisMinute) // 1
  * ```
  *
- * @category services
+ * @category layers
  * @since 0.0.0
  */
 export const EmbeddingRateLimiterVoyage = makeEmbeddingRateLimiter(VOYAGE_RATE_LIMITS);
 
 /**
- * Rate limiter for local models (effectively unlimited)
+ * High-cap limiter for local embedding models.
  *
- * **Example** (Inspect embedding rate limiter local)
+ * **Example** (Acquire under local limits)
  *
  * ```ts
- * import { EmbeddingRateLimiterLocal } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ * import { Effect } from "effect"
+ * import { EmbeddingRateLimiter, EmbeddingRateLimiterLocal } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
- * console.log(EmbeddingRateLimiterLocal)
+ * const metrics = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const limiter = yield* EmbeddingRateLimiter
+ *     yield* limiter.acquire
+ *     yield* limiter.release
+ *     return yield* limiter.getMetrics
+ *   }).pipe(Effect.provide(EmbeddingRateLimiterLocal), Effect.orDie)
+ * )
+ * console.log(metrics.requestsThisMinute) // 1
  * ```
  *
- * @category services
+ * @category layers
  * @since 0.0.0
  */
 export const EmbeddingRateLimiterLocal = makeEmbeddingRateLimiter(LOCAL_RATE_LIMITS);
 
 /**
- * No-op rate limiter for testing
+ * Test limiter that never delays or rejects acquire.
  *
- * **Example** (Inspect embedding rate limiter noop)
+ * **Example** (Observe unchanged metrics)
  *
  * ```ts
- * import { EmbeddingRateLimiterNoop } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ * import { Effect } from "effect"
+ * import { EmbeddingRateLimiter, EmbeddingRateLimiterNoop } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
- * console.log(EmbeddingRateLimiterNoop)
+ * const metrics = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const limiter = yield* EmbeddingRateLimiter
+ *     yield* limiter.acquire
+ *     return yield* limiter.getMetrics
+ *   }).pipe(Effect.provide(EmbeddingRateLimiterNoop), Effect.orDie)
+ * )
+ * console.log(metrics.requestsThisMinute) // 0
  * ```
  *
  * @category layers

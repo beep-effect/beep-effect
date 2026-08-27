@@ -1,3 +1,18 @@
+/**
+ * Minimatch engine: compile a glob to a total string matcher.
+ *
+ * Platform is an explicit option defaulting to `"posix"` — there is no ambient
+ * `process.platform`. `match()` is total: exceeding `maxGlobstarRecursion`
+ * is an intentional false negative and never throws. Brace expansion keeps
+ * the CVE-2022-3517 ReDoS-safe pre-check and throws on budget exhaustion
+ * instead of truncating.
+ *
+ * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
+ * License: BlueOak-1.0.0.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // Ported from minimatch@10.2.5 (https://github.com/isaacs/minimatch)
 // Copyright: Isaac Z. Schlueter and Contributors
 // License: BlueOak-1.0.0 (https://blueoakcouncil.org/license/1.0.0)
@@ -36,7 +51,7 @@ import { GLOBSTAR } from "./types.ts";
 export { escape } from "./escape.ts";
 export type { EngineOptions, MMRegExp, ParseReturn, ParseReturnFiltered, Platform } from "./types.ts";
 export { unescape } from "./unescape.ts";
-export { GLOBSTAR };
+export { GLOBSTAR } from "./types.ts";
 
 // Optimized checking for the most common glob patterns.
 const starDotExtRE = /^\*+([^+@!?*[(]*)$/;
@@ -114,6 +129,29 @@ const twoStarNoDot = "(?:(?!(?:\\/|^)\\.).)*?";
 // Invalid sets are not expanded.
 // a{2..}b -> a{2..}b
 // a{b}c -> a{b}c
+/**
+ * Expand braces in `pattern`, or return `[pattern]` when `nobrace` is set or
+ * the CVE-2022-3517-safe pre-check finds no brace set.
+ *
+ * **Gotchas**
+ *
+ * Budget exhaustion inside the expander throws {@link GuardExceeded}
+ * `ExpansionBudgetExceeded` instead of silently truncating. `nobrace: true`
+ * is a no-op that returns the original pattern.
+ *
+ * **Example** (Expand braces or skip them)
+ *
+ * ```ts
+ * import { braceExpand } from "../../glob/internal/minimatch.ts"
+ *
+ * console.log(braceExpand("a{b,c}", {})) // ["ab", "ac"]
+ * console.log(braceExpand("a{b,c}", { nobrace: true })) // ["a{b,c}"]
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const braceExpand = (pattern: string, options: EngineOptions = {}): Array<string> => {
 	assertValidPattern(pattern);
 
@@ -132,6 +170,30 @@ export const braceExpand = (pattern: string, options: EngineOptions = {}): Array
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|]/;
 const regExpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
+/**
+ * Compiled minimatch engine: the compile/match implementation behind
+ * {@link GlobPattern}.
+ *
+ * **Gotchas**
+ *
+ * Platform defaults to `"posix"` with no ambient process read. `match()` is
+ * total — exceeding `maxGlobstarRecursion` (default 200) returns `false` and
+ * never {@link GuardExceeded}. `noglobstar` rewrites `**` to `*`.
+ *
+ * **Example** (Match a recursive TypeScript glob)
+ *
+ * ```ts
+ * import { Minimatch } from "../../glob/internal/minimatch.ts"
+ *
+ * const matcher = new Minimatch("**/*.ts", {})
+ * console.log(matcher.match("src/index.ts")) // true
+ * console.log(matcher.match("src/index.js")) // false
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export class Minimatch {
 	options: EngineOptions;
 	set: Array<Array<ParseReturnFiltered>>;

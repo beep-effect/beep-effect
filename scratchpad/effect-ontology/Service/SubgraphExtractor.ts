@@ -386,9 +386,15 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
  * **Example** (Compose the live extraction layer)
  *
  * ```ts
- * import { SubgraphExtractorDefault } from "@effect-ontology/Service/SubgraphExtractor"
+ * import { Effect } from "effect"
+ * import { SubgraphExtractor, SubgraphExtractorDefault } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * console.log(SubgraphExtractorDefault)
+ * const program = Effect.gen(function* () {
+ *   const extractor = yield* SubgraphExtractor
+ *   return extractor
+ * }).pipe(Effect.provide(SubgraphExtractorDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

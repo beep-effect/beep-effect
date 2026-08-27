@@ -1,3 +1,13 @@
+/**
+ * Confined evaluator for parsed CodeMode programs.
+ *
+ * Host callers should prefer {@link executeWithLimits}, which constructs this
+ * class, copies results out, and applies budgets. Direct `run` is the inner
+ * evaluation loop used by that entry.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Unknown } from "@beep/schema/Unknown";
 import {
   Cause,
@@ -414,6 +424,63 @@ type GeneratorState = {
 
 const promiseResolutionNode: AstNode = {type: "PromiseResolution"};
 
+/**
+ * Evaluates a {@link ProgramNode} against a fresh lexical frame and Promise runtime.
+ *
+ * **Gotchas**
+ *
+ * `run` pushes an extra scope frame so top-level declarations can shadow
+ * builtins such as `Promise`. The implicit async body adopts a returned promise
+ * before copy-out. `await` always suspends, including for plain values. Array,
+ * Object, Date, and RegExp construct identically with or without `new`; Map,
+ * Set, URL, and URLSearchParams require `new`; Math, JSON, and console are not
+ * functions. Date-as-function formats ISO so the host timezone does not leak.
+ * Tool-call promises fork at the call site so admission hooks run when the call
+ * is made, and fiber exits make settlement idempotent.
+ *
+ * **Example** (Run a parsed literal program)
+ *
+ * ```ts
+ * import { Effect, Scope } from "effect"
+ * import * as S from "effect/Schema"
+ * import { ProgramNode } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ * import { Interpreter } from "../../../codemode/interpreter/Interpreter.runtime.ts"
+ *
+ * const program = S.decodeUnknownSync(ProgramNode)({
+ *   type: "Program",
+ *   body: [
+ *     {
+ *       type: "ExpressionStatement",
+ *       expression: { type: "Literal", value: 2, raw: "2" },
+ *     },
+ *   ],
+ * })
+ *
+ * const result = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const scope = yield* Scope.make()
+ *     const interpreter = new Interpreter(
+ *       () => Effect.succeed(undefined),
+ *       () => Effect.succeed(undefined),
+ *       () => [],
+ *       new PromiseRuntime(scope),
+ *     )
+ *     return yield* interpreter.run(program)
+ *   }),
+ * )
+ * console.log(result)
+ * // 2
+ * ```
+ *
+ * @see {@link executeWithLimits} for the supported host entry that parses, copies out, and applies budgets.
+ * @see {@link ScopeStack} for TDZ, const assignment, and empty-stack throws.
+ * @see {@link PromiseRuntime} for settlement, observation, and un-awaited rejection diagnostics.
+ * @see {@link RuntimeReference} for the schema-owned handles `run` installs as builtins.
+ * @see {@link GlobalNamespace} for constructor vs namespace call semantics.
+ * @category services
+ * @since 0.0.0
+ */
 export class Interpreter<R> {
   private scopes: ScopeStack;
   private readonly executeTool: (
@@ -490,6 +557,39 @@ export class Interpreter<R> {
     }
   }
 
+  /**
+   * Evaluates a decoded {@link ProgramNode} in a fresh lexical frame, adopting a returned promise.
+   *
+   * **Example** (Run a parsed literal)
+   *
+   * ```ts
+   * import { Effect, Scope } from "effect"
+   * import * as S from "effect/Schema"
+   * import { ProgramNode } from "../../../codemode/interpreter/Interpreter.model.ts"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   * import { Interpreter } from "../../../codemode/interpreter/Interpreter.runtime.ts"
+   *
+   * const program = S.decodeUnknownSync(ProgramNode)({
+   *   type: "Program",
+   *   body: [{ type: "ExpressionStatement", expression: { type: "Literal", value: 2, raw: "2" } }],
+   * })
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     return yield* new Interpreter(
+   *       () => Effect.succeed(undefined),
+   *       () => Effect.succeed(undefined),
+   *       () => [],
+   *       new PromiseRuntime(scope),
+   *     ).run(program)
+   *   }),
+   * )
+   * console.log(result)
+   * // 2
+   * ```
+   *
+   * @since 0.0.0
+   */
   run(program: ProgramNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     // Keep top-level declarations separate so they can shadow builtins.
@@ -527,6 +627,27 @@ export class Interpreter<R> {
     }).pipe(Effect.ensuring(Effect.sync(() => self.scopes.pop())));
   }
 
+  /**
+   * Forks a host tool call at the call site so admission hooks run when the guest invokes it.
+   *
+   * **Example** (Call a missing tool path)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return await tools.missing()")
+   *   }),
+   * )
+   * console.log(result.ok === false)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   // Fork at the call site so admission and hooks occur when the call is made.
   private createToolCallPromise(
     path: ReadonlyArray<string>,
@@ -535,10 +656,52 @@ export class Interpreter<R> {
     return this.createPromise(Effect.suspend(() => this.executeTool(path, args)));
   }
 
+  /**
+   * Registers a guest effect with {@link PromiseRuntime.create}.
+   *
+   * **Example** (Return an awaited promise)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return await Promise.resolve(3)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 3
+   * ```
+   *
+   * @since 0.0.0
+   */
   private createPromise(effect: Effect.Effect<unknown, InterpreterFailure, R>): Effect.Effect<CodeModePromise, never, R> {
     return this.promises.create(effect);
   }
 
+  /**
+   * Marks a guest promise observed, awaits its fiber, then yields so settlement is never inline.
+   *
+   * **Example** (Settle an awaited value)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return await 4")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 4
+   * ```
+   *
+   * @since 0.0.0
+   */
   // Fiber exits make settlement idempotent; yielding prevents inline continuation.
   private settlePromise(promise: CodeModePromise): Effect.Effect<unknown, InterpreterFailure> {
     const promises = this.promises;
@@ -548,6 +711,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Dispatches one statement node, returning an abrupt {@link StatementResult} or {@link StatementNone}.
+   *
+   * **Example** (Evaluate an expression statement)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("5")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 5
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     if (!S.is(StatementNodeType)(node.type)) {
       return Effect.fail(unsupportedSyntax(node.type, node));
@@ -585,6 +769,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Evaluates a block in a pushed scope, predeclaring lexicals and stopping on the first abrupt result.
+   *
+   * **Example** (Return from a nested block)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("{ const inner = 6; return inner }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 6
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateBlock(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     this.scopes.push();
     const self = this;
@@ -606,6 +811,27 @@ export class Interpreter<R> {
     }).pipe(Effect.ensuring(Effect.sync(() => self.scopes.pop())));
   }
 
+  /**
+   * Captures the current scope stack into a {@link CodeModeFunction} handle.
+   *
+   * **Example** (Call a captured arrow)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const add = (n) => n + 1; return add(7)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 8
+   * ```
+   *
+   * @since 0.0.0
+   */
   private createFunction(node: AstNode): CodeModeFunction {
     return CodeModeFunction.new(
       getArray(node, "params").map((parameter, index) => asNode(parameter, `params[${index}]`)),
@@ -616,6 +842,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Declares function-declaration bindings in the current frame before statements run.
+   *
+   * **Example** (Call a hoisted function)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return answer(); function answer() { return 9 }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 9
+   * ```
+   *
+   * @since 0.0.0
+   */
   private hoistFunctions(statements: ReadonlyArray<unknown>): void {
     for (const statementValue of statements) {
       if (!AstNode.is(statementValue) || statementValue.type !== "FunctionDeclaration") continue;
@@ -624,6 +871,27 @@ export class Interpreter<R> {
     }
   }
 
+  /**
+   * Hoists `var` names into the current frame as initialized `undefined` slots.
+   *
+   * **Example** (Read a var declared later)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const before = value; var value = 10; return [before, value]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [undefined, 10]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private hoistVariables(value: unknown): void {
     const scope = this.scopes.current();
     for (const [name, node] of collectHoistedVariables(value)) {
@@ -633,6 +901,27 @@ export class Interpreter<R> {
     }
   }
 
+  /**
+   * Reserves `let`/`const` names in the current frame so TDZ reads fail before initialize.
+   *
+   * **Example** (Read a let before initialization)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("try { return count } catch (error) { let count = 1; return error.name }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // ReferenceError
+   * ```
+   *
+   * @since 0.0.0
+   */
   private predeclareLexical(statements: ReadonlyArray<unknown>): void {
     for (const statementValue of statements) {
       if (!AstNode.is(statementValue) || statementValue.type !== "VariableDeclaration") continue;
@@ -648,10 +937,52 @@ export class Interpreter<R> {
     }
   }
 
+  /**
+   * Reserves every name in a binding pattern before the pattern is initialized.
+   *
+   * **Example** (Destructure a reserved let)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let { n } = { n: 11 }; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 11
+   * ```
+   *
+   * @since 0.0.0
+   */
   private predeclarePattern(pattern: AstNode, mutable: boolean, node: AstNode): void {
     for (const name of collectPatternNames(pattern)) this.scopes.reserve(name, mutable, node);
   }
 
+  /**
+   * Evaluates an if statement using JavaScript truthiness, taking the else branch only when present.
+   *
+   * **Example** (Take the then branch)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("if (true) { return 12 } return 0")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 12
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateIfStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const testNode = getNode(node, "test");
     const consequentNode = getNode(node, "consequent");
@@ -666,6 +997,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Evaluates a switch against data-only discriminant and case values, falling through until `break`.
+   *
+   * **Example** (Match a case)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("switch (2) { case 1: return 0; case 2: return 13; default: return -1 }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 13
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateSwitchStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -720,6 +1072,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Runs a while loop, honoring labeled `break`/`continue` against the supplied loop labels.
+   *
+   * **Example** (Count with while)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; while (n < 3) n += 1; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 3
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateWhileStatement(
     node: AstNode,
     labels: O.Option<LoopLabels> = O.none(),
@@ -751,6 +1124,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Runs a do-while loop so the body executes once even when the test is already falsy.
+   *
+   * **Example** (Run the body once)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; do { n += 1 } while (false); return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 1
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateDoWhileStatement(
     node: AstNode,
     labels: O.Option<LoopLabels> = O.none(),
@@ -782,6 +1176,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Runs a C-style for loop, cloning per-iteration `let` bindings so closures see the right slot.
+   *
+   * **Example** (Accumulate in a for loop)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let sum = 0; for (let i = 0; i < 3; i += 1) sum += i; return sum")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 3
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateForStatement(
     node: AstNode,
     labels: O.Option<LoopLabels> = O.none(),
@@ -865,6 +1280,27 @@ export class Interpreter<R> {
     }).pipe(Effect.ensuring(Effect.sync(() => self.scopes.pop())));
   }
 
+  /**
+   * Iterates `for...of` / `for await...of` over arrays, strings, Map/Set/URLSearchParams, or custom iterators.
+   *
+   * **Example** (Sum an array)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let sum = 0; for (const n of [1, 2, 3]) sum += n; return sum")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 6
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateForOfStatement(
     node: AstNode,
     labels: O.Option<LoopLabels> = O.none(),
@@ -978,12 +1414,54 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Adopts a thenable or guest promise and settles it, including plain values via {@link resolvePromise}.
+   *
+   * **Example** (Await a plain number)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return await 14")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 14
+   * ```
+   *
+   * @since 0.0.0
+   */
   private awaitValue(value: unknown, node: AstNode = promiseResolutionNode): Effect.Effect<unknown, InterpreterFailure, R> {
     return Effect.flatMap(resolvePromise(this.runner, this.promises, value, node), (promise) =>
       this.settlePromise(promise),
     );
   }
 
+  /**
+   * Awaits a value produced by a sync iterator during `for await...of`, closing the iterator on rejection.
+   *
+   * **Example** (for-await over an array)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const out = []; for await (const n of [15]) out.push(n); return out")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [15]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private awaitAsyncFromSyncValue(
     iterator: CustomIterator,
     value: unknown,
@@ -1001,6 +1479,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Builds a synchronous cursor over arrays, strings, Map, Set, URLSearchParams, or a custom iterator.
+   *
+   * **Example** (Spread an array)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return [...[16, 17]]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [16, 17]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private syncIterator(value: unknown, node: AstNode) {
     const iterator = A.isArray(value)
       ? value[Symbol.iterator]()
@@ -1035,6 +1534,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Resolves a guest generator or object with `Symbol.iterator` / `Symbol.asyncIterator` into a cursor.
+   *
+   * **Example** (Iterate a generator)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield 18 }; const it = g(); return it.next().value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 18
+   * ```
+   *
+   * @since 0.0.0
+   */
   private customIterator(
     value: unknown,
     node: AstNode,
@@ -1069,6 +1589,26 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Advances a custom iterator, awaiting async `next()` results and wrapping sync values for `for await`.
+   *
+   * **Example** (Pull the next generator result)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield 19; return 20 }; return g().next()")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * ```
+   *
+   * @since 0.0.0
+   */
   private nextIteratorResult(iterator: CustomIterator, node: AstNode, awaiting: boolean) {
     const self = this;
     return Effect.gen(function* () {
@@ -1105,6 +1645,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Invokes an iterator's `return` method when a loop exits early, awaiting async close when required.
+   *
+   * **Example** (Break out of for-of)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; for (const x of [1, 2, 3]) { n = x; break }; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 1
+   * ```
+   *
+   * @since 0.0.0
+   */
   private closeIterator(iterator: CustomIterator, node: AstNode, awaiting = true): Effect.Effect<void, InterpreterFailure, R> {
     const close =
       CodeModeGenerator.is(iterator.iterator)
@@ -1139,22 +1700,106 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Asserts that an iterator `next`/`return` result is a non-runtime data object.
+   *
+   * **Example** (Reject a non-object next result)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const it = { next: () => 1 }; for (const x of it) return x")
+   *   }),
+   * )
+   * console.log(result.ok === false)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   private requireIteratorObject(value: unknown, context: string, node: AstNode): SafeObject {
     if (S.is(SafeObjectSchema)(value) && !isRuntimeReference(value)) return value;
     throw InterpreterRuntimeError.new(`${context} must be an object.`, node).as("TypeError");
   }
 
+  /**
+   * Accepts a {@link CodeModeGenerator} or a data object as an iterator instance.
+   *
+   * **Example** (Use a generator as an iterator)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield 21 }; let n = 0; for (const x of g()) n = x; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 21
+   * ```
+   *
+   * @since 0.0.0
+   */
   private requireIterator(value: unknown, node: AstNode): SafeObject | CodeModeGenerator {
     return CodeModeGenerator.is(value)
       ? value
       : this.requireIteratorObject(value, "Iterator method result", node);
   }
 
+  /**
+   * Asserts that an iterator method (`next`/`return`) is a function.
+   *
+   * **Example** (Reject a non-callable next)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("for (const x of { next: 1 }) return x")
+   *   }),
+   * )
+   * console.log(result.ok === false)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   private requireIteratorMethod(value: unknown, context: string, node: AstNode): unknown {
     if (typeofValue(value) === "function") return value;
     throw InterpreterRuntimeError.new(`${context} must be a function.`, node).as("TypeError");
   }
 
+  /**
+   * Lists enumerable string keys for objects, arrays, and tool namespaces; `null`/`undefined` yield `[]`.
+   *
+   * **Example** (for-in over an object)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const keys = []; for (const key in { a: 1 }) keys.push(key); return keys")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // ["a"]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private enumerableKeys(value: unknown): Array<string> | undefined {
     if (P.isNullish(value)) return A.empty();
     if (ToolReference.is(value)) {
@@ -1169,6 +1814,27 @@ export class Interpreter<R> {
     return undefined;
   }
 
+  /**
+   * Iterates enumerable keys with `for...in`, treating nullish sources as empty.
+   *
+   * **Example** (Skip a null source)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; for (const key in null) n += 1; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 0
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateForInStatement(
     node: AstNode,
     labels: O.Option<LoopLabels> = O.none(),
@@ -1247,6 +1913,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Builds a labeled or unlabeled {@link StatementBreak} from a `break` statement.
+   *
+   * **Example** (Break a loop)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; for (;;) { n = 22; break }; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 22
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateBreakStatement(node: AstNode): StatementResult {
     const labelNode = getOptionalNode(node, "label");
     return StatementBreak.new(
@@ -1256,6 +1943,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Builds a labeled or unlabeled {@link StatementContinue} from a `continue` statement.
+   *
+   * **Example** (Skip an iteration)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; for (const x of [1, 2]) { if (x === 1) continue; n = x }; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 2
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateContinueStatement(node: AstNode): StatementResult {
     const labelNode = getOptionalNode(node, "label");
     return StatementContinue.new(
@@ -1265,6 +1973,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Evaluates a labeled statement, attaching the label to nested loops so labeled break/continue can escape.
+   *
+   * **Example** (Break an outer label)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; outer: for (;;) { for (;;) { n = 23; break outer } }; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 23
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateLabeledStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const labels = MutableHashSet.empty<string>();
     let body = node;
@@ -1291,11 +2020,53 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Evaluates a `throw` argument and fails the guest program with {@link ProgramThrow}.
+   *
+   * **Example** (Catch a thrown string)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("try { throw \"boom\" } catch (error) { return error }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // boom
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateThrowStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const argument = getNode(node, "argument");
     return Effect.flatMap(this.evaluateExpression(argument), (value) => Effect.fail(ProgramThrow.new(value)));
   }
 
+  /**
+   * Runs try/catch/finally, converting guest throws into catch bindings and preferring abrupt finally results.
+   *
+   * **Example** (Recover in catch)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("try { throw 1 } catch (error) { return 24 }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 24
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateTryStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const body = getNode(node, "block");
     const handler = getOptionalNode(node, "handler");
@@ -1350,6 +2121,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Declares or initializes each binding in a `var`/`let`/`const` declaration.
+   *
+   * **Example** (Initialize a const)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const value = 25; return value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 25
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateVariableDeclaration(node: AstNode): Effect.Effect<void, InterpreterFailure, R> {
     const kind = getString(node, "kind");
     const declarations = getArray(node, "declarations");
@@ -1376,6 +2168,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Walks a binding pattern, declaring or initializing names including object/array rest.
+   *
+   * **Example** (Destructure with a default)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const { n = 26 } = {}; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 26
+   * ```
+   *
+   * @since 0.0.0
+   */
   private declarePattern(
     pattern: AstNode,
     value: unknown,
@@ -1447,6 +2260,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Assigns into an existing pattern target: identifiers, members, and nested destructuring.
+   *
+   * **Example** (Assign through an array pattern)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let a; let b; [a, b] = [27, 28]; return [a, b]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [27, 28]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private assignPattern(pattern: AstNode, value: unknown, node: AstNode): Effect.Effect<void, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -1508,6 +2342,26 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Walks an array pattern against a synchronous iterable, filling holes and rest elements.
+   *
+   * **Example** (Collect a rest tail)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const [head, ...tail] = [29, 30, 31]; return [head, tail]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * ```
+   *
+   * @since 0.0.0
+   */
   private destructureArrayPattern(
     pattern: AstNode,
     value: unknown,
@@ -1556,6 +2410,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Resolves a destructuring property key, including computed keys.
+   *
+   * **Example** (Destructure a computed key)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const key = \"n\"; const { [key]: value } = { n: 32 }; return value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 32
+   * ```
+   *
+   * @since 0.0.0
+   */
   private destructuringPropertyKey(property: AstNode): Effect.Effect<PropertyKey, InterpreterFailure, R> {
     if (property.type !== "Property" || getString(property, "kind") !== "init") {
       throw InterpreterRuntimeError.new("Unsupported object destructuring property.", property);
@@ -1567,6 +2442,27 @@ export class Interpreter<R> {
     return Effect.succeed(keyNode.type === "Identifier" ? getString(keyNode, "name") : String(keyNode.value));
   }
 
+  /**
+   * Reads one destructured property from a data object or array without walking the prototype.
+   *
+   * **Example** (Pick a named property)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const { n } = { n: 33 }; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 33
+   * ```
+   *
+   * @since 0.0.0
+   */
   private destructuringPropertyValue(source: SafeObject | Array<unknown>, key: PropertyKey): unknown {
     if (!Array.isArray(source)) return Reflect.get(source, key);
     if (key === "length") return source.length;
@@ -1580,6 +2476,27 @@ export class Interpreter<R> {
     return undefined;
   }
 
+  /**
+   * Dispatches one expression node, including literals, operators, calls, members, and constructors.
+   *
+   * **Example** (Evaluate a literal)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return 34")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 34
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const nodeType = node.type;
     if (!S.is(ExpressionNodeType)(nodeType)) {
@@ -1646,6 +2563,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Constructs a supported builtin (`Promise`, errors, Array/Object/Date/Map/Set/URL`).
+   *
+   * **Example** (Construct a Set)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Array.from(new Set([35, 35]))")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [35]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateNewExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const callee = getNode(node, "callee");
     if (callee.type !== "Identifier") {
@@ -1695,6 +2633,27 @@ export class Interpreter<R> {
     return Effect.fail(unsupportedSyntax("NewExpression", node));
   }
 
+  /**
+   * Constructs an array from arguments, treating a single integer as a sparse length like JS.
+   *
+   * **Example** (Array from values)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Array(36, 37)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [36, 37]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructArray(args: Array<unknown>, node: AstNode): Array<unknown> {
     if (args.length !== 1) return [...args];
     const first = args[0];
@@ -1706,6 +2665,27 @@ export class Interpreter<R> {
     return new Array(first);
   }
 
+  /**
+   * Constructs `{}` from nullish input, or returns an existing object; primitive wrappers are rejected.
+   *
+   * **Example** (Object with no arguments)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Object.keys(Object())")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // []
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructObject(args: Array<unknown>, node: AstNode): unknown {
     const first = args[0];
     if (P.isNull(first) || P.isUndefined(first)) return {};
@@ -1716,6 +2696,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Constructs a {@link CodeModeDate} from no args, a parseable value, or year/month components.
+   *
+   * **Example** (Date from an epoch millis)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new Date(0).getTime()")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 0
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructDate(args: Array<unknown>, node: AstNode): Effect.Effect<CodeModeDate, InterpreterFailure, R> {
     if (A.isArrayEmpty(args)) {
       return DateTime.now.pipe(
@@ -1766,6 +2767,27 @@ export class Interpreter<R> {
     return Effect.succeed(CodeModeDate.new(time));
   }
 
+  /**
+   * Coerces a Date constructor argument through `valueOf`/`toString` when the value is an object.
+   *
+   * **Example** (Parse a date string)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new Date(\"1970-01-01T00:00:00.000Z\").getTime()")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 0
+   * ```
+   *
+   * @since 0.0.0
+   */
   private toDatePrimitive(value: unknown, node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     if (P.isNull(value) || (!P.isObjectKeyword(value) && typeof value !== "function")) return Effect.succeed(value);
     const self = this;
@@ -1785,6 +2807,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Constructs a {@link CodeModeRegExp}, rejecting invalid patterns and flags with SyntaxError.
+   *
+   * **Example** (Test a constructed regex)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new RegExp(\"a+\").test(\"aa\")")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructRegExp(args: Array<unknown>, node: AstNode): CodeModeRegExp {
     const first = args[0];
     const pattern =
@@ -1810,6 +2853,27 @@ export class Interpreter<R> {
     }
   }
 
+  /**
+   * Constructs a {@link CodeModeMap} from omitted input or an iterable of `[key, value]` pairs.
+   *
+   * **Example** (Read a Map value)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new Map([[\"n\", 38]]).get(\"n\")")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 38
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructMap(init: unknown, node: AstNode): Effect.Effect<CodeModeMap, InterpreterFailure, R> {
     const target = CodeModeMap.new();
     if (P.isUndefined(init) || P.isNull(init)) return Effect.succeed(target);
@@ -1840,6 +2904,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Constructs a {@link CodeModeSet} from omitted input or a synchronous iterable.
+   *
+   * **Example** (Check Set membership)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new Set([39]).has(39)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructSet(init: unknown, node: AstNode): Effect.Effect<CodeModeSet, InterpreterFailure, R> {
     const target = CodeModeSet.new();
     if (P.isUndefined(init) || P.isNull(init)) return Effect.succeed(target);
@@ -1859,6 +2944,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Constructs a {@link CodeModeURL} from an input string and optional base, throwing TypeError on invalid URLs.
+   *
+   * **Example** (Read a URL pathname)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new URL(\"https://example.com/x\").pathname")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // /x
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructURL(args: Array<unknown>, node: AstNode): CodeModeURL {
     if (A.isArrayEmpty(args)) {
       throw InterpreterRuntimeError.new("new URL(...) requires a URL string and an optional base URL.", node).as(
@@ -1877,6 +2983,27 @@ export class Interpreter<R> {
     }
   }
 
+  /**
+   * Constructs {@link CodeModeURLSearchParams} from a query string, data object, or iterable pairs.
+   *
+   * **Example** (Read a query parameter)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new URLSearchParams(\"n=40\").get(\"n\")")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 40
+   * ```
+   *
+   * @since 0.0.0
+   */
   private constructURLSearchParams(init: unknown, node: AstNode): Effect.Effect<CodeModeURLSearchParams, InterpreterFailure, R> {
     if (P.isUndefined(init)) return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams()));
     if (CodeModeURLSearchParams.is(init)) {
@@ -1929,6 +3056,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Reads one `[name, value]` pair while constructing URLSearchParams from an iterable.
+   *
+   * **Example** (Construct from pairs)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return new URLSearchParams([[\"n\", \"41\"]]).get(\"n\")")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 41
+   * ```
+   *
+   * @since 0.0.0
+   */
   private readURLSearchParamsPair(value: unknown, node: AstNode): Effect.Effect<Array<string>, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -1952,6 +3100,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Evaluates a binary operator, treating `instanceof` specially and bounding other results as data.
+   *
+   * **Example** (Add two numbers)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return 20 + 22")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 42
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateBinaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     if (!S.is(BinaryOperator)(operator)) {
@@ -1968,6 +3137,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Applies a data-only binary operator, coercing Date and object operands like the guest language.
+   *
+   * **Example** (Strict equality)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return 1 === 1")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   private applyBinaryOperator(
     operator: AppliedBinaryOperator,
     lhs: unknown,
@@ -2034,6 +3224,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Evaluates `&&`, `||`, and `??` with JavaScript short-circuiting.
+   *
+   * **Example** (Nullish coalescing)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return null ?? 43")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 43
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateLogicalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     if (!S.is(LogicalOperator)(operator)) {
@@ -2054,6 +3265,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Evaluates unary operators including `!`, `void`, `typeof`, `delete`, and numeric coercion.
+   *
+   * **Example** (Negate a boolean)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return !false")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateUnaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
@@ -2091,6 +3323,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Evaluates `=`, compound assignment, and logical assignment into identifiers or members.
+   *
+   * **Example** (Assign to a let)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n; n = 44; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 44
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateAssignmentExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const left = getNode(node, "left");
     const operator = getString(node, "operator");
@@ -2143,6 +3396,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Applies `&&=`, `||=`, or `??=`, writing only when the current value should be replaced.
+   *
+   * **Example** (Logical or-assign)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 0; n ||= 45; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 45
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateLogicalAssignment(
     node: AstNode,
     left: AstNode,
@@ -2178,6 +3452,27 @@ export class Interpreter<R> {
     throw InterpreterRuntimeError.new("Assignment target must be an Identifier or MemberExpression.", left);
   }
 
+  /**
+   * Applies prefix/postfix `++`/`--` to identifiers and members.
+   *
+   * **Example** (Postfix increment)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 45; n++; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 46
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateUpdateExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
@@ -2223,6 +3518,27 @@ export class Interpreter<R> {
     throw InterpreterRuntimeError.new("Update target must be an Identifier or MemberExpression.", argument);
   }
 
+  /**
+   * Evaluates a call expression, short-circuiting optional calls when the callee is nullish.
+   *
+   * **Example** (Call Number)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Number(\"47\")")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 47
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateCallExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const callee = getNode(node, "callee");
     const argNodes = getArray(node, "arguments");
@@ -2238,6 +3554,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Dispatches every guest invocation: tools, promises, functions, globals, coercions, and constructors.
+   *
+   * **Example** (Call Math.abs)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Math.abs(-48)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 48
+   * ```
+   *
+   * @since 0.0.0
+   */
   // The single dispatch for every invocation: call expressions and callbacks share it.
   private invokeCallable(
     callable: unknown,
@@ -2427,6 +3764,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Allows `Object.keys` on tool namespaces and rejects other Object methods against opaque tool handles.
+   *
+   * **Example** (List tool keys)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Object.keys(tools)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // []
+   * ```
+   *
+   * @since 0.0.0
+   */
   private invokeObjectMethodOnTools(name: string, ref: ToolReference, node: AstNode): unknown {
     if (name === "keys") {
       const keys = this.enumerableKeys(ref);
@@ -2446,11 +3804,52 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Captures `console.log`/`warn`/`error`/`dir`/`table` into the execution log list.
+   *
+   * **Example** (Capture a log line)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("console.log(\"hi\"); return 1")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.logs : result)
+   * ```
+   *
+   * @since 0.0.0
+   */
   private invokeConsole(name: ConsoleMethod, args: Array<unknown>, _node: AstNode): undefined {
     this.logs.push(formatConsoleMessage(name, args));
     return undefined;
   }
 
+  /**
+   * Evaluates call arguments, expanding spread elements through a synchronous iterator.
+   *
+   * **Example** (Spread into Math.max)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return Math.max(...[1, 49])")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 49
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateCallArguments(argNodes: Array<unknown>): Effect.Effect<Array<unknown>, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -2477,6 +3876,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Invokes a guest function in a captured-scope frame, wrapping async bodies in a guest promise.
+   *
+   * **Example** (Call an arrow with rest)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const sum = (...ns) => ns[0] + ns[1]; return sum(20, 30)")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 50
+   * ```
+   *
+   * @since 0.0.0
+   */
   private invokeFunction(fn: CodeModeFunction, args: Array<unknown>): Effect.Effect<unknown, InterpreterFailure, R> {
     const invocation = new Interpreter(this.executeTool, this.invokeSearch, this.toolKeys, this.promises, this.logs);
     invocation.scopes = ScopeStack.new(
@@ -2535,6 +3955,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Builds a {@link CodeModeGenerator} that queues `next`/`return`/`throw` against a function body fiber.
+   *
+   * **Example** (Pull from a generator)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield 51 }; return g().next().value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 51
+   * ```
+   *
+   * @since 0.0.0
+   */
   private createGenerator(
     invocation: Interpreter<R>,
     run: Effect.Effect<unknown, InterpreterFailure, R>,
@@ -2639,6 +4080,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Drains leftover generator requests after the body completes, settling return/throw waiters.
+   *
+   * **Example** (Read a generator return)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { return 52 }; const it = g(); it.next(); return it.next().value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 52
+   * ```
+   *
+   * @since 0.0.0
+   */
   private completeGeneratorRequests(state: GeneratorState, asynchronous: boolean): Effect.Effect<void, never, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -2671,6 +4133,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Dequeues the next generator request, parking until one is posted when the queue is empty.
+   *
+   * **Example** (Resume a parked yield)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { const n = yield 1; return n }; const it = g(); it.next(); return it.next(53).value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 53
+   * ```
+   *
+   * @since 0.0.0
+   */
   private takeGeneratorRequest(state: GeneratorState): Effect.Effect<GeneratorRequest> {
     const next = this.dequeueGeneratorRequest(state);
     if (P.isNotUndefined(next)) return Effect.succeed(next);
@@ -2687,6 +4170,27 @@ export class Interpreter<R> {
     );
   }
 
+  /**
+   * Pops the next queued generator request, compacting the queue when it drains.
+   *
+   * **Example** (Queue two next calls)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield 1; yield 2 }; const it = g(); return [it.next().value, it.next().value]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [1, 2]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private dequeueGeneratorRequest(state: GeneratorState): GeneratorRequest | undefined {
     const request = state.pending[state.pendingIndex];
     if (P.isUndefined(request)) return undefined;
@@ -2698,6 +4202,27 @@ export class Interpreter<R> {
     return request;
   }
 
+  /**
+   * Evaluates `yield` and `yield*`, failing when used outside a generator body.
+   *
+   * **Example** (Yield a value)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield 54 }; return g().next().value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 54
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateYieldExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const argument = getOptionalNode(node, "argument");
     const self = this;
@@ -2715,6 +4240,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Completes the active generator request with a yielded value and waits for the next request.
+   *
+   * **Example** (Resume after yield)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { return yield 1 }; const it = g(); it.next(); return it.next(55).value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 55
+   * ```
+   *
+   * @since 0.0.0
+   */
   private suspendGenerator(value: unknown, node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const state = this.generatorState;
     if (O.isNone(state) || O.isNone(state.value.active)) {
@@ -2735,6 +4281,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Delegates `yield*` to an iterable or iterator, forwarding next/return/throw.
+   *
+   * **Example** (Yield from an array)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("function* g() { yield* [56] }; return g().next().value")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 56
+   * ```
+   *
+   * @since 0.0.0
+   */
   private delegateYield(value: unknown, node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -2828,6 +4395,26 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Builds a null-prototype object from init properties and object spread.
+   *
+   * **Example** (Spread into an object)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return { ...{ a: 1 }, b: 57 }")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateObjectExpression(node: AstNode): Effect.Effect<Record<string, unknown>, InterpreterFailure, R> {
     const objectValue: Record<string, unknown> = Object.create(null);
     const properties = getArray(node, "properties");
@@ -2884,6 +4471,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Builds an array literal, preserving elisions as holes and expanding spread elements.
+   *
+   * **Example** (Spread into an array)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return [58, ...[59]]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // [58, 59]
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateArrayExpression(node: AstNode): Effect.Effect<Array<unknown>, InterpreterFailure, R> {
     const elements = getArray(node, "elements");
     const values = A.empty<unknown>();
@@ -2915,6 +4523,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Concatenates cooked template quasis with coerced interpolations.
+   *
+   * **Example** (Interpolate a number)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return `n=${60}`")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // n=60
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateTemplateLiteral(node: AstNode): Effect.Effect<string, InterpreterFailure, R> {
     const quasis = getArray(node, "quasis");
     const expressions = getArray(node, "expressions");
@@ -2943,12 +4572,54 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Evaluates a ternary, choosing consequent or alternate by JavaScript truthiness.
+   *
+   * **Example** (Take the true branch)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return true ? 61 : 0")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 61
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateConditionalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     return Effect.flatMap(this.evaluateExpression(getNode(node, "test")), (test) =>
       this.evaluateExpression(getNode(node, P.isTruthy(test) ? "consequent" : "alternate")),
     );
   }
 
+  /**
+   * Applies a compound assignment operator by delegating to the corresponding binary operator.
+   *
+   * **Example** (Add-assign)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("let n = 60; n += 2; return n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 62
+   * ```
+   *
+   * @since 0.0.0
+   */
   private applyCompoundAssignment(
     operator: typeof CompoundOperator.Encoded,
     current: unknown,
@@ -2958,6 +4629,27 @@ export class Interpreter<R> {
     return this.applyBinaryOperator(CompoundOperator.Enum[operator], current, incoming, node);
   }
 
+  /**
+   * Resolves a member expression into a tool path, builtin method handle, or data {@link MemberReference}.
+   *
+   * **Example** (Read a data property)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return { n: 63 }.n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 63
+   * ```
+   *
+   * @since 0.0.0
+   */
   private getMemberReference(
     node: AstNode,
     operation: "read" | "delete" = "read",
@@ -3238,6 +4930,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Reads the value of a resolved member, including optional chaining short-circuit.
+   *
+   * **Example** (Optional-chain a missing object)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const obj = null; return obj?.n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // undefined
+   * ```
+   *
+   * @since 0.0.0
+   */
   private readMember(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     return Effect.map(this.getMemberReference(node), (reference) => {
       if (reference === OptionalShortCircuit) return OptionalShortCircuit;
@@ -3260,6 +4973,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Writes a value into a data member reference after resolving the member expression.
+   *
+   * **Example** (Assign an object property)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const obj = { n: 0 }; obj.n = 64; return obj.n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 64
+   * ```
+   *
+   * @since 0.0.0
+   */
   private writeMember(node: AstNode, value: unknown): Effect.Effect<unknown, InterpreterFailure, R> {
     return this.modifyMember(node, () => Effect.succeed({
       write: true,
@@ -3268,6 +5002,27 @@ export class Interpreter<R> {
     }));
   }
 
+  /**
+   * Deletes a data member when the argument is a member expression; other delete targets succeed as `true`.
+   *
+   * **Example** (Delete an own property)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const obj = { n: 1 }; delete obj.n; return obj.n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // undefined
+   * ```
+   *
+   * @since 0.0.0
+   */
   private evaluateDeleteExpression(argument: AstNode): Effect.Effect<boolean, InterpreterFailure, R> {
     const target = argument.type === "ChainExpression" ? getNode(argument, "expression") : argument;
     if (target.type !== "MemberExpression") {
@@ -3291,6 +5046,27 @@ export class Interpreter<R> {
   }
 
   // Resolve side-effecting object and key expressions exactly once.
+  /**
+   * Reads a member, applies an updater, and writes the result back for compound and update operators.
+   *
+   * **Example** (Increment a property)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const obj = { n: 64 }; obj.n++; return obj.n")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 65
+   * ```
+   *
+   * @since 0.0.0
+   */
   private modifyMember(
     node: AstNode,
     compute: (current: unknown) => Effect.Effect<{
@@ -3327,6 +5103,27 @@ export class Interpreter<R> {
     });
   }
 
+  /**
+   * Reads one property from a {@link MemberReference} target, including array indices.
+   *
+   * **Example** (Read an array index)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("return [66][0]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 66
+   * ```
+   *
+   * @since 0.0.0
+   */
   private readReferenceValue(reference: MemberReference, key: PropertyKey): unknown {
     if (CodeModeURL.is(reference.target)) {
       return Reflect.get(reference.target.url, key);
@@ -3335,6 +5132,27 @@ export class Interpreter<R> {
     return Reflect.get(reference.target, key);
   }
 
+  /**
+   * Writes a property onto a data object or array, rejecting circular insertions.
+   *
+   * **Example** (Write an array index)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const xs = [0]; xs[0] = 67; return xs[0]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 67
+   * ```
+   *
+   * @since 0.0.0
+   */
   private assignToReference(reference: MemberReference, key: PropertyKey, next: unknown, node: AstNode): void {
     if (Array.isArray(reference.target)) {
       const target = reference.target;
@@ -3376,6 +5194,27 @@ export class Interpreter<R> {
     Reflect.set(target, key, next);
   }
 
+  /**
+   * Coerces a computed property to a string, number, or iterator symbol; other keys TypeError.
+   *
+   * **Example** (Read a computed key)
+   *
+   * ```ts
+   * import { CodeMode } from "@beep/scratchpad/codemode"
+   * import { Effect } from "effect"
+   *
+   * const result = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const runtime = yield* CodeMode.make({})
+   *     return yield* runtime.execute("const key = \"n\"; return { n: 68 }[key]")
+   *   }),
+   * )
+   * console.log(result.ok === true ? result.value : result)
+   * // 68
+   * ```
+   *
+   * @since 0.0.0
+   */
   private toPropertyKey(value: unknown, node: AstNode): PropertyKey {
     if (P.isString(value) || P.isNumber(value)) {
       return value;

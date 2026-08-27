@@ -1,5 +1,6 @@
 /**
- * Utility Module Exports
+ * Idempotency, IRI, RDF, hashing, retrieval, similarity, and SQL helpers
+ * shared across effect-ontology.
  *
  * @packageDocumentation
  * @since 0.0.0

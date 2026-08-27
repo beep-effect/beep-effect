@@ -6,6 +6,7 @@
  * with that reference. Unknown top-level keys are retained separately by the
  * loader through {@link SettingsRaw}.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -76,6 +77,7 @@ export type PermissionModeEncoded = typeof PermissionMode.Encoded;
  * console.log(Settings.EffortLevel.is.xhigh("xhigh"))
  * ```
  *
+ * @see {@link Frontmatter.EffortLevel} for the frontmatter closed set (`max` is frontmatter-only).
  * @category schemas
  * @since 0.0.0
  */
@@ -270,8 +272,10 @@ export class PermissionsConfig extends S.Class<PermissionsConfig>($I`Permissions
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.PermissionsConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.PermissionsConfig.Encoded = {
+ *   allow: ["Read(./src/**)"]
+ * }
+ * console.log(input.allow)
  * ```
  *
  * @category type-level
@@ -339,8 +343,10 @@ export class SandboxFilesystemConfig extends S.Class<SandboxFilesystemConfig>($I
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.SandboxFilesystemConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.SandboxFilesystemConfig.Encoded = {
+ *   allowWrite: ["/tmp/build"]
+ * }
+ * console.log(input.allowWrite)
  * ```
  *
  * @category type-level
@@ -418,8 +424,10 @@ export class SandboxNetworkConfig extends S.Class<SandboxNetworkConfig>($I`Sandb
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.SandboxNetworkConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.SandboxNetworkConfig.Encoded = {
+ *   allowedDomains: ["api.example.com"]
+ * }
+ * console.log(input.allowedDomains)
  * ```
  *
  * @category type-level
@@ -524,8 +532,10 @@ export class SandboxConfig extends S.Class<SandboxConfig>($I`SandboxConfig`)(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.SandboxConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.SandboxConfig.Encoded = {
+ *   enabled: true
+ * }
+ * console.log(input.enabled)
  * ```
  *
  * @category type-level
@@ -591,8 +601,11 @@ export class StatusLineConfig extends S.Class<StatusLineConfig>($I`StatusLineCon
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.StatusLineConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.StatusLineConfig.Encoded = {
+ *   type: "command",
+ *   command: "~/.claude/statusline.sh"
+ * }
+ * console.log(input.command)
  * ```
  *
  * @category type-level
@@ -716,8 +729,11 @@ export class VoiceConfig extends S.Class<VoiceConfig>($I`VoiceConfig`)(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.VoiceConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.VoiceConfig.Encoded = {
+ *   enabled: true,
+ *   mode: "tap"
+ * }
+ * console.log(input.mode)
  * ```
  *
  * @category type-level
@@ -777,6 +793,7 @@ class McpServerUrlMatcher extends S.Class<McpServerUrlMatcher>($I`McpServerUrlMa
  * const matcher = S.decodeSync(Settings.McpServerPolicyMatcher)({
  *   serverName: "github"
  * })
+ * console.log("serverName" in matcher ? matcher.serverName : undefined) // "github"
  * ```
  *
  * @category schemas
@@ -846,8 +863,11 @@ export class DirectorySourceSpec extends S.Class<DirectorySourceSpec>($I`Directo
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.DirectorySourceSpec.Encoded) => input
- * console.log(accept)
+ * const input: Settings.DirectorySourceSpec.Encoded = {
+ *   source: "directory",
+ *   path: "./plugins"
+ * }
+ * console.log(input.path)
  * ```
  *
  * @category type-level
@@ -907,8 +927,11 @@ export class GithubSourceSpec extends S.Class<GithubSourceSpec>($I`GithubSourceS
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.GithubSourceSpec.Encoded) => input
- * console.log(accept)
+ * const input: Settings.GithubSourceSpec.Encoded = {
+ *   source: "github",
+ *   repo: "acme/plugins"
+ * }
+ * console.log(input.repo)
  * ```
  *
  * @category type-level
@@ -970,8 +993,11 @@ export class GitSourceSpec extends S.Class<GitSourceSpec>($I`GitSourceSpec`)(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.GitSourceSpec.Encoded) => input
- * console.log(accept)
+ * const input: Settings.GitSourceSpec.Encoded = {
+ *   source: "git",
+ *   url: "https://git.example.com/plugins.git"
+ * }
+ * console.log(input.url)
  * ```
  *
  * @category type-level
@@ -1030,8 +1056,11 @@ export class HostPatternSourceSpec extends S.Class<HostPatternSourceSpec>($I`Hos
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.HostPatternSourceSpec.Encoded) => input
- * console.log(accept)
+ * const input: Settings.HostPatternSourceSpec.Encoded = {
+ *   source: "hostPattern",
+ *   hostPattern: "^git\\.example\\.com$"
+ * }
+ * console.log(input.hostPattern)
  * ```
  *
  * @category type-level
@@ -1092,8 +1121,12 @@ export class SettingsSourceSpec extends S.Class<SettingsSourceSpec>($I`SettingsS
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.SettingsSourceSpec.Encoded) => input
- * console.log(accept)
+ * const input: Settings.SettingsSourceSpec.Encoded = {
+ *   source: "settings",
+ *   name: "team-tools",
+ *   plugins: []
+ * }
+ * console.log(input.name)
  * ```
  *
  * @category type-level
@@ -1129,6 +1162,7 @@ export declare namespace SettingsSourceSpec {
  *   source: "github",
  *   repo: "acme/plugins"
  * })
+ * console.log(source.source) // "github"
  * ```
  *
  * @category schemas
@@ -1176,6 +1210,7 @@ export type MarketplaceSourceSpecEncoded = typeof MarketplaceSourceSpec.Encoded;
  *   source: { source: "directory", path: "./plugins" },
  *   autoUpdate: false
  * })
+ * console.log(marketplace.source.source) // "directory"
  * ```
  *
  * @category schemas
@@ -1193,6 +1228,18 @@ export class Marketplace extends S.Class<Marketplace>($I`Marketplace`)(
 
 /**
  * Companion types for {@link Marketplace}.
+ *
+ * **Example** (Describe encoded marketplace)
+ *
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const input: Settings.Marketplace.Encoded = {
+ *   source: { source: "directory", path: "./plugins" },
+ *   autoUpdate: false
+ * }
+ * console.log(input.source.source)
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -1292,6 +1339,7 @@ class PolicyPathPatternSourceSpec extends S.Class<PolicyPathPatternSourceSpec>($
  *   source: "npm",
  *   package: "@acme/plugins"
  * })
+ * console.log(source.source) // "npm"
  * ```
  *
  * @category schemas
@@ -1371,8 +1419,10 @@ export class AttributionConfig extends S.Class<AttributionConfig>($I`Attribution
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.AttributionConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.AttributionConfig.Encoded = {
+ *   commit: "Generated with Claude Code"
+ * }
+ * console.log(input.commit)
  * ```
  *
  * @category type-level
@@ -1450,8 +1500,10 @@ export class PluginOptionsConfig extends S.Class<PluginOptionsConfig>($I`PluginO
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.PluginOptionsConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.PluginOptionsConfig.Encoded = {
+ *   options: { endpoint: "https://api.example.com" }
+ * }
+ * console.log(input.options)
  * ```
  *
  * @category type-level
@@ -1513,8 +1565,10 @@ export class WorktreeConfig extends S.Class<WorktreeConfig>($I`WorktreeConfig`)(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.WorktreeConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.WorktreeConfig.Encoded = {
+ *   bgIsolation: "worktree"
+ * }
+ * console.log(input.bgIsolation)
  * ```
  *
  * @category type-level
@@ -1574,8 +1628,10 @@ export class PolicyHelperConfig extends S.Class<PolicyHelperConfig>($I`PolicyHel
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.PolicyHelperConfig.Encoded) => input
- * console.log(accept)
+ * const input: Settings.PolicyHelperConfig.Encoded = {
+ *   path: "/usr/local/bin/claude-policy"
+ * }
+ * console.log(input.path)
  * ```
  *
  * @category type-level
@@ -1608,6 +1664,7 @@ export declare namespace PolicyHelperConfig {
  * import { Settings } from "effect-claudecode"
  *
  * const raw = S.decodeSync(Settings.SettingsRaw)({ futureSetting: true })
+ * console.log(raw.futureSetting) // true
  * ```
  *
  * @category schemas
@@ -1834,6 +1891,18 @@ export class SettingsFile extends S.Class<SettingsFile>($I`SettingsFile`)(
 
 /**
  * Companion types for {@link SettingsFile}.
+ *
+ * **Example** (Describe encoded settings)
+ *
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const input: Settings.SettingsFile.Encoded = {
+ *   model: "claude-sonnet-5",
+ *   theme: "dark"
+ * }
+ * console.log(input.model)
+ * ```
  *
  * @category type-level
  * @since 0.0.0

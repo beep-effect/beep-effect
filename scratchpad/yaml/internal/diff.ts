@@ -1,8 +1,22 @@
-// Character-level text diffing shared by the formatter and modifier: turns
-// (original, modified) into minimal raw edit records. The facade
-// materializes public `YamlEdit` instances from these.
+/**
+ * Character-level text diffing shared by the formatter and modifier.
+ *
+ * Turns `(original, modified)` into minimal raw edit records. The facade
+ * materializes public `YamlEdit` instances from these.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
-/** A raw text-edit record: replace `[offset, offset + length)` with `content`. */
+/**
+ * A raw text-edit record: replace `[offset, offset + length)` with `content`.
+ *
+ * @see {@link computeEdits} for the prefix/suffix diff that produces these records.
+ * @see {@link YamlEdit} for the public edit the facade materializes.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface RawEdit {
 	readonly offset: number;
 	readonly length: number;
@@ -20,9 +34,30 @@ export interface RawEdit {
  * For more granular edits (multiple disjoint changes), a line-level pass
  * splits the middle region into per-line edits when possible.
  *
- * This relies on the assumption that both strings share an identical
- * structural skeleton (they were produced from the same AST); a simple
- * prefix/suffix match is sufficient and a full Myers diff is unnecessary.
+ * **Gotchas**
+ *
+ * This is not a general-purpose diff. It assumes a shared AST skeleton and
+ * LF endings from the stringifier. Diffing CRLF originals against LF
+ * output, or two unrelated strings, collapses to one coarse middle edit
+ * (and offsets are wrong if CR is present). Empty when the prefix plus
+ * suffix cover both strings.
+ *
+ * **Example** (One-line value change is a single edit)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlFormat } from "@beep/scratchpad/yaml"
+ *
+ * const edits = Effect.runSync(YamlFormat.modify("a: 1\nb: 2\n", ["a"], 9))
+ * console.log(edits.length) // 1
+ * console.log(edits[0]?.offset) // 3
+ * console.log(edits[0]?.content) // "9"
+ * ```
+ *
+ * @see {@link YamlFormat.format} for the public formatter that consumes these edits.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export function computeEdits(original: string, modified: string): ReadonlyArray<RawEdit> {
 	if (original === modified) return [];

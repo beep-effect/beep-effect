@@ -177,10 +177,8 @@ const decodeFrontmatter = <Schema extends S.Top>(
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const parsed = yield* Frontmatter.parse("---\nname: review\n---\n# Review", "<inline>")
- *   console.log(parsed.body) // "# Review"
- * })
+ * const parsed = Effect.runSync(Frontmatter.parse("---\nname: review\n---\n# Review", "<inline>"))
+ * console.log(parsed.body) // "# Review"
  * ```
  *
  * @effects Annotates the current span and emits debug logs; may fail with {@link FrontmatterParseError}.

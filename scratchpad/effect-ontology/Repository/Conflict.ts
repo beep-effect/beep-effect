@@ -133,26 +133,35 @@ const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withEffectCodecStatics);
 const decodeCountRow = (rows: unknown) => normalizeDecodedRows(CountRows.decodeUnknownEffect(rows));
 
 /**
- * Canonicalize a pair of claim UUIDs for persistence.
+ * Canonicalize a pair of claim UUIDs so the smaller id is always stored first.
  *
- * **Example** (Order a claim pair)
+ * **Example** (Order a pair and reject a self-pair)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Effect, Exit } from "effect"
  * import { canonicalConflictPair } from "@effect-ontology/Repository/Conflict"
  *
- * const program = Effect.gen(function* () {
- *   const pair = yield* canonicalConflictPair(
+ * const ordered = Effect.runSync(
+ *   canonicalConflictPair(
  *     "00000000-0000-4000-8000-000000000012",
  *     "00000000-0000-4000-8000-000000000011"
  *   )
+ * )
+ * console.log(ordered)
+ * // ["00000000-0000-4000-8000-000000000011", "00000000-0000-4000-8000-000000000012"]
  *
- *   console.log(pair)
- * })
- *
- * console.log(program)
+ * const selfPair = Effect.runSync(
+ *   Effect.exit(
+ *     canonicalConflictPair(
+ *       "00000000-0000-4000-8000-000000000011",
+ *       "00000000-0000-4000-8000-000000000011"
+ *     )
+ *   )
+ * )
+ * console.log(Exit.isFailure(selfPair)) // true
  * ```
  *
+ * @see {@link EqualConflictPairError} for the self-pair failure.
  * @category utilities
  * @since 0.0.0
  */
@@ -277,17 +286,23 @@ interface ConflictRepositoryShape {
 }
 
 /**
- * Repository for detected conflict persistence, queries, counts, and terminal transitions.
+ * Persists detected claim conflicts, counts, and terminal transitions.
  *
- * **Example** (Inspect the default conflict repository layer)
+ * **Example** (Count conflicts for an ontology)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline"
  * import { ConflictRepository } from "@effect-ontology/Repository/Conflict"
+ * import { Effect } from "effect"
  *
- * console.log(Layer.isLayer(ConflictRepository.Default)) // true
+ * const counts = Effect.gen(function* () {
+ *   const conflicts = yield* ConflictRepository
+ *   return yield* conflicts.counts(ConflictsQuery.make({ ontologyId: "people" }))
+ * })
+ * console.log(typeof counts) // "object"
  * ```
  *
+ * @see {@link canonicalConflictPair} for the ordered UUID pair stored on insert.
  * @category repositories
  * @since 0.0.0
  */

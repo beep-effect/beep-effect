@@ -27,15 +27,18 @@ export const migrationsFolder: string = fileURLToPath(new URL("./migrations", im
 /**
  * Applies canonical migrations from an explicit generated folder.
  *
- * **Example** (Inspect an explicit-folder migration runner)
+ * **Example** (Apply migrations from a generated folder)
  *
  * ```ts
- * import { migrateFromFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ * import { Effect } from "effect"
+ * import { migrateFromFolder, migrationsFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
  *
- * console.log(migrateFromFolder)
+ * const migrate = migrateFromFolder(migrationsFolder)
+ * console.log(Effect.isEffect(migrate)) // true
+ * console.log(migrationsFolder.endsWith("/migrations"))
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const migrateFromFolder = Effect.fn("MigrationRunner.migrateFromFolder")(function* (folder: string) {
@@ -53,15 +56,17 @@ export const migrateFromFolder = Effect.fn("MigrationRunner.migrateFromFolder")(
  * second invocation is a no-op, while later timestamped folders are applied in
  * order without changing this runtime module.
  *
- * **Example** (Compose startup migration)
+ * **Example** (Use migrateOnBoot as databaseReady's second step)
  *
  * ```ts
- * import { migrateOnBoot } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ * import { Effect } from "effect"
+ * import { migrateOnBoot, migrateFromFolder, migrationsFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
  *
- * console.log(migrateOnBoot)
+ * const documented = [migrateOnBoot, migrateFromFolder(migrationsFolder)] as const
+ * console.log(Effect.isEffect(documented[0])) // true
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const migrateOnBoot = migrateFromFolder(migrationsFolder);

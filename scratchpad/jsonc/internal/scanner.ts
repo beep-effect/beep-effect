@@ -1,17 +1,25 @@
-// JSONC scanner (lexer): converts a JSONC string into a stream of tokens.
-//
-// Private implementation, zero dependencies. Ported near-verbatim from the v3
-// `createScanner`/`JsoncScanner` (which was public); in `@effected/jsonc` the
-// scanner is internal — there is no public tokenizer surface (a
-// `Stream<JsoncToken>` tokenizer is deferred until a consumer materializes).
-// Reference: Microsoft's jsonc-parser scanner design (MIT).
-//
-// Line/character tracking is intentionally dropped here: the `Jsonc` facade
-// derives `line`/`character` from a token `offset` against the source text
-// when it materializes a `JsoncParseErrorDetail`, so the scanner only needs
-// to track byte offsets.
+/**
+ * JSONC scanner (lexer): converts a JSONC string into a stream of tokens.
+ *
+ * Private implementation, zero dependencies. There is no public tokenizer
+ * surface — a `Stream<JsoncToken>` tokenizer is deferred until a consumer
+ * materializes. Line/character tracking is intentionally dropped here: the
+ * `Jsonc` facade derives `line`/`character` from a token `offset` against the
+ * source text when it materializes a `JsoncParseErrorDetail`, so the scanner
+ * only needs to track character offsets.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
-/** Token kinds produced by the scanner. Internal — not a public vocabulary. */
+/**
+ * Token kinds produced by the scanner. Internal — not a public vocabulary.
+ *
+ * @see {@link createScanner} for the factory that yields these kinds.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SyntaxKind =
 	| "OpenBrace"
 	| "CloseBrace"
@@ -31,7 +39,15 @@ export type SyntaxKind =
 	| "Unknown"
 	| "EOF";
 
-/** Scanner-level lexical error codes. Internal — mapped to parse codes by the parser. */
+/**
+ * Scanner-level lexical error codes. Internal — mapped to parse codes by the
+ * parser.
+ *
+ * @see {@link scanErrorToCode} for the translation into public parse codes.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScanError =
 	| "None"
 	| "UnexpectedEndOfComment"
@@ -42,7 +58,14 @@ export type ScanError =
 	| "InvalidCharacter"
 	| "InvalidSymbol";
 
-/** Stateful cursor over JSONC text that produces tokens on demand. */
+/**
+ * Stateful cursor over JSONC text that produces tokens on demand.
+ *
+ * @see {@link createScanner} for the constructor of this cursor.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Scanner {
 	/** Advance the cursor to the next token and return its {@link SyntaxKind}. */
 	scan(): SyntaxKind;
@@ -68,9 +91,39 @@ const isDigit = (ch: number): boolean => ch >= 0x30 && ch <= 0x39;
 /**
  * Create a stateful {@link Scanner} for the given JSONC string.
  *
+ * **Gotchas**
+ *
+ * `ignoreTrivia` changes whether comments exist as tokens: {@link Jsonc.stripComments}
+ * depends on `false` so line and block comments are visible. The scanner does
+ * not track line/character; those are derived later on {@link JsoncParseErrorDetail}.
+ *
+ * **Example** (Comments vanish when trivia is ignored)
+ *
+ * ```ts
+ * import { createScanner } from "../../jsonc/internal/scanner.ts";
+ *
+ * const kinds = (ignoreTrivia: boolean): Array<string> => {
+ *   const scanner = createScanner("{ // c\n }", ignoreTrivia);
+ *   const out: Array<string> = [];
+ *   let kind = scanner.scan();
+ *   while (kind !== "EOF") {
+ *     out.push(kind);
+ *     kind = scanner.scan();
+ *   }
+ *   return out;
+ * };
+ *
+ * console.log(kinds(false).includes("LineComment")); // true
+ * console.log(kinds(true).includes("LineComment")); // false
+ * ```
+ *
  * @param text - JSONC string to tokenize.
  * @param ignoreTrivia - When `true`, whitespace, line-break and comment tokens
  *   are skipped so only structural tokens are returned.
+ * @see {@link JsoncParseErrorDetail} for why the scanner stores offsets only.
+ * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const createScanner = (text: string, ignoreTrivia = false): Scanner => {
 	const len = text.length;

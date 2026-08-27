@@ -1,3 +1,11 @@
+/**
+ * Guest `Object` statics that inspect or copy data objects while rejecting
+ * un-awaited promises and blocked keys.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { P, A } from "@beep/utils"
 import { Effect } from "effect"
@@ -16,9 +24,43 @@ import { boundedData, coerceToString } from "./StdLib.value.ts"
 import { preserveConsumerError, type SyncIteratorRunner } from "../interpreter/Interpreter.iterator.ts"
 import { type ObjectStatic, objectStatics } from "../Codemode.method-names.ts"
 
+const $I = $ScratchpadId.create("codemode/stdlib/StdLib.object");
+
+/**
+ * Object statics that preserve the target's identity instead of allocating a
+ * fresh data object (`assign`, `values`, `entries`, `fromEntries`).
+ *
+ * **Example** (Confirm assign is identity-preserving)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { objectMethodsPreservingIdentity } from "../../../codemode/stdlib/StdLib.object.ts"
+ *
+ * console.log(S.is(objectMethodsPreservingIdentity)("assign"))
+ * console.log(S.is(objectMethodsPreservingIdentity)("keys"))
+ * ```
+ *
+ * @see {@link invokeObjectMethod} for keys, assign, and other direct statics.
+ * @see {@link invokeObjectFromEntries} for the fromEntries iterable adapter.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const objectMethodsPreservingIdentity = LiteralKit(
   objectStatics.pickOptions(["assign", "values", "entries", "fromEntries"])
+).pipe(
+  $I.annoteSchema("objectMethodsPreservingIdentity", {
+    description: "Object statics that keep the target object's identity.",
+  })
 )
+
+/**
+ * Decoded value produced by {@link objectMethodsPreservingIdentity}.
+ *
+ * @see {@link objectMethodsPreservingIdentity} for the runtime identity-preserving kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type objectMethodsPreservingIdentity = typeof objectMethodsPreservingIdentity.Type;
 
 export { objectStatics } from "../Codemode.method-names.ts"
 
@@ -27,6 +69,30 @@ const DirectObjectMethod = LiteralKit(
 )
 type DirectObjectMethod = Exclude<ObjectStatic, "fromEntries" | "groupBy">;
 
+/**
+ * Dispatches guest `Object` statics over data objects and arrays.
+ *
+ * **Gotchas**
+ *
+ * An un-awaited {@link CodeModePromise} throws `InvalidDataValue` ("await it
+ * before inspecting"). Other CodeMode values become `{}`. Prototypes other than
+ * `Object.prototype` are rejected. `assign` throws on {@link isBlockedMember}
+ * keys such as `__proto__`. This is not host `Object.*`.
+ *
+ * **Example** (List keys of a data object)
+ *
+ * ```ts
+ * import { invokeObjectMethod } from "../../../codemode/stdlib/StdLib.object.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(invokeObjectMethod("keys", [{ a: 1, b: 2 }], node))
+ * ```
+ *
+ * @see {@link invokeObjectFromEntries} for building an object from entries.
+ * @see {@link objectMethodsPreservingIdentity} for the identity-preserving subset including fromEntries.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown => {
   const requireObject = (): object => {
@@ -89,6 +155,48 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
   })
 }
 
+/**
+ * Builds a null-prototype object from a synchronous iterable of `[key, value]`
+ * entries.
+ *
+ * **Gotchas**
+ *
+ * The source must be a synchronous iterable. Async iterables throw `TypeError`.
+ * Blocked keys such as `__proto__` fail at the entry, not when later read.
+ *
+ * **Example** (Build an object from entries)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { invokeObjectFromEntries } from "../../../codemode/stdlib/StdLib.object.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const runner = {
+ *   syncIterator: (value: unknown) => {
+ *     if (!Array.isArray(value)) return Effect.succeed(undefined)
+ *     let index = 0
+ *     return Effect.succeed({
+ *       next: Effect.sync(() => {
+ *         if (index >= value.length) return { done: true, value: undefined }
+ *         const current = value[index]
+ *         index += 1
+ *         return { done: false, value: current }
+ *       }),
+ *       close: Effect.void,
+ *     })
+ *   },
+ * }
+ * const object = await Effect.runPromise(
+ *   invokeObjectFromEntries(runner, [["a", 1]], node)
+ * )
+ * console.log(object)
+ * ```
+ *
+ * @see {@link invokeObjectMethod} for Object.keys and the other direct statics.
+ * @see {@link objectMethodsPreservingIdentity} for the identity-preserving subset that includes fromEntries.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeObjectFromEntries = <R>(
   runner: SyncIteratorRunner<R>,

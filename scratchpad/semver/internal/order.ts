@@ -1,12 +1,21 @@
-// Shared comparison primitives over structural version parts.
-//
-// Every module in the package compares versions through these functions, so
-// SemVer 2.0.0 precedence rules live exactly once. Operating on structural
-// parts (not the `SemVer` class) keeps this module import-cycle-free: the
-// grammar, desugar and normalize pipeline and the `SemVer` class itself all
-// consume it.
+/**
+ * SemVer 2.0.0 §11 comparison primitives over structural version parts.
+ *
+ * Every module in the package compares versions through these functions, so
+ * precedence rules live exactly once. Operating on parts (not the `SemVer`
+ * class) keeps this module import-cycle-free: the grammar, desugar, and
+ * normalize pipeline and the `SemVer` class itself all consume it.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
-/** Structural fields of a parsed version, shared by the parser pipeline. */
+/**
+ * Structural fields of a parsed version, shared by the parser pipeline.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface VersionParts {
 	readonly major: number;
 	readonly minor: number;
@@ -15,10 +24,20 @@ export interface VersionParts {
 	readonly build: ReadonlyArray<string>;
 }
 
-/** The relational operator prefix of a comparator (`=`, `>`, `>=`, `<`, `<=`). */
+/**
+ * The relational operator prefix of a comparator (`=`, `>`, `>=`, `<`, `<=`).
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ComparatorOperator = "=" | ">" | ">=" | "<" | "<=";
 
-/** Structural fields of a parsed comparator. */
+/**
+ * Structural fields of a parsed comparator.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ComparatorParts {
 	readonly operator: ComparatorOperator;
 	readonly version: VersionParts;
@@ -28,6 +47,21 @@ export interface ComparatorParts {
  * Compare two prerelease identifiers per SemVer 2.0.0 §11: numeric
  * identifiers always have lower precedence than alphanumeric ones; numerics
  * compare numerically, alphanumerics lexically.
+ *
+ * **Example** (Numeric identifiers sort before alphanumeric)
+ *
+ * ```ts
+ * import { comparePrereleaseIdentifier } from "../../semver/internal/order.ts";
+ *
+ * console.log(comparePrereleaseIdentifier(1, "alpha"));
+ * // => -1
+ * console.log(comparePrereleaseIdentifier("alpha", "beta"));
+ * // => -1
+ * ```
+ *
+ * @see {@link compareParts} for the full version comparison that uses this identifier rule.
+ * @category combinators
+ * @since 0.0.0
  */
 export const comparePrereleaseIdentifier = (a: string | number, b: string | number): number => {
 	if (typeof a === "number" && typeof b === "number") return a - b;
@@ -39,6 +73,25 @@ export const comparePrereleaseIdentifier = (a: string | number, b: string | numb
 /**
  * Compare two versions per SemVer 2.0.0 precedence (§11). Build metadata is
  * ignored (§10).
+ *
+ * **Example** (Prerelease loses to the matching stable version)
+ *
+ * ```ts
+ * import { compareParts } from "../../semver/internal/order.ts";
+ *
+ * const alpha = { major: 1, minor: 0, patch: 0, prerelease: ["alpha"], build: [] };
+ * const stable = { major: 1, minor: 0, patch: 0, prerelease: [], build: ["b"] };
+ *
+ * console.log(compareParts(alpha, stable));
+ * // => -1
+ * console.log(compareParts({ ...stable, build: ["a"] }, stable));
+ * // => 0
+ * ```
+ *
+ * @see {@link SemVer.Order} for the class-level Order that uses this comparison.
+ * @see {@link compareBuild} when a total order over distinct version strings is required.
+ * @category combinators
+ * @since 0.0.0
  */
 export const compareParts = (a: VersionParts, b: VersionParts): -1 | 0 | 1 => {
 	if (a.major !== b.major) return a.major > b.major ? 1 : -1;
@@ -66,6 +119,22 @@ export const compareParts = (a: VersionParts, b: VersionParts): -1 | 0 | 1 => {
  * without build metadata sort before versions with it. This is a total-order
  * tiebreaker outside the SemVer spec (which ignores build metadata), used
  * only by `SemVer.OrderWithBuild`.
+ *
+ * **Example** (Empty build sorts before any identifier)
+ *
+ * ```ts
+ * import { compareBuild } from "../../semver/internal/order.ts";
+ *
+ * console.log(compareBuild(["a"], []));
+ * // => 1
+ * console.log(compareBuild(["a"], ["b"]));
+ * // => -1
+ * ```
+ *
+ * @see {@link SemVer.OrderWithBuild} for the class-level Order that uses this as a tiebreaker.
+ * @see {@link compareParts} for spec precedence, which ignores build.
+ * @category combinators
+ * @since 0.0.0
  */
 export const compareBuild = (a: ReadonlyArray<string>, b: ReadonlyArray<string>): -1 | 0 | 1 => {
 	const aHasBuild = a.length > 0;

@@ -1,3 +1,10 @@
+/**
+ * Single-operator version constraints (`>=1.2.3`, `1.0.0`). Range sugar
+ * (`^`, `~`, `x`, hyphen, `||`) belongs on {@link Range}, not here.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { formatComparator, parseComparator } from "./internal/grammar.ts";
 import { SemVer } from "./SemVer.ts";
@@ -9,7 +16,24 @@ import { SemVer } from "./SemVer.ts";
  * {@link Comparator.FromString} reports the same failure through a generic
  * `Schema` parse error instead of this class, carrying the same message.
  *
+ * **Example** (Read the tag from a failed parse)
+ *
+ * ```ts
+ * import { Comparator } from "@beep/scratchpad/semver";
+ * import { Result } from "effect";
+ *
+ * const parsed = Comparator.parseResult("^1.2.3");
+ * if (Result.isFailure(parsed)) {
+ *   console.log(parsed.failure._tag);
+ *   // => "InvalidComparatorError"
+ * }
+ * ```
+ *
+ * @see {@link Comparator.FromString} when the same failure should surface as a SchemaIssue.InvalidValue instead of this tagged error.
+ * @see {@link Range} for caret, tilde, X-range, hyphen, and `||` sugar, which this class never accepts.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidComparatorError extends Schema.TaggedError<InvalidComparatorError>()("InvalidComparatorError", {
 	/** The raw input string that failed to parse. */
@@ -29,9 +53,10 @@ export class InvalidComparatorError extends Schema.TaggedError<InvalidComparator
  * `<`, `<=`) followed by a complete version; a missing operator means `=`.
  * Wildcards and range sugar are not allowed — those belong to `Range`.
  *
- * @example
+ * **Example** (Parse and test a comparator)
+ *
  * ```ts
- * import { Comparator, SemVer } from "@effected/semver";
+ * import { Comparator, SemVer } from "@beep/scratchpad/semver";
  * import { Effect } from "effect";
  *
  * const program = Effect.gen(function* () {
@@ -44,7 +69,10 @@ export class InvalidComparatorError extends Schema.TaggedError<InvalidComparator
  * // => true
  * ```
  *
+ * @see {@link Range} for wildcards and range sugar (`^`, `~`, `x`, hyphen, `||`).
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class Comparator extends Schema.Class<Comparator>("Comparator")({
 	/** The relational operator applied to `version`; a missing prefix in the source string means `=`. */
@@ -84,15 +112,17 @@ export class Comparator extends Schema.Class<Comparator>("Comparator")({
 	 * Parse a comparator string (e.g. `">=1.2.3"`), synchronously, returning a
 	 * `Result` instead of an `Effect`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Comparator.parse} is defined in terms of this function; the two
 	 * never diverge. Reach for the `Effect` variant inside Effect code — it
 	 * carries the `Comparator.parse` tracing span — and for this one at
 	 * synchronous boundaries.
 	 *
-	 * @example
+	 * **Example** (Inspect the operator on a successful parse)
+	 *
 	 * ```ts
-	 * import { Comparator } from "@effected/semver";
+	 * import { Comparator } from "@beep/scratchpad/semver";
 	 * import { Result } from "effect";
 	 *
 	 * const ok = Comparator.parseResult(">=1.2.3");
@@ -104,6 +134,7 @@ export class Comparator extends Schema.Class<Comparator>("Comparator")({
 	 * @param input - the comparator string to parse
 	 * @returns a `Result` succeeding with the parsed {@link Comparator}, or
 	 * failing with {@link InvalidComparatorError}.
+	 * @see {@link Comparator.parse} for the Effect variant with a tracing span.
 	 */
 	static parseResult(input: string): Result.Result<Comparator, InvalidComparatorError> {
 		const result = parseComparator(input);

@@ -1,3 +1,12 @@
+/**
+ * Guest Promise scheduling, observation, and constructor/static/instance dispatch.
+ *
+ * Observation controls un-awaited rejection reporting; program completion
+ * interrupts all remaining promise work via {@link PromiseRuntime.interrupt}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $ScratchpadId } from "@beep/identity";
 import  { SafeObject } from "@beep/schema/SafeObject";
 import { A, O, P, pipe, Eq } from "@beep/utils";
@@ -45,7 +54,46 @@ const failureFromCause = (
     : InterpreterRuntimeError.new(normalizeError(squashed).message);
 };
 
-// Observation only controls rejection reporting; program completion interrupts all promise work.
+/**
+ * Per-execution registry of guest promises, observation, and interruption.
+ *
+ * **Gotchas**
+ *
+ * Observation only controls rejection reporting; program completion interrupts
+ * all promise work. Missing {@link PromiseRuntime.markObserved} turns an awaited
+ * rejection into `"Unhandled rejection from an un-awaited promise"`. IDs are
+ * allocated before forking so reruns get distinct diagnostics in creation
+ * order. Observation must be recorded when responsibility transfers, before the
+ * consumer fiber runs. {@link PromiseRuntime.interrupt} loops
+ * `Fiber.interruptAll` until the active set is empty because a straggler can
+ * create promises before its interruption lands.
+ *
+ * **Example** (Create, observe, and await a settled promise)
+ *
+ * ```ts
+ * import { Effect, Exit, Scope } from "effect"
+ * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ *
+ * const program = Effect.gen(function* () {
+ *   const scope = yield* Scope.make()
+ *   const runtime = new PromiseRuntime(scope)
+ *   const promise = yield* runtime.create(Effect.succeed(1))
+ *   runtime.markObserved(promise)
+ *   const exit = yield* runtime.await(promise)
+ *   yield* runtime.interrupt()
+ *   return Exit.isSuccess(exit) ? exit.value : exit
+ * })
+ *
+ * console.log(await Effect.runPromise(program))
+ * // 1
+ * ```
+ *
+ * @see {@link executeWithLimits} for the timeout path that calls `interrupt()`.
+ * @see {@link constructPromise} for `new Promise(executor)` construction.
+ * @see {@link resolvePromise} for adopting thenables into this runtime.
+ * @category services
+ * @since 0.0.0
+ */
 export class PromiseRuntime<R> {
   private readonly active = MutableHashSet.empty<CodeModePromise>()
   private readonly ids = MutableHashMap.empty<CodeModePromise, number>()
@@ -58,6 +106,28 @@ export class PromiseRuntime<R> {
     this.scope = scope;
   }
 
+  /**
+   * Forks a guest effect into a {@link CodeModePromise}, allocating its diagnostic id first.
+   *
+   * **Example** (Create a settled promise)
+   *
+   * ```ts
+   * import { Effect, Scope } from "effect"
+   * import { CodeModePromise } from "../../../codemode/Codemode.values.ts"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   *
+   * const promise = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     return yield* new PromiseRuntime(scope).create(Effect.succeed(1))
+   *   }),
+   * )
+   * console.log(CodeModePromise.is(promise))
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   create(effect: Effect.Effect<unknown, InterpreterFailure, R>): Effect.Effect<CodeModePromise, never, R> {
     return Effect.suspend(() => {
       // Allocate before forking so reruns get distinct IDs and diagnostics retain creation order.
@@ -87,6 +157,32 @@ export class PromiseRuntime<R> {
     })
   }
 
+  /**
+   * Records that a consumer now owns this promise so an awaited rejection is not an unhandled diagnostic.
+   *
+   * Observation must be recorded when responsibility transfers, before the consumer fiber runs.
+   *
+   * **Example** (Observe before awaiting)
+   *
+   * ```ts
+   * import { Effect, Exit, Scope } from "effect"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   *
+   * const exit = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     const runtime = new PromiseRuntime(scope)
+   *     const promise = yield* runtime.create(Effect.succeed("ready"))
+   *     runtime.markObserved(promise)
+   *     return yield* runtime.await(promise)
+   *   }),
+   * )
+   * console.log(Exit.isSuccess(exit) ? exit.value : exit)
+   * // ready
+   * ```
+   *
+   * @since 0.0.0
+   */
   // Observation must be recorded when responsibility transfers, before the consumer fiber runs.
   markObserved(promise: CodeModePromise): void {
     MutableHashSet.add(this.observed, promise)
@@ -95,14 +191,87 @@ export class PromiseRuntime<R> {
     if (O.isSome(id)) MutableHashMap.remove(this.failures, id.value)
   }
 
+  /**
+   * Awaits the fiber backing a guest promise and returns its exit.
+   *
+   * **Example** (Await a successful promise)
+   *
+   * ```ts
+   * import { Effect, Exit, Scope } from "effect"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   *
+   * const exit = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     const runtime = new PromiseRuntime(scope)
+   *     const promise = yield* runtime.create(Effect.succeed(7))
+   *     runtime.markObserved(promise)
+   *     return yield* runtime.await(promise)
+   *   }),
+   * )
+   * console.log(Exit.isSuccess(exit) ? exit.value : exit)
+   * // 7
+   * ```
+   *
+   * @since 0.0.0
+   */
   await(promise: CodeModePromise): Effect.Effect<Exit.Exit<unknown, InterpreterFailure>> {
     return Fiber.await(promise.fiber)
   }
 
+  /**
+   * Forks work into the runtime scope without registering a guest promise handle.
+   *
+   * **Example** (Fork a side-effect job)
+   *
+   * ```ts
+   * import { Effect, MutableRef, Scope } from "effect"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   *
+   * const seen = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     const flag = MutableRef.make(false)
+   *     yield* new PromiseRuntime(scope).fork(Effect.sync(() => MutableRef.set(flag, true)))
+   *     yield* Effect.yieldNow
+   *     return MutableRef.get(flag)
+   *   }),
+   * )
+   * console.log(seen)
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   fork(effect: Effect.Effect<unknown, InterpreterFailure, R>): Effect.Effect<void, never, R> {
     return Effect.asVoid(Effect.forkIn(effect, this.scope, { startImmediately: true }))
   }
 
+  /**
+   * Returns unhandled-rejection diagnostics in promise-creation order.
+   *
+   * **Example** (Read an un-awaited rejection)
+   *
+   * ```ts
+   * import { Effect, Scope } from "effect"
+   * import { InterpreterRuntimeError } from "../../../codemode/interpreter/Interpreter.model.ts"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   *
+   * const messages = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     const runtime = new PromiseRuntime(scope)
+   *     yield* runtime.create(Effect.fail(InterpreterRuntimeError.new("boom")))
+   *     yield* Effect.yieldNow
+   *     return runtime.diagnostics().map((diagnostic) => diagnostic.message)
+   *   }),
+   * )
+   * console.log(messages[0]?.includes("Unhandled rejection"))
+   * // true
+   * ```
+   *
+   * @since 0.0.0
+   */
   diagnostics(): Array<DiagnosticModel> {
     return pipe(
       this.failures,
@@ -117,6 +286,29 @@ export class PromiseRuntime<R> {
     )
   }
 
+  /**
+   * Interrupts every active guest promise, looping until the live set is empty, then returns diagnostics.
+   *
+   * **Example** (Interrupt leftover work)
+   *
+   * ```ts
+   * import { Effect, Scope } from "effect"
+   * import { PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+   *
+   * const leftover = await Effect.runPromise(
+   *   Effect.gen(function* () {
+   *     const scope = yield* Scope.make()
+   *     const runtime = new PromiseRuntime(scope)
+   *     yield* runtime.create(Effect.never)
+   *     return yield* runtime.interrupt()
+   *   }),
+   * )
+   * console.log(leftover.length)
+   * // 0
+   * ```
+   *
+   * @since 0.0.0
+   */
   // Re-check because a straggler can create promises before its interruption lands.
   interrupt(): Effect.Effect<Array<DiagnosticModel>> {
     const self = this
@@ -135,11 +327,68 @@ export class PromiseRuntime<R> {
   }
 }
 
+/**
+ * TypeError raised when a promise would resolve with itself.
+ *
+ * **Example** (Inspect the cycle TypeError)
+ *
+ * ```ts
+ * import { selfResolutionError } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ *
+ * const error = selfResolutionError({ type: "CallExpression" })
+ * console.log(error.errorName, error.message)
+ * // TypeError Chaining cycle detected: a promise cannot resolve with itself.
+ * ```
+ *
+ * @see {@link resolvePromiseValue} for the thenable walk that raises this error.
+ * @category constructors
+ * @since 0.0.0
+ */
 export const selfResolutionError = (node?: AstNode): InterpreterRuntimeError =>
   InterpreterRuntimeError.new("Chaining cycle detected: a promise cannot resolve with itself.", node).as("TypeError")
 
+/**
+ * Mutable slot used to detect a promise resolving with its own handle.
+ *
+ * @see {@link resolvePromiseValue} for the self-resolution check that reads this ref.
+ * @see {@link resolvePromise} for the allocation that fills the slot after create.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PromiseIdentity = MutableRef.MutableRef<O.Option<CodeModePromise>>
 
+/**
+ * Settles a thenable or guest promise down to a non-thenable value.
+ *
+ * **Gotchas**
+ *
+ * Self-resolution against `own` fails with {@link selfResolutionError}. A
+ * thenable's `then` method is invoked in a later job (`Effect.yieldNow`) so it
+ * never runs inline. Plain non-thenable values succeed immediately.
+ *
+ * **Example** (Pass a plain value through)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { resolvePromiseValue } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ * }
+ *
+ * console.log(
+ *   await Effect.runPromise(resolvePromiseValue(runner, 41, { type: "Identifier" })),
+ * )
+ * // 41
+ * ```
+ *
+ * @see {@link resolvePromise} for wrapping the settled value in a {@link CodeModePromise}.
+ * @see {@link selfResolutionError} for the cycle TypeError this helper raises.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const resolvePromiseValue = <R>(
   runner: CallbackRunner<R>,
@@ -177,6 +426,45 @@ export const resolvePromiseValue = <R>(
   })
 }
 
+/**
+ * Adopts an existing guest promise or wraps a value in a new one.
+ *
+ * **Example** (Wrap a number in a guest promise)
+ *
+ * ```ts
+ * import { Effect, Scope } from "effect"
+ * import { CodeModePromise } from "../../../codemode/Codemode.values.ts"
+ * import {
+ *   PromiseRuntime,
+ *   resolvePromise,
+ * } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ * }
+ *
+ * const wrapped = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const scope = yield* Scope.make()
+ *     return yield* resolvePromise(
+ *       runner,
+ *       new PromiseRuntime(scope),
+ *       1,
+ *       { type: "CallExpression" },
+ *     )
+ *   }),
+ * )
+ * console.log(CodeModePromise.is(wrapped))
+ * // true
+ * ```
+ *
+ * @see {@link resolvePromiseValue} for the thenable walk used before forking.
+ * @see {@link constructPromise} for `new Promise(executor)` which also fills a {@link PromiseIdentity}.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const resolvePromise = <R>(
   runner: CallbackRunner<R>,
@@ -192,6 +480,77 @@ export const resolvePromise = <R>(
   })
 }
 
+/**
+ * Dispatches a static `Promise.*` method on the guest Promise namespace.
+ *
+ * **Gotchas**
+ *
+ * `Promise.race([])` fails with `"Promise.race([]) would never settle"` instead
+ * of hanging. Iterable arguments must be synchronous; async iterables TypeError.
+ * Members are observed as they are collected so un-awaited diagnostics do not
+ * fire for values `all`/`race` already owns.
+ *
+ * **Example** (Reject an empty Promise.race)
+ *
+ * ```ts
+ * import { Cause, Effect, Exit, Scope } from "effect"
+ * import {
+ *   invokePromiseMethod,
+ *   PromiseRuntime,
+ * } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ * import {
+ *   InterpreterFailure,
+ *   PromiseMethodReference,
+ * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ *   syncIterator: (value: unknown) => {
+ *     if (!Array.isArray(value)) return Effect.succeed(undefined)
+ *     let index = 0
+ *     const items = value
+ *     return Effect.succeed({
+ *       next: Effect.sync(() => {
+ *         if (index >= items.length) return { done: true, value: undefined }
+ *         const current = items[index]
+ *         index += 1
+ *         return { done: false, value: current }
+ *       }),
+ *       close: Effect.void,
+ *     })
+ *   },
+ * }
+ *
+ * const message = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const scope = yield* Scope.make()
+ *     const promises = new PromiseRuntime(scope)
+ *     const promise = yield* invokePromiseMethod(
+ *       runner,
+ *       promises,
+ *       PromiseMethodReference.new("race"),
+ *       [[]],
+ *       { type: "CallExpression" },
+ *     )
+ *     promises.markObserved(promise)
+ *     const exit = yield* promises.await(promise)
+ *     const failure = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+ *     return InterpreterFailure.guards.InterpreterRuntimeError(failure)
+ *       ? failure.message
+ *       : failure
+ *   }),
+ * )
+ * console.log(message)
+ * // Promise.race([]) would never settle; provide at least one promise or value.
+ * ```
+ *
+ * @see {@link invokePromiseInstanceMethod} for `.then` / `.catch` / `.finally`.
+ * @see {@link resolvePromise} for `Promise.resolve`.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokePromiseMethod = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
@@ -321,6 +680,57 @@ export const invokePromiseMethod = <R>(
   })
 }
 
+/**
+ * Dispatches `.then`, `.catch`, or `.finally` on a guest promise.
+ *
+ * **Gotchas**
+ *
+ * The source promise is marked observed before chaining. Reaction handlers
+ * never run inline: settled reactions yield once, and teardown (interrupt)
+ * bypasses handlers. Arbitrary host callables cannot be handlers; wrap them in
+ * an arrow {@link CodeModeFunction}.
+ *
+ * **Example** (Bind then onto a guest promise)
+ *
+ * ```ts
+ * import { Effect, Fiber, Scope } from "effect"
+ * import {
+ *   invokePromiseInstanceMethod,
+ *   PromiseRuntime,
+ * } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ * import { PromiseInstanceMethodReference } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { CodeModePromise } from "../../../codemode/Codemode.values.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed("recovered"),
+ *   settlePromise: (promise: CodeModePromise) =>
+ *     Effect.flatMap(Fiber.await(promise.fiber), (exit) => exit),
+ * }
+ *
+ * const chained = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const scope = yield* Scope.make()
+ *     const promises = new PromiseRuntime(scope)
+ *     const source = yield* promises.create(Effect.succeed(1))
+ *     return yield* invokePromiseInstanceMethod(
+ *       runner,
+ *       promises,
+ *       PromiseInstanceMethodReference.new(source, "then"),
+ *       [undefined, undefined],
+ *       { type: "CallExpression" },
+ *     )
+ *   }),
+ * )
+ * console.log(CodeModePromise.is(chained))
+ * // true
+ * ```
+ *
+ * @see {@link applyCollectionCallback} for the handler admission used by reactions.
+ * @see {@link invokePromiseMethod} for static `Promise.*` methods.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokePromiseInstanceMethod = <R>(
   runner: CallbackRunner<R>,
@@ -369,6 +779,47 @@ export const invokePromiseInstanceMethod = <R>(
   })
 }
 
+/**
+ * Constructs a guest promise from a {@link CodeModeFunction} executor.
+ *
+ * **Gotchas**
+ *
+ * The executor check throws synchronously — it does not `Effect.fail`. Wrapping
+ * this helper in `Effect.try` is required if the caller might pass a non-function.
+ * A valid executor receives resolve/reject {@link PromiseCapabilityFunction}s
+ * and the resulting promise identity is filled before the executor runs so
+ * self-resolution can be detected.
+ *
+ * **Example** (Reject a non-function executor synchronously)
+ *
+ * ```ts
+ * import { Effect, Scope } from "effect"
+ * import { constructPromise, PromiseRuntime } from "../../../codemode/interpreter/Interpreter.promises.ts"
+ * import { InterpreterFailure } from "../../../codemode/interpreter/Interpreter.model.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ * }
+ *
+ * const scope = await Effect.runPromise(Scope.make())
+ * try {
+ *   constructPromise(runner, new PromiseRuntime(scope), 1, { type: "NewExpression" })
+ * } catch (error) {
+ *   console.log(
+ *     InterpreterFailure.guards.InterpreterRuntimeError(error) ? error.message : error,
+ *   )
+ * }
+ * // new Promise(...) expects an executor function (e.g. new Promise((resolve, reject) => { ... })).
+ * ```
+ *
+ * @see {@link selfResolutionError} for the cycle TypeError resolve-with-self raises later.
+ * @see {@link resolvePromiseValue} for how resolve arguments are adopted.
+ * @throws InterpreterRuntimeError TypeError when `executor` is not a {@link CodeModeFunction}.
+ * @category constructors
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const constructPromise = <R>(
   runner: CallbackRunner<R>,

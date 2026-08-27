@@ -55,20 +55,22 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
 export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError;
 
 /**
- * Result of applying a curation action
+ * Outcome of applying one curation action to a claim or entity.
  *
- *
- * **Example** (Use the CurationResult contract)
+ * **Example** (Record a successful correction)
  *
  * ```ts
  * import type { CurationResult } from "@effect-ontology/Service/Curation"
  *
- * const acceptsCurationResult = (_value: CurationResult): void => undefined
- *
- * console.log(acceptsCurationResult)
+ * const result: CurationResult = {
+ *   action: "CorrectTripleAction",
+ *   success: true,
+ *   details: { claimId: "claim-ada-founded" }
+ * }
+ * console.log(result.success) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export interface CurationResult {
@@ -82,17 +84,23 @@ export interface CurationResult {
 // =============================================================================
 
 /**
- * Provides the curation service service capability.
+ * Applies curation actions to claims and entities and publishes follow-up jobs.
  *
- * **Example** (Inspect curation service)
+ * **Example** (Compose a curation action)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { CurationService } from "@effect-ontology/Service/Curation"
  *
- * console.log(CurationService)
+ * const program = Effect.gen(function* () {
+ *   const curation = yield* CurationService
+ *   return curation
+ * }).pipe(Effect.provide(CurationService.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {

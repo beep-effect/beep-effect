@@ -1,11 +1,10 @@
 /**
- * PostToolUse hook event.
+ * Fires after a tool call completes successfully. A handler can block
+ * the tool result, inject additional context, or replace the tool or MCP
+ * response. Matcher is on `tool_name`. See
+ * https://code.claude.com/docs/en/hooks#posttooluse.
  *
- * Fires after a tool call completes successfully. A handler can block the
- * tool result (feeding feedback back to Claude), inject additional context,
- * or replace the tool's response (for MCP tools). Supports a regex matcher
- * on `tool_name`. See https://code.claude.com/docs/en/hooks#posttooluse.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -27,18 +26,30 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PostToolUse");
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a PostToolUse hook, including `tool_name`, original
+ * `tool_input`, and the completed `tool_response`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a completed Read)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PostToolUse.Input)
+ * const input = S.decodeUnknownSync(Hook.PostToolUse.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Read",
+ *   tool_input: { file_path: "/repo/README.md" },
+ *   tool_response: { content: "# beep" },
+ * })
+ *
+ * console.log(input.tool_name) // "Read"
  * ```
  *
+ * @see {@link replaceOutput} for rewriting a non-MCP tool response.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`PostToolUseInput`)(
@@ -61,18 +72,26 @@ export class Input extends S.Class<Input>($I`PostToolUseInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that can inject context or replace tool /
+ * MCP output.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect replaced tool output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.HookSpecificOutput)
+ * const specific = Hook.PostToolUse.HookSpecificOutput.make({
+ *   hookEventName: "PostToolUse",
+ *   updatedToolOutput: O.some({ content: "[redacted]" }),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.updatedToolOutput)) // { content: "[redacted]" }
  * ```
  *
+ * @see {@link replaceOutput} for writing `updatedToolOutput`.
+ * @see {@link replaceMcpOutput} for writing `updatedMCPToolOutput`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolUseHookSpecificOutput`)(
@@ -88,18 +107,23 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolU
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a PostToolUse handler returns. `decision: "block"`
+ * rejects the tool result; replacement fields live on
+ * `hookSpecificOutput`.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.Output)
+ * const output = Hook.PostToolUse.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link passthrough} for leaving the tool result unchanged.
+ * @see {@link block} for rejecting the tool result.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`PostToolUseOutput`)(
@@ -125,14 +149,18 @@ export class Output extends S.Class<Output>($I`PostToolUseOutput`)(
 /**
  * No-op output — tool result passes through unchanged.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Pass the tool result through)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.passthrough)
+ * const output = Hook.PostToolUse.passthrough()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for rejecting the tool result.
+ * @see {@link addContext} for injecting context without blocking.
  * @category constructors
  * @since 0.0.0
  */
@@ -141,14 +169,19 @@ export const passthrough = (): Output => Output.make();
 /**
  * Block the tool result and feed the reason back to Claude.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Reject a tool result)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.block)
+ * const output = Hook.PostToolUse.block("output contained secrets")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "output contained secrets"
  * ```
  *
+ * @see {@link passthrough} for leaving the tool result unchanged.
+ * @see {@link replaceOutput} for rewriting the result instead of blocking.
  * @category constructors
  * @since 0.0.0
  */
@@ -157,14 +190,19 @@ export const block = (reason: string): Output => Output.make({ decision: O.some(
 /**
  * Inject additional context into the transcript without blocking.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Add a reminder beside the result)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.addContext)
+ * const output = Hook.PostToolUse.addContext("Prefer bun test next")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "Prefer bun test next"
  * ```
  *
+ * @see {@link replaceOutput} for rewriting the tool response.
+ * @see {@link passthrough} for leaving the transcript unchanged.
  * @category constructors
  * @since 0.0.0
  */
@@ -179,16 +217,25 @@ export const addContext = (additionalContext: string): Output =>
   });
 
 /**
- * Replace the MCP tool's response. Only valid for MCP tool invocations.
+ * Replace a non-MCP tool's response by writing `updatedToolOutput`.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * Claude Code ignores this field for MCP tools. Use
+ * {@link replaceMcpOutput} (`updatedMCPToolOutput`) for MCP invocations.
+ *
+ * **Example** (Redact a Read result)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.replaceOutput)
+ * const output = Hook.PostToolUse.replaceOutput({ content: "[redacted]" })
+ * const replaced = O.flatMap(output.hookSpecificOutput, (specific) => specific.updatedToolOutput)
+ * console.log(O.getOrUndefined(replaced)) // { content: "[redacted]" }
  * ```
  *
+ * @see {@link replaceMcpOutput} for MCP-only `updatedMCPToolOutput`.
  * @category constructors
  * @since 0.0.0
  */
@@ -205,18 +252,26 @@ export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: st
   });
 
 /**
- * Constructor for `replaceMcpOutput`.
+ * Replace an MCP tool's response by writing `updatedMCPToolOutput`.
  *
- * **Example** (Use replaceMcpOutput)
+ * **Gotchas**
+ *
+ * Only valid for MCP tool invocations. Non-MCP tools honor
+ * {@link replaceOutput} (`updatedToolOutput`) instead.
+ *
+ * **Example** (Replace MCP output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolUse.replaceMcpOutput)
+ * const output = Hook.PostToolUse.replaceMcpOutput({ text: "sanitized" })
+ * const replaced = O.flatMap(output.hookSpecificOutput, (specific) => specific.updatedMCPToolOutput)
+ * console.log(O.getOrUndefined(replaced)) // { text: "sanitized" }
  * ```
  *
+ * @see {@link replaceOutput} for non-MCP `updatedToolOutput`.
  * @category constructors
- *
  * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
@@ -236,18 +291,24 @@ export const replaceMcpOutput = (updatedMCPToolOutput: unknown, additionalContex
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable PostToolUse hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a PostToolUse hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostToolUse.define)
+ * const hook = Hook.PostToolUse.define({
+ *   handler: () => Effect.succeed(Hook.PostToolUse.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PostToolUse"
  * ```
  *
+ * @see {@link onTool} for handling a single supported tool.
+ * @see {@link onMatcher} for filtering on `tool_name`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -260,18 +321,11 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Build a PostToolUse hook that only handles a specific supported tool.
- * Non-matching tool invocations default to `passthrough()`.
+ * Configuration for {@link onTool}: a supported tool name plus a handler
+ * that receives the decoded tool payload and response.
  *
- * **Example** (Build PostToolUse hook that only handles a specific supported tool)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type BashHook = Hook.PostToolUse.OnToolConfig<"Bash", never, never>
- * ```
- *
- * @category constructors
+ * @see {@link onTool} for the constructor that consumes this config.
+ * @category type-level
  * @since 0.0.0
  */
 export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
@@ -282,18 +336,32 @@ export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
 };
 
 /**
- * Constructor for `onTool`.
+ * Build a PostToolUse hook that only handles a specific supported tool.
+ * Non-matching tool invocations default to `passthrough()`.
  *
- * **Example** (Use onTool)
+ * **Gotchas**
+ *
+ * Omitted `onDecodeError` fails closed with `HookToolDecodeError`.
+ * Omitted `onMismatch` passthroughs.
+ *
+ * **Example** (Redact Bash output)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostToolUse.onTool)
+ * const hook = Hook.PostToolUse.onTool({
+ *   toolName: "Bash",
+ *   handler: () => Effect.succeed(Hook.PostToolUse.replaceOutput({ stdout: "[redacted]" })),
+ * })
+ *
+ * console.log(hook.event) // "PostToolUse"
  * ```
  *
+ * @see {@link OnToolConfig} for the config shape.
+ * @see {@link onAdapter} for a custom typed adapter.
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const onTool = <const T extends Tool.SupportedToolName, E, R>(
@@ -316,14 +384,22 @@ export const onTool = <const T extends Tool.SupportedToolName, E, R>(
  * Build a PostToolUse hook that only handles matching `tool_name` values.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * **Example** (Build PostToolUse hook that only handles matching `tool_name` values)
+ * **Example** (Annotate Write results)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostToolUse.onMatcher)
+ * const hook = Hook.PostToolUse.onMatcher({
+ *   matcher: "Write",
+ *   handler: () => Effect.succeed(Hook.PostToolUse.addContext("Run bun test next")),
+ * })
+ *
+ * console.log(hook.event) // "PostToolUse"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link onTool} for typed decoding of a supported tool.
  * @category constructors
  * @since 0.0.0
  */
@@ -345,14 +421,27 @@ export const onMatcher = <E, R>(config: {
  * Build a PostToolUse hook from a custom typed tool adapter.
  * Non-matching tool invocations default to `passthrough()`.
  *
- * **Example** (Build PostToolUse hook from a custom typed tool adapter)
+ * **Gotchas**
+ *
+ * Omitted `onDecodeError` fails closed with `HookToolDecodeError`.
+ * Omitted `onMismatch` passthroughs.
+ *
+ * **Example** (Handle Bash through its adapter)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostToolUse.onAdapter)
+ * const hook = Hook.PostToolUse.onAdapter({
+ *   adapter: Hook.Tool.BashAdapter,
+ *   handler: () => Effect.succeed(Hook.PostToolUse.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PostToolUse"
  * ```
  *
+ * @see {@link onTool} for the built-in supported-tool entry.
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

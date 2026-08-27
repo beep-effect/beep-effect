@@ -6,6 +6,7 @@
  * `managed-mcp.json`. Loaders read through the Effect `FileSystem`
  * service and decode JSON with Effect Schema.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -318,15 +319,24 @@ const managedRoots = (options: O.Option<ManagedMcpLoadOptions>): ReadonlyArray<s
 /**
  * Resolve candidate system `managed-mcp.json` paths.
  *
- * **Example** (Inspect managed mcp json paths)
+ * **Example** (Resolve managed MCP candidate paths)
  *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
  *
- * const program = Mcp.managedMcpJsonPaths({
- *   managedMcpRoots: ["/etc/claude-code"]
- * })
- * console.log(program)
+ * const paths = Effect.runSync(
+ *   Effect.provide(
+ *     Mcp.managedMcpJsonPaths({
+ *       managedMcpRoots: ["/etc/claude-code", "/opt/claude-code"]
+ *     }),
+ *     Path.layer
+ *   )
+ * )
+ *
+ * console.log(paths)
+ * // ["/etc/claude-code/managed-mcp.json", "/opt/claude-code/managed-mcp.json"]
  * ```
  *
  * @category configuration
@@ -424,15 +434,43 @@ const mergeServerRecords = (
  * lower-precedence server with the same URL or stdio command/arguments.
  * Fields inside an individual server entry are never merged.
  *
- * **Example** (Create merge mcp json files)
+ * **Example** (Later files win by name and endpoint)
  *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const merged = Mcp.mergeMcpJsonFiles([
- *   Mcp.McpJsonFile.make({ mcpServers: {} })
- * ])
- * console.log(merged.mcpServers)
+ * const user = Mcp.McpJsonFile.make({
+ *   mcpServers: {
+ *     filesystem: Mcp.StdioMcpServer.make({
+ *       command: "npx",
+ *       args: O.some(["-y", "@modelcontextprotocol/server-filesystem"])
+ *     }),
+ *     docs: Mcp.HttpMcpServer.make({
+ *       type: "http",
+ *       url: "https://mcp.example.test/docs"
+ *     })
+ *   }
+ * })
+ * const project = Mcp.McpJsonFile.make({
+ *   mcpServers: {
+ *     filesystem: Mcp.StdioMcpServer.make({
+ *       command: "npx",
+ *       args: O.some(["-y", "@modelcontextprotocol/server-filesystem", "/repo"])
+ *     }),
+ *     docsV2: Mcp.HttpMcpServer.make({
+ *       type: "http",
+ *       url: "https://mcp.example.test/docs"
+ *     })
+ *   }
+ * })
+ * const merged = Mcp.mergeMcpJsonFiles([user, project])
+ * const filesystem = merged.mcpServers.filesystem
+ *
+ * console.log(Object.keys(merged.mcpServers).sort()) // ["docsV2", "filesystem"]
+ * console.log(S.is(Mcp.StdioMcpServer)(filesystem) ? filesystem.args : undefined)
+ * // { _tag: "Some", value: ["-y", "@modelcontextprotocol/server-filesystem", "/repo"] }
  * ```
  *
  * @category combinators
@@ -539,15 +577,25 @@ const projectClaudeJsonEntry = (file: ClaudeJsonFile, cwd: string, resolvedCwd: 
  * `workspace` is skipped with a warning because Claude Code reserves
  * that name internally.
  *
- * **Example** (Inspect the strict loader Effect)
+ * **Example** (Load a project MCP file and skip reserved names)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Mcp.loadJson("/workspace/.mcp.json")
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/workspace/.mcp.json": JSON.stringify({
+ *     mcpServers: {
+ *       docs: { command: "npx", args: ["-y", "docs-mcp"] },
+ *       workspace: { command: "reserved" }
+ *     }
+ *   })
+ * })
+ * const file = await Effect.runPromise(
+ *   Effect.provide(Mcp.loadJson("/workspace/.mcp.json"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(Object.keys(file.mcpServers)) // ["docs"]
  * ```
  *
  * @effects Reads and decodes the file through `FileSystem.FileSystem`, logging reserved names and failing with `McpConfigError` on read or decode errors.
@@ -569,15 +617,25 @@ export const loadJson = Effect.fn("Mcp.loadJson")(function* (
 /**
  * Read a `~/.claude.json` file and decode the MCP-related sections.
  *
- * **Example** (Inspect the Claude JSON loader Effect)
+ * **Example** (Decode MCP sections from user Claude JSON)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * const program = Mcp.loadClaudeJson("/home/user/.claude.json")
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/home/user/.claude.json": JSON.stringify({
+ *     theme: "dark",
+ *     mcpServers: { docs: { command: "user-docs" } }
+ *   })
+ * })
+ * const file = await Effect.runPromise(
+ *   Effect.provide(Mcp.loadClaudeJson("/home/user/.claude.json"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(O.map(file.mcpServers, (servers) => Object.keys(servers)))
+ * // { _tag: "Some", value: ["docs"] }
  * ```
  *
  * @effects Reads the file through `FileSystem.FileSystem` and fails with `McpConfigError` when reading or decoding fails.
@@ -609,15 +667,34 @@ const loadManagedMcpWithOptions = Effect.fn("Mcp.loadManagedMcp")(function* (
  * Claude Code treats this file as exclusive enterprise control: when it
  * exists, user, project, local, and plugin MCP configs are suppressed.
  *
- * **Example** (Run loadManagedMcp)
+ * **Example** (Discover the first managed MCP file)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * const program = Mcp.loadManagedMcp({
- *   managedMcpRoots: ["/etc/claude-code"]
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/etc/claude-code/managed-mcp.json": JSON.stringify({
+ *     mcpServers: { enterprise: { command: "enterprise-mcp" } }
+ *   })
  * })
- * console.log(program)
+ * const managed = await Effect.runPromise(
+ *   Effect.provide(
+ *     Mcp.loadManagedMcp({ managedMcpRoots: ["/etc/claude-code"] }),
+ *     fileSystem.layer
+ *   )
+ * )
+ * const missing = await Effect.runPromise(
+ *   Effect.provide(
+ *     Mcp.loadManagedMcp({ managedMcpRoots: ["/no-such-root"] }),
+ *     fileSystem.layer
+ *   )
+ * )
+ *
+ * console.log(O.map(managed, (file) => Object.keys(file.mcpServers)))
+ * // { _tag: "Some", value: ["enterprise"] }
+ * console.log(O.isNone(missing)) // true
  * ```
  *
  * @category decoding
@@ -706,13 +783,44 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * system `managed-mcp.json` exists, it has exclusive control and the
  * returned config contains only managed servers.
  *
- * **Example** (Run loadEffective)
+ * **Example** (Merge local over project over user MCP servers)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
- * const program = Mcp.loadEffective("/workspace")
- * console.log(program)
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/home/user/.claude.json": JSON.stringify({
+ *     mcpServers: {
+ *       docs: { command: "user-docs" },
+ *       search: { command: "user-search" }
+ *     },
+ *     projects: {
+ *       "/workspace": {
+ *         mcpServers: { docs: { command: "local-docs" } }
+ *       }
+ *     }
+ *   }),
+ *   "/workspace/.mcp.json": JSON.stringify({
+ *     mcpServers: { search: { command: "project-search" } }
+ *   })
+ * })
+ * const effective = await Effect.runPromise(
+ *   Effect.provide(
+ *     Mcp.loadEffective("/workspace", {
+ *       claudeJsonPath: "/home/user/.claude.json",
+ *       managedMcpRoots: ["/no-managed-mcp"]
+ *     }),
+ *     fileSystem.layer
+ *   )
+ * )
+ * const docs = effective.mcpServers.docs
+ * const search = effective.mcpServers.search
+ *
+ * console.log(Object.keys(effective.mcpServers).sort()) // ["docs", "search"]
+ * console.log(S.is(Mcp.StdioMcpServer)(docs) ? docs.command : undefined) // "local-docs"
+ * console.log(S.is(Mcp.StdioMcpServer)(search) ? search.command : undefined) // "project-search"
  * ```
  *
  * @category decoding

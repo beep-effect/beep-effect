@@ -41,9 +41,15 @@ export type CircuitState = "closed" | "open" | "half_open";
  * ```ts
  * import type { RateLimiterState } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * const acceptsRateLimiterState = (_value: RateLimiterState): void => undefined
- *
- * console.log(acceptsRateLimiterState)
+ * const state: RateLimiterState = {
+ *   requestsThisMinute: 0,
+ *   tokensThisMinute: 0,
+ *   lastReset: 0,
+ *   circuitState: "closed",
+ *   failureCount: 0,
+ *   successCount: 0
+ * }
+ * console.log(state.circuitState) // "closed"
  * ```
  *
  * @category type-level
@@ -71,11 +77,18 @@ export interface RateLimiterState {
  * **Example** (Use the RateLimiterConfig contract)
  *
  * ```ts
+ * import { Duration } from "effect"
  * import type { RateLimiterConfig } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * const acceptsRateLimiterConfig = (_value: RateLimiterConfig): void => undefined
- *
- * console.log(acceptsRateLimiterConfig)
+ * const config: RateLimiterConfig = {
+ *   requestsPerMinute: 50,
+ *   tokensPerMinute: 80_000,
+ *   maxConcurrent: 4,
+ *   failureThreshold: 5,
+ *   recoveryTimeout: Duration.seconds(30),
+ *   successThreshold: 2
+ * }
+ * console.log(config.requestsPerMinute) // 50
  * ```
  *
  * @category type-level
@@ -126,9 +139,15 @@ const DEFAULT_CONFIG: RateLimiterConfig = {
  *
  * ```ts
  * import { Layer } from "effect"
- * import { CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ * import { Effect } from "effect"
+ * import { CentralRateLimiterService, CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * console.log(Layer.isLayer(CentralRateLimiterServiceLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const limiter = yield* CentralRateLimiterService
+ *   return limiter
+ * }).pipe(Effect.provide(CentralRateLimiterServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -303,9 +322,15 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
  * **Example** (Inspect central rate limiter service live)
  *
  * ```ts
- * import { CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ * import { Effect } from "effect"
+ * import { CentralRateLimiterService, CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * console.log(CentralRateLimiterServiceLive)
+ * const program = Effect.gen(function* () {
+ *   const limiter = yield* CentralRateLimiterService
+ *   return limiter
+ * }).pipe(Effect.provide(CentralRateLimiterServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -319,9 +344,15 @@ export const CentralRateLimiterServiceLive = Layer.effect(CentralRateLimiterServ
  * **Example** (Inspect central rate limiter service test)
  *
  * ```ts
- * import { CentralRateLimiterServiceTest } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ * import { Effect } from "effect"
+ * import { CentralRateLimiterService, CentralRateLimiterServiceTest } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * console.log(CentralRateLimiterServiceTest)
+ * const program = Effect.gen(function* () {
+ *   const limiter = yield* CentralRateLimiterService
+ *   return limiter
+ * }).pipe(Effect.provide(CentralRateLimiterServiceTest))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

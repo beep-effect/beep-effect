@@ -302,14 +302,6 @@ export const BatchIngestResult = BatchIngestResultDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchIngestResult}.
  *
- * **Example** (Use BatchIngestResult)
- * ```ts
- * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion"
- *
- * const readStatus = (result: BatchIngestResult) => result._tag
- * console.log(readStatus)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -440,14 +432,6 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
 
 /**
  * Runtime value decoded by {@link BatchIngestResponse}.
- *
- * **Example** (Use BatchIngestResponse)
- * ```ts
- * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion"
- *
- * const total = (response: BatchIngestResponse) => response.summary.total
- * console.log(total)
- * ```
  *
  * @category type-level
  * @since 0.0.0

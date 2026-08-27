@@ -1,19 +1,19 @@
-// The `Yaml` facade: value-level parsing, stringification, comment stripping,
-// semantic equality and the flagship schema factories, plus the parse and
-// stringify options and errors they raise.
-//
-// `Yaml` is a namespace of statics over the internal engine and the schema
-// layer — not itself a schema class. Per the package Effect-wrapping policy,
-// `parse`/`parseAll`/`stringify` and schema decoding carry real typed error
-// channels; `stripComments`/`equals`/`equalsValue` are pure total functions.
-//
-// Cycle firewall: the internal engine returns raw `{ code, message, offset,
-// length }` diagnostic records and plain document records; this module
-// materializes YamlDiagnostic instances (deriving `line`/`character` from
-// `offset`) and constructs the aggregate YamlParseError / YamlStringifyError.
-// The dependency edge runs facade → engine only, so `noImportCycles` stays
-// satisfied.
+/**
+ * Value-level YAML 1.2 parsing, stringification, comment stripping, semantic
+ * equality and schema factories.
+ *
+ * `Yaml` is a namespace of statics over the internal engine and the schema
+ * layer — not itself a schema class. `parse`/`parseAll`/`stringify` and schema
+ * decoding carry real typed error channels; `stripComments`/`equals`/
+ * `equalsValue` are pure total functions. The engine returns raw diagnostic
+ * records; this module materializes {@link YamlDiagnostic} and the aggregate
+ * {@link YamlParseError} / {@link YamlStringifyError}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { composeAllDocuments, composeFirstDocument } from "./internal/composer/document.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
@@ -32,6 +32,8 @@ import {
 	nodeToJsValue,
 } from "./YamlNode.ts";
 
+const $I = $ScratchpadId.create("yaml/Yaml");
+
 /**
  * Options controlling parse behavior. All fields are omissible; absent fields
  * resolve to `strict` `true`, `maxAliasCount` `100` (the alias-based
@@ -42,21 +44,36 @@ import {
  * kit convention (never `new`). Call sites that take a `YamlParseOptions`
  * also accept a structurally-matching plain literal.
  *
- * @example
- * ```ts
- * import { Yaml, YamlParseOptions } from "@effected/yaml";
+ * **Example** (Bound alias expansion while parsing)
  *
- * const options = YamlParseOptions.make({ maxAliasCount: 50 });
- * const parsed = Yaml.parse("a: 1", options);
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml, YamlParseOptions } from "@beep/scratchpad/yaml"
+ *
+ * const options = YamlParseOptions.make({ maxAliasCount: 0 })
+ * const parsed = Yaml.parseResult("a: &id 1\nb: *id\n", options)
+ *
+ * console.log(Result.isFailure(parsed)) // true
+ * if (Result.isFailure(parsed)) {
+ *   console.log(parsed.failure.diagnostics[0]?.code) // "AliasCountExceeded"
+ * }
  * ```
  *
+ * @see {@link Yaml.parseResult} for the synchronous parse that consumes these options.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseOptions")({
-	strict: Schema.optionalKey(Schema.Boolean),
-	maxAliasCount: Schema.optionalKey(Schema.Number),
-	uniqueKeys: Schema.optionalKey(Schema.Boolean),
-}) {}
+export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseOptions")(
+	{
+		strict: Schema.optionalKey(Schema.Boolean),
+		maxAliasCount: Schema.optionalKey(Schema.Number),
+		uniqueKeys: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("YamlParseOptions", {
+		description: "Parse options that bound alias expansion and duplicate-key policy while decoding YAML into values.",
+	}),
+) {}
 
 /**
  * Options controlling stringify behavior. All fields are omissible; absent
@@ -97,18 +114,31 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
  * the kit convention (never `new`). Call sites that take a
  * `YamlStringifyOptions` also accept a structurally-matching plain literal.
  *
- * @example
- * ```ts
- * import { Yaml, YamlStringifyOptions } from "@effected/yaml";
+ * **Gotchas**
  *
- * const options = YamlStringifyOptions.make({ indentSequences: true });
- * const yaml = Yaml.stringify({ key: ["a", "b"] }, options);
- * // key:
- * //   - a
- * //   - b
+ * `lineWidth` folds only on {@link Yaml.stringify} / {@link Yaml.stringifyResult}.
+ * It is inert on {@link YamlDocument.stringify} and {@link YamlFormat}. Schema
+ * factories encode with default stringify options and never fold.
+ *
+ * **Example** (Indent nested sequences)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml, YamlStringifyOptions } from "@beep/scratchpad/yaml"
+ *
+ * const options = YamlStringifyOptions.make({ indentSequences: true })
+ * const yaml = Yaml.stringifyResult({ key: ["a", "b"] }, options)
+ *
+ * console.log(Result.isSuccess(yaml)) // true
+ * if (Result.isSuccess(yaml)) {
+ *   console.log(yaml.success.includes("  - a")) // true
+ * }
  * ```
  *
+ * @see {@link Yaml.stringifyResult} for the synchronous stringify that honors `lineWidth` and `indentSequences`.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("YamlStringifyOptions")({
 	indent: Schema.optionalKey(Schema.Number),
@@ -171,22 +201,59 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 	quoteCompat: Schema.optionalKey(QuoteCompat),
 	finalNewline: Schema.optionalKey(Schema.Boolean),
 	forceDefaultStyles: Schema.optionalKey(Schema.Boolean),
-}) {}
+},
+	$I.annote("YamlStringifyOptions", {
+		description: "Stringify options for indent, folding, quote fallback and collection presentation.",
+	}),
+) {}
 
 /**
  * Error-recovery parse failure: aggregates every fatal {@link YamlDiagnostic}
- * encountered, so a single failure reports the whole batch. Raised by
+ * plus `DuplicateKey` promotions when `uniqueKeys` is true (the default), so
+ * a single failure reports the whole batch. Raised by
  * {@link Yaml.parse}, {@link Yaml.parseAll}, `YamlDocument.parse`/`parseAll`
  * and the decode direction of the schema factories. The error itself has no
  * `code` field: read the code from the diagnostics —
  * `error.diagnostics[0].code` is the primary failure.
  *
+ * **Gotchas**
+ *
+ * {@link YamlDiagnostic.isFatal} is false for `"DuplicateKey"`. Duplicate
+ * mapping keys still fail parse when `uniqueKeys` is true by promoting that
+ * warning onto this error. Filtering `error.diagnostics` with
+ * {@link YamlDiagnostic.isFatal} drops the DuplicateKey record.
+ *
+ * **Example** (Construct a parse error and read the code)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml, YamlParseError } from "@beep/scratchpad/yaml"
+ *
+ * const failed = Yaml.parseResult("a: 1\na: 2\n")
+ * console.log(Result.isFailure(failed)) // true
+ * if (Result.isFailure(failed)) {
+ *   console.log(failed.failure._tag) // "YamlParseError"
+ *   console.log(failed.failure.diagnostics[0]?.code) // "DuplicateKey"
+ *   console.log(failed.failure instanceof YamlParseError) // true
+ * }
+ * ```
+ *
+ * @see {@link YamlDiagnostic} for the diagnostic records aggregated on `diagnostics`.
+ * @see {@link YamlDiagnostic.isFatal} for why DuplicateKey is not a fatal code even when parse fails.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class YamlParseError extends Schema.TaggedError<YamlParseError>()("YamlParseError", {
-	diagnostics: Schema.Array(YamlDiagnostic),
-	input: Schema.String,
-}) {
+export class YamlParseError extends Schema.TaggedError<YamlParseError>()(
+	"YamlParseError",
+	{
+		diagnostics: Schema.Array(YamlDiagnostic),
+		input: Schema.String,
+	},
+	$I.annote("YamlParseError", {
+		description: "Aggregate YAML parse failure carrying fatal diagnostics and DuplicateKey promotions from one input.",
+	}),
+) {
 	override get message(): string {
 		const count = this.diagnostics.length;
 		const summary = this.diagnostics.map((d) => `${d.code} at ${d.line}:${d.character}`).join("; ");
@@ -201,12 +268,38 @@ export class YamlParseError extends Schema.TaggedError<YamlParseError>()("YamlPa
  * the schema factories. The error itself has no `code` field: read the code
  * from the diagnostics — `error.diagnostics[0].code` is the primary failure.
  *
+ * **Example** (Handle a circular-reference stringify failure)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const cyclic: { self?: unknown } = {}
+ * cyclic.self = cyclic
+ * const failed = Yaml.stringifyResult(cyclic)
+ *
+ * console.log(Result.isFailure(failed)) // true
+ * if (Result.isFailure(failed)) {
+ *   console.log(failed.failure._tag) // "YamlStringifyError"
+ *   console.log(failed.failure.diagnostics[0]?.code) // "CircularReference"
+ * }
+ * ```
+ *
+ * @see {@link YamlDiagnostic} for the diagnostic records aggregated on `diagnostics`.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class YamlStringifyError extends Schema.TaggedError<YamlStringifyError>()("YamlStringifyError", {
-	diagnostics: Schema.Array(YamlDiagnostic),
-	value: Schema.Unknown,
-}) {
+export class YamlStringifyError extends Schema.TaggedError<YamlStringifyError>()(
+	"YamlStringifyError",
+	{
+		diagnostics: Schema.Array(YamlDiagnostic),
+		value: Schema.Unknown,
+	},
+	$I.annote("YamlStringifyError", {
+		description: "YAML stringify failure carrying structured diagnostics for circular references and nesting-depth blow-ups.",
+	}),
+) {
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `YAML stringify failed: ${summary}`;
@@ -418,7 +511,10 @@ const stringifyOrFail = (value: unknown, options?: YamlStringifyOptions): Effect
  * plus `decode` and `encode` functions derived from it once, so callers need
  * no generic `Schema` machinery at the use site.
  *
+ * @see {@link Yaml.bind} for the factory that produces this codec.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlBoundCodec<T, RD = never, RE = never> {
 	/** The composed codec decoding a YAML `string` straight into `T`. */
@@ -432,28 +528,55 @@ export interface YamlBoundCodec<T, RD = never, RE = never> {
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
- * Static entry points for YAML parsing, stringification, comment stripping,
- * semantic equality and the schema factories. Not instantiable.
+ * Parse, stringify, compare and schema-bind YAML 1.2 as plain values with
+ * typed errors.
  *
- * @remarks
+ * **Details**
+ *
  * `parse`/`parseAll`/`stringify` and the schema factories carry real typed
  * error channels — including the hardening guards (an alias-expansion budget
  * on decode, a nesting-depth cap on encode) that keep malformed or
  * adversarial input on the typed channel instead of surfacing as an unhandled
  * defect. `stripComments`/`equals`/`equalsValue` are pure total functions.
  *
- * @example
- * ```ts
- * import { Yaml } from "@effected/yaml";
- * import { Effect } from "effect";
+ * **Gotchas**
  *
- * const program = Effect.gen(function* () {
- *   const value = yield* Yaml.parse("name: Alice\nage: 30");
- *   return value; // { name: "Alice", age: 30 }
- * });
+ * `lineWidth` folds only on {@link Yaml.stringify} / {@link Yaml.stringifyResult}
+ * and is inert on {@link YamlDocument.stringify} and {@link YamlFormat}. A
+ * `"<<"` object key is quoted on this value path (`'<<': …`) so it does not
+ * become a merge key; the document/format path leaves a parsed plain `<<`
+ * unquoted. Schema factories encode with default stringify options and never
+ * fold — bind {@link Yaml.fromString} / {@link Yaml.schema} / {@link Yaml.bind}
+ * results to a `const`. {@link Yaml.equals} treats alias-expansion blow-ups as
+ * malformed (`false`) rather than throwing. {@link Yaml.stripComments} is
+ * quote-aware. {@link YamlParseError} / {@link YamlStringifyError} have no
+ * `code` field — read `error.diagnostics[0].code`.
+ *
+ * **Example** (Parse a mapping and stringify it back)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const parsed = Yaml.parseResult("name: Alice\nage: 30")
+ * console.log(Result.isSuccess(parsed)) // true
+ * if (Result.isSuccess(parsed)) {
+ *   console.log(parsed.success) // { name: "Alice", age: 30 }
+ * }
+ *
+ * const yaml = Yaml.stringifyResult({ name: "Alice" })
+ * if (Result.isSuccess(yaml)) {
+ *   console.log(yaml.success) // "name: Alice\n"
+ * }
  * ```
  *
+ * @see {@link YamlDocument.parse} for an AST parse that keeps warnings-as-data instead of a plain value.
+ * @see {@link YamlFormat.format} for comment-preserving text edits instead of round-trip stringify.
+ * @see {@link YamlVisitor.visit} for a SAX event stream over composed documents.
+ * @see {@link Yaml.parseResult} for the synchronous Result primitive that `parse` wraps.
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export class Yaml {
 	private constructor() {}
@@ -500,7 +623,8 @@ export class Yaml {
 	 * (`NestingDepthExceeded`) — both surface through the typed error channel
 	 * rather than as an unhandled stack-overflow defect.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * A `"<<"` object key is emitted **quoted** (`'<<': …`). This is the
 	 * opposite of the document path ({@link YamlFormat.format} and
 	 * `YamlDocument#stringify`), which leaves a parsed plain `<<` key unquoted
@@ -518,7 +642,8 @@ export class Yaml {
 	 * an `Effect`. A pure escape hatch for config-time callers that cannot
 	 * `await` an Effect (a `vitest.config.ts` is the motivating case).
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * This is the package's single parse path. {@link Yaml.parse} is defined in
 	 * terms of it (`Effect.fromResult` behind the named span), so the two
 	 * variants cannot diverge. Reach for the `Effect` variant inside Effect
@@ -530,20 +655,20 @@ export class Yaml {
 	 * "billion laughs" alias-expansion blow-up all yield a `Failure` carrying a
 	 * {@link YamlParseError}; the method never throws.
 	 *
-	 * @example
+	 * **Example** (Inspect success and failure)
+	 *
 	 * ```ts
-	 * import { Yaml } from "@effected/yaml";
-	 * import { Result } from "effect";
+	 * import { Result } from "effect"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
 	 *
-	 * const result = Yaml.parseResult("name: Alice\nage: 30");
+	 * const result = Yaml.parseResult("name: Alice\nage: 30")
+	 * console.log(Result.isSuccess(result)) // true
 	 * if (Result.isSuccess(result)) {
-	 *   result.success; // { name: "Alice", age: 30 }
-	 * } else {
-	 *   result.failure; // YamlParseError
+	 *   console.log(result.success) // { name: "Alice", age: 30 }
 	 * }
-	 * ```
 	 *
-	 * @public
+	 * console.log(Result.isFailure(Yaml.parseResult("a: 1\na: 2\n"))) // true
+	 * ```
 	 */
 	static parseResult(text: string, options?: YamlParseOptions): Result.Result<unknown, YamlParseError> {
 		return parseResultImpl(text, options);
@@ -557,7 +682,8 @@ export class Yaml {
 	 * `null` for it); a single-document stream succeeds with a one-element
 	 * array whose value is exactly what {@link Yaml.parseResult} yields.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * This is the package's single multi-document parse path.
 	 * {@link Yaml.parseAll} is defined in terms of it (`Effect.fromResult`
 	 * behind the named span), so the two variants cannot diverge. Anchors are
@@ -572,21 +698,18 @@ export class Yaml {
 	 * "billion laughs" alias bomb in any document) fails typed, never as a
 	 * defect; the method never throws.
 	 *
-	 * @example
-	 * ```ts
-	 * import { Yaml } from "@effected/yaml";
-	 * import { Result } from "effect";
+	 * **Example** (Parse a two-document stream)
 	 *
-	 * // Whole-stream validity check: fails if ANY document is invalid.
-	 * const result = Yaml.parseAllResult("a: 1\n---\nb: 2\n");
+	 * ```ts
+	 * import { Result } from "effect"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const result = Yaml.parseAllResult("a: 1\n---\nb: 2\n")
+	 * console.log(Result.isSuccess(result)) // true
 	 * if (Result.isSuccess(result)) {
-	 *   result.success; // [{ a: 1 }, { b: 2 }]
-	 * } else {
-	 *   result.failure; // YamlParseError aggregating every fatal diagnostic
+	 *   console.log(result.success) // [{ a: 1 }, { b: 2 }]
 	 * }
 	 * ```
-	 *
-	 * @public
 	 */
 	static parseAllResult(
 		text: string,
@@ -605,20 +728,18 @@ export class Yaml {
 	 * yields a `Failure` carrying a {@link YamlStringifyError} rather than a
 	 * thrown stack-overflow defect; the method never throws.
 	 *
-	 * @example
-	 * ```ts
-	 * import { Yaml } from "@effected/yaml";
-	 * import { Result } from "effect";
+	 * **Example** (Stringify a mapping)
 	 *
-	 * const result = Yaml.stringifyResult({ name: "Alice" });
-	 * if (Result.isFailure(result)) {
-	 *   result.failure; // YamlStringifyError
-	 * } else {
-	 *   result.success; // "name: Alice\n"
+	 * ```ts
+	 * import { Result } from "effect"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const result = Yaml.stringifyResult({ name: "Alice" })
+	 * console.log(Result.isSuccess(result)) // true
+	 * if (Result.isSuccess(result)) {
+	 *   console.log(result.success) // "name: Alice\n"
 	 * }
 	 * ```
-	 *
-	 * @public
 	 */
 	static stringifyResult(value: unknown, options?: YamlStringifyOptions): Result.Result<string, YamlStringifyError> {
 		return stringifyResultImpl(value, options);
@@ -814,29 +935,30 @@ export class Yaml {
 	 * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Yaml.schema}
 	 * would; the target's decoding/encoding service requirements flow through.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Schema-producing: each call composes a fresh schema and derives both
 	 * directions from it. Bind the result to a `const` — that single binding is
-	 * the point.
+	 * the point. Encode uses default stringify options, so `lineWidth` never
+	 * folds through this path.
 	 *
-	 * @example
+	 * **Example** (Decode YAML into a struct and encode it back)
+	 *
 	 * ```ts
-	 * import { Yaml } from "@effected/yaml";
-	 * import { Effect, Schema } from "effect";
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
 	 *
-	 * const Config = Schema.Struct({ port: Schema.Number });
-	 * const config = Yaml.bind(Config);
+	 * const Config = S.Struct({ port: S.Number })
+	 * const config = Yaml.bind(Config)
+	 * const value = Effect.runSync(config.decode("port: 3000"))
 	 *
-	 * const program = Effect.gen(function* () {
-	 *   const value = yield* config.decode("port: 3000");
-	 *   const text = yield* config.encode(value);
-	 *   return [value, text] as const;
-	 * });
+	 * console.log(value) // { port: 3000 }
+	 * console.log(Effect.runSync(config.encode(value)).includes("3000")) // true
 	 * ```
 	 *
 	 * @param target - The domain schema decoded values must satisfy.
-	 * @returns A {@link YamlBoundCodec} carrying the composed schema and its
-	 *   two pre-bound directions.
+	 * @returns A {@link YamlBoundCodec} carrying the composed schema and its two pre-bound directions.
 	 */
 	static bind<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): YamlBoundCodec<T, RD, RE> {
 		const schema = Yaml.schema(target);

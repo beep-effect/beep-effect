@@ -180,14 +180,25 @@ const infoCommand = Command.make("info", {}, () => withErrorHandler(infoHandler(
 // =============================================================================
 
 /**
- * Exposes storage command for composition by callers of this module.
+ * Browses cloud or local object storage used by extraction batches.
  *
- * **Example** (Inspect storage command)
+ * **Details**
+ *
+ * Subcommands: `ls` (list prefix), `cat` (print an object), `batches`
+ * (list batch directories), and `info` (backend summary).
+ *
+ * **Example** (List storage prefixes)
  *
  * ```ts
  * import { storageCommand } from "@effect-ontology/Cli/Commands/Storage"
+ * import * as A from "effect/Array"
  *
- * console.log(storageCommand)
+ * console.log(storageCommand.name) // "storage"
+ * console.log(
+ *   A.flatMap(storageCommand.subcommands, (group) => A.map(group.commands, (command) => command.name))
+ * )
+ * // ["ls", "cat", "batches", "info"]
+ * // effect-onto storage ls --prefix batches/
  * ```
  *
  * @category cli-commands

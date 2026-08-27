@@ -1,7 +1,13 @@
-// empty-lines (#129): caps runs of consecutive blank lines — in the body
-// (`max`), at document start (`maxStart`) and at document end (`maxEnd`).
-// Blank lines inside scalar content are the value's business and are
-// skipped. The fix deletes the excess lines surgically.
+/**
+ * empty-lines: caps runs of consecutive blank lines — in the body (`max`),
+ * at document start (`maxStart`) and at document end (`maxEnd`).
+ *
+ * Blank lines inside scalar content are the value's business and are
+ * skipped. The fix deletes the excess lines surgically.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -13,6 +19,20 @@ import { insideScalarSpan, nonNegativeIntegerOption } from "./util.ts";
  * Options for `empty-lines`: `max` consecutive blank lines in the body
  * (default 2), `maxStart` at the document start and `maxEnd` at the end
  * (both default 0).
+ *
+ * **Example** (Cap body blanks at two)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "empty-lines": { max: 2 } } })
+ * console.log(config.rules["empty-lines"])
+ * ```
+ *
+ * @see {@link emptyLines} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const emptyLinesOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
@@ -27,7 +47,32 @@ interface EmptyLinesOptions {
 	readonly maxEnd?: number;
 }
 
-/** Runs of blank lines beyond the configured caps, with a deleting fix. */
+/**
+ * Runs of blank lines beyond the configured caps, with a deleting fix.
+ *
+ * **Gotchas**
+ *
+ * A blank line inside a `|` scalar is value, not layout — {@link insideScalarSpan}
+ * skips it so a "helpful" deletion cannot grow or shrink the parsed string.
+ *
+ * **Example** (Body blanks are flagged; block-scalar interior blanks are not)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "empty-lines": { max: 1 } } })
+ * const body = YamlLint.run("a: 1\n\n\n\nb: 2\n", YamlLint.builtins, config)
+ * console.log(body.some((d) => d.rule === "empty-lines")) // true
+ *
+ * const scalar = YamlLint.run("a: |\n  keep\n\n  this\n", YamlLint.builtins, config)
+ * console.log(scalar.every((d) => d.rule !== "empty-lines")) // true
+ * ```
+ *
+ * @see {@link insideScalarSpan} for the scalar-content firewall.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const emptyLines: YamlRule = {
 	id: "empty-lines",
 	check: (ctx: LintContext, options) => {

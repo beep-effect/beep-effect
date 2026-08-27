@@ -115,7 +115,7 @@ const preferredObservationEvidence = <
  * console.log(options.defaultConfidence) // 0.85
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ClaimFactoryOptions extends S.Class<ClaimFactoryOptions>($I`ClaimFactoryOptions`)(
@@ -136,13 +136,7 @@ export class ClaimFactoryOptions extends S.Class<ClaimFactoryOptions>($I`ClaimFa
 /**
  * Constructor input accepted by {@link ClaimFactoryOptions}.
  *
- * **Example** (Select the ontology scope)
- * ```ts
- * import type { ClaimFactoryOptionsInput } from "@effect-ontology/Utils/ClaimFactory"
- * const field: keyof ClaimFactoryOptionsInput = "ontologyId"
- * console.log(field) // "ontologyId"
- * ```
- *
+ * @see {@link ClaimFactoryOptions} for the runtime schema and default confidence.
  * @category type-level
  * @since 0.0.0
  */
@@ -260,7 +254,7 @@ export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollis
  * console.log(S.is(ClaimData)({})) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ClaimData extends S.Class<ClaimData>($I`ClaimData`)(
@@ -1007,17 +1001,21 @@ export const claimsDataToQuads = dual3(
 /**
  * Encode the exact extraction artifact as schema-owned RDF payload quads.
  *
- * **Example** (Inspect the effectful encoder)
+ * **Example** (Encode an empty artifact)
  * ```ts
  * import { ClaimExtractionArtifact, claimExtractionArtifactToQuads } from "@effect-ontology/Utils/ClaimFactory"
+ * import { Effect } from "effect"
  *
- * const encoded = claimExtractionArtifactToQuads(
- *   ClaimExtractionArtifact.make({ claims: [], entityObservations: [], relationObservations: [] }),
- *   "urn:example:graph"
+ * const quads = Effect.runSync(
+ *   claimExtractionArtifactToQuads(
+ *     ClaimExtractionArtifact.make({ claims: [], entityObservations: [], relationObservations: [] }),
+ *     "urn:example:graph"
+ *   )
  * )
- * console.log(encoded)
+ * console.log(quads.length) // 2
  * ```
  *
+ * @see {@link claimExtractionArtifactFromQuads} for decoding the embedded payload.
  * @category codecs
  * @since 0.0.0
  */
@@ -1058,8 +1056,11 @@ export const claimExtractionArtifactToQuads = dual2(
  * **Example** (Decode a legacy graph without an embedded artifact)
  * ```ts
  * import { claimExtractionArtifactFromQuads } from "@effect-ontology/Utils/ClaimFactory"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
- * console.log(claimExtractionArtifactFromQuads([]))
+ * const decoded = Effect.runSync(claimExtractionArtifactFromQuads([]))
+ * console.log(O.isNone(decoded)) // true
  * ```
  *
  * @category codecs

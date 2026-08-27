@@ -992,13 +992,6 @@ export const AgentEvent = AgentEventDefinition.pipe(
 /**
  * Runtime value decoded by {@link AgentEvent}.
  *
- * **Example** (Select the lifecycle discriminator)
- * ```ts
- * import type { AgentEvent } from "@effect-ontology/Model/Agent"
- * const field: keyof AgentEvent = "_tag"
- * console.log(field) // "_tag"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

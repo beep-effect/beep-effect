@@ -9,24 +9,25 @@
  * The pure core is synchronous and `Result`-based so a hook script can read the
  * current state of a journal with no Effect runtime at all.
  *
- * @example
+ * **Example** (Read last valid line without a runtime)
+ *
  * ```ts
- * import { Line } from "@effected/jsonl";
- * import { Option } from "effect";
+ * import { Line } from "@beep/scratchpad/jsonl"
+ * import * as O from "effect/Option"
  *
- * declare const sourceText: string;
- *
- * // The whole read path for a snapshot journal, with no runtime.
- * const state = Line.lastValid(sourceText);
- * if (Option.isSome(state)) {
- *   state.value.value; // the decoded JSON of the last valid line
- *   state.value.line.offset; // its byte offset, for a resumable cursor
+ * const sourceText = '{"round":1}\n{"round":2}\n{"round":'
+ * const state = Line.lastValid(sourceText)
+ * console.log(O.isSome(state)) // true
+ * if (O.isSome(state)) {
+ *   console.log(state.value.value) // { round: 2 }
+ *   console.log(state.value.line.offset) // 12
  * }
  * ```
  *
- * @see {@link https://effect.website | Effect}
- *
+ * @see {@link Line} for the synchronous, runtime-free snapshot read path.
+ * @see {@link Journal} for the Effect service that appends and tails a file.
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 // `Envelope` and `JsonlEvent` each carry BOTH a value and a type declaration,

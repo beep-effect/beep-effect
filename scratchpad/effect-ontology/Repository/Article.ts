@@ -53,18 +53,9 @@ const decodeArticleCountRows = (rows: unknown) =>
 // =============================================================================
 
 /**
- * Describes the article id data exposed by this module.
+ * Database identifier of a persisted article row.
  *
- * **Example** (Create ArticleId)
- *
- * ```ts
- * import type { ArticleId } from "@effect-ontology/Repository/Article"
- *
- * const articleId: ArticleId = "article-id-1"
- *
- * console.log(articleId)
- * ```
- *
+ * @see {@link ArticleRepository} for lookups that consume this identifier.
  * @category type-level
  * @since 0.0.0
  */
@@ -180,17 +171,25 @@ interface ArticleRepositoryShape {
 }
 
 /**
- * Provides repository access for article repository.
+ * Persists and queries ontology-scoped source articles.
  *
- * **Example** (Inspect article repository)
+ * **Example** (Count and existence-check articles)
  *
  * ```ts
  * import { ArticleRepository } from "@effect-ontology/Repository/Article"
+ * import { Effect } from "effect"
  *
- * console.log(ArticleRepository)
+ * const inspectPeople = Effect.gen(function* () {
+ *   const articles = yield* ArticleRepository
+ *   const total = yield* articles.countArticles({ ontologyId: "people" })
+ *   const exists = yield* articles.articleExists("https://example.com/ada", "people")
+ *   return { total, exists }
+ * })
+ * console.log(inspectPeople.pipe !== undefined) // true
  * ```
  *
- * @category layers
+ * @see {@link ArticleFilter} for the query input accepted by `countArticles`.
+ * @category repositories
  * @since 0.0.0
  */
 export class ArticleRepository extends Context.Service<ArticleRepository, ArticleRepositoryShape>()(

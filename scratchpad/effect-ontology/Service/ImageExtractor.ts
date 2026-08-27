@@ -36,9 +36,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageExtractor");
  * ```ts
  * import type { ImageExtractionInput } from "@effect-ontology/Service/ImageExtractor"
  *
- * const acceptsImageExtractionInput = (_value: ImageExtractionInput): void => undefined
- *
- * console.log(acceptsImageExtractionInput)
+ * const input: ImageExtractionInput = {
+ *   content: "![Ada](https://example.org/ada.png)",
+ *   sourceUrl: "https://example.org/ada"
+ * }
+ * console.log(input.sourceUrl)
  * ```
  *
  * @category type-level
@@ -172,9 +174,15 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
  * **Example** (Inspect image extractor)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ImageExtractor } from "@effect-ontology/Service/ImageExtractor"
  *
- * console.log(ImageExtractor)
+ * const program = Effect.gen(function* () {
+ *   const extractor = yield* ImageExtractor
+ *   return extractor
+ * }).pipe(Effect.provide(ImageExtractor.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

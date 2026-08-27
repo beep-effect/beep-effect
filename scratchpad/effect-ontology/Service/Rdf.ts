@@ -186,12 +186,13 @@ export type RdfStore = RdfStoreHandle;
 /**
  *  Guard for opaque workflow-store handles created by this module.
  *
- * **Example** (Inspect is rdf store)
+ * **Example** (Guard an empty store)
  *
  * ```ts
- * import { isRdfStore } from "@effect-ontology/Service/Rdf"
+ * import { emptyRdfStore, isRdfStore } from "@effect-ontology/Service/Rdf"
  *
- * console.log(isRdfStore)
+ * console.log(isRdfStore(emptyRdfStore())) // true
+ * console.log(isRdfStore({})) // false
  * ```
  *
  * @category predicates
@@ -204,15 +205,16 @@ const makeRdfStore = (store: N3Store): RdfStore => new RdfStoreHandle(store);
 /**
  *  Create an empty mutable workflow store without exposing the backend.
  *
- * **Example** (Inspect empty rdf store)
+ * **Example** (Create an empty store)
  *
  * ```ts
- * import { emptyRdfStore } from "@effect-ontology/Service/Rdf"
+ * import { emptyRdfStore, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(emptyRdfStore)
+ * const store = emptyRdfStore()
+ * console.log(rdfStoreSize(store)) // 0
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
@@ -220,15 +222,17 @@ export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
 /**
  *  Create a mutable workflow store from a canonical RDF dataset.
  *
- * **Example** (Inspect rdf store from dataset)
+ * **Example** (Wrap an empty dataset)
  *
  * ```ts
- * import { rdfStoreFromDataset } from "@effect-ontology/Service/Rdf"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import { rdfStoreFromDataset, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreFromDataset)
+ * const store = rdfStoreFromDataset(makeDataset([]))
+ * console.log(rdfStoreSize(store)) // 0
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const rdfStoreFromDataset = (dataset: CanonicalRdf.Dataset): RdfStore =>
@@ -239,15 +243,15 @@ const backend = RdfStoreHandle.backend;
 /**
  *  Return the current number of canonical quads in a workflow store.
  *
- * **Example** (Inspect rdf store size)
+ * **Example** (Count quads in an empty store)
  *
  * ```ts
- * import { rdfStoreSize } from "@effect-ontology/Service/Rdf"
+ * import { emptyRdfStore, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreSize)
+ * console.log(rdfStoreSize(emptyRdfStore())) // 0
  * ```
  *
- * @category services
+ * @category getters
  * @since 0.0.0
  */
 export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
@@ -255,15 +259,17 @@ export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
 /**
  *  Return canonical quads matching a workflow-store pattern.
  *
- * **Example** (Inspect rdf store quads)
+ * **Example** (Query an empty store)
  *
  * ```ts
- * import { rdfStoreQuads } from "@effect-ontology/Service/Rdf"
+ * import { Effect } from "effect"
+ * import { emptyRdfStore, rdfStoreQuads } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreQuads)
+ * const quads = Effect.runSync(rdfStoreQuads(emptyRdfStore(), {}).pipe(Effect.orDie))
+ * console.log(quads.length) // 0
  * ```
  *
- * @category services
+ * @category getters
  * @since 0.0.0
  */
 export const rdfStoreQuads: {
@@ -285,15 +291,17 @@ export const rdfStoreQuads: {
 /**
  *  Return every canonical quad in a workflow store.
  *
- * **Example** (Inspect rdf store all quads)
+ * **Example** (Read every quad)
  *
  * ```ts
- * import { rdfStoreAllQuads } from "@effect-ontology/Service/Rdf"
+ * import { Effect } from "effect"
+ * import { emptyRdfStore, rdfStoreAllQuads } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreAllQuads)
+ * const quads = Effect.runSync(rdfStoreAllQuads(emptyRdfStore()).pipe(Effect.orDie))
+ * console.log(quads.length) // 0
  * ```
  *
- * @category services
+ * @category getters
  * @since 0.0.0
  */
 export const rdfStoreAllQuads = (store: RdfStore): Effect.Effect<ReadonlyArray<Quad>, RdfError> =>
@@ -302,15 +310,25 @@ export const rdfStoreAllQuads = (store: RdfStore): Effect.Effect<ReadonlyArray<Q
 /**
  *  Add one canonical quad to a mutable workflow store.
  *
- * **Example** (Inspect rdf store add quad)
+ * **Example** (Add a name triple)
  *
  * ```ts
- * import { rdfStoreAddQuad } from "@effect-ontology/Service/Rdf"
+ * import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import { emptyRdfStore, rdfStoreAddQuad, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreAddQuad)
+ * const store = emptyRdfStore()
+ * rdfStoreAddQuad(
+ *   store,
+ *   makeQuad(
+ *     makeNamedNode("https://example.org/Ada"),
+ *     makeNamedNode("https://schema.org/name"),
+ *     makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+ *   )
+ * )
+ * console.log(rdfStoreSize(store)) // 1
  * ```
  *
- * @category services
+ * @category setters
  * @since 0.0.0
  */
 export const rdfStoreAddQuad: {
@@ -323,15 +341,24 @@ export const rdfStoreAddQuad: {
 /**
  *  Remove canonical quads from a mutable workflow store.
  *
- * **Example** (Inspect rdf store remove quads)
+ * **Example** (Remove a previously added quad)
  *
  * ```ts
- * import { rdfStoreRemoveQuads } from "@effect-ontology/Service/Rdf"
+ * import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import { emptyRdfStore, rdfStoreAddQuad, rdfStoreRemoveQuads, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreRemoveQuads)
+ * const store = emptyRdfStore()
+ * const quad = makeQuad(
+ *   makeNamedNode("https://example.org/Ada"),
+ *   makeNamedNode("https://schema.org/name"),
+ *   makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+ * )
+ * rdfStoreAddQuad(store, quad)
+ * rdfStoreRemoveQuads(store, [quad])
+ * console.log(rdfStoreSize(store)) // 0
  * ```
  *
- * @category services
+ * @category setters
  * @since 0.0.0
  */
 export const rdfStoreRemoveQuads: {
@@ -344,15 +371,15 @@ export const rdfStoreRemoveQuads: {
 /**
  *  Clone a workflow store without exposing its mutable backend.
  *
- * **Example** (Inspect clone rdf store)
+ * **Example** (Clone an empty store)
  *
  * ```ts
- * import { cloneRdfStore } from "@effect-ontology/Service/Rdf"
+ * import { cloneRdfStore, emptyRdfStore, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(cloneRdfStore)
+ * console.log(rdfStoreSize(cloneRdfStore(emptyRdfStore()))) // 0
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const cloneRdfStore = (store: RdfStore): RdfStore => makeRdfStore(new N3.Store(backend(store)));
@@ -360,15 +387,18 @@ export const cloneRdfStore = (store: RdfStore): RdfStore => makeRdfStore(new N3.
 /**
  *  Apply N3 rules while keeping the mutable driver backend private.
  *
- * **Example** (Inspect rdf store apply rules)
+ * **Example** (Apply an empty rule set)
  *
  * ```ts
- * import { rdfStoreApplyRules } from "@effect-ontology/Service/Rdf"
+ * import { Effect } from "effect"
+ * import { emptyRdfStore, rdfStoreApplyRules, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreApplyRules)
+ * const store = emptyRdfStore()
+ * Effect.runSync(rdfStoreApplyRules(store, []).pipe(Effect.orDie))
+ * console.log(rdfStoreSize(store)) // 0
  * ```
  *
- * @category services
+ * @category utilities
  * @since 0.0.0
  */
 export const rdfStoreApplyRules: {
@@ -401,14 +431,13 @@ export const rdfStoreApplyRules: {
  * null values act as wildcards (match anything).
  *
  *
- * **Example** (Use the QuadPattern contract)
+ * **Example** (Match any name triple)
  *
  * ```ts
  * import type { QuadPattern } from "@effect-ontology/Service/Rdf"
  *
- * const acceptsQuadPattern = (_value: QuadPattern): void => undefined
- *
- * console.log(acceptsQuadPattern)
+ * const pattern: QuadPattern = { predicate: "https://schema.org/name" }
+ * console.log(pattern.predicate)
  * ```
  *
  * @category type-level
@@ -494,15 +523,17 @@ const canonicalQuadToN3 = (quad: CanonicalRdf.Quad): N3.Quad =>
 /**
  *  Convert the experiment's mutable store to the canonical RDF dataset contract.
  *
- * **Example** (Inspect rdf store to dataset)
+ * **Example** (Export an empty store)
  *
  * ```ts
- * import { rdfStoreToDataset } from "@effect-ontology/Service/Rdf"
+ * import { Effect } from "effect"
+ * import { emptyRdfStore, rdfStoreToDataset } from "@effect-ontology/Service/Rdf"
  *
- * console.log(rdfStoreToDataset)
+ * const dataset = Effect.runSync(rdfStoreToDataset(emptyRdfStore()).pipe(Effect.orDie))
+ * console.log(dataset.quads.length) // 0
  * ```
  *
- * @category services
+ * @category mapping
  * @since 0.0.0
  */
 export const rdfStoreToDataset = Effect.fn("Rdf.rdfStoreToDataset")(function* (
@@ -549,14 +580,16 @@ const domainTermToN3Term = (
  * Options for adding triples to a store with optional named graph
  *
  *
- * **Example** (Use the AddTriplesOptions contract)
+ * **Example** (Target a named graph)
  *
  * ```ts
  * import type { AddTriplesOptions } from "@effect-ontology/Service/Rdf"
  *
- * const acceptsAddTriplesOptions = (_value: AddTriplesOptions): void => undefined
- *
- * console.log(acceptsAddTriplesOptions)
+ * const options: AddTriplesOptions = {
+ *   graphUri: "https://example.org/graphs/extraction",
+ *   targetNamespace: "https://example.org/core/"
+ * }
+ * console.log(options.targetNamespace)
  * ```
  *
  * @category type-level
@@ -586,14 +619,19 @@ export interface AddTriplesOptions {
  * Captures information about the extraction run for audit purposes.
  *
  *
- * **Example** (Use the ExtractionMetadata contract)
+ * **Example** (Record extraction provenance)
  *
  * ```ts
  * import type { ExtractionMetadata } from "@effect-ontology/Service/Rdf"
  *
- * const acceptsExtractionMetadata = (_value: ExtractionMetadata): void => undefined
- *
- * console.log(acceptsExtractionMetadata)
+ * const metadata: ExtractionMetadata = {
+ *   graphUri: "https://example.org/graphs/prov",
+ *   timestamp: "2026-01-01T00:00:00.000Z",
+ *   sourceUri: "gs://beep-input/ada.txt",
+ *   model: "claude-haiku-4-5",
+ *   ontologyVersion: "core@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+ * }
+ * console.log(metadata.model)
  * ```
  *
  * @category type-level
@@ -804,13 +842,19 @@ export interface RdfBuilderShape {
  * - `addRelations`: Convert Relation domain objects to RDF
  * - `toTurtle`: Serialize to Turtle with prefixes
  *
- * **Example** (Inspect the RDF-builder layer)
+ * **Example** (Parse Turtle into a store)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { RdfBuilder } from "@effect-ontology/Service/Rdf"
+ * import { Effect } from "effect"
+ * import { RdfBuilder, rdfStoreSize } from "@effect-ontology/Service/Rdf"
  *
- * console.log(Layer.isLayer(RdfBuilder.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const rdf = yield* RdfBuilder
+ *   const store = yield* rdf.parseTurtle('<https://example.org/ada> <https://schema.org/name> "Ada" .')
+ *   return rdfStoreSize(store)
+ * }).pipe(Effect.provide(RdfBuilder.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

@@ -173,37 +173,18 @@ CRITICAL RULES:
 );
 
 /**
- * Type helpers
+ * Runtime schema returned by {@link makeEntitySchema} for Stage-1 entity extraction.
  *
- * **Example** (Reference the entity graph schema factory result)
- *
- * ```ts
- * import { makeEntitySchema, type EntityGraphSchema } from "@effect-ontology/Schema/EntityFactory"
- *
- * const entityGraphSchemaFactory: typeof makeEntitySchema = makeEntitySchema
- * const describeEntityGraphSchema = (_schema: EntityGraphSchema): string => "entity graph schema"
- *
- * console.log(entityGraphSchemaFactory.length, describeEntityGraphSchema.length)
- * ```
- *
+ * @see {@link makeEntitySchema} for constructing the schema from ontology classes.
  * @category type-level
  * @since 0.0.0
  */
 export type EntityGraphSchema = ReturnType<typeof makeEntitySchema>;
 
 /**
- * Describes the entity graph type data exposed by this module.
+ * Decoded entity graph produced by {@link makeEntitySchema}.
  *
- * **Example** (Reference EntityGraph fields)
- *
- * ```ts
- * import type { EntityGraph } from "@effect-ontology/Schema/EntityFactory"
- *
- * const entityGraphFields: ReadonlyArray<keyof EntityGraph> = ["entities"]
- *
- * console.log(entityGraphFields)
- * ```
- *
+ * @see {@link makeEntitySchema} for Stage-1 vs Stage-2 shape and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */

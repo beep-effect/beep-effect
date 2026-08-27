@@ -14,6 +14,7 @@
     "claudecode:test": "bunx --bun vitest run --config claudecode/vitest.config.ts",
     "claudecode:typecheck": "tsgo -p claudecode/tsconfig.json --noEmit",
     "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen:claudecode": "bun run ../packages/tooling/tool/docgen/src/bin.ts --config-file docgen.claudecode.json",
     "docgen:effect-ontology": "bun run ../packages/tooling/tool/docgen/src/bin.ts --config-file docgen.effect-ontology.json",
     "generate:effect-ontology-migrations": "bun effect-ontology/scripts/generate-migrations.ts",
     "lint:effect-ontology": "biome check --config-path effect-ontology/biome.jsonc effect-ontology",

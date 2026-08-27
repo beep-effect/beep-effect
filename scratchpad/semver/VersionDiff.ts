@@ -1,3 +1,10 @@
+/**
+ * Classifies the highest-precedence field that differs between two versions,
+ * plus signed numeric deltas for changelog-style summaries.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Schema } from "effect";
 import { SemVer } from "./SemVer.ts";
 
@@ -23,9 +30,18 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  * `"minor"`, `"patch"`, `"prerelease"` (only prerelease identifiers differ),
  * `"build"` (only build metadata differs) or `"none"`.
  *
- * @example
+ * **Gotchas**
+ *
+ * `"build"` diffs are classified even though SemVer precedence equality
+ * ignores build metadata (§10). `VersionDiff.between(a, b).type === "build"`
+ * can coexist with `a.equal(b) === true`. Changelog UIs that skip "no
+ * change" via {@link SemVer.equal} will drop build-only diffs; the reverse
+ * treats spec-equal versions as a change.
+ *
+ * **Example** (Classify a major bump)
+ *
  * ```ts
- * import { SemVer, VersionDiff } from "@effected/semver";
+ * import { SemVer, VersionDiff } from "@beep/scratchpad/semver";
  * import { Effect } from "effect";
  *
  * const program = Effect.gen(function* () {
@@ -39,7 +55,11 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  * // => ["major", 1]
  * ```
  *
+ * @see {@link SemVer.OrderWithBuild} for a total order that agrees with build-only classification.
+ * @see {@link SemVer.equal} for spec equality, which ignores build metadata.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class VersionDiff extends Schema.TaggedClass<VersionDiff>()("VersionDiff", {
 	/** The highest-precedence field that differs between `from` and `to`; see the class doc for the classification order. */

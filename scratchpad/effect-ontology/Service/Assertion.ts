@@ -48,14 +48,17 @@ const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
  * Input for creating an assertion from claims
  *
  *
- * **Example** (Use the CreateAssertionInput contract)
+ * **Example** (Accept claims into an assertion)
  *
  * ```ts
  * import type { CreateAssertionInput } from "@effect-ontology/Service/Assertion"
  *
- * const acceptsCreateAssertionInput = (_value: CreateAssertionInput): void => undefined
- *
- * console.log(acceptsCreateAssertionInput)
+ * const input: CreateAssertionInput = {
+ *   ontologyId: "core",
+ *   claimIds: ["claim-ada-founded"],
+ *   decision: "accept"
+ * }
+ * console.log(input.decision) // "accept"
  * ```
  *
  * @category type-level
@@ -85,14 +88,17 @@ export interface CreateAssertionInput {
  * Filter for querying assertions
  *
  *
- * **Example** (Use the AssertionFilter contract)
+ * **Example** (Filter accepted assertions)
  *
  * ```ts
  * import type { AssertionFilter } from "@effect-ontology/Service/Assertion"
  *
- * const acceptsAssertionFilter = (_value: AssertionFilter): void => undefined
- *
- * console.log(acceptsAssertionFilter)
+ * const filter: AssertionFilter = {
+ *   subjectIri: "https://example.org/Ada",
+ *   status: "accepted",
+ *   limit: 20
+ * }
+ * console.log(filter.limit) // 20
  * ```
  *
  * @category type-level
@@ -111,14 +117,13 @@ export interface AssertionFilter {
  * Assertion with full provenance information
  *
  *
- * **Example** (Use the AssertionWithProvenance contract)
+ * **Example** (Attach source claims)
  *
  * ```ts
  * import type { AssertionWithProvenance } from "@effect-ontology/Service/Assertion"
  *
- * const acceptsAssertionWithProvenance = (_value: AssertionWithProvenance): void => undefined
- *
- * console.log(acceptsAssertionWithProvenance)
+ * const empty: AssertionWithProvenance["sourceClaims"] = []
+ * console.log(empty.length) // 0
  * ```
  *
  * @category type-level
@@ -133,14 +138,30 @@ export interface AssertionWithProvenance {
  * Internal assertion row type (matches what we store)
  *
  *
- * **Example** (Use the AssertionRow contract)
+ * **Example** (Read assertion identity)
  *
  * ```ts
  * import type { AssertionRow } from "@effect-ontology/Service/Assertion"
  *
- * const acceptsAssertionRow = (_value: AssertionRow): void => undefined
- *
- * console.log(acceptsAssertionRow)
+ * const idOf = (row: AssertionRow): string => row.id
+ * const row = {
+ *   id: "assertion-1",
+ *   ontologyId: "core",
+ *   subjectIri: "https://example.org/Ada",
+ *   predicateIri: "https://example.org/founded",
+ *   objectValue: "https://example.org/Acme",
+ *   objectType: "iri",
+ *   status: "accepted",
+ *   assertedAt: new Date("2026-01-01T00:00:00.000Z"),
+ *   derivedFrom: ["claim-ada-founded"],
+ *   curatedBy: null,
+ *   confidence: 0.9,
+ *   validFrom: null,
+ *   validTo: null,
+ *   rejectedAt: null,
+ *   rejectionReason: null
+ * } satisfies AssertionRow
+ * console.log(idOf(row)) // "assertion-1"
  * ```
  *
  * @category type-level
@@ -167,12 +188,16 @@ export interface AssertionRow {
 /**
  *  Typed failure for assertion lifecycle operations.
  *
- * **Example** (Inspect assertion error)
+ * **Example** (Construct an assertion error)
  *
  * ```ts
  * import { AssertionError } from "@effect-ontology/Service/Assertion"
  *
- * console.log(AssertionError)
+ * const error = AssertionError.make({
+ *   operation: "create",
+ *   message: "Source claims belong to different ontologies"
+ * })
+ * console.log(error._tag) // "AssertionError"
  * ```
  *
  * @category errors
@@ -238,13 +263,22 @@ const ASSERTIONS = {
  * - `reject`: Soft-delete an assertion with reason
  * - `toTriples`: Convert assertion to RDF quads
  *
- * **Example** (Inspect the assertion-service layer)
+ * **Example** (Create an assertion from accepted claims)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { AssertionService } from "@effect-ontology/Service/Assertion"
  *
- * console.log(Layer.isLayer(AssertionService.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const assertions = yield* AssertionService
+ *   return yield* assertions.createAssertion({
+ *     ontologyId: "core",
+ *     claimIds: ["claim-ada-founded"],
+ *     decision: "accept"
+ *   })
+ * }).pipe(Effect.provide(AssertionService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -654,12 +688,18 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
  * Default layer for production use.
  * Includes ClaimRepository and RdfBuilder dependencies.
  *
- * **Example** (Inspect assertion service live)
+ * **Example** (Provide the live assertion layer)
  *
  * ```ts
- * import { AssertionServiceLive } from "@effect-ontology/Service/Assertion"
+ * import { Effect } from "effect"
+ * import { AssertionService, AssertionServiceLive } from "@effect-ontology/Service/Assertion"
  *
- * console.log(AssertionServiceLive)
+ * const program = Effect.gen(function* () {
+ *   const assertions = yield* AssertionService
+ *   return yield* assertions.query({ status: "accepted", limit: 10 })
+ * }).pipe(Effect.provide(AssertionServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

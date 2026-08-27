@@ -1,0 +1,157 @@
+{
+  "generatedAt": "2026-08-27T03:16:05.808Z",
+  "fileCount": 476,
+  "moduleCount": 468,
+  "exportCount": 4033,
+  "owningExportCount": 3659,
+  "reExportCount": 374,
+  "openModuleCount": 0,
+  "openOwningExportCount": 0,
+  "byKind": {
+    "value": 2516,
+    "type": 1143,
+    "re-export": 374
+  },
+  "packs": [
+    {
+      "id": "claudecode-events",
+      "moduleCount": 31,
+      "owningExportCount": 349,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "claudecode-hook",
+      "moduleCount": 8,
+      "owningExportCount": 56,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "claudecode-config",
+      "moduleCount": 11,
+      "owningExportCount": 118,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "claudecode-runtime",
+      "moduleCount": 15,
+      "owningExportCount": 189,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "ontology-domain",
+      "moduleCount": 55,
+      "owningExportCount": 569,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "ontology-service",
+      "moduleCount": 78,
+      "owningExportCount": 465,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "ontology-runtime",
+      "moduleCount": 40,
+      "owningExportCount": 202,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "ontology-rest",
+      "moduleCount": 55,
+      "owningExportCount": 354,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "yaml-public",
+      "moduleCount": 11,
+      "owningExportCount": 80,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "yaml-internal",
+      "moduleCount": 37,
+      "owningExportCount": 183,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "toml",
+      "moduleCount": 15,
+      "owningExportCount": 92,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "jsonc",
+      "moduleCount": 13,
+      "owningExportCount": 55,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "jsonl",
+      "moduleCount": 11,
+      "owningExportCount": 46,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "glob",
+      "moduleCount": 13,
+      "owningExportCount": 20,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "schemastore",
+      "moduleCount": 14,
+      "owningExportCount": 47,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "semver",
+      "moduleCount": 10,
+      "owningExportCount": 34,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "memfs",
+      "moduleCount": 3,
+      "owningExportCount": 18,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "beep-docs",
+      "moduleCount": 9,
+      "owningExportCount": 95,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "codemode",
+      "moduleCount": 34,
+      "owningExportCount": 353,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    },
+    {
+      "id": "remainder",
+      "moduleCount": 5,
+      "owningExportCount": 334,
+      "openModuleCount": 0,
+      "openOwningExportCount": 0
+    }
+  ]
+}

@@ -67,12 +67,23 @@ export interface GenerateObjectWithRetryOptions<
 /**
  * Generate structured object with standardized retry, timeout, and telemetry.
  *
- * **Example** (Inspect generate object with retry)
+ * **Example** (Compose a retried structured generation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { generateObjectWithRetry } from "@effect-ontology/Service/LlmWithRetry"
  *
- * console.log(generateObjectWithRetry)
+ * const Founder = S.Struct({ founder: S.String })
+ * const program = generateObjectWithRetry({
+ *   prompt: "Extract the founder from: Ada founded Acme.",
+ *   schema: Founder,
+ *   objectName: "Founder",
+ *   serviceName: "EntityExtractor",
+ *   model: "claude-haiku-4-5",
+ *   provider: "anthropic",
+ *   retryPolicy: {}
+ * })
+ * console.log(program)
  * ```
  *
  * @category schemas

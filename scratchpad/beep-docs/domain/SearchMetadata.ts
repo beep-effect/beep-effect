@@ -56,12 +56,14 @@ const SearchSectionsFromJsonStrings = SearchSection.pipe(S.fromJsonString, S.Arr
 /**
  * Which content collection a search record came from.
  *
- * **Example** (Read the enum)
+ * **Example** (Guard a content source)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SearchContentSource } from "./SearchMetadata.ts"
  *
- * console.log(SearchContentSource.Enum.documentation)
+ * console.log(S.is(SearchContentSource)(SearchContentSource.Enum.documentation)) // true
+ * console.log(S.is(SearchContentSource)("forum")) // false
  * ```
  *
  * @category schemas

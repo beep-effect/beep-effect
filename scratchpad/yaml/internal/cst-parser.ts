@@ -1,8 +1,15 @@
-// YAML 1.2 CST parser — transforms a token stream into a Concrete Syntax Tree.
-//
-// The CST preserves every character of the original input, including
-// whitespace, comments, and structural indicators. No value interpretation
-// occurs at this stage.
+/**
+ * YAML 1.2 CST parser — transforms a token stream into a Concrete Syntax Tree.
+ *
+ * The CST preserves every character of the original input, including
+ * whitespace, comments, and structural indicators. No value interpretation
+ * occurs at this stage — `true` is still the string `"true"`. Nesting is
+ * capped at `MAX_NESTING_DEPTH + 8` so the composer diagnostic always fires
+ * first.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { CstNode, CstNodeType } from "./cst.ts";
 import { lexAll } from "./lexer.ts";
@@ -1091,6 +1098,27 @@ function parseDocuments(tokens: ReadonlyArray<YamlToken>, text: string): CstNode
  * Each CST node preserves every character of the original input, including
  * whitespace, comments, and structural indicators. No value interpretation
  * occurs at this stage — `true` is still the string `"true"`.
+ *
+ * **Gotchas**
+ *
+ * CST nesting is capped at `MAX_CST_DEPTH = 256 + 8` so the composer's
+ * `NestingDepthExceeded` diagnostic always fires first. {@link Yaml.parse}
+ * resolves Core Schema types after this stage.
+ *
+ * **Example** (Parse every document in a stream)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parseAll("a: 1\n---\nb: 2\n"))) // [{ a: 1 }, { b: 2 }]
+ * ```
+ *
+ * @see {@link CstNode} for the uninterpreted tree this parser produces.
+ * @see {@link MAX_NESTING_DEPTH} for the composer budget this cap sits above.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function parseCSTAll(text: string): ReadonlyArray<CstNode> {
 	return parseDocuments(lexAll(text), text);

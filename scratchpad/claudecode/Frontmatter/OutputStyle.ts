@@ -24,10 +24,10 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/OutputStyle");
  * import * as S from "effect/Schema"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const style = yield* S.decodeUnknownEffect(Frontmatter.OutputStyleFrontmatter)({ name: "terse" })
- *   console.log(O.getOrNull(style.name)) // "terse"
- * })
+ * const style = Effect.runSync(
+ *   S.decodeUnknownEffect(Frontmatter.OutputStyleFrontmatter)({ name: "terse" })
+ * )
+ * console.log(O.getOrNull(style.name)) // "terse"
  * ```
  *
  * @category models

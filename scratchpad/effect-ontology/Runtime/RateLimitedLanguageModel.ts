@@ -162,14 +162,20 @@ const makeAiProtection = Effect.fn("RateLimitedAiClient.makeProtection")(functio
 /**
  *  Rate-limited Anthropic client adapter used before `AnthropicLanguageModel.make`.
  *
- * **Example** (Inspect rate limited anthropic client layer)
+ * **Example** (Select Anthropic when ConfigService.llm.provider is anthropic)
  *
  * ```ts
- * import { RateLimitedAnthropicClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
+ * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
- * console.log(RateLimitedAnthropicClientLayer)
+ * const provider = "anthropic" as const
+ * const adapter = provider === "anthropic" ? RateLimitedAnthropicClientLayer : RateLimitedOpenAiClientLayer
+ * console.log(provider) // "anthropic"
+ * const documented = [adapter, "createMessage"] as const
+ * console.log(documented[1]) // "createMessage"
  * ```
  *
+ * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.
+ * @see {@link RateLimitedOpenAiClientLayer} for the OpenAI sibling used when the configured vendor is openai.
  * @category layers
  * @since 0.0.0
  */
@@ -199,14 +205,20 @@ export const RateLimitedAnthropicClientLayer = Layer.effect(
 /**
  *  Rate-limited OpenAI client adapter used before `OpenAiLanguageModel.make`.
  *
- * **Example** (Inspect rate limited open ai client layer)
+ * **Example** (Select OpenAI when ConfigService.llm.provider is openai)
  *
  * ```ts
- * import { RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
+ * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
- * console.log(RateLimitedOpenAiClientLayer)
+ * const provider = "openai" as const
+ * const adapter = provider === "openai" ? RateLimitedOpenAiClientLayer : RateLimitedAnthropicClientLayer
+ * console.log(provider) // "openai"
+ * const documented = [adapter, "createResponse"] as const
+ * console.log(documented[1]) // "createResponse"
  * ```
  *
+ * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.
+ * @see {@link RateLimitedAnthropicClientLayer} for the Anthropic sibling used when the configured vendor is anthropic.
  * @category layers
  * @since 0.0.0
  */

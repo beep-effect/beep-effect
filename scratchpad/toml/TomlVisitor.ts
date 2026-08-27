@@ -1,23 +1,31 @@
-// SAX-style event stream over the semantic walk: `TableStart`/
-// `ArrayTableStart`/`KeyValue` events ride `analyze`'s existing iterative pass
-// (no added recursion — analyze's own header/dotted-key navigation is already
-// iterative, and this module adds only a flat second pass plus a sort, never
-// a walk of its own). Comment events — standalone trivia comments and
-// expression trailing comments — are collected by that second pass over the
-// same `TomlExpression` array and merged with the semantic events by source
-// offset, so the merged sequence streams in document order.
-//
-// Offset semantics (pinned in `__test__/TomlVisitor.test.ts`): a `Comment`
-// event's `offset` is the position of its `#` marker in the source text. For
-// a standalone trivia comment that is the `#` found inside the trivia's raw
-// slice; for a trailing comment it is located by searching forward from the
-// end of the value span (key-values) or the last key span (headers) — the
-// first position a `#` can legally appear, since nothing between there and
-// the comment marker can itself contain a `#` character.
-//
-// Cycle firewall: same materialization as `Toml.parse` (Task 7) — the engine
-// throws raw carriers (`RawTomlError`, `GuardExceeded`); this module builds
-// the typed `TomlParseError`, never letting a raw carrier escape as a defect.
+/**
+ * SAX-style event stream over the semantic walk of a TOML document.
+ *
+ * **Details**
+ *
+ * `TableStart` / `ArrayTableStart` / `KeyValue` events ride `analyze`'s
+ * existing iterative pass (no added recursion — analyze's own header/dotted-key
+ * navigation is already iterative, and this module adds only a flat second
+ * pass plus a sort, never a walk of its own). Comment events — standalone
+ * trivia comments and expression trailing comments — are collected by that
+ * second pass over the same `TomlExpression` array and merged with the
+ * semantic events by source offset, so the merged sequence streams in
+ * document order.
+ *
+ * A `Comment` event's `offset` is the position of its `#` marker in the
+ * source text. For a standalone trivia comment that is the `#` found inside
+ * the trivia's raw slice; for a trailing comment it is located by searching
+ * forward from the end of the value span (key-values) or the last key span
+ * (headers) — the first position a `#` can legally appear, since nothing
+ * between there and the comment marker can itself contain a `#` character.
+ *
+ * Cycle firewall: same materialization as `Toml.parse` — the engine throws
+ * raw carriers (`RawTomlError`, `GuardExceeded`); this module builds the
+ * typed `TomlParseError`, never letting a raw carrier escape as a defect.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Data, Effect, Stream } from "effect";
 import { isRawTomlError } from "./internal/diagnostics.ts";
@@ -36,9 +44,18 @@ import { TomlKeyValue, TomlTrivia } from "./TomlNode.ts";
  * event, then again for every `[table]` header. `ArrayTableStart` fires for
  * every `[[array]]` header with the 0-based element `index`. `KeyValue.path`
  * includes the final key. `Comment` covers both standalone (trivia) and
- * trailing comments — see the module remarks for `offset`'s exact meaning.
+ * trailing comments.
  *
- * @public
+ * **Gotchas**
+ *
+ * A `Comment` event's `offset` is the `#` marker, not the start of the
+ * expression that owns the comment. Treating it as the expression start
+ * highlights the wrong span. The synthetic root `TableStart` is sorted with
+ * internal offset `-1` so it precedes a leading comment at offset 0.
+ *
+ * @see {@link TomlVisitor} for the stream that emits these events.
+ * @category type-level
+ * @since 0.0.0
  */
 export type TomlVisitorEvent = Data.TaggedEnum<{
 	TableStart: { readonly path: ReadonlyArray<string> };
@@ -51,7 +68,19 @@ export type TomlVisitorEvent = Data.TaggedEnum<{
  * Constructors and matchers for the `TomlVisitorEvent` union (e.g.
  * `TomlVisitorEvent.KeyValue({ path, node })`, `TomlVisitorEvent.$is("Comment")`).
  *
- * @public
+ * **Example** (Construct a root table event)
+ *
+ * ```ts
+ * import { TomlVisitorEvent } from "@beep/scratchpad/toml"
+ *
+ * const root = TomlVisitorEvent.TableStart({ path: [] })
+ * console.log(root._tag) // "TableStart"
+ * console.log(TomlVisitorEvent.$is("TableStart")(root)) // true
+ * ```
+ *
+ * @see {@link TomlVisitor.visit} to produce these events from TOML text.
+ * @category constructors
+ * @since 0.0.0
  */
 export const TomlVisitorEvent = Data.taggedEnum<TomlVisitorEvent>();
 
@@ -170,9 +199,32 @@ const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent
 	});
 
 /**
- * SAX-style TOML visitor statics. Not instantiable.
+ * SAX-style TOML visitor that streams semantic events in document order.
  *
- * @public
+ * **Gotchas**
+ *
+ * Construction is eager, not on-demand: the full text is parsed, walked by
+ * `analyze`, and sorted into document order up front, inside the `Effect`
+ * `Stream.unwrap` runs to build the stream. `Stream.take` still short-circuits
+ * consumption, but it does not skip that parse/analyze/sort pass — peeking
+ * the root table of a multi-megabyte document still pays the full walk.
+ * Failures are {@link TomlParseError}, including semantic `DuplicateKey`,
+ * never a raw defect.
+ *
+ * **Example** (Collect events from a small document)
+ *
+ * ```ts
+ * import { Effect, Stream } from "effect"
+ * import { TomlVisitor } from "@beep/scratchpad/toml"
+ *
+ * const events = Effect.runSync(Stream.runCollect(TomlVisitor.visit('name = "Alice"\n')))
+ * console.log(events.map((event) => event._tag)) // ["TableStart", "KeyValue"]
+ * ```
+ *
+ * @see {@link Toml.parse} for the same materialization on the value pipeline.
+ * @see {@link TomlDocument} to keep the CST when you need more than events.
+ * @category streams
+ * @since 0.0.0
  */
 export class TomlVisitor {
 	private constructor() {}
@@ -182,12 +234,26 @@ export class TomlVisitor {
 	 * order. Fails the stream with {@link TomlParseError} on the first
 	 * lex/parse or semantic violation — never as an unhandled defect.
 	 *
-	 * @remarks
-	 * Construction is eager, not on-demand: the full text is parsed, walked by
-	 * `analyze` and sorted into document order up front, inside the `Effect`
-	 * `Stream.unwrap` runs to build the stream. Only enumeration of the
-	 * already-built event array is streamed — `Stream.take` still short-circuits
-	 * consumption, but it does not avoid the initial parse/analyze/sort pass.
+	 * **Gotchas**
+	 *
+	 * Construction is eager: the full parse/analyze/sort runs inside
+	 * `Stream.unwrap` before any event is pulled. `Stream.take` does not avoid
+	 * that pass.
+	 *
+	 * **Example** (Stream a comment's hash offset)
+	 *
+	 * ```ts
+	 * import { Effect, Stream } from "effect"
+	 * import { TomlVisitor, TomlVisitorEvent } from "@beep/scratchpad/toml"
+	 *
+	 * const events = Effect.runSync(Stream.runCollect(TomlVisitor.visit("# heading\nname = 1\n")))
+	 * const comment = events.find(TomlVisitorEvent.$is("Comment"))
+	 * console.log(comment?.offset) // 0
+	 * console.log(comment?.text) // "heading"
+	 * ```
+	 *
+	 * @see {@link Toml.parse} for the same typed materialization of engine carriers.
+	 * @see {@link TomlDocument} to keep the CST if you need more than events.
 	 */
 	static visit(text: string): Stream.Stream<TomlVisitorEvent, TomlParseError> {
 		return Stream.unwrap(collectEventsOrFail(text).pipe(Effect.map(Stream.fromIterable)));

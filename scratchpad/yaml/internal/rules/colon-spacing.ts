@@ -1,7 +1,14 @@
-// colon-spacing (#129): spaces around the block-mapping `:` indicator —
-// none before it (a `key :` reads as a key containing a space), at most one
-// after it. An explicit-value `:` at the head of its line is structure, not
-// spacing, and a comment after the colon belongs to comments-spacing.
+/**
+ * colon-spacing: spaces around the block-mapping `:` indicator — none
+ * before it (a `key :` reads as a key containing a space), at most one
+ * after it.
+ *
+ * An explicit-value `:` at the head of its line is structure, not spacing,
+ * and a comment after the colon belongs to comments-spacing.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -15,6 +22,20 @@ import { nonNegativeIntegerOption, positiveIntegerOption } from "./util.ts";
  * is legal (`key:` needs no space before the colon), but at least one
  * separation space must FOLLOW it — `0` would make the fix emit `a:val`, a
  * plain scalar, not a mapping entry.
+ *
+ * **Example** (Decode the default after-colon budget)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "colon-spacing": { maxSpacesAfter: 1 } } })
+ * console.log(config.rules["colon-spacing"])
+ * ```
+ *
+ * @see {@link colonSpacing} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const colonSpacingOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
@@ -27,7 +48,30 @@ interface ColonSpacingOptions {
 	readonly maxSpacesAfter?: number;
 }
 
-/** Spacing around the block-mapping `:` indicator. */
+/**
+ * Spacing around the block-mapping `:` indicator.
+ *
+ * **Gotchas**
+ *
+ * Runtime `maxSpacesAfter` is clamped with `Math.max(1, …)` so a hand-built
+ * `{ maxSpacesAfter: 0 }` cannot bypass the schema and emit `a:val`.
+ *
+ * **Example** (Flag a space before the colon)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const hits = YamlLint.run("key : value\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "colon-spacing": "error" },
+ * }))
+ * console.log(hits.some((d) => d.rule === "colon-spacing")) // true
+ * ```
+ *
+ * @see {@link positiveIntegerOption} for the schema that rejects `0`.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const colonSpacing: YamlRule = {
 	id: "colon-spacing",
 	check: (ctx, options) => {

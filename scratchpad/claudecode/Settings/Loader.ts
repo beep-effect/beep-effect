@@ -5,6 +5,7 @@
  * Code precedence order. Scalars use the higher-priority value, arrays are
  * concatenated and de-duplicated, and objects are merged recursively.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -31,16 +32,24 @@ const $I = $ScratchpadId.create("claudecode/Settings/Loader");
 /**
  * Optional source overrides accepted by {@link load}.
  *
+ * **Gotchas**
+ *
+ * `managedSettingsRoots` replaces the default managed roots
+ * (`/Library/Application Support/ClaudeCode`, `/etc/claude-code`,
+ * `C:\Program Files\ClaudeCode`) and ignores `managedSettingsRoot`.
+ * `managedSettingsRoot` is consulted only when `managedSettingsRoots` is
+ * absent.
+ *
  * **Example** (Configure an explicit settings source)
  *
  * ```ts
+ * import * as O from "effect/Option"
  * import { Settings } from "effect-claudecode"
  *
- * const options: Settings.LoadOptions.Encoded = {
- *   settingsPath: "/tmp/session-settings.json"
- * }
- *
- * console.log(options.settingsPath) // "/tmp/session-settings.json"
+ * const options = Settings.LoadOptions.make({
+ *   settingsPath: O.some("/tmp/session-settings.json")
+ * })
+ * console.log(O.getOrUndefined(options.settingsPath)) // "/tmp/session-settings.json"
  * ```
  *
  * @category configuration
@@ -350,6 +359,15 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * Priority is user, project, local, optional `--settings`, then managed
  * settings. Files that do not exist are skipped. Malformed JSON and invalid
  * known settings fail with path-aware typed errors.
+ *
+ * **Gotchas**
+ *
+ * `managedSettingsRoots` replaces the default managed roots
+ * (`/Library/Application Support/ClaudeCode`, `/etc/claude-code`,
+ * `C:\Program Files\ClaudeCode`) and ignores `managedSettingsRoot`.
+ * Passing both fields is not "root plus extras": the array replaces
+ * everything. `managedSettingsRoot` is consulted only when
+ * `managedSettingsRoots` is absent.
  *
  * **Example** (Load effective settings)
  *

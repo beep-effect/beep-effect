@@ -144,14 +144,24 @@ const toExtractionParams = (
   });
 
 /**
- * Validates and represents make extraction entity handler values at runtime.
+ * Builds the Cluster RPC handlers for extract, cache lookup, cancel, and status.
  *
- * **Example** (Inspect make extraction entity handler)
+ * **Details**
+ *
+ * The returned effect acquires extraction, grounding, and LLM-control services,
+ * then yields idempotent `ExtractFromText`, `GetCachedResult`, `CancelExtraction`,
+ * and `GetExtractionStatus` handlers. {@link ExtractionEntityHandlerLayer} runs
+ * this constructor with `Effect.orDie`.
+ *
+ * **Example** (Name the handler methods)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
  *
- * console.log(makeExtractionEntityHandler)
+ * const methods = ["ExtractFromText", "GetCachedResult", "CancelExtraction", "GetExtractionStatus"] as const
+ * console.log(Effect.isEffect(makeExtractionEntityHandler)) // true
+ * console.log(methods[0]) // "ExtractFromText"
  * ```
  *
  * @category constructors
@@ -491,14 +501,26 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
 });
 
 /**
- * Provides the Effect layer for extraction entity handler layer dependencies.
+ * Registers {@link makeExtractionEntityHandler} as the `KGExtractor` Cluster entity.
  *
- * **Example** (Inspect extraction entity handler layer)
+ * **Details**
+ *
+ * Handler construction is `orDie`'d at layer build time so a missing dependency
+ * fails fast rather than leaving a half-registered entity.
+ *
+ * **Example** (Wire the handler beside sqlite Cluster storage)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { ExtractionEntityHandlerLayer } from "@effect-ontology/Cluster/ExtractionEntityHandler"
+ * import { ClusterSqliteLive } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ExtractionEntityHandlerLayer)
+ * const wired = Layer.provide(
+ *   ExtractionEntityHandlerLayer,
+ *   ClusterSqliteLive({ filename: "output/cluster.db", runnerStorage: "memory" })
+ * )
+ * const documented = [wired, "ExtractFromText"] as const
+ * console.log(documented[1]) // "ExtractFromText"
  * ```
  *
  * @category layers

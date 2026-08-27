@@ -1,11 +1,10 @@
 /**
- * SessionStart hook event.
- *
  * Fires when a Claude Code session begins, resumes, is cleared, or
  * compacts. Does not carry `permission_mode`. The primary use-case is
- * injecting repo-specific context via `addContext`. Supports a matcher
- * on `source`. See https://code.claude.com/docs/en/hooks#sessionstart.
+ * injecting repo-specific context via `addContext`. Matcher is on
+ * `source`. See https://code.claude.com/docs/en/hooks#sessionstart.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -32,18 +31,21 @@ const WatchPaths = S.String.pipe(
 );
 
 /**
- * Schema for `Source`.
+ * Why this session started (`startup`, `resume`, `clear`, or
+ * `compact`).
  *
- * **Example** (Inspect the Source schema)
+ * **Example** (Decode a session source)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.SessionStart.Source)
+ * const source = S.decodeUnknownSync(Hook.SessionStart.Source)("startup")
+ * console.log(source) // "startup"
  * ```
  *
+ * @see {@link onMatcher} for filtering on this source.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const Source = LiteralKit(["startup", "resume", "clear", "compact"]).pipe(
@@ -53,35 +55,42 @@ export const Source = LiteralKit(["startup", "resume", "clear", "compact"]).pipe
 );
 
 /**
- * Type-level model for `Source`.
+ * Decoded value produced by {@link Source}.
  *
- * **Example** (Use Source as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.SessionStart.Source
- * ```
- *
+ * @see {@link Source} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type Source = typeof Source.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a SessionStart hook, including `source` and
+ * optional session title.
  *
- * **Example** (Inspect the Input schema)
+ * **Gotchas**
+ *
+ * This event omits `permission_mode`. Other envelope events may carry
+ * it; reading `input.permission_mode` here is always `none`.
+ *
+ * **Example** (Decode a startup payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.SessionStart.Input)
+ * const input = S.decodeUnknownSync(Hook.SessionStart.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SessionStart",
+ *   source: "startup",
+ * })
+ *
+ * console.log(input.source) // "startup"
  * ```
  *
+ * @see {@link addContext} for the canonical SessionStart response.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`SessionStartInput`)(
@@ -103,18 +112,25 @@ export class Input extends S.Class<Input>($I`SessionStartInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that can inject context, seed an initial user
+ * message, rename the session, watch paths, or reload skills.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect injected context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.HookSpecificOutput)
+ * const specific = Hook.SessionStart.HookSpecificOutput.make({
+ *   hookEventName: "SessionStart",
+ *   additionalContext: O.some("Use bun, not npm"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "Use bun, not npm"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SessionStartHookSpecificOutput`)(
@@ -132,18 +148,22 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SessionSt
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a SessionStart handler returns. Session-start effects
+ * live on `hookSpecificOutput`.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.Output)
+ * const output = Hook.SessionStart.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for starting with no extra effects.
+ * @see {@link addContext} for the canonical SessionStart response.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`SessionStartOutput`)(
@@ -165,18 +185,21 @@ export class Output extends S.Class<Output>($I`SessionStartOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `passthrough`.
+ * Start the session with no extra effects. Equivalent to empty
+ * `Output.make()`.
  *
- * **Example** (Use passthrough)
+ * **Example** (Skip extra session-start effects)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.passthrough)
+ * const output = Hook.SessionStart.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link addContext} for injecting repo context.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
@@ -185,14 +208,19 @@ export const passthrough = (): Output => Output.make();
  * Inject additional context at the start of the session. Claude will
  * see this as a system message. The canonical use-case for SessionStart.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Inject a package-manager hint)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.addContext)
+ * const output = Hook.SessionStart.addContext("Use bun, not npm")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "Use bun, not npm"
  * ```
  *
+ * @see {@link startWithMessage} for seeding an initial user message.
+ * @see {@link reloadSkills} for forcing a skills reload.
  * @category constructors
  * @since 0.0.0
  */
@@ -207,18 +235,21 @@ export const addContext = (additionalContext: string): Output =>
   });
 
 /**
- * Constructor for `startWithMessage`.
+ * Seed the session with an initial user message.
  *
- * **Example** (Use startWithMessage)
+ * **Example** (Start with a kickoff prompt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.startWithMessage)
+ * const output = Hook.SessionStart.startWithMessage("Summarize yesterday's CI failures")
+ * const message = O.flatMap(output.hookSpecificOutput, (specific) => specific.initialUserMessage)
+ * console.log(O.getOrUndefined(message)) // "Summarize yesterday's CI failures"
  * ```
  *
+ * @see {@link addContext} for injecting system context instead.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const startWithMessage = (initialUserMessage: string): Output =>
@@ -232,18 +263,21 @@ export const startWithMessage = (initialUserMessage: string): Output =>
   });
 
 /**
- * Constructor for `renameSession`.
+ * Set the session title at start.
  *
- * **Example** (Use renameSession)
+ * **Example** (Name the session)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.renameSession)
+ * const output = Hook.SessionStart.renameSession("CI fix")
+ * const title = O.flatMap(output.hookSpecificOutput, (specific) => specific.sessionTitle)
+ * console.log(O.getOrUndefined(title)) // "CI fix"
  * ```
  *
+ * @see {@link addContext} for injecting context without renaming.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const renameSession = (sessionTitle: string): Output =>
@@ -257,18 +291,22 @@ export const renameSession = (sessionTitle: string): Output =>
   });
 
 /**
- * Constructor for `watchPaths`.
+ * Advertise extra filesystem paths to watch after the session starts.
  *
- * **Example** (Use watchPaths)
+ * **Example** (Watch a lockfile and reload skills)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.watchPaths)
+ * const output = Hook.SessionStart.watchPaths(["/repo/bun.lock"], { reloadSkills: true })
+ * const specific = O.getOrUndefined(output.hookSpecificOutput)
+ * console.log(O.getOrUndefined(specific?.watchPaths ?? O.none())) // ["/repo/bun.lock"]
+ * console.log(O.getOrUndefined(specific?.reloadSkills ?? O.none())) // true
  * ```
  *
+ * @see {@link reloadSkills} for reloading skills without extra watches.
  * @category constructors
- *
  * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
@@ -284,18 +322,22 @@ export const watchPaths = (paths: ReadonlyArray<string>, options?: { readonly re
   });
 
 /**
- * Constructor for `reloadSkills`.
+ * Ask Claude Code to reload skills at session start.
  *
- * **Example** (Use reloadSkills)
+ * **Example** (Reload skills)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionStart.reloadSkills)
+ * const output = Hook.SessionStart.reloadSkills()
+ * const reload = O.flatMap(output.hookSpecificOutput, (specific) => specific.reloadSkills)
+ * console.log(O.getOrUndefined(reload)) // true
  * ```
  *
+ * @see {@link watchPaths} for also advertising filesystem watches.
+ * @see {@link addContext} for injecting repo context.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const reloadSkills = (): Output =>
@@ -313,18 +355,23 @@ export const reloadSkills = (): Output =>
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable SessionStart hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a SessionStart hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SessionStart.define)
+ * const hook = Hook.SessionStart.define({
+ *   handler: () => Effect.succeed(Hook.SessionStart.addContext("Use bun, not npm")),
+ * })
+ *
+ * console.log(hook.event) // "SessionStart"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `source`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -339,14 +386,22 @@ export const define = <E, R>(config: {
 /**
  * Build a SessionStart hook that only handles matching `source` values.
  *
- * **Example** (Build SessionStart hook that only handles matching `source` values)
+ * **Example** (Inject context on startup)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SessionStart.onMatcher)
+ * const hook = Hook.SessionStart.onMatcher({
+ *   matcher: "startup",
+ *   handler: () => Effect.succeed(Hook.SessionStart.addContext("Use bun, not npm")),
+ * })
+ *
+ * console.log(hook.event) // "SessionStart"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link addContext} for the matched-handler result used here.
  * @category constructors
  * @since 0.0.0
  */

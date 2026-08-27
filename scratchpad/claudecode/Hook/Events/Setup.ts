@@ -1,10 +1,10 @@
 /**
- * Setup hook event.
- *
  * Fires for explicit setup runs (`--init-only`, `-p --init`, or
- * `-p --maintenance`). Supports a matcher on `trigger`.
- * See https://code.claude.com/docs/en/hooks#setup.
+ * `-p --maintenance`). A handler can inject context via `addContext`.
+ * Matcher is on `trigger` (`init` or `maintenance`). See
+ * https://code.claude.com/docs/en/hooks#setup.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -20,18 +20,20 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/Setup");
 
 /**
- * Schema for `Trigger`.
+ * Why this setup run started (`init` or `maintenance`).
  *
- * **Example** (Inspect the Trigger schema)
+ * **Example** (Decode a setup trigger)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Setup.Trigger)
+ * const trigger = S.decodeUnknownSync(Hook.Setup.Trigger)("maintenance")
+ * console.log(trigger) // "maintenance"
  * ```
  *
+ * @see {@link onMatcher} for filtering on this trigger.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const Trigger = LiteralKit(["init", "maintenance"]).pipe(
@@ -41,35 +43,37 @@ export const Trigger = LiteralKit(["init", "maintenance"]).pipe(
 );
 
 /**
- * Type-level model for `Trigger`.
+ * Decoded value produced by {@link Trigger}.
  *
- * **Example** (Use Trigger as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.Setup.Trigger
- * ```
- *
+ * @see {@link Trigger} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type Trigger = typeof Trigger.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a Setup hook, including whether this is `init` or
+ * `maintenance`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a maintenance run)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Setup.Input)
+ * const input = S.decodeUnknownSync(Hook.Setup.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "Setup",
+ *   trigger: "maintenance",
+ * })
+ *
+ * console.log(input.trigger) // "maintenance"
  * ```
  *
+ * @see {@link addContext} for injecting repo context during setup.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`SetupInput`)(
@@ -84,18 +88,24 @@ export class Input extends S.Class<Input>($I`SetupInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that injects `additionalContext` during setup.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect additional context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Setup.HookSpecificOutput)
+ * const specific = Hook.Setup.HookSpecificOutput.make({
+ *   hookEventName: "Setup",
+ *   additionalContext: O.some("Use bun, not npm"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "Use bun, not npm"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SetupHookSpecificOutput`)(
@@ -109,18 +119,22 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SetupHook
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a Setup handler returns. `hookSpecificOutput` is the
+ * channel for injected context.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Setup.Output)
+ * const output = Hook.Setup.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for skipping extra context.
+ * @see {@link addContext} for injecting repo context.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`SetupOutput`)(
@@ -138,35 +152,40 @@ export class Output extends S.Class<Output>($I`SetupOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Skip extra context. Equivalent to empty `Output.make()`.
  *
- * **Example** (Use passthrough)
+ * **Example** (Skip extra context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Setup.passthrough)
+ * const output = Hook.Setup.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link addContext} for injecting repo context.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `addContext`.
+ * Inject additional context Claude will see during this setup run.
  *
- * **Example** (Use addContext)
+ * **Example** (Inject a package-manager hint)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Setup.addContext)
+ * const output = Hook.Setup.addContext("Use bun, not npm")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "Use bun, not npm"
  * ```
  *
+ * @see {@link passthrough} for skipping extra context.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
@@ -180,18 +199,23 @@ export const addContext = (additionalContext: string): Output =>
   });
 
 /**
- * Constructor for `define`.
+ * Build a runnable Setup hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a Setup hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Setup.define)
+ * const hook = Hook.Setup.define({
+ *   handler: () => Effect.succeed(Hook.Setup.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "Setup"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `trigger`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -204,18 +228,25 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Constructor for `onMatcher`.
+ * Build a Setup hook that only handles matching `trigger` values.
  *
- * **Example** (Use onMatcher)
+ * **Example** (Inject context on maintenance)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Setup.onMatcher)
+ * const hook = Hook.Setup.onMatcher({
+ *   matcher: "maintenance",
+ *   handler: () => Effect.succeed(Hook.Setup.addContext("Use bun, not npm")),
+ * })
+ *
+ * console.log(hook.event) // "Setup"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link addContext} for the matched-handler result used here.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {

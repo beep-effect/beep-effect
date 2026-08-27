@@ -6,23 +6,25 @@
  * all pure (no IO), with a single aggregate parse error and string→domain
  * schema factories.
  *
- * @example
+ * **Example** (Parse JSONC with a line comment)
+ *
  * ```ts
- * import { Jsonc } from "@effected/jsonc";
- * import { Effect, Schema } from "effect";
+ * import { Jsonc } from "@beep/scratchpad/jsonc";
+ * import { Effect } from "effect";
+ * import * as S from "effect/Schema";
  *
- * const Config = Schema.Struct({ port: Schema.Number });
+ * const Config = S.Struct({ port: S.Number });
  * const ConfigFromJsonc = Jsonc.schema(Config);
+ * const config = Effect.runSync(
+ *   S.decodeUnknownEffect(ConfigFromJsonc)('{ "port": 3000 // dev\n }'),
+ * );
  *
- * const program = Effect.gen(function* () {
- *   const config = yield* Schema.decodeUnknownEffect(ConfigFromJsonc)('{ "port": 3000 // dev\n }');
- *   return config; // { port: 3000 }
- * });
+ * console.log(config.port); // 3000
  * ```
  *
- * @see {@link https://effect.website | Effect}
- *
+ * @see {@link Jsonc} for the parse/stringify/schema facade.
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export type { JsoncBoundCodec } from "./Jsonc.ts";

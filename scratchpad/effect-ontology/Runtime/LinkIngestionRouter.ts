@@ -86,17 +86,18 @@ export class LinkIngestionBackgroundTasks extends Context.Service<LinkIngestionB
 }
 
 /**
- * Exposes link ingestion router for composition by callers of this module.
+ * HTTP surface for creating a workflow batch from already-ingested link IDs.
  *
- * **Example** (Inspect link ingestion router)
+ * **Example** (Name the from-links batch route)
  *
  * ```ts
  * import { LinkIngestionRouter } from "@effect-ontology/Runtime/LinkIngestionRouter"
  *
- * console.log(LinkIngestionRouter)
+ * const documented = [LinkIngestionRouter, "POST /v1/ontologies/:ontologyId/batches/from-links"] as const
+ * console.log(documented[1]) // "POST /v1/ontologies/:ontologyId/batches/from-links"
  * ```
  *
- * @category services
+ * @category endpoints
  * @since 0.0.0
  */
 export const LinkIngestionRouter = HttpRouter.addAll([

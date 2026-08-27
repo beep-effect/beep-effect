@@ -36,10 +36,10 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget"
  * ```ts
  * import { BudgetedStage } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(BudgetedStage)
+ * console.log(BudgetedStage.is.entity_extraction("entity_extraction")) // true
  * ```
  *
- * @category services
+ * @category schemas
  * @since 0.0.0
  */
 export const BudgetedStage = LiteralKit([
@@ -48,7 +48,11 @@ export const BudgetedStage = LiteralKit([
   "grounding",
   "property_scoping",
   "other",
-]);
+]).annotate(
+  $I.annote("BudgetedStage", {
+    description: "Pipeline stages that draw from the shared LLM token budget.",
+  })
+);
 
 /**
  * Describes the budgeted stage data exposed by this module.
@@ -70,9 +74,8 @@ const isBudgetedStage = S.is(BudgetedStage);
  * ```ts
  * import type { TokenBudgetState } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * const acceptsTokenBudgetState = (_value: TokenBudgetState): void => undefined
- *
- * console.log(acceptsTokenBudgetState)
+ * const state: TokenBudgetState = { total: 100_000, used: 0, byStage: {} }
+ * console.log(state.used) // 0
  * ```
  *
  * @category type-level
@@ -116,9 +119,15 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
  *
  * ```ts
  * import { Layer } from "effect"
- * import { TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { Effect } from "effect"
+ * import { TokenBudgetService, TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(Layer.isLayer(TokenBudgetServiceLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const budget = yield* TokenBudgetService
+ *   return budget
+ * }).pipe(Effect.provide(TokenBudgetServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -240,9 +249,15 @@ const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: numbe
  * **Example** (Inspect token budget service live)
  *
  * ```ts
- * import { TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { Effect } from "effect"
+ * import { TokenBudgetService, TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(TokenBudgetServiceLive)
+ * const program = Effect.gen(function* () {
+ *   const budget = yield* TokenBudgetService
+ *   return budget
+ * }).pipe(Effect.provide(TokenBudgetServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -256,9 +271,15 @@ export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make());
  * **Example** (Inspect token budget service test)
  *
  * ```ts
- * import { TokenBudgetServiceTest } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { Effect } from "effect"
+ * import { TokenBudgetService, TokenBudgetServiceTest } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(TokenBudgetServiceTest)
+ * const program = Effect.gen(function* () {
+ *   const budget = yield* TokenBudgetService
+ *   return budget
+ * }).pipe(Effect.provide(TokenBudgetServiceTest))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

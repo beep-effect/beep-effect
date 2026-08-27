@@ -1,23 +1,15 @@
-// Ported from minimatch@10.2.5 (https://github.com/isaacs/minimatch)
-// Copyright: Isaac Z. Schlueter and Contributors
-// License: BlueOak-1.0.0 (https://blueoakcouncil.org/license/1.0.0)
-// Port notes: verbatim except the options type now comes from the extracted
-// types leaf.
-
+/**
+ * Escape glob magic characters so a literal string matches only itself.
+ *
+ * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
+ * License: BlueOak-1.0.0. Verbatim except the options type now comes from the
+ * extracted types leaf.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { EngineOptions } from "./types.ts";
 
-/**
- * Escape all magic characters in a glob pattern.
- *
- * If the `windowsPathsNoEscape` option is used, then characters are escaped
- * by wrapping in `[]`, because a magic character wrapped in a character class
- * can only be satisfied by that exact character. In this mode, `\` is _not_
- * escaped, because it is not interpreted as a magic character, but instead as
- * a path separator.
- *
- * If the `magicalBraces` option is used, then braces (`{` and `}`) will be
- * escaped.
- */
 const escapePattern = (
 	s: string,
 	{
@@ -34,6 +26,37 @@ const escapePattern = (
 	return windowsPathsNoEscape ? s.replace(/[?*()[\]]/g, "[$&]") : s.replace(/[?*()[\]\\]/g, "\\$&");
 };
 
-// Exported under the upstream name; the internal binding avoids shadowing the
-// deprecated global escape().
-export { escapePattern as escape };
+/**
+ * Escape all magic characters in a glob pattern.
+ *
+ * If the `windowsPathsNoEscape` option is used, then characters are escaped
+ * by wrapping in `[]`, because a magic character wrapped in a character class
+ * can only be satisfied by that exact character. In this mode, `\` is _not_
+ * escaped, because it is not interpreted as a magic character, but instead as
+ * a path separator.
+ *
+ * If the `magicalBraces` option is used, then braces (`{` and `}`) will be
+ * escaped.
+ *
+ * **Gotchas**
+ *
+ * Default `magicalBraces` is false here and true on the matching unescape.
+ * Pass the same options bag both ways or `{` / `}` will not round-trip.
+ * Slashes (and backslashes in `windowsPathsNoEscape` mode) are never escaped.
+ *
+ * **Example** (Escape stars in both separator modes)
+ *
+ * ```ts
+ * import { escape } from "../../glob/internal/escape.ts"
+ *
+ * console.log(escape("foo*.ts")) // "foo\\*.ts"
+ * console.log(escape("foo*.ts", { windowsPathsNoEscape: true })) // "foo[*].ts"
+ * console.log(escape("foo{bar}").includes("{")) // true
+ * console.log(escape("foo{bar}", { magicalBraces: true }).includes("{")) // false
+ * ```
+ *
+ * @internal
+ * @category encoding
+ * @since 0.0.0
+ */
+export const escape = escapePattern;

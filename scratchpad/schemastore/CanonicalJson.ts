@@ -1,5 +1,19 @@
+/**
+ * Deterministic JSON text for committed SchemaStore files.
+ *
+ * Object keys stay in insertion order, line endings are LF, and every
+ * document ends with a trailing newline so committed schema files are
+ * byte-stable across runs.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Result, Schema } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
+
+const $I = $ScratchpadId.create("schemastore/CanonicalJson");
 
 /**
  * Indicates that a value reachable from the serialization input is not a
@@ -11,14 +25,39 @@ import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
  * `null` — canonical serialization refuses to alter the document, so every
  * non-JSON value is a typed failure carrying the path to fix.
  *
+ * **Example** (Refuse undefined instead of dropping it)
+ *
+ * ```ts
+ * import { CanonicalJson, NonJsonValueError } from "@beep/scratchpad/schemastore"
+ * import { Result } from "effect"
+ *
+ * const failed = CanonicalJson.serializeResult({ missing: undefined })
+ *
+ * console.log(Result.isFailure(failed) && failed.failure instanceof NonJsonValueError)
+ * // => true
+ * if (Result.isFailure(failed) && failed.failure instanceof NonJsonValueError) {
+ *   console.log(failed.failure.found)
+ *   // => "undefined"
+ * }
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class NonJsonValueError extends Schema.TaggedError<NonJsonValueError>()("NonJsonValueError", {
-	/** JSON pointer to the offending value (`""` is the document root). */
-	path: Schema.String,
-	/** The `typeof`/structural description of the rejected value. */
-	found: Schema.String,
-}) {
+export class NonJsonValueError extends Schema.TaggedError<NonJsonValueError>($I`NonJsonValueError`)(
+	"NonJsonValueError",
+	{
+		/** JSON pointer to the offending value (`""` is the document root). */
+		path: Schema.String,
+		/** The `typeof`/structural description of the rejected value. */
+		found: Schema.String,
+	},
+	$I.annote("NonJsonValueError", {
+		description:
+			"Raised when canonical JSON serialization reaches a non-JSON value such as undefined, NaN, bigint, or a non-plain object.",
+	}),
+) {
 	override get message(): string {
 		return `Non-JSON value (${this.found}) at "${this.path}"`;
 	}
@@ -31,14 +70,36 @@ export class NonJsonValueError extends Schema.TaggedError<NonJsonValueError>()("
  *
  * Raised by {@link CanonicalJson.serialize}.
  *
+ * **Example** (Construct the depth-cap error)
+ *
+ * ```ts
+ * import { JsonDepthExceededError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = JsonDepthExceededError.make({ path: "", maxDepth: 256 })
+ *
+ * console.log(error._tag)
+ * // => "JsonDepthExceededError"
+ * console.log(error.maxDepth)
+ * // => 256
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class JsonDepthExceededError extends Schema.TaggedError<JsonDepthExceededError>()("JsonDepthExceededError", {
-	/** JSON pointer to the node where the cap was hit. */
-	path: Schema.String,
-	/** The nesting cap that was exceeded. */
-	maxDepth: Schema.Number,
-}) {
+export class JsonDepthExceededError extends Schema.TaggedError<JsonDepthExceededError>($I`JsonDepthExceededError`)(
+	"JsonDepthExceededError",
+	{
+		/** JSON pointer to the node where the cap was hit. */
+		path: Schema.String,
+		/** The nesting cap that was exceeded. */
+		maxDepth: Schema.Number,
+	},
+	$I.annote("JsonDepthExceededError", {
+		description:
+			"Raised when canonical JSON serialization nests past the 256-level hardening cap, including cyclic values.",
+	}),
+) {
 	override get message(): string {
 		return `JSON nesting exceeds ${this.maxDepth} levels at "${this.path}"`;
 	}
@@ -47,14 +108,20 @@ export class JsonDepthExceededError extends Schema.TaggedError<JsonDepthExceeded
 /**
  * Union of the failures {@link CanonicalJson.serialize} can raise.
  *
+ * @see {@link CanonicalJson.serialize} for the Effect form that fails with this union.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CanonicalJsonError = NonJsonValueError | JsonDepthExceededError;
 
 /**
  * Options for {@link CanonicalJson.serialize}.
  *
+ * @see {@link CanonicalJson.serialize} for the serializer these options configure.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface CanonicalJsonOptions {
 	/**
@@ -96,7 +163,34 @@ const escapePointerSegment = (segment: string): string => segment.replace(/~/g, 
  * (see {@link NonJsonValueError}); nesting past the hardening cap — which
  * includes cyclic values — fails with {@link JsonDepthExceededError}.
  *
+ * **Gotchas**
+ *
+ * A negative or fractional `indent` throws a bare `Error` (a wiring mistake,
+ * not {@link CanonicalJsonError}). Counts above 10 are honored, unlike
+ * `JSON.stringify`'s silent clamp. Keys are never sorted. `undefined`,
+ * `NaN`, `Infinity`, bigint, function, and non-plain objects fail typed
+ * instead of being rewritten.
+ *
+ * **Example** (Preserve insertion order and trailing newline)
+ *
+ * ```ts
+ * import { CanonicalJson } from "@beep/scratchpad/schemastore"
+ * import { Result } from "effect"
+ *
+ * const text = CanonicalJson.serializeResult({ b: 1, a: 2 })
+ *
+ * console.log(Result.isSuccess(text) ? text.success : text.failure)
+ * // => "{\n\t\"b\": 1,\n\t\"a\": 2\n}\n"
+ * ```
+ *
+ * @throws A negative or fractional `indent` throws `Error` because option
+ * validation is a wiring mistake, not a document-data failure.
+ * @see {@link StoreDocument.serializeResult} for the document wrapper that uses this engine.
+ * @see {@link NonJsonValueError} for the typed refusal of non-JSON values.
+ * @see {@link JsonDepthExceededError} for the typed depth/cycle failure.
  * @public
+ * @category encoding
+ * @since 0.0.0
  */
 export class CanonicalJson {
 	private constructor() {}

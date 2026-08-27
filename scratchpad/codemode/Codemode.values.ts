@@ -1,3 +1,10 @@
+/**
+ * Guest JavaScript values whose mutation and identity are part of the
+ * interpreter contract at the copyIn checkpoint boundary.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { Equal, Fiber } from "effect";
@@ -45,9 +52,28 @@ const NativeURL = S.instanceOf(URL).pipe(
 );
 
 /**
- * Promise handle owned by one CodeMode execution.
+ * Promise handle owned by one CodeMode execution, identity-equal by reference.
  *
- * @category runtime
+ * **Gotchas**
+ *
+ * {@link CodeModePromise.new} wraps the instance with `Equal.byReferenceUnsafe`
+ * because Effect hash collections must not structurally traverse the stored
+ * Fiber. This type is not a {@link CodeModeValue} member; un-awaited promises
+ * are rejected at the copyIn boundary instead.
+ *
+ * **Example** (Wrap a forked fiber)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { CodeModePromise } from "../../../codemode/Codemode.values.ts"
+ *
+ * const promise = CodeModePromise.new(Effect.runFork(Effect.succeed("done")))
+ *
+ * console.log(CodeModePromise.is(promise)) // true
+ * ```
+ *
+ * @see {@link isCodeModeValue} for the guest-value guard that excludes this handle.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModePromise`)("CodeModePromise",
@@ -67,9 +93,26 @@ export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModeP
 }
 
 /**
- * Mutable JavaScript Date value represented by epoch milliseconds.
+ * Guest Date adapter that stores epoch milliseconds, including NaN invalid dates.
  *
- * @category runtime
+ * **Gotchas**
+ *
+ * The `time` field is `S.Number` so an invalid JavaScript Date (`NaN`) stays
+ * representable instead of being rejected by a finite-number schema.
+ *
+ * **Example** (Keep an invalid date observable)
+ *
+ * ```ts
+ * import { CodeModeDate } from "../../../codemode/Codemode.values.ts"
+ *
+ * const date = CodeModeDate.new(Number.NaN)
+ *
+ * console.log(CodeModeDate.is(date)) // true
+ * console.log(Number.isNaN(date.time)) // true
+ * ```
+ *
+ * @see {@link CodeModeValue} for the tagged union that includes this adapter.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)("CodeModeDate",
@@ -86,9 +129,21 @@ export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)(
 }
 
 /**
- * Mutable JavaScript RegExp value.
+ * Guest RegExp adapter backed by a native regular expression instance.
  *
- * @category runtime
+ * **Example** (Construct a global regex)
+ *
+ * ```ts
+ * import { CodeModeRegExp } from "../../../codemode/Codemode.values.ts"
+ *
+ * const regex = CodeModeRegExp.new("ab+", "g")
+ *
+ * console.log(CodeModeRegExp.is(regex)) // true
+ * console.log(regex.regex.source) // "ab+"
+ * ```
+ *
+ * @see {@link CodeModeValue} for the tagged union that includes this adapter.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeRegExp`)("CodeModeRegExp",
@@ -102,6 +157,23 @@ export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeReg
   static readonly new = (pattern: string, flags: string): CodeModeRegExp =>
     CodeModeRegExp.make({ regex: new RegExp(pattern, flags) });
 
+  /**
+   * Last-index cursor of the wrapped native RegExp.
+   *
+   * **Example** (Read and write lastIndex)
+   *
+   * ```ts
+   * import { CodeModeRegExp } from "../../../codemode/Codemode.values.ts"
+   *
+   * const regex = CodeModeRegExp.new("a", "g")
+   * regex.lastIndex = 1
+   *
+   * console.log(regex.lastIndex) // 1
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   get lastIndex(): unknown {
     return Reflect.get(this.regex, "lastIndex");
   }
@@ -112,9 +184,28 @@ export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeReg
 }
 
 /**
- * Mutable JavaScript Map value.
+ * Guest Map adapter backed by a native Map so object identity and live
+ * mutation match JavaScript.
  *
- * @category runtime
+ * **Gotchas**
+ *
+ * HashMap cannot preserve object identity, SameValueZero, or in-place
+ * mutation, so the guest collection is a native `Map`.
+ *
+ * **Example** (Mutate a native-backed map)
+ *
+ * ```ts
+ * import { CodeModeMap } from "../../../codemode/Codemode.values.ts"
+ *
+ * const map = CodeModeMap.new()
+ * map.map.set("a", 1)
+ *
+ * console.log(CodeModeMap.is(map)) // true
+ * console.log(map.map.size) // 1
+ * ```
+ *
+ * @see {@link CodeModeValue} for the tagged union that includes this adapter.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModeMap extends S.TaggedClass<CodeModeMap>($I`CodeModeMap`)("CodeModeMap",
@@ -131,9 +222,28 @@ export class CodeModeMap extends S.TaggedClass<CodeModeMap>($I`CodeModeMap`)("Co
 }
 
 /**
- * Mutable JavaScript Set value.
+ * Guest Set adapter backed by a native Set so object identity and live
+ * mutation match JavaScript.
  *
- * @category runtime
+ * **Gotchas**
+ *
+ * HashSet cannot preserve object identity, SameValueZero, or in-place
+ * mutation, so the guest collection is a native `Set`.
+ *
+ * **Example** (Mutate a native-backed set)
+ *
+ * ```ts
+ * import { CodeModeSet } from "../../../codemode/Codemode.values.ts"
+ *
+ * const set = CodeModeSet.new()
+ * set.set.add("a")
+ *
+ * console.log(CodeModeSet.is(set)) // true
+ * console.log(set.set.size) // 1
+ * ```
+ *
+ * @see {@link CodeModeValue} for the tagged union that includes this adapter.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModeSet extends S.TaggedClass<CodeModeSet>($I`CodeModeSet`)("CodeModeSet",
@@ -150,9 +260,22 @@ export class CodeModeSet extends S.TaggedClass<CodeModeSet>($I`CodeModeSet`)("Co
 }
 
 /**
- * Mutable JavaScript URLSearchParams value.
+ * Guest URLSearchParams adapter wrapping a native search-parameter list.
  *
- * @category runtime
+ * **Example** (Read a query parameter)
+ *
+ * ```ts
+ * import { CodeModeURLSearchParams } from "../../../codemode/Codemode.values.ts"
+ *
+ * const params = CodeModeURLSearchParams.new(new URLSearchParams("q=1"))
+ *
+ * console.log(CodeModeURLSearchParams.is(params)) // true
+ * console.log(params.params.get("q")) // "1"
+ * ```
+ *
+ * @see {@link CodeModeURL} for the URL adapter that owns a search-params instance.
+ * @see {@link CodeModeValue} for the tagged union that includes this adapter.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchParams>($I`CodeModeURLSearchParams`)("CodeModeURLSearchParams",
@@ -168,9 +291,22 @@ export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchPara
 }
 
 /**
- * Mutable JavaScript URL value.
+ * Guest URL adapter wrapping a native URL and its live searchParams object.
  *
- * @category runtime
+ * **Example** (Read href from a wrapped URL)
+ *
+ * ```ts
+ * import { CodeModeURL } from "../../../codemode/Codemode.values.ts"
+ *
+ * const url = CodeModeURL.new(new URL("https://example.com/path"))
+ *
+ * console.log(CodeModeURL.is(url)) // true
+ * console.log(url.url.href) // "https://example.com/path"
+ * ```
+ *
+ * @see {@link CodeModeURLSearchParams} for the search-params adapter stored on `searchParams`.
+ * @see {@link CodeModeValue} for the tagged union that includes this adapter.
+ * @category models
  * @since 0.0.0
  */
 export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)("CodeModeURL",
@@ -192,9 +328,27 @@ export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)("Co
 }
 
 /**
- * Values whose native mutation and identity semantics are part of the guest
- * JavaScript contract.
+ * Tagged union of guest values whose native mutation and identity semantics
+ * are part of the JavaScript contract.
  *
+ * **Gotchas**
+ *
+ * Members are Date, RegExp, Map, Set, URL, and URLSearchParams.
+ * {@link CodeModePromise} is excluded; un-awaited promises fail at copyIn.
+ *
+ * **Example** (Match a tagged Date member)
+ *
+ * ```ts
+ * import { CodeModeDate, CodeModeValue } from "../../../codemode/Codemode.values.ts"
+ *
+ * const date = CodeModeDate.new(0)
+ *
+ * console.log(CodeModeValue.is(date)) // true
+ * console.log(date._tag) // "CodeModeDate"
+ * ```
+ *
+ * @see {@link isCodeModeValue} for the exported type guard over this union.
+ * @see {@link CodeModePromise} for the promise handle excluded from this union.
  * @category models
  * @since 0.0.0
  */
@@ -213,8 +367,34 @@ export const CodeModeValue = S.Union([
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime type for {@link CodeModeValue}. */
+/**
+ * Decoded guest-value member produced by {@link CodeModeValue}.
+ *
+ * @see {@link CodeModeValue} for the runtime tagged union and membership guard.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CodeModeValue = typeof CodeModeValue.Type;
 
-/** Guard for {@link CodeModeValue}. */
+/**
+ * Type guard for {@link CodeModeValue} guest adapters.
+ *
+ * **Example** (Date is a guest value; a promise handle is not)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import {
+ *   CodeModeDate,
+ *   CodeModePromise,
+ *   isCodeModeValue,
+ * } from "../../../codemode/Codemode.values.ts"
+ *
+ * console.log(isCodeModeValue(CodeModeDate.new(0))) // true
+ * console.log(isCodeModeValue(CodeModePromise.new(Effect.runFork(Effect.succeed("done"))))) // false
+ * ```
+ *
+ * @see {@link CodeModePromise} for the handle this guard deliberately excludes.
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isCodeModeValue = CodeModeValue.is;

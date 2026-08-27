@@ -299,9 +299,11 @@ export class ModulePathDerivationFailed extends S.TaggedError<ModulePathDerivati
  * **Example** (Guard a failure)
  *
  * ```ts
- * import { LoadApiReferenceDatasetError } from "./ApiReferenceDataset.ts"
+ * import { DatasetReadFailed, LoadApiReferenceDatasetError } from "./ApiReferenceDataset.ts"
  *
- * console.log(typeof LoadApiReferenceDatasetError.guards.PathEscapesDataset)
+ * const error = DatasetReadFailed.make({ path: "/data/v4/manifest.json", cause: "EACCES" })
+ * console.log(LoadApiReferenceDatasetError.guards.DatasetReadFailed(error)) // true
+ * console.log(LoadApiReferenceDatasetError.guards.PathEscapesDataset(error)) // false
  * ```
  *
  * @category errors
@@ -544,10 +546,10 @@ const loadChannel = Effect.fn("ApiReferenceDataset.loadChannel")(function* (base
  * import { loadApiReferenceDataset } from "./ApiReferenceDataset.ts"
  *
  * const program = loadApiReferenceDataset(".data/api-reference").pipe(
- *   Effect.map((entries) => entries.length),
+ *   Effect.map((entries) => entries.map((entry) => entry.id)),
  *   Effect.provide(BunServices.layer)
  * )
- * console.log(typeof program)
+ * Effect.runPromise(program).then(console.log)
  * ```
  *
  * @category utilities

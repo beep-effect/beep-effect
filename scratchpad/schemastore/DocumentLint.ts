@@ -1,25 +1,63 @@
+/**
+ * Structural and hygiene checks over an assembled {@link StoreDocument}.
+ *
+ * This is the engine-free half of validation: `$ref` resolution against
+ * `$defs`, unknown-keyword detection, and SchemaStore's description-URL
+ * convention. A real-engine gate stays at {@link SchemaValidator}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { KeywordFamilies } from "./KeywordFamilies.ts";
 import type { StoreDocument } from "./StoreDocument.ts";
+
+const $I = $ScratchpadId.create("schemastore/DocumentLint");
 
 /**
  * A structural lint finding over an assembled document: a value in a
  * report, never an error channel — a document with findings is still a
  * document, and the consumer decides what a finding gates.
  *
+ * **Example** (Construct an advisory finding)
+ *
+ * ```ts
+ * import { DocumentLintFinding } from "@beep/scratchpad/schemastore"
+ *
+ * const finding = DocumentLintFinding.make({
+ *   check: "DescriptionWithoutUrl",
+ *   severity: "advisory",
+ *   path: "/description",
+ *   message: "SchemaStore's description convention ends with a documentation URL",
+ * })
+ *
+ * console.log(finding.check)
+ * // => "DescriptionWithoutUrl"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class DocumentLintFinding extends Schema.Class<DocumentLintFinding>("DocumentLintFinding")({
-	/** Which check fired. */
-	check: Schema.Literals(["UnresolvedRef", "UnknownKeyword", "DescriptionWithoutUrl", "DepthExceeded"]),
-	/** `"warning"` for structural defects, `"advisory"` for best practices. */
-	severity: Schema.Literals(["warning", "advisory"]),
-	/** JSON pointer into the flat document (`""` is the root schema). */
-	path: Schema.String,
-	/** Human-readable explanation. */
-	message: Schema.String,
-}) {}
+export class DocumentLintFinding extends Schema.Class<DocumentLintFinding>($I`DocumentLintFinding`)(
+	{
+		/** Which check fired. */
+		check: Schema.Literals(["UnresolvedRef", "UnknownKeyword", "DescriptionWithoutUrl", "DepthExceeded"]),
+		/** `"warning"` for structural defects, `"advisory"` for best practices. */
+		severity: Schema.Literals(["warning", "advisory"]),
+		/** JSON pointer into the flat document (`""` is the root schema). */
+		path: Schema.String,
+		/** Human-readable explanation. */
+		message: Schema.String,
+	},
+	$I.annote("DocumentLintFinding", {
+		description:
+			"A structural or hygiene lint finding over a StoreDocument: a report value, never an error channel.",
+	}),
+) {}
 
 // Draft-07 keywords, plus `$defs` (the Draft-07-valid alias the SchemaStore
 // document shape keeps its pool under).
@@ -222,7 +260,35 @@ const lintSchema = (node: unknown, path: string, depth: number, context: LintCon
  * Tractable because the input is bounded `toJsonSchemaDocument` output;
  * this is not a general JSON Schema validator.
  *
+ * **Gotchas**
+ *
+ * Findings are never an error channel — a document with findings is still a
+ * document. Hostile nesting becomes `DepthExceeded` rather than a throw. A
+ * surviving `#/definitions/...` `$ref` is `UnresolvedRef` because the
+ * publication pool is `$defs`. Boolean schemas are legal leaves.
+ * `DescriptionWithoutUrl` is advisory, not a warning.
+ *
+ * **Example** (Lint a document whose description has no docs URL)
+ *
+ * ```ts
+ * import { DocumentLint, StoreDocument } from "@beep/scratchpad/schemastore"
+ *
+ * const document = StoreDocument.draft07({
+ *   $id: "https://example.com/config.schema.json",
+ *   root: { type: "object", description: "Build configuration" },
+ * })
+ * const findings = DocumentLint.lint(document)
+ *
+ * console.log(findings.map((finding) => finding.check))
+ * // => ["DescriptionWithoutUrl"]
+ * ```
+ *
+ * @see {@link SchemaValidator} for the real-engine half of the validation story.
+ * @see {@link KeywordFamilies.isDeclared} for the admission predicate `UnknownKeyword` consults.
+ * @see {@link StoreDocument} for the assembled document this lint walks.
  * @public
+ * @category diagnostics
+ * @since 0.0.0
  */
 export class DocumentLint {
 	private constructor() {}

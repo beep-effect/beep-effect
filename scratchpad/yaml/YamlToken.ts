@@ -1,22 +1,41 @@
-// The public positioned token stream (#129): promotes the internal lexer
-// token to public surface for lint- and LSP-class consumers. The internal
-// token spells two fields differently (`value`, `column`); promotion
-// reconciles them to the positioned-diagnostic vocabulary the public surface
-// already uses in `YamlDiagnostic` (`text`, `character`).
-//
-// Cycle firewall: this module imports the internal lexer and the `Yaml`
-// facade's error type; nothing imports `YamlToken.ts` back except the lint
-// layer above it.
+/**
+ * Positioned YAML token stream for lint and LSP consumers.
+ *
+ * Promotes the internal lexer token to the public surface. The internal token
+ * spells two fields differently (`value`, `column`); promotion reconciles them
+ * to the positioned-diagnostic vocabulary already used by {@link YamlDiagnostic}
+ * (`text`, `character`).
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Result, Schema, Stream } from "effect";
 import { lexAll } from "./internal/lexer.ts";
 import type { YamlToken as InternalToken } from "./internal/token.ts";
 import type { YamlParseError } from "./Yaml.ts";
 
+const $I = $ScratchpadId.create("yaml/YamlToken");
+
 /**
  * The 22 lexical token kinds produced by the YAML tokenizer.
  *
+ * **Example** (Match a token kind)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YamlTokenKind } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(YamlTokenKind)("scalar")) // true
+ * console.log(S.is(YamlTokenKind)("error")) // true
+ * console.log(S.is(YamlTokenKind)("not-a-kind")) // false
+ * ```
+ *
+ * @see {@link YamlToken} for the positioned token that carries one of these kinds.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlTokenKind = Schema.Literals([
 	"document-start",
@@ -41,12 +60,19 @@ export const YamlTokenKind = Schema.Literals([
 	"comment",
 	"byte-order-mark",
 	"error",
-]);
+]).pipe(
+	$I.annoteSchema("YamlTokenKind", {
+		description: "Lexical token kinds produced by the YAML tokenizer.",
+	}),
+);
 
 /**
- * The union of all lexical token kind string literals.
+ * Decoded literal union produced by {@link YamlTokenKind}.
  *
+ * @see {@link YamlTokenKind} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlTokenKind = typeof YamlTokenKind.Type;
 
@@ -60,16 +86,50 @@ export type YamlTokenKind = typeof YamlTokenKind.Type;
  * - `line` / `character` — the zero-based position of the token's start,
  *   matching the `YamlDiagnostic` position vocabulary.
  *
+ * **Gotchas**
+ *
+ * Public `text` is the raw source slice. The internal lexer `value` is
+ * processed (quotes stripped) and is not this field. `line`/`character` are
+ * derived from offset; the internal `column` is indent on synthetic
+ * block-start tokens and must not be copied onto public tokens. Hot-path
+ * construction uses `new YamlToken`, not `make`.
+ *
+ * **Example** (Make a scalar token)
+ *
+ * ```ts
+ * import { YamlToken } from "@beep/scratchpad/yaml"
+ *
+ * const token = YamlToken.make({
+ *   kind: "scalar",
+ *   text: "a",
+ *   offset: 0,
+ *   length: 1,
+ *   line: 0,
+ *   character: 0,
+ * })
+ *
+ * console.log(token.kind) // "scalar"
+ * console.log(token.text) // "a"
+ * ```
+ *
+ * @see {@link YamlTokens.tokenize} for the tokenizer that produces these tokens from source.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlToken extends Schema.Class<YamlToken>("YamlToken")({
-	kind: YamlTokenKind,
-	text: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
-}) {}
+export class YamlToken extends Schema.Class<YamlToken>("YamlToken")(
+	{
+		kind: YamlTokenKind,
+		text: Schema.String,
+		offset: Schema.Number,
+		length: Schema.Number,
+		line: Schema.Number,
+		character: Schema.Number,
+	},
+	$I.annote("YamlToken", {
+		description: "A positioned YAML lexical token whose text is the raw source slice.",
+	}),
+) {}
 
 /**
  * Promote the internal lexer tokens to the public shape.
@@ -112,9 +172,42 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
 };
 
 /**
- * Tokenizer statics. Not instantiable.
+ * Tokenize YAML into a positioned stream for lint and LSP consumers.
  *
+ * **Gotchas**
+ *
+ * {@link YamlTokens.tokenize}'s failure channel is reserved and never fires
+ * today: the lexer is total, and lexical errors surface as `"error"`-kind
+ * tokens **in the success array** so `parse-validity` can lint malformed
+ * input. Do not "fix" tokenize to fail on those tokens. {@link YamlTokens.stream}
+ * derives from tokenize; the reserved failure would `Stream.die` and does not
+ * fire. Public `text` is the raw source slice
+ * (`source.slice(offset, offset + length) === text`). Positions are derived
+ * from offset — internal `column` is indent on synthetic block-start tokens.
+ *
+ * **Example** (Tokenize well-formed and malformed input)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { YamlTokens } from "@beep/scratchpad/yaml"
+ *
+ * const ok = YamlTokens.tokenize("a: 1\n")
+ * console.log(Result.isSuccess(ok)) // true
+ * if (Result.isSuccess(ok)) {
+ *   console.log(ok.success.some((token) => token.kind === "scalar")) // true
+ * }
+ *
+ * const malformed = YamlTokens.tokenize("\ta: 1\n")
+ * if (Result.isSuccess(malformed)) {
+ *   console.log(malformed.success.some((token) => token.kind === "error")) // true
+ * }
+ * ```
+ *
+ * @see {@link YamlVisitor.visit} for AST events rather than lexical tokens.
+ * @see {@link YamlLint} for the lint facade that consumes this token stream.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class YamlTokens {
 	private constructor() {}
@@ -125,7 +218,8 @@ export class YamlTokens {
 	 * {@link YamlTokens.stream} form is derived from this one, per the kit's
 	 * sync-primitive policy).
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * The failure channel is **reserved** (for future input-hardening guards)
 	 * and never fires today: the lexer is total, and lexical errors surface as
 	 * `"error"`-kind tokens **in the success array** so that linting can run
@@ -133,14 +227,16 @@ export class YamlTokens {
 	 * documents that do not parse. Do not "fix" this method to fail on
 	 * `"error"` tokens; that would make malformed documents unlintable.
 	 *
-	 * @example
-	 * ```ts
-	 * import { YamlTokens } from "@effected/yaml";
-	 * import { Result } from "effect";
+	 * **Example** (Inspect token kinds)
 	 *
-	 * const result = YamlTokens.tokenize("a: 1\n");
+	 * ```ts
+	 * import { Result } from "effect"
+	 * import { YamlTokens } from "@beep/scratchpad/yaml"
+	 *
+	 * const result = YamlTokens.tokenize("a: 1\n")
+	 * console.log(Result.isSuccess(result)) // true
 	 * if (Result.isSuccess(result)) {
-	 *   result.success.map((t) => t.kind); // ["scalar", "block-map-start", ...]
+	 *   console.log(result.success.map((token) => token.kind).includes("scalar")) // true
 	 * }
 	 * ```
 	 */
@@ -153,11 +249,12 @@ export class YamlTokens {
 	 * {@link YamlTokens.tokenize} for genuinely incremental (SAX-style)
 	 * consumers, parallel to `YamlVisitor.visit`.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Derived from the sync primitive, so it shares its contract: lexical
 	 * errors arrive as `"error"`-kind tokens in the stream, never as a stream
-	 * failure. (The primitive's reserved failure channel would surface as a
-	 * defect here; it never fires today.)
+	 * failure. The primitive's reserved failure channel would surface as a
+	 * defect here; it never fires today.
 	 */
 	static stream(text: string): Stream.Stream<YamlToken> {
 		return Stream.suspend(() =>

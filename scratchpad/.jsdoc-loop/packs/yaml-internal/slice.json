@@ -1,0 +1,5434 @@
+{
+  "pack": "yaml-internal",
+  "modules": [
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "pack": "yaml-internal",
+      "exportCount": 8,
+      "owningExportCount": 8,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "pack": "yaml-internal",
+      "exportCount": 10,
+      "owningExportCount": 10,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "pack": "yaml-internal",
+      "exportCount": 14,
+      "owningExportCount": 14,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "pack": "yaml-internal",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/flow.ts",
+      "pack": "yaml-internal",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "pack": "yaml-internal",
+      "exportCount": 24,
+      "owningExportCount": 24,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "pack": "yaml-internal",
+      "exportCount": 15,
+      "owningExportCount": 15,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/tags.ts",
+      "pack": "yaml-internal",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-parser.ts",
+      "pack": "yaml-internal",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "pack": "yaml-internal",
+      "exportCount": 15,
+      "owningExportCount": 15,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "pack": "yaml-internal",
+      "exportCount": 14,
+      "owningExportCount": 14,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diff.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/equal.ts",
+      "pack": "yaml-internal",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "pack": "yaml-internal",
+      "exportCount": 8,
+      "owningExportCount": 8,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/lexer.ts",
+      "pack": "yaml-internal",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/options.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/raw-document.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/requote.ts",
+      "pack": "yaml-internal",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/catalog.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/colon-spacing.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/comments-spacing.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/document-end.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/document-start.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/empty-lines.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/eof-newline.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/hyphen-spacing.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/indentation.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "yaml/internal/rules/key-duplicates.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/line-length.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/parse-validity.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/quoted-strings.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/trailing-spaces.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/truthy.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "pack": "yaml-internal",
+      "exportCount": 8,
+      "owningExportCount": 8,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "pack": "yaml-internal",
+      "exportCount": 7,
+      "owningExportCount": 7,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/token.ts",
+      "pack": "yaml-internal",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "checkAnchorOnAlias",
+      "line": 19,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "makeAlias",
+      "line": 30,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "registerAnchor",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "getAnchorName",
+      "line": 70,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "getAliasName",
+      "line": 82,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "scanName",
+      "line": 90,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "buildAnchorMap",
+      "line": 123,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/anchors.ts",
+      "name": "getNodeValue",
+      "line": 154,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "composeBlockMap",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "SemanticItem",
+      "line": 153,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "flattenBlockMapChildren",
+      "line": 160,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "buildPairs",
+      "line": 829,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "keyIdentity",
+      "line": 1249,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "checkDuplicateKeys",
+      "line": 1273,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "checkMultilineImplicitKeys",
+      "line": 1376,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "checkTrailingContentOnSameLine",
+      "line": 1454,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "composeBlockSeq",
+      "line": 1646,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/block.ts",
+      "name": "composeFlatBlockMap",
+      "line": 2010,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "CommentFields",
+      "line": 50,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "hasBlankLineBetween",
+      "line": 61,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "sameLineSpan",
+      "line": 68,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "isOwnLineAt",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "isAfterIndicatorOnly",
+      "line": 98,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "hasBlankLineAbove",
+      "line": 122,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "blankLineAboveStart",
+      "line": 132,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "blankAboveIsKeepChompContent",
+      "line": 180,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "hasBlankLineBelow",
+      "line": 196,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "rawCommentText",
+      "line": 217,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "joinComments",
+      "line": 223,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "columnAt",
+      "line": 228,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "EscapedComment",
+      "line": 241,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/comments.ts",
+      "name": "withCommentFields",
+      "line": 252,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "name": "composeDocument",
+      "line": 233,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "name": "validateCrossDocumentDirectives",
+      "line": 936,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "name": "EMPTY_DOCUMENT",
+      "line": 1084,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "name": "composeFirstDocument",
+      "line": 1101,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "name": "composeFirstDocumentCounted",
+      "line": 1113,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/document.ts",
+      "name": "composeAllDocuments",
+      "line": 1140,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/flow.ts",
+      "name": "composeFlowMap",
+      "line": 172,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/flow.ts",
+      "name": "flattenFlowChildren",
+      "line": 245,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/flow.ts",
+      "name": "composeFlowSeq",
+      "line": 453,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "classifyPlainNumeric",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "resolveScalar",
+      "line": 106,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "getScalarStyle",
+      "line": 119,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "getBlockChomp",
+      "line": 135,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "getBlockIndent",
+      "line": 153,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "getScalarValue",
+      "line": 181,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "foldFlowLines",
+      "line": 354,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "collectMultilineKey",
+      "line": 398,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "collectMultilinePlainScalar",
+      "line": 493,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "findNextSignificantChild",
+      "line": 646,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "hasValueSepAfterInList",
+      "line": 668,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "hasBlockMapAfterInList",
+      "line": 678,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "findValueSepOffset",
+      "line": 693,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "hasValueSepBetween",
+      "line": 708,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "blockMapStartsWithValueSep",
+      "line": 723,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "hasValueSepThroughPlainScalars",
+      "line": 744,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "findNextContentInList",
+      "line": 768,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "findFirstContent",
+      "line": 781,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "findLastContent",
+      "line": 791,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "findNextContentChild",
+      "line": 806,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "indexOfChild",
+      "line": 823,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "hasValueSepAfter",
+      "line": 831,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "makeScalar",
+      "line": 1194,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/scalars.ts",
+      "name": "shouldPreserveRaw",
+      "line": 1243,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "getLineStarts",
+      "line": 22,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "lineCol",
+      "line": 33,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "sameLine",
+      "line": 53,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "hasNonWhitespaceBeforeOnLine",
+      "line": 63,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "lineIndentColumn",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "NodeMeta",
+      "line": 90,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "hasMeta",
+      "line": 96,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "clearMeta",
+      "line": 100,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "commentProps",
+      "line": 112,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "FlowComposers",
+      "line": 136,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "ComposerState",
+      "line": 141,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "createState",
+      "line": 167,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "MAX_NESTING_DEPTH",
+      "line": 194,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "enterNesting",
+      "line": 202,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/state.ts",
+      "name": "exitNesting",
+      "line": 219,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/tags.ts",
+      "name": "resolveTagHandle",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/tags.ts",
+      "name": "parseDirective",
+      "line": 56,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/composer/tags.ts",
+      "name": "validateTagHandlesInDocument",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-parser.ts",
+      "name": "parseCSTAll",
+      "line": 1095,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstDocumentStartEvent",
+      "line": 38,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstDocumentEndEvent",
+      "line": 45,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstMapStartEvent",
+      "line": 52,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstMapEndEvent",
+      "line": 60,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstSeqStartEvent",
+      "line": 67,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstSeqEndEvent",
+      "line": 75,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstKeyEvent",
+      "line": 82,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstValueEvent",
+      "line": 90,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstScalarEvent",
+      "line": 101,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstAliasEvent",
+      "line": 109,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstCommentEvent",
+      "line": 117,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstDirectiveEvent",
+      "line": 125,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstErrorEvent",
+      "line": 133,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "CstVisitorEvent",
+      "line": 141,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst-visitor.ts",
+      "name": "cstEvents",
+      "line": 550,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst.ts",
+      "name": "CstNodeType",
+      "line": 6,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/cst.ts",
+      "name": "CstNode",
+      "line": 28,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YAML_LEX_ERROR_CODES",
+      "line": 11,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YAML_PARSE_ERROR_CODES",
+      "line": 25,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YAML_COMPOSE_ERROR_CODES",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YAML_STRINGIFY_ERROR_CODES",
+      "line": 55,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YAML_MODIFY_ERROR_CODES",
+      "line": 68,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YamlLexErrorCode",
+      "line": 78,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YamlParseStageErrorCode",
+      "line": 81,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YamlComposeErrorCode",
+      "line": 84,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YamlStringifyStageErrorCode",
+      "line": 87,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YamlModifyStageErrorCode",
+      "line": 90,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "YamlErrorCode",
+      "line": 93,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "RawDiagnostic",
+      "line": 105,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "FATAL_CODES",
+      "line": 118,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diagnostics.ts",
+      "name": "isFatalCode",
+      "line": 135,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diff.ts",
+      "name": "RawEdit",
+      "line": 6,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/diff.ts",
+      "name": "computeEdits",
+      "line": 27,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/equal.ts",
+      "name": "deepEqual",
+      "line": 15,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "foldScalarLine",
+      "line": 26,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "foldRenderedScalar",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "isControlChar",
+      "line": 118,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "hasInteriorTrailingWhitespace",
+      "line": 129,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "hasNewlineSpacesTab",
+      "line": 158,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "renderSingleQuotedMultiline",
+      "line": 184,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "renderBlockLiteral",
+      "line": 232,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@param"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/fold.ts",
+      "name": "renderBlockFolded",
+      "line": 295,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/lexer.ts",
+      "name": "YamlScanner",
+      "line": 20,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/lexer.ts",
+      "name": "createScanner",
+      "line": 54,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/lexer.ts",
+      "name": "lexAll",
+      "line": 1507,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/options.ts",
+      "name": "ParseOptionsInput",
+      "line": 9,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/options.ts",
+      "name": "StringifyOptionsInput",
+      "line": 19,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/raw-document.ts",
+      "name": "RawDirective",
+      "line": 10,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/raw-document.ts",
+      "name": "RawYamlDocument",
+      "line": 16,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/requote.ts",
+      "name": "RequoteScalarInput",
+      "line": 40,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/requote.ts",
+      "name": "RequoteMode",
+      "line": 50,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/requote.ts",
+      "name": "requoteScalarText",
+      "line": 74,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/catalog.ts",
+      "name": "builtinRules",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/catalog.ts",
+      "name": "builtinOptionsSchemas",
+      "line": 51,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/colon-spacing.ts",
+      "name": "colonSpacingOptions",
+      "line": 19,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/colon-spacing.ts",
+      "name": "colonSpacing",
+      "line": 31,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/comments-spacing.ts",
+      "name": "commentsSpacingOptions",
+      "line": 20,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/comments-spacing.ts",
+      "name": "commentsSpacing",
+      "line": 53,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/document-end.ts",
+      "name": "documentEndOptions",
+      "line": 16,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/document-end.ts",
+      "name": "documentEnd",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/document-start.ts",
+      "name": "documentStartOptions",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/document-start.ts",
+      "name": "documentStart",
+      "line": 31,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/empty-lines.ts",
+      "name": "emptyLinesOptions",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/empty-lines.ts",
+      "name": "emptyLines",
+      "line": 31,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/eof-newline.ts",
+      "name": "eofNewlineOptions",
+      "line": 10,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/eof-newline.ts",
+      "name": "eofNewline",
+      "line": 15,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/hyphen-spacing.ts",
+      "name": "hyphenSpacingOptions",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/hyphen-spacing.ts",
+      "name": "hyphenSpacing",
+      "line": 27,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/indentation.ts",
+      "name": "indentationOptions",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/indentation.ts",
+      "name": "indentation",
+      "line": 122,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/key-duplicates.ts",
+      "name": "keyDuplicatesOptions",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/key-duplicates.ts",
+      "name": "keyDuplicates",
+      "line": 55,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/line-length.ts",
+      "name": "lineLengthOptions",
+      "line": 15,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/line-length.ts",
+      "name": "lineLength",
+      "line": 23,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/parse-validity.ts",
+      "name": "parseValidityOptions",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/parse-validity.ts",
+      "name": "parseValidity",
+      "line": 20,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/quoted-strings.ts",
+      "name": "quotedStringsOptions",
+      "line": 24,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/quoted-strings.ts",
+      "name": "quotedStrings",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/trailing-spaces.ts",
+      "name": "trailingSpacesOptions",
+      "line": 13,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/trailing-spaces.ts",
+      "name": "trailingSpaces",
+      "line": 18,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/truthy.ts",
+      "name": "truthyOptions",
+      "line": 23,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/truthy.ts",
+      "name": "truthy",
+      "line": 59,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "nonNegativeIntegerOption",
+      "line": 15,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "positiveIntegerOption",
+      "line": 25,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "ScalarRole",
+      "line": 32,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "walkScalars",
+      "line": 35,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "isScalarContinuationLine",
+      "line": 63,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "coveringToken",
+      "line": 73,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "insideScalarSpan",
+      "line": 96,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/rules/util.ts",
+      "name": "positionAt",
+      "line": 105,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "StringifyFailure",
+      "line": 42,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "StringifyDepthExceeded",
+      "line": 60,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "renderDoubleQuoted",
+      "line": 285,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "renderSingleQuoted",
+      "line": 336,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "stripNodeComments",
+      "line": 952,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "stringifyValue",
+      "line": 1878,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/stringifier.ts",
+      "name": "stringifyDocument",
+      "line": 1892,
+      "kind": "value",
+      "exportKind": "function",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/token.ts",
+      "name": "YamlTokenKind",
+      "line": 6,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "yaml/internal/token.ts",
+      "name": "YamlToken",
+      "line": 35,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "yaml-internal",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    }
+  ]
+}

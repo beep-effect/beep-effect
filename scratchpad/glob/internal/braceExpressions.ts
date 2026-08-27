@@ -1,3 +1,15 @@
+/**
+ * Position-bounded character-class compiler for glob `[...]` expressions.
+ *
+ * POSIX classes, `!`/`^` negation, poison `$.` for empty classes, and
+ * single-character `[_]` literal escapes. No recursion, no depth guard.
+ *
+ * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
+ * License: BlueOak-1.0.0.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // Ported from minimatch@10.2.5 (https://github.com/isaacs/minimatch)
 // Copyright: Isaac Z. Schlueter and Contributors
 // License: BlueOak-1.0.0 (https://blueoakcouncil.org/license/1.0.0)
@@ -35,14 +47,49 @@ const regexpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g
 // everything has already been escaped, we just have to join
 const rangesToString = (ranges: Array<string>): string => ranges.join("");
 
+/**
+ * Tuple returned by {@link parseClass}: regexp source, whether `/u` is
+ * required, how many characters were consumed, and whether the class is magic.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, hasMagic: boolean];
 
-// takes a glob string at a posix brace expression, and returns
-// an equivalent regular expression source, and boolean indicating
-// whether the /u flag needs to be applied, and the number of chars
-// consumed to parse the character class.
-// This also removes out of order ranges, and returns ($.) if the
-// entire class just no good.
+/**
+ * Compile a glob `[...]` class at `position` into regexp source.
+ *
+ * Returns regexp source, whether `/u` is required, consumed character count,
+ * and whether the class is magic. Out-of-order ranges are dropped. An empty
+ * class poisons the whole glob with `$.`.
+ *
+ * **Gotchas**
+ *
+ * Throws if `glob[position]` is not `"["`. Empty `[]` does not fail compile —
+ * it matches nothing via poison `$.`. Single-character `[x]` / `[_]` is not
+ * magic: it is a literal escape of glob metacharacters. `!` or `^` at class
+ * start negates.
+ *
+ * **Example** (Compile a range class and a literal escape)
+ *
+ * ```ts
+ * import { parseClass } from "../../glob/internal/braceExpressions.ts"
+ *
+ * console.log(parseClass("[a-z]", 0)) // ["[a-z]", false, 5, true]
+ * console.log(parseClass("[_]", 0)) // ["_", false, 3, false]
+ * try {
+ *   parseClass("a", 0)
+ * } catch (error) {
+ *   console.log(error instanceof Error && error.message) // "not in a brace expression"
+ * }
+ * ```
+ *
+ * @throws `Error` with message `not in a brace expression` when `glob[position]` is not `"["`.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseClass = (glob: string, position: number): ParseClassResult => {
 	const pos = position;
 	if (glob.charAt(pos) !== "[") {

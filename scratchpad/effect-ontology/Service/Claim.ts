@@ -54,13 +54,22 @@ const randomUuid = Effect.all([
  * Input for creating a new claim
  *
  *
- * **Example** (Use the CreateClaimInput contract)
+ * **Example** (Create a claim payload)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { CreateClaimInput } from "@effect-ontology/Service/Claim"
  *
- * console.log(S.is(CreateClaimInput)({})) // false
+ * const input = CreateClaimInput.make({
+ *   subjectIri: "https://example.org/Ada",
+ *   predicateIri: "https://example.org/founded",
+ *   objectValue: "https://example.org/Acme",
+ *   objectType: "iri",
+ *   articleId: "article-ada",
+ *   ontologyId: "core",
+ *   confidence: Confidence.make(0.91)
+ * })
+ * console.log(input.objectType) // "iri"
  * ```
  *
  * @category type-level
@@ -94,13 +103,17 @@ export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimIn
  * Result of deprecating a claim
  *
  *
- * **Example** (Use the DeprecationResult contract)
+ * **Example** (Record a deprecation)
  *
  * ```ts
- * import * as S from "effect/Schema"
  * import { DeprecationResult } from "@effect-ontology/Service/Claim"
  *
- * console.log(S.is(DeprecationResult)({})) // false
+ * const result = DeprecationResult.make({
+ *   claimId: "claim-ada-founded",
+ *   deprecatedAt: new Date("2026-01-01T00:00:00.000Z"),
+ *   reason: "Superseded by a curated triple"
+ * })
+ * console.log(result.claimId) // "claim-ada-founded"
  * ```
  *
  * @category type-level
@@ -168,13 +181,29 @@ interface ClaimServiceShape {
  * - `getClaimHistory`: Get all claims for a subject+predicate over time
  * - `toReifiedTriples`: Convert claim to reified RDF quads
  *
- * **Example** (Inspect the claim-service layer)
+ * **Example** (Create a claim through the service)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { ClaimService } from "@effect-ontology/Service/Claim"
+ * import { Effect } from "effect"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { ClaimService, CreateClaimInput } from "@effect-ontology/Service/Claim"
  *
- * console.log(Layer.isLayer(ClaimService.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const claims = yield* ClaimService
+ *   return yield* claims.createClaim(
+ *     CreateClaimInput.make({
+ *       subjectIri: "https://example.org/Ada",
+ *       predicateIri: "https://example.org/founded",
+ *       objectValue: "https://example.org/Acme",
+ *       objectType: "iri",
+ *       articleId: "article-ada",
+ *       ontologyId: "core",
+ *       confidence: Confidence.make(0.91)
+ *     })
+ *   )
+ * }).pipe(Effect.provide(ClaimService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

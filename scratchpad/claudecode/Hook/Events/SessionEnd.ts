@@ -1,10 +1,9 @@
 /**
- * SessionEnd hook event.
+ * Fires when a session terminates (clear, resume, logout, or exit).
+ * Observability-only: JSON output is not acted on. Matcher is on
+ * `reason`. See https://code.claude.com/docs/en/hooks#sessionend.
  *
- * Fires when a session terminates (clear, resume, logout, exit). Supports
- * a matcher on `reason`. Observability-only — the hook's output is
- * not acted on. See https://code.claude.com/docs/en/hooks#sessionend.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -23,18 +22,20 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/SessionEnd");
 
 /**
- * Schema for `ExitReason`.
+ * Why the Claude Code session ended.
  *
- * **Example** (Inspect the ExitReason schema)
+ * **Example** (Decode an exit reason)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.SessionEnd.ExitReason)
+ * const reason = S.decodeUnknownSync(Hook.SessionEnd.ExitReason)("logout")
+ * console.log(reason) // "logout"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this reason.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const ExitReason = LiteralKit([
@@ -51,35 +52,36 @@ export const ExitReason = LiteralKit([
 );
 
 /**
- * Type-level model for `ExitReason`.
+ * Decoded value produced by {@link ExitReason}.
  *
- * **Example** (Use ExitReason as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.SessionEnd.ExitReason
- * ```
- *
+ * @see {@link ExitReason} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type ExitReason = typeof ExitReason.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a SessionEnd hook, including the exit `reason`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a logout)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.SessionEnd.Input)
+ * const input = S.decodeUnknownSync(Hook.SessionEnd.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SessionEnd",
+ *   reason: "logout",
+ * })
+ *
+ * console.log(input.reason) // "logout"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `reason`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`SessionEndInput`)(
@@ -98,18 +100,25 @@ export class Input extends S.Class<Input>($I`SessionEndInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `Output`.
+ * JSON response a SessionEnd handler may return. Claude Code ignores it;
+ * the session is already ending.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * Setting `continue: false` does not keep the session open.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionEnd.Output)
+ * const output = Hook.SessionEnd.Output.make()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`SessionEndOutput`)(
@@ -130,18 +139,24 @@ export class Output extends S.Class<Output>($I`SessionEndOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SessionEnd.passthrough)
+ * const output = Hook.SessionEnd.passthrough()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link define} for wrapping this result in a handler.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
@@ -151,18 +166,27 @@ export const passthrough = (): Output => Output.make();
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable SessionEnd hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores the JSON response.
+ *
+ * **Example** (Define a SessionEnd hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SessionEnd.define)
+ * const hook = Hook.SessionEnd.define({
+ *   handler: () => Effect.succeed(Hook.SessionEnd.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "SessionEnd"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `reason`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -177,14 +201,21 @@ export const define = <E, R>(config: {
 /**
  * Build a SessionEnd hook that only handles matching `reason` values.
  *
- * **Example** (Build SessionEnd hook that only handles matching `reason` values)
+ * **Example** (Observe logout)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SessionEnd.onMatcher)
+ * const hook = Hook.SessionEnd.onMatcher({
+ *   matcher: "logout",
+ *   handler: () => Effect.succeed(Hook.SessionEnd.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "SessionEnd"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

@@ -1,25 +1,18 @@
-// SAX-style CST visitor for YAML documents.
-//
-// `cstEvents()` walks YAML source text and yields CstVisitorEvent values in
-// document order. All content is delivered as raw source strings — no type
-// resolution occurs at the CST level. CST-level parse errors are surfaced as
-// CstErrorEvent records rather than thrown failures.
-//
-// CST structure notes:
-//
-// The parser produces a CST where block-map nodes do NOT include their first
-// key scalar. Instead, the first key of a block mapping appears as a sibling
-// node (at the parent level) immediately before the block-map node that holds
-// the `:` indicator and value. This means:
-//
-// For `name: John`, the document children are:
-// - `flow-scalar("name")` — the key (outside the block-map)
-// - `block-map(": John")` — children start with whitespace(":") then the value
-//
-// The visitor detects this "scalar → block-map" sibling pattern and emits the
-// scalar as a `CstKeyEvent`. Inside a block-map, the first non-trivia scalar
-// is always a value; scalars then alternate as key/value pairs for subsequent
-// entries.
+/**
+ * SAX-style CST visitor for YAML documents.
+ *
+ * `cstEvents()` walks YAML source text and yields CstVisitorEvent values in
+ * document order. All content is delivered as raw source strings — no type
+ * resolution occurs at the CST level. Errors are `CstErrorEvent` records;
+ * the generator never throws.
+ *
+ * Block-map nodes do not include their first key scalar. For `name: John`
+ * the document children are `flow-scalar("name")` then `block-map(": John")`.
+ * The visitor emits that sibling scalar as `CstKeyEvent`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { CstNode } from "./cst.ts";
 import { parseCSTAll } from "./cst-parser.ts";
@@ -34,21 +27,39 @@ type Path = ReadonlyArray<string | number>;
 // Event records
 // ---------------------------------------------------------------------------
 
-/** Emitted when the CST visitor enters a document node. */
+/**
+ * Emitted when the CST visitor enters a document node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstDocumentStartEvent {
 	readonly _tag: "CstDocumentStartEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor exits a document node. */
+/**
+ * Emitted when the CST visitor exits a document node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstDocumentEndEvent {
 	readonly _tag: "CstDocumentEndEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor enters a block-map or flow-map node. */
+/**
+ * Emitted when the CST visitor enters a block-map or flow-map node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstMapStartEvent {
 	readonly _tag: "CstMapStartEvent";
 	readonly path: Path;
@@ -56,14 +67,26 @@ export interface CstMapStartEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor exits a block-map or flow-map node. */
+/**
+ * Emitted when the CST visitor exits a block-map or flow-map node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstMapEndEvent {
 	readonly _tag: "CstMapEndEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor enters a block-seq or flow-seq node. */
+/**
+ * Emitted when the CST visitor enters a block-seq or flow-seq node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstSeqStartEvent {
 	readonly _tag: "CstSeqStartEvent";
 	readonly path: Path;
@@ -71,14 +94,33 @@ export interface CstSeqStartEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor exits a block-seq or flow-seq node. */
+/**
+ * Emitted when the CST visitor exits a block-seq or flow-seq node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstSeqEndEvent {
 	readonly _tag: "CstSeqEndEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor encounters a scalar that is a map key. */
+/**
+ * Emitted when the CST visitor encounters a scalar that is a map key.
+ *
+ * **Gotchas**
+ *
+ * For `name: John` the first key is a sibling `flow-scalar` before the
+ * `block-map`, rewritten here as a `CstKeyEvent` whose `source` is `name`.
+ * A walker that looks only at `block-map` children misses that key.
+ *
+ * @see {@link cstEvents} for the generator that emits this event.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstKeyEvent {
 	readonly _tag: "CstKeyEvent";
 	readonly path: Path;
@@ -86,7 +128,13 @@ export interface CstKeyEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters a scalar that is a map value. */
+/**
+ * Emitted when the CST visitor encounters a scalar that is a map value.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstValueEvent {
 	readonly _tag: "CstValueEvent";
 	readonly path: Path;
@@ -97,6 +145,10 @@ export interface CstValueEvent {
 /**
  * Emitted when the CST visitor encounters a standalone scalar (not a map key
  * or value — e.g., a sequence item or bare document scalar).
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CstScalarEvent {
 	readonly _tag: "CstScalarEvent";
@@ -105,7 +157,13 @@ export interface CstScalarEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters an alias reference node (including the leading `*`). */
+/**
+ * Emitted when the CST visitor encounters an alias reference node (including the leading `*`).
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstAliasEvent {
 	readonly _tag: "CstAliasEvent";
 	readonly path: Path;
@@ -113,7 +171,13 @@ export interface CstAliasEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters a comment node (including the leading `#`). */
+/**
+ * Emitted when the CST visitor encounters a comment node (including the leading `#`).
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstCommentEvent {
 	readonly _tag: "CstCommentEvent";
 	readonly path: Path;
@@ -121,7 +185,13 @@ export interface CstCommentEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters a directive node (e.g., `%YAML 1.2`). */
+/**
+ * Emitted when the CST visitor encounters a directive node (e.g., `%YAML 1.2`).
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstDirectiveEvent {
 	readonly _tag: "CstDirectiveEvent";
 	readonly path: Path;
@@ -129,7 +199,13 @@ export interface CstDirectiveEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters an error node in the CST. */
+/**
+ * Emitted when the CST visitor encounters an error node in the CST.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstErrorEvent {
 	readonly _tag: "CstErrorEvent";
 	readonly path: Path;
@@ -137,7 +213,14 @@ export interface CstErrorEvent {
 	readonly source: string;
 }
 
-/** A discriminated union of all thirteen SAX-style YAML CST visitor events. */
+/**
+ * A discriminated union of all thirteen SAX-style YAML CST visitor events.
+ *
+ * @see {@link cstEvents} for the generator that yields these events.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstVisitorEvent =
 	| CstDocumentStartEvent
 	| CstDocumentEndEvent
@@ -546,6 +629,26 @@ function* walkDocument(doc: CstNode): Generator<CstVisitorEvent> {
  * All content is delivered as raw source strings — `true` is still the string
  * `"true"`. CST-level errors are surfaced as {@link CstErrorEvent} records;
  * the generator never throws.
+ *
+ * **Gotchas**
+ *
+ * For `name: John` the first key is a sibling scalar before the block-map.
+ * This generator emits it as {@link CstKeyEvent} (`source` is `name`). A
+ * walker that looks only at `block-map` children misses that key.
+ *
+ * **Example** (Parse a one-pair mapping)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("name: John\n"))) // { name: "John" }
+ * ```
+ *
+ * @see {@link CstKeyEvent} for the sibling-key event this rewrite emits.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function* cstEvents(text: string): Generator<CstVisitorEvent, void, undefined> {
 	for (const doc of parseCSTAll(text)) {

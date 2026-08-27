@@ -68,15 +68,42 @@ import { simpleTokenize } from "../Utils/String.ts";
  * 4. Call Graph.connectedComponents() to find clusters
  * 5. Each component = one resolved entity cluster
  *
- * **Example** (Use clusterEntities)
+ * **Example** (Cluster two similar people without embeddings)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { Effect, HashMap, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import { EmbeddingError } from "@effect-ontology/Error/Embedding"
+ * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
  * import { clusterEntities } from "@effect-ontology/Workflow/EntityResolutionGraph"
- * import * as Effect from "effect/Effect"
  *
- * const clusters = clusterEntities([], [], EntityResolutionConfig.default())
- * console.log(Effect.isEffect(clusters)) // true
+ * const UnavailableEmbeddings = Layer.succeed(
+ *   EmbeddingService,
+ *   EmbeddingService.of({
+ *     embed: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     embedBatch: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     cosineSimilarity: () => 0,
+ *     getProviderMetadata: Effect.succeed({ providerId: "nomic", modelId: "test", dimension: 1 })
+ *   })
+ * )
+ * const clusterCount = Effect.runPromise(
+ *   clusterEntities(
+ *     [
+ *       Entity.make({ id: EntityId.make("alice"), mention: "Alice", types: [IRI.make("https://schema.org/Person")] }),
+ *       Entity.make({ id: EntityId.make("alicia"), mention: "Alicia", types: [IRI.make("https://schema.org/Person")] })
+ *     ],
+ *     [],
+ *     EntityResolutionConfig.default()
+ *   ).pipe(
+ *     Effect.provide(UnavailableEmbeddings),
+ *     Effect.map((result) => HashMap.size(result.embeddingMap))
+ *   )
+ * )
+ * console.log(clusterCount)
  * ```
  *
  * @param entities - Entities to cluster
@@ -378,16 +405,43 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  *
  * Pipeline: KnowledgeGraph → MentionRecords → Clustering → ResolvedEntities → ERG
  *
- * **Example** (Use buildEntityResolutionGraph)
+ * **Example** (Build a resolution graph from two people)
  *
  * ```ts
- * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { IRI } from "@beep/rdf"
+ * import { Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import { EmbeddingError } from "@effect-ontology/Error/Embedding"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
  * import { buildEntityResolutionGraph } from "@effect-ontology/Workflow/EntityResolutionGraph"
- * import * as Effect from "effect/Effect"
  *
- * const resolution = buildEntityResolutionGraph(KnowledgeGraph.make({}), EntityResolutionConfig.default())
- * console.log(Effect.isEffect(resolution)) // true
+ * const UnavailableEmbeddings = Layer.succeed(
+ *   EmbeddingService,
+ *   EmbeddingService.of({
+ *     embed: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     embedBatch: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     cosineSimilarity: () => 0,
+ *     getProviderMetadata: Effect.succeed({ providerId: "nomic", modelId: "test", dimension: 1 })
+ *   })
+ * )
+ * const nodeCount = Effect.runPromise(
+ *   buildEntityResolutionGraph(
+ *     KnowledgeGraph.make({
+ *       entities: [
+ *         Entity.make({ id: EntityId.make("alice"), mention: "Alice", types: [IRI.make("https://schema.org/Person")] }),
+ *         Entity.make({ id: EntityId.make("alicia"), mention: "Alicia", types: [IRI.make("https://schema.org/Person")] })
+ *       ]
+ *     }),
+ *     EntityResolutionConfig.default()
+ *   ).pipe(
+ *     Effect.provide(UnavailableEmbeddings),
+ *     Effect.map((graph) => graph.stats.clusterCount)
+ *   )
+ * )
+ * console.log(nodeCount)
  * ```
  *
  * @param kg - Input knowledge graph

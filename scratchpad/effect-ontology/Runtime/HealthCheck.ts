@@ -25,23 +25,6 @@ const healthOk: "ok" = "ok";
 const healthError: "error" = "error";
 
 /**
- * Health check result
- *
- *
- * **Example** (Use the HealthResult contract)
- *
- * ```ts
- * import type { HealthResult } from "@effect-ontology/Runtime/HealthCheck"
- *
- * const acceptsHealthResult = (_value: HealthResult): void => undefined
- *
- * console.log(acceptsHealthResult)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-/**
  * Aggregate status exposed by a health probe.
  *
  * **Example** (Inspect health statuses)
@@ -118,12 +101,16 @@ export type HealthCheckStatus = typeof HealthCheckStatus.Type;
 /**
  * Timestamped aggregate result returned by runtime health probes.
  *
- * **Example** (Inspect the health result schema)
+ * **Example** (Construct an ok probe result)
  *
  * ```ts
  * import { HealthResult } from "@effect-ontology/Runtime/HealthCheck"
  *
- * console.log(HealthResult)
+ * const result = HealthResult.make({
+ *   status: "ok",
+ *   timestamp: "2026-08-26T00:00:00.000Z"
+ * })
+ * console.log(result.status) // "ok"
  * ```
  *
  * @category models
@@ -142,17 +129,22 @@ export class HealthResult extends S.Class<HealthResult>($I`HealthResult`)(
 ) {}
 
 /**
- * HealthCheckService - Liveness and readiness probes
+ * Liveness, readiness, and deep-dependency probes for Kubernetes-style health checks.
  *
- * **Example** (Inspect health check service)
+ * **Example** (Provide the default probe layer)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { HealthCheckService } from "@effect-ontology/Runtime/HealthCheck"
  *
- * console.log(HealthCheckService)
+ * const liveness = Effect.gen(function* () {
+ *   const health = yield* HealthCheckService
+ *   return yield* health.liveness()
+ * }).pipe(Effect.provide(HealthCheckService.Default))
+ * console.log(Effect.isEffect(liveness)) // true
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class HealthCheckService extends Context.Service<HealthCheckService>()($I`HealthCheckService`, {

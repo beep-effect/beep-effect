@@ -1,14 +1,21 @@
-// Recursive descent over the scanner producing the lossless linear CST.
-// The load-bearing contract is the SPAN TILING INVARIANT: every expression's
-// span starts at the first character of its line's leading whitespace (the
-// BOM included, on the first line) and ends after its terminating newline (or
-// at EOF); consecutive blank/comment-only lines coalesce into one TomlTrivia;
-// concatenating every expression's source slice in order reproduces the
-// source byte-exactly. Task 11's stringify rides on it.
-//
-// The one recursion surface is parseValue → parseArray/parseInlineTable,
-// guarded by an explicit `depth` parameter against MAX_NESTING_DEPTH
-// (GuardExceeded at the opening bracket). Everything else is a linear walk.
+/**
+ * Recursive descent over the scanner producing the lossless linear CST.
+ *
+ * **Details**
+ *
+ * The load-bearing contract is the span-tiling invariant: every expression's
+ * span starts at the first character of its line's leading whitespace (the
+ * BOM included, on the first line) and ends after its terminating newline (or
+ * at EOF); consecutive blank/comment-only lines coalesce into one
+ * {@link TomlTrivia}; concatenating every expression's source slice in order
+ * reproduces the source byte-exactly. The one recursion surface is
+ * `parseValue` → array/inline table, guarded by an explicit `depth` parameter
+ * against {@link MAX_NESTING_DEPTH} ({@link GuardExceeded} at the opening
+ * bracket). Everything else is a linear walk.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import type { TomlExpression, TomlValueNode } from "../TomlNode.ts";
@@ -400,9 +407,35 @@ const parseHeaderExpression = (
 
 /**
  * Parse a TOML document into its linear CST: the flat, source-tiling list of
- * expressions. Throws RawTomlError on malformed input and GuardExceeded when
- * value nesting exceeds MAX_NESTING_DEPTH; the facade (Task 7) materializes
- * both into typed errors.
+ * expressions. Throws {@link RawTomlError} on malformed input and
+ * {@link GuardExceeded} when value nesting exceeds {@link MAX_NESTING_DEPTH};
+ * the public facades materialize both into typed errors.
+ *
+ * **Gotchas**
+ *
+ * The BOM folds into the first expression span as leading whitespace —
+ * stripping it before calling this function then comparing spans to the
+ * original buffer is off by one. This function throws {@link RawTomlError} /
+ * {@link GuardExceeded}, never {@link TomlParseError}.
+ *
+ * **Example** (Parse a one-line document)
+ *
+ * ```ts
+ * import { TomlKeyValue } from "@beep/scratchpad/toml"
+ * import { parseExpressions } from "../../../toml/internal/parser.ts"
+ *
+ * const expressions = parseExpressions('name = "Alice"\n')
+ * console.log(expressions[0] instanceof TomlKeyValue) // true
+ * console.log(expressions[0]?.offset) // 0
+ * ```
+ *
+ * @throws A {@link RawTomlError} on malformed input.
+ * @throws A {@link GuardExceeded} when value nesting exceeds {@link MAX_NESTING_DEPTH}.
+ * @see {@link Toml.parse} for the typed value facade.
+ * @see {@link TomlDocument.parse} for the typed lossless-document facade.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseExpressions = (source: string): ReadonlyArray<TomlExpression> => {
 	assertValidUnicode(source);

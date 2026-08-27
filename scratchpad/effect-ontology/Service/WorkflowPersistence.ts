@@ -31,7 +31,12 @@ import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storag
  * ```ts
  * import { StorageKeyValueStoreLive } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(StorageKeyValueStoreLive)
+ * import { Layer } from "effect"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
+ * import { StorageKeyValueStoreLive } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * const layer = Layer.provide(StorageKeyValueStoreLive, StorageServiceTest)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -78,7 +83,11 @@ export const StorageKeyValueStoreLive = Layer.effect(
  * ```ts
  * import { WorkflowPersistenceLive } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(WorkflowPersistenceLive)
+ * import { Layer } from "effect"
+ * import { WorkflowPersistenceLive, WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * const layer = Layer.merge(WorkflowPersistenceLive, WorkflowPersistenceMemory)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -102,7 +111,11 @@ export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
  * ```ts
  * import { WorkflowPersistenceTest } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(WorkflowPersistenceTest)
+ * import { Layer } from "effect"
+ * import { WorkflowPersistenceMemory, WorkflowPersistenceTest } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * const layer = Layer.merge(WorkflowPersistenceTest, WorkflowPersistenceMemory)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -125,7 +138,10 @@ export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
  * ```ts
  * import { WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(WorkflowPersistenceMemory)
+ * import { Layer } from "effect"
+ * import { WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * console.log(Layer.merge(WorkflowPersistenceMemory, WorkflowPersistenceMemory))
  * ```
  *
  * @category services

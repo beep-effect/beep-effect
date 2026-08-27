@@ -290,14 +290,6 @@ export const TextSpan = LegacyTextSpan.pipe(
 /**
  * Runtime value decoded by {@link TextSpan}.
  *
- * **Example** (Use TextSpan)
- * ```ts
- * import type { TextSpan } from "@effect-ontology/Schema/KnowledgeModel"
- *
- * const width = (span: TextSpan) => span.endChar - span.startChar
- * console.log(width)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -406,14 +398,6 @@ export const RdfObject = ObjectTerm.annotate({
 
 /**
  * Runtime value decoded by {@link RdfObject}.
- *
- * **Example** (Use RdfObject)
- * ```ts
- * import type { RdfObject } from "@effect-ontology/Schema/KnowledgeModel"
- *
- * const termType = (object: RdfObject) => object.termType
- * console.log(termType)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -675,10 +659,33 @@ export class Assertion extends S.Class<Assertion>($I`Assertion`)(
  *
  * **Example** (Use DerivedAssertion)
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { DerivedAssertion } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const readRule = (value: DerivedAssertion) => value.ruleId
- * console.log(readRule)
+ * const derived = S.decodeUnknownOption(DerivedAssertion)({
+ *   id: "derived-abc123def456",
+ *   assertion: {
+ *     id: "assertion-abc123def456",
+ *     subject: { termType: "NamedNode", value: "https://example.com/alice" },
+ *     predicate: { termType: "NamedNode", value: "https://schema.org/name" },
+ *     object: {
+ *       termType: "Literal",
+ *       value: "Alice",
+ *       datatype: {
+ *         termType: "NamedNode",
+ *         value: "https://www.w3.org/2001/XMLSchema#string"
+ *       }
+ *     },
+ *     assertedAt: "1970-01-01T00:00:00.000Z",
+ *     derivedFrom: ["claim-abc123def456"],
+ *     status: "accepted"
+ *   },
+ *   ruleId: "rule-transitivity",
+ *   supportingFacts: ["assertion-abc123def456"],
+ *   derivedAt: "1970-01-01T00:00:00.000Z"
+ * })
+ * console.log(O.map(derived, (value) => value.ruleId)) // Some("rule-transitivity")
  * ```
  *
  * @invariant At least one supporting assertion is recorded.

@@ -28,10 +28,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionCache");
  * **Example** (Validate cached extraction result)
  *
  * ```ts
- * import { CachedExtractionResult } from "@effect-ontology/Service/ExtractionCache"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { CachedExtractionResult } from "@effect-ontology/Service/ExtractionCache"
  *
- * console.log(S.is(CachedExtractionResult)({}))
+ * const decoded = S.decodeUnknownOption(CachedExtractionResult)({
+ *   entities: [],
+ *   relations: [],
+ *   metadata: { computedAt: "2026-01-01T00:00:00.000Z", model: "claude-haiku-4-5", temperature: 0, computedIn: 12 }
+ * })
+ * console.log(O.isSome(decoded)) // true
  * ```
  *
  * @category schemas
@@ -50,7 +56,11 @@ export const CachedExtractionResult = S.Struct({
     temperature: S.Finite,
     computedIn: S.Finite,
   }),
-});
+}).pipe(
+  $I.annoteSchema("CachedExtractionResult", {
+    description: "Cached extraction entities, relations, and model metadata.",
+  })
+);
 /**
  * Describes the cached extraction result data exposed by this module.
  *
@@ -67,14 +77,14 @@ const encodeCachedExtractionResult = S.encodeEffect(CachedExtractionResultJson);
 // =============================================================================
 
 /**
- * Provides the default cache dir service capability.
+ * Default filesystem directory used by the extraction cache.
  *
  * **Example** (Inspect default cache dir)
  *
  * ```ts
  * import { DEFAULT_CACHE_DIR } from "@effect-ontology/Service/ExtractionCache"
  *
- * console.log(DEFAULT_CACHE_DIR)
+ * console.log(DEFAULT_CACHE_DIR) // "output/cache"
  * ```
  *
  * @category constants
@@ -108,9 +118,11 @@ export interface ExtractionCacheService {
  * **Example** (Inspect make file system extraction cache)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeFileSystemExtractionCache } from "@effect-ontology/Service/ExtractionCache"
  *
- * console.log(makeFileSystemExtractionCache)
+ * const program = makeFileSystemExtractionCache("/tmp/extraction-cache")
+ * console.log(program)
  * ```
  *
  * @category constructors
@@ -154,9 +166,15 @@ export const makeFileSystemExtractionCache = Effect.fn("makeFileSystemExtraction
  * **Example** (Inspect extraction cache)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ExtractionCache } from "@effect-ontology/Service/ExtractionCache"
  *
- * console.log(ExtractionCache)
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* ExtractionCache
+ *   return yield* cache.get("ada")
+ * }).pipe(Effect.provide(ExtractionCache.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -174,9 +192,15 @@ export class ExtractionCache extends Context.Service<ExtractionCache, Extraction
  * **Example** (Inspect extraction cache live)
  *
  * ```ts
- * import { ExtractionCacheLive } from "@effect-ontology/Service/ExtractionCache"
+ * import { Effect } from "effect"
+ * import { ExtractionCache, ExtractionCacheLive } from "@effect-ontology/Service/ExtractionCache"
  *
- * console.log(ExtractionCacheLive)
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* ExtractionCache
+ *   return yield* cache.get("ada")
+ * }).pipe(Effect.provide(ExtractionCacheLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -190,9 +214,15 @@ export const ExtractionCacheLive = ExtractionCache.Default;
  * **Example** (Inspect file system extraction cache live)
  *
  * ```ts
- * import { FileSystemExtractionCacheLive } from "@effect-ontology/Service/ExtractionCache"
+ * import { Effect } from "effect"
+ * import { ExtractionCache, FileSystemExtractionCacheLive } from "@effect-ontology/Service/ExtractionCache"
  *
- * console.log(FileSystemExtractionCacheLive)
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* ExtractionCache
+ *   return yield* cache.get("ada")
+ * }).pipe(Effect.provide(FileSystemExtractionCacheLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

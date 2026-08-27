@@ -27,21 +27,26 @@ import { StorageService } from "./Storage.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
 /**
- * Embedding vector type
+ * Finite numeric vector stored in the embedding cache.
  *
- * **Example** (Validate embedding)
+ * **Example** (Validate a cached vector)
  *
  * ```ts
- * import { Embedding } from "@effect-ontology/Service/EmbeddingCache"
  * import * as S from "effect/Schema"
+ * import { Embedding } from "@effect-ontology/Service/EmbeddingCache"
  *
- * console.log(S.is(Embedding)({}))
+ * console.log(S.is(Embedding)([0.12, -0.4, 0.88])) // true
+ * console.log(S.is(Embedding)({})) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const Embedding = S.Array(S.Finite);
+export const Embedding = S.Array(S.Finite).pipe(
+  $I.annoteSchema("Embedding", {
+    description: "Finite embedding vector cached by EmbeddingCache.",
+  })
+);
 /**
  * Describes the embedding data exposed by this module.
  *
@@ -83,20 +88,23 @@ const evictLeastRecentlyUsed = (
 };
 
 /**
- * Cache configuration
+ * Entry lifetime and capacity bound for an embedding cache.
  *
- *
- * **Example** (Use the EmbeddingCacheConfig contract)
+ * **Example** (Configure cache lifetime and capacity)
  *
  * ```ts
- * import type { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
+ * import { PosInt } from "@beep/schema"
+ * import { Duration } from "effect"
+ * import { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
  *
- * const acceptsEmbeddingCacheConfig = (_value: EmbeddingCacheConfig): void => undefined
- *
- * console.log(acceptsEmbeddingCacheConfig)
+ * const config = EmbeddingCacheConfig.make({
+ *   ttl: Duration.minutes(30),
+ *   maxEntries: PosInt.make(100)
+ * })
+ * console.log(config.maxEntries) // 100
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`EmbeddingCacheConfig`)(
@@ -159,17 +167,26 @@ export interface EmbeddingCacheService {
 }
 
 /**
- * EmbeddingCache service tag
+ * In-memory embedding cache with TTL and LRU eviction.
  *
- * **Example** (Inspect embedding cache)
+ * **Example** (Set and get a vector)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
  *
- * console.log(EmbeddingCache)
+ * const cached = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const cache = yield* EmbeddingCache
+ *     yield* cache.set("ada", [0.1, 0.2])
+ *     return yield* cache.get("ada")
+ *   }).pipe(Effect.provide(EmbeddingCache.Default), Effect.orDie)
+ * )
+ * console.log(O.isSome(cached)) // true
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCacheService>()($I`EmbeddingCache`) {
@@ -247,14 +264,23 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
 }
 
 /**
- * Test layer that always misses cache
+ * Test layer that always reports a cache miss.
  *
- * **Example** (Inspect embedding cache test)
+ * **Example** (Observe a guaranteed miss)
  *
  * ```ts
- * import { EmbeddingCacheTest } from "@effect-ontology/Service/EmbeddingCache"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { EmbeddingCache, EmbeddingCacheTest } from "@effect-ontology/Service/EmbeddingCache"
  *
- * console.log(EmbeddingCacheTest)
+ * const found = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const cache = yield* EmbeddingCache
+ *     yield* cache.set("ada", [0.1, 0.2])
+ *     return yield* cache.get("ada")
+ *   }).pipe(Effect.provide(EmbeddingCacheTest), Effect.orDie)
+ * )
+ * console.log(O.isNone(found)) // true
  * ```
  *
  * @category layers
@@ -305,14 +331,39 @@ export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
 }
 
 /**
- * PersistentEmbeddingCache service tag
+ * Context tag for an embedding cache with memory plus persistent storage.
  *
- * **Example** (Inspect persistent embedding cache)
+ * **Gotchas**
+ *
+ * `clear` drops only the in-memory HashMap. Persistent blobs (GCS or the
+ * backing {@link StorageService}) are left in place, so a later `get` can still
+ * reload the vector from storage.
+ *
+ * **Example** (Clear memory while a persisted copy survives)
  *
  * ```ts
- * import { PersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ * import { Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import { makePersistentEmbeddingCache, PersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(PersistentEmbeddingCache)
+ * const PersistentLive = Layer.effect(
+ *   PersistentEmbeddingCache,
+ *   Effect.gen(function* () {
+ *     const storage = yield* StorageService
+ *     return yield* makePersistentEmbeddingCache(storage, "embeddings/cache")
+ *   })
+ * ).pipe(Layer.provide(StorageServiceTest))
+ *
+ * const found = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const cache = yield* PersistentEmbeddingCache
+ *     yield* cache.set("ada", [0.1, 0.2])
+ *     yield* cache.clear
+ *     return yield* cache.get("ada")
+ *   }).pipe(Effect.provide(PersistentLive), Effect.orDie)
+ * )
+ * console.log(O.isSome(found)) // true
  * ```
  *
  * @category services
@@ -344,22 +395,35 @@ const decodeEmbeddingBlob = S.decodeUnknownOption(S.fromJsonString(EmbeddingBlob
 const encodeEmbeddingBlob = S.encodeEffect(S.fromJsonString(EmbeddingBlob));
 
 /**
- * Create persistent embedding cache with GCS backing
+ * Build a memory-plus-storage embedding cache over a {@link StorageService}.
  *
  * **Details**
  *
- * Architecture:
- * - Uses in-memory HashMap for fast lookups
- * - Falls back to GCS on memory miss
- * - Writes to both memory and GCS on set
- * - Batch writes use a single blob per batch to minimize GCS operations
+ * Lookups hit an in-memory HashMap first and fall back to storage on miss.
+ * Writes update both layers. Storage keys are `{cachePath}/{hash[0:2]}/{hash}.json`.
  *
- * **Example** (Inspect make persistent embedding cache)
+ * **Gotchas**
+ *
+ * `clear` empties only the in-memory map. Callers that need to wipe persisted
+ * blobs must use {@link StorageService} directly.
+ *
+ * **Example** (Set, then reload after a memory miss)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * import { makePersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(makePersistentEmbeddingCache)
+ * const found = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const storage = yield* StorageService
+ *     const cache = yield* makePersistentEmbeddingCache(storage, "embeddings/cache")
+ *     yield* cache.set("ada", [0.1, 0.2])
+ *     return yield* cache.get("ada")
+ *   }).pipe(Effect.provide(StorageServiceTest), Effect.orDie)
+ * )
+ * console.log(O.isSome(found)) // true
  * ```
  *
  * @category constructors
@@ -709,14 +773,35 @@ const EmbeddingCacheAliasLayer = Layer.effect(EmbeddingCache, PersistentEmbeddin
 );
 
 /**
- * Provides the embedding cache with persistence service capability.
+ * Layer providing both {@link EmbeddingCache} and {@link PersistentEmbeddingCache}.
  *
- * **Example** (Inspect embedding cache with persistence)
+ * **Details**
+ *
+ * Requires {@link ConfigService} and {@link StorageService}. Persistence is
+ * enabled only when `config.embedding.cachePath` is set.
+ *
+ * **Example** (Provide persistence over in-memory storage)
  *
  * ```ts
- * import { EmbeddingCacheWithPersistence } from "@effect-ontology/Service/EmbeddingCache"
+ * import { Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
+ * import { EmbeddingCache, EmbeddingCacheWithPersistence } from "@effect-ontology/Service/EmbeddingCache"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(EmbeddingCacheWithPersistence)
+ * const layer = EmbeddingCacheWithPersistence.pipe(
+ *   Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)),
+ *   Layer.provide(StorageServiceTest)
+ * )
+ *
+ * const size = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const cache = yield* EmbeddingCache
+ *     yield* cache.set("ada", [0.1, 0.2])
+ *     return yield* cache.size
+ *   }).pipe(Effect.provide(layer), Effect.orDie)
+ * )
+ * console.log(size) // 1
  * ```
  *
  * @category layers

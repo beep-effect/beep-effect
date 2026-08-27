@@ -278,14 +278,22 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
 // =============================================================================
 
 /**
- * Exposes reconcile command for composition by callers of this module.
+ * Analyzes entities in a persisted batch for duplicate candidates and prints
+ * reconciliation statistics.
  *
- * **Example** (Inspect reconcile command)
+ * **Details**
+ *
+ * Identify the batch with `--batch-id` or `--manifest`. `--threshold` raises
+ * or lowers merge consideration; `--verbose` prints per-entity detail.
+ *
+ * **Example** (Reconcile persisted batch conflicts)
  *
  * ```ts
  * import { reconcileCommand } from "@effect-ontology/Cli/Commands/Reconcile"
  *
- * console.log(reconcileCommand)
+ * console.log(reconcileCommand.name) // "reconcile"
+ * console.log(reconcileCommand.description)
+ * // effect-onto reconcile --batch-id batch-1234567890ab --threshold 0.8
  * ```
  *
  * @category cli-commands

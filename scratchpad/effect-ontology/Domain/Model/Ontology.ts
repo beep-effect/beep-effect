@@ -162,18 +162,6 @@ export const PropertyRangeKind = LiteralKit(["object", "datatype"])
 /**
  * Decoded `object` or `datatype` literal produced by the {@link PropertyRangeKind} schema.
  *
- * **Example** (Decode PropertyRangeKind)
- *
- * ```ts
- * import { PropertyRangeKind } from "@effect-ontology/Domain/Model/Ontology"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizePropertyRangeKind = (_value: PropertyRangeKind): string => "valid property range kind"
- *
- * console.log(O.map(S.decodeUnknownOption(PropertyRangeKind)({}), summarizePropertyRangeKind))
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -405,18 +393,6 @@ export const ClassDefinition = ClassDefinitionModel.annotate({
 /**
  * Decoded class metadata produced by {@link ClassDefinition}, including its search-document behavior.
  *
- * **Example** (Decode ClassDefinition)
- *
- * ```ts
- * import { ClassDefinition } from "@effect-ontology/Domain/Model/Ontology"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeClassDefinition = (_value: ClassDefinition): string => "valid class definition"
- *
- * console.log(O.map(S.decodeUnknownOption(ClassDefinition)({}), summarizeClassDefinition))
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -590,18 +566,6 @@ export const PropertyDefinition = PropertyDefinitionModel.annotate({
 
 /**
  * Decoded property metadata produced by {@link PropertyDefinition}, including range and search behavior.
- *
- * **Example** (Decode PropertyDefinition)
- *
- * ```ts
- * import { PropertyDefinition } from "@effect-ontology/Domain/Model/Ontology"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizePropertyDefinition = (_value: PropertyDefinition): string => "valid property definition"
- *
- * console.log(O.map(S.decodeUnknownOption(PropertyDefinition)({}), summarizePropertyDefinition))
- * ```
  *
  * @category type-level
  * @since 0.0.0

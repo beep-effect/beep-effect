@@ -12,9 +12,25 @@ import * as S from "effect/Schema";
 const $I = $ScratchpadId.create("codemode/Codemode.tool-error");
 
 /**
- * The `ToolError` model.
+ * Host tool failure that is safe to surface through CodeMode diagnostics.
  *
- * @category models
+ * **Gotchas**
+ *
+ * Omitting `cause` stores `O.none()`; the field is optional at construction,
+ * not a required defect payload.
+ *
+ * **Example** (Construct and narrow a tool refusal)
+ *
+ * ```ts
+ * import { ToolError } from "@beep/scratchpad/codemode"
+ *
+ * const error = ToolError.new("search is disabled in this runtime")
+ *
+ * console.log(ToolError.is(error)) // true
+ * console.log(error.message) // "search is disabled in this runtime"
+ * ```
+ *
+ * @category errors
  * @since 0.0.0
  */
 export class ToolError extends S.TaggedError<ToolError>($I`ToolError`)(
@@ -41,15 +57,17 @@ export class ToolError extends S.TaggedError<ToolError>($I`ToolError`)(
 }
 
 /**
- * Companion namespace for {@link ToolError}
+ * Encoded companions for the {@link ToolError} tagged error.
  *
+ * @category type-level
  * @since 0.0.0
  */
 export declare namespace ToolError {
   /**
-   * Companion encoded type for {@link ToolError}
+   * Encoded wire shape accepted by {@link ToolError} before decoding.
    *
-   * @category models
+   * @see {@link ToolError} for the runtime tagged error and constructors.
+   * @category type-level
    * @since 0.0.0
    */
   export type Encoded = typeof ToolError.Encoded;

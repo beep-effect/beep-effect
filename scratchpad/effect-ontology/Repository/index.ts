@@ -47,167 +47,197 @@ export * from "./schema.ts";
 // =============================================================================
 
 /**
- * Drizzle client layer from environment config
+ * Drizzle client layer constructed from environment config.
  *
  * **Details**
  *
- * Requires SqlClient from @effect/sql-pg
+ * Requires SqlClient from `@effect/sql-pg`.
  *
- * **Example** (Inspect drizzle live)
+ * **Example** (Compose Drizzle with Postgres)
  *
  * ```ts
- * import { DrizzleLive } from "@effect-ontology/Repository/index"
+ * import { DrizzleLive, DrizzleWithPgLive, PgClientLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(DrizzleLive)
+ * const drizzle = Layer.provide(DrizzleLive, PgClientLive)
+ * console.log(Layer.isLayer(drizzle) && Layer.isLayer(DrizzleWithPgLive)) // true
  * ```
  *
+ * @see {@link PgClientLive} for the Postgres connection this Drizzle layer consumes.
  * @category layers
  * @since 0.0.0
  */
 export const DrizzleLive = CanonicalDrizzleLive;
 
 /**
- * PgClient layer from environment variables
+ * Postgres client layer constructed from environment variables.
  *
- * **Details**
+ * **Gotchas**
  *
- * Environment variables:
- * - POSTGRES_HOST: Database host (default: localhost)
- * - POSTGRES_PORT: Database port (default: 5432)
- * - POSTGRES_DATABASE: Database name (default: workflow)
- * - POSTGRES_USER: Database username (default: workflow)
- * - POSTGRES_PASSWORD: Database password (required)
- * - POSTGRES_SSL: Enable SSL (default: false)
+ * `POSTGRES_PASSWORD` is required. Host defaults to `localhost`, port `5432`,
+ * database and user `workflow`, SSL off unless `POSTGRES_SSL` is set.
  *
- * **Example** (Inspect pg client live)
+ * **Example** (Provide Postgres under Drizzle)
  *
  * ```ts
- * import { PgClientLive } from "@effect-ontology/Repository/index"
+ * import { DrizzleLive, PgClientLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(PgClientLive)
+ * const withPg = Layer.provide(DrizzleLive, PgClientLive)
+ * console.log(Layer.isLayer(withPg)) // true
  * ```
  *
+ * @see {@link makeTestRepositoriesLayer} for an explicit host/port/password constructor.
  * @category layers
  * @since 0.0.0
  */
 export const PgClientLive = CanonicalPgClientLive;
 
 /**
- * Full Drizzle layer with Postgres connection
+ * Database-ready Drizzle layer with a live Postgres connection.
  *
- * **Example** (Inspect drizzle with pg live)
+ * **Example** (Use the combined Postgres Drizzle layer)
  *
  * ```ts
- * import { DrizzleWithPgLive } from "@effect-ontology/Repository/index"
+ * import { DrizzleWithPgLive, PgClientLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(DrizzleWithPgLive)
+ * console.log(Layer.isLayer(DrizzleWithPgLive) && Layer.isLayer(PgClientLive)) // true
  * ```
  *
+ * @see {@link PgClientLive} for the env-driven connection this layer includes.
  * @category layers
  * @since 0.0.0
  */
 export const DrizzleWithPgLive = DatabaseReadyLive;
 
 /**
- * ClaimRepository with Drizzle
+ * {@link ClaimRepository} provided with the live Drizzle/Postgres stack.
  *
- * **Example** (Inspect claim repository live)
+ * **Example** (Acquire the live claim repository)
  *
  * ```ts
- * import { ClaimRepositoryLive } from "@effect-ontology/Repository/index"
+ * import { ClaimRepositoryLive, RepositoriesLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(ClaimRepositoryLive)
+ * console.log(Layer.isLayer(ClaimRepositoryLive)) // true
+ * console.log(Layer.isLayer(RepositoriesLive)) // true
  * ```
  *
+ * @see {@link RepositoriesLive} for merging this layer with the other repositories.
  * @category layers
  * @since 0.0.0
  */
 export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
- * ConflictRepository with Drizzle.
+ * {@link ConflictRepository} provided with the live Drizzle/Postgres stack.
  *
- * **Example** (Inspect the live conflict layer)
+ * **Example** (Acquire the live conflict repository)
  *
  * ```ts
  * import { ConflictRepositoryLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(ConflictRepositoryLive)
+ * console.log(Layer.isLayer(ConflictRepositoryLive)) // true
  * ```
  *
+ * @see {@link RepositoriesLive} for merging this layer with the other repositories.
  * @category layers
  * @since 0.0.0
  */
 export const ConflictRepositoryLive = ConflictRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
- * ArticleRepository with Drizzle
+ * {@link ArticleRepository} provided with the live Drizzle/Postgres stack.
  *
- * **Example** (Inspect article repository live)
+ * **Example** (Acquire the live article repository)
  *
  * ```ts
  * import { ArticleRepositoryLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(ArticleRepositoryLive)
+ * console.log(Layer.isLayer(ArticleRepositoryLive)) // true
  * ```
  *
+ * @see {@link RepositoriesLive} for merging this layer with the other repositories.
  * @category layers
  * @since 0.0.0
  */
 export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
- * EntityRegistryRepository with Drizzle
+ * {@link EntityRegistryRepository} provided with the live Drizzle/Postgres stack.
  *
- * **Details**
+ * **Gotchas**
  *
- * Requires pgvector extension to be enabled in PostgreSQL.
+ * PostgreSQL must have the pgvector extension enabled.
  *
- * **Example** (Inspect entity registry repository live)
+ * **Example** (Acquire the live entity registry)
  *
  * ```ts
  * import { EntityRegistryRepositoryLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(EntityRegistryRepositoryLive)
+ * console.log(Layer.isLayer(EntityRegistryRepositoryLive)) // true
  * ```
  *
+ * @see {@link RepositoriesLive} for merging this layer with the other repositories.
  * @category layers
  * @since 0.0.0
  */
 export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
- * EmbeddingRepository with Drizzle
+ * {@link EmbeddingRepository} provided with the live Drizzle/Postgres stack.
  *
- * **Details**
+ * **Gotchas**
  *
- * Provides persistent vector storage with hybrid search.
- * Requires pgvector extension to be enabled in PostgreSQL.
+ * PostgreSQL must have the pgvector extension enabled for hybrid search.
  *
- * **Example** (Inspect embedding repository live)
+ * **Example** (Acquire the live embedding repository)
  *
  * ```ts
  * import { EmbeddingRepositoryLive } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(EmbeddingRepositoryLive)
+ * console.log(Layer.isLayer(EmbeddingRepositoryLive)) // true
  * ```
  *
+ * @see {@link RepositoriesLive} for merging this layer with the other repositories.
  * @category layers
  * @since 0.0.0
  */
 export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
- * All repositories with Drizzle and Postgres
+ * Merges claim, conflict, article, entity-registry, and embedding live
+ * repositories onto one Postgres/Drizzle stack.
  *
- * **Example** (Inspect repositories live)
+ * **Example** (Compose the repository family)
  *
  * ```ts
- * import { RepositoriesLive } from "@effect-ontology/Repository/index"
+ * import {
+ *   ArticleRepositoryLive,
+ *   ClaimRepositoryLive,
+ *   ConflictRepositoryLive,
+ *   EmbeddingRepositoryLive,
+ *   EntityRegistryRepositoryLive,
+ *   RepositoriesLive
+ * } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(RepositoriesLive)
+ * const composed = Layer.mergeAll(
+ *   ClaimRepositoryLive,
+ *   ConflictRepositoryLive,
+ *   ArticleRepositoryLive,
+ *   EntityRegistryRepositoryLive,
+ *   EmbeddingRepositoryLive
+ * )
+ * console.log(Layer.isLayer(composed) && Layer.isLayer(RepositoriesLive)) // true
  * ```
  *
+ * @see {@link makeTestRepositoriesLayer} for the explicit-config test twin.
  * @category layers
  * @since 0.0.0
  */
@@ -220,16 +250,30 @@ export const RepositoriesLive = Layer.mergeAll(
 );
 
 /**
- * Test layer with explicit config
+ * Builds the full repository family against an explicit Postgres connection.
  *
- * **Example** (Inspect make test repositories layer)
+ * **Gotchas**
+ *
+ * Entity-registry and embedding repositories still require pgvector on that
+ * database.
+ *
+ * **Example** (Construct a test repository layer)
  *
  * ```ts
  * import { makeTestRepositoriesLayer } from "@effect-ontology/Repository/index"
+ * import { Layer } from "effect"
  *
- * console.log(makeTestRepositoriesLayer)
+ * const testLayer = makeTestRepositoriesLayer({
+ *   host: "127.0.0.1",
+ *   port: 5432,
+ *   database: "ontology_test",
+ *   username: "ontology",
+ *   password: "secret"
+ * })
+ * console.log(Layer.isLayer(testLayer)) // true
  * ```
  *
+ * @see {@link RepositoriesLive} for the env-driven production merge.
  * @category layers
  * @since 0.0.0
  */

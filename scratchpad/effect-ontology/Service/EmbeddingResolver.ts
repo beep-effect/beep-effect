@@ -47,12 +47,22 @@ export const DEFAULT_MAX_BATCH_SIZE = 128;
  * - Completes each request with corresponding result
  * - Propagates errors to all requests in failed batch
  *
- * **Example** (Inspect make embedding resolver)
+ * **Example** (Build a resolver over a stub provider)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeEmbeddingResolver } from "@effect-ontology/Service/EmbeddingResolver"
+ * import { ProviderMetadata, cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  *
- * console.log(makeEmbeddingResolver)
+ * const resolver = makeEmbeddingResolver(
+ *   {
+ *     metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "demo", dimension: 2 }),
+ *     embedBatch: (requests) => Effect.succeed(requests.map(() => [1, 0])),
+ *     cosineSimilarity
+ *   },
+ *   8
+ * )
+ * console.log(resolver)
  * ```
  *
  * @param provider - The embedding provider to use

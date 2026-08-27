@@ -1,7 +1,11 @@
 /**
  * The `Journal` service: one append-only, schema-validated JSONL file.
  *
- * @since 0.1.0
+ * Each registry gets its own uniquely-keyed class, so several journals coexist
+ * in one layer graph with each one's operations typed by *its* registry.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import type { Duration as DurationType, PlatformError, Scope, Take } from "effect";
 import {
@@ -36,14 +40,18 @@ import type { CursoredSlice } from "./Slice.ts";
 import { matchesFrame } from "./Slice.ts";
 
 /**
- * The failure channel of a write operation.
+ * Failures an append can produce, including an untranslated `PlatformError`.
  *
- * `PlatformError` rides through untranslated per the taxonomy's rule. **Any
- * `PlatformError` out of an append must be treated as a possibly-torn tail**:
+ * **Gotchas**
+ *
+ * Any `PlatformError` out of an append must be treated as a possibly-torn tail:
  * `writeAll` reports no byte count, so a failure cannot be read as "nothing was
  * written". The next reader walks back over whatever fragment survived.
  *
+ * @see {@link MalformedLine} for the torn-tail vs terminated-hole distinction a later read observes.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export type JournalWriteError =
 	| JournalClosed
@@ -56,16 +64,24 @@ export type JournalWriteError =
 	| PlatformError.PlatformError;
 
 /**
- * The failure channel of a read operation.
+ * Failures a historical or live read can produce: the file is missing, or IO
+ * failed without being wrapped.
  *
+ * @see {@link JournalWriteError} for the write channel, which additionally includes encode and lifecycle tags.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export type JournalReadError = JournalNotFound | PlatformError.PlatformError;
 
 /**
- * Options for one append.
+ * Per-append options: currently only the partition key stamped on the envelope.
+ *
+ * `at` is not caller-supplied — the service stamps it from the Effect `Clock`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface AppendOptions {
 	/** The partition key to stamp on the envelope. */
@@ -73,9 +89,24 @@ export interface AppendOptions {
 }
 
 /**
- * The shape of a `Journal`, typed by its registry.
+ * Runtime operations of one journal, typed by the registry it was defined over.
  *
+ * **Gotchas**
+ *
+ * `appendPatch` is shallow and builds a transient `Object.create` instance —
+ * nested objects in the patch replace, they do not deep-merge, and the merged
+ * value is never returned to the caller. An unsliced `query()` reads the
+ * requested region in one allocation bounded by the file's size. Bind
+ * `layer(...)` to a const and provide that const; calling it twice mints two
+ * unserialized journals over one file.
+ *
+ * @see {@link JournalWriteError} for the torn-tail reading of append IO failure.
+ * @see {@link JournalResync} for truncation or replacement beneath a reader.
+ * @see {@link canMerge} for the asymmetric patch-into-class guard `appendPatch` uses.
+ * @see {@link shallowMerge} for the pollution-safe copy `appendPatch` uses.
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface JournalShape<R extends JsonlEvent.Registry> {
 	/**
@@ -132,16 +163,14 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
 	 * Filtering happens on the envelope **frame**, strictly before the payload
 	 * schema runs, so a non-matching line's `data` is never decoded.
 	 *
-	 * @remarks
-	 * **Cost, stated rather than implied.** As built, the requested region —
-	 * `cursor` to the end of the file — is read in ONE allocation bounded by the
-	 * file's size, and the matching envelopes are buffered before the first is
-	 * emitted. An unsliced `query()` over a large journal therefore does hold
-	 * that journal in memory; a `cursor` is what bounds the read, which is
-	 * precisely what a resuming consumer already persists. The window-bounded
-	 * reads are `latest` and the `lastValid`-backed paths. Emitting per window,
-	 * so an unsliced query costs a window rather than a file, is tracked as
-	 * spencerbeggs/effected#233.
+	 * **Gotchas**
+	 *
+	 * As built, the requested region — `cursor` to the end of the file — is read
+	 * in one allocation bounded by the file's size, and matching envelopes are
+	 * buffered before the first is emitted. An unsliced `query()` over a large
+	 * journal therefore holds that journal in memory; a `cursor` is what bounds
+	 * the read. Window-bounded reads are `latest` and the `lastValid`-backed
+	 * paths. Emitting per window is spencerbeggs/effected#233.
 	 */
 	readonly query: <T extends JsonlEvent.Tag<R> = JsonlEvent.Tag<R>>(
 		slice?: CursoredSlice<R, T> | undefined,
@@ -158,19 +187,16 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
 	 * (a `terminal` event reaches the tail) or its scope closes. Subscribing to
 	 * an already-quiescent journal ends immediately.
 	 *
-	 * @remarks
-	 * Two properties are worth knowing before relying on them.
+	 * **Gotchas**
 	 *
-	 * The **delivered-before-end guarantee is scoped to consuming subscribers**:
+	 * The delivered-before-end guarantee is scoped to consuming subscribers:
 	 * every append that completed is delivered before the stream ends, provided
 	 * the subscriber keeps taking. One that stops taking cannot observe
-	 * completion by definition, and shutdown will not wait on it past its bound.
-	 *
-	 * The **filter-before-decode guarantee is structural on the historical half
-	 * only**. Replayed lines are filtered on the frame before their payload is
-	 * decoded. Live envelopes arrive already decoded — the appender decoded its
-	 * own payload in order to return it — so a filtered-out live envelope was
-	 * decoded once, by the writer, not by each subscriber.
+	 * completion, and shutdown will not wait on it past its bound. Filter-before-
+	 * decode is structural on the historical half only. Live envelopes arrive
+	 * already decoded — the appender decoded its own payload in order to return
+	 * it — so a filtered-out live envelope was decoded once, by the writer, not
+	 * by each subscriber.
 	 */
 	readonly changes: <T extends JsonlEvent.Tag<R> = JsonlEvent.Tag<R>>(
 		slice?: CursoredSlice<R, T> | undefined,
@@ -209,9 +235,18 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
 }
 
 /**
- * Configuration for one journal layer.
+ * Layer input for one journal: the file path, optional activation-watch
+ * directory, hub capacity, and shutdown publish bound.
+ *
+ * **Gotchas**
+ *
+ * `directory` defaults to `path`'s parent by taking everything before its last
+ * `/` or `\`. That derivation breaks drive-relative Windows paths and any path
+ * whose parent is not a plain prefix — name the directory explicitly then.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface JournalConfig {
 	/** Path to the journal file. It need not exist yet. */
@@ -1101,9 +1136,21 @@ const makeEngine = Effect.fn("makeEngine")(function* (
 	});
 
 /**
- * A per-registry `Journal` service class.
+ * The per-registry service class `Journal.Service` returns: static `events`,
+ * a `layer` factory, and the usual Context key.
  *
+ * **Gotchas**
+ *
+ * Layers are memoized by reference. Calling `layer(...)` twice mints two
+ * independent journals over one file — two semaphores, two hubs, two `latest`
+ * refs — and their appends are not serialized against each other. Bind the
+ * result to a const and provide that const.
+ *
+ * @see {@link Journal} for the factory that produces this class.
+ * @see {@link JournalConfig} for the path and activation-watch fields `layer` takes.
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Registry>
 	extends Context.ServiceClass<Self, Id, JournalShape<R>> {
@@ -1112,27 +1159,15 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
 	/**
 	 * Build the layer for this journal.
 	 *
-	 * @remarks
-	 * **Construction can fail with a `PlatformError`, and that is deliberate.** A
+	 * **Gotchas**
+	 *
+	 * Construction can fail with a `PlatformError`, and that is deliberate. A
 	 * journal file that does not exist yet is a legal state and constructs
 	 * cleanly — but a file that exists and cannot be read (`EACCES`, a bad
-	 * handle) is a real failure, and typing this channel `never` would have made
-	 * it arrive as an untypeable defect that no caller could catch.
-	 *
-	 * **Bind the result to a const and provide that const.** Layers are memoized
-	 * by reference, so calling this twice mints **two independent journals over
-	 * one file** — two semaphores, two hubs, two `latest` refs — and their
-	 * appends are not serialized against each other. That is the in-process form
-	 * of exactly the interleaving the cooperative-writer rules exist to prevent,
-	 * and it typechecks perfectly.
-	 *
-	 * ```ts
-	 * // correct
-	 * export const layer = MailJournal.layer({ path });
-	 *
-	 * // WRONG — a second, unserialized journal over the same file
-	 * Effect.provide(program, MailJournal.layer({ path }));
-	 * ```
+	 * handle) is a real failure, and typing this channel `never` would make it
+	 * arrive as an untypeable defect. Bind the returned layer to a const and
+	 * provide that const: `Effect.provide(program, MailJournal.layer({ path }))`
+	 * mints a second, unserialized journal over the same file.
 	 */
 	readonly layer: (config: JournalConfig) => Layer.Layer<Self, PlatformError.PlatformError, FileSystem.FileSystem>;
 }
@@ -1146,19 +1181,31 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
  * one layer graph with each one's operations typed by *its* registry. This
  * mirrors `ConfigFile.Service<Self, A>()(id)`.
  *
- * @example
- * ```ts
- * import { Journal, JsonlEvent } from "@effected/jsonl";
- * import { Schema } from "effect";
+ * **Gotchas**
  *
- * const events = [JsonlEvent.make("started", { data: Schema.Void })] as const;
+ * Bind `MailJournal.layer({ path })` to a const and provide that const. Layers
+ * are memoized by reference, so calling `layer` at the provide site mints a
+ * second unserialized journal over the same file.
+ *
+ * **Example** (Define a journal service and bind its layer)
+ *
+ * ```ts
+ * import { Journal, JsonlEvent } from "@beep/scratchpad/jsonl"
+ * import * as S from "effect/Schema"
+ *
+ * const events = [JsonlEvent.make("started", { data: S.Void })] as const
  *
  * class MailJournal extends Journal.Service<MailJournal>()("dogfood/MailJournal", { events }) {}
  *
- * export const layer = MailJournal.layer({ path: ".claude/dogfood/silk.jsonl" });
+ * export const layer = MailJournal.layer({ path: ".claude/dogfood/silk.jsonl" })
+ * console.log(MailJournal.events[0]?.tag) // "started"
  * ```
  *
+ * @see {@link JournalClass} for the static `events` / `layer` surface this returns.
+ * @see {@link JournalShape} for the append/query/changes operations the layer provides.
  * @public
+ * @category factories
+ * @since 0.0.0
  */
 export const Journal = {
 	Service:

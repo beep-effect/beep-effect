@@ -5,6 +5,7 @@
  * runner pipeline — stdin → decode → handler → encode → stdout — without
  * spawning a process. Plus mock constructors and assertion helpers.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

@@ -1,16 +1,18 @@
 /**
  * Zero-dependency TOML 1.1.0 parsing and stringification as Effect schemas.
  *
- * @remarks
+ * **Details**
+ *
  * {@link Toml} is the value-level facade (`parse`/`stringify` and the schema
- * factories); {@link TomlDiagnostic} is the structured diagnostic every
- * failure carries; the `TomlNode` classes are the lossless linear CST; the
+ * factories). {@link TomlDiagnostic} is the structured diagnostic every
+ * failure carries. The `TomlNode` classes are the lossless linear CST. The
  * four `TomlDateTime` classes model TOML's date-time types. All fallible
- * entry points — parse, stringify and the codec directions — carry typed
+ * entry points — parse, stringify, and the codec directions — carry typed
  * errors built from {@link TomlDiagnostic}, never a collapsed string reason
  * or an unhandled defect on malformed or adversarial input.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export type { TomlBoundCodec } from "./Toml.ts";

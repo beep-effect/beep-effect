@@ -7,9 +7,10 @@
  * `Range.FromString`, `Comparator.FromString` transform to and from the
  * canonical strings).
  *
- * @example
+ * **Example** (Parse, bump, and test a range)
+ *
  * ```ts
- * import { Range, SemVer } from "@effected/semver";
+ * import { Range, SemVer } from "@beep/scratchpad/semver";
  * import { Effect } from "effect";
  *
  * const program = Effect.gen(function* () {
@@ -23,10 +24,10 @@
  * // => ["1.3.0", true, false]
  * ```
  *
- * @see {@link https://semver.org | SemVer 2.0.0 Specification}
- * @see {@link https://effect.website | Effect}
- *
+ * @see {@link https://semver.org} for the SemVer 2.0.0 grammar this parser implements strictly (no loose coercion).
+ * @see {@link https://effect.website} for Effect's Schema, Result, and Context.Service APIs this kit is built on.
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export { Comparator, InvalidComparatorError } from "./Comparator.ts";

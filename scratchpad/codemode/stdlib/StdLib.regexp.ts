@@ -1,3 +1,11 @@
+/**
+ * Guest RegExp construction, `RegExp.escape`, and lastIndex-aware `exec`/`test`
+ * for the CodeMode interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $ScratchpadId } from "@beep/identity";
 import { Unknown } from "@beep/schema/Unknown";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
 import { SafeObject } from "@beep/schema"
@@ -17,6 +25,8 @@ export {
   regexpStatics,
 } from "../Codemode.method-names.ts"
 
+const $I = $ScratchpadId.create("codemode/stdlib/StdLib.regexp");
+
 type MatchValue = Array<unknown> & {
   index?: number
   groups?: SafeObject
@@ -27,6 +37,24 @@ type IndicesValue = Array<unknown> & {
   groups?: SafeObject
 }
 
+/**
+ * Closed kit of guest-visible `RegExp` instance properties including flags and
+ * `lastIndex`.
+ *
+ * **Example** (Confirm source and lastIndex membership)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { regexpProperties } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * console.log(S.is(regexpProperties)("source"))
+ * console.log(S.is(regexpProperties)("lastIndex"))
+ * ```
+ *
+ * @see {@link invokeRegExpMethod} for exec and test against those properties.
+ * @category constants
+ * @since 0.0.0
+ */
 export const regexpProperties = LiteralKit([
   "source",
   "flags",
@@ -39,16 +67,88 @@ export const regexpProperties = LiteralKit([
   "unicode",
   "unicodeSets",
   "dotAll",
-])
+]).pipe(
+  $I.annoteSchema("regexpProperties", {
+    description: "Guest-visible RegExp instance property names.",
+  })
+)
+
+/**
+ * Decoded value produced by {@link regexpProperties}.
+ *
+ * @see {@link regexpProperties} for the runtime kit of RegExp property names.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type regexpProperties = typeof regexpProperties.Type;
 
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString
 
+/**
+ * Strips the host `Invalid regular expression:` prefix from a thrown pattern
+ * error so guest diagnostics stay pattern-focused.
+ *
+ * **Example** (Normalize a SyntaxError message)
+ *
+ * ```ts
+ * import { regexFailureReason } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * console.log(regexFailureReason(new SyntaxError("Invalid regular expression: /(/: Unterminated group")))
+ * ```
+ *
+ * @see {@link escapeRegexHint} for the hint appended when a string pattern is invalid.
+ * @see {@link toHostRegex} for the constructor that uses this reason.
+ * @category utilities
+ * @since 0.0.0
+ */
 export const regexFailureReason = (error: unknown): string =>
   (error instanceof Error ? error.message : String(error)).replace(/^Invalid regular expression:\s*/i, "")
 
+/**
+ * Hint appended when a string pattern is not a valid regular expression.
+ *
+ * **Example** (Read the escape hint)
+ *
+ * ```ts
+ * import { escapeRegexHint } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * console.log(escapeRegexHint.includes("backslash"))
+ * ```
+ *
+ * @see {@link toHostRegex} for the constructor that includes this hint in SyntaxError.
+ * @see {@link regexFailureReason} for the stripped host error text.
+ * @category constants
+ * @since 0.0.0
+ */
 export const escapeRegexHint =
   'To match special characters like ( ) [ ] { } + * ? . literally, escape them with a backslash (e.g. "\\\\(") or test for them with String.includes instead.'
 
+/**
+ * Converts a guest pattern argument into a host `RegExp`.
+ *
+ * **Gotchas**
+ *
+ * An undefined pattern behaves as an empty pattern (`/(?:)/` equivalent
+ * `new RegExp("")`), matching native `String.prototype.match(undefined)`.
+ * Invalid string patterns throw `SyntaxError` whose message includes
+ * {@link regexFailureReason} and {@link escapeRegexHint}.
+ *
+ * **Example** (Treat undefined as an empty pattern)
+ *
+ * ```ts
+ * import { toHostRegex } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const regex = toHostRegex(undefined, "match", node)
+ * console.log(regex.source)
+ * console.log(regex.test(""))
+ * ```
+ *
+ * @see {@link escapeRegexHint} for the text appended to invalid-pattern errors.
+ * @see {@link matchToValue} for converting exec results into guest arrays.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
   // Native parity: an undefined pattern behaves as an empty pattern.
@@ -70,6 +170,30 @@ export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFl
   )
 }
 
+/**
+ * Copies a native `RegExpMatchArray` into a guest array, dropping blocked
+ * named-group keys.
+ *
+ * **Gotchas**
+ *
+ * Named groups whose keys fail {@link isBlockedMember} are omitted from
+ * `groups` rather than throwing.
+ *
+ * **Example** (Preserve index and named groups)
+ *
+ * ```ts
+ * import { matchToValue } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * const match = /(?<digit>\d)/.exec("a1")
+ * const value = match === null ? null : matchToValue(match)
+ * console.log(value)
+ * ```
+ *
+ * @see {@link invokeRegExpMethod} for exec that feeds this converter.
+ * @see {@link toHostRegex} for building the host regex that produced the match.
+ * @category utilities
+ * @since 0.0.0
+ */
 export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
   const result: MatchValue = Array.from(match, (group) => group)
   if (P.isNotUndefined(match.index)) result.index = match.index
@@ -84,6 +208,28 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
   return result
 }
 
+/**
+ * Implements guest `RegExp.escape` only; the name argument is ignored.
+ *
+ * **Gotchas**
+ *
+ * This is not a general static dispatcher. The only implemented static is
+ * `RegExp.escape`. Non-string arguments throw `TypeError`.
+ *
+ * **Example** (Escape a capturing-group pattern)
+ *
+ * ```ts
+ * import { invokeRegExpStatic } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(invokeRegExpStatic("escape", ["(foo)"], node))
+ * ```
+ *
+ * @see {@link toHostRegex} for compiling an escaped or raw pattern.
+ * @see {@link escapeRegexHint} for the user-facing escape guidance.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
   if (!P.isString(args[0])) {
@@ -92,6 +238,32 @@ export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, no
   return RegExp.escape(args[0])
 }
 
+/**
+ * Dispatches guest `RegExp.prototype` `test`, `exec`, and `toString`.
+ *
+ * **Gotchas**
+ *
+ * For `global` or `sticky` flags, `lastIndex` is copied onto the host regex
+ * before `test`/`exec` and written back after. Non-stateful flags restore the
+ * previous `lastIndex` so matching does not appear to mutate it.
+ *
+ * **Example** (Exec a digit pattern and read index)
+ *
+ * ```ts
+ * import { CodeModeRegExp } from "../../../codemode/Codemode.values.ts"
+ * import { invokeRegExpMethod } from "../../../codemode/stdlib/StdLib.regexp.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const regex = CodeModeRegExp.new("(?<digit>\\d)", "")
+ * const match = invokeRegExpMethod(regex, "exec", ["a1"], node)
+ * console.log(match)
+ * ```
+ *
+ * @see {@link matchToValue} for how exec arrays are copied into guest values.
+ * @see {@link toHostRegex} for compiling string patterns used by String.match.
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeRegExpMethod = (
   value: CodeModeRegExp,

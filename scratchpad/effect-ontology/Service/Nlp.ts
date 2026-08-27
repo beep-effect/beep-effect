@@ -637,13 +637,18 @@ type WinkSentenceView = {
 /**
  * Provides the nlp service service capability.
  *
- * **Example** (Inspect the default NLP layer)
+ * **Example** (Tokenize through the service)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { NlpService } from "@effect-ontology/Service/Nlp"
  *
- * console.log(Layer.isLayer(NlpService.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NlpService
+ *   return yield* nlp.tokenize("Ada founded Acme.")
+ * }).pipe(Effect.provide(NlpService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

@@ -1,25 +1,47 @@
-// The character-level heart of the engine: position-based scan functions over
-// the source string, plus value-token classification. Every scan function is
-// pure and stateless — `(source, pos)` in, `ScanResult` out — and every
-// malformed input throws RawTomlError with the offset of the offending
-// character. The parser (Task 6) drives these; nothing here recurses.
-//
-// The classification regexes are the grammar reference's G4/G5 literals,
-// copied verbatim. Datetime range validation happens BEFORE constructing the
-// TomlDateTime classes so the diagnostic carries the token's offset instead
-// of a schema check message.
+/**
+ * Character-level scan functions over a TOML source string, plus value-token
+ * classification.
+ *
+ * **Details**
+ *
+ * Every scan function is pure and stateless — `(source, pos)` in,
+ * {@link ScanResult} out — and every malformed input throws
+ * {@link RawTomlError} with the offset of the offending character. Nothing
+ * here recurses. The classification regexes are the grammar reference's G4/G5
+ * literals, copied verbatim. Datetime range validation happens **before**
+ * constructing the {@link TomlOffsetDateTime} classes so the diagnostic carries the
+ * token's offset instead of a schema check message.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import type { TomlErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 
-/** The result of a scan: the decoded value and the position after the token. */
+/**
+ * The result of a scan: the decoded value and the position after the token.
+ *
+ * @see {@link scanBareKey} for a typical producer of this shape.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ScanResult<T> {
 	readonly value: T;
 	readonly end: number;
 }
 
-/** A classified TOML scalar. */
+/**
+ * A classified TOML scalar: string, number, bigint, boolean, or one of the
+ * four date-time classes.
+ *
+ * @see {@link classifyValueToken} for the function that produces this union.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScalarValue =
 	| string
 	| number
@@ -60,11 +82,41 @@ const isControlChar = (code: number): boolean => code <= 0x08 || (code >= 0x0a &
 
 const isDigit = (code: number): boolean => code >= 0x30 && code <= 0x39;
 
-/** Whether `code` is a bare-key character: `[A-Za-z0-9_-]`. */
+/**
+ * Whether `code` is a bare-key character: `[A-Za-z0-9_-]`.
+ *
+ * **Example** (Test a letter and a space)
+ *
+ * ```ts
+ * import { isBareKeyChar } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(isBareKeyChar("a".charCodeAt(0))) // true
+ * console.log(isBareKeyChar(" ".charCodeAt(0))) // false
+ * ```
+ *
+ * @internal
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isBareKeyChar = (code: number): boolean =>
 	(code >= 0x61 && code <= 0x7a) || (code >= 0x41 && code <= 0x5a) || isDigit(code) || code === 0x5f || code === HYPHEN;
 
-/** The number of code units to skip for a single leading U+FEFF BOM. */
+/**
+ * The number of code units to skip for a single leading U+FEFF BOM.
+ *
+ * **Example** (Skip a leading BOM)
+ *
+ * ```ts
+ * import { skipBom } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(skipBom("\uFEFFhi")) // 1
+ * console.log(skipBom("hi")) // 0
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const skipBom = (source: string): number => (source.charCodeAt(0) === BOM ? 1 : 0);
 
 /**
@@ -76,6 +128,30 @@ export const skipBom = (source: string): number => (source.charCodeAt(0) === BOM
  * legal character to honor the encoding rule the toml-test corpus pins
  * (invalid/encoding/bad-utf8-in-string.toml, bad-utf8-in-comment.toml,
  * bad-codepoint.toml and friends).
+ *
+ * **Gotchas**
+ *
+ * A document whose only "illegal" character is a U+FFFD that would be legal
+ * TOML still fails `InvalidUtf8`.
+ *
+ * **Example** (Reject a replacement character)
+ *
+ * ```ts
+ * import { isRawTomlError } from "../../../toml/internal/diagnostics.ts"
+ * import { assertValidUnicode } from "../../../toml/internal/scanner.ts"
+ *
+ * assertValidUnicode("ok")
+ * try {
+ *   assertValidUnicode("bad \uFFFD")
+ * } catch (error) {
+ *   console.log(isRawTomlError(error) && error.diagnostic.code) // "InvalidUtf8"
+ * }
+ * ```
+ *
+ * @throws A {@link RawTomlError} with code `InvalidUtf8` when U+FFFD is present.
+ * @internal
+ * @category assertions
+ * @since 0.0.0
  */
 export const assertValidUnicode = (source: string): void => {
 	const index = source.indexOf("�");
@@ -89,7 +165,22 @@ export const assertValidUnicode = (source: string): void => {
 	}
 };
 
-/** Skip spaces and tabs; returns the position of the first other character. */
+/**
+ * Skip spaces and tabs; returns the position of the first other character.
+ *
+ * **Example** (Advance past indentation)
+ *
+ * ```ts
+ * import { scanWhitespace } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(scanWhitespace("  x", 0)) // 2
+ * console.log(scanWhitespace("x", 0)) // 0
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanWhitespace = (source: string, pos: number): number => {
 	let i = pos;
 	while (i < source.length) {
@@ -105,6 +196,27 @@ export const scanWhitespace = (source: string, pos: number): number => {
 /**
  * Consume one `\n` or `\r\n` newline. A lone `\r` throws BareCarriageReturn;
  * no newline at `pos` returns `pos` unchanged.
+ *
+ * **Example** (Consume LF and leave other characters)
+ *
+ * ```ts
+ * import { isRawTomlError } from "../../../toml/internal/diagnostics.ts"
+ * import { scanNewline } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(scanNewline("\n", 0)) // 1
+ * console.log(scanNewline("\r\n", 0)) // 2
+ * console.log(scanNewline("a", 0)) // 0
+ * try {
+ *   scanNewline("\r", 0)
+ * } catch (error) {
+ *   console.log(isRawTomlError(error) && error.diagnostic.code) // "BareCarriageReturn"
+ * }
+ * ```
+ *
+ * @throws A {@link RawTomlError} with code `BareCarriageReturn` for a lone CR.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanNewline = (source: string, pos: number): number => {
 	const code = source.charCodeAt(pos);
@@ -123,6 +235,20 @@ export const scanNewline = (source: string, pos: number): number => {
 /**
  * Scan a comment starting at `#` through end of line or EOF. The value
  * excludes the `#`; control characters other than tab are rejected.
+ *
+ * **Example** (Scan a comment body)
+ *
+ * ```ts
+ * import { scanComment } from "../../../toml/internal/scanner.ts"
+ *
+ * const scanned = scanComment("# hi\n", 0)
+ * console.log(scanned.value) // " hi"
+ * console.log(scanned.end) // 4
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanComment = (source: string, pos: number): ScanResult<string> => {
 	let i = pos + 1;
@@ -139,7 +265,27 @@ export const scanComment = (source: string, pos: number): ScanResult<string> => 
 	return { value: source.slice(pos + 1, i), end: i };
 };
 
-/** Scan a run of bare-key characters; the value may be empty. */
+/**
+ * Scan a run of bare-key characters; the value may be empty.
+ *
+ * **Gotchas**
+ *
+ * An empty result is not itself an error — the parser decides whether an
+ * empty bare key is legal at that position.
+ *
+ * **Example** (Scan a name and an empty run)
+ *
+ * ```ts
+ * import { scanBareKey } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(scanBareKey("name =", 0)) // { value: "name", end: 4 }
+ * console.log(scanBareKey(" =", 0)) // { value: "", end: 0 }
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanBareKey = (source: string, pos: number): ScanResult<string> => {
 	let i = pos;
 	while (i < source.length && isBareKeyChar(source.charCodeAt(i))) {
@@ -209,7 +355,28 @@ const decodeUnicodeEscape = (
 const unicodeEscapeWidth = (code: number): 2 | 4 | 8 | undefined =>
 	code === LOWER_X ? 2 : code === LOWER_U ? 4 : code === UPPER_U ? 8 : undefined;
 
-/** Scan a single-line basic string starting at the opening `"`. */
+/**
+ * Scan a single-line basic string starting at the opening `"`.
+ *
+ * **Example** (Decode a basic string)
+ *
+ * ```ts
+ * import { isRawTomlError } from "../../../toml/internal/diagnostics.ts"
+ * import { scanBasicString } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(scanBasicString('"Alice"', 0)) // { value: "Alice", end: 7 }
+ * try {
+ *   scanBasicString('"unterminated', 0)
+ * } catch (error) {
+ *   console.log(isRawTomlError(error) && error.diagnostic.code) // "UnterminatedString"
+ * }
+ * ```
+ *
+ * @throws A {@link RawTomlError} for unterminated strings, invalid escapes, or control characters.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanBasicString = (source: string, pos: number): ScanResult<string> => {
 	let out = "";
 	let chunkStart = pos + 1;
@@ -254,7 +421,22 @@ export const scanBasicString = (source: string, pos: number): ScanResult<string>
 	return raise("UnterminatedString", "unterminated basic string", pos, source.length - pos);
 };
 
-/** Scan a single-line literal string starting at the opening `'`. */
+/**
+ * Scan a single-line literal string starting at the opening `'`.
+ *
+ * **Example** (Decode a literal string)
+ *
+ * ```ts
+ * import { scanLiteralString } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(scanLiteralString("'Alice'", 0)) // { value: "Alice", end: 7 }
+ * ```
+ *
+ * @throws A {@link RawTomlError} for unterminated strings or control characters.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanLiteralString = (source: string, pos: number): ScanResult<string> => {
 	let i = pos + 1;
 	while (i < source.length) {
@@ -308,7 +490,23 @@ const skipLineEndingTrim = (source: string, pos: number): number => {
 	return i;
 };
 
-/** Scan a multiline basic string starting at the opening `"""`. */
+/**
+ * Scan a multiline basic string starting at the opening `"""`.
+ *
+ * **Example** (Decode a multiline basic string)
+ *
+ * ```ts
+ * import { scanMultilineBasicString } from "../../../toml/internal/scanner.ts"
+ *
+ * const scanned = scanMultilineBasicString('"""\\nhello"""', 0)
+ * console.log(scanned.value) // "hello"
+ * ```
+ *
+ * @throws A {@link RawTomlError} for unterminated strings, invalid escapes, or control characters.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanMultilineBasicString = (source: string, pos: number): ScanResult<string> => {
 	let i = skipLeadingNewline(source, pos + 3);
 	let out = "";
@@ -387,7 +585,23 @@ export const scanMultilineBasicString = (source: string, pos: number): ScanResul
 	return raise("UnterminatedString", "unterminated multiline basic string", pos, source.length - pos);
 };
 
-/** Scan a multiline literal string starting at the opening `'''`. */
+/**
+ * Scan a multiline literal string starting at the opening `'''`.
+ *
+ * **Example** (Decode a multiline literal string)
+ *
+ * ```ts
+ * import { scanMultilineLiteralString } from "../../../toml/internal/scanner.ts"
+ *
+ * const scanned = scanMultilineLiteralString("'''\\nhello'''", 0)
+ * console.log(scanned.value) // "hello"
+ * ```
+ *
+ * @throws A {@link RawTomlError} for unterminated strings or control characters.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanMultilineLiteralString = (source: string, pos: number): ScanResult<string> => {
 	const contentStart = skipLeadingNewline(source, pos + 3);
 	let i = contentStart;
@@ -471,6 +685,27 @@ const LOCAL_TIME = /^([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?$/;
  * `]`, `}` and `#` — with the G5 extension: a token that scanned as a full
  * date followed by a single space and a digit continues through the time
  * part, so `1979-05-27 07:32:00Z` is one token.
+ *
+ * **Gotchas**
+ *
+ * TOML 1.1 makes seconds optional (`07:32` is valid) but `07:32.5` is not —
+ * the fraction nests inside the optional seconds group. A date plus space plus
+ * digit continues through the time so offset date-times with a space separator
+ * stay one token.
+ *
+ * **Example** (Scan a space-separated offset date-time)
+ *
+ * ```ts
+ * import { scanValueToken } from "../../../toml/internal/scanner.ts"
+ *
+ * console.log(scanValueToken("1979-05-27 07:32:00Z", 0).value) // "1979-05-27 07:32:00Z"
+ * console.log(scanValueToken("07:32", 0).value) // "07:32"
+ * ```
+ *
+ * @see {@link classifyValueToken} to turn the scanned token into a scalar.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanValueToken = (source: string, pos: number): ScanResult<string> => {
 	let end = scanTokenSpan(source, pos);
@@ -574,6 +809,32 @@ const decodeOffsetMinutes = (text: string, offset: number, length: number): numb
  * shapes (validated against the Gregorian calendar and clock ranges before
  * construction), integers across four radixes with int64 range checking and
  * number/bigint narrowing, and floats including the special spellings.
+ *
+ * **Gotchas**
+ *
+ * Absent seconds materialize as `0` (`07:32` becomes `07:32:00`). Datetime
+ * range validation happens before constructing the classes so the diagnostic
+ * carries the token offset instead of a schema-check message. `07:32.5` does
+ * not match a time.
+ *
+ * **Example** (Classify a time with optional seconds)
+ *
+ * ```ts
+ * import { TomlLocalTime } from "@beep/scratchpad/toml"
+ * import { classifyValueToken } from "../../../toml/internal/scanner.ts"
+ *
+ * const time = classifyValueToken("07:32", 0)
+ * console.log(time instanceof TomlLocalTime) // true
+ * console.log(time instanceof TomlLocalTime && time.second) // 0
+ * ```
+ *
+ * @see {@link TomlOffsetDateTime} for offset date-times this function constructs.
+ * @see {@link TomlLocalDateTime} for local date-times this function constructs.
+ * @see {@link TomlLocalDate} for local dates this function constructs.
+ * @see {@link TomlLocalTime} for local times this function constructs.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const classifyValueToken = (token: string, offset: number): ScalarValue => {
 	if (token === "true") {

@@ -5,6 +5,7 @@
  * Code state (`settings.json`, `.mcp.json`, plugin directories) behind a
  * service with explicit invalidation effects.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -110,13 +111,18 @@ export interface Interface {
  * **Example** (Access the project service)
  *
  * ```ts
- * import { ClaudeProject } from "effect-claudecode"
+ * import { ClaudeProject, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const cwd = Effect.service(ClaudeProject.Service).pipe(
- *   Effect.map((project) => project.cwd)
+ * const fileSystem = Testing.makeMockFileSystem()
+ * const cwd = await Effect.runPromise(
+ *   Effect.service(ClaudeProject.Service).pipe(
+ *     Effect.map((project) => project.cwd),
+ *     Effect.provide(ClaudeProject.layer({ cwd: "/repo" })),
+ *     Effect.provide(fileSystem.layer)
+ *   )
  * )
- * console.log(cwd)
+ * console.log(cwd) // "/repo"
  * ```
  *
  * @category services
@@ -131,6 +137,12 @@ const providePlatform =
 
 /**
  * Construct a project service layer.
+ *
+ * **Gotchas**
+ *
+ * A successfully loaded effective MCP document whose `mcpServers` record is
+ * empty becomes `O.none()`, not `O.some({ mcpServers: {} })`. That includes a
+ * present `.mcp.json` whose servers were all reserved/`workspace`-stripped.
  *
  * **Example** (Build a project layer)
  *
@@ -251,15 +263,28 @@ export const settings = Effect.flatMap(project, (current) => current.settings);
 /**
  * Effectful access to the cached optional MCP config.
  *
- * **Example** (Inspect effective MCP configuration)
+ * **Gotchas**
+ *
+ * Empty effective MCP configuration is `O.none()`. A present `.mcp.json` that
+ * decodes to zero servers — including after reserved `workspace` stripping —
+ * is absent, not `O.some` of an empty record.
+ *
+ * **Example** (Treat an empty MCP file as absent)
  *
  * ```ts
- * import { ClaudeProject, ClaudeRuntime } from "effect-claudecode"
+ * import { ClaudeProject, ClaudeRuntime, Testing } from "effect-claudecode"
  * import * as O from "effect/Option"
  *
- * const runtime = ClaudeRuntime.project({ cwd: process.cwd() })
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/repo/.mcp.json": JSON.stringify({ mcpServers: {} })
+ * })
+ * const runtime = ClaudeRuntime.project({
+ *   cwd: "/repo",
+ *   platformLayer: fileSystem.layer,
+ *   logger: "none"
+ * })
  * const loaded = await runtime.runPromise(ClaudeProject.mcp)
- * console.log(O.isSome(loaded))
+ * console.log(O.isNone(loaded)) // true
  * await runtime.dispose()
  * ```
  *

@@ -1,3 +1,11 @@
+/**
+ * Strict SemVer 2.0.0 versions as an Effect `Schema.Class`. There is no
+ * loose node-semver coercion: `v`/`V` prefixes, `=` prefixes, leading zeros,
+ * partial versions, and dist-tags are rejected.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import {
 	Effect,
 	Equal,
@@ -21,8 +29,32 @@ import { compareBuild, comparePrereleaseIdentifier } from "./internal/order.ts";
  * `Schema` parse error instead of this class, carrying the same message.
  * Unlike node-semver, no loose parsing or `v`-prefix coercion is performed.
  *
- * @see {@link https://semver.org | SemVer 2.0.0 Specification}
+ * **Gotchas**
+ *
+ * There is no `coerce` / `{ loose: true }` path. `v1.2.3`, `V1.2.3`,
+ * `=1.0.0`, `01.2.3`, `1`, `1.2`, and dist-tags all fail. Range sugar
+ * (`^`, `~`, `x`, hyphen, `||`) belongs on {@link Range}.
+ *
+ * **Example** (Reject `v`, partial versions, and `=` prefixes)
+ *
+ * ```ts
+ * import { SemVer } from "@beep/scratchpad/semver";
+ * import { Result } from "effect";
+ *
+ * const tags = ["v1.2.3", "1.2", "=1.0.0"].map((input) => {
+ *   const parsed = SemVer.parseResult(input);
+ *   return Result.isFailure(parsed) ? parsed.failure._tag : "ok";
+ * });
+ * console.log(tags);
+ * // => ["InvalidVersionError", "InvalidVersionError", "InvalidVersionError"]
+ * ```
+ *
+ * @see {@link https://semver.org} for the SemVer 2.0.0 grammar this parser implements strictly (no loose coercion).
+ * @see {@link SemVer.FromString} when the same failure should surface as a SchemaIssue.InvalidValue instead of this tagged error.
+ * @see {@link Range} for node-semver range sugar, which this error never accepts.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidVersionError extends Schema.TaggedError<InvalidVersionError>()("InvalidVersionError", {
 	/** The raw input string that failed to parse. */
@@ -64,9 +96,24 @@ const buildIdentifier = Schema.String.check(Schema.isPattern(/^[0-9A-Za-z-]+$/))
  * dual statics on the class. The string representation is the schema's
  * encoded form via {@link SemVer.FromString}.
  *
- * @example
+ * **Gotchas**
+ *
+ * There is no loose node-semver coercion: no `v`/`V`, no `=` prefix, no
+ * leading zeros, no partial versions, no dist-tags, no `coerce`.
+ *
+ * {@link SemVer.parseResult} trims surrounding whitespace (`" 1.2.3"`
+ * succeeds). {@link SemVer.isValid}, {@link SemVer.ExactVersionString},
+ * and {@link SemVer.PinnableVersionString} require `input === input.trim()`
+ * and reject the same padded string.
+ *
+ * {@link SemVer.equal}, `Hash`, and {@link SemVer.Order} ignore build
+ * metadata (§10). Use {@link SemVer.OrderWithBuild} when distinct version
+ * strings must sort apart.
+ *
+ * **Example** (Parse, bump, compare)
+ *
  * ```ts
- * import { SemVer } from "@effected/semver";
+ * import { SemVer } from "@beep/scratchpad/semver";
  * import { Effect } from "effect";
  *
  * const program = Effect.gen(function* () {
@@ -79,8 +126,15 @@ const buildIdentifier = Schema.String.check(Schema.isPattern(/^[0-9A-Za-z-]+$/))
  * // => ["1.3.0", false, true]
  * ```
  *
- * @see {@link https://semver.org | SemVer 2.0.0 Specification}
+ * @see {@link https://semver.org} for the SemVer 2.0.0 grammar this parser implements strictly (no loose coercion).
+ * @see {@link Range} for node-semver caret, tilde, X-range, hyphen, and `||` sugar (this class parses versions only).
+ * @see {@link SemVer.parseResult} for the synchronous Result constructor that {@link SemVer.parse} wraps.
+ * @see {@link SemVer.FromString} when a Schema decode is needed (failures are SchemaIssue.InvalidValue, not InvalidVersionError).
+ * @see {@link SemVer.isValid} when padded input must be rejected rather than trimmed.
+ * @see {@link SemVer.OrderWithBuild} when build metadata must participate in ordering.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	/** The major version component; incompatible API changes. */
@@ -100,6 +154,14 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * Schema transformation between the canonical version string and
 	 * {@link SemVer}: decoding parses with the strict grammar, encoding
 	 * prints `major.minor.patch[-prerelease][+build]`.
+	 *
+	 * **Gotchas**
+	 *
+	 * Decode failures are `SchemaIssue.InvalidValue`, not
+	 * {@link InvalidVersionError}. Reach for {@link SemVer.parse} /
+	 * {@link SemVer.parseResult} when the tagged error is wanted.
+	 *
+	 * @see {@link SemVer.parseResult} for the tagged-error constructor this codec's decode path parallels.
 	 */
 	static readonly FromString: Schema.Codec<SemVer, string> = Schema.String.pipe(
 		Schema.decodeTo(
@@ -125,7 +187,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * `Schema.String` refined by {@link SemVer.isValid}: an exact SemVer 2.0.0
 	 * version string whose type stays `string`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * For consumer structs whose field must remain a plain string — a manifest
 	 * model, an action input — while still refusing everything that is not
 	 * exactly one version: ranges, partial versions, dist-tags, and padded
@@ -134,6 +197,14 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * {@link SemVer.PinnableVersionString} when the `+` position is spoken for.
 	 * Decode to a {@link SemVer} instance with {@link SemVer.FromString}
 	 * instead when the parsed components are wanted.
+	 *
+	 * **Gotchas**
+	 *
+	 * `" 1.2.3"` fails this schema even though {@link SemVer.parseResult}
+	 * succeeds after trimming.
+	 *
+	 * @see {@link SemVer.parseResult} when trimmed parse success is acceptable.
+	 * @see {@link SemVer.PinnableVersionString} when build metadata must be refused.
 	 */
 	static readonly ExactVersionString: Schema.String = Schema.String.pipe(
 		Schema.check(
@@ -150,13 +221,23 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * build-metadata-free SemVer 2.0.0 version string whose type stays
 	 * `string`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * The corepack-pinnable notion: what the `<name>@<version>[+<integrity>]`
 	 * pin grammar can express in its version position, where the first `+`
 	 * always begins the integrity component. `@effected/package-json`'s
 	 * `PackageManager` field model consumes this schema directly; suites that
 	 * must prove they share it rather than carrying a copy can assert object
 	 * identity against this export.
+	 *
+	 * **Gotchas**
+	 *
+	 * Padded input is rejected, matching {@link SemVer.isValid}. Build
+	 * metadata (`1.2.3+build`) is not pinnable even though it is valid
+	 * grammar.
+	 *
+	 * @see {@link SemVer.ExactVersionString} when build metadata should still pass.
+	 * @see {@link SemVer.isPinnable} for the predicate this schema refines.
 	 */
 	static readonly PinnableVersionString: Schema.String = Schema.String.pipe(
 		Schema.check(
@@ -177,27 +258,32 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * Rejects `v`/`V` prefixes, `=` prefixes, leading zeros on numeric
 	 * identifiers and partially consumed input.
 	 *
-	 * @remarks
-	 * **Surrounding whitespace is TRIMMED before parsing**, matching
-	 * node-semver's constructor: `" 1.2.3"` parses successfully. When padded
-	 * input should be the caller's error rather than silently canonicalized,
-	 * reach for {@link SemVer.isValid} / {@link SemVer.ExactVersionString}
-	 * (or their pinnable twins), which deliberately reject it.
+	 * **Gotchas**
+	 *
+	 * Surrounding whitespace is trimmed before parsing, matching node-semver's
+	 * constructor: `" 1.2.3"` parses successfully. When padded input should be
+	 * the caller's error rather than silently canonicalized, reach for
+	 * {@link SemVer.isValid} / {@link SemVer.ExactVersionString} (or their
+	 * pinnable twins), which deliberately reject it.
 	 *
 	 * {@link SemVer.parse} is defined in terms of this function; the two never
 	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
 	 * the `SemVer.parse` tracing span — and for this one at synchronous
 	 * boundaries.
 	 *
-	 * @example
+	 * **Example** (Parse, trim, and reject a `v` prefix)
+	 *
 	 * ```ts
-	 * import { SemVer } from "@effected/semver";
+	 * import { SemVer } from "@beep/scratchpad/semver";
 	 * import { Result } from "effect";
 	 *
 	 * const ok = SemVer.parseResult("1.2.3");
 	 * if (Result.isSuccess(ok)) {
 	 *   console.log(ok.success.major); // => 1
 	 * }
+	 *
+	 * console.log(Result.isSuccess(SemVer.parseResult(" 1.2.3"))); // => true
+	 * console.log(SemVer.isValid(" 1.2.3")); // => false
 	 *
 	 * const bad = SemVer.parseResult("v1.2.3");
 	 * if (Result.isFailure(bad)) {
@@ -209,6 +295,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * @returns a `Result` succeeding with the parsed {@link SemVer}, or failing
 	 * with {@link InvalidVersionError} when `input` is not a valid version
 	 * string.
+	 * @see {@link SemVer.parse} for the Effect variant with a tracing span.
+	 * @see {@link SemVer.isValid} when padded input must be rejected rather than trimmed.
 	 */
 	static parseResult(input: string): Result.Result<SemVer, InvalidVersionError> {
 		const result = parseVersion(input);
@@ -235,9 +323,10 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * Whether `input` is a valid SemVer 2.0.0 version string, exactly as
 	 * given.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Strict grammar validity — the same grammar as {@link SemVer.parseResult}
-	 * — with one deliberate divergence: surrounding whitespace is **rejected**.
+	 * — with one deliberate divergence: surrounding whitespace is rejected.
 	 * `parseResult` trims its input (matching node-semver, whose `SemVer`
 	 * constructor trims), so `" 1.2.3"` parses; this predicate answers a
 	 * different question — "is this string, byte for byte, a version?" — and a
@@ -249,6 +338,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * @param input - the candidate version string
 	 * @returns `true` when `input` is a valid version string with no
 	 * surrounding whitespace.
+	 * @see {@link SemVer.parseResult} when trimmed parse success is acceptable.
+	 * @see {@link SemVer.ExactVersionString} for the schema that refines with this predicate.
 	 */
 	static isValid(input: string): boolean {
 		return input === input.trim() && Result.isSuccess(SemVer.parseResult(input));
@@ -258,7 +349,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * Whether `input` is a corepack-pinnable version string: valid by
 	 * {@link SemVer.isValid} **and** carrying no build metadata.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * The notion the `<name>@<version>[+<integrity>]` pin grammar needs: there
 	 * the first `+` after the version always begins the integrity component,
 	 * so a version carrying build identifiers would encode to a string that
@@ -269,6 +361,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * @returns `true` when `input` is a valid version string with no
 	 * surrounding whitespace (the string equals its own trim) and whose
 	 * build metadata is empty.
+	 * @see {@link SemVer.isValid} for the whitespace and grammar check this predicate tightens.
+	 * @see {@link SemVer.PinnableVersionString} for the schema that refines with this predicate.
 	 */
 	static isPinnable(input: string): boolean {
 		if (input !== input.trim()) {
@@ -303,6 +397,8 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	/**
 	 * `Order` instance following SemVer 2.0.0 precedence (§11); build
 	 * metadata is ignored (§10).
+	 *
+	 * @see {@link SemVer.OrderWithBuild} when distinct version strings that differ only in build must sort apart.
 	 */
 	static readonly Order: Order.Order<SemVer> = Order.make((a, b) => a.compare(b));
 
@@ -311,6 +407,9 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 	 * when versions are otherwise equal, producing a total order over
 	 * distinct version strings. Not spec precedence — use {@link SemVer.Order}
 	 * unless a deterministic tiebreak across build metadata is required.
+	 *
+	 * @see {@link SemVer.Order} for spec precedence, which ignores build.
+	 * @see {@link VersionDiff} for a classification that treats build-only changes as `"build"`.
 	 */
 	static readonly OrderWithBuild: Order.Order<SemVer> = Order.make((a, b) => {
 		const base = a.compare(b);
@@ -582,7 +681,28 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
  * Every operation returns a new {@link SemVer}; build metadata never
  * survives a bump.
  *
+ * **Gotchas**
+ *
+ * A prerelease bump on a stable version starts at the *next* patch:
+ * `1.0.0` plus `prerelease("rc")` is `1.0.1-rc.0`, not `1.0.0-rc.0`.
+ * Switching identifier resets the numeric counter. Build metadata is
+ * stripped by every bump, including `patch()`.
+ *
+ * **Example** (Prerelease starts at next patch; build does not survive)
+ *
+ * ```ts
+ * import { SemVer } from "@beep/scratchpad/semver";
+ *
+ * console.log(SemVer.of(1, 0, 0).bump.prerelease("rc").toString());
+ * // => "1.0.1-rc.0"
+ * console.log(SemVer.of(1, 0, 0, [], ["build"]).bump.patch().build);
+ * // => []
+ * ```
+ *
+ * @see {@link SemVer.bump} for the instance accessor that returns this helper.
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export class SemVerBump {
   readonly v: SemVer

@@ -28,7 +28,22 @@ const renderLiteral = (value: unknown): string =>
     Result.getOrElse(() => "unknown")
   );
 
-/** Schema for property names that are safe to emit with dot notation. */
+/**
+ * Schema for property names that are safe to emit with dot notation.
+ *
+ * **Example** (Accept foo, reject foo-bar)
+ *
+ * ```ts
+ * import { IdentifierSegment } from "../../../codemode/Codemode.tool-schema.ts"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IdentifierSegment)("foo")) // true
+ * console.log(S.is(IdentifierSegment)("foo-bar")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IdentifierSegment = S.String.check(
   S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u)
 ).pipe(
@@ -38,7 +53,31 @@ export const IdentifierSegment = S.String.check(
   })
 );
 
-/** Guard for {@link IdentifierSegment}. */
+/**
+ * Decoded identifier segment produced by {@link IdentifierSegment}.
+ *
+ * @see {@link IdentifierSegment} for the runtime schema and membership guard.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IdentifierSegment = typeof IdentifierSegment.Type;
+
+/**
+ * Guard for property names that are safe to emit with dot notation.
+ *
+ * **Example** (Admit foo, reject foo-bar)
+ *
+ * ```ts
+ * import { identifierSegment } from "../../../codemode/Codemode.tool-schema.ts"
+ *
+ * console.log(identifierSegment("foo")) // true
+ * console.log(identifierSegment("foo-bar")) // false
+ * ```
+ *
+ * @see {@link IdentifierSegment} for the runtime schema this guard wraps.
+ * @category guards
+ * @since 0.0.0
+ */
 export const identifierSegment = IdentifierSegment.is;
 
 const renderKey = (name: string): string =>
@@ -474,7 +513,32 @@ const renderSchema = (
   return "unknown";
 };
 
-/** Renders an Effect Schema as the TypeScript shape exposed to the guest. */
+/**
+ * Renders an Effect Schema as the TypeScript shape exposed to the guest.
+ *
+ * **Gotchas**
+ *
+ * JSON Schema conversion or decode failure becomes the string `"unknown"`.
+ * `decoded=true` uses `S.toType(schema)` (decoded-side JSON Schema); the
+ * default encoded-side path uses the schema as-is. Descriptions that contain
+ * `*/` are rewritten so generated comments cannot terminate a block.
+ *
+ * **Example** (Render a string schema)
+ *
+ * ```ts
+ * import { toTypeScript } from "../../../codemode/Codemode.tool-schema.ts"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(toTypeScript(S.String)) // "string"
+ * ```
+ *
+ * @param decoded - When true, render the decoded-side JSON Schema via `S.toType`.
+ * @see {@link jsonSchemaToTypeScript} for rendering an already-built JSON Schema document.
+ * @see {@link inputTypeScript} for the tool-input renderer that uses this pipeline.
+ * @see {@link outputTypeScript} for the tool-output renderer that uses this pipeline.
+ * @category formatting
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const toTypeScript = (
   schema: S.Top,
@@ -497,7 +561,27 @@ export const toTypeScript = (
     })
   );
 
-/** Renders a raw JSON Schema document after schema-first decoding. */
+/**
+ * Renders a raw JSON Schema document after schema-first decoding.
+ *
+ * **Gotchas**
+ *
+ * JSON Schema decode failure becomes the string `"unknown"` rather than a
+ * typed error.
+ *
+ * **Example** (Render a number JSON Schema)
+ *
+ * ```ts
+ * import { jsonSchemaToTypeScript } from "@beep/scratchpad/codemode"
+ *
+ * console.log(jsonSchemaToTypeScript({ type: "number" })) // "number"
+ * ```
+ *
+ * @see {@link toTypeScript} for the Effect Schema entry point that builds JSON Schema first.
+ * @see {@link inputTypeScript} for the tool-input renderer that delegates here.
+ * @category formatting
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const jsonSchemaToTypeScript = (
   schema: JsonSchema,
@@ -515,7 +599,24 @@ export const jsonSchemaToTypeScript = (
     })
   );
 
-/** One discoverable input property. */
+/**
+ * One discoverable input property decoded from a tool input JSON Schema.
+ *
+ * **Example** (Construct a required name property)
+ *
+ * ```ts
+ * import { InputProperty } from "../../../codemode/Codemode.tool-schema.ts"
+ * import * as O from "effect/Option"
+ *
+ * const property = InputProperty.new("name", O.some("Guest name"), true)
+ *
+ * console.log(property.name) // "name"
+ * console.log(property.required) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class InputProperty extends S.Class<InputProperty>($I`InputProperty`)(
   {
     name: S.String,
@@ -554,7 +655,29 @@ const toolInputDocument = (
     }))
   );
 
-/** Returns the schema-owned properties used by the built-in tool search. */
+/**
+ * Returns the schema-owned properties used by the built-in tool search.
+ *
+ * **Example** (List input property names)
+ *
+ * ```ts
+ * import { inputProperties } from "../../../codemode/Codemode.tool-schema.ts"
+ * import { Tool } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
+ *
+ * const Ping = Tool.make("Ping", {
+ *   parameters: S.Struct({ name: S.String }),
+ *   success: S.String,
+ * })
+ *
+ * console.log(inputProperties(Ping).map((property) => property.name)) // ["name"]
+ * ```
+ *
+ * @see {@link InputProperty} for the property model this function returns.
+ * @see {@link inputTypeScript} for the TypeScript rendering of the same input schema.
+ * @category getters
+ * @since 0.0.0
+ */
 export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
   pipe(
     toolInputDocument(tool),
@@ -587,12 +710,62 @@ export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
     Result.getOrElse(A.empty)
   );
 
-/** Renders one tool's input schema. */
+/**
+ * Renders one tool's input schema as TypeScript.
+ *
+ * **Example** (Render a struct input)
+ *
+ * ```ts
+ * import { inputTypeScript, Tool } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
+ *
+ * const Ping = Tool.make("Ping", {
+ *   parameters: S.Struct({ name: S.String }),
+ *   success: S.String,
+ * })
+ *
+ * console.log(inputTypeScript(Ping).includes("name")) // true
+ * ```
+ *
+ * @see {@link jsonSchemaToTypeScript} for the JSON Schema renderer this function delegates to.
+ * @see {@link outputTypeScript} for the corresponding output renderer.
+ * @category formatting
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const inputTypeScript = (tool: Tool.Any, pretty = false): string =>
   jsonSchemaToTypeScript(Tool.getJsonSchema(tool), pretty);
 
-/** Renders one tool's success and returned-failure schemas. */
+/**
+ * Renders one tool's success and returned-failure schemas as TypeScript.
+ *
+ * **Gotchas**
+ *
+ * Success and failure schemas are unioned only when `tool.failureMode === "return"`.
+ * Tools with `failureMode: "error"` emit the success type only, even when a
+ * failure schema exists. Conversion failure becomes the string `"unknown"`.
+ *
+ * **Example** (Union output when failures are returned)
+ *
+ * ```ts
+ * import { outputTypeScript, Tool } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
+ *
+ * const Ping = Tool.make("Ping", {
+ *   parameters: S.Struct({}),
+ *   success: S.Number,
+ *   failure: S.String,
+ *   failureMode: "return",
+ * })
+ *
+ * console.log(outputTypeScript(Ping)) // "number | string"
+ * ```
+ *
+ * @see {@link toTypeScript} for the schema renderer used for success and failure.
+ * @see {@link inputTypeScript} for the corresponding input renderer.
+ * @category formatting
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const outputTypeScript = (tool: Tool.Any, pretty = false): string => {
   const success = toTypeScript(tool.successSchema, true, pretty);

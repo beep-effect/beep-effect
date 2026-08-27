@@ -80,14 +80,23 @@ class InferenceCliError extends S.TaggedError<InferenceCliError>($I`InferenceCli
 ) {}
 
 /**
- * inference - Run RDFS inference on a Turtle file
+ * Runs RDFS inference on a local Turtle file and writes the enriched graph.
  *
- * **Example** (Use inferenceCommand)
+ * **Details**
+ *
+ * `--input` / `-i` is the Turtle source; `--output` / `-o` is the destination;
+ * `--profile` selects `rdfs`, `rdfs-subclass`, or `owl-sameas`; `--delta-only`
+ * / `-d` writes only inferred triples.
+ *
+ * **Example** (Run RDFS inference on Turtle)
  *
  * ```ts
  * import { inferenceCommand } from "@effect-ontology/Cli/Commands/Inference"
  *
- * console.log(inferenceCommand)
+ * console.log(inferenceCommand.name) // "inference"
+ * console.log(inferenceCommand.description)
+ * // effect-onto inference --input graph.ttl --output enriched.ttl --profile rdfs
+ * // effect-onto inference -i graph.ttl --delta-only
  * ```
  *
  * @category cli-commands

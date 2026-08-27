@@ -1,18 +1,16 @@
-// The formatting/modification concept: computing non-mutating edits that
-// reformat a document or change a value at a path, via the library's
-// parse → transform AST → stringify → diff pipeline.
-//
-// Cycle firewall: this module drives the internal engine directly
-// (`composeFirstDocumentCounted`, `stringifyDocument`) exactly as `Yaml.ts`
-// does; nothing imports `YamlFormat.ts` back.
-//
-// Neither `format` nor `modify` catch the internal stringifier's
-// `StringifyFailure` (the circular-reference guard): both build their output
-// AST from either already-parsed nodes or `jsValueToNode`'s scalar-only
-// synthesis, so a cycle can never occur here — if `StringifyFailure` were
-// ever thrown it would indicate an internal invariant violation, not a
-// user-facing error, and is left to surface as an uncaught defect.
+/**
+ * Comment-preserving YAML formatting and path-targeted modification.
+ *
+ * Computes non-mutating edits that reformat a document or change a value at a
+ * path via parse → transform AST → stringify → diff. `StringifyFailure` is
+ * left as a defect: format/modify never stringify a cyclic graph, so that
+ * throw would be an internal invariant violation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Schema } from "effect";
 import { EMPTY_DOCUMENT, composeAllDocuments, composeFirstDocumentCounted } from "./internal/composer/document.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
@@ -28,12 +26,18 @@ import { YamlEdit, YamlRange } from "./YamlEdit.ts";
 import type { YamlNode } from "./YamlNode.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
 
+const $I = $ScratchpadId.create("yaml/YamlFormat");
+
 /**
  * A range accepted at the `format`/`formatToString`/etc. call sites: either a
  * {@link YamlRange} instance or a plain `{ offset, length }` literal (the two
  * are structurally interchangeable — only `offset`/`length` are read).
  *
+ * @see {@link YamlRange} for the schema-backed range class.
+ * @see {@link YamlFormat.format} for the entry point that accepts either form.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlRangeLike = YamlRange | { readonly offset: number; readonly length: number };
 
@@ -42,8 +46,8 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * field (derived, not hand-duplicated — including `indentSequences`,
  * `quoteStyle` and `quoteCompat`) plus
  * `preserveComments` (default `true`), `range` (restrict edits to a
- * region; see the module-level remarks on the `range` parameter vs. this
- * field) and `requoteScalars` (default `false`).
+ * region; a positional `range` argument to {@link YamlFormat.format} wins
+ * over this field) and `requoteScalars` (default `false`).
  *
  * `requoteScalars` makes `quoteStyle` apply to scalars **already quoted in
  * the source** on the format path — by default formatting preserves an
@@ -65,25 +69,40 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * the kit convention (never `new`). Call sites that take a
  * `YamlFormattingOptions` also accept a structurally-matching plain literal.
  *
- * @example
- * ```ts
- * import { YamlFormat, YamlFormattingOptions } from "@effected/yaml";
+ * **Details**
  *
- * const options = YamlFormattingOptions.make({ indentSequences: true });
- * const formatted = YamlFormat.formatToString("key:\n- a\n- b\n", undefined, options);
- * // key:
- * //   - a
- * //   - b
+ * `requoteScalars` is format-only: it is deliberately absent from
+ * {@link Yaml.stringify} and {@link YamlFormat.modify}. A re-quote happens
+ * only when it provably preserves the parsed value; plain and block scalars
+ * stay as they are, and tagged, anchored, or multi-line scalars are skipped.
+ *
+ * **Example** (Indent nested sequences while formatting)
+ *
+ * ```ts
+ * import { YamlFormat, YamlFormattingOptions } from "@beep/scratchpad/yaml"
+ *
+ * const options = YamlFormattingOptions.make({ indentSequences: true })
+ * const formatted = YamlFormat.formatToString("key:\n- a\n- b\n", undefined, options)
+ *
+ * console.log(formatted.includes("  - a")) // true
  * ```
  *
+ * @see {@link YamlFormat.formatToString} for applying these options in one step.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class YamlFormattingOptions extends Schema.Class<YamlFormattingOptions>("YamlFormattingOptions")({
-	...YamlStringifyOptions.fields,
-	preserveComments: Schema.optionalKey(Schema.Boolean),
-	range: Schema.optionalKey(YamlRange),
-	requoteScalars: Schema.optionalKey(Schema.Boolean),
-}) {}
+export class YamlFormattingOptions extends Schema.Class<YamlFormattingOptions>("YamlFormattingOptions")(
+	{
+		...YamlStringifyOptions.fields,
+		preserveComments: Schema.optionalKey(Schema.Boolean),
+		range: Schema.optionalKey(YamlRange),
+		requoteScalars: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("YamlFormattingOptions", {
+		description: "Formatting options: stringify presentation plus comment preservation, range restriction and optional scalar re-quoting.",
+	}),
+) {}
 
 /**
  * Raised when `YamlFormat.modify` cannot navigate the requested path against
@@ -98,12 +117,33 @@ export class YamlFormattingOptions extends Schema.Class<YamlFormattingOptions>("
  * itself has no `code` field: read the code from the diagnostics —
  * `error.diagnostics[0].code` is the primary failure.
  *
+ * **Example** (Refuse a multi-document modify)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlFormat, YamlModificationError } from "@beep/scratchpad/yaml"
+ *
+ * const failed = Effect.runSync(Effect.flip(YamlFormat.modify("a: 1\n---\nb: 2\n", ["a"], 9)))
+ * console.log(failed._tag) // "YamlModificationError"
+ * console.log(failed instanceof YamlModificationError) // true
+ * console.log(failed.diagnostics[0]?.code) // "MultiDocumentStream"
+ * ```
+ *
+ * @see {@link YamlFormat.modify} for the entry point that raises this error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class YamlModificationError extends Schema.TaggedError<YamlModificationError>()("YamlModificationError", {
-	path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
-	diagnostics: Schema.Array(YamlDiagnostic),
-}) {
+export class YamlModificationError extends Schema.TaggedError<YamlModificationError>()(
+	"YamlModificationError",
+	{
+		path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
+		diagnostics: Schema.Array(YamlDiagnostic),
+	},
+	$I.annote("YamlModificationError", {
+		description: "Typed failure when YamlFormat.modify cannot parse, navigate, or legally rewrite a document.",
+	}),
+) {
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `Modification failed at path [${this.path.join(", ")}]: ${summary}`;
@@ -458,9 +498,11 @@ function rebuildSeq(node: YamlSeq, items: ReadonlyArray<YamlNode>): YamlSeq {
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
- * Formatting and modification statics. Not instantiable.
+ * Compute comment-preserving text edits that reformat or modify a document
+ * without round-tripping through a serializer.
  *
- * @remarks
+ * **Details**
+ *
  * `format`/`formatToString` are pure and total (edit computation never fails
  * — malformed input yields no edits rather than corrupting the document).
  * `modify`/`modifyToString` carry a real error channel: navigation failures
@@ -469,25 +511,45 @@ function rebuildSeq(node: YamlSeq, items: ReadonlyArray<YamlNode>): YamlSeq {
  * `diagnostics: ReadonlyArray<YamlDiagnostic>`, never a collapsed `reason`
  * string.
  *
+ * **Gotchas**
+ *
  * `format`/`formatToString` handle multi-document streams whole — every
  * document is re-emitted in order with its own framing, never a silently
  * truncated stream. `modify`/`modifyToString` are **single-document**: a
- * {@link YamlPath} carries no document index, so which document of a stream
- * a path names is a rule the format does not define, and a multi-document
- * stream fails typed with a `MultiDocumentStream` diagnostic rather than
- * guessing. Parse a stream with {@link Yaml.parseAll} /
- * `Yaml.parseAllResult`.
+ * {@link YamlPath} carries no document index, so a multi-document stream fails
+ * typed with `MultiDocumentStream` rather than guessing document 1. Parse a
+ * stream with {@link Yaml.parseAll} first. Directive-carrying input (`%YAML`/
+ * `%TAG`) is refused on every path: format leaves it byte-identical, modify
+ * fails with `DirectiveCarryingDocument`. Positional `range` wins over
+ * `options.range`. `requoteScalars` is format-only. A plain `<<` stays
+ * unquoted (opposite of {@link Yaml.stringify}). `lineWidth` is inert here.
+ * `StringifyFailure` would be an internal defect, not a user error.
+ * {@link YamlModificationError} has no `code` field — read
+ * `error.diagnostics[0].code`.
  *
- * **Directive-carrying input is refused on every path.** The stringifier does
- * not re-emit `%YAML`/`%TAG` directive lines, and re-emitting a document
- * without its `%TAG` while keeping the shorthand tags that depend on it
- * (`!e!foo`) turns a valid file into one no parser can read. So
- * `format`/`formatToString` leave such input byte-identical (no edits), and
- * `modify`/`modifyToString` fail typed with a `DirectiveCarryingDocument`
- * diagnostic. Directive re-emission is unimplemented, not undesired — the
- * refusal is the floor that stops corruption until it lands.
+ * **Example** (Format sequences and refuse a multi-document modify)
  *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlFormat, YamlFormattingOptions } from "@beep/scratchpad/yaml"
+ *
+ * const formatted = YamlFormat.formatToString(
+ *   "key:\n- a\n- b\n",
+ *   undefined,
+ *   YamlFormattingOptions.make({ indentSequences: true }),
+ * )
+ * console.log(formatted.includes("  - a")) // true
+ *
+ * const failed = Effect.runSync(Effect.flip(YamlFormat.modify("a: 1\n---\nb: 2\n", ["a"], 9)))
+ * console.log(failed.diagnostics[0]?.code) // "MultiDocumentStream"
+ * ```
+ *
+ * @see {@link Yaml.stringify} for value-path folding and quoted `<<` keys.
+ * @see {@link Yaml.parseAll} for splitting streams before modify.
+ * @see {@link YamlRangeLike} for the range form that accepts plain `{ offset, length }` literals.
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class YamlFormat {
 	private constructor() {}
@@ -516,7 +578,8 @@ export class YamlFormat {
 	 * directives is left untouched. Detection is directive-token-level: a
 	 * literal `%TAG` inside a scalar is content and formats normally.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * The positional `range` argument takes precedence over
 	 * `options?.range` when both are given; either accepts a plain
 	 * `{ offset, length }` object as well as a {@link YamlRange} instance, so
@@ -593,7 +656,8 @@ export class YamlFormat {
 	 * directive re-emission is unimplemented, not undesired. A literal
 	 * `%TAG` inside a scalar is content and does not trigger the refusal.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * `options` is a bare {@link YamlStringifyOptions} — it controls only the
 	 * internal re-stringify step, not a range (there is no range to restrict
 	 * for a path-targeted modification).

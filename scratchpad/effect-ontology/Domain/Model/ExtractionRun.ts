@@ -634,10 +634,31 @@ export class RunStats extends S.Class<RunStats>($I`RunStats`)(
  *
  * **Example** (Use ExtractionRun)
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
  *
- * const metadataPath = (run: ExtractionRun): string => run.metadataPath
- * console.log(typeof metadataPath) // "function"
+ * const run = S.decodeUnknownOption(ExtractionRun)({
+ *   id: "doc-abc123def456",
+ *   status: { _tag: "Pending" },
+ *   config: {
+ *     ontology: {
+ *       namespace: "football",
+ *       name: "premier-league",
+ *       contentHash: "a".repeat(64)
+ *     },
+ *     chunking: {},
+ *     llm: {
+ *       model: "gpt-5",
+ *       temperature: 0,
+ *       maxTokens: 4096,
+ *       timeout: 30_000
+ *     }
+ *   },
+ *   createdAt: "2026-07-25T10:00:00.000Z",
+ *   outputDir: "runs/doc-abc123def456/outputs"
+ * })
+ * console.log(O.map(run, (value) => value.metadataPath)) // Some("runs/doc-abc123def456/metadata.json")
  * ```
  *
  * @category aggregates
@@ -690,14 +711,35 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Effect primary key used for aggregate identity and deduplication.
    *
-   * **Example** (Use ExtractionRun)
+   * **Example** (Read the primary key)
    *
    * ```ts
    * import { PrimaryKey } from "effect"
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
-   * const primaryKey = (run: ExtractionRun) => run[PrimaryKey.symbol]()
-   * console.log(typeof primaryKey) // "function"
+   * const run = S.decodeUnknownOption(ExtractionRun)({
+   *   id: "doc-abc123def456",
+   *   status: { _tag: "Pending" },
+   *   config: {
+   *     ontology: {
+   *       namespace: "football",
+   *       name: "premier-league",
+   *       contentHash: "a".repeat(64)
+   *     },
+   *     chunking: {},
+   *     llm: {
+   *       model: "gpt-5",
+   *       temperature: 0,
+   *       maxTokens: 4096,
+   *       timeout: 30_000
+   *     }
+   *   },
+   *   createdAt: "2026-07-25T10:00:00.000Z",
+   *   outputDir: "runs/doc-abc123def456/outputs"
+   * })
+   * console.log(O.map(run, (value) => value[PrimaryKey.symbol]())) // Some("doc-abc123def456")
    * ```
    *
    * @returns This run's validated document identifier.
@@ -709,13 +751,34 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Canonical storage path for serialized run metadata.
    *
-   * **Example** (Use ExtractionRun)
+   * **Example** (Read the metadata path)
    *
    * ```ts
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
-   * const metadataPath = (run: ExtractionRun) => run.metadataPath
-   * console.log(typeof metadataPath) // "function"
+   * const run = S.decodeUnknownOption(ExtractionRun)({
+   *   id: "doc-abc123def456",
+   *   status: { _tag: "Pending" },
+   *   config: {
+   *     ontology: {
+   *       namespace: "football",
+   *       name: "premier-league",
+   *       contentHash: "a".repeat(64)
+   *     },
+   *     chunking: {},
+   *     llm: {
+   *       model: "gpt-5",
+   *       temperature: 0,
+   *       maxTokens: 4096,
+   *       timeout: 30_000
+   *     }
+   *   },
+   *   createdAt: "2026-07-25T10:00:00.000Z",
+   *   outputDir: "runs/doc-abc123def456/outputs"
+   * })
+   * console.log(O.map(run, (value) => value.metadataPath)) // Some("runs/doc-abc123def456/metadata.json")
    * ```
    *
    * @returns Storage-relative metadata path derived from the run identifier.
@@ -727,13 +790,34 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Canonical storage path for the immutable run input.
    *
-   * **Example** (Use outputPath)
+   * **Example** (Read the input path)
    *
    * ```ts
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
-   * const inputPath = (run: ExtractionRun) => run.inputPath
-   * console.log(typeof inputPath) // "function"
+   * const run = S.decodeUnknownOption(ExtractionRun)({
+   *   id: "doc-abc123def456",
+   *   status: { _tag: "Pending" },
+   *   config: {
+   *     ontology: {
+   *       namespace: "football",
+   *       name: "premier-league",
+   *       contentHash: "a".repeat(64)
+   *     },
+   *     chunking: {},
+   *     llm: {
+   *       model: "gpt-5",
+   *       temperature: 0,
+   *       maxTokens: 4096,
+   *       timeout: 30_000
+   *     }
+   *   },
+   *   createdAt: "2026-07-25T10:00:00.000Z",
+   *   outputDir: "runs/doc-abc123def456/outputs"
+   * })
+   * console.log(O.map(run, (value) => value.inputPath)) // Some("runs/doc-abc123def456/input/document.txt")
    * ```
    *
    * @returns Storage-relative input path derived from the run identifier.
@@ -745,13 +829,34 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Canonical storage path for a typed run output.
    *
-   * **Example** (Use AuditErrorType)
+   * **Example** (Read an output path)
    *
    * ```ts
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
-   * const outputPath = (run: ExtractionRun) => run.outputPath("metadata")
-   * console.log(typeof outputPath) // "function"
+   * const run = S.decodeUnknownOption(ExtractionRun)({
+   *   id: "doc-abc123def456",
+   *   status: { _tag: "Pending" },
+   *   config: {
+   *     ontology: {
+   *       namespace: "football",
+   *       name: "premier-league",
+   *       contentHash: "a".repeat(64)
+   *     },
+   *     chunking: {},
+   *     llm: {
+   *       model: "gpt-5",
+   *       temperature: 0,
+   *       maxTokens: 4096,
+   *       timeout: 30_000
+   *     }
+   *   },
+   *   createdAt: "2026-07-25T10:00:00.000Z",
+   *   outputDir: "runs/doc-abc123def456/outputs"
+   * })
+   * console.log(O.map(run, (value) => value.outputPath("metadata"))) // Some("runs/doc-abc123def456/outputs/metadata.json")
    * ```
    *
    * @param type - Logical output kind whose canonical filename is requested.

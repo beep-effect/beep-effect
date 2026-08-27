@@ -5,6 +5,7 @@
  * hostile input, with zero runtime dependencies.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export { GlobPattern, GlobPatternError, GlobPatternOptions } from "./GlobPattern.ts";

@@ -169,14 +169,21 @@ To create a link, run:`);
 // =============================================================================
 
 /**
- * Exposes link command for composition by callers of this module.
+ * Creates `owl:sameAs` links between local entity IRIs and Wikidata identifiers.
  *
- * **Example** (Inspect link command)
+ * **Details**
+ *
+ * Provide `--entity-iri` plus `--wikidata-id`, or `--search` to look up
+ * candidates. `--dry-run` prints the triple without writing a graph.
+ *
+ * **Example** (Link a local entity to Wikidata)
  *
  * ```ts
  * import { linkCommand } from "@effect-ontology/Cli/Commands/Link"
  *
- * console.log(linkCommand)
+ * console.log(linkCommand.name) // "link"
+ * console.log(linkCommand.description)
+ * // effect-onto link --entity-iri https://example.com/ada --wikidata-id Q7259
  * ```
  *
  * @category cli-commands

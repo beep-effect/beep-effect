@@ -245,9 +245,15 @@ export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>(
  *
  * ```ts
  * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { CrossBatchEntityResolver } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
- * console.log(Layer.isLayer(CrossBatchEntityResolver.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const resolver = yield* CrossBatchEntityResolver
+ *   return resolver
+ * }).pipe(Effect.provide(CrossBatchEntityResolver.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -587,9 +593,15 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
  *
  * ```ts
  * import { Layer } from "effect"
- * import { CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ * import { Effect } from "effect"
+ * import { CrossBatchEntityResolver, CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
- * console.log(Layer.isLayer(CrossBatchEntityResolverLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const resolver = yield* CrossBatchEntityResolver
+ *   return resolver
+ * }).pipe(Effect.provide(CrossBatchEntityResolverLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

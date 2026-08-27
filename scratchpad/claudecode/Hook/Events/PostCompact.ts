@@ -1,11 +1,9 @@
 /**
- * PostCompact hook event.
+ * Fires after Claude Code compacts the conversation. Observability-only:
+ * there is no decision control. Matcher is on `trigger` (`manual` or
+ * `auto`). See https://code.claude.com/docs/en/hooks#postcompact.
  *
- * Fires after Claude Code compacts the conversation context. Supports a
- * matcher on `trigger` (`manual` | `auto`). Observability-only —
- * there is no decision control.
- * See https://code.claude.com/docs/en/hooks#postcompact.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -20,18 +18,21 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/PostCompact");
 
 /**
- * Schema for `Trigger`.
+ * Whether compaction was user-initiated (`manual`) or automatic
+ * (`auto`).
  *
- * **Example** (Inspect the Trigger schema)
+ * **Example** (Decode a compact trigger)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PostCompact.Trigger)
+ * const trigger = S.decodeUnknownSync(Hook.PostCompact.Trigger)("auto")
+ * console.log(trigger) // "auto"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this trigger.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const Trigger = LiteralKit(["manual", "auto"]).pipe(
@@ -41,35 +42,37 @@ export const Trigger = LiteralKit(["manual", "auto"]).pipe(
 );
 
 /**
- * Type-level model for `Trigger`.
+ * Decoded value produced by {@link Trigger}.
  *
- * **Example** (Use Trigger as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PostCompact.Trigger
- * ```
- *
+ * @see {@link Trigger} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type Trigger = typeof Trigger.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a PostCompact hook, including `trigger` and optional
+ * `compact_summary`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode an automatic compact)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PostCompact.Input)
+ * const input = S.decodeUnknownSync(Hook.PostCompact.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostCompact",
+ *   trigger: "auto",
+ * })
+ *
+ * console.log(input.trigger) // "auto"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `trigger`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`PostCompactInput`)(
@@ -85,18 +88,26 @@ export class Input extends S.Class<Input>($I`PostCompactInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a PostCompact handler may return. Claude Code ignores
+ * it; compaction has already finished.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * There is no decision control. Emitting `continue: false` does not
+ * restore the pre-compact context.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostCompact.Output)
+ * const output = Hook.PostCompact.Output.make()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`PostCompactOutput`)(
@@ -113,35 +124,50 @@ export class Output extends S.Class<Output>($I`PostCompactOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostCompact.passthrough)
+ * const output = Hook.PostCompact.passthrough()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link define} for wrapping this result in a handler.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `define`.
+ * Build a runnable PostCompact hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores the JSON response.
+ *
+ * **Example** (Define a PostCompact hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostCompact.define)
+ * const hook = Hook.PostCompact.define({
+ *   handler: () => Effect.succeed(Hook.PostCompact.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PostCompact"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `trigger`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -156,14 +182,21 @@ export const define = <E, R>(config: {
 /**
  * Build a PostCompact hook that only handles matching `trigger` values.
  *
- * **Example** (Build PostCompact hook that only handles matching `trigger` values)
+ * **Example** (Observe automatic compaction)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostCompact.onMatcher)
+ * const hook = Hook.PostCompact.onMatcher({
+ *   matcher: "auto",
+ *   handler: () => Effect.succeed(Hook.PostCompact.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PostCompact"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

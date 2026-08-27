@@ -1,7 +1,15 @@
-// Flow-collection composition: flow mappings, flow sequences, and the
-// flow-children flattening walk. Imports the shared pair-building machinery
-// from `block.ts`; block composition reaches these composers through
-// `state.flow` so the import stays one-directional (flow → block).
+/**
+ * Flow-collection composition: flow mappings, flow sequences, and the
+ * flow-children flattening walk.
+ *
+ * Imports the shared pair-building machinery from `block.ts`; block
+ * composition reaches these composers through `state.flow` so the import
+ * stays one-directional (flow → block). Exhausted `enterNesting` returns an
+ * empty collection placeholder.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { CollectionStyle, ScalarStyle, YamlNode, YamlPair } from "../../YamlNode.ts";
 import { YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
@@ -169,6 +177,29 @@ function isClosersOnly(text: string, start: number, end: number): boolean {
 // Compose flow map
 // ---------------------------------------------------------------------------
 
+/**
+ * Compose a flow mapping (`{a: 1}`) from its CST node.
+ *
+ * **Gotchas**
+ *
+ * Do not import this from `block.ts` — block recurses here through
+ * {@link FlowComposers}. Exhausted {@link enterNesting} returns an empty
+ * map placeholder instead of recursing.
+ *
+ * **Example** (Flow mapping parses to a plain object)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("{a: 1}\n"))) // { a: 1 }
+ * ```
+ *
+ * @see {@link FlowComposers} for the injected dispatch that avoids a cycle.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function composeFlowMap(
 	cst: CstNode,
 	state: ComposerState,
@@ -242,6 +273,23 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 	return map;
 }
 
+/**
+ * Flatten flow-collection CST children into {@link SemanticItem}s for
+ * {@link buildPairs}.
+ *
+ * **Example** (Comma-separated flow entries)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("{a: 1, b: 2}\n"))) // { a: 1, b: 2 }
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function flattenFlowChildren(children: readonly CstNode[], state: ComposerState): SemanticItem[] {
 	const items: SemanticItem[] = [];
 	let pendingMeta: NodeMeta = {};
@@ -450,6 +498,28 @@ export function flattenFlowChildren(children: readonly CstNode[], state: Compose
 // Compose flow seq
 // ---------------------------------------------------------------------------
 
+/**
+ * Compose a flow sequence (`[1, 2]`) from its CST node.
+ *
+ * **Gotchas**
+ *
+ * Exhausted {@link enterNesting} returns an empty seq placeholder. Import
+ * stays flow → block only.
+ *
+ * **Example** (Flow sequence parses to an array)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("[1, 2]\n"))) // [1, 2]
+ * ```
+ *
+ * @see {@link composeFlowMap} for the mapping counterpart.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function composeFlowSeq(
 	cst: CstNode,
 	state: ComposerState,

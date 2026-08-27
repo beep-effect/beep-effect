@@ -48,22 +48,33 @@ interface CachedClaimRepositoryShape extends Context.Service.Shape<typeof ClaimR
 }
 
 /**
- * CachedClaimRepository service
+ * Claim repository wrapper that caches claim-id and subject lookups with
+ * Effect.Cache.
  *
  * **Details**
  *
- * Wraps ClaimRepository with Effect.Cache for hot-path queries.
- * Maintains same interface as ClaimRepository.
+ * Same query surface as {@link ClaimRepository}, plus `cacheStats` and
+ * `invalidateAll`.
  *
- * **Example** (Inspect cached claim repository)
+ * **Example** (Inspect claim cache stats and invalidate)
  *
  * ```ts
  * import { CachedClaimRepository } from "@effect-ontology/Repository/CachedClaim"
+ * import { Effect } from "effect"
  *
- * console.log(CachedClaimRepository)
+ * const inspectCache = Effect.gen(function* () {
+ *   const claims = yield* CachedClaimRepository
+ *   const before = yield* claims.cacheStats
+ *   yield* claims.invalidateAll
+ *   const after = yield* claims.cacheStats
+ *   return { before, after }
+ * })
+ * console.log(typeof inspectCache) // "object"
  * ```
  *
- * @category layers
+ * @see {@link ClaimRepository} for the uncached persistence service this wraps.
+ * @see {@link CachedClaimRepositoryLayer} for the Default layer export.
+ * @category repositories
  * @since 0.0.0
  */
 export class CachedClaimRepository extends Context.Service<CachedClaimRepository, CachedClaimRepositoryShape>()(
@@ -221,16 +232,17 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
 }
 
 /**
- * Layer that provides CachedClaimRepository
+ * Layer providing {@link CachedClaimRepository} over {@link ClaimRepository}.
  *
- * **Example** (Inspect cached claim repository layer)
+ * **Example** (Reuse the default claim-cache layer)
  *
  * ```ts
- * import { CachedClaimRepositoryLayer } from "@effect-ontology/Repository/CachedClaim"
+ * import { CachedClaimRepository, CachedClaimRepositoryLayer } from "@effect-ontology/Repository/CachedClaim"
  *
- * console.log(CachedClaimRepositoryLayer)
+ * console.log(CachedClaimRepositoryLayer === CachedClaimRepository.Default) // true
  * ```
  *
+ * @see {@link CachedClaimRepository} for `cacheStats` and `invalidateAll`.
  * @category layers
  * @since 0.0.0
  */

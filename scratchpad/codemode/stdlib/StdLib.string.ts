@@ -1,3 +1,10 @@
+/**
+ * Guest `String.fromCharCode` and `String.fromCodePoint` dispatch for the
+ * CodeMode interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
 import {
   type StringStatic,
@@ -9,6 +16,26 @@ export {
   stringStatics,
 } from "../Codemode.method-names.ts"
 
+/**
+ * Dispatches guest `String.fromCharCode` and `String.fromCodePoint`.
+ *
+ * **Gotchas**
+ *
+ * Every argument must be a number; non-numeric arguments throw. There is no
+ * general String static table beyond these two constructors.
+ *
+ * **Example** (Build a string from char codes)
+ *
+ * ```ts
+ * import { invokeStringStatic } from "../../../codemode/stdlib/StdLib.string.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(invokeStringStatic("fromCharCode", [65, 66], node))
+ * ```
+ *
+ * @category interop
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeStringStatic = (name: StringStatic, args: Array<unknown>, node: AstNode): unknown => {
   const codes = args.map((arg) => {

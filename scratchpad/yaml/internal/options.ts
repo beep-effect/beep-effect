@@ -1,11 +1,34 @@
-// Internal option shapes consumed by the engine. The public facade owns the
-// `Schema.Class` option types (`YamlParseOptions`, `YamlStringifyOptions`,
-// `YamlFormattingOptions`); the engine takes these plain records so it never
-// imports the facade. Defaults are applied where consumed (`?? default`).
+/**
+ * Internal option records consumed by the YAML engine.
+ *
+ * The public facade owns the `Schema.Class` option types
+ * (`YamlParseOptions`, `YamlStringifyOptions`, `YamlFormattingOptions`);
+ * the engine takes these plain records so it never imports the facade.
+ * Defaults are applied where the options are consumed (`??`), not here.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { CollectionStyle, QuoteCompat, QuoteStyle, ScalarStyle } from "../YamlNode.ts";
 
-/** Parse options as consumed by the composer. All fields optional. */
+/**
+ * Parse options as consumed by the composer. All fields optional.
+ *
+ * **Details**
+ *
+ * `maxAliasCount` defaults to `100` in {@link createState} and counts only
+ * **defined** alias nodes (dangling `*missing` emits `UndefinedAlias` and
+ * does not increment the budget). Exceeding the cap is fatal
+ * (`isFatalCode("AliasCountExceeded")`).
+ *
+ * @see {@link YamlParseOptions} for the public schema-backed parse options.
+ * @see {@link createState} for where `?? 100` is applied.
+ * @see {@link makeAlias} for the defined-alias counting rule.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ParseOptionsInput {
 	/** Treat parse errors as failures rather than recovering. Default `true`. */
 	readonly strict?: boolean | undefined;
@@ -15,7 +38,14 @@ export interface ParseOptionsInput {
 	readonly uniqueKeys?: boolean | undefined;
 }
 
-/** Stringify options as consumed by the stringifier. All fields optional. */
+/**
+ * Stringify options as consumed by the stringifier. All fields optional.
+ *
+ * @see {@link YamlStringifyOptions} for the public schema-backed stringify options.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface StringifyOptionsInput {
 	/** Spaces per indentation level. Default `2`. */
 	readonly indent?: number | undefined;

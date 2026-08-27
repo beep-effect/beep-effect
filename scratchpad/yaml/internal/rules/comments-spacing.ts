@@ -1,9 +1,13 @@
-// comments-spacing (#129): a `#` needs a space after it to read as prose,
-// and a TRAILING comment needs breathing room from the content before it.
-// Own-line versus trailing is decided from token adjacency (content before
-// the comment on its line) — the P2 comment model's leading/trailing split
-// at the source level. A shebang (`#!` at the very start of the stream) is
-// exempt.
+/**
+ * comments-spacing: a `#` needs a space after it to read as prose, and a
+ * trailing comment needs breathing room from the content before it.
+ *
+ * Own-line versus trailing is decided from token adjacency. A shebang
+ * (`#!` at the very start of the stream) is exempt.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -16,6 +20,20 @@ import { nonNegativeIntegerOption } from "./util.ts";
  * Options for `comments-spacing`: `minSpacesBefore` between content and a
  * trailing `#` (default 1 — the kit's own emission spelling) and
  * `requireSpaceAfter` the `#` (default `true`).
+ *
+ * **Example** (Enable the default spacing budget)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "comments-spacing": { minSpacesBefore: 1 } } })
+ * console.log(config.rules["comments-spacing"])
+ * ```
+ *
+ * @see {@link commentsSpacing} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const commentsSpacingOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
@@ -49,7 +67,26 @@ const spacingBefore = (
 /** Shebang exemption: `#!` at the very start of the stream. */
 const isShebang = (token: YamlToken): boolean => token.offset === 0 && token.text.startsWith("#!");
 
-/** Comment spacing: after the `#`, and before a trailing comment's `#`. */
+/**
+ * Comment spacing: after the `#`, and before a trailing comment's `#`.
+ *
+ * **Example** (Trailing `#` without a space vs shebang)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "comments-spacing": "error" } })
+ * const missing = YamlLint.run("a: 1# note\n", YamlLint.builtins, config)
+ * console.log(missing.some((d) => d.rule === "comments-spacing")) // true
+ *
+ * const shebang = YamlLint.run("#!/usr/bin/env\na: 1\n", YamlLint.builtins, config)
+ * console.log(shebang.every((d) => d.rule !== "comments-spacing")) // true
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const commentsSpacing: YamlRule = {
 	id: "comments-spacing",
 	check: (ctx, options) => {

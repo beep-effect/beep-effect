@@ -5,6 +5,7 @@
  * `import { Mcp } from 'effect-claudecode'` and access members as
  * `Mcp.McpServerConfig`, `Mcp.McpJsonFile`, `Mcp.loadJson`, etc.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

@@ -1,3 +1,15 @@
+/**
+ * Bash 4.3-style brace expansion with a depth guard and a throwing budget.
+ *
+ * Over-deep nesting throws `NestingDepthExceeded`. Budget exhaustion throws
+ * `ExpansionBudgetExceeded` instead of silently truncating. Invalid `max` is
+ * a `TypeError` defect via `assertCap`.
+ *
+ * Ported from brace-expansion@5.0.7.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // Ported from brace-expansion@5.0.7 (https://github.com/juliangruber/brace-expansion)
 // Copyright (c) 2013 Julian Gruber <julian@juliangruber.com>
 //
@@ -105,6 +117,14 @@ const parseCommaParts = (str: string, depth: number): Array<string> => {
 	return parts;
 };
 
+/**
+ * Options for {@link expand}. `max` is a positive integer; a NaN or
+ * non-integer value is a wiring defect via `assertCap`.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface BraceExpansionOptions {
 	readonly max?: number;
 }
@@ -112,9 +132,38 @@ export interface BraceExpansionOptions {
 /**
  * Expand a brace pattern into its alternatives, Bash 4.3 style.
  *
- * Guard behavior (see the port notes above): over-deep nesting and budget
- * exhaustion throw {@link GuardExceeded}; an invalid `max` dies as a
- * `TypeError` defect.
+ * Guard behavior: over-deep nesting and budget exhaustion throw
+ * {@link GuardExceeded}; an invalid `max` dies as a `TypeError` defect.
+ *
+ * **Gotchas**
+ *
+ * Compile-time only. Budget exhaustion throws `ExpansionBudgetExceeded`
+ * instead of truncating the list (silent truncation would change match
+ * semantics). Nesting past {@link MAX_NESTING_DEPTH} throws
+ * `NestingDepthExceeded`. This is not the globstar false-negative cap.
+ * A leading `{}` is escaped only at the top level, matching Bash 4.3:
+ * `{},a}b` does not expand, while `a{},b}c` expands to `[a}c,abc]`.
+ *
+ * **Example** (Expand alternatives and trip the budget)
+ *
+ * ```ts
+ * import { expand } from "../../glob/internal/braceExpansion.ts"
+ * import { GuardExceeded } from "../../glob/internal/limits.ts"
+ *
+ * console.log(expand("a{b,c}d")) // ["abd", "acd"]
+ * console.log(expand("{},a}b")) // ["{},a}b"]
+ * console.log(expand("a{},b}c")) // ["a}c", "abc"]
+ *
+ * try {
+ *   expand("{0..2}", { max: 2 })
+ * } catch (error) {
+ *   console.log(error instanceof GuardExceeded && error.reason === "ExpansionBudgetExceeded") // true
+ * }
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const expand = (str: string, options: BraceExpansionOptions = {}): Array<string> => {
 	if (!str) {

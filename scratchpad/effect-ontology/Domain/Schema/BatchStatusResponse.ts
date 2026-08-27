@@ -95,14 +95,6 @@ export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchStatusResponse}.
  *
- * **Example** (Use BatchStatusResponse)
- * ```ts
- * import type { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse"
- *
- * const tag = (response: BatchStatusResponse) => response._tag
- * console.log(typeof tag) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

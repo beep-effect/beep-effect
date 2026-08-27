@@ -1,3 +1,20 @@
+/**
+ * Lexical schemas and Effect codecs for WHATWG HTML microdata values, the
+ * W3C Microdata-to-RDF XSD subsets, and RFC 6350 vCard VALUE types. Pick a
+ * `*String` filter for a spelling, `MicrodataXsd*` when RDF typing requires
+ * XML Schema, or a `*FromString` codec when the decoded value should be
+ * Duration, DateTime, bigint, URL, or another runtime type.
+ *
+ * **Gotchas**
+ *
+ * Lexical spaces without specification bounds remain unbounded. A
+ * multi-megabyte year, TEXT-CHAR, URL token, or integer lexeme still
+ * decodes; apply payload-size budgets at the transport layer, not in these
+ * filters.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $ScratchpadId } from "@beep/identity";
 import { Double } from "@beep/schema/Double";
 import { Int64 } from "@beep/schema/Int";
@@ -25,7 +42,6 @@ import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("microdata/Microdata.model");
 
-// Lexical spaces without specification bounds remain unbounded; transport layers must apply payload-size budgets.
 const asciiWhitespacePattern = /^[\t\n\f\r ]+|[\t\n\f\r ]+$/g;
 const htmlYearPattern = /^\d{4,}$/;
 const htmlMonthPattern = /^(\d{4,})-(\d{2})$/;
@@ -303,6 +319,7 @@ const isAbsoluteUrlString = flow(S.decodeUnknownOption(S.URLFromString), O.isSom
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataXsdYearString} for the xsd:gYear subset required by Microdata-to-RDF.
  * @category schemas
  * @since 0.0.0
  */
@@ -339,6 +356,7 @@ export type HtmlYearString = typeof HtmlYearString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataXsdYearMonthString} for the xsd:gYearMonth subset required by Microdata-to-RDF.
  * @category schemas
  * @since 0.0.0
  */
@@ -375,6 +393,7 @@ export type HtmlMonthString = typeof HtmlMonthString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataXsdDateString} for the xsd:date subset required by Microdata-to-RDF.
  * @category schemas
  * @since 0.0.0
  */
@@ -447,6 +466,7 @@ export type HtmlYearlessDateString = typeof HtmlYearlessDateString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataXsdTimeString} for the xsd:time subset required by Microdata-to-RDF.
  * @category schemas
  * @since 0.0.0
  */
@@ -483,6 +503,7 @@ export type HtmlTimeString = typeof HtmlTimeString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataXsdDateTimeString} for the xsd:dateTime subset (requires seconds and a `T` separator).
  * @category schemas
  * @since 0.0.0
  */
@@ -506,6 +527,10 @@ export type HtmlLocalDateTimeString = typeof HtmlLocalDateTimeString.Type;
 /**
  * WHATWG time-zone offset microsyntax, including offsets through 23:59.
  *
+ * **Gotchas**
+ *
+ * Negative zero (`-00:00` / `-0000`) is rejected; use `Z` or `+00:00`.
+ *
  * **Example** (Decode an HTML time-zone offset)
  *
  * ```ts
@@ -517,6 +542,7 @@ export type HtmlLocalDateTimeString = typeof HtmlLocalDateTimeString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardUtcOffsetString} for the RFC 6350 `±HHMM` form without `Z`, which admits `-0000`.
  * @category schemas
  * @since 0.0.0
  */
@@ -551,6 +577,7 @@ export type HtmlTimeZoneOffsetString = typeof HtmlTimeZoneOffsetString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataDateTimeFromString} to decode the lexeme to `DateTime.Utc`; {@link MicrodataXsdDateTimeString} for the xsd:dateTime subset used by Microdata-to-RDF.
  * @category schemas
  * @since 0.0.0
  */
@@ -659,6 +686,7 @@ const htmlDurationUnit = flow(Str.toUpperCase, O.liftPredicate(S.is(HtmlDuration
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlHumanDurationString} for the unordered unique-scale human form; {@link HtmlDurationString} to accept either spelling.
  * @category schemas
  * @since 0.0.0
  */
@@ -684,6 +712,11 @@ export type HtmlIsoDurationString = typeof HtmlIsoDurationString.Type;
 /**
  * Human-readable WHATWG duration syntax with unique scales in any order.
  *
+ * **Gotchas**
+ *
+ * Only the `S` scale may include a `.` fraction, at most three digits.
+ * Duplicate scales still fail.
+ *
  * **Example** (Decode a human-readable HTML duration)
  *
  * ```ts
@@ -695,6 +728,7 @@ export type HtmlIsoDurationString = typeof HtmlIsoDurationString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlIsoDurationString} for the restricted ISO form; {@link MicrodataDurationFromString} to decode either spelling to an Effect Duration.
  * @category schemas
  * @since 0.0.0
  */
@@ -729,6 +763,7 @@ export type HtmlHumanDurationString = typeof HtmlHumanDurationString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataDurationFromString} to decode either HTML duration lexeme to an Effect Duration.
  * @category schemas
  * @since 0.0.0
  */
@@ -760,6 +795,7 @@ export type HtmlDurationString = typeof HtmlDurationString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlUrlPotentiallySurroundedBySpaces} to strip surrounding ASCII whitespace before treating the token as parser input.
  * @category schemas
  * @since 0.0.0
  */
@@ -801,6 +837,7 @@ export type HtmlUrlTokenString = typeof HtmlUrlTokenString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlUrlTokenString} for the already-stripped parser token; {@link makeHtmlUrlFromString} to resolve it against a document base.
  * @category schemas
  * @since 0.0.0
  */
@@ -845,6 +882,7 @@ export type HtmlUrlPotentiallySurroundedBySpaces = typeof HtmlUrlPotentiallySurr
  * console.log(value.href) // "https://example.com/item"
  * ```
  *
+ * @see {@link MicrodataUrlFromString} for already-absolute microdata URL properties that do not need a document base.
  * @category constructors
  * @since 0.0.0
  */
@@ -877,6 +915,7 @@ export const makeHtmlUrlFromString = (base: URL) =>
  * console.log(value)
  * ```
  *
+ * @see {@link makeHtmlUrlFromString} to resolve document-relative HTML URLs; {@link MicrodataUrlFromString} to decode this serialized form to a platform URL.
  * @category schemas
  * @since 0.0.0
  */
@@ -918,6 +957,7 @@ export type MicrodataSerializedUrlString = typeof MicrodataSerializedUrlString.T
  * console.log(value)
  * ```
  *
+ * @see {@link makeHtmlUrlFromString} to resolve document-relative HTML URLs against a parser base.
  * @category schemas
  * @since 0.0.0
  */
@@ -1067,6 +1107,7 @@ const formatHtmlDuration = (value: Duration.Duration): O.Option<string> =>
  * console.log(HtmlDurationValue.is(Duration.seconds(1))) // true
  * ```
  *
+ * @see {@link MicrodataDurationFromString} to decode either HTML duration lexeme to this duration type.
  * @category schemas
  * @since 0.0.0
  */
@@ -1102,17 +1143,24 @@ export type HtmlDurationValue = typeof HtmlDurationValue.Type;
 /**
  * Reversible codec from either HTML duration lexical form to an Effect duration.
  *
+ * **Gotchas**
+ *
+ * Encode always emits restricted ISO spelling, so `1h 30m` decodes then
+ * encodes as `PT1H30M`.
+ *
  * **Example** (Decode an HTML duration)
  *
  * ```ts
  * import { Effect } from "effect"
  * import { MicrodataDurationFromString } from "./Microdata.model.ts"
  *
- * const value = Effect.runSync(MicrodataDurationFromString.decodeUnknownEffect("PT1H"))
+ * const value = Effect.runSync(MicrodataDurationFromString.decodeUnknownEffect("1h 30m"))
+ * const encoded = Effect.runSync(MicrodataDurationFromString.encodeEffect(value))
  *
- * console.log(value)
+ * console.log(encoded) // "PT1H30M"
  * ```
  *
+ * @see {@link HtmlDurationString} to validate the lexical form without converting.
  * @category schemas
  * @since 0.0.0
  */
@@ -1171,6 +1219,7 @@ const normalizeHtmlGlobalDateTime: (value: HtmlGlobalDateTimeString) => string =
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlGlobalDateTimeString} to validate the HTML lexeme without converting to an instant.
  * @category schemas
  * @since 0.0.0
  */
@@ -1208,6 +1257,7 @@ export type MicrodataDateTimeFromString = typeof MicrodataDateTimeFromString.Typ
  * console.log(value)
  * ```
  *
+ * @see {@link XsdIntegerFromString} to decode to unbounded bigint; {@link VCardIntegerFromString} for the Int64-bounded RFC 6350 INTEGER codec.
  * @category schemas
  * @since 0.0.0
  */
@@ -1241,6 +1291,7 @@ export type XsdIntegerString = typeof XsdIntegerString.Type;
  * console.log(XsdIntegerValue.is(42n)) // true
  * ```
  *
+ * @see {@link VCardIntegerValue} for the Int64-bounded vCard integer; {@link XsdIntegerFromString} to decode xsd:integer lexemes to this type.
  * @category schemas
  * @since 0.0.0
  */
@@ -1275,6 +1326,7 @@ export type XsdIntegerValue = typeof XsdIntegerValue.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardIntegerFromString} for the Int64-bounded RFC 6350 INTEGER codec.
  * @category schemas
  * @since 0.0.0
  */
@@ -1368,6 +1420,11 @@ export type XsdDoubleString = typeof XsdDoubleString.Type;
 /**
  * Reversible xsd:double codec backed by the repository's branded binary64 type.
  *
+ * **Gotchas**
+ *
+ * Encode canonicalizes integer-looking numbers to `n.0` and signed zero to
+ * `-0.0`; `INF` / `NaN` keep their XML Schema spellings.
+ *
  * **Example** (Decode an XML Schema double)
  *
  * ```ts
@@ -1375,10 +1432,13 @@ export type XsdDoubleString = typeof XsdDoubleString.Type;
  * import { XsdDoubleFromString } from "./Microdata.model.ts"
  *
  * const value = Effect.runSync(XsdDoubleFromString.decodeUnknownEffect("1.25E2"))
+ * const encoded = Effect.runSync(XsdDoubleFromString.encodeEffect(value))
  *
- * console.log(value)
+ * console.log(value) // 125
+ * console.log(encoded) // "125.0"
  * ```
  *
+ * @see {@link VCardFloatFromString} for RFC 6350 FLOAT as BigDecimal without scientific notation.
  * @category schemas
  * @since 0.0.0
  */
@@ -1416,6 +1476,7 @@ export type XsdDoubleFromString = typeof XsdDoubleFromString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataDataValueFromString} to keep a string fallback when the value is not xsd:integer or xsd:double.
  * @category schemas
  * @since 0.0.0
  */
@@ -1461,6 +1522,7 @@ const MicrodataNonNumericString = S.String.check(
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataNumericValueFromString} to require integer-first numeric typing without a string fallback.
  * @category schemas
  * @since 0.0.0
  */
@@ -1505,6 +1567,7 @@ const xsdDateTimeFromHtmlPattern =
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlDateString} for the broader WHATWG date space that still admits years outside xsd:date.
  * @category schemas
  * @since 0.0.0
  */
@@ -1541,6 +1604,7 @@ export type MicrodataXsdDateString = typeof MicrodataXsdDateString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlMonthString} for the broader WHATWG month space.
  * @category schemas
  * @since 0.0.0
  */
@@ -1581,6 +1645,7 @@ export type MicrodataXsdYearMonthString = typeof MicrodataXsdYearMonthString.Typ
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlYearString} for the broader WHATWG year space.
  * @category schemas
  * @since 0.0.0
  */
@@ -1617,6 +1682,7 @@ export type MicrodataXsdYearString = typeof MicrodataXsdYearString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlTimeString} for the broader WHATWG time space that still admits omitted seconds.
  * @category schemas
  * @since 0.0.0
  */
@@ -1656,6 +1722,7 @@ const isMicrodataXsdDateTime = (value: string): boolean =>
  * console.log(value)
  * ```
  *
+ * @see {@link HtmlGlobalDateTimeString} for the broader WHATWG global date-time space; {@link HtmlLocalDateTimeString} for local (unoffset) HTML date-times.
  * @category schemas
  * @since 0.0.0
  */
@@ -1701,6 +1768,7 @@ export type MicrodataXsdDateTimeString = typeof MicrodataXsdDateTimeString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataRuntimeValueFromString} to decode to Effect DateTime, Duration, or number types instead of XSD lexical subsets; {@link MicrodataContextualValueFromString} to tag the value with DOM or vocabulary context.
  * @category schemas
  * @since 0.0.0
  */
@@ -1747,6 +1815,7 @@ export type MicrodataRdfTimeValueFromString = typeof MicrodataRdfTimeValueFromSt
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataRdfTimeValueFromString} for W3C Microdata-to-RDF time-element typing; {@link MicrodataContextualValueFromString} when URL versus numeric versus time typing depends on element context.
  * @category schemas
  * @since 0.0.0
  */
@@ -1881,6 +1950,7 @@ const VCardValueTypeBase = LiteralKit([
  * console.log(value)
  * ```
  *
+ * @see {@link VCardValueTypeFromString} to canonicalize case-insensitive spellings; {@link VCardDeclaredValueTypeString} to also admit IANA and `x-` extension tokens.
  * @category schemas
  * @since 0.0.0
  */
@@ -1916,6 +1986,7 @@ const isVCardPredefinedValueType = flow(Str.toLowerCase, S.is(VCardValueType));
  * console.log(value)
  * ```
  *
+ * @see {@link VCardValueType} for the lowercase literal kit; {@link VCardValueTypeFromString} to decode to that kit.
  * @category schemas
  * @since 0.0.0
  */
@@ -1953,6 +2024,7 @@ export type VCardValueTypeString = typeof VCardValueTypeString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardValueType} for the lowercase literals; {@link VCardDeclaredValueTypeString} to also admit IANA and `x-` extension tokens.
  * @category schemas
  * @since 0.0.0
  */
@@ -2073,6 +2145,7 @@ export type VCardExperimentalValueTypeString = typeof VCardExperimentalValueType
  * console.log(value)
  * ```
  *
+ * @see {@link VCardValueTypeString} for predefined VALUE names only; {@link VCardValueTypeFromString} to canonicalize those names.
  * @category schemas
  * @since 0.0.0
  */
@@ -2144,6 +2217,7 @@ export type VCardTextString = typeof VCardTextString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardUrlFromString} to decode the WHATWG URL-compatible subset to a platform URL.
  * @category schemas
  * @since 0.0.0
  */
@@ -2324,6 +2398,7 @@ export type VCardDateAndOrTimeString = typeof VCardDateAndOrTimeString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardZonedTimestampString} for the zoned subset convertible to an instant; {@link VCardTimestampFromString} to decode that subset to `DateTime.Utc`.
  * @category schemas
  * @since 0.0.0
  */
@@ -2357,6 +2432,7 @@ export type VCardTimestampString = typeof VCardTimestampString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardTimestampString} for floating (unzoned) timestamps; {@link VCardTimestampFromString} to decode this zoned subset to `DateTime.Utc`.
  * @category schemas
  * @since 0.0.0
  */
@@ -2419,6 +2495,10 @@ export type VCardBooleanString = typeof VCardBooleanString.Type;
 /**
  * RFC 6350 signed decimal INTEGER lexical space.
  *
+ * **Gotchas**
+ *
+ * Magnitude is unbounded here; {@link VCardIntegerFromString} rejects values outside Int64.
+ *
  * **Example** (Decode a vCard integer lexeme)
  *
  * ```ts
@@ -2430,6 +2510,7 @@ export type VCardBooleanString = typeof VCardBooleanString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardIntegerFromString} for the Int64-bounded codec; {@link XsdIntegerFromString} for unbounded xsd:integer.
  * @category schemas
  * @since 0.0.0
  */
@@ -2556,6 +2637,10 @@ export type VCardLanguageTagString = typeof VCardLanguageTagString.Type;
 /**
  * Reversible RFC 6350 BOOLEAN codec.
  *
+ * **Gotchas**
+ *
+ * Encode always writes uppercase `TRUE` / `FALSE`, even when decode accepted mixed case.
+ *
  * **Example** (Decode a vCard boolean)
  *
  * ```ts
@@ -2563,8 +2648,10 @@ export type VCardLanguageTagString = typeof VCardLanguageTagString.Type;
  * import { VCardBooleanFromString } from "./Microdata.model.ts"
  *
  * const value = Effect.runSync(VCardBooleanFromString.decodeUnknownEffect("true"))
+ * const encoded = Effect.runSync(VCardBooleanFromString.encodeEffect(value))
  *
- * console.log(value)
+ * console.log(value) // true
+ * console.log(encoded) // "TRUE"
  * ```
  *
  * @category schemas
@@ -2595,6 +2682,10 @@ export type VCardBooleanFromString = typeof VCardBooleanFromString.Type;
 /**
  * Signed 64-bit integer value admitted by RFC 6350.
  *
+ * **Gotchas**
+ *
+ * This is Int64 (`-2^63` through `2^63-1`), not unbounded {@link XsdIntegerValue}.
+ *
  * **Example** (Validate a vCard integer)
  *
  * ```ts
@@ -2603,6 +2694,7 @@ export type VCardBooleanFromString = typeof VCardBooleanFromString.Type;
  * console.log(VCardIntegerValue.is(42n)) // true
  * ```
  *
+ * @see {@link XsdIntegerValue} for unbounded xsd:integer bigint; {@link VCardIntegerFromString} to decode RFC 6350 INTEGER lexemes into this Int64 type.
  * @category schemas
  * @since 0.0.0
  */
@@ -2626,6 +2718,12 @@ export type VCardIntegerValue = typeof VCardIntegerValue.Type;
 /**
  * Reversible RFC 6350 INTEGER codec backed by a signed 64-bit bigint.
  *
+ * **Gotchas**
+ *
+ * Lexical integers outside signed 64-bit range remain accepted by
+ * {@link VCardIntegerString} and fail only here. Use
+ * {@link XsdIntegerFromString} for arbitrary-precision XML Schema integers.
+ *
  * **Example** (Decode a vCard integer)
  *
  * ```ts
@@ -2637,6 +2735,7 @@ export type VCardIntegerValue = typeof VCardIntegerValue.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link XsdIntegerFromString} for unbounded xsd:integer; {@link VCardIntegerString} for the unbounded lexical filter that still accepts overflow digits.
  * @category schemas
  * @since 0.0.0
  */
@@ -2732,6 +2831,7 @@ export type VCardFloatValue = typeof VCardFloatValue.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link XsdDoubleFromString} for IEEE-754 xsd:double with exponent and INF/NaN.
  * @category schemas
  * @since 0.0.0
  */
@@ -2853,15 +2953,20 @@ export type VCardUtcOffsetValue = typeof VCardUtcOffsetValue.Type;
 /**
  * Reversible RFC 6350 UTC-OFFSET codec backed by Effect duration.
  *
+ * **Gotchas**
+ *
+ * Encode always writes `±HHMM`, so `+05` becomes `+0500`.
+ *
  * **Example** (Decode a vCard UTC offset)
  *
  * ```ts
  * import { Effect } from "effect"
  * import { VCardUtcOffsetFromString } from "./Microdata.model.ts"
  *
- * const value = Effect.runSync(VCardUtcOffsetFromString.decodeUnknownEffect("+0530"))
+ * const value = Effect.runSync(VCardUtcOffsetFromString.decodeUnknownEffect("+05"))
+ * const encoded = Effect.runSync(VCardUtcOffsetFromString.encodeEffect(value))
  *
- * console.log(value)
+ * console.log(encoded) // "+0500"
  * ```
  *
  * @category schemas
@@ -2970,7 +3075,8 @@ export type VCardTimestampValue = typeof VCardTimestampValue.Type;
  *
  * Floating timestamps remain valid in {@link VCardTimestampString} but fail
  * this UTC conversion. Leap-second timestamps likewise remain valid lexical
- * values but cannot be represented by `DateTime.Utc`.
+ * values but cannot be represented by `DateTime.Utc`. Encode drops offsets
+ * to a `Z` UTC spelling (`20240229T123045Z`), not the original offset form.
  *
  * **Example** (Decode a vCard timestamp instant)
  *
@@ -2983,6 +3089,7 @@ export type VCardTimestampValue = typeof VCardTimestampValue.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardTimestampString} for the complete TIMESTAMP lexeme including floating forms; {@link VCardZonedTimestampString} for the zoned subset this codec consumes.
  * @category schemas
  * @since 0.0.0
  */
@@ -3011,6 +3118,11 @@ export type VCardTimestampFromString = typeof VCardTimestampFromString.Type;
 /**
  * URL-compatible subset of RFC 6350 URI values, decoded to the platform URL type.
  *
+ * **Gotchas**
+ *
+ * Values such as `urn:example:item` remain valid {@link VCardUriString} and
+ * fail WHATWG URL parsing here.
+ *
  * **Example** (Decode a vCard URL)
  *
  * ```ts
@@ -3022,6 +3134,7 @@ export type VCardTimestampFromString = typeof VCardTimestampFromString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link VCardUriString} for any absolute RFC 3986 URI, including URNs that fail WHATWG URL parsing.
  * @category schemas
  * @since 0.0.0
  */
@@ -3064,6 +3177,7 @@ export type VCardUrlFromString = typeof VCardUrlFromString.Type;
  * console.log(value)
  * ```
  *
+ * @see {@link MicrodataRuntimeValueFromString} for untagged Effect-first decoding; {@link MicrodataRdfTimeValueFromString} for W3C time-element RDF typing.
  * @category schemas
  * @since 0.0.0
  */
@@ -3095,7 +3209,15 @@ export type MicrodataContextualValueFromString = typeof MicrodataContextualValue
  * **Details**
  *
  * This tagged boundary prevents ambiguous strings such as `TRUE`, `10`, or
- * `urn:example:x` from being assigned a scalar type by branch order.
+ * `urn:example:x` from being assigned a scalar type by branch order. Only
+ * `boolean`, `integer`, `float`, and `utc-offset` decode through the
+ * `*FromString` codecs to runtime values (boolean, Int64, BigDecimal,
+ * Duration). `text`, `uri`, `date`, `time`, `date-time`, `date-and-or-time`,
+ * `timestamp`, and `language-tag` stay branded lexical strings —
+ * `timestamp` remains {@link VCardTimestampString}, not
+ * {@link VCardTimestampFromString}. Convert timestamps with that codec
+ * separately; {@link MicrodataContextualValueFromString} does decode URL,
+ * numeric, and runtime branches.
  *
  * **Example** (Decode a declared vCard scalar)
  *
@@ -3108,6 +3230,7 @@ export type MicrodataContextualValueFromString = typeof MicrodataContextualValue
  * console.log(value)
  * ```
  *
+ * @see {@link VCardTimestampFromString} to convert a tagged `timestamp` lexeme to `DateTime.Utc`; {@link VCardUrlFromString} to convert a tagged `uri` lexeme to a platform URL.
  * @category schemas
  * @since 0.0.0
  */

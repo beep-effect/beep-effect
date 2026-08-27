@@ -26,18 +26,9 @@ import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 const $I = $ScratchpadId.create("effect-ontology/Cluster/BackpressureHandler");
 
 /**
- * Alias for backward compatibility - maps to ProgressEvent from Contract
+ * Progress event accepted by {@link withBackpressure} and {@link withBackpressureMetered}.
  *
- * **Example** (Reference ExtractionProgressEvent fields)
- *
- * ```ts
- * import type { ExtractionProgressEvent } from "@effect-ontology/Cluster/BackpressureHandler"
- *
- * const extractionProgressEventFields: ReadonlyArray<keyof ExtractionProgressEvent> = ["_tag"]
- *
- * console.log(extractionProgressEventFields)
- * ```
- *
+ * @see {@link ProgressEvent} for the tagged progress-event union and decoding.
  * @category type-level
  * @since 0.0.0
  */
@@ -48,14 +39,22 @@ export type ExtractionProgressEvent = ProgressEvent;
 // =============================================================================
 
 /**
- * Backpressure configuration
+ * Queue capacity and sampling ratios applied when a progress consumer is slow.
  *
- * **Example** (Inspect backpressure config)
+ * **Example** (Construct a tight sampling config)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { BackpressureConfig } from "@effect-ontology/Cluster/BackpressureHandler"
  *
- * console.log(BackpressureConfig)
+ * const config = BackpressureConfig.make({
+ *   maxQueuedEvents: PosInt.make(8),
+ *   samplingThreshold: UnitInterval.make(0.5),
+ *   samplingRate: UnitInterval.make(0.25)
+ * })
+ * console.log(config.maxQueuedEvents) // 8
+ * console.log(config.samplingThreshold) // 0.5
  * ```
  *
  * @category schemas
@@ -152,20 +151,39 @@ const consumeQueue = Effect.fn("BackpressureHandler.consumeQueue")(function* <A,
  * 2. Non-critical events are sampled based on queue load
  * 3. Oldest non-critical events are dropped if queue is full
  *
- * **Example** (Use withBackpressure)
+ * **Example** (Deliver a critical start event)
  *
  * ```ts
- * import { Stream } from "effect"
+ * import { Effect, Stream } from "effect"
+ * import * as S from "effect/Schema"
  * import { BackpressureConfig, withBackpressure } from "@effect-ontology/Cluster/BackpressureHandler"
+ * import { ExtractionStartedEvent } from "@effect-ontology/Contract/ProgressStreaming"
  *
- * const controlled = withBackpressure(Stream.empty, BackpressureConfig.make({}))
- * console.log(Stream.isStream(controlled)) // true
+ * const started = S.decodeUnknownSync(ExtractionStartedEvent)({
+ *   _tag: "extraction_started",
+ *   eventId: "00000000-0000-4000-8000-000000000001",
+ *   runId: "doc-0123456789ab",
+ *   timestamp: "2026-08-11T12:00:00Z",
+ *   overallProgress: 0,
+ *   totalChunks: 4,
+ *   textMetadata: { characterCount: 1200, estimatedAvgChunkSize: 300 }
+ * })
+ * const tags = Effect.runPromise(
+ *   Effect.scoped(
+ *     Stream.make(started).pipe(
+ *       withBackpressure(BackpressureConfig.make({})),
+ *       Stream.map((event) => event._tag),
+ *       Stream.runCollect
+ *     )
+ *   )
+ * )
+ * console.log(tags)
  * ```
  *
  * @param source - Source stream of progress events
  * @param config - Backpressure configuration
  * @returns Stream with backpressure applied
- * @category services
+ * @category combinators
  * @since 0.0.0
  */
 export const withBackpressure: {
@@ -236,18 +254,9 @@ export const withBackpressure: {
 // =============================================================================
 
 /**
- * Backpressure metrics for monitoring
+ * Counters emitted by {@link withBackpressureMetered} as events are received, delivered, or dropped.
  *
- * **Example** (Reference BackpressureMetrics fields)
- *
- * ```ts
- * import type { BackpressureMetrics } from "@effect-ontology/Cluster/BackpressureHandler"
- *
- * const backpressureMetricsFields: ReadonlyArray<keyof BackpressureMetrics> = ["eventsReceived", "eventsDelivered", "eventsDropped"]
- *
- * console.log(backpressureMetricsFields)
- * ```
- *
+ * @see {@link withBackpressureMetered} for the stream combinator that records these counters.
  * @category type-level
  * @since 0.0.0
  */
@@ -269,15 +278,42 @@ export interface BackpressureMetrics {
 /**
  * Create a metered backpressure handler that tracks metrics
  *
- * **Example** (Inspect with backpressure metered)
+ * **Example** (Record dropped non-critical events)
  *
  * ```ts
- * import { withBackpressureMetered } from "@effect-ontology/Cluster/BackpressureHandler"
+ * import { Effect, Ref, Stream } from "effect"
+ * import * as S from "effect/Schema"
+ * import { BackpressureConfig, withBackpressureMetered } from "@effect-ontology/Cluster/BackpressureHandler"
+ * import { ChunkingProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
  *
- * console.log(withBackpressureMetered)
+ * const progress = S.decodeUnknownSync(ChunkingProgressEvent)({
+ *   _tag: "chunking_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001",
+ *   runId: "doc-0123456789ab",
+ *   timestamp: "2026-08-24T00:00:00.000Z",
+ *   overallProgress: 5,
+ *   chunksCompleted: 3,
+ *   chunksProcessing: 1,
+ *   avgChunkSize: 480
+ * })
+ * const dropped = Effect.runPromise(
+ *   Effect.scoped(
+ *     Effect.gen(function* () {
+ *       const droppedRef = yield* Ref.make(0)
+ *       yield* Stream.make(progress).pipe(
+ *         withBackpressureMetered(BackpressureConfig.make({}), (metrics) =>
+ *           Ref.set(droppedRef, metrics.eventsDropped)
+ *         ),
+ *         Stream.runDrain
+ *       )
+ *       return yield* Ref.get(droppedRef)
+ *     })
+ *   )
+ * )
+ * console.log(dropped)
  * ```
  *
- * @category services
+ * @category combinators
  * @since 0.0.0
  */
 export const withBackpressureMetered: {

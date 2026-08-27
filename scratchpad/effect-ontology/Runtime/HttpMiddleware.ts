@@ -27,12 +27,19 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/HttpMiddleware");
 /**
  * Request-local actor used for auditable conflict transitions.
  *
- * **Example** (Inspect the request service)
+ * **Example** (Provide an anonymous conflict actor)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { ConflictActor } from "@effect-ontology/Schema/Timeline"
  * import { CurrentConflictActor } from "@effect-ontology/Runtime/HttpMiddleware"
  *
- * console.log(CurrentConflictActor)
+ * const actor = ConflictActor.make({ principal: "anonymous", credentialFingerprint: O.none() })
+ * const program = Effect.succeed(actor.principal).pipe(
+ *   Effect.provideService(CurrentConflictActor, actor)
+ * )
+ * console.log(Effect.runSync(program)) // "anonymous"
  * ```
  *
  * @category services
@@ -81,12 +88,15 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * - Health endpoints remain public
  * - Invalid/missing key returns 401
  *
- * **Example** (Inspect make auth middleware)
+ * **Example** (Build auth middleware from ConfigService)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeAuthMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  *
- * console.log(makeAuthMiddleware)
+ * const documented = [makeAuthMiddleware, 401] as const
+ * console.log(Effect.isEffect(documented[0])) // true
+ * console.log(documented[1]) // 401
  * ```
  *
  * @category constructors
@@ -160,12 +170,15 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 /**
  * Middleware to track active requests for graceful shutdown
  *
- * **Example** (Inspect make shutdown middleware)
+ * **Example** (Build shutdown middleware that returns 503 after drain starts)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  *
- * console.log(makeShutdownMiddleware)
+ * const documented = [makeShutdownMiddleware, 503] as const
+ * console.log(Effect.isEffect(documented[0])) // true
+ * console.log(documented[1]) // 503
  * ```
  *
  * @category constructors
@@ -187,12 +200,13 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
  * - Response status code
  * - Configurable log level (debug for health checks, info for API)
  *
- * **Example** (Inspect make logging middleware)
+ * **Example** (Build request-timing middleware)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeLoggingMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  *
- * console.log(makeLoggingMiddleware)
+ * console.log(Effect.isEffect(makeLoggingMiddleware)) // true
  * ```
  *
  * @category constructors

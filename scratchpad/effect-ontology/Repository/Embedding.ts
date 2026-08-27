@@ -41,17 +41,19 @@ import { Embeddings, embeddings } from "./schema.ts";
 // =============================================================================
 
 /**
- * Entity types that can have embeddings
+ * Closed set of repository entities that can own an embedding.
  *
- * **Example** (Inspect embedding entity type)
+ * **Example** (Recognize an embedding owner)
  *
  * ```ts
  * import { EmbeddingEntityType } from "@effect-ontology/Repository/Embedding"
  *
- * console.log(EmbeddingEntityType)
+ * console.log(EmbeddingEntityType.is.class("class")) // true
+ * console.log(EmbeddingEntityType.is.class("entity")) // false
  * ```
  *
- * @category repositories
+ * @see {@link EmbeddingRepository} for similarity search scoped by this type.
+ * @category schemas
  * @since 0.0.0
  */
 export const EmbeddingEntityType = LiteralKit(["class", "entity", "claim", "example"]).pipe(
@@ -61,39 +63,33 @@ export const EmbeddingEntityType = LiteralKit(["class", "entity", "claim", "exam
 );
 
 /**
- * Describes the embedding entity type data exposed by this module.
+ * Runtime value accepted by {@link EmbeddingEntityType}.
  *
- * **Example** (Decode EmbeddingEntityType)
- *
- * ```ts
- * import { EmbeddingEntityType } from "@effect-ontology/Repository/Embedding"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeEmbeddingEntityType = (_value: EmbeddingEntityType): string => "valid embedding entity type"
- *
- * console.log(O.map(S.decodeUnknownOption(EmbeddingEntityType)({}), summarizeEmbeddingEntityType))
- * ```
- *
+ * @see {@link EmbeddingEntityType} for the closed literal set and guards.
  * @category type-level
  * @since 0.0.0
  */
 export type EmbeddingEntityType = typeof EmbeddingEntityType.Type;
 
 /**
- * Result from vector similarity search
+ * Repository entity and its cosine-similarity score from vector search.
  *
- * **Example** (Reference SimilarityResult fields)
+ * **Example** (Construct a similarity hit)
  *
  * ```ts
- * import type { SimilarityResult } from "@effect-ontology/Repository/Embedding"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { EmbeddingEntityType, SimilarityResult } from "@effect-ontology/Repository/Embedding"
  *
- * const similarityResultFields: ReadonlyArray<keyof SimilarityResult> = ["entityId", "entityType", "similarity"]
- *
- * console.log(similarityResultFields)
+ * const hit = SimilarityResult.make({
+ *   entityId: "ada_lovelace",
+ *   entityType: EmbeddingEntityType.Enum.class,
+ *   similarity: UnitInterval.make(0.91)
+ * })
+ * console.log(hit.entityId) // "ada_lovelace"
  * ```
  *
- * @category type-level
+ * @see {@link EmbeddingRepository} for `findSimilar` that returns this payload.
+ * @category models
  * @since 0.0.0
  */
 export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityResult`)(
@@ -108,19 +104,27 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
 ) {}
 
 /**
- * Result from hybrid search (vector + text RRF fusion)
+ * Repository entity and its reciprocal-rank-fusion scores from hybrid search.
  *
- * **Example** (Reference HybridSearchResult fields)
+ * **Example** (Construct a hybrid-search hit)
  *
  * ```ts
- * import type { HybridSearchResult } from "@effect-ontology/Repository/Embedding"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { EmbeddingEntityType, HybridSearchResult } from "@effect-ontology/Repository/Embedding"
  *
- * const hybridSearchResultFields: ReadonlyArray<keyof HybridSearchResult> = ["entityId", "entityType", "rrfScore"]
- *
- * console.log(hybridSearchResultFields)
+ * const hit = HybridSearchResult.make({
+ *   entityId: "ada_lovelace",
+ *   entityType: EmbeddingEntityType.Enum.entity,
+ *   rrfScore: UnitInterval.make(0.8),
+ *   vectorRank: NonNegativeInt.make(1),
+ *   textRank: NonNegativeInt.make(2)
+ * })
+ * console.log(hit.rrfScore) // 0.8
  * ```
  *
- * @category type-level
+ * @see {@link EmbeddingRepository} for `hybridSearch` that returns this payload.
+ * @category models
  * @since 0.0.0
  */
 export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSearchResult`)(
@@ -137,19 +141,19 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
 ) {}
 
 /**
- * Options for similarity search
+ * Bounded result count and cosine-similarity threshold for vector search.
  *
- * **Example** (Reference SimilaritySearchOptions fields)
+ * **Example** (Use search defaults)
  *
  * ```ts
- * import type { SimilaritySearchOptions } from "@effect-ontology/Repository/Embedding"
+ * import { SimilaritySearchOptions } from "@effect-ontology/Repository/Embedding"
  *
- * const similaritySearchOptionsFields: ReadonlyArray<keyof SimilaritySearchOptions> = ["limit", "minSimilarity"]
- *
- * console.log(similaritySearchOptionsFields)
+ * const options = SimilaritySearchOptions.make({})
+ * console.log(options.limit) // 20
  * ```
  *
- * @category type-level
+ * @see {@link EmbeddingRepository} for `findSimilar` that consumes these options.
+ * @category configuration
  * @since 0.0.0
  */
 export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I`SimilaritySearchOptions`)(
@@ -165,35 +169,26 @@ export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I
 /**
  * Constructor input accepted by {@link SimilaritySearchOptions}.
  *
- * **Example** (Configure similarity search)
- *
- * ```ts
- * import { PosInt } from "@beep/schema/Int"
- * import type { SimilaritySearchOptionsInput } from "@effect-ontology/Repository/Embedding"
- *
- * const options: SimilaritySearchOptionsInput = { limit: PosInt.make(10) }
- * console.log(options)
- * ```
- *
+ * @see {@link SimilaritySearchOptions} for the runtime schema and constructor defaults.
  * @category type-level
  * @since 0.0.0
  */
 export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~type.make.in"];
 
 /**
- * Options for hybrid search
+ * Bounded result count and fusion weights for hybrid vector and text search.
  *
- * **Example** (Reference HybridSearchOptions fields)
+ * **Example** (Use hybrid-search defaults)
  *
  * ```ts
- * import type { HybridSearchOptions } from "@effect-ontology/Repository/Embedding"
+ * import { HybridSearchOptions } from "@effect-ontology/Repository/Embedding"
  *
- * const hybridSearchOptionsFields: ReadonlyArray<keyof HybridSearchOptions> = ["limit", "vectorWeight", "textWeight"]
- *
- * console.log(hybridSearchOptionsFields)
+ * const options = HybridSearchOptions.make({})
+ * console.log(options.vectorWeight) // 0.6
  * ```
  *
- * @category type-level
+ * @see {@link EmbeddingRepository} for `hybridSearch` that consumes these options.
+ * @category configuration
  * @since 0.0.0
  */
 export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridSearchOptions`)(
@@ -210,16 +205,7 @@ export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridS
 /**
  * Constructor input accepted by {@link HybridSearchOptions}.
  *
- * **Example** (Configure hybrid search)
- *
- * ```ts
- * import { PosInt } from "@beep/schema/Int"
- * import type { HybridSearchOptionsInput } from "@effect-ontology/Repository/Embedding"
- *
- * const options: HybridSearchOptionsInput = { limit: PosInt.make(10) }
- * console.log(options)
- * ```
- *
+ * @see {@link HybridSearchOptions} for the runtime schema and constructor defaults.
  * @category type-level
  * @since 0.0.0
  */
@@ -458,21 +444,36 @@ interface EmbeddingRepositoryShape {
 }
 
 /**
- * Embedding Repository Service
+ * Persistent vector store with cosine similarity and hybrid RRF search.
  *
  * **Details**
  *
- * Provides persistent vector storage with hybrid search capabilities.
+ * Hybrid search fuses pgvector ANN with PostgreSQL full-text ranking.
  *
- * **Example** (Inspect embedding repository)
+ * **Gotchas**
+ *
+ * PostgreSQL must have the pgvector extension enabled.
+ *
+ * **Example** (Run a similarity search)
  *
  * ```ts
- * import { EmbeddingRepository } from "@effect-ontology/Repository/Embedding"
+ * import { EmbeddingEntityType, EmbeddingRepository } from "@effect-ontology/Repository/Embedding"
+ * import { Effect } from "effect"
  *
- * console.log(EmbeddingRepository)
+ * const similar = Effect.gen(function* () {
+ *   const embeddings = yield* EmbeddingRepository
+ *   return yield* embeddings.findSimilar(
+ *     "people",
+ *     EmbeddingEntityType.Enum.entity,
+ *     Array.from({ length: 768 }, () => 0)
+ *   )
+ * })
+ * console.log(typeof similar) // "object"
  * ```
  *
- * @category layers
+ * @see {@link SimilaritySearchOptions} for vector-only search bounds.
+ * @see {@link HybridSearchOptions} for vector-plus-text fusion weights.
+ * @category repositories
  * @since 0.0.0
  */
 export class EmbeddingRepository extends Context.Service<EmbeddingRepository, EmbeddingRepositoryShape>()(

@@ -1,14 +1,24 @@
-// TOML's four date-time types: an offset date-time, a local date-time, a
-// local date and a local time. Effect's DateTime module models none of the
-// local-only variants (no offset, no time zone), so all four land here as
-// Schema.Class value objects with calendar validity, canonical `toString`
-// and structural equality.
-//
-// Leaf module: imports only `effect`. The scanner (Task 5) constructs these,
-// value stringify (Task 8) prints them, and the corpus harness (Task 9)
-// compares them.
+/**
+ * TOML's four date-time value objects: offset date-time, local date-time,
+ * local date, and local time.
+ *
+ * **Details**
+ *
+ * Effect's `DateTime` module models none of the local-only variants (no
+ * offset, no time zone), so all four land here as `Schema.Class` value
+ * objects with Gregorian calendar validity, canonical `toString`, and
+ * structural equality. This is a leaf module: it imports only `effect`. The
+ * scanner constructs these classes after range-checking so diagnostics carry
+ * the token offset; stringify prints `toString()`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
+
+const $I = $ScratchpadId.create("toml/TomlDateTime");
 
 /** Zero-pad `value` to `width` digits (never truncates a wider value). */
 function pad(value: number, width: number): string {
@@ -92,11 +102,27 @@ function formatOffset(offsetMinutes: number): string {
  * A TOML local date: `year`-`month`-`day` with no time-of-day or offset,
  * validated against the real Gregorian calendar.
  *
- * @public
+ * **Example** (Format a calendar date)
+ *
+ * ```ts
+ * import { TomlLocalDate } from "@beep/scratchpad/toml"
+ *
+ * const date = TomlLocalDate.make({ year: 1979, month: 5, day: 27 })
+ * console.log(String(date)) // "1979-05-27"
+ * ```
+ *
+ * @see {@link TomlLocalDateTime} to attach a local time-of-day without an offset.
+ * @see {@link TomlDateTimeLiteral} for the CST wrapper that stores one of the four date-time classes.
+ * @category models
+ * @since 0.0.0
  */
-export class TomlLocalDate extends Schema.Class<TomlLocalDate>("TomlLocalDate")(
+export class TomlLocalDate extends Schema.Class<TomlLocalDate>($I`TomlLocalDate`)(
 	Schema.Struct(dateFields).check(isRealCalendarDate),
+	$I.annote("TomlLocalDate", {
+		description: "A TOML local date with Gregorian calendar validity and no time-of-day or offset.",
+	}),
 ) {
+	/** @internal */
 	override toString(): string {
 		return formatDate(this);
 	}
@@ -106,9 +132,37 @@ export class TomlLocalDate extends Schema.Class<TomlLocalDate>("TomlLocalDate")(
  * A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or
  * offset. `second` tolerates the RFC 3339 leap second (0-60).
  *
- * @public
+ * **Gotchas**
+ *
+ * `second: 60` is admitted because RFC 3339 allows a leap second; TOML itself
+ * does not validate leap seconds. `toString` omits a fractional part when
+ * `nanosecond === 0` and otherwise trims trailing zeros (`500000000` prints as
+ * `.5`).
+ *
+ * **Example** (Format a leap-second local time)
+ *
+ * ```ts
+ * import { TomlLocalTime } from "@beep/scratchpad/toml"
+ *
+ * const leap = TomlLocalTime.make({ hour: 23, minute: 59, second: 60, nanosecond: 0 })
+ * console.log(String(leap)) // "23:59:60"
+ *
+ * const fraction = TomlLocalTime.make({ hour: 7, minute: 32, second: 0, nanosecond: 500_000_000 })
+ * console.log(String(fraction)) // "07:32:00.5"
+ * ```
+ *
+ * @see {@link TomlLocalDateTime} to combine this time with a local date.
+ * @see {@link TomlDateTimeLiteral} for the CST wrapper that stores one of the four date-time classes.
+ * @category models
+ * @since 0.0.0
  */
-export class TomlLocalTime extends Schema.Class<TomlLocalTime>("TomlLocalTime")(timeFields) {
+export class TomlLocalTime extends Schema.Class<TomlLocalTime>($I`TomlLocalTime`)(
+	timeFields,
+	$I.annote("TomlLocalTime", {
+		description: "A TOML local time with optional nanoseconds and RFC 3339 leap-second tolerance.",
+	}),
+) {
+	/** @internal */
 	override toString(): string {
 		return formatTime(this);
 	}
@@ -118,11 +172,41 @@ export class TomlLocalTime extends Schema.Class<TomlLocalTime>("TomlLocalTime")(
  * A TOML local date-time: a {@link TomlLocalDate} and a {@link TomlLocalTime}
  * combined, with no offset.
  *
- * @public
+ * **Gotchas**
+ *
+ * `toString` uses `T` as the date/time separator and applies the same
+ * fractional-second trimming as {@link TomlLocalTime}.
+ *
+ * **Example** (Format a local date-time)
+ *
+ * ```ts
+ * import { TomlLocalDateTime } from "@beep/scratchpad/toml"
+ *
+ * const local = TomlLocalDateTime.make({
+ *   year: 1979,
+ *   month: 5,
+ *   day: 27,
+ *   hour: 7,
+ *   minute: 32,
+ *   second: 0,
+ *   nanosecond: 0,
+ * })
+ * console.log(String(local)) // "1979-05-27T07:32:00"
+ * ```
+ *
+ * @see {@link TomlLocalDate} for the date half and {@link TomlLocalTime} for the time half.
+ * @see {@link TomlOffsetDateTime} to attach a UTC offset.
+ * @see {@link TomlDateTimeLiteral} for the CST wrapper that stores one of the four date-time classes.
+ * @category models
+ * @since 0.0.0
  */
-export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>("TomlLocalDateTime")(
+export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>($I`TomlLocalDateTime`)(
 	Schema.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
+	$I.annote("TomlLocalDateTime", {
+		description: "A TOML local date-time combining a calendar date and a local time with no offset.",
+	}),
 ) {
+	/** @internal */
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}`;
 	}
@@ -133,15 +217,58 @@ export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>("TomlLoca
  * (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction;
  * this class only bounds the combined minute count.
  *
- * @public
+ * **Gotchas**
+ *
+ * Direct construction accepts `offsetMinutes: 24 * 60 - 1` (1439) even though
+ * a parsed `+24:00` would have been rejected as an out-of-range `hh`. A zero
+ * offset prints as `Z`, not `+00:00`.
+ *
+ * **Example** (Format an offset date-time including a leap second)
+ *
+ * ```ts
+ * import { TomlOffsetDateTime } from "@beep/scratchpad/toml"
+ *
+ * const utc = TomlOffsetDateTime.make({
+ *   year: 1979,
+ *   month: 5,
+ *   day: 27,
+ *   hour: 7,
+ *   minute: 32,
+ *   second: 0,
+ *   nanosecond: 0,
+ *   offsetMinutes: 0,
+ * })
+ * console.log(String(utc)) // "1979-05-27T07:32:00Z"
+ *
+ * const leap = TomlOffsetDateTime.make({
+ *   year: 2016,
+ *   month: 12,
+ *   day: 31,
+ *   hour: 23,
+ *   minute: 59,
+ *   second: 60,
+ *   nanosecond: 0,
+ *   offsetMinutes: 0,
+ * })
+ * console.log(String(leap)) // "2016-12-31T23:59:60Z"
+ * ```
+ *
+ * @see {@link TomlLocalDateTime} for the offset-free sibling.
+ * @see {@link TomlDateTimeLiteral} for the CST wrapper that stores one of the four date-time classes.
+ * @category models
+ * @since 0.0.0
  */
-export class TomlOffsetDateTime extends Schema.Class<TomlOffsetDateTime>("TomlOffsetDateTime")(
+export class TomlOffsetDateTime extends Schema.Class<TomlOffsetDateTime>($I`TomlOffsetDateTime`)(
 	Schema.Struct({
 		...dateFields,
 		...timeFields,
 		offsetMinutes: Schema.Int.check(Schema.isBetween({ minimum: -1439, maximum: 1439 })),
 	}).check(isRealCalendarDate),
+	$I.annote("TomlOffsetDateTime", {
+		description: "A TOML offset date-time storing calendar fields plus a combined UTC offset in minutes.",
+	}),
 ) {
+	/** @internal */
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;
 	}

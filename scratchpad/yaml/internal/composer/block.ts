@@ -1,9 +1,15 @@
-// Block-collection composition: block mappings (with the sibling-first-key
-// CST shape), block sequences, flat block maps, and the shared pair-building
-// machinery (`SemanticItem`, `buildPairs`) that flow composition also uses.
-//
-// Cross-seam recursion into flow composition goes through `state.flow` (see
-// `FlowComposers` in `state.ts`) so this module never imports `flow.ts`.
+/**
+ * Block-collection composition: block mappings (with the sibling-first-key
+ * CST shape), block sequences, flat block maps, and the shared pair-building
+ * machinery (`SemanticItem`, `buildPairs`) that flow composition also uses.
+ *
+ * Cross-seam recursion into flow composition goes through `state.flow` so
+ * this module never imports `flow.ts`. Exhausted `enterNesting` returns an
+ * empty collection placeholder.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type {CollectionStyle, ScalarStyle, YamlNode} from "../../YamlNode.ts";
 import {
@@ -73,6 +79,25 @@ import {
  *
  * The first key is external (sibling before block-map in document/parent).
  * Subsequent keys are inside the block-map children.
+ *
+ * **Gotchas**
+ *
+ * Recurse into flow via {@link FlowComposers}, never by importing `flow.ts`.
+ * Exhausted {@link enterNesting} returns an empty map placeholder.
+ *
+ * **Example** (Parse a one-pair block mapping)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: 1\n"))) // { a: 1 }
+ * ```
+ *
+ * @see {@link FlowComposers} for the injected flow dispatch.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function composeBlockMap(
 	blockMapCst: CstNode,
@@ -150,6 +175,15 @@ function composeBlockMapInner(
 	return map;
 }
 
+/**
+ * Flattened CST token used by {@link buildPairs}: a key, value-sep, node,
+ * or comment in document order.
+ *
+ * @see {@link flattenBlockMapChildren} for the walk that produces these items.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface SemanticItem {
 	kind: "key" | "value-sep" | "node" | "comment";
 	node?: YamlNode;
@@ -157,6 +191,22 @@ export interface SemanticItem {
 	offset?: number;
 }
 
+/**
+ * Flatten block-map CST children into {@link SemanticItem}s for {@link buildPairs}.
+ *
+ * **Example** (Two-pair mapping)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: 1\nb: 2\n"))) // { a: 1, b: 2 }
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function flattenBlockMapChildren(
 	children: readonly CstNode[],
 	state: ComposerState,
@@ -826,6 +876,22 @@ export function flattenBlockMapChildren(
  * after the last pair are returned so the caller can attach them as the
  * containing collection's trailing `comment`.
  */
+/**
+ * Consume flattened {@link SemanticItem}s into {@link YamlPair}s, attributing
+ * comments onto key/value nodes.
+ *
+ * **Example** (Trailing comment stays on the pair)
+ *
+ * ```ts
+ * import { YamlFormat } from "@beep/scratchpad/yaml"
+ *
+ * console.log(YamlFormat.formatToString("a: 1 # t\n").includes("# t")) // true
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function buildPairs(
 	items: SemanticItem[],
 	pairs: YamlPair[],
@@ -1245,6 +1311,22 @@ function consumeValueNodeForNullKey(
  * from float via the source form (or an explicit tag). String/bool/null keys
  * are distinguished by their type prefix, so `1` (int) never collides with
  * `"1"` (string) or `true`.
+ *
+ * **Example** (`1` vs `"1"` do not collide)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const hits = YamlLint.run("1: a\n\"1\": b\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "key-duplicates": "error" },
+ * }))
+ * console.log(hits.every((d) => d.rule !== "key-duplicates")) // true
+ * ```
+ *
+ * @see {@link keyDuplicates} for the lint rule that uses this identity.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export function keyIdentity(key: YamlScalar, text: string): string {
 	const v = key.value;
@@ -1270,6 +1352,25 @@ export function keyIdentity(key: YamlScalar, text: string): string {
 	}
 }
 
+/**
+ * Warn on duplicate scalar keys when `uniqueKeys` is enabled.
+ *
+ * **Example** (Duplicate keys fail the default parse)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const hits = YamlLint.run("a: 1\na: 2\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "key-duplicates": "error" },
+ * }))
+ * console.log(hits.some((d) => d.rule === "key-duplicates")) // true
+ * ```
+ *
+ * @see {@link keyIdentity} for the type-and-value identity used here.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export function checkDuplicateKeys(pairs: YamlPair[], state: ComposerState): void {
 	const seen = new Set<string>();
 	for (const pair of pairs) {
@@ -1372,6 +1473,19 @@ function wasIntroducedByExplicitKeyIndicator(text: string, offset: number): bool
 /**
  * Validate that implicit mapping keys do not span multiple lines.
  * YAML 1.2 §7.4.2 requires implicit keys to fit on a single line.
+ *
+ * **Example** (Explicit `?` key may span lines)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("? hello\n  world\n: 1\n")))
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
  */
 export function checkMultilineImplicitKeys(
 	pairs: readonly YamlPair[],
@@ -1450,6 +1564,19 @@ export function checkMultilineImplicitKeys(
  * Used to detect trailing content after quoted scalars and flow collections.
  * Skips if the next non-trivia content is a ":" (value-sep), since that means
  * this node is actually a key, not a value.
+ *
+ * **Example** (Quoted scalar as a complete value)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: \"hi\"\n"))) // { a: "hi" }
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
  */
 export function checkTrailingContentOnSameLine(
 	children: readonly CstNode[],
@@ -1643,6 +1770,26 @@ function validatePropertyContinuationColumn(
 // Compose block seq
 // ---------------------------------------------------------------------------
 
+/**
+ * Compose a block sequence from its CST node.
+ *
+ * **Gotchas**
+ *
+ * Exhausted {@link enterNesting} returns an empty seq placeholder.
+ *
+ * **Example** (Block sequence)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("- 1\n- 2\n"))) // [1, 2]
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function composeBlockSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
@@ -2006,6 +2153,19 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 /**
  * Compose a block map from flat document children (no block-map wrapper node).
  * This happens in multi-document scenarios where the parser doesn't create a block-map node.
+ *
+ * **Example** (First document of a two-document stream)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: 1\n---\nb: 2\n"))) // { a: 1 }
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function composeFlatBlockMap(
 	children: readonly CstNode[],

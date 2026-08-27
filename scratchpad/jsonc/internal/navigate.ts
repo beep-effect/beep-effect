@@ -1,19 +1,31 @@
-// Scanner-based path navigation for the modifier. Private implementation.
-//
-// This replaces v3's self-admittedly fragile `lastIndexOf('"segment"')`
-// backwards string search — which broke on keys containing quote characters —
-// with structural resolution through the scanner's tokens: the matching
-// property's key offset is captured directly from the key token, never
-// guessed from the source text. `navigate` returns a plain structural result;
-// `JsoncModifier` synthesizes edits and constructs `JsoncModificationError`
-// from it, so this module never imports the facade or the edit vocabulary.
+/**
+ * Scanner-based path navigation for the modifier. Private implementation.
+ *
+ * Resolves a {@link JsoncPath} through scanner tokens rather than a
+ * `lastIndexOf('"segment"')` search of the raw text, so keys containing quote
+ * characters are located from the key token itself. Returns a plain
+ * structural result; {@link JsoncModifier} synthesizes edits and constructs
+ * {@link JsoncModificationError} from it, so this module never imports the
+ * facade or the edit vocabulary.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { JsoncPath } from "../JsoncNode.ts";
 import { createScanner } from "./scanner.ts";
 import type { SkipCursor } from "./skip.ts";
 import { skipBalancedValue } from "./skip.ts";
 
-/** The target property/element was located. */
+/**
+ * The target property/element was located.
+ *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Located {
 	readonly _tag: "Located";
 	readonly container: "object" | "array";
@@ -34,7 +46,15 @@ export interface Located {
 	readonly commaAfter?: number | undefined;
 }
 
-/** The target does not exist; an insertion point was resolved instead. */
+/**
+ * The target does not exist; an insertion point was resolved instead.
+ *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Insert {
 	readonly _tag: "Insert";
 	readonly container: "object" | "array";
@@ -46,25 +66,68 @@ export interface Insert {
 	readonly depth: number;
 }
 
-/** A structural type mismatch: expected an object or array but found otherwise. */
+/**
+ * A structural type mismatch: expected an object or array but found otherwise.
+ *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Mismatch {
 	readonly _tag: "Mismatch";
 	readonly depth: number;
 	readonly expected: "object" | "array";
 }
 
-/** Nothing to resolve (e.g. navigating an empty path segment set). */
+/**
+ * Nothing to resolve (for example navigating an empty path segment set).
+ *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface NoOp {
 	readonly _tag: "NoOp";
 }
 
-/** The outcome of navigating a {@link JsoncPath} through JSONC source. */
+/**
+ * The outcome of navigating a {@link JsoncPath} through JSONC source.
+ *
+ * @see {@link navigate} for the function that returns this union.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NavigateResult = Located | Insert | Mismatch | NoOp;
 
 /**
  * Resolve `path` against `text`, returning where the target is (or where it
  * would be inserted). `path` must be non-empty — the whole-document case is
  * handled by the caller.
+ *
+ * **Example** (Locate, insert-miss, and mismatch)
+ *
+ * ```ts
+ * import { navigate } from "../../jsonc/internal/navigate.ts";
+ *
+ * const located = navigate('{ "port": 3000 }', ["port"]);
+ * console.log(located._tag); // "Located"
+ *
+ * const insert = navigate('{ "port": 3000 }', ["host"]);
+ * console.log(insert._tag); // "Insert"
+ *
+ * const mismatch = navigate("[1, 2]", ["port"]);
+ * console.log(mismatch._tag); // "Mismatch"
+ * ```
+ *
+ * @see {@link NavigateResult} for the `Located` / `Insert` / `Mismatch` / `NoOp` union.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export function navigate(text: string, path: JsoncPath): NavigateResult {
 	if (path.length === 0) {

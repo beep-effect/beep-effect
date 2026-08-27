@@ -39,14 +39,19 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentKit");
 // =============================================================================
 
 /**
- * Provides the agent input error service capability.
+ * Invalid or incomplete input supplied to an orchestration agent.
  *
- * **Example** (Inspect agent input error)
+ * **Example** (Construct an agent input error)
  *
  * ```ts
  * import { AgentInputError } from "@effect-ontology/Service/Agent/AgentKit"
  *
- * console.log(AgentInputError)
+ * const error = AgentInputError.make({
+ *   taskId: "task-ada",
+ *   message: "Ontology path is required",
+ *   missing: ["ontology.path"]
+ * })
+ * console.log(error._tag) // "AgentInputError"
  * ```
  *
  * @category errors
@@ -75,17 +80,23 @@ const mergeTask = (task: AgentTask, updates: Partial<AgentTask>): AgentTask => A
 // =============================================================================
 
 /**
- * Validates and represents agent kit values at runtime.
+ * Built-in Agent adapters that share {@link AgentTask} as the pipeline envelope.
  *
- * **Example** (Inspect agent kit)
+ * **Example** (Acquire the kit from its Default layer)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { AgentKit } from "@effect-ontology/Service/Agent/AgentKit"
  *
- * console.log(AgentKit)
+ * const program = Effect.gen(function* () {
+ *   const kit = yield* AgentKit
+ *   return kit
+ * }).pipe(Effect.provide(AgentKit.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {

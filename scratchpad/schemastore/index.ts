@@ -15,33 +15,35 @@
  * which ships closed — no adapter to write), and the emit pipeline over all
  * of it (`SchemaPipeline`).
  *
- * @example
+ * **Example** (Lint a generated store document)
+ *
  * ```ts
- * import { CatalogEntry, DocumentLint, StoreDocument } from "@effected/schemastore";
- * import { Effect, Schema } from "effect";
+ * import { DocumentLint, StoreDocument } from "@beep/scratchpad/schemastore"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
  * // The description carries no docs URL, so the lint's advisory fires.
- * const Config = Schema.Struct({ name: Schema.String }).annotate({
+ * const Config = S.Struct({ name: S.String }).annotate({
  *   description: "Build configuration",
- * });
+ * })
  *
  * const program = Effect.gen(function* () {
  *   const document = yield* StoreDocument.fromSchema(Config, {
  *     $id: "https://example.com/config.schema.json",
- *   });
- *   const findings = DocumentLint.lint(document);
- *   const text = yield* Effect.fromResult(document.serializeResult());
- *   return [findings.length, text.endsWith("\n")] as const;
- * });
+ *   })
+ *   const findings = DocumentLint.lint(document)
+ *   const text = yield* Effect.fromResult(document.serializeResult())
+ *   return [findings.length, text.endsWith("\n")] as const
+ * })
  *
- * console.log(Effect.runSync(program));
+ * console.log(Effect.runSync(program))
  * // => [1, true]
  * ```
  *
- * @see {@link https://www.schemastore.org | SchemaStore}
- * @see {@link https://effect.website | Effect}
- *
+ * @see {@link https://www.schemastore.org} for the catalog publication shape this kit emits.
+ * @see {@link https://effect.website} for the Effect Schema sources this kit lowers to Draft-07.
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export { AnnotationCarriers, CarrierDepthExceededError } from "./AnnotationCarriers.ts";

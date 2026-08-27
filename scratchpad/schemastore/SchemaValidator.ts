@@ -1,8 +1,21 @@
+/**
+ * Closed ajv validation for SchemaStore documents; findings are values.
+ *
+ * Document rejection is a {@link ValidationFinding} list. The error channel
+ * is reserved for the engine failing as a mechanism.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
 import type { ErrorObject } from "ajv";
 import { Ajv } from "ajv";
 import { Context, Effect, Layer, Schema } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { KeywordFamilies } from "./KeywordFamilies.ts";
+
+const $I = $ScratchpadId.create("schemastore/SchemaValidator");
 
 /**
  * Indicates that the validation engine behind the {@link SchemaValidator}
@@ -13,12 +26,32 @@ import { KeywordFamilies } from "./KeywordFamilies.ts";
  * value), never an error. Raised by implementations of
  * {@link SchemaValidatorShape.validate}.
  *
+ * **Example** (Construct a mechanism failure)
+ *
+ * ```ts
+ * import { SchemaValidatorError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = SchemaValidatorError.make({ cause: "ajv failed to start" })
+ *
+ * console.log(error._tag)
+ * // => "SchemaValidatorError"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class SchemaValidatorError extends Schema.TaggedError<SchemaValidatorError>()("SchemaValidatorError", {
-	/** The underlying engine failure, preserved structurally. */
-	cause: Schema.Defect(),
-}) {
+export class SchemaValidatorError extends Schema.TaggedError<SchemaValidatorError>($I`SchemaValidatorError`)(
+	"SchemaValidatorError",
+	{
+		/** The underlying engine failure, preserved structurally. */
+		cause: Schema.Defect(),
+	},
+	$I.annote("SchemaValidatorError", {
+		description:
+			"Raised when the JSON Schema validation engine fails as a mechanism and cannot produce findings.",
+	}),
+) {
 	override get message(): string {
 		return "Schema validation engine failed";
 	}
@@ -29,21 +62,47 @@ export class SchemaValidatorError extends Schema.TaggedError<SchemaValidatorErro
  * report, never an error channel — the consumer decides what a finding
  * gates.
  *
+ * **Example** (Construct a validator finding)
+ *
+ * ```ts
+ * import { ValidationFinding } from "@beep/scratchpad/schemastore"
+ *
+ * const finding = ValidationFinding.make({
+ *   path: "/type",
+ *   message: "must be object",
+ *   keyword: "type",
+ * })
+ *
+ * console.log(finding.keyword)
+ * // => "type"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class ValidationFinding extends Schema.Class<ValidationFinding>("ValidationFinding")({
-	/** JSON pointer into the flat document (`""` is the root schema). */
-	path: Schema.String,
-	/** Human-readable explanation from the engine. */
-	message: Schema.String,
-	/** The JSON Schema keyword the finding is about, when the engine names one. */
-	keyword: Schema.optionalKey(Schema.String),
-}) {}
+export class ValidationFinding extends Schema.Class<ValidationFinding>($I`ValidationFinding`)(
+	{
+		/** JSON pointer into the flat document (`""` is the root schema). */
+		path: Schema.String,
+		/** Human-readable explanation from the engine. */
+		message: Schema.String,
+		/** The JSON Schema keyword the finding is about, when the engine names one. */
+		keyword: Schema.optionalKey(Schema.String),
+	},
+	$I.annote("ValidationFinding", {
+		description:
+			"One problem a JSON Schema engine found with a document: a report value, never an error channel.",
+	}),
+) {}
 
 /**
  * Options for {@link SchemaValidatorShape.validate}.
  *
+ * @see {@link SchemaValidatorShape.validate} for the operation these options configure.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface SchemaValidatorOptions {
 	/**
@@ -58,7 +117,10 @@ export interface SchemaValidatorOptions {
  * The shape of the {@link SchemaValidator} service — what an implementation
  * provides.
  *
+ * @see {@link SchemaValidator} for the service that carries this shape.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SchemaValidatorShape {
 	/**
@@ -133,21 +195,37 @@ const notStubbed = (method: string) => () =>
  * reject the language-server families `DocumentLint` deliberately allows —
  * one predicate governs both verdicts.
  *
- * @example
+ * **Gotchas**
+ *
+ * A document the engine rejects is a {@link ValidationFinding} list, not
+ * {@link SchemaValidatorError}. {@link SchemaValidator.makeTest} **dies** if
+ * `validate` is unstubbed — there is no honest default; use
+ * {@link SchemaValidator.noop} for an always-clean layer. The shipped layer
+ * registers {@link KeywordFamilies} keywords present in the document before
+ * compile so ajv strict mode does not reject language-server keys.
+ *
+ * **Example** (Validate a trivial object schema)
+ *
  * ```ts
- * import { SchemaValidator } from "@effected/schemastore";
- * import { Effect } from "effect";
+ * import { SchemaValidator } from "@beep/scratchpad/schemastore"
+ * import { Effect } from "effect"
  *
  * const program = Effect.gen(function* () {
- *   const validator = yield* SchemaValidator;
- *   return yield* validator.validate({ type: "object" });
- * });
+ *   const validator = yield* SchemaValidator
+ *   return yield* validator.validate({ type: "object" })
+ * })
  *
- * Effect.runPromise(Effect.provide(program, SchemaValidator.layer));
+ * Effect.runPromise(Effect.provide(program, SchemaValidator.layer)).then((result) => console.log(result))
  * // => []
  * ```
  *
+ * @see {@link SchemaValidator.noop} for the always-clean layer that skips the engine.
+ * @see {@link SchemaValidator.layerTest} for the die-unless-stubbed test double.
+ * @see {@link DocumentLint} for the engine-free structural half of validation.
+ * @see {@link KeywordFamilies} for the declared keywords registered before ajv compile.
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class SchemaValidator extends Context.Service<SchemaValidator, SchemaValidatorShape>()(
 	"@effected/schemastore/SchemaValidator",

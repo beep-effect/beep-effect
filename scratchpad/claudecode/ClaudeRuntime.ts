@@ -7,6 +7,7 @@
  * platform layer for tests and merge in additional services for their own
  * programs.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

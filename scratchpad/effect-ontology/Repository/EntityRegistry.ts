@@ -45,7 +45,7 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
 // =============================================================================
 
 /**
- * Describes the canonical entity id data exposed by this module.
+ * Database identity of a canonical entity in the persistent registry.
  *
  * **Example** (Create CanonicalEntityId)
  *
@@ -53,10 +53,10 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
  * import { CanonicalEntityId } from "@effect-ontology/Repository/EntityRegistry"
  *
  * const canonicalEntityId = CanonicalEntityId.make("00000000-0000-4000-8000-000000000001")
- *
  * console.log(canonicalEntityId)
  * ```
  *
+ * @see {@link EntityRegistryRepository} for lookups that consume this identifier.
  * @category schemas
  * @since 0.0.0
  */
@@ -71,12 +71,13 @@ export const CanonicalEntityId = UUID.pipe(
 /**
  * Decoded database identity accepted by {@link CanonicalEntityId}.
  *
+ * @see {@link CanonicalEntityId} for the branded UUID schema.
  * @category type-level
  * @since 0.0.0
  */
 export type CanonicalEntityId = typeof CanonicalEntityId.Type;
 /**
- * Describes the entity alias id data exposed by this module.
+ * Database identity of an entity alias in the persistent registry.
  *
  * **Example** (Create EntityAliasId)
  *
@@ -84,10 +85,10 @@ export type CanonicalEntityId = typeof CanonicalEntityId.Type;
  * import { EntityAliasId } from "@effect-ontology/Repository/EntityRegistry"
  *
  * const entityAliasId = EntityAliasId.make("00000000-0000-4000-8000-000000000002")
- *
  * console.log(entityAliasId)
  * ```
  *
+ * @see {@link EntityRegistryRepository} for alias writes that consume this identifier.
  * @category schemas
  * @since 0.0.0
  */
@@ -101,6 +102,7 @@ export const EntityAliasId = UUID.pipe(
 /**
  * Decoded database identity accepted by {@link EntityAliasId}.
  *
+ * @see {@link EntityAliasId} for the branded UUID schema.
  * @category type-level
  * @since 0.0.0
  */
@@ -159,7 +161,7 @@ export class BlockingCandidate extends S.Class<BlockingCandidate>($I`BlockingCan
 export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
 
 /**
- * Describes the canonical entity filter data exposed by this module.
+ * Ontology-scoped query input for listing canonical entities by type.
  *
  * **Example** (Filter canonical entities)
  *
@@ -176,6 +178,7 @@ export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
  * console.log(filter.limit) // 20
  * ```
  *
+ * @see {@link EntityRegistryRepository} for listing methods that consume this filter.
  * @category models
  * @since 0.0.0
  */
@@ -419,17 +422,24 @@ interface EntityRegistryRepositoryShape {
 }
 
 /**
- * Provides repository access for entity registry repository.
+ * Persists canonical entities, aliases, and blocking tokens with pgvector
+ * similarity search.
  *
- * **Example** (Inspect the default registry repository layer)
+ * **Example** (Read registry stats and blocking candidates)
  *
  * ```ts
- * import { Layer } from "effect"
  * import { EntityRegistryRepository } from "@effect-ontology/Repository/EntityRegistry"
+ * import { Effect } from "effect"
  *
- * console.log(Layer.isLayer(EntityRegistryRepository.Default)) // true
+ * const inspectRegistry = Effect.gen(function* () {
+ *   const registry = yield* EntityRegistryRepository
+ *   const stats = yield* registry.getStats("people")
+ *   return stats
+ * })
+ * console.log(typeof inspectRegistry) // "object"
  * ```
  *
+ * @see {@link BlockingCandidate} for the payload returned by token or embedding blocking.
  * @category repositories
  * @since 0.0.0
  */

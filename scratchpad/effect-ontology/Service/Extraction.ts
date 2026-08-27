@@ -77,9 +77,15 @@ const isAttributeValue = (value: unknown): value is string | number | boolean =>
  * **Example** (Inspect entity extractor)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { EntityExtractor } from "@effect-ontology/Service/Extraction"
  *
- * console.log(EntityExtractor)
+ * const program = Effect.gen(function* () {
+ *   const extractor = yield* EntityExtractor
+ *   return yield* extractor.extract("Ada founded Acme.", [])
+ * }).pipe(Effect.provide(EntityExtractor.Test))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -306,9 +312,15 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
  * **Example** (Inspect mention extractor)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { MentionExtractor } from "@effect-ontology/Service/Extraction"
  *
- * console.log(MentionExtractor)
+ * const program = Effect.gen(function* () {
+ *   const extractor = yield* MentionExtractor
+ *   return yield* extractor.extract("Ada founded Acme.")
+ * }).pipe(Effect.provide(MentionExtractor.Test))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -403,9 +415,15 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
  * **Example** (Inspect relation extractor)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { RelationExtractor } from "@effect-ontology/Service/Extraction"
  *
- * console.log(RelationExtractor)
+ * const program = Effect.gen(function* () {
+ *   const extractor = yield* RelationExtractor
+ *   return yield* extractor.extract("Ada founded Acme.", [], [])
+ * }).pipe(Effect.provide(RelationExtractor.Test))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

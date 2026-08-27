@@ -1,20 +1,27 @@
-// The formatting/modification concept: non-mutating text splices (TomlEdit)
-// that conservatively normalize whitespace or change a value at a path, both
-// computed against the linear CST so comments and layout survive every
-// operation. Format is syntactic and structural — every edit derives from an
-// expression or value span, never from naive line splitting, so a byte
-// inside a multi-line string is untouchable by construction. Modify resolves
-// its path through the SEMANTIC view and pins the insertion-placement rules:
-// root inserts land after the last root expression (before the first
-// header), section inserts after the section's last non-trivia expression,
-// dotted tables render as dotted keys appended to their defining section,
-// and inline or implicit tables refuse with a typed error.
-//
-// Cycle firewall: the engine throws raw carriers (RawTomlError,
-// GuardExceeded); this module materializes TomlDiagnostic instances and the
-// tagged TomlModificationError. The dependency edge runs facade → engine
-// only.
+/**
+ * Conservative TOML formatting and path-based modification as non-mutating
+ * text splices computed against the linear CST.
+ *
+ * **Details**
+ *
+ * Format is syntactic and structural — every edit derives from an expression
+ * or value span, never from naive line splitting, so a byte inside a
+ * multi-line string is untouchable by construction. Modify resolves its path
+ * through the semantic view and pins the insertion-placement rules: root
+ * inserts land after the last root expression (before the first header),
+ * section inserts after the section's last non-trivia expression, dotted
+ * tables render as dotted keys appended to their defining section, and inline
+ * or implicit tables refuse with a typed error. Cycle firewall: the engine
+ * throws raw carriers (`RawTomlError`, `GuardExceeded`); this module
+ * materializes {@link TomlDiagnostic} instances and the tagged
+ * {@link TomlModificationError}. The dependency edge runs facade → engine
+ * only.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import {Effect, Schema} from "effect";
 import type {TomlErrorCodeRaw} from "./internal/diagnostics.ts";
 import {isRawTomlError} from "./internal/diagnostics.ts";
@@ -41,12 +48,17 @@ import {
   TomlTrivia,
 } from "./TomlNode.ts";
 
+const $I = $ScratchpadId.create("toml/TomlFormat");
+
 /**
  * A range accepted at the `format`/`formatToString` call sites: either a
  * {@link TomlRange} instance or a plain `{ offset, length }` literal (the two
  * are structurally interchangeable — only `offset`/`length` are read).
  *
- * @public
+ * @see {@link TomlRange} for the schema-backed range class.
+ * @see {@link TomlFormat.format} for the call site that accepts this union.
+ * @category type-level
+ * @since 0.0.0
  */
 export type TomlRangeLike = TomlRange | { readonly offset: number; readonly length: number };
 
@@ -56,11 +68,28 @@ export type TomlRangeLike = TomlRange | { readonly offset: number; readonly leng
  * strings; for `modify` it overrides the dominant newline inherited by
  * inserted lines.
  *
- * @public
+ * **Example** (Normalize newlines to CRLF)
+ *
+ * ```ts
+ * import { TomlFormat, TomlFormattingOptions } from "@beep/scratchpad/toml"
+ *
+ * const options = TomlFormattingOptions.make({ newline: "\r\n" })
+ * const formatted = TomlFormat.formatToString('name = "Alice"\n', undefined, options)
+ * console.log(formatted) // "name = \"Alice\"\r\n"
+ * ```
+ *
+ * @see {@link TomlFormat.format} for the syntactic formatter that consumes these options.
+ * @category configuration
+ * @since 0.0.0
  */
-export class TomlFormattingOptions extends Schema.Class<TomlFormattingOptions>("TomlFormattingOptions")({
-	newline: Schema.optionalKey(Schema.Literals(["\n", "\r\n"])),
-}) {}
+export class TomlFormattingOptions extends Schema.Class<TomlFormattingOptions>($I`TomlFormattingOptions`)(
+	{
+		newline: Schema.optionalKey(Schema.Literals(["\n", "\r\n"])),
+	},
+	$I.annote("TomlFormattingOptions", {
+		description: "Formatting and modification options whose only knob is newline.",
+	}),
+) {}
 
 /**
  * Raised when `TomlFormat.modify` cannot resolve the requested path against
@@ -69,11 +98,32 @@ export class TomlFormattingOptions extends Schema.Class<TomlFormattingOptions>("
  * cannot render as TOML. Carries one structured {@link TomlDiagnostic} —
  * never a collapsed `reason` string.
  *
- * @public
+ * **Example** (Fail an empty path)
+ *
+ * ```ts
+ * import { Effect, Result } from "effect"
+ * import { TomlFormat } from "@beep/scratchpad/toml"
+ *
+ * const outcome = Effect.runSync(Effect.result(TomlFormat.modify('name = "Alice"\n', [], "Bob")))
+ * console.log(Result.isFailure(outcome) && outcome.failure._tag) // "TomlModificationError"
+ * console.log(Result.isFailure(outcome) && outcome.failure.diagnostic.code) // "DottedKeyConflict"
+ * ```
+ *
+ * @see {@link TomlParseError} for syntax failures raised before modification is attempted.
+ * @see {@link TomlFormat.modify} for the entry point that raises this error.
+ * @category errors
+ * @since 0.0.0
  */
-export class TomlModificationError extends Schema.TaggedError<TomlModificationError>()("TomlModificationError", {
-	diagnostic: TomlDiagnostic,
-}) {
+export class TomlModificationError extends Schema.TaggedError<TomlModificationError>($I`TomlModificationError`)(
+	"TomlModificationError",
+	{
+		diagnostic: TomlDiagnostic,
+	},
+	$I.annote("TomlModificationError", {
+		description: "Tagged modification failure carrying one TomlDiagnostic for path or insertion-target errors.",
+	}),
+) {
+	/** @internal */
 	override get message(): string {
 		return `TOML modification failed: ${this.diagnostic.code} ${this.diagnostic.message}`;
 	}
@@ -757,18 +807,48 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
- * Formatting and modification statics. Not instantiable.
+ * Conservative, span-preserving TOML formatting and path-based modification.
+ * Both operations compute non-mutating CST splices: `format` is total
+ * (malformed input yields no edits), and `modify` fails typed without
+ * auto-creating tables or appending array elements.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `format`/`formatToString` are pure and total: malformed input yields no
- * edits rather than corrupting the document, and every edit derives from an
- * expression or value span, so bytes inside multi-line strings are
- * untouchable by construction. `modify`/`modifyToString` carry a real error
- * channel — {@link TomlParseError} when the source does not parse and
- * {@link TomlModificationError} for path-resolution and insertion-target
- * failures — and every document they produce reparses cleanly.
+ * edits rather than corrupting the document, so an empty edit list is not
+ * proof the source was already formatted. Bytes inside multi-line strings are
+ * untouchable by construction. `modify` never auto-creates intermediate
+ * tables, never appends array elements, and fails typed on an empty path or a
+ * path deeper than `MAX_NESTING_DEPTH`. Semantic diagnostics on the document
+ * become {@link TomlModificationError}; unparseable source becomes
+ * {@link TomlParseError}.
  *
- * @public
+ * **Example** (Format a compacted pair)
+ *
+ * ```ts
+ * import { TomlFormat } from "@beep/scratchpad/toml"
+ *
+ * const formatted = TomlFormat.formatToString('name="Alice"')
+ * console.log(formatted) // 'name = "Alice"\n'
+ * console.log(TomlFormat.format("not = = toml").length) // 0
+ * ```
+ *
+ * **Example** (Replace a value at a path)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { TomlFormat } from "@beep/scratchpad/toml"
+ *
+ * const updated = Effect.runSync(TomlFormat.modifyToString('name = "Alice"\n', ["name"], "Bob"))
+ * console.log(updated.includes("Bob")) // true
+ * ```
+ *
+ * @see {@link TomlEdit.applyAll} to apply the edits `format`/`modify` compute.
+ * @see {@link TomlDocument.parse} for the lossless parse `modify` rides on.
+ * @see {@link TomlParseError} for syntax failures from `modify`.
+ * @see {@link TomlModificationError} for path-resolution and insertion-target failures.
+ * @category formatting
+ * @since 0.0.0
  */
 export class TomlFormat {
 	private constructor() {}
@@ -783,6 +863,18 @@ export class TomlFormat {
 	 * rewriting. `range` restricts edits to the expressions intersecting it.
 	 * Non-mutating — apply with `TomlEdit.applyAll` (or use
 	 * {@link TomlFormat.formatToString}).
+	 *
+	 * **Example** (Emit a spacing edit)
+	 *
+	 * ```ts
+	 * import { TomlFormat } from "@beep/scratchpad/toml"
+	 *
+	 * const edits = TomlFormat.format('name="Alice"')
+	 * console.log(edits.length > 0) // true
+	 * console.log(TomlFormat.format("not = = toml")) // []
+	 * ```
+	 *
+	 * @see {@link TomlEdit.applyAll} to apply the returned splices.
 	 */
 	static format(text: string, range?: TomlRangeLike, options?: TomlFormattingOptions): ReadonlyArray<TomlEdit> {
 		const tagged = computeFormatEdits(text, options);
@@ -798,6 +890,16 @@ export class TomlFormat {
 	/**
 	 * Format `text` and apply the resulting edits in one step
 	 * (`TomlEdit.applyAll ∘ format`). Pure and total.
+	 *
+	 * **Example** (Normalize compacted assignment)
+	 *
+	 * ```ts
+	 * import { TomlFormat } from "@beep/scratchpad/toml"
+	 *
+	 * console.log(TomlFormat.formatToString('name="Alice"')) // 'name = "Alice"\n'
+	 * ```
+	 *
+	 * @see {@link TomlFormat.format} for the non-applying edit list.
 	 */
 	static formatToString(text: string, range?: TomlRangeLike, options?: TomlFormattingOptions): string {
 		return TomlEdit.applyAll(text, TomlFormat.format(text, range, options));
@@ -815,6 +917,16 @@ export class TomlFormat {
 	 * section; inline and implicitly created tables refuse. Inserted lines
 	 * inherit the document's dominant newline unless `options.newline`
 	 * overrides it. Every modified document reparses cleanly.
+	 *
+	 * **Gotchas**
+	 *
+	 * Malformed source fails with {@link TomlParseError}. Path-resolution,
+	 * empty-path, depth-cap, and insertion-target failures fail with
+	 * {@link TomlModificationError}. Modify never creates `[table]` headers
+	 * for missing intermediates and never appends array elements.
+	 *
+	 * @see {@link TomlFormat.format} for the total syntactic formatter.
+	 * @see {@link TomlModificationError} for path and insertion-target failures.
 	 */
 	static readonly modify = Effect.fn("TomlFormat.modify")(function* (
 		text: string,
@@ -863,6 +975,8 @@ export class TomlFormat {
 	/**
 	 * Modify `text` and apply the resulting edits in one step
 	 * (`TomlEdit.applyAll ∘ modify`).
+	 *
+	 * @see {@link TomlFormat.modify} for the non-applying edit list.
 	 */
 	static readonly modifyToString = Effect.fn("TomlFormat.modifyToString")(function* (
 		text: string,

@@ -6,15 +6,19 @@
  * the cost of answering "what is the current state" grow with the age of the
  * journal, which is the thing this package exists to avoid.
  *
- * **The scope of that, honestly**: it binds the tail reads. The historical read
- * (`Journal`'s `readFrom`, behind `query` and the replay half of `changes`)
- * currently reads its whole requested region in one allocation bounded by the
- * file's size, and is bounded by the caller's `cursor` rather than by a window.
- * Paging it through {@link readRangeText} is spencerbeggs/effected#233; until
- * that lands, this module's discipline is a property of the tail reads, not of
- * every read in the service.
+ * **Gotchas**
  *
+ * This module's window discipline binds the tail reads only. The historical
+ * read (`Journal`'s `readFrom`, behind `query` and the replay half of
+ * `changes`) currently reads its whole requested region in one allocation
+ * bounded by the file's size, and is bounded by the caller's `cursor` rather
+ * than by a window. Paging it through {@link readRangeText} is
+ * spencerbeggs/effected#233.
+ *
+ * @see {@link Line.lastValid} for the text-level walk-back these reads feed.
  * @internal
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { FileSystem, PlatformError } from "effect";
@@ -33,14 +37,32 @@ const LF = 0x0a;
  * on the first read, small enough that reading it is cheap against a journal of
  * any age. When it misses, {@link readTail} widens rather than failing.
  *
+ * **Example** (Default window size)
+ *
+ * ```ts
+ * console.log(DEFAULT_WINDOW) // 8192
+ * ```
+ *
+ * @see {@link readTail} for the unclamped window this seeds.
+ * @see {@link readTailUntil} for widening when the last line misses this window.
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_WINDOW = 8192;
 
 /**
- * A decoded tail window.
+ * A decoded tail window of JSONL text, starting at a line boundary.
  *
+ * Offsets this package hands out are relative to the post-BOM start of the
+ * file, so the first line of a BOM'd journal begins at 0 exactly as it does
+ * in one without. Add `start` to a `LineSlice.offset` computed over `text` to
+ * get the offset in the journal.
+ *
+ * @see {@link readTail} for the operation that produces this window.
  * @internal
+ * @category models
+ * @since 0.0.0
  */
 export interface TailWindow {
 	/** The decoded text of the window, starting at a line boundary. */
@@ -73,7 +95,34 @@ const hasBom = (bytes: Uint8Array): boolean =>
  * a window at offset 0, so every offset it emitted was physical — silently off
  * by three against a file the package itself had described as post-BOM.
  *
+ * **Gotchas**
+ *
+ * Do not infer BOM from window position. A journal larger than the window never
+ * has a window at offset 0, and skipping this probe silently shifts every
+ * cursor by 3.
+ *
+ * **Example** (BOM byte count from a seeded volume)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { Effect, FileSystem } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   return yield* probeBomBytes(fs, "/mail.jsonl")
+ * })
+ * const layer = MemoryFileSystem.layerWith({
+ *   "/mail.jsonl": "\uFEFF{\"event\":\"started\"}\n",
+ * })
+ * Effect.runPromise(program.pipe(Effect.provide(layer))).then(console.log)
+ * // 3
+ * ```
+ *
+ * @see {@link DEFAULT_WINDOW} for the window size that must not be used to infer BOM.
+ * @see {@link Line.lastValid} for the walk-back that consumes the decoded tail text.
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const probeBomBytes = (
 	fs: FileSystem.FileSystem,
@@ -104,14 +153,39 @@ export const probeBomBytes = (
  *    A `U+FEFF` anywhere else is content and is left alone.
  * 3. **Never read the whole file** unless the file is smaller than the window.
  *
- * **`window` is not clamped**, deliberately. `Journal`'s historical read sizes
- * its window to the region it has to return, so a clamp here would silently
- * truncate that read rather than bound it. The clamp belongs with the paged
- * rewrite of that read — one that emits per window and can therefore honour a
- * maximum — and is carried on spencerbeggs/effected#233, not added underneath
- * it.
+ * **Gotchas**
  *
+ * `window` is not clamped, deliberately. `Journal`'s historical read sizes its
+ * window to the region it has to return, so a clamp here would silently
+ * truncate that read rather than bound it. The clamp belongs with the paged
+ * rewrite of that read (spencerbeggs/effected#233).
+ *
+ * **Example** (Window start rebases to a line boundary)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { Effect, FileSystem } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   const bom = yield* probeBomBytes(fs, "/mail.jsonl")
+ *   return yield* readTail(fs, "/mail.jsonl", 8, bom)
+ * })
+ * const layer = MemoryFileSystem.layerWith({
+ *   "/mail.jsonl": "aaaaaaa\nbbbb\n",
+ * })
+ * Effect.runPromise(program.pipe(Effect.provide(layer))).then((tail) => {
+ *   console.log(tail.text) // "bbbb\n"
+ *   console.log(tail.start) // 8
+ * })
+ * ```
+ *
+ * @see {@link probeBomBytes} for the file-level BOM count this subtracts.
+ * @see {@link DEFAULT_WINDOW} for the usual first window size.
+ * @see {@link Line.lastValid} for walking the decoded window text.
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const readTail = (
 	fs: FileSystem.FileSystem,
@@ -159,7 +233,33 @@ export const readTail = (
  * cheap: a journal whose last line is longer than the initial window would
  * otherwise report "no valid envelope" for a perfectly healthy file.
  *
+ * **Example** (Widen until the last line is inside the window)
+ *
+ * ```ts
+ * import { Line } from "@beep/scratchpad/jsonl"
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { Effect, FileSystem } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   const bom = yield* probeBomBytes(fs, "/mail.jsonl")
+ *   return yield* readTailUntil(fs, "/mail.jsonl", bom, (window) => Line.lastValid(window.text), 4)
+ * })
+ * const layer = MemoryFileSystem.layerWith({
+ *   "/mail.jsonl": '{"round":1}\n',
+ * })
+ * Effect.runPromise(program.pipe(Effect.provide(layer))).then((found) => {
+ *   console.log(O.isSome(found)) // true
+ * })
+ * ```
+ *
+ * @see {@link readTail} for the unclamped window this widens.
+ * @see {@link DEFAULT_WINDOW} for the usual first window size.
+ * @see {@link Line.lastValid} for the typical `decode` argument.
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const readTailUntil = <A>(
 	fs: FileSystem.FileSystem,
@@ -190,14 +290,37 @@ export const readTailUntil = <A>(
  * The byte→string seam lives here, in the service layer, because `Line.split`
  * is string-in by design and the pure core must never learn about buffers.
  *
+ * **Gotchas**
+ *
  * `TextDecoder` is used in **streaming mode** (`{ stream: true }`) so a
  * multi-byte character split across two reads is reassembled rather than
  * mangled. A naive per-chunk `decode` corrupts any such character — a bug that
- * appears only with non-ASCII payloads at specific sizes, which is exactly the
- * kind that reaches production. The final `decode()` with no argument flushes
- * any trailing partial sequence.
+ * appears only with non-ASCII payloads at specific sizes. The final
+ * `decode()` with no argument flushes any trailing partial sequence. Do not
+ * decode chunks independently.
  *
+ * **Example** (Read a seeded range as text)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { Effect, FileSystem } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   return yield* readRangeText(fs, "/mail.jsonl", 0, 12)
+ * })
+ * const layer = MemoryFileSystem.layerWith({
+ *   "/mail.jsonl": '{"round":1}\n',
+ * })
+ * Effect.runPromise(program.pipe(Effect.provide(layer))).then(console.log)
+ * // {"round":1}\n
+ * ```
+ *
+ * @see {@link Line.lastValid} for walking the decoded range as JSONL.
+ * @see {@link readTail} for the windowed tail read that also decodes from bytes.
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const readRangeText = (
 	fs: FileSystem.FileSystem,

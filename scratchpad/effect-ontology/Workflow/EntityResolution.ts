@@ -26,20 +26,22 @@ import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
 const $I = $ScratchpadId.create("effect-ontology/Workflow/EntityResolution");
 
 /**
- * Configuration for entity resolution
+ * Mention similarity and type-overlap thresholds used by {@link resolveEntities}.
  *
- *
- * **Example** (Use the EntityResolutionConfig contract)
+ * **Example** (Construct a resolution config)
  *
  * ```ts
- * import type { EntityResolutionConfig } from "@effect-ontology/Workflow/EntityResolution"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { EntityResolutionConfig } from "@effect-ontology/Workflow/EntityResolution"
  *
- * const acceptsEntityResolutionConfig = (_value: EntityResolutionConfig): void => undefined
- *
- * console.log(acceptsEntityResolutionConfig)
+ * const config = EntityResolutionConfig.make({
+ *   mentionSimilarityThreshold: UnitInterval.make(0.7),
+ *   requireTypeOverlap: true
+ * })
+ * console.log(config.requireTypeOverlap) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`EntityResolutionConfig`)(
@@ -56,29 +58,21 @@ export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`E
 /**
  * Constructor input accepted by {@link EntityResolutionConfig}.
  *
- * **Example** (Configure entity resolution)
- *
- * ```ts
- * import type { EntityResolutionConfigInput } from "@effect-ontology/Workflow/EntityResolution"
- *
- * const config: EntityResolutionConfigInput = { requireTypeOverlap: false }
- * console.log(config)
- * ```
- *
+ * @see {@link EntityResolutionConfig} for the runtime class and {@link resolveEntities} for applying it.
  * @category type-level
  * @since 0.0.0
  */
 export type EntityResolutionConfigInput = (typeof EntityResolutionConfig)["~type.make.in"];
 
 /**
- * Exposes default config for composition by callers of this module.
+ * Schema-defaulted {@link EntityResolutionConfig} used when callers omit thresholds.
  *
- * **Example** (Inspect default config)
+ * **Example** (Read the default mention threshold)
  *
  * ```ts
  * import { DEFAULT_CONFIG } from "@effect-ontology/Workflow/EntityResolution"
  *
- * console.log(DEFAULT_CONFIG)
+ * console.log(DEFAULT_CONFIG.mentionSimilarityThreshold) // 0.7
  * ```
  *
  * @category constants
@@ -201,19 +195,31 @@ const mergeEntityCluster = (
  * Identifies and merges duplicate entities based on mention similarity
  * and type compatibility. Updates relations to point to canonical entities.
  *
- * **Example** (Use resolveEntities)
+ * **Example** (Merge overlapping Person mentions)
  *
  * ```ts
- * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { IRI } from "@beep/rdf"
+ * import { Effect } from "effect"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { resolveEntities } from "@effect-ontology/Workflow/EntityResolution"
- * import * as Effect from "effect/Effect"
  *
- * const resolved = resolveEntities(KnowledgeGraph.make({}), {
- *   mentionSimilarityThreshold: UnitInterval.make(0.7),
- *   requireTypeOverlap: true
+ * const graph = KnowledgeGraph.make({
+ *   entities: [
+ *     Entity.make({
+ *       id: EntityId.make("eze"),
+ *       mention: "Eze",
+ *       types: [IRI.make("https://schema.org/Person")]
+ *     }),
+ *     Entity.make({
+ *       id: EntityId.make("eberechi_eze"),
+ *       mention: "Eberechi Eze",
+ *       types: [IRI.make("https://schema.org/Person")]
+ *     })
+ *   ]
  * })
- * console.log(Effect.isEffect(resolved)) // true
+ * const resolved = Effect.runSync(resolveEntities(graph, {}))
+ * console.log(resolved.entities.length)
  * ```
  *
  * @param graph - Input knowledge graph

@@ -54,7 +54,32 @@ const NonEmptyString = S.NonEmptyString.pipe(
 );
 const SuccessStatus = S.String.check(S.isPattern(/^2\d\d$/u));
 
-/** Supported parameter locations before request-body fields are introduced. */
+/**
+ * OpenAPI parameter locations supported as wire parameters: path, query, and
+ * header. Body is not a parameter location.
+ *
+ * **Gotchas**
+ *
+ * This kit is {@link InputLocation} minus `"body"`. Request-body fields use
+ * {@link InputLocation} `"body"` and {@link BodyMode}, never this kit. Matrix,
+ * label, and other OpenAPI styles are not represented here.
+ *
+ * **Example** (Accept query and reject body)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ParameterLocation } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(S.is(ParameterLocation)("query"))
+ * console.log(S.is(ParameterLocation)("body"))
+ * ```
+ *
+ * @see {@link InputLocation} for the full set including body.
+ * @see {@link InputField} for the field that stores location versus inputName.
+ * @see {@link BodyMode} for how a JSON body is flattened or kept as one value.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ParameterLocation = LiteralKit(
   InputLocation.omitOptions(["body"])
 ).pipe(
@@ -63,7 +88,13 @@ export const ParameterLocation = LiteralKit(
   })
 );
 
-/** Runtime type for {@link ParameterLocation}. */
+/**
+ * Decoded value produced by {@link ParameterLocation}.
+ *
+ * @see {@link ParameterLocation} for the runtime path/query/header kit.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParameterLocation = typeof ParameterLocation.Type;
 
 const ignoredHeaderParameters = LiteralKit([
@@ -72,14 +103,38 @@ const ignoredHeaderParameters = LiteralKit([
   "authorization",
 ]);
 
-/** Direction used while removing visibility-only schema properties. */
+/**
+ * Model-facing direction used while stripping `readOnly` or `writeOnly`
+ * schema properties.
+ *
+ * **Example** (Decode a request direction)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SchemaDirection } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(S.is(SchemaDirection)("request"))
+ * console.log(S.is(SchemaDirection)("response"))
+ * ```
+ *
+ * @see {@link componentDefinitions} for projecting component schemas in one direction.
+ * @see {@link hasDirectionalSchemas} for detecting whether a document needs this split.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const SchemaDirection = LiteralKit(["request", "response"]).pipe(
   $I.annoteSchema("SchemaDirection", {
     description: "The model-facing direction of an OpenAPI schema.",
   })
 );
 
-/** Runtime type for {@link SchemaDirection}. */
+/**
+ * Decoded value produced by {@link SchemaDirection}.
+ *
+ * @see {@link SchemaDirection} for the runtime request/response kit.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SchemaDirection = typeof SchemaDirection.Type;
 
 const HiddenKeyword = MappedLiteralKit([
@@ -103,13 +158,63 @@ const nestedSchemaMaps = LiteralKit([
   "definitions",
 ]);
 
-/** Guard for JSON-style records used by OpenAPI. */
+/**
+ * Guard for JSON-style records used while walking an OpenAPI document.
+ *
+ * **Example** (Accept a path item object)
+ *
+ * ```ts
+ * import { isRecord } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(isRecord({ get: {} }))
+ * console.log(isRecord(null))
+ * ```
+ *
+ * @see {@link own} for reading a key from a record that passed this guard.
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isRecord = UnknownRecord.is;
 
-/** Decodes a non-empty string without scattering nullish checks. */
+/**
+ * Decodes a non-empty string without scattering nullish checks across the
+ * planner.
+ *
+ * **Example** (Keep a summary and drop empty text)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { nonEmptyString } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(O.getOrUndefined(nonEmptyString("ready")))
+ * console.log(O.isNone(nonEmptyString("")))
+ * ```
+ *
+ * @see {@link own} for fetching the raw value before this decode.
+ * @category parsing
+ * @since 0.0.0
+ */
 export const nonEmptyString = NonEmptyString.decodeOption;
 
-/** Own-property lookup for spec-controlled records. */
+/**
+ * Own-property lookup for spec-controlled records.
+ *
+ * **Example** (Read a path item operation)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { own } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const pathItem = { get: { operationId: "getHealth" } }
+ * console.log(O.isSome(own(pathItem, "get")))
+ * console.log(O.isNone(own(pathItem, "post")))
+ * ```
+ *
+ * @see {@link isRecord} for the guard used before this lookup.
+ * @see {@link resolve} for following `$ref` after reading a node.
+ * @category getters
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const own = <Value>(
   record: Readonly<Record<string, Value>>,
@@ -171,7 +276,36 @@ const resolvePointer = (root: unknown, ref: string): O.Option<unknown> =>
     )
   );
 
-/** Resolves a local OpenAPI `$ref`, terminating cycles without native sets. */
+/**
+ * Resolves a local OpenAPI `$ref`, terminating cycles without native sets.
+ *
+ * **Gotchas**
+ *
+ * Only `#/` local JSON Pointers are followed. Remote or external `$ref` values
+ * are left intact. Unresolved pointers and looping refs return the current
+ * node unchanged, so callers of {@link componentDefinitions} and
+ * {@link securitySchemes} may still see a `{ $ref }` object.
+ *
+ * **Example** (Follow a local components schema pointer)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Document } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { resolve } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const document = S.decodeUnknownSync(Document)({
+ *   openapi: "3.1.0",
+ *   components: { schemas: { Health: { type: "object" } } },
+ * })
+ * console.log(resolve(document, { $ref: "#/components/schemas/Health" }))
+ * console.log(resolve(document, { $ref: "https://example.test/schema.json" }))
+ * ```
+ *
+ * @see {@link componentDefinitions} for directional projection after resolve.
+ * @see {@link securitySchemes} for scheme resolution that inherits this local-only rule.
+ * @category parsing
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const resolve = (document: Document, value: unknown): unknown => {
   const next = (
@@ -228,7 +362,32 @@ const resolveResource = (
   );
 };
 
-/** Returns whether a document contains directional visibility keywords. */
+/**
+ * Returns whether a document contains directional visibility keywords
+ * (`readOnly` or `writeOnly`).
+ *
+ * **Example** (Detect a writeOnly request field)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Document } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { hasDirectionalSchemas } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const directional = S.decodeUnknownSync(Document)({
+ *   components: { schemas: { User: { properties: { secret: { writeOnly: true } } } } },
+ * })
+ * const plain = S.decodeUnknownSync(Document)({
+ *   components: { schemas: { User: { properties: { name: { type: "string" } } } } },
+ * })
+ * console.log(hasDirectionalSchemas(directional))
+ * console.log(hasDirectionalSchemas(plain))
+ * ```
+ *
+ * @see {@link SchemaDirection} for the request/response split this detection enables.
+ * @see {@link componentDefinitions} for projecting schemas once this is true.
+ * @category predicates
+ * @since 0.0.0
+ */
 export const hasDirectionalSchemas = (document: Document): boolean => {
   const contains = (
     value: unknown,
@@ -471,7 +630,31 @@ const projectSchema = (
       : value
   );
 
-/** Normalizes component schemas for one model-facing direction. */
+/**
+ * Normalizes component schemas for one model-facing direction.
+ *
+ * **Example** (Project request-side component schemas)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { Document } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { componentDefinitions } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const document = S.decodeUnknownSync(Document)({
+ *   openapi: "3.1.0",
+ *   components: { schemas: { Health: { type: "object" } } },
+ * })
+ * const definitions = componentDefinitions(document, "request")
+ * console.log(Result.isSuccess(definitions) ? Object.keys(definitions.success) : definitions.failure)
+ * ```
+ *
+ * @see {@link SchemaDirection} for the request versus response projection.
+ * @see {@link resolve} for the local `$ref` walk used before normalization.
+ * @see {@link inputSchema} for attaching these definitions onto a tool input.
+ * @category parsing
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const componentDefinitions = (
   document: Document,
@@ -995,7 +1178,50 @@ const nextInputName = (
     : candidate;
 };
 
-/** Normalizes operation parameters and request-body fields. */
+/**
+ * Normalizes operation parameters and request-body fields into model-visible
+ * {@link InputField} values.
+ *
+ * **Gotchas**
+ *
+ * Names that fail `isBlockedMember` are rewritten to `${name}_2`. Cross-location
+ * collisions (the same wire `name` in path and query) become
+ * `${location}_${visibleName}`. {@link inputSchema} then keys properties by
+ * `inputName`, not the OpenAPI parameter `name`, so callers sending spec names
+ * may send unused fields.
+ *
+ * **Example** (Project path and query fields)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { Document } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { operationInput } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const document = S.decodeUnknownSync(Document)({ openapi: "3.1.0" })
+ * const input = operationInput(
+ *   document,
+ *   {},
+ *   {
+ *     parameters: [
+ *       { name: "id", in: "path", required: true, schema: { type: "string" } },
+ *       { name: "verbose", in: "query", schema: { type: "boolean" } },
+ *     ],
+ *   },
+ * )
+ * console.log(
+ *   Result.isSuccess(input)
+ *     ? input.success.fields.map((field) => [field.inputName, field.location])
+ *     : input.failure,
+ * )
+ * ```
+ *
+ * @see {@link inputSchema} for the object schema keyed by `inputName`.
+ * @see {@link InputField} for `inputName` versus wire `name`.
+ * @see {@link operationOutput} for the response-side sibling.
+ * @category parsing
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationInput = (
   document: Document,
@@ -1059,7 +1285,36 @@ export const operationInput = (
     })
   );
 
-/** Emits the object JSON Schema accepted by one generated tool. */
+/**
+ * Emits the object JSON Schema accepted by one generated tool, keyed by
+ * {@link InputField.inputName}.
+ *
+ * **Example** (Build a tool input schema from fields)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InputField, JsonSchema } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { inputSchema } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const id = InputField.new(
+ *   "id",
+ *   "id",
+ *   "path",
+ *   true,
+ *   S.decodeUnknownSync(JsonSchema)({ type: "string" }),
+ *   O.none(),
+ *   O.none(),
+ * )
+ * const schema = inputSchema([id], {})
+ * console.log(schema)
+ * ```
+ *
+ * @see {@link operationInput} for the fields whose `inputName` keys this schema.
+ * @see {@link InputField} for `inputName` versus the OpenAPI wire `name`.
+ * @category parsing
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const inputSchema = (
   fields: ReadonlyArray<InputField>,
@@ -1116,7 +1371,47 @@ const successfulResponses = (
   );
 };
 
-/** Produces the normalized success schema for one operation. */
+/**
+ * Produces the normalized success schema for one operation.
+ *
+ * **Gotchas**
+ *
+ * Hard failures (later recorded as {@link Skipped.reason} by {@link fromSpec}):
+ * `"WebSocket operations are not supported"` when `x-websocket` is true,
+ * `"SSE operations are not supported"` when a success content type is
+ * `text/event-stream`, and `"binary responses are not supported"` for non-JSON
+ * non-text media types or `format: binary`.
+ *
+ * **Example** (Project a JSON success schema)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Document } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { operationOutput } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const document = S.decodeUnknownSync(Document)({ openapi: "3.1.0" })
+ * const output = operationOutput(
+ *   document,
+ *   {
+ *     responses: {
+ *       "200": {
+ *         description: "ok",
+ *         content: { "application/json": { schema: { type: "object" } } },
+ *       },
+ *     },
+ *   },
+ *   {},
+ * )
+ * console.log(Result.isSuccess(output) ? O.isSome(output.success) : output.failure)
+ * ```
+ *
+ * @see {@link fromSpec} for how these failures become {@link Skipped}.
+ * @see {@link operationInput} for the request-side sibling.
+ * @category parsing
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationOutput = (
   document: Document,
@@ -1292,7 +1587,23 @@ const isOperationPathAvailable = (
   );
 };
 
-/** Produces a collision-free dotted Toolkit path for an operation. */
+/**
+ * Produces a collision-free dotted Toolkit path for an operation.
+ *
+ * **Example** (Prefer operationId then fall back to method+path)
+ *
+ * ```ts
+ * import { HashSet } from "effect"
+ * import { operationPath } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(operationPath("get", "/health", { operationId: "getHealth" }, HashSet.empty(), HashSet.empty()))
+ * console.log(operationPath("get", "/users/{id}", {}, HashSet.empty(), HashSet.empty()))
+ * ```
+ *
+ * @see {@link fromSpec} for the compilation that records used names and namespaces.
+ * @category getters
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationPath = (
   method: string,
@@ -1350,7 +1661,31 @@ export const operationPath = (
   return A.of(next(2));
 };
 
-/** Validates a host or document server URL. */
+/**
+ * Validates a host or document server URL as an absolute HTTP(S) origin plus
+ * path, with no query string or fragment.
+ *
+ * **Gotchas**
+ *
+ * Only `http:` and `https:` are accepted. Query strings and hashes fail. When
+ * the spec's `servers[].url` is a `{variable}` template, callers must pass
+ * {@link Options.baseUrl} instead of relying on {@link specServerUrl}.
+ *
+ * **Example** (Accept HTTPS and reject a websocket URL)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { validateBaseUrl } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(Result.isSuccess(validateBaseUrl("https://api.example.test")))
+ * console.log(Result.isFailure(validateBaseUrl("ws://api.example.test")))
+ * ```
+ *
+ * @see {@link specServerUrl} for reading the first `servers[].url` then validating it.
+ * @see {@link Options} for the `baseUrl` that overrides document servers.
+ * @category validation
+ * @since 0.0.0
+ */
 export const validateBaseUrl = (
   value: string
 ): Result.Result<string, string> =>
@@ -1374,7 +1709,33 @@ export const validateBaseUrl = (
     })
   );
 
-/** Resolves the first declared server URL. */
+/**
+ * Resolves the first declared `servers[].url` and validates it as absolute
+ * HTTP(S).
+ *
+ * **Gotchas**
+ *
+ * Missing `servers` fails with `"spec declares no servers; pass baseUrl"`.
+ * Templated `{variable}` URLs fail with a pass-`baseUrl` message rather than
+ * expanding. The same HTTP(S)-only, no-query, no-hash rules as
+ * {@link validateBaseUrl} apply. {@link fromSpec} prefers {@link Options.baseUrl},
+ * else operation/pathItem/document servers.
+ *
+ * **Example** (Read the first server or demand baseUrl)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { specServerUrl } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * console.log(Result.getOrThrow(specServerUrl({ servers: [{ url: "https://api.example.test" }] })))
+ * console.log(Result.isFailure(specServerUrl({})))
+ * ```
+ *
+ * @see {@link validateBaseUrl} for the HTTP(S) absolute-URL check.
+ * @see {@link Options} for the `baseUrl` override used by {@link fromSpec}.
+ * @category getters
+ * @since 0.0.0
+ */
 export const specServerUrl = (
   source: Readonly<Record<string, unknown>>
 ): Result.Result<string, string> => {
@@ -1399,7 +1760,28 @@ export const specServerUrl = (
   return validateBaseUrl(url.value);
 };
 
-/** Decodes an OpenAPI security requirement array to HashMap-backed models. */
+/**
+ * Decodes an OpenAPI security requirement array to HashMap-backed AND groups.
+ *
+ * **Example** (Decode an apiKey requirement)
+ *
+ * ```ts
+ * import { HashMap, Result } from "effect"
+ * import { securityRequirements } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const decoded = securityRequirements([{ apiKey: [] }])
+ * console.log(
+ *   Result.isSuccess(decoded)
+ *     ? HashMap.has(decoded.success[0].schemes, "apiKey")
+ *     : decoded.failure,
+ * )
+ * ```
+ *
+ * @see {@link operationSecurityRequirements} for filtering cookie-only alternatives.
+ * @see {@link SecurityRequirement} for the AND-group model.
+ * @category parsing
+ * @since 0.0.0
+ */
 export const securityRequirements = (
   value: unknown
 ): Result.Result<ReadonlyArray<SecurityRequirement>, string> => {
@@ -1438,7 +1820,42 @@ export const securityRequirements = (
   );
 };
 
-/** Selects supported security alternatives for one operation. */
+/**
+ * Selects supported security alternatives for one operation, dropping cookie
+ * apiKey schemes.
+ *
+ * **Gotchas**
+ *
+ * Cookie-carried apiKey schemes are modeled by {@link ApiKeyCookie} for
+ * diagnostics but are not executable. When every remaining alternative needs a
+ * cookie, this fails with `cookie authentication '…' is not supported`.
+ * {@link invoke} also rejects cookie credentials at apply time.
+ *
+ * **Example** (Keep a header apiKey alternative)
+ *
+ * ```ts
+ * import { HashMap, Result } from "effect"
+ * import { ApiKeyHeader, SecuritySchemeApiKey } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { operationSecurityRequirements, securityRequirements } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const schemes = HashMap.fromIterable([
+ *   ["apiKey", SecuritySchemeApiKey.new(ApiKeyHeader.new("x-api-key"))],
+ * ])
+ * const selected = operationSecurityRequirements(
+ *   [{ apiKey: [] }],
+ *   securityRequirements(undefined),
+ *   schemes,
+ * )
+ * console.log(Result.isSuccess(selected) ? selected.success.length : selected.failure)
+ * ```
+ *
+ * @see {@link ApiKeyCookie} for the diagnostic-only cookie carrier.
+ * @see {@link invoke} for the runtime cookie rejection.
+ * @see {@link securitySchemes} for constructing cookie carriers that this later rejects.
+ * @see {@link ApiKeyHeader} and {@link ApiKeyQuery} for executable carriers.
+ * @category parsing
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationSecurityRequirements = (
   value: unknown,
@@ -1500,7 +1917,34 @@ export const operationSecurityRequirements = (
     })
   );
 
-/** Resolves supported component security schemes to a HashMap. */
+/**
+ * Resolves supported component security schemes to a HashMap, including
+ * diagnostic-only cookie apiKey carriers.
+ *
+ * **Example** (Resolve a header apiKey scheme)
+ *
+ * ```ts
+ * import { HashMap } from "effect"
+ * import * as S from "effect/Schema"
+ * import { Document } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { securitySchemes } from "../../../codemode/openapi/OpenAPI.specification.ts"
+ *
+ * const document = S.decodeUnknownSync(Document)({
+ *   components: {
+ *     securitySchemes: {
+ *       apiKey: { type: "apiKey", in: "header", name: "x-api-key" },
+ *     },
+ *   },
+ * })
+ * console.log(HashMap.has(securitySchemes(document), "apiKey"))
+ * ```
+ *
+ * @see {@link operationSecurityRequirements} for dropping cookie-only alternatives.
+ * @see {@link ApiKeyCookie} for cookie carriers retained only for diagnostics.
+ * @see {@link resolve} for the local `$ref` walk used on scheme objects.
+ * @category parsing
+ * @since 0.0.0
+ */
 export const securitySchemes = (
   document: Document
 ): HashMap.HashMap<string, SecurityScheme> => {

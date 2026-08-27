@@ -25,18 +25,18 @@ import { StorageService } from "../Service/Storage.ts";
 // =============================================================================
 
 /**
- * Validates and represents asset router values at runtime.
+ * HTTP surface for downloading raw documents, Turtle graphs, link content, and batch reports.
  *
- * **Example** (Validate asset router)
+ * **Example** (Name a document-content route)
  *
  * ```ts
- * import { Layer } from "effect"
  * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
  *
- * console.log(Layer.isLayer(AssetRouter)) // true
+ * const documented = [AssetRouter, "/v1/ontologies/:ontologyId/documents/:docId/content"] as const
+ * console.log(documented[1]) // "/v1/ontologies/:ontologyId/documents/:docId/content"
  * ```
  *
- * @category layers
+ * @category endpoints
  * @since 0.0.0
  */
 export const AssetRouter = HttpRouter.addAll([

@@ -220,12 +220,19 @@ type ParsedOntology = {
  * parser's typed failure channel. Both data-first and data-last call forms are
  * supported.
  *
- * **Example** (Inspect the parser API)
+ * **Example** (Parse classes from an empty store)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { parseOntologyFromStore } from "@effect-ontology/Service/Ontology"
+ * import { emptyRdfStore, RdfBuilder } from "@effect-ontology/Service/Rdf"
  *
- * console.log(typeof parseOntologyFromStore) // "function"
+ * const program = Effect.gen(function* () {
+ *   const rdf = yield* RdfBuilder
+ *   return yield* parseOntologyFromStore(rdf, emptyRdfStore(), "ontologies/core.ttl")
+ * }).pipe(Effect.provide(RdfBuilder.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category parsing
@@ -607,12 +614,18 @@ export const parseOntologyFromStore: {
  * Loads ontology from file, parses using RdfService, and extracts classes/properties
  * using RdfService queries. Backend-agnostic: works with any RDF engine.
  *
- * **Example** (Inspect ontology service)
+ * **Example** (Search ontology classes)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { OntologyService } from "@effect-ontology/Service/Ontology"
  *
- * console.log(OntologyService)
+ * const program = Effect.gen(function* () {
+ *   const ontology = yield* OntologyService
+ *   return yield* ontology.searchClasses("Person")
+ * }).pipe(Effect.provide(OntologyService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

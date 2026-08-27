@@ -1,11 +1,14 @@
-// Document-level composition: the per-CST-document compose walk, directive
-// validation (per-document and cross-document), the sourceMultiline
-// decoration post-pass, and the two engine entry points the facade and the
-// compliance harness drive (`composeFirstDocument`, `composeAllDocuments`).
-//
-// This module wires the flow-composer dispatch into state (see `state.ts`)
-// — it is the only composer module that imports both `block.ts` and
-// `flow.ts`, and nothing in the engine imports it back.
+/**
+ * Document-level composition: the per-CST-document compose walk, directive
+ * validation, and the engine entry points the facade drives.
+ *
+ * This is the only composer module that imports both `block.ts` and
+ * `flow.ts`; nothing in the engine imports it back. Fatal-code filtering is
+ * the facade's job — these entry points return raw diagnostics unfiltered.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type {YamlNode} from "../../YamlNode.ts";
 import {
@@ -230,6 +233,23 @@ function checkTrailingContentAfterDocValue(
 // Compose document
 // ---------------------------------------------------------------------------
 
+/**
+ * Compose one CST document node into a raw document record.
+ *
+ * **Example** (Single-document mapping)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: 1\n"))) // { a: 1 }
+ * ```
+ *
+ * @see {@link composeFirstDocument} for the text-level engine entry.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function composeDocument(
 	cst: CstNode,
 	state: ComposerState,
@@ -932,6 +952,27 @@ function findNestedDirective(node: CstNode): CstNode | null {
  * preceded by a document-end marker (`...`). This function checks each
  * CST document node after the first: if it contains directives, the
  * preceding document must have ended with `...`.
+ *
+ * **Gotchas**
+ *
+ * `%TAG` handles do not leak across `---`. Subsequent documents that use a
+ * named handle without a local `%TAG` get `UnresolvedTag`. Directives
+ * between documents also require a preceding `...`.
+ *
+ * **Example** (Handle from document 1 is unresolved in document 2)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const leaked = Yaml.parseAllResult("%TAG !e! tag:example.com,2000:app/\n---\n!e!foo: 1\n")
+ * console.log(Result.isFailure(leaked)) // true
+ * ```
+ *
+ * @see {@link validateTagHandlesInDocument} for the per-document handle check.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
@@ -1081,6 +1122,22 @@ function decorateDocumentSourceMultiline(doc: RawYamlDocument, text: string): Ra
 // Engine entry points
 // ---------------------------------------------------------------------------
 
+/**
+ * Empty recovered document used when the CST stream has no document node.
+ *
+ * **Example** (Empty input parses as `null`)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse(""))) // null
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const EMPTY_DOCUMENT: RawYamlDocument = {
 	contents: null,
 	errors: [],
@@ -1097,6 +1154,26 @@ export const EMPTY_DOCUMENT: RawYamlDocument = {
  * filtering (the facade applies `isFatalCode` to the returned diagnostics).
  * Cross-document directive-placement errors are validated into the same
  * state and therefore appear in the returned document's `errors`.
+ *
+ * **Gotchas**
+ *
+ * Calling the engine directly and treating `errors.length > 0` as fatal (or
+ * as non-fatal) disagrees with {@link Yaml.parse}. Cross-document directive
+ * errors appear on this first document's `errors`.
+ *
+ * **Example** (First document of a two-document stream)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: 1\n---\nb: 2\n"))) // { a: 1 }
+ * ```
+ *
+ * @see {@link isFatalCode} for the filter the facade applies.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
 	return composeFirstDocumentCounted(text, options).document;
@@ -1109,6 +1186,30 @@ export function composeFirstDocument(text: string, options?: ParseOptionsInput):
  * scalar or quoted string is content, not a document marker). Callers that
  * must refuse multi-document input (the `YamlFormat` single-document
  * contract) read `documentCount` instead of re-parsing.
+ *
+ * **Gotchas**
+ *
+ * Fatal-code filtering is still the facade's job. `documentCount` is CST
+ * documents, not a regex over `---`.
+ *
+ * **Example** (Modify refuses a two-document stream)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlFormat } from "@beep/scratchpad/yaml"
+ *
+ * const refused = Effect.runSync(
+ *   YamlFormat.modify("a: 1\n---\nb: 2\n", ["a"], 9).pipe(
+ *     Effect.match({ onFailure: () => true, onSuccess: () => false }),
+ *   ),
+ * )
+ * console.log(refused) // true
+ * ```
+ *
+ * @see {@link isFatalCode} for the filter the facade applies.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function composeFirstDocumentCounted(
 	text: string,
@@ -1136,6 +1237,25 @@ export function composeFirstDocumentCounted(
  * cross-document directive validation runs in its own state whose errors
  * are returned unfiltered as `streamErrors` (v3 filtered these to
  * `InvalidDirective` before failing — the facade applies that filter).
+ *
+ * **Gotchas**
+ *
+ * `streamErrors` are unfiltered. The facade applies {@link isFatalCode}
+ * (and historically filtered to `InvalidDirective`).
+ *
+ * **Example** (Two-document stream)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parseAll("a: 1\n---\nb: 2\n"))) // [{ a: 1 }, { b: 2 }]
+ * ```
+ *
+ * @see {@link isFatalCode} for the filter the facade applies.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function composeAllDocuments(
 	text: string,

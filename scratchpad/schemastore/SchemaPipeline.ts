@@ -1,12 +1,15 @@
-// The verb `SchemaTarget` was defined for: generate each target's document,
-// lint it, validate it with the real engine, gate on the findings, and write
-// it. Orchestration only — every step belongs to a module this package
-// already owns, and no JSON Schema capability is added here.
-//
-// A plain function rather than a `Context.Service`: it needs `SchemaFile`
-// and `SchemaValidator`, which compose through `R` for free. A service would
-// add a layer to wire for no capability the consumer does not already have.
+/**
+ * Orchestrate generate → lint → validate → gate → write for SchemaStore targets.
+ *
+ * Adds no JSON Schema capability of its own: every step belongs to a module
+ * this package already owns. Requires `SchemaFile` and `SchemaValidator` in
+ * `R`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Schema } from "effect";
 import type { CanonicalJsonError } from "./CanonicalJson.ts";
 import { DocumentLint } from "./DocumentLint.ts";
@@ -24,6 +27,8 @@ import { SchemaValidator } from "./SchemaValidator.ts";
 import type { SchemaConversionError } from "./StoreDocument.ts";
 import { StoreDocument } from "./StoreDocument.ts";
 
+const $I = $ScratchpadId.create("schemastore/SchemaPipeline");
+
 /**
  * One problem found while emitting a target, from either gate, normalized
  * so a single policy predicate can judge both.
@@ -31,20 +36,45 @@ import { StoreDocument } from "./StoreDocument.ts";
  * `DocumentLint` findings keep their own severity; engine findings are
  * `"warning"` — a document the engine rejects is not advisory.
  *
+ * **Example** (Construct a lint finding)
+ *
+ * ```ts
+ * import { PipelineFinding } from "@beep/scratchpad/schemastore"
+ *
+ * const finding = PipelineFinding.make({
+ *   source: "lint",
+ *   severity: "warning",
+ *   check: "UnresolvedRef",
+ *   path: "/$ref",
+ *   message: "$ref does not resolve against $defs",
+ * })
+ *
+ * console.log(finding.label)
+ * // => "UnresolvedRef"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class PipelineFinding extends Schema.Class<PipelineFinding>("PipelineFinding")({
-	/** Which gate produced it. */
-	source: Schema.Literals(["lint", "validator"]),
-	/** `"warning"` blocks under the default policy; `"advisory"` does not. */
-	severity: Schema.Literals(["warning", "advisory"]),
-	/** The lint check's name, or the engine keyword, when one is named. */
-	check: Schema.optionalKey(Schema.String),
-	/** JSON pointer into the flat document (`""` is the root). */
-	path: Schema.String,
-	/** Human-readable explanation. */
-	message: Schema.String,
-}) {
+export class PipelineFinding extends Schema.Class<PipelineFinding>($I`PipelineFinding`)(
+	{
+		/** Which gate produced it. */
+		source: Schema.Literals(["lint", "validator"]),
+		/** `"warning"` blocks under the default policy; `"advisory"` does not. */
+		severity: Schema.Literals(["warning", "advisory"]),
+		/** The lint check's name, or the engine keyword, when one is named. */
+		check: Schema.optionalKey(Schema.String),
+		/** JSON pointer into the flat document (`""` is the root). */
+		path: Schema.String,
+		/** Human-readable explanation. */
+		message: Schema.String,
+	},
+	$I.annote("PipelineFinding", {
+		description:
+			"One lint or validator problem found while emitting a SchemaStore target, normalized so a single policy can judge both gates.",
+	}),
+) {
 	/**
 	 * What to call this finding when rendering it: the check name when the
 	 * gate named one, the gate itself otherwise.
@@ -63,14 +93,46 @@ export class PipelineFinding extends Schema.Class<PipelineFinding>("PipelineFind
  * gating policy. Carries every blocking finding, so a caller renders one
  * report instead of discovering problems one run at a time.
  *
+ * **Example** (Construct a gate failure)
+ *
+ * ```ts
+ * import { PipelineFinding, SchemaGateError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = SchemaGateError.make({
+ *   $id: "https://example.com/config.schema.json",
+ *   findings: [
+ *     PipelineFinding.make({
+ *       source: "validator",
+ *       severity: "warning",
+ *       path: "",
+ *       message: "schema is not valid",
+ *     }),
+ *   ],
+ * })
+ *
+ * console.log(error._tag)
+ * // => "SchemaGateError"
+ * console.log(error.findings.length)
+ * // => 1
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class SchemaGateError extends Schema.TaggedError<SchemaGateError>()("SchemaGateError", {
-	/** The `$id` of the target that failed the gate. */
-	$id: Schema.String,
-	/** Every finding that blocked, in discovery order. */
-	findings: Schema.Array(PipelineFinding),
-}) {
+export class SchemaGateError extends Schema.TaggedError<SchemaGateError>($I`SchemaGateError`)(
+	"SchemaGateError",
+	{
+		/** The `$id` of the target that failed the gate. */
+		$id: Schema.String,
+		/** Every finding that blocked, in discovery order. */
+		findings: Schema.Array(PipelineFinding),
+	},
+	$I.annote("SchemaGateError", {
+		description:
+			"Raised when a target's lint or validator findings block under the active gating policy.",
+	}),
+) {
 	override get message(): string {
 		return `Schema "${this.$id}" failed its gate with ${this.findings.length} blocking finding(s)`;
 	}
@@ -79,7 +141,10 @@ export class SchemaGateError extends Schema.TaggedError<SchemaGateError>()("Sche
 /**
  * What the pipeline did with one target.
  *
+ * @see {@link SchemaPipeline.run} for the emit loop that returns this result.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PipelineResult {
 	/** The target's `$id`. */
@@ -102,7 +167,10 @@ export interface PipelineResult {
  * What {@link SchemaPipeline.check} found for one target — the same report
  * without the write.
  *
+ * @see {@link SchemaPipeline.check} for the drift-check that returns this result.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PipelineCheckResult {
 	/** The target's `$id`. */
@@ -126,7 +194,11 @@ export interface PipelineCheckResult {
 /**
  * Options for {@link SchemaPipeline.run} and {@link SchemaPipeline.check}.
  *
+ * @see {@link SchemaPipeline.run} for the emit loop these options configure.
+ * @see {@link SchemaPipeline.check} for the total drift-check counterpart.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SchemaPipelineOptions {
 	/**
@@ -213,27 +285,46 @@ const gate = (
  * which is the part that must not silently differ between consumers, has
  * one default and one override point.
  *
- * @example
+ * **Gotchas**
+ *
+ * {@link SchemaPipeline.run} short-circuits at the first {@link SchemaGateError}
+ * and does not write that target or later ones. {@link SchemaPipeline.check}
+ * is total over the targets and reports `blocked` instead of failing. On
+ * documents built by `StoreDocument.fromSchema`, `UnknownKeyword` is
+ * effectively unreachable — the engine gate is the practical blocker.
+ *
+ * **Example** (Check one target without writing)
+ *
  * ```ts
- * import { SchemaFile, SchemaPipeline, SchemaTarget, SchemaValidator } from "@effected/schemastore";
- * import { NodeServices } from "@effect/platform-node";
- * import { Effect, Layer, Schema } from "effect";
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { SchemaFile, SchemaPipeline, SchemaTarget, SchemaValidator } from "@beep/scratchpad/schemastore"
+ * import { Effect, Layer, Path } from "effect"
+ * import * as S from "effect/Schema"
  *
- * const targets = [
- *   SchemaTarget.make({
- *     schema: Schema.Struct({ name: Schema.String }),
- *     $id: "https://example.com/config.schema.json",
- *     path: "schemas/config.schema.json",
- *   }),
- * ];
+ * const target = SchemaTarget.make({
+ *   schema: S.Struct({ name: S.String }),
+ *   $id: "https://example.com/config.schema.json",
+ *   path: "/schemas/config.schema.json",
+ * })
  *
- * const program = SchemaPipeline.run(targets).pipe(
+ * const program = SchemaPipeline.checkOne(target).pipe(
  *   Effect.provide(Layer.mergeAll(SchemaFile.layer, SchemaValidator.layer)),
- *   Effect.provide(NodeServices.layer),
- * );
+ *   Effect.provide(Layer.mergeAll(MemoryFileSystem.layer, Path.layer)),
+ * )
+ *
+ * Effect.runPromise(program).then((result) =>
+ *   console.log({ blocked: result.blocked, wouldWrite: result.wouldWrite, change: result.change }),
+ * )
+ * // => { blocked: false, wouldWrite: true, change: "created" }
  * ```
  *
+ * @see {@link SchemaPipeline.check} for the total drift-check counterpart to `run`.
+ * @see {@link SchemaGateError} for the typed failure when `run` stops at a blocking target.
+ * @see {@link SchemaTarget} for the publication-target constructor the pipeline consumes.
+ * @see {@link SchemaValidator} for the engine gate that blocks generated documents in practice.
  * @public
+ * @category workflows
+ * @since 0.0.0
  */
 export class SchemaPipeline {
 	private constructor() {}

@@ -11,19 +11,23 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 
 /**
- * Normalize an Effect failure at a Drizzle operation boundary.
+ * Maps any Effect failure at a Drizzle boundary onto `DrizzleError` tagged
+ * with the operation that failed.
  *
- * **Example** (Normalize an execution failure)
+ * **Example** (Capture an execute failure)
  *
  * ```ts
  * import { normalizeDrizzleError } from "@effect-ontology/Utils/Sql"
  * import { Effect } from "effect"
  *
- * const query = Effect.fail("connection closed").pipe(normalizeDrizzleError("execute"))
- * console.log(query)
+ * const error = Effect.runSync(
+ *   Effect.flip(Effect.fail("connection closed").pipe(normalizeDrizzleError("execute")))
+ * )
+ * console.log(error._tag) // "DrizzleError"
+ * console.log(error.operation) // "execute"
  * ```
  *
- * @category errors
+ * @category error-handling
  * @since 0.0.0
  */
 export const normalizeDrizzleError =

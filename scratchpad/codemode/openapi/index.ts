@@ -441,6 +441,68 @@ const makeHandlersLayer = (
  * Decodes raw OpenAPI adapter options, then compiles representable operations
  * into a dynamic Effect AI Toolkit and its handler layer.
  *
+ * **Gotchas**
+ *
+ * A successful Effect still carries {@link FromSpecResult.skipped}: invalid
+ * paths, WebSocket/SSE/binary responses, cookie-only security, and bad server
+ * URLs are omitted rather than failing compilation. The Effect error channel
+ * is only {@link InvalidOpenApiOptions} from options decode. Generated tools
+ * use `failureMode: "return"` and surface HTTP failures as {@link ToolError}
+ * from {@link invoke}, not as a failed Effect.
+ *
+ * **Example** (Compile a GET /health document)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { fromSpec } from "../../../codemode/openapi/index.ts"
+ *
+ * const result = await Effect.runPromise(
+ *   fromSpec({
+ *     spec: {
+ *       openapi: "3.1.0",
+ *       info: { title: "Health", version: "1.0.0" },
+ *       paths: {
+ *         "/health": {
+ *           get: {
+ *             operationId: "getHealth",
+ *             responses: {
+ *               "200": {
+ *                 description: "ok",
+ *                 content: {
+ *                   "application/json": {
+ *                     schema: { type: "object", properties: { ok: { type: "boolean" } } },
+ *                   },
+ *                 },
+ *               },
+ *             },
+ *           },
+ *         },
+ *       },
+ *     },
+ *     baseUrl: "https://api.example.test",
+ *   })
+ * )
+ * console.log(Object.keys(result.toolkit.tools))
+ * console.log(result.skipped)
+ * ```
+ *
+ * **Example** (Reject invalid adapter options)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { fromSpec } from "../../../codemode/openapi/index.ts"
+ *
+ * const error = await Effect.runPromise(fromSpec({ spec: null }).pipe(Effect.flip))
+ * console.log(error._tag)
+ * console.log(error.message)
+ * ```
+ *
+ * @see {@link invoke} for HTTP execution of each generated tool.
+ * @see {@link Skipped} for operations omitted from the toolkit.
+ * @see {@link Options} for the decoded adapter options including baseUrl.
+ * @see {@link InvalidOpenApiOptions} for the only Effect-channel failure.
+ * @see {@link operationOutput} for WebSocket/SSE/binary skip reasons.
+ * @see {@link FromSpecResult} for toolkit, handlers, and skipped together.
  * @category constructors
  * @since 0.0.0
  */

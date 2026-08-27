@@ -1,13 +1,16 @@
-// The single iterative bracket-balance skip, shared by the parser (tree/value
-// depth caps), the modifier's structural navigation and the visitor's depth
-// cap. Private implementation.
-//
-// Counting `Open*`/`Close*` bracket depth over the flat token stream skips any
-// value — scalar or arbitrarily-nested collection — without recursing, so it
-// cannot overflow the stack on hostile deeply-nested input. Strings tokenize
-// whole, so braces inside them never affect the count. This is
-// security-relevant recursion hardening: keep the single copy here so a
-// boundary tweak or malformed-input guard lands everywhere at once.
+/**
+ * Iterative bracket-balance skip shared by the parser, navigator and visitor.
+ *
+ * Counting `Open*`/`Close*` bracket depth over the flat token stream skips any
+ * value — scalar or arbitrarily-nested collection — without recursing, so it
+ * cannot overflow the stack on hostile deeply-nested input. Strings tokenize
+ * whole, so braces inside them never affect the count. This is
+ * security-relevant recursion hardening: keep the single copy here so a
+ * boundary tweak or malformed-input guard lands everywhere at once.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { SyntaxKind } from "./scanner.ts";
 
@@ -17,6 +20,11 @@ import type { SyntaxKind } from "./scanner.ts";
  * `scanNext`, the visitor's raw non-emitting `scan`, the navigator's
  * trivia-ignoring closure — so the skip stays agnostic of how tokens are
  * produced or what bookkeeping advancing entails.
+ *
+ * @see {@link skipBalancedValue} for the iterative skip that consumes this cursor.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SkipCursor {
 	/** Return the current token without advancing. */
@@ -42,6 +50,33 @@ export interface SkipCursor {
  *
  * Callers that skip a container at a depth cap pass the opener as the current
  * token and ignore the returned offset.
+ *
+ * **Example** (Empty-range closer stays put)
+ *
+ * ```ts
+ * import { createScanner } from "../../jsonc/internal/scanner.ts";
+ * import { skipBalancedValue } from "../../jsonc/internal/skip.ts";
+ *
+ * const scanner = createScanner("}");
+ * scanner.scan();
+ * const start = scanner.getTokenOffset();
+ * const end = skipBalancedValue({
+ *   getToken: () => scanner.getToken(),
+ *   advance: () => {
+ *     scanner.scan();
+ *   },
+ *   tokenStart: () => scanner.getTokenOffset(),
+ *   tokenEnd: () => scanner.getTokenOffset() + scanner.getTokenLength(),
+ * });
+ *
+ * console.log(end === start); // true
+ * console.log(scanner.getToken() === "CloseBrace"); // true
+ * ```
+ *
+ * @see {@link SkipCursor} for the adapter each call site must provide.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export const skipBalancedValue = (cursor: SkipCursor): number => {
 	const start = cursor.getToken();

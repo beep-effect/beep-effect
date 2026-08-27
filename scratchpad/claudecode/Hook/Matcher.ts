@@ -10,6 +10,7 @@
  * Use these when you dispatch many events from one script and need to
  * branch within a single handler.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -29,20 +30,28 @@ const exactMatcherPattern = /^[A-Za-z0-9_|]+$/;
  * only from letters/digits/`_`/`|` are exact values or `|`-separated exact
  * lists, and strings containing any other character are JavaScript regexes.
  *
- * **Example** (Match exact, listed, and regular-expression tools)
+ * **Gotchas**
+ *
+ * Claude Code already applies the `matcher` field in settings.json before
+ * spawning the process. Use this helper only when one script must branch on
+ * several incoming values itself.
+ *
+ * **Example** (Match exact, listed, and regular-expression names)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * const isBash = Hook.matchTool('Bash')
- * const isEditOrWrite = Hook.matchTool('Edit|Write')
- * const isMcp = Hook.matchTool('mcp__.*')
+ * const isBash = Hook.matchValue("Bash")
+ * const isEditOrWrite = Hook.matchValue("Edit|Write")
+ * const isMcp = Hook.matchValue("mcp__.*")
  *
  * console.log(isBash("Bash")) // true
  * console.log(isEditOrWrite("Write")) // true
  * console.log(isMcp("mcp__foo")) // true
  * ```
  *
+ * @see {@link matchFileName} for FileChanged basename matchers, which never compile `|` segments as regular expressions.
+ * @see {@link matchTool} for the tool-name alias of this compiler.
  * @category predicates
  * @since 0.0.0
  */
@@ -62,16 +71,26 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
 };
 
 /**
- * Test whether a matcher pattern matches a value, one-shot.
+ * One-shot test of a matcher pattern against a value.
  *
- * **Example** (Test one tool name)
+ * **Gotchas**
+ *
+ * Claude Code already applies the `matcher` field in settings.json before
+ * spawning the process. Use this helper only when one script must branch on
+ * several incoming values itself.
+ *
+ * **Example** (Test exact, listed, and regular-expression names)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.testTool("Bash", "Bash"))
+ * console.log(Hook.testValue("Bash", "Bash")) // true
+ * console.log(Hook.testValue("Edit|Write", "Read")) // false
+ * console.log(Hook.testValue("mcp__.*", "mcp__foo")) // true
  * ```
  *
+ * @see {@link matchFileName} for FileChanged basename matchers, which never compile `|` segments as regular expressions.
+ * @see {@link testTool} for the tool-name alias of this one-shot test.
  * @category predicates
  * @since 0.0.0
  */
@@ -114,6 +133,12 @@ export const handleMatcher =
 /**
  * Alias for `matchValue(...)` when matching `tool_name`.
  *
+ * **Gotchas**
+ *
+ * Claude Code already applies the `matcher` field in settings.json before
+ * spawning the process. In-process matching is only needed when one script
+ * handles many tool events.
+ *
  * **Example** (Match a tool name)
  *
  * ```ts
@@ -123,6 +148,8 @@ export const handleMatcher =
  * console.log(matches("Bash")) // true
  * ```
  *
+ * @see {@link matchFileName} for FileChanged basename matchers, which never compile `|` segments as regular expressions.
+ * @see {@link matchValue} for the shared compiler this alias forwards to.
  * @category predicates
  * @since 0.0.0
  */
@@ -133,19 +160,21 @@ export const matchTool = matchValue;
  * FileChanged matcher strings on `|` and treats each segment as a literal
  * basename rather than a regular expression. `*` and `""` still match all.
  *
- * **Example** (Match an exact file basename)
+ * **Example** (Match literal basenames, not regular expressions)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * const hook = Hook.FileChanged.onMatcher({
- *   matcher: "README.md|package.json",
- *   handler: () => Effect.succeed(Hook.FileChanged.passthrough())
- * })
- * console.log(hook.event) // "FileChanged"
+ * const matches = Hook.matchFileName("README.md|package.json")
+ * console.log(matches("README.md")) // true
+ * console.log(matches("src.ts")) // false
+ *
+ * const looksLikeRegex = Hook.matchFileName("config.*|[secret].env")
+ * console.log(looksLikeRegex("config.*")) // true
+ * console.log(looksLikeRegex("config.json")) // false
  * ```
  *
+ * @see {@link matchTool} for tool-name matchers, which compile non-exact patterns as JavaScript regular expressions.
  * @category predicates
  * @since 0.0.0
  */
@@ -161,7 +190,13 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
 };
 
 /**
- * Test whether a regex pattern matches a tool name, one-shot.
+ * One-shot test of a tool-name matcher against a candidate name.
+ *
+ * **Gotchas**
+ *
+ * Claude Code already applies the `matcher` field in settings.json before
+ * spawning the process. In-process matching is only needed when one script
+ * handles many tool events.
  *
  * **Example** (Test one tool matcher)
  *
@@ -171,6 +206,8 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
  * console.log(Hook.testTool("Edit|Write", "Write")) // true
  * ```
  *
+ * @see {@link matchFileName} for FileChanged basename matchers, which never compile `|` segments as regular expressions.
+ * @see {@link testValue} for the shared one-shot tester this alias forwards to.
  * @category predicates
  * @since 0.0.0
  */

@@ -15,8 +15,10 @@
  * value on the read path, because discriminating through a union decodes every
  * line's payload eagerly and inverts the guarantee.
  *
- * @since 0.1.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
+import { $ScratchpadId } from "@beep/identity";
 import type { DateTime } from "effect";
 import { Effect, Option, Result, Schema } from "effect";
 import type { MalformedLine } from "./JsonlError.ts";
@@ -24,6 +26,8 @@ import { InvalidData, UnknownEvent, UnserializableData } from "./JsonlError.ts";
 import type { DataSchema, JsonlEvent } from "./JsonlEvent.ts";
 import { Line } from "./Line.ts";
 import { LineSlice } from "./LineSlice.ts";
+
+const $I = $ScratchpadId.create("jsonl/Envelope");
 
 /**
  * Stage one of the read path: the envelope with its payload left undecoded.
@@ -37,14 +41,60 @@ import { LineSlice } from "./LineSlice.ts";
  * traversing it. That is what keeps frame decoding independent of payload
  * depth, and what lets filtering happen before any payload schema runs.
  *
+ * **Gotchas**
+ *
+ * Never put a `Schema.Union` on the read path — filtering must decode this
+ * frame first. `Line.lastValid` accepts a torn scalar (`4` from `42`) that is
+ * not an envelope; walk back with {@link Envelope.lastValidResult} when the
+ * line must be one.
+ *
+ * **Example** (Decode a raw line's frame with data still unknown)
+ *
+ * ```ts
+ * import { Envelope, Line } from "@beep/scratchpad/jsonl"
+ * import { Result } from "effect"
+ *
+ * const line = Line.split(
+ *   '{"at":"2026-01-15T12:00:00.000Z","event":"mail-received","data":{"round":1}}\n',
+ * )[0]
+ * if (line !== undefined) {
+ *   const frame = Envelope.frameResult(line)
+ *   console.log(Result.isSuccess(frame)) // true
+ *   if (Result.isSuccess(frame)) {
+ *     console.log(frame.success.event) // "mail-received"
+ *     console.log(frame.success.data) // { round: 1 }
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link Line.lastValid} for the JSON-only walk-back that does not close torn scalars.
+ * @see {@link Envelope.lastValidResult} for the envelope walk-back.
+ * @see {@link JsonlEvent} for the registry whose payload schemas stage two applies.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const EnvelopeFrame = Schema.Struct({
 	at: Schema.DateTimeUtcFromString,
 	event: Schema.String,
 	scope: Schema.optionalKey(Schema.String),
 	data: Schema.Unknown,
-});
+}).pipe(
+	$I.annoteSchema("EnvelopeFrame", {
+		description: "Stage-one envelope with payload left as unknown JSON.",
+	}),
+);
+
+/**
+ * Decoded stage-one envelope produced by {@link EnvelopeFrame}.
+ *
+ * `data` is still the raw JSON value; the registered payload schema has not run.
+ *
+ * @see {@link EnvelopeFrame} for the runtime schema and two-stage decode contract.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EnvelopeFrame = typeof EnvelopeFrame.Type;
 
 /**
  * A decoded envelope: the frame, its validated payload, and where it sits in
@@ -54,7 +104,11 @@ export const EnvelopeFrame = Schema.Struct({
  * A registry of event definitions produces a union of these discriminated on
  * `event`, so narrowing on the tag recovers the payload type registered for it.
  *
+ * @see {@link Envelope} for decode, encode, and the envelope-level walk-back.
+ * @see {@link EnvelopeFrame} for the undecoded frame stage one produces.
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface Envelope<out Tag extends string, out Data> {
 	/** UTC timestamp, assigned by the service at append time from the `Clock`. */
@@ -70,10 +124,12 @@ export interface Envelope<out Tag extends string, out Data> {
 }
 
 /**
- * The envelope type derived from one event definition. Distributes over a union
- * of definitions, which is what turns a registry into a discriminated union.
+ * Envelope type derived from one event definition, distributing over a union.
  *
+ * @see {@link Envelope} for the interface this alias instantiates.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type EnvelopeOf<E extends JsonlEvent.Any> =
 	E extends JsonlEvent<infer Tag, infer Data extends DataSchema, boolean, boolean>
@@ -81,16 +137,22 @@ export type EnvelopeOf<E extends JsonlEvent.Any> =
 		: never;
 
 /**
- * The discriminated union of every envelope a registry can carry.
+ * Discriminated union of every envelope a registry can carry.
  *
+ * @see {@link Envelope} for the interface members of this union.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type EnvelopeUnion<R extends JsonlEvent.Registry> = EnvelopeOf<JsonlEvent.Events<R>>;
 
 /**
- * The envelope variant carrying a given tag — the type a slice narrows to.
+ * Envelope variant carrying a given tag — the type a slice narrows to.
  *
+ * @see {@link Envelope} for the interface this extract refines.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type EnvelopeWithTag<R extends JsonlEvent.Registry, T extends string> = Extract<
 	EnvelopeUnion<R>,
@@ -175,7 +237,51 @@ const completeResult = <const R extends JsonlEvent.Registry>(
  * defined **in terms of** the sync ones via `Effect.fromResult`, so the two can
  * never drift into two implementations of the same rule.
  *
+ * **Gotchas**
+ *
+ * Never put a `Schema.Union` on the read path — filter {@link EnvelopeFrame}
+ * first. `Schema.Void` encodes to `undefined` and `JSON.stringify` drops that
+ * key, so encode emits `null` instead; otherwise the frame could never decode.
+ * Unguarded `JSON.stringify` throws at `Effect.fromResult` construction, where
+ * no fiber can catch it — that becomes {@link UnserializableData}.
+ * `Line.lastValid` accepts a torn scalar that is not an envelope.
+ *
+ * **Example** (Registry decode and Void encodes as null)
+ *
+ * ```ts
+ * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/jsonl"
+ * import { DateTime, Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const MailReceived = JsonlEvent.make("mail-received", {
+ *   data: S.Struct({ round: S.Number }),
+ * })
+ * const Unlinked = JsonlEvent.make("unlinked", { data: S.Void, terminal: true })
+ * const events = [MailReceived, Unlinked] as const
+ * const at = DateTime.makeUnsafe("2026-01-15T12:00:00.000Z")
+ *
+ * const line = Line.split(
+ *   '{"at":"2026-01-15T12:00:00.000Z","event":"mail-received","data":{"round":1}}\n',
+ * )[0]
+ * if (line !== undefined) {
+ *   const decoded = Envelope.decodeResult(events, line)
+ *   console.log(Result.isSuccess(decoded)) // true
+ * }
+ *
+ * const encoded = Envelope.encodeResult(events, { event: "unlinked", data: undefined, at })
+ * console.log(Result.isSuccess(encoded)) // true
+ * if (Result.isSuccess(encoded)) {
+ *   console.log(encoded.success.includes('"data":null')) // true
+ * }
+ * ```
+ *
+ * @see {@link Line.lastValid} for the JSON-only walk-back that does not close torn scalars.
+ * @see {@link Envelope.lastValidResult} for the envelope walk-back.
+ * @see {@link JsonlEvent} for the registry whose tags and payload schemas these operations use.
+ * @see {@link UnserializableData} for a valid payload that cannot be JSON.
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const Envelope = {
 	/**

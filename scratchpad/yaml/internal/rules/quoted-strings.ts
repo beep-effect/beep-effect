@@ -1,12 +1,14 @@
-// quoted-strings (#129): quote-style policy for string VALUE scalars (and
-// sequence items) — keys are out of scope (they belong to `truthy`'s trap
-// detection when they matter). `quoteType` defaults to DOUBLE — the one
-// taste call the design doc pins for the default preset.
-//
-// Fixes are conservative: a quote swap or a wrap happens only when it
-// provably preserves the parsed value (single-line, no escapes in play, no
-// quote character of the target style in the content, no tag/anchor on the
-// node); otherwise the diagnostic ships without a fix.
+/**
+ * quoted-strings: quote-style policy for string VALUE scalars (and sequence
+ * items). Keys are out of scope (they belong to `truthy` when they matter).
+ *
+ * `quoteType` defaults to double. Fixes are conservative: a quote swap or
+ * wrap happens only when it provably preserves the parsed value; otherwise
+ * the diagnostic ships without a fix.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -20,6 +22,20 @@ import { positionAt, walkScalars } from "./util.ts";
  * Options for `quoted-strings`: the preferred `quoteType` (default
  * `"double"`) and whether plain string scalars are `required` to be quoted
  * at all (default `false` — only already-quoted scalars are policed).
+ *
+ * **Example** (Prefer double quotes)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "quoted-strings": { quoteType: "double" } } })
+ * console.log(config.rules["quoted-strings"])
+ * ```
+ *
+ * @see {@link quotedStrings} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const quotedStringsOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
@@ -44,7 +60,38 @@ const safeQuoteFix = (ctx: LintContext, scalar: YamlScalar, quote: '"' | "'"): Y
 	return YamlEdit.make({ offset: scalar.offset, length: scalar.length, content });
 };
 
-/** Quote-style policy for string value scalars. */
+/**
+ * Quote-style policy for string value scalars.
+ *
+ * **Gotchas**
+ *
+ * Lint fixes use {@link requoteScalarText} in `"conservative"` mode only.
+ * A diagnostic without a `fix` is a successful conservative skip, not an
+ * incomplete implementation. Do not upgrade the lint fix to `"escaping"` —
+ * that dialect belongs to format `requoteScalars`. Keys are out of scope
+ * (`required: false` polices only already-quoted scalars).
+ *
+ * **Example** (Safe wrap vs skipped escaped scalar)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const wrap = YamlLint.run("a: hello\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "quoted-strings": { quoteType: "double", required: true } },
+ * }))
+ * console.log(wrap.some((d) => d.rule === "quoted-strings" && d.fix !== undefined)) // true
+ *
+ * const skip = YamlLint.run("a: \"hi\\tthere\"\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "quoted-strings": { quoteType: "single" } },
+ * }))
+ * console.log(skip.filter((d) => d.rule === "quoted-strings").every((d) => d.fix === undefined)) // true
+ * ```
+ *
+ * @see {@link requoteScalarText} for the shared conservative/escaping helper.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const quotedStrings: YamlRule = {
 	id: "quoted-strings",
 	check: (ctx, options) => {

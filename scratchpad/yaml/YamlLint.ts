@@ -1,12 +1,15 @@
-// The lint engine (#129): the rule-aware config schema and the `YamlLint`
-// facade (`run`, `fix`, `builtins`). The rule model (`LintContext`,
-// `YamlRule`, `YamlLintDiagnostic`) lives in `YamlLintRule.ts` — see the
-// cycle-firewall note there.
-//
-// The governing constraint: v1 is the pure half only. No file discovery, no
-// config-file loading, no IO, no CLI — strings in, diagnostics or a fixed
-// string out. The runner is someone else's tier.
+/**
+ * Pure YAML linting: strings in, diagnostics or a fixed string out.
+ *
+ * The rule-aware config schema and the {@link YamlLint} facade (`run`, `fix`,
+ * `builtins`). The rule model lives in `YamlLintRule.ts` to break the
+ * catalog cycle. No file discovery, config-file loading, IO or CLI lives here.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Result, Schema } from "effect";
 import { composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
@@ -18,6 +21,8 @@ import type { LintContext, LintLine, StyleObservation, YamlLintSeverity, YamlRul
 import { YamlLintDiagnostic } from "./YamlLintRule.ts";
 import { YamlTokens } from "./YamlToken.ts";
 
+const $I = $ScratchpadId.create("yaml/YamlLint");
+
 // ── Config ──────────────────────────────────────────────────────────────────
 
 /**
@@ -25,17 +30,38 @@ import { YamlTokens } from "./YamlToken.ts";
  * case), `"off"` to disable, or a typed per-rule options object (the tuning
  * case; may carry its own `severity`).
  *
+ * **Example** (Accept severity literals and option objects)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YamlLintRuleSetting } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(YamlLintRuleSetting)("off")) // true
+ * console.log(S.is(YamlLintRuleSetting)("warning")) // true
+ * console.log(S.is(YamlLintRuleSetting)({ quoteType: "double" })) // true
+ * ```
+ *
+ * @see {@link YamlLintConfig} for the config that stores a map of these settings.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlLintRuleSetting = Schema.Union([
 	Schema.Literals(["error", "warning", "off"]),
 	Schema.Record(Schema.String, Schema.Unknown),
-]);
+]).pipe(
+	$I.annoteSchema("YamlLintRuleSetting", {
+		description: "One lint config entry: a severity literal, off, or a per-rule options object.",
+	}),
+);
 
 /**
- * The union type of one `rules`-map entry.
+ * Decoded union produced by {@link YamlLintRuleSetting}.
  *
+ * @see {@link YamlLintRuleSetting} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlLintRuleSetting = typeof YamlLintRuleSetting.Type;
 
@@ -91,11 +117,37 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
  * static, not an `extends` string resolution step (this package owns no
  * config-file loader).
  *
+ * **Gotchas**
+ *
+ * Config validation rejects demoting or disabling `parse-validity`. Document-
+ * driven rules see only the first stream document; token and line rules cover
+ * full source. `"off"` in a base config outranks inference.
+ *
+ * **Example** (Spread the default preset)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({
+ *   rules: { ...YamlLintConfig.default.rules, "trailing-spaces": "warning" },
+ * })
+ *
+ * console.log(config.rules["trailing-spaces"]) // "warning"
+ * ```
+ *
+ * @see {@link YamlLint.run} for applying this config to a document.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class YamlLintConfig extends Schema.Class<YamlLintConfig>("YamlLintConfig")({
-	rules: Schema.Record(Schema.String, YamlLintRuleSetting).pipe(Schema.check(Schema.makeFilter(validateRulesMap))),
-}) {
+export class YamlLintConfig extends Schema.Class<YamlLintConfig>("YamlLintConfig")(
+	{
+		rules: Schema.Record(Schema.String, YamlLintRuleSetting).pipe(Schema.check(Schema.makeFilter(validateRulesMap))),
+	},
+	$I.annote("YamlLintConfig", {
+		description: "Lint configuration mapping rule ids to severities or per-rule options.",
+	}),
+) {
 	/**
 	 * The default preset. Rule entries accrete as built-ins land; the
 	 * `quoted-strings` rule defaults to DOUBLE quotes here (the one taste
@@ -194,18 +246,46 @@ const buildContext = (text: string): LintContext => {
  * FIRST occurrence seen (merging keeps the left operand's position, so on a
  * multi-file merge the first file that exhibited the spelling names it).
  *
+ * **Example** (Record a first-seen quote-style vote)
+ *
+ * ```ts
+ * import { StyleVoteTally } from "@beep/scratchpad/yaml"
+ *
+ * const tally = StyleVoteTally.make({
+ *   rule: "quoted-strings",
+ *   dimension: "quoteType",
+ *   value: "double",
+ *   count: 2,
+ *   offset: 3,
+ *   length: 5,
+ *   line: 0,
+ *   character: 3,
+ * })
+ *
+ * console.log(tally.count) // 2
+ * console.log(tally.value) // "double"
+ * ```
+ *
+ * @see {@link StyleEvidence} for the monoid that accumulates these tallies.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally")({
-	rule: Schema.String,
-	dimension: Schema.String,
-	value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
-	count: Schema.Number,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
-}) {}
+export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally")(
+	{
+		rule: Schema.String,
+		dimension: Schema.String,
+		value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
+		count: Schema.Number,
+		offset: Schema.Number,
+		length: Schema.Number,
+		line: Schema.Number,
+		character: Schema.Number,
+	},
+	$I.annote("StyleVoteTally", {
+		description: "An accumulated tally of one style vote spelling with first-seen position.",
+	}),
+) {}
 
 /**
  * An accumulated {@link StyleFloor} for a `(rule, dimension)` pair: the
@@ -213,13 +293,35 @@ export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally
  * takes the maximum. Floors are informational — never resolved into config
  * options (see {@link StyleFloor}).
  *
+ * **Example** (Record a measured line-length floor)
+ *
+ * ```ts
+ * import { StyleFloorTally } from "@beep/scratchpad/yaml"
+ *
+ * const floor = StyleFloorTally.make({
+ *   rule: "line-length",
+ *   dimension: "max",
+ *   value: 96,
+ * })
+ *
+ * console.log(floor.value) // 96
+ * ```
+ *
+ * @see {@link StyleFloor} for the per-occurrence observation this tally accumulates.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class StyleFloorTally extends Schema.Class<StyleFloorTally>("StyleFloorTally")({
-	rule: Schema.String,
-	dimension: Schema.String,
-	value: Schema.Number,
-}) {}
+export class StyleFloorTally extends Schema.Class<StyleFloorTally>("StyleFloorTally")(
+	{
+		rule: Schema.String,
+		dimension: Schema.String,
+		value: Schema.Number,
+	},
+	$I.annote("StyleFloorTally", {
+		description: "The largest measured style floor observed for a (rule, dimension) pair.",
+	}),
+) {}
 
 /** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
 const valueKey = (value: string | number | boolean): string => `${typeof value}:${String(value)}`;
@@ -258,12 +360,41 @@ const byTallyOrder = (
  * every value `observe`/`combine`/`fromObservations` produces is canonical
  * and the monoid laws hold structurally over them.
  *
+ * **Gotchas**
+ *
+ * Floors never become config options. Strict inference fails only on observed
+ * disagreement; unobserved dimensions fall back to `base`. `"off"` in base
+ * outranks inference. Branch on `_tag` when consuming observations — class
+ * instances are structurally assignable.
+ *
+ * **Example** (Combine two observe results)
+ *
+ * ```ts
+ * import { StyleEvidence, YamlLint } from "@beep/scratchpad/yaml"
+ *
+ * const singles = YamlLint.observe("name: 'Ada'\n", YamlLint.builtins)
+ * const doubles = YamlLint.observe('name: "Bob"\n', YamlLint.builtins)
+ * const combined = StyleEvidence.combine(singles, doubles)
+ *
+ * console.log(combined.votes.some((vote) => vote.dimension === "quoteType")) // true
+ * ```
+ *
+ * @see {@link YamlLint.observe} for collecting evidence from source text.
+ * @see {@link YamlLint.resolveStrict} for failing on observed disagreement.
+ * @see {@link YamlLint.inferLenient} for plurality resolution plus residual diagnostics.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")({
-	votes: Schema.Array(StyleVoteTally),
-	floors: Schema.Array(StyleFloorTally),
-}) {
+export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")(
+	{
+		votes: Schema.Array(StyleVoteTally),
+		floors: Schema.Array(StyleFloorTally),
+	},
+	$I.annote("StyleEvidence", {
+		description: "Monoid of per-dimension style votes and floors collected from observed YAML sources.",
+	}),
+) {
 	/** The monoid identity: no observations. */
 	static readonly empty: StyleEvidence = StyleEvidence.make({ votes: [], floors: [] });
 
@@ -338,13 +469,46 @@ export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")(
  * spellings disagree. `candidates` carries every spelling with its count and
  * first-seen position, ordered by count descending (dominant first).
  *
+ * **Example** (Name a quote-style conflict)
+ *
+ * ```ts
+ * import { StyleConflict, StyleVoteTally } from "@beep/scratchpad/yaml"
+ *
+ * const conflict = StyleConflict.make({
+ *   rule: "quoted-strings",
+ *   dimension: "quoteType",
+ *   candidates: [
+ *     StyleVoteTally.make({
+ *       rule: "quoted-strings",
+ *       dimension: "quoteType",
+ *       value: "double",
+ *       count: 2,
+ *       offset: 0,
+ *       length: 3,
+ *       line: 0,
+ *       character: 0,
+ *     }),
+ *   ],
+ * })
+ *
+ * console.log(conflict.dimension) // "quoteType"
+ * ```
+ *
+ * @see {@link YamlStyleConflictError} for the strict-inference error that carries these conflicts.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class StyleConflict extends Schema.Class<StyleConflict>("StyleConflict")({
-	rule: Schema.String,
-	dimension: Schema.String,
-	candidates: Schema.Array(StyleVoteTally),
-}) {}
+export class StyleConflict extends Schema.Class<StyleConflict>("StyleConflict")(
+	{
+		rule: Schema.String,
+		dimension: Schema.String,
+		candidates: Schema.Array(StyleVoteTally),
+	},
+	$I.annote("StyleConflict", {
+		description: "A strict-inference conflict: one (rule, dimension) whose observed spellings disagree.",
+	}),
+) {}
 
 /**
  * Raised by strict config inference when observed evidence is not unanimous:
@@ -354,11 +518,34 @@ export class StyleConflict extends Schema.Class<StyleConflict>("StyleConflict")(
  * rule). Unobserved dimensions never conflict: they fall back to the base
  * config's defaults.
  *
+ * **Example** (Strict inference fails on mixed quotes)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { YamlLint, YamlStyleConflictError } from "@beep/scratchpad/yaml"
+ *
+ * const strict = YamlLint.inferStrict("a: 'x'\nb: \"y\"\n", YamlLint.builtins)
+ * console.log(Result.isFailure(strict)) // true
+ * if (Result.isFailure(strict)) {
+ *   console.log(strict.failure._tag) // "YamlStyleConflictError"
+ *   console.log(strict.failure instanceof YamlStyleConflictError) // true
+ * }
+ * ```
+ *
+ * @see {@link YamlLint.resolveStrict} for the resolver that raises this error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class YamlStyleConflictError extends Schema.TaggedError<YamlStyleConflictError>()("YamlStyleConflictError", {
-	conflicts: Schema.Array(StyleConflict),
-}) {
+export class YamlStyleConflictError extends Schema.TaggedError<YamlStyleConflictError>()(
+	"YamlStyleConflictError",
+	{
+		conflicts: Schema.Array(StyleConflict),
+	},
+	$I.annote("YamlStyleConflictError", {
+		description: "Strict style inference failed because observed evidence disagreed on at least one dimension.",
+	}),
+) {
 	override get message(): string {
 		return this.conflicts
 			.map(
@@ -468,7 +655,10 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
  * diagnostics that config still produces on the observed text ("here is your
  * config, and the places that do not match it").
  *
+ * @see {@link YamlLint.inferLenient} for the convenience that returns this report.
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface YamlLintInference {
 	readonly config: YamlLintConfig;
@@ -515,14 +705,47 @@ const runRules = (
 };
 
 /**
- * Linting statics. Not instantiable.
+ * Run, fix and infer YAML style over in-memory strings.
  *
- * @remarks
+ * **Details**
+ *
  * Pure and synchronous throughout — the lint engine is the pure half only:
  * strings in, diagnostics or a fixed string out. File discovery, config-file
  * loading and autofix-to-disk belong to a consumer's tier, not here.
  *
+ * **Gotchas**
+ *
+ * `parse-validity` is always-on and cannot be demoted. `run`/`fix`
+ * document-driven rules see only the first stream document; token and line
+ * rules cover full source. `fix` drops overlapping or same-offset surgical
+ * fixes (earlier `run` order wins) and fails with {@link YamlParseError} on a
+ * fatal first document. Duplicate-key policy belongs to `key-duplicates`;
+ * compose uses `uniqueKeys: false` so `parse-validity` does not double-report.
+ *
+ * **Example** (Find trailing spaces, then infer lenient residual)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const findings = YamlLint.run("a: 1 \n", YamlLint.builtins, YamlLintConfig.default)
+ * console.log(findings.some((diagnostic) => diagnostic.rule === "trailing-spaces")) // true
+ *
+ * const fixed = YamlLint.fix("a: 1 \n", YamlLint.builtins, YamlLintConfig.default)
+ * console.log(Result.isSuccess(fixed) && !fixed.success.includes("1 ")) // true
+ *
+ * const inference = YamlLint.inferLenient("a: 1 \n", YamlLint.builtins)
+ * console.log(inference.residual.some((diagnostic) => diagnostic.rule === "trailing-spaces")) // true
+ * ```
+ *
+ * @see {@link YamlLint.run} for the rule loop.
+ * @see {@link YamlLint.fix} for comment-safe surgical fixes.
+ * @see {@link YamlLint.observe} for collecting style evidence.
+ * @see {@link YamlLint.resolveStrict} for unanimous overlay over a base config.
+ * @see {@link YamlLint.inferLenient} for plurality inference plus residual diagnostics.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class YamlLint {
 	private constructor() {}

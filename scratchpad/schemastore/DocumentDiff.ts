@@ -1,11 +1,13 @@
-// Classifies the difference between two emitted schema documents by what
-// the difference MEANS, not by how the bytes read: a change confined to
-// documentation keywords is transparently replaceable for consumers, while
-// a change to any assertion keyword alters the validation contract and is
-// the signal to cut a new schema version.
-//
-// Pure — no IO. `SchemaFile` consumes it to answer what changed alongside
-// whether it wrote.
+/**
+ * Classify annotation vs contract change for SchemaStore versioning.
+ *
+ * A change confined to documentation keywords is transparently replaceable
+ * for consumers; a change to any assertion keyword alters the validation
+ * contract and is the signal to cut a new schema version. Pure — no IO.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { KeywordFamilies } from "./KeywordFamilies.ts";
@@ -24,7 +26,10 @@ import { KeywordFamilies } from "./KeywordFamilies.ts";
  *   {@link SchemaVersioning}, this is the change that warrants a new
  *   version rather than an in-place replacement.
  *
+ * @see {@link DocumentDiff.classify} for the walk that produces this classification.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type SchemaChange = "none" | "annotations" | "contract";
 
@@ -253,21 +258,36 @@ const compareDependencies = (a: unknown, b: unknown, depth: number): SchemaChang
  * walk and degrades to a whole-subtree comparison reported as `"contract"`
  * when unequal, never a throw.
  *
- * @example
+ * **Gotchas**
+ *
+ * `default`, `examples`, `readOnly`, and `writeOnly` are deliberately not
+ * documentation keywords — form generators and clients act on them, so a
+ * change there is `"contract"`. Past the 256-level nesting cap, unequal
+ * subtrees report `"contract"` (the conservative direction). Object key
+ * order is ignored; array order is data. {@link DocumentDiff.isClean} is
+ * false for `"created"` — a file that did not exist is a change.
+ *
+ * **Example** (Classify annotation vs contract)
+ *
  * ```ts
- * import { DocumentDiff } from "@effected/schemastore";
+ * import { DocumentDiff } from "@beep/scratchpad/schemastore"
  *
- * const before = { type: "object", properties: { name: { type: "string", description: "A" } } };
- * const after = { type: "object", properties: { name: { type: "string", description: "B" } } };
+ * const before = { type: "object", properties: { name: { type: "string", description: "A" } } }
+ * const after = { type: "object", properties: { name: { type: "string", description: "B" } } }
  *
- * console.log(DocumentDiff.classify(before, after));
+ * console.log(DocumentDiff.classify(before, after))
  * // => "annotations"  (republish transparently; no new version needed)
  *
- * console.log(DocumentDiff.classify(before, { ...before, required: ["name"] }));
+ * console.log(DocumentDiff.classify(before, { ...before, required: ["name"] }))
  * // => "contract"     (documents valid before may be invalid now)
  * ```
  *
+ * @see {@link DocumentDiff.isAnnotationKeyword} for the documentation-keyword predicate the walk uses.
+ * @see {@link KeywordFamilies} for the language-server families treated as annotations.
+ * @see {@link SchemaVersioning} for when a `"contract"` classification warrants a new version.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class DocumentDiff {
 	private constructor() {}

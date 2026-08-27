@@ -1,3 +1,10 @@
+/**
+ * In-memory sorted version cache over SemVer precedence: load, resolve,
+ * and navigate a set of versions without IO.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Context, Effect, Layer, Option, Ref, Schema } from "effect";
 import type { InvalidRangeError } from "./Range.ts";
 import { Range } from "./Range.ts";
@@ -8,7 +15,29 @@ import { VersionDiff } from "./VersionDiff.ts";
  * Indicates that an extremum (`latest`/`oldest`) was requested from an empty
  * cache.
  *
+ * **Example** (Raise from `latest` on an empty cache)
+ *
+ * ```ts
+ * import { VersionCache } from "@beep/scratchpad/semver";
+ * import { Effect, Result } from "effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* VersionCache;
+ *   return yield* Effect.result(cache.latest());
+ * }).pipe(Effect.provide(VersionCache.layer));
+ *
+ * const result = Effect.runSync(program);
+ * if (Result.isFailure(result)) {
+ *   console.log(result.failure._tag);
+ *   // => "EmptyCacheError"
+ * }
+ * ```
+ *
+ * @see {@link VersionNotFoundError} when a navigation pivot is missing from a non-empty cache.
+ * @see {@link UnsatisfiedRangeError} when versions exist but none match a range.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class EmptyCacheError extends Schema.TaggedError<EmptyCacheError>()("EmptyCacheError", {}) {
 	override get message(): string {
@@ -20,7 +49,30 @@ export class EmptyCacheError extends Schema.TaggedError<EmptyCacheError>()("Empt
  * Indicates that a navigation operation (`diff`/`next`/`prev`) referenced a
  * version that is not in the cache.
  *
+ * **Example** (Raise from `next` when the pivot is missing)
+ *
+ * ```ts
+ * import { SemVer, VersionCache } from "@beep/scratchpad/semver";
+ * import { Effect, Result } from "effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* VersionCache;
+ *   yield* cache.load([SemVer.of(1, 0, 0)]);
+ *   return yield* Effect.result(cache.next(SemVer.of(2, 0, 0)));
+ * }).pipe(Effect.provide(VersionCache.layer));
+ *
+ * const result = Effect.runSync(program);
+ * if (Result.isFailure(result)) {
+ *   console.log(result.failure._tag);
+ *   // => "VersionNotFoundError"
+ * }
+ * ```
+ *
+ * @see {@link EmptyCacheError} when `latest`/`oldest` is requested from an empty cache.
+ * @see {@link UnsatisfiedRangeError} when versions exist but none match a range.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class VersionNotFoundError extends Schema.TaggedError<VersionNotFoundError>()("VersionNotFoundError", {
 	/** The version that was not found. */
@@ -36,7 +88,31 @@ export class VersionNotFoundError extends Schema.TaggedError<VersionNotFoundErro
  * requested range. Carries the range and the versions that were available,
  * and is fully serializable — both payload fields are schema classes.
  *
+ * **Example** (Raise from `resolve` when nothing matches)
+ *
+ * ```ts
+ * import { Range, SemVer, VersionCache } from "@beep/scratchpad/semver";
+ * import { Effect, Result } from "effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const cache = yield* VersionCache;
+ *   yield* cache.load([SemVer.of(1, 0, 0)]);
+ *   const range = Result.getOrThrow(Range.parseResult("^2.0.0"));
+ *   return yield* Effect.result(cache.resolve(range));
+ * }).pipe(Effect.provide(VersionCache.layer));
+ *
+ * const result = Effect.runSync(program);
+ * if (Result.isFailure(result)) {
+ *   console.log(result.failure._tag);
+ *   // => "UnsatisfiedRangeError"
+ * }
+ * ```
+ *
+ * @see {@link EmptyCacheError} when the cache has no versions at all.
+ * @see {@link Range.maxSatisfying} when absence should be `Option.none()` instead of a typed failure.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class UnsatisfiedRangeError extends Schema.TaggedError<UnsatisfiedRangeError>()("UnsatisfiedRangeError", {
 	/** The range that could not be satisfied. */
@@ -60,7 +136,10 @@ export class UnsatisfiedRangeError extends Schema.TaggedError<UnsatisfiedRangeEr
  * version is not cached", `Option.none()` means "the pivot is at the
  * boundary".
  *
- * @public
+ * @see {@link VersionCache} for the service class and live layer.
+ * @see {@link EmptyCacheError} / {@link VersionNotFoundError} / {@link UnsatisfiedRangeError} for the three typed failure channels.
+ * @category type-level
+ * @since 0.0.0
  */
 export interface VersionCacheShape {
 	/** Replace all cached versions with the given array. */
@@ -122,9 +201,19 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  *
  * Provide {@link VersionCache.layer} to construct the live implementation.
  *
- * @example
+ * **Gotchas**
+ *
+ * Membership and ordering follow SemVer precedence (build metadata ignored),
+ * so versions that differ only in build occupy one slot: adding
+ * `1.0.0+build.2` after `1.0.0+build.1` is a no-op.
+ *
+ * `next`/`prev` use `Option.none()` only when the pivot exists at an edge.
+ * A missing pivot is {@link VersionNotFoundError}, not `none`.
+ *
+ * **Example** (Provide the layer, load, and read latest)
+ *
  * ```ts
- * import { SemVer, VersionCache } from "@effected/semver";
+ * import { SemVer, VersionCache } from "@beep/scratchpad/semver";
  * import { Effect } from "effect";
  *
  * const program = Effect.gen(function* () {
@@ -138,7 +227,13 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  * // => "2.0.0"
  * ```
  *
+ * @see {@link EmptyCacheError} when `latest`/`oldest` is called on an empty cache.
+ * @see {@link VersionNotFoundError} when `next`/`prev`/`diff` use a pivot that is not cached.
+ * @see {@link UnsatisfiedRangeError} when `resolve` finds no matching version.
+ * @see {@link Range.maxSatisfying} when absence should be `Option.none()` instead of a typed failure.
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class VersionCache extends Context.Service<VersionCache, VersionCacheShape>()("@effected/semver/VersionCache") {
 	/**

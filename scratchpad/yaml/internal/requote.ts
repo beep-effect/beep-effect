@@ -1,32 +1,17 @@
-// Shared re-quoting semantics (#347): the ONE definition of "which scalar can
-// be re-quoted to the target style, and with what replacement text", so the
-// `quoted-strings` lint fix and `YamlFormat`'s opt-in `requoteScalars` option
-// cannot drift into two dialects of "re-quotable".
-//
-// Two modes, deliberately distinct:
-//
-// - `"conservative"` is the lint fix's shipped behavior, byte-exact: a quote
-//   swap or a wrap happens only when the raw inner text IS the parsed value
-//   (no escapes, no doubled quotes in play) and the target quote never
-//   appears in it — otherwise no replacement. The lint fix delegates here so
-//   its behavior is pinned by this module rather than re-derived.
-// - `"escaping"` is the format path's semantics-preserving transform: it
-//   re-renders the parsed value through the stringifier's own quote
-//   renderers, applying proper double-quote escaping for single→double and
-//   `''` doubling for double→single. Double→single returns no replacement
-//   whenever the value carries characters single-quoted style cannot express
-//   (newlines, tabs, carriage returns, control and other non-printable
-//   characters — single quotes can escape nothing but `'`). Only
-//   already-quoted, single-line, untagged, unanchored source scalars are
-//   candidates: plain scalars stay plain and block scalars stay block.
-//
-// The escaping mode's replacement text comes from `renderDoubleQuoted` /
-// `renderSingleQuoted` — the same functions the stringifier itself uses to
-// emit a scalar of that style — so a format-path caller that flips a node's
-// `style` and re-stringifies produces exactly this replacement.
-//
-// Like the stringifier, this module consumes the public AST *types* only;
-// nothing public imports it back, so the cycle firewall holds.
+/**
+ * Shared re-quoting semantics so the `quoted-strings` lint fix and
+ * `YamlFormat`'s opt-in `requoteScalars` option cannot drift into two
+ * dialects of "re-quotable".
+ *
+ * Two modes, deliberately distinct: `"conservative"` is the lint fix's
+ * byte-exact shipped behavior; `"escaping"` is the format path's
+ * semantics-preserving transform through the stringifier's quote renderers.
+ * This module consumes public AST *types* only; nothing public imports it
+ * back, so the cycle firewall holds.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { ScalarStyle } from "../YamlNode.ts";
 import { isControlChar } from "./fold.ts";
@@ -36,6 +21,11 @@ import { renderDoubleQuoted, renderSingleQuoted } from "./stringifier.ts";
  * The structural slice of a scalar node the re-quoting decision reads —
  * satisfied by a public `YamlScalar` without this module depending on the
  * class itself.
+ *
+ * @see {@link requoteScalarText} for the function that consumes this slice.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RequoteScalarInput {
 	readonly value: unknown;
@@ -46,7 +36,24 @@ export interface RequoteScalarInput {
 	readonly length: number;
 }
 
-/** See the module header: `"conservative"` = lint-fix semantics, `"escaping"` = format-path semantics. */
+/**
+ * Re-quoting dialect: `"conservative"` is lint-fix semantics, `"escaping"`
+ * is format-path semantics.
+ *
+ * **Gotchas**
+ *
+ * The modes are deliberately distinct. Using `"escaping"` in the lint fix
+ * would change shipped bytes; using `"conservative"` on the format path
+ * would skip valid quote swaps. Conservative is byte-exact (inner text must
+ * equal the parsed value). Escaping re-renders via `renderDoubleQuoted` /
+ * `renderSingleQuoted`; double→single returns `undefined` when the value
+ * carries characters single-quoted style cannot express.
+ *
+ * @see {@link quotedStrings} for the lint rule that always uses `"conservative"`.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RequoteMode = "conservative" | "escaping";
 
 /**
@@ -70,6 +77,36 @@ function isSingleQuotable(value: string): boolean {
  * The replacement raw text that re-quotes `scalar` with `quote`, or
  * `undefined` when no value-preserving replacement exists under `mode`
  * (skipping is always correct; corrupting never is).
+ *
+ * **Gotchas**
+ *
+ * Skip when the scalar has a tag, an anchor, a non-string value, or a
+ * multi-line source slice (`\n` or `\r`). Conservative skips when inner
+ * text ≠ value or the target quote appears in the content. Import only
+ * public AST *types* here — a runtime import of the classes would cycle
+ * the engine.
+ *
+ * **Example** (Conservative wrap vs skipped escaped scalar)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const wrap = YamlLint.run("a: hello\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "quoted-strings": { quoteType: "double", required: true } },
+ * }))
+ * console.log(wrap.some((d) => d.rule === "quoted-strings" && d.fix !== undefined)) // true
+ *
+ * const skip = YamlLint.run("a: \"a\\nb\"\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "quoted-strings": { quoteType: "single" } },
+ * }))
+ * console.log(skip.filter((d) => d.rule === "quoted-strings").every((d) => d.fix === undefined)) // true
+ * ```
+ *
+ * @see {@link quotedStrings} for the lint path that always passes `"conservative"`.
+ * @see {@link YamlFormat.format} for the format path's opt-in `requoteScalars`.
+ * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export function requoteScalarText(
 	text: string,

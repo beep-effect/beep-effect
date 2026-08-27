@@ -34,6 +34,20 @@ import {
  * Options for `indentation`: `spaces` per level (number or "consistent",
  * default "consistent") and `indentSequences` (boolean or "consistent",
  * default "consistent").
+ *
+ * **Example** (Ask for two-space levels)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { indentation: { spaces: 2 } } })
+ * console.log(config.rules.indentation)
+ * ```
+ *
+ * @see {@link indentation} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const indentationOptions = Schema.Struct({
   severity: Schema.optionalKey(YamlLintSeverity),
@@ -118,7 +132,33 @@ const isKeyThenSeqEntry = (
   return curr.indent === prev.indent || curr.indent === prev.indent + (unit ?? curr.indent - prev.indent);
 };
 
-/** Block-structure indent style. */
+/**
+ * Block-structure indent style.
+ *
+ * **Gotchas**
+ *
+ * No fix: reindenting is formatting. Structural legality (a dedent to an
+ * unknown level) is parse-validity's job; this rule only speaks where the
+ * document is well-formed and the style drifts. Scalar bodies and flow
+ * collections are skipped.
+ *
+ * **Example** (Inconsistent mapping indent vs skipped block-scalar body)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { indentation: { spaces: 2 } } })
+ * const drift = YamlLint.run("a:\n   b: 1\n", YamlLint.builtins, config)
+ * console.log(drift.some((d) => d.rule === "indentation")) // true
+ *
+ * const scalar = YamlLint.run("a: |\n     keep\n", YamlLint.builtins, config)
+ * console.log(scalar.every((d) => d.rule !== "indentation")) // true
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const indentation: YamlRule = {
   id: "indentation",
   check: (ctx, options) => {

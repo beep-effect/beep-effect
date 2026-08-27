@@ -1,7 +1,11 @@
-// Desugaring of range sugar (caret, tilde, X-ranges, hyphen ranges) into
-// primitive comparator sets, matching node-semver semantics. Operates on
-// structural parts; the `Range` schema materializes classes from the result.
-
+/**
+ * Desugaring of range sugar (caret, tilde, X-ranges, hyphen ranges) into
+ * primitive comparator sets, matching node-semver semantics. Operates on
+ * structural parts; the `Range` schema materializes classes from the result.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.ts";
 
 /**
@@ -9,6 +13,9 @@ import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.
  * `*`). `null` in `major`/`minor`/`patch` marks an unspecified (wildcard)
  * component; `prerelease`/`build` are only populated when the fully
  * specified suffix of a partial version carries them.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PartialParts {
 	readonly major: number | null;
@@ -32,6 +39,33 @@ const comp = (operator: ComparatorOperator, version: VersionParts): ComparatorPa
  * Desugar a tilde range (`~1.2.3`, `~1.2`, `~1`) into a `>=`/`<` comparator
  * pair that allows patch-level changes when a minor version is specified,
  * and minor-level changes when it is not.
+ *
+ * **Gotchas**
+ *
+ * `~1` (no minor) allows minor-level changes: `>=1.0.0 <2.0.0-0`. That is
+ * broader than `~1.2.3` (`>=1.2.3 <1.3.0-0`).
+ *
+ * **Example** (Expand `~1.2.3` to a patch-level window)
+ *
+ * ```ts
+ * import { desugarTilde } from "../../semver/internal/desugar.ts";
+ * import { formatComparator } from "../../semver/internal/grammar.ts";
+ *
+ * const comparators = desugarTilde({
+ *   major: 1,
+ *   minor: 2,
+ *   patch: 3,
+ *   prerelease: [],
+ *   build: [],
+ * });
+ * console.log(comparators.map(formatComparator));
+ * // => [">=1.2.3", "<1.3.0-0"]
+ * ```
+ *
+ * @see {@link desugarCaret} for npm compatibility (`^`) expansion, which uses the rightmost non-zero 0.x rule.
+ * @see {@link parseRange} for the grammar entry point that calls this after seeing `~`.
+ * @category normalization
+ * @since 0.0.0
  */
 export const desugarTilde = (p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major ?? 0;
@@ -53,6 +87,33 @@ export const desugarTilde = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * compatibility rules: changes are allowed in the rightmost of
  * major/minor/patch that is non-zero (so `^0.2.3` allows patch bumps only,
  * `^0.0.3` allows none).
+ *
+ * **Gotchas**
+ *
+ * `^` is not "compatible major" on 0.x: `^0.2.3` is `>=0.2.3 <0.3.0-0`, and
+ * `^0.0.3` is `>=0.0.3 <0.0.4-0`.
+ *
+ * **Example** (Caret on 0.x allows only the rightmost non-zero component)
+ *
+ * ```ts
+ * import { desugarCaret } from "../../semver/internal/desugar.ts";
+ * import { formatComparator } from "../../semver/internal/grammar.ts";
+ *
+ * const comparators = desugarCaret({
+ *   major: 0,
+ *   minor: 2,
+ *   patch: 3,
+ *   prerelease: [],
+ *   build: [],
+ * });
+ * console.log(comparators.map(formatComparator));
+ * // => [">=0.2.3", "<0.3.0-0"]
+ * ```
+ *
+ * @see {@link desugarTilde} for `~` expansion, which does not special-case 0.x.
+ * @see {@link parseRange} for the grammar entry point that calls this after seeing `^`.
+ * @category normalization
+ * @since 0.0.0
  */
 export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major ?? 0;
@@ -98,6 +159,34 @@ export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * specified version with no operator (or `=`) desugars to a single `=`
  * comparator; wildcards expand to the bounding `>=`/`<` pair implied by the
  * given `operator`.
+ *
+ * **Gotchas**
+ *
+ * Operator + wildcard rewrites do not preserve the operator: `>1.x` becomes
+ * `>=2.0.0`, and `<=1.2.x` becomes `<1.3.0-0`. Both `*` and `>*` expand to
+ * `>=0.0.0`.
+ *
+ * **Example** (Rewrite `>1.x` to a lower bound on the next major)
+ *
+ * ```ts
+ * import { desugarXRange } from "../../semver/internal/desugar.ts";
+ * import { formatComparator } from "../../semver/internal/grammar.ts";
+ *
+ * const comparators = desugarXRange(">", {
+ *   major: 1,
+ *   minor: null,
+ *   patch: null,
+ *   prerelease: [],
+ *   build: [],
+ * });
+ * console.log(comparators.map(formatComparator));
+ * // => [">=2.0.0"]
+ * ```
+ *
+ * @see {@link desugarHyphen} for hyphen-range expansion (`1.2.3 - 2.3`).
+ * @see {@link parseRange} for the grammar entry point that feeds partial versions into this function.
+ * @category normalization
+ * @since 0.0.0
  */
 export const desugarXRange = (operator: string | null, p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major;
@@ -165,6 +254,31 @@ export const desugarXRange = (operator: string | null, p: PartialParts): Readonl
  * lower bound and, for the upper bound, `<=` when it is fully specified or
  * `<` the next unspecified component when it is partial (`1.2.3 - 2.3` →
  * `>=1.2.3 <2.4.0-0`).
+ *
+ * **Gotchas**
+ *
+ * A partial upper bound uses exclusive `<` on the next component
+ * (`1.2.3 - 2.3` → `>=1.2.3 <2.4.0-0`). A fully specified upper bound uses
+ * inclusive `<=`.
+ *
+ * **Example** (Partial upper bound becomes an exclusive next-minor)
+ *
+ * ```ts
+ * import { desugarHyphen } from "../../semver/internal/desugar.ts";
+ * import { formatComparator } from "../../semver/internal/grammar.ts";
+ *
+ * const comparators = desugarHyphen(
+ *   { major: 1, minor: 2, patch: 3, prerelease: [], build: [] },
+ *   { major: 2, minor: 3, patch: null, prerelease: [], build: [] },
+ * );
+ * console.log(comparators.map(formatComparator));
+ * // => [">=1.2.3", "<2.4.0-0"]
+ * ```
+ *
+ * @see {@link desugarXRange} for wildcard and operator-prefix expansion.
+ * @see {@link parseRange} for the grammar entry point that detects ` - ` hyphen ranges.
+ * @category normalization
+ * @since 0.0.0
  */
 export const desugarHyphen = (lower: PartialParts, upper: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const lowerVersion = sv(lower.major ?? 0, lower.minor ?? 0, lower.patch ?? 0, lower.prerelease);

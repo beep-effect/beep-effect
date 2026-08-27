@@ -1,11 +1,14 @@
-// document-start (#129): the `---` marker at the head of the stream —
-// required (`present: true`, the default) or forbidden (`present: false`).
-// Scope is deliberately the STREAM HEAD only: `---` separators between the
-// documents of a multi-document stream are structure, not style — removing
-// one would merge two documents, and no lint rule gets to do that.
-//
-// Opt-in: absent from both presets (many real-world corpora — workflow
-// files above all — never carry the marker).
+/**
+ * document-start: the `---` marker at the head of the stream — required
+ * (`present: true`, the default) or forbidden (`present: false`).
+ *
+ * Scope is the stream head only: `---` separators between documents are
+ * structure — removing one would merge documents. Opt-in and absent from
+ * both presets. Directives require `---`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -13,7 +16,29 @@ import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlToken } from "../../YamlToken.ts";
 
-/** Options for `document-start`: require (`true`, default) or forbid the marker. */
+/**
+ * Options for `document-start`: require (`true`, default) or forbid the marker.
+ *
+ * **Gotchas**
+ *
+ * Directives (`%YAML` / `%TAG`) require `---`. Forbidding the marker on a
+ * directive-carrying stream is a conflict the rule will not "fix" by
+ * deleting structure.
+ *
+ * **Example** (Require a stream-head `---`)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "document-start": { present: true } } })
+ * console.log(config.rules["document-start"])
+ * ```
+ *
+ * @see {@link documentStart} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
 export const documentStartOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
 	present: Schema.optionalKey(Schema.Boolean),
@@ -27,7 +52,31 @@ const hasDirectives = (ctx: LintContext): boolean => ctx.tokens.some((t) => t.ki
 /** The first non-trivia token: it decides whether the stream is headed by `---`. */
 const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((t) => !TRIVIA.has(t.kind));
 
-/** The `---` marker at the head of the stream. */
+/**
+ * The `---` marker at the head of the stream.
+ *
+ * **Gotchas**
+ *
+ * A two-document stream whose head already has `---` is not a
+ * document-start violation for the internal separator. Removing a
+ * mid-stream `---` would merge documents.
+ *
+ * **Example** (Internal `---` is structure, not a style miss)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const hits = YamlLint.run("---\na: 1\n---\nb: 2\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "document-start": { present: true } },
+ * }))
+ * console.log(hits.every((d) => d.rule !== "document-start")) // true
+ * ```
+ *
+ * @see {@link documentEnd} for the matching stream-tail marker rule.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const documentStart: YamlRule = {
 	id: "document-start",
 	check: (ctx, options) => {

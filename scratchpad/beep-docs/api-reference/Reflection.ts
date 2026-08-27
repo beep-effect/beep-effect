@@ -144,15 +144,16 @@ export class ReflectionDecodeFailed extends S.TaggedError<ReflectionDecodeFailed
  * **Example** (Branch on the failure)
  *
  * ```ts
- * import { LoadReflectionError } from "./Reflection.ts"
+ * import { LoadReflectionError, ReflectionReadFailed } from "./Reflection.ts"
  *
+ * const error = ReflectionReadFailed.make({ path: "v4/effect/Option.json", cause: "ENOENT" })
  * const describe = LoadReflectionError.match({
- *   PathEscapesDataset: (error) => `escapes: ${error.path}`,
- *   ReflectionReadFailed: (error) => `read: ${error.path}`,
- *   ReflectionDigestMismatch: (error) => `digest: ${error.entryId}`,
- *   ReflectionDecodeFailed: (error) => `decode: ${error.path}`,
+ *   PathEscapesDataset: (escaped) => `escapes: ${escaped.path}`,
+ *   ReflectionReadFailed: (failed) => `read: ${failed.path}`,
+ *   ReflectionDigestMismatch: (mismatch) => `digest: ${mismatch.entryId}`,
+ *   ReflectionDecodeFailed: (failed) => `decode: ${failed.path}`,
  * })
- * console.log(typeof describe)
+ * console.log(describe(error)) // "read: v4/effect/Option.json"
  * ```
  *
  * @category errors
@@ -220,10 +221,13 @@ const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.
  * })
  *
  * const program = loadReflection(entry, ReflectionOptions.make({ baseDirectory: ".data/api-reference" })).pipe(
- *   Effect.map((reflection) => reflection.name),
+ *   Effect.match({
+ *     onFailure: (error) => error._tag,
+ *     onSuccess: (reflection) => reflection.name,
+ *   }),
  *   Effect.provide(BunServices.layer)
  * )
- * console.log(typeof program)
+ * Effect.runPromise(program).then(console.log)
  * ```
  *
  * @category utilities

@@ -46,7 +46,12 @@ const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"])
  * ```ts
  * import { TicketStorageError } from "@effect-ontology/Service/Ticket"
  *
- * console.log(TicketStorageError)
+ * const error = TicketStorageError.make({
+ *   message: "Ticket store is unavailable",
+ *   operation: "persist",
+ *   cause: new Error("disk full")
+ * })
+ * console.log(error._tag) // "TicketStorageError"
  * ```
  *
  * @category errors
@@ -229,12 +234,20 @@ const makeTicketService = Effect.gen(function* () {
 /**
  * Provides the ticket service service capability.
  *
- * **Example** (Inspect ticket service)
+ * **Example** (Count active tickets)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { TicketService } from "@effect-ontology/Service/Ticket"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(TicketService)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const tickets = yield* TicketService
+ *     return yield* tickets.getActiveCount
+ *   }).pipe(Effect.provide(TicketService.Default), Effect.provide(StorageServiceTest), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category layers
@@ -249,12 +262,20 @@ export class TicketService extends Context.Service<TicketService>()($I`TicketSer
 /**
  * Provides the Effect layer for ticket service live dependencies.
  *
- * **Example** (Inspect ticket service live)
+ * **Example** (Provide live ticket storage)
  *
  * ```ts
- * import { TicketServiceLive } from "@effect-ontology/Service/Ticket"
+ * import { Effect } from "effect"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
+ * import { TicketService, TicketServiceLive } from "@effect-ontology/Service/Ticket"
  *
- * console.log(TicketServiceLive)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const tickets = yield* TicketService
+ *     return yield* tickets.getActiveCount
+ *   }).pipe(Effect.provide(TicketServiceLive), Effect.provide(StorageServiceTest), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category layers

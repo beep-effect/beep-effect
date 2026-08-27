@@ -37,20 +37,21 @@ const DeadLetterMessage = S.Struct({
 // =============================================================================
 
 /**
- * Published message result
+ * Cloud Pub/Sub acknowledgement identifying the published message and topic.
  *
- *
- * **Example** (Use the PublishResult contract)
+ * **Example** (Record a published message)
  *
  * ```ts
- * import type { PublishResult } from "@effect-ontology/Service/PubSubClient"
+ * import { PublishResult } from "@effect-ontology/Service/PubSubClient"
  *
- * const acceptsPublishResult = (_value: PublishResult): void => undefined
- *
- * console.log(acceptsPublishResult)
+ * const result = PublishResult.make({
+ *   messageId: "msg-1",
+ *   topicName: "ontology-events"
+ * })
+ * console.log(result.messageId) // "msg-1"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class PublishResult extends S.Class<PublishResult>($I`PublishResult`)(
@@ -80,18 +81,7 @@ export interface ReceivedMessage {
 }
 
 /**
- * Pub/Sub client configuration
- *
- *
- * **Example** (Use the PubSubClientConfig contract)
- *
- * ```ts
- * import type { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
- *
- * const acceptsPubSubClientConfig = (_value: PubSubClientConfig): void => undefined
- *
- * console.log(acceptsPubSubClientConfig)
- * ```
+ * Project, topic, and subscription identifiers consumed by the Pub/Sub client.
  *
  * @category type-level
  * @since 0.0.0
@@ -161,9 +151,15 @@ export interface PubSubClientMethods {
  * **Example** (Inspect pub sub client)
  *
  * ```ts
- * import { PubSubClient } from "@effect-ontology/Service/PubSubClient"
+ * import { Effect } from "effect"
+ * import { PubSubClient, PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClient)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* PubSubClient
+ *   return client
+ * }).pipe(Effect.provide(PubSubClientDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -176,17 +172,30 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
 // =============================================================================
 
 /**
- * PubSub configuration from environment
+ * Environment-backed Pub/Sub project, topic, and subscription identifiers.
  *
- * **Example** (Inspect pub sub client config)
+ * **Details**
+ *
+ * Missing keys fall back to the `effect-ontology` project and the default
+ * ontology event, job, subscription, and dead-letter topic names.
+ *
+ * **Example** (Load default Pub/Sub identifiers)
  *
  * ```ts
+ * import { ConfigProvider, Effect } from "effect"
  * import { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClientConfig)
+ * const config = Effect.runSync(
+ *   Effect.provide(
+ *     PubSubClientConfig,
+ *     ConfigProvider.layer(ConfigProvider.fromUnknown({}))
+ *   )
+ * )
+ * console.log(config.projectId) // "effect-ontology"
+ * console.log(config.eventsTopicId) // "ontology-events"
  * ```
  *
- * @category services
+ * @category configuration
  * @since 0.0.0
  */
 export const PubSubClientConfig = Config.all({
@@ -213,9 +222,15 @@ export const PubSubClientConfig = Config.all({
  * **Example** (Inspect pub sub client live)
  *
  * ```ts
- * import { PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
+ * import { Effect } from "effect"
+ * import { PubSubClient, PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClientLive)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* PubSubClient
+ *   return client
+ * }).pipe(Effect.provide(PubSubClientLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -386,9 +401,11 @@ export const PubSubClientLive = Layer.effect(
  * **Example** (Inspect event bus pub sub bridge)
  *
  * ```ts
- * import { EventBusPubSubBridge } from "@effect-ontology/Service/PubSubClient"
+ * import { Layer } from "effect"
+ * import { EventBusPubSubBridge, PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(EventBusPubSubBridge)
+ * const layer = Layer.provide(EventBusPubSubBridge, PubSubClientLive)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -422,9 +439,15 @@ export const EventBusPubSubBridge = Layer.effectDiscard(
  * **Example** (Inspect pub sub client default)
  *
  * ```ts
- * import { PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
+ * import { Effect } from "effect"
+ * import { PubSubClient, PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
  *
- * console.log(PubSubClientDefault)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* PubSubClient
+ *   return client
+ * }).pipe(Effect.provide(PubSubClientDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

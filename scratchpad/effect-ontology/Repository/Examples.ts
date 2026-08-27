@@ -73,17 +73,19 @@ export const ExampleId = S.NonEmptyString.pipe(
 export type ExampleId = typeof ExampleId.Type;
 
 /**
- * Example types for few-shot learning
+ * Closed set of few-shot example tasks stored by the repository.
  *
- * **Example** (Inspect example type)
+ * **Example** (Recognize an extraction task)
  *
  * ```ts
  * import { ExampleType } from "@effect-ontology/Repository/Examples"
  *
- * console.log(ExampleType)
+ * console.log(ExampleType.is.entity_extraction("entity_extraction")) // true
+ * console.log(ExampleType.is.entity_extraction("negative")) // false
  * ```
  *
- * @category repositories
+ * @see {@link ExamplesRepository} for retrieval scoped by this task type.
+ * @category schemas
  * @since 0.0.0
  */
 export const ExampleType = LiteralKit(["entity_extraction", "relation_extraction", "entity_linking", "negative"]).pipe(
@@ -93,37 +95,28 @@ export const ExampleType = LiteralKit(["entity_extraction", "relation_extraction
 );
 
 /**
- * Describes the example type data exposed by this module.
+ * Runtime value accepted by {@link ExampleType}.
  *
- * **Example** (Decode ExampleType)
- *
- * ```ts
- * import { ExampleType } from "@effect-ontology/Repository/Examples"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExampleType = (_value: ExampleType): string => "valid example type"
- *
- * console.log(O.map(S.decodeUnknownOption(ExampleType)({}), summarizeExampleType))
- * ```
- *
+ * @see {@link ExampleType} for the closed literal set and guards.
  * @category type-level
  * @since 0.0.0
  */
 export type ExampleType = typeof ExampleType.Type;
 
 /**
- * Example source (how the example was created)
+ * Closed set of provenance sources for few-shot examples.
  *
- * **Example** (Inspect example source)
+ * **Example** (Recognize a manual example)
  *
  * ```ts
  * import { ExampleSource } from "@effect-ontology/Repository/Examples"
  *
- * console.log(ExampleSource)
+ * console.log(ExampleSource.is.manual("manual")) // true
+ * console.log(ExampleSource.is.manual("validated")) // false
  * ```
  *
- * @category repositories
+ * @see {@link CreateExampleInput} for the creation payload that stores this source.
+ * @category schemas
  * @since 0.0.0
  */
 export const ExampleSource = LiteralKit(["manual", "validated", "auto_generated"]).pipe(
@@ -133,20 +126,9 @@ export const ExampleSource = LiteralKit(["manual", "validated", "auto_generated"
 );
 
 /**
- * Describes the example source data exposed by this module.
+ * Runtime value accepted by {@link ExampleSource}.
  *
- * **Example** (Decode ExampleSource)
- *
- * ```ts
- * import { ExampleSource } from "@effect-ontology/Repository/Examples"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExampleSource = (_value: ExampleSource): string => "valid example source"
- *
- * console.log(O.map(S.decodeUnknownOption(ExampleSource)({}), summarizeExampleSource))
- * ```
- *
+ * @see {@link ExampleSource} for the closed literal set and guards.
  * @category type-level
  * @since 0.0.0
  */
@@ -167,17 +149,18 @@ const PromptMessage = S.Struct({
 const PromptMessages = PromptMessage.pipe(S.Array);
 
 /**
- * Validates and represents scored example values at runtime.
+ * Retrieval hit for a stored few-shot example, including similarity and usage.
  *
- * **Example** (Validate scored example)
+ * **Example** (Reject an incomplete scored example)
  *
  * ```ts
  * import { ScoredExample } from "@effect-ontology/Repository/Examples"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ScoredExample)({}))
+ * console.log(S.is(ScoredExample)({})) // false
  * ```
  *
+ * @see {@link ExamplesRepository} for scored retrieval that produces this payload.
  * @category schemas
  * @since 0.0.0
  */
@@ -199,39 +182,29 @@ export const ScoredExample = S.Struct({
 );
 
 /**
- * Describes the scored example data exposed by this module.
+ * Runtime value decoded by {@link ScoredExample}.
  *
- * **Example** (Decode ScoredExample)
- *
- * ```ts
- * import { ScoredExample } from "@effect-ontology/Repository/Examples"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeScoredExample = (_value: ScoredExample): string => "valid scored example"
- *
- * console.log(O.map(S.decodeUnknownOption(ScoredExample)({}), summarizeScoredExample))
- * ```
- *
+ * @see {@link ScoredExample} for the runtime schema and Option-normalized fields.
  * @category type-level
  * @since 0.0.0
  */
 export type ScoredExample = typeof ScoredExample.Type;
 
 /**
- * Options for example retrieval
+ * Validated retrieval count, threshold, optional ontology filters, and
+ * negative-example policy.
  *
- * **Example** (Reference ExampleRetrievalOptions fields)
+ * **Example** (Use retrieval defaults)
  *
  * ```ts
- * import type { ExampleRetrievalOptions } from "@effect-ontology/Repository/Examples"
+ * import { ExampleRetrievalOptions } from "@effect-ontology/Repository/Examples"
  *
- * const exampleRetrievalOptionsFields: ReadonlyArray<keyof ExampleRetrievalOptions> = ["k", "minSimilarity", "targetClass"]
- *
- * console.log(exampleRetrievalOptionsFields)
+ * const options = ExampleRetrievalOptions.make({})
+ * console.log(options.k) // 5
  * ```
  *
- * @category type-level
+ * @see {@link ExamplesRepository} for scored retrieval that consumes these options.
+ * @category configuration
  * @since 0.0.0
  */
 export class ExampleRetrievalOptions extends S.Class<ExampleRetrievalOptions>($I`ExampleRetrievalOptions`)(
@@ -250,35 +223,33 @@ export class ExampleRetrievalOptions extends S.Class<ExampleRetrievalOptions>($I
 /**
  * Constructor input accepted by {@link ExampleRetrievalOptions}.
  *
- * **Example** (Configure example retrieval)
- *
- * ```ts
- * import { PosInt } from "@beep/schema/Int"
- * import type { ExampleRetrievalOptionsInput } from "@effect-ontology/Repository/Examples"
- *
- * const options: ExampleRetrievalOptionsInput = { k: PosInt.make(3) }
- * console.log(options)
- * ```
- *
+ * @see {@link ExampleRetrievalOptions} for the runtime schema and constructor defaults.
  * @category type-level
  * @since 0.0.0
  */
 export type ExampleRetrievalOptionsInput = (typeof ExampleRetrievalOptions)["~type.make.in"];
 
 /**
- * Input for creating a new example
+ * Validated repository input for creating a few-shot example.
  *
- * **Example** (Reference CreateExampleInput fields)
+ * **Example** (Construct a manual entity-extraction example)
  *
  * ```ts
- * import type { CreateExampleInput } from "@effect-ontology/Repository/Examples"
+ * import { CreateExampleInput, ExampleSource, ExampleType } from "@effect-ontology/Repository/Examples"
  *
- * const createExampleInputFields: ReadonlyArray<keyof CreateExampleInput> = ["ontologyId", "exampleType", "source"]
- *
- * console.log(createExampleInputFields)
+ * const input = CreateExampleInput.make({
+ *   ontologyId: "people",
+ *   exampleType: ExampleType.Enum.entity_extraction,
+ *   source: ExampleSource.Enum.manual,
+ *   inputText: "Ada Lovelace was a mathematician.",
+ *   expectedOutput: { mention: "Ada Lovelace" },
+ *   embedding: [0.1, 0.2]
+ * })
+ * console.log(input.isNegative) // false
  * ```
  *
- * @category type-level
+ * @see {@link ExamplesRepository} for the insert method that consumes this payload.
+ * @category models
  * @since 0.0.0
  */
 export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExampleInput`)(
@@ -308,15 +279,7 @@ export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExa
 /**
  * Constructor input accepted by {@link CreateExampleInput}.
  *
- * **Example** (Reference example creation input)
- *
- * ```ts
- * import type { CreateExampleInputInput } from "@effect-ontology/Repository/Examples"
- *
- * const accept = (_input: CreateExampleInputInput): void => undefined
- * console.log(accept)
- * ```
- *
+ * @see {@link CreateExampleInput} for the runtime schema and default source.
  * @category type-level
  * @since 0.0.0
  */
@@ -412,17 +375,24 @@ interface ExamplesRepositoryShape {
 }
 
 /**
- * Validates and represents examples repository values at runtime.
+ * Stores and retrieves ontology-scoped few-shot examples with hybrid scoring.
  *
- * **Example** (Inspect examples repository)
+ * **Example** (Read example-store stats)
  *
  * ```ts
  * import { ExamplesRepository } from "@effect-ontology/Repository/Examples"
+ * import { Effect } from "effect"
  *
- * console.log(ExamplesRepository)
+ * const stats = Effect.gen(function* () {
+ *   const examples = yield* ExamplesRepository
+ *   return yield* examples.getStats("people")
+ * })
+ * console.log(typeof stats) // "object"
  * ```
  *
- * @category layers
+ * @see {@link ScoredExample} for the retrieval payload returned by hybrid search.
+ * @see {@link ExampleRetrievalOptions} for scored retrieval bounds.
+ * @category repositories
  * @since 0.0.0
  */
 export class ExamplesRepository extends Context.Service<ExamplesRepository, ExamplesRepositoryShape>()(

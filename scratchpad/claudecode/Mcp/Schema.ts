@@ -4,6 +4,7 @@
  * The decoded domain uses `Option` for absent wire keys while preserving
  * Claude Code's current transport shapes on the encoded side.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";

@@ -1,16 +1,26 @@
-// Recursive-descent JSONC parser: value mode (plain JS values) and tree mode
-// (`JsoncNode` AST). Private implementation.
-//
-// This module owns the single copy of the scan-error to parse-code mapping
-// (`scanErrorToCode`), consumed by both this parser and the visitor. It
-// returns plain results plus raw error records (`{ code, offset, length }`)
-// and MUST NOT import from `Jsonc.ts`: the facade maps raw records into
-// `JsoncParseErrorDetail` (computing `line`/`character` from `offset`) and
-// constructs the aggregate `JsoncParseError` itself, so the dependency edge
-// runs facade to parser only — never the reverse (a cycle would trip the
-// error-level `noImportCycles` lint).
-//
-// Reference: Microsoft's jsonc-parser parser design (MIT).
+/**
+ * Recursive-descent JSONC parser: value mode (plain JS values) and tree mode
+ * (`JsoncNode` AST). Private implementation.
+ *
+ * **Details**
+ *
+ * This module owns the single copy of the scan-error to parse-code mapping
+ * (`scanErrorToCode`), consumed by both this parser and the visitor. It
+ * returns plain results plus raw error records (`{ code, offset, length }`)
+ * and MUST NOT import from `Jsonc.ts`: the facade maps raw records into
+ * `JsoncParseErrorDetail` (computing `line`/`character` from `offset`) and
+ * constructs the aggregate `JsoncParseError` itself, so the dependency edge
+ * runs facade to parser only — never the reverse (a cycle would trip the
+ * error-level `noImportCycles` lint).
+ *
+ * The public API does not expose this recovered `{ value, errors }` /
+ * `{ root, errors }` pair: {@link Jsonc.parseResult} and
+ * {@link Jsonc.parseTreeResult} fail whenever `errors.length > 0` and discard
+ * the recovered value.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { JsoncNode } from "../JsoncNode.ts";
 import { makeNodeUnsafe } from "../JsoncNode.ts";
@@ -24,6 +34,19 @@ import { skipBalancedValue } from "./skip.ts";
  * The public parse-error code vocabulary. The facade builds its `@public`
  * `JsoncParseErrorCode` schema from this array; the parser produces these codes
  * as plain strings so the schema stays facade-owned without an import cycle.
+ *
+ * **Example** (Nesting-depth code is in the vocabulary)
+ *
+ * ```ts
+ * import { JSONC_PARSE_ERROR_CODES } from "../../jsonc/internal/parser.ts";
+ *
+ * console.log(JSONC_PARSE_ERROR_CODES.includes("NestingDepthExceeded")); // true
+ * ```
+ *
+ * @see {@link JsoncParseErrorCode} for the public literals schema built from this array.
+ * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const JSONC_PARSE_ERROR_CODES = [
 	"InvalidSymbol",
@@ -45,30 +68,69 @@ export const JSONC_PARSE_ERROR_CODES = [
 	"NestingDepthExceeded",
 ] as const;
 
-/** A single parse-error code. */
+/**
+ * A single parse-error code.
+ *
+ * @see {@link JSONC_PARSE_ERROR_CODES} for the source array of these literals.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseCode = (typeof JSONC_PARSE_ERROR_CODES)[number];
 
-/** A raw parse error record — position only; the facade derives line/character. */
+/**
+ * A raw parse error record — position only; the facade derives line/character.
+ *
+ * @see {@link JsoncParseError} for the public aggregate that maps these records.
+ * @see {@link parseValue} for the recovery pair that carries this record.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface RawParseError {
 	readonly code: ParseCode;
 	readonly offset: number;
 	readonly length: number;
 }
 
-/** Plain flags accepted by the parser, decoded from `JsoncParseOptions` by the facade. */
+/**
+ * Plain flags accepted by the parser, decoded from `JsoncParseOptions` by the
+ * facade.
+ *
+ * @see {@link JsoncParseOptions} for the public options the facade maps into these flags.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ParseFlags {
 	readonly disallowComments?: boolean | undefined;
 	readonly allowTrailingComma?: boolean | undefined;
 	readonly allowEmptyContent?: boolean | undefined;
 }
 
-/** Value-mode result: the recovered value plus every error encountered. */
+/**
+ * Value-mode result: the recovered value plus every error encountered.
+ *
+ * @see {@link parseValue} for the function that returns this pair.
+ * @see {@link JsoncParseError} for the public failure that discards `value`.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ParseValueResult {
 	readonly value: unknown;
 	readonly errors: ReadonlyArray<RawParseError>;
 }
 
-/** Tree-mode result: the root node (or `undefined` for empty input) plus errors. */
+/**
+ * Tree-mode result: the root node (or `undefined` for empty input) plus errors.
+ *
+ * @see {@link parseTree} for the function that returns this pair.
+ * @see {@link JsoncParseError} for the public failure that discards `root`.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ParseTreeResult {
 	readonly root: JsoncNode | undefined;
 	readonly errors: ReadonlyArray<RawParseError>;
@@ -77,6 +139,20 @@ export interface ParseTreeResult {
 /**
  * The single scan-error to parse-code translation, shared by the parser and the
  * visitor. Returns `undefined` for `"None"` (no error).
+ *
+ * **Example** (No scanner error maps to nothing)
+ *
+ * ```ts
+ * import { scanErrorToCode } from "../../jsonc/internal/parser.ts";
+ *
+ * console.log(scanErrorToCode("None")); // undefined
+ * console.log(scanErrorToCode("InvalidUnicode")); // "InvalidUnicode"
+ * ```
+ *
+ * @see {@link JsoncParseError} for the public aggregate built after this mapping.
+ * @internal
+ * @category mapping
+ * @since 0.0.0
  */
 export const scanErrorToCode = (error: ScanError): ParseCode | undefined => {
 	switch (error) {
@@ -559,13 +635,58 @@ function run(text: string, flags: ParseFlags, buildTree: boolean): Internal {
 	return { value, root: undefined, errors };
 }
 
-/** Parse into a plain JS value, recovering from and collecting every error. */
+/**
+ * Parse into a plain JS value, recovering from and collecting every error.
+ *
+ * **Gotchas**
+ *
+ * The recovered `value` is an internal artifact. {@link Jsonc.parseResult} fails
+ * whenever `errors.length > 0` and does not return it.
+ *
+ * **Example** (Recovered value plus errors)
+ *
+ * ```ts
+ * import { parseValue } from "../../jsonc/internal/parser.ts";
+ *
+ * const recovered = parseValue("{ bad }", {});
+ *
+ * console.log(recovered.errors.length > 0); // true
+ * console.log(recovered.value !== undefined); // true
+ * ```
+ *
+ * @see {@link JsoncParseError} for the public aggregate that discards this recovery pair.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseValue = (text: string, flags: ParseFlags): ParseValueResult => {
 	const { value, errors } = run(text, flags, false);
 	return { value, errors };
 };
 
-/** Parse into a {@link JsoncNode} AST, recovering from and collecting every error. */
+/**
+ * Parse into a {@link JsoncNode} AST, recovering from and collecting every error.
+ *
+ * **Gotchas**
+ *
+ * The recovered `root` is an internal artifact. {@link Jsonc.parseTreeResult}
+ * fails whenever `errors.length > 0` and does not return it.
+ *
+ * **Example** (Tree mode still reports recovered errors)
+ *
+ * ```ts
+ * import { parseTree } from "../../jsonc/internal/parser.ts";
+ *
+ * const recovered = parseTree("{ bad }", {});
+ *
+ * console.log(recovered.errors.length > 0); // true
+ * ```
+ *
+ * @see {@link parseValue} for the value-mode twin that also keeps recovery artifacts.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseTree = (text: string, flags: ParseFlags): ParseTreeResult => {
 	const { root, errors } = run(text, flags, true);
 	return { root, errors };

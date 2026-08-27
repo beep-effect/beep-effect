@@ -731,13 +731,18 @@ const DEFAULT_BATCH_SIZE = 5;
  * Provides relation verification via secondary LLM pass.
  * Supports both single relation and batched verification.
  *
- * **Example** (Inspect the default grounder layer)
+ * **Example** (Compose relation verification)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { Grounder } from "@effect-ontology/Service/Grounder"
  *
- * console.log(Layer.isLayer(Grounder.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const grounder = yield* Grounder
+ *   return grounder
+ * }).pipe(Effect.provide(Grounder.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

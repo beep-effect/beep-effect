@@ -210,14 +210,21 @@ const reEnrichAllCommand = Command.make(
 // =============================================================================
 
 /**
- * Exposes workflow command for composition by callers of this module.
+ * Manages durable link-ingestion workflows: list pending work, mark stale
+ * links failed, and re-enrich failed content.
  *
- * **Example** (Inspect workflow command)
+ * **Example** (List pending workflow links)
  *
  * ```ts
  * import { workflowCommand } from "@effect-ontology/Cli/Commands/Workflow"
+ * import * as A from "effect/Array"
  *
- * console.log(workflowCommand)
+ * console.log(workflowCommand.name) // "workflow"
+ * console.log(
+ *   A.flatMap(workflowCommand.subcommands, (group) => A.map(group.commands, (command) => command.name))
+ * )
+ * // ["list-pending", "cleanup-stale", "re-enrich", "re-enrich-all"]
+ * // effect-onto workflow list-pending --ontology people
  * ```
  *
  * @category cli-commands

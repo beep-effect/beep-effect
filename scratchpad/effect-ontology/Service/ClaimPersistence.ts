@@ -30,13 +30,18 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
  * Metadata for the source article
  *
  *
- * **Example** (Use the ArticleMetadata contract)
+ * **Example** (Describe a source article)
  *
  * ```ts
- * import * as S from "effect/Schema"
  * import { ArticleMetadata } from "@effect-ontology/Service/ClaimPersistence"
  *
- * console.log(S.is(ArticleMetadata)({})) // false
+ * const metadata = ArticleMetadata.make({
+ *   uri: "https://example.org/articles/ada",
+ *   ontologyId: "core",
+ *   publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+ *   headline: "Ada founded Acme"
+ * })
+ * console.log(metadata.ontologyId) // "core"
  * ```
  *
  * @category type-level
@@ -60,13 +65,18 @@ export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata
  * Result of claim persistence operation
  *
  *
- * **Example** (Use the PersistenceResult contract)
+ * **Example** (Record inserted claims)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { PersistenceResult } from "@effect-ontology/Service/ClaimPersistence"
  *
- * console.log(S.is(PersistenceResult)({})) // false
+ * const result = PersistenceResult.make({
+ *   articleId: "article-ada",
+ *   claimsInserted: NonNegativeInt.make(3),
+ *   claimsTotal: NonNegativeInt.make(3)
+ * })
+ * console.log(result.claimsInserted) // 3
  * ```
  *
  * @category type-level
@@ -95,12 +105,25 @@ export class PersistenceResult extends S.Class<PersistenceResult>($I`Persistence
  * Persists extracted claims to PostgreSQL with proper article linking
  * and idempotent upsert handling.
  *
- * **Example** (Inspect claim persistence service)
+ * **Example** (Persist claims for an article)
  *
  * ```ts
- * import { ClaimPersistenceService } from "@effect-ontology/Service/ClaimPersistence"
+ * import { Effect } from "effect"
+ * import { ArticleMetadata, ClaimPersistenceService } from "@effect-ontology/Service/ClaimPersistence"
  *
- * console.log(ClaimPersistenceService)
+ * const program = Effect.gen(function* () {
+ *   const persistence = yield* ClaimPersistenceService
+ *   return yield* persistence.persistClaims(
+ *     [],
+ *     ArticleMetadata.make({
+ *       uri: "https://example.org/articles/ada",
+ *       ontologyId: "core",
+ *       publishedAt: new Date("2026-01-01T00:00:00.000Z")
+ *     })
+ *   )
+ * }).pipe(Effect.provide(ClaimPersistenceService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

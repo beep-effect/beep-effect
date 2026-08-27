@@ -1,10 +1,10 @@
 /**
- * UserPromptExpansion hook event.
- *
  * Fires when a user-typed slash command expands into a prompt before it
- * reaches Claude. Supports a matcher on `command_name`.
- * See https://code.claude.com/docs/en/hooks#userpromptexpansion.
+ * reaches Claude. A handler can `allow`, `block`, or `addContext`.
+ * Matcher is on `command_name`. See
+ * https://code.claude.com/docs/en/hooks#userpromptexpansion.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -19,18 +19,21 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/UserPromptExpansion");
 
 /**
- * Schema for `ExpansionType`.
+ * Kind of expansion that produced this prompt (`slash_command` or
+ * `mcp_prompt`).
  *
- * **Example** (Inspect the ExpansionType schema)
+ * **Example** (Decode an expansion type)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.UserPromptExpansion.ExpansionType)
+ * const kind = S.decodeUnknownSync(Hook.UserPromptExpansion.ExpansionType)("slash_command")
+ * console.log(kind) // "slash_command"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this kind.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const ExpansionType = LiteralKit(["slash_command", "mcp_prompt"]).pipe(
@@ -40,35 +43,41 @@ export const ExpansionType = LiteralKit(["slash_command", "mcp_prompt"]).pipe(
 );
 
 /**
- * Type-level model for `ExpansionType`.
+ * Decoded value produced by {@link ExpansionType}.
  *
- * **Example** (Use ExpansionType as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.UserPromptExpansion.ExpansionType
- * ```
- *
+ * @see {@link ExpansionType} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type ExpansionType = typeof ExpansionType.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a UserPromptExpansion hook, including `command_name`
+ * and the expanded `prompt`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a slash-command expansion)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.UserPromptExpansion.Input)
+ * const input = S.decodeUnknownSync(Hook.UserPromptExpansion.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "UserPromptExpansion",
+ *   expansion_type: "slash_command",
+ *   command_name: "review",
+ *   command_args: "src/index.ts",
+ *   command_source: "project",
+ *   prompt: "Review src/index.ts",
+ * })
+ *
+ * console.log(input.command_name) // "review"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `command_name`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`UserPromptExpansionInput`)(
@@ -87,18 +96,25 @@ export class Input extends S.Class<Input>($I`UserPromptExpansionInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that injects `additionalContext` beside the
+ * expanded prompt.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect additional context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.UserPromptExpansion.HookSpecificOutput)
+ * const specific = Hook.UserPromptExpansion.HookSpecificOutput.make({
+ *   hookEventName: "UserPromptExpansion",
+ *   additionalContext: O.some("Follow the repo review checklist"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "Follow the repo review checklist"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`UserPromptExpansionHookSpecificOutput`)(
@@ -112,18 +128,22 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`UserPromp
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a UserPromptExpansion handler returns. `decision:
+ * "block"` refuses the expanded prompt.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.UserPromptExpansion.Output)
+ * const output = Hook.UserPromptExpansion.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link allow} for letting the expanded prompt through.
+ * @see {@link block} for refusing it.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`UserPromptExpansionOutput`)(
@@ -143,52 +163,63 @@ export class Output extends S.Class<Output>($I`UserPromptExpansionOutput`)(
 ) {}
 
 /**
- * Constructor for `allow`.
+ * Let the expanded prompt reach Claude. Equivalent to empty
+ * `Output.make()`.
  *
- * **Example** (Use allow)
+ * **Example** (Allow the expansion)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.UserPromptExpansion.allow)
+ * const output = Hook.UserPromptExpansion.allow()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for refusing the expanded prompt.
+ * @see {@link addContext} for injecting extra context without blocking.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const allow = (): Output => Output.make();
 
 /**
- * Constructor for `block`.
+ * Refuse the expanded prompt and feed `reason` back to the user.
  *
- * **Example** (Use block)
+ * **Example** (Block a slash command)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.UserPromptExpansion.block)
+ * const output = Hook.UserPromptExpansion.block("review is disabled in this session")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "review is disabled in this session"
  * ```
  *
+ * @see {@link allow} for letting the expanded prompt through.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
- * Constructor for `addContext`.
+ * Allow the expansion and inject additional context Claude will see.
  *
- * **Example** (Use addContext)
+ * **Example** (Add a checklist to a slash command)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.UserPromptExpansion.addContext)
+ * const output = Hook.UserPromptExpansion.addContext("Follow the repo review checklist")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "Follow the repo review checklist"
  * ```
  *
+ * @see {@link allow} for proceeding with no extra context.
+ * @see {@link block} for refusing the expansion.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
@@ -202,18 +233,23 @@ export const addContext = (additionalContext: string): Output =>
   });
 
 /**
- * Constructor for `define`.
+ * Build a runnable UserPromptExpansion hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a UserPromptExpansion hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.UserPromptExpansion.define)
+ * const hook = Hook.UserPromptExpansion.define({
+ *   handler: () => Effect.succeed(Hook.UserPromptExpansion.allow()),
+ * })
+ *
+ * console.log(hook.event) // "UserPromptExpansion"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `command_name`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -226,18 +262,31 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Constructor for `onMatcher`.
+ * Build a UserPromptExpansion hook that only handles matching
+ * `command_name` values.
  *
- * **Example** (Use onMatcher)
+ * **Gotchas**
+ *
+ * Omitted `onMismatch` succeeds {@link allow}, so a matcher miss lets
+ * the expanded prompt through instead of becoming a no-op.
+ *
+ * **Example** (Block a specific slash command)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.UserPromptExpansion.onMatcher)
+ * const hook = Hook.UserPromptExpansion.onMatcher({
+ *   matcher: "review",
+ *   handler: () => Effect.succeed(Hook.UserPromptExpansion.block("review is disabled")),
+ * })
+ *
+ * console.log(hook.event) // "UserPromptExpansion"
  * ```
  *
+ * @see {@link allow} for the default mismatch output.
+ * @see {@link block} for the matched-handler decision used here.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {

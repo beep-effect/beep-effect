@@ -26,6 +26,7 @@
  * └── settings.json             (preserved when loaded from disk)
  * ```
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import * as A from "effect/Array";
@@ -753,20 +754,22 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
  * your preferred platform layer at the call site (for example
  * `NodeFileSystem.layer` + `NodePath.layer` under Node).
  *
- * **Example** (Run write)
+ * **Example** (Write a plugin tree in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * const def = Plugin.define({
+ * const definition = Plugin.define({
  *   manifest: { name: "my-plugin" },
- *   commands: [
- *     Plugin.command({ name: "hi", body: "# /hi\n" })
- *   ]
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
  * })
+ * const fileSystem = await Effect.runPromise(
+ *   Testing.writePluginToMemory(definition, "/tmp/my-plugin")
+ * )
  *
- * const program = Plugin.write(def, "/tmp/my-plugin")
- * console.log(program)
+ * console.log(fileSystem.exists("/tmp/my-plugin/.claude-plugin/plugin.json")) // true
+ * console.log(fileSystem.exists("/tmp/my-plugin/commands/hi.md")) // true
  * ```
  *
  * @category serialization

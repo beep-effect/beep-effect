@@ -18,15 +18,6 @@
  * - SSE streaming to frontends
  * - Checkpoint/resume support
  *
- * **Example** (Inspect the coordinator layer)
- *
- * ```ts
- * import { Layer } from "effect"
- * import { AgentCoordinator } from "@effect-ontology/Service/Agent/AgentCoordinator"
- *
- * console.log(Layer.isLayer(AgentCoordinator.Default)) // true
- * ```
- *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -189,14 +180,23 @@ const resolveExecutionOptions = (options?: ExecutionOptions): ResolvedExecutionO
  * Result of pipeline execution
  *
  *
- * **Example** (Use the ExecutionResult contract)
+ * **Example** (Capture a pending pipeline result)
  *
  * ```ts
- * import type { ExecutionResult } from "@effect-ontology/Service/Agent/AgentCoordinator"
+ * import { DateTime, HashMap } from "effect"
+ * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+ * import { ExecutionResult } from "@effect-ontology/Service/Agent/AgentCoordinator"
  *
- * const acceptsExecutionResult = (_value: ExecutionResult): void => undefined
- *
- * console.log(acceptsExecutionResult)
+ * const result = ExecutionResult.make({
+ *   state: PipelineState.make({
+ *     pipelineId: "pipeline-ada",
+ *     startedAt: DateTime.nowUnsafe(),
+ *     status: PipelineStatus.cases.Pending.make({})
+ *   }),
+ *   events: [],
+ *   outputs: HashMap.empty<typeof AgentId.Type, unknown>()
+ * })
+ * console.log(result.state.status._tag) // "Pending"
  * ```
  *
  * @category models
@@ -266,12 +266,18 @@ interface AgentCoordinatorShape {
  * Coordinates the execution of multiple agents in configurable patterns.
  * Manages agent registration, pipeline execution, and event collection.
  *
- * **Example** (Inspect agent coordinator)
+ * **Example** (List registered agents)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { AgentCoordinator } from "@effect-ontology/Service/Agent/AgentCoordinator"
  *
- * console.log(AgentCoordinator)
+ * const program = Effect.gen(function* () {
+ *   const coordinator = yield* AgentCoordinator
+ *   return yield* coordinator.listAgents
+ * }).pipe(Effect.provide(AgentCoordinator.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

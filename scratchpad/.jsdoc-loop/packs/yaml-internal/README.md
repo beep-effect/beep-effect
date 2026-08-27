@@ -1,0 +1,273 @@
+# Pack yaml-internal
+
+- modules: 37
+- owning exports: 183
+- re-exports: 0
+- open modules: 36
+- open owning exports: 183
+
+## Files
+
+- `yaml/internal/composer/anchors.ts` owning=8 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/block.ts` owning=10 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/comments.ts` owning=14 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/document.ts` owning=6 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/flow.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/scalars.ts` owning=24 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/state.ts` owning=15 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/composer/tags.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/cst-parser.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/cst-visitor.ts` owning=15 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/cst.ts` owning=2 moduleFindings=missing-packageDocumentation|missing-module-since
+- `yaml/internal/diagnostics.ts` owning=14 moduleFindings=missing-packageDocumentation|missing-module-since
+- `yaml/internal/diff.ts` owning=2 moduleFindings=missing-packageDocumentation|missing-module-since
+- `yaml/internal/equal.ts` owning=1 moduleFindings=missing-packageDocumentation|missing-module-since
+- `yaml/internal/fold.ts` owning=8 moduleFindings=missing-packageDocumentation|missing-module-since
+- `yaml/internal/lexer.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/options.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/raw-document.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/requote.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/catalog.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/colon-spacing.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/comments-spacing.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/document-end.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/document-start.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/empty-lines.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/eof-newline.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/hyphen-spacing.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/indentation.ts` owning=2 moduleFindings=none
+- `yaml/internal/rules/key-duplicates.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/line-length.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/parse-validity.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/quoted-strings.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/trailing-spaces.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/truthy.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/rules/util.ts` owning=8 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/stringifier.ts` owning=7 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/internal/token.ts` owning=2 moduleFindings=missing-packageDocumentation|missing-module-since
+
+## Open modules
+
+- `yaml/internal/composer/anchors.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/block.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/comments.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/document.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/flow.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/scalars.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/state.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/composer/tags.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/cst-parser.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/cst-visitor.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/cst.ts`: missing-packageDocumentation, missing-module-since
+- `yaml/internal/diagnostics.ts`: missing-packageDocumentation, missing-module-since
+- `yaml/internal/diff.ts`: missing-packageDocumentation, missing-module-since
+- `yaml/internal/equal.ts`: missing-packageDocumentation, missing-module-since
+- `yaml/internal/fold.ts`: missing-packageDocumentation, missing-module-since
+- `yaml/internal/lexer.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/options.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/raw-document.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/requote.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/catalog.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/colon-spacing.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/comments-spacing.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/document-end.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/document-start.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/empty-lines.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/eof-newline.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/hyphen-spacing.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/key-duplicates.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/line-length.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/parse-validity.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/quoted-strings.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/trailing-spaces.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/truthy.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/rules/util.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/stringifier.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/internal/token.ts`: missing-packageDocumentation, missing-module-since
+
+## Open owning exports
+
+- `yaml/internal/composer/anchors.ts:19` `checkAnchorOnAlias` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/anchors.ts:30` `makeAlias` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/anchors.ts:58` `registerAnchor` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/anchors.ts:70` `getAnchorName` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/anchors.ts:82` `getAliasName` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/anchors.ts:90` `scanName` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/anchors.ts:123` `buildAnchorMap` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/anchors.ts:154` `getNodeValue` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/block.ts:77` `composeBlockMap` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/block.ts:153` `SemanticItem` (type/interface) missing=@category|@since findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/block.ts:160` `flattenBlockMapChildren` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/block.ts:829` `buildPairs` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/block.ts:1249` `keyIdentity` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/block.ts:1273` `checkDuplicateKeys` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/block.ts:1376` `checkMultilineImplicitKeys` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/block.ts:1454` `checkTrailingContentOnSameLine` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/block.ts:1646` `composeBlockSeq` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/block.ts:2010` `composeFlatBlockMap` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:50` `CommentFields` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:61` `hasBlankLineBetween` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:68` `sameLineSpan` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:78` `isOwnLineAt` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:98` `isAfterIndicatorOnly` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:122` `hasBlankLineAbove` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:132` `blankLineAboveStart` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:180` `blankAboveIsKeepChompContent` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:196` `hasBlankLineBelow` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:217` `rawCommentText` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:223` `joinComments` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:228` `columnAt` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:241` `EscapedComment` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/composer/comments.ts:252` `withCommentFields` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/document.ts:233` `composeDocument` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/document.ts:936` `validateCrossDocumentDirectives` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/document.ts:1084` `EMPTY_DOCUMENT` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/document.ts:1101` `composeFirstDocument` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/document.ts:1113` `composeFirstDocumentCounted` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/document.ts:1140` `composeAllDocuments` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/flow.ts:172` `composeFlowMap` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/flow.ts:245` `flattenFlowChildren` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/flow.ts:453` `composeFlowSeq` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:50` `classifyPlainNumeric` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:106` `resolveScalar` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:119` `getScalarStyle` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:135` `getBlockChomp` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:153` `getBlockIndent` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:181` `getScalarValue` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:354` `foldFlowLines` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:398` `collectMultilineKey` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:493` `collectMultilinePlainScalar` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:646` `findNextSignificantChild` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:668` `hasValueSepAfterInList` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:678` `hasBlockMapAfterInList` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:693` `findValueSepOffset` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:708` `hasValueSepBetween` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:723` `blockMapStartsWithValueSep` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:744` `hasValueSepThroughPlainScalars` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:768` `findNextContentInList` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:781` `findFirstContent` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:791` `findLastContent` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:806` `findNextContentChild` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:823` `indexOfChild` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:831` `hasValueSepAfter` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/scalars.ts:1194` `makeScalar` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/scalars.ts:1243` `shouldPreserveRaw` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:22` `getLineStarts` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:33` `lineCol` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:53` `sameLine` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:63` `hasNonWhitespaceBeforeOnLine` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:78` `lineIndentColumn` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:90` `NodeMeta` (type/interface) missing=@category|@since findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:96` `hasMeta` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:100` `clearMeta` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:112` `commentProps` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:136` `FlowComposers` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/composer/state.ts:141` `ComposerState` (type/interface) missing=@category|@since findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:167` `createState` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/state.ts:194` `MAX_NESTING_DEPTH` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:202` `enterNesting` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/state.ts:219` `exitNesting` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/tags.ts:17` `resolveTagHandle` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/composer/tags.ts:56` `parseDirective` (value/function) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `yaml/internal/composer/tags.ts:77` `validateTagHandlesInDocument` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/cst-parser.ts:1095` `parseCSTAll` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:38` `CstDocumentStartEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:45` `CstDocumentEndEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:52` `CstMapStartEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:60` `CstMapEndEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:67` `CstSeqStartEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:75` `CstSeqEndEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:82` `CstKeyEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:90` `CstValueEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:101` `CstScalarEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:109` `CstAliasEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:117` `CstCommentEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:125` `CstDirectiveEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:133` `CstErrorEvent` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:141` `CstVisitorEvent` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst-visitor.ts:550` `cstEvents` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/cst.ts:6` `CstNodeType` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/cst.ts:28` `CstNode` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:11` `YAML_LEX_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:25` `YAML_PARSE_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:38` `YAML_COMPOSE_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:55` `YAML_STRINGIFY_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:68` `YAML_MODIFY_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:78` `YamlLexErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:81` `YamlParseStageErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:84` `YamlComposeErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:87` `YamlStringifyStageErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:90` `YamlModifyStageErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:93` `YamlErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:105` `RawDiagnostic` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:118` `FATAL_CODES` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diagnostics.ts:135` `isFatalCode` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/diff.ts:6` `RawEdit` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/diff.ts:27` `computeEdits` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/equal.ts:15` `deepEqual` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:26` `foldScalarLine` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:79` `foldRenderedScalar` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:118` `isControlChar` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:129` `hasInteriorTrailingWhitespace` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:158` `hasNewlineSpacesTab` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:184` `renderSingleQuotedMultiline` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:232` `renderBlockLiteral` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/fold.ts:295` `renderBlockFolded` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/lexer.ts:20` `YamlScanner` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/lexer.ts:54` `createScanner` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/lexer.ts:1507` `lexAll` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/options.ts:9` `ParseOptionsInput` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/options.ts:19` `StringifyOptionsInput` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/raw-document.ts:10` `RawDirective` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/raw-document.ts:16` `RawYamlDocument` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/requote.ts:40` `RequoteScalarInput` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/requote.ts:50` `RequoteMode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/requote.ts:74` `requoteScalarText` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/catalog.ts:48` `builtinRules` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/catalog.ts:51` `builtinOptionsSchemas` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/colon-spacing.ts:19` `colonSpacingOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/colon-spacing.ts:31` `colonSpacing` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/comments-spacing.ts:20` `commentsSpacingOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/comments-spacing.ts:53` `commentsSpacing` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/document-end.ts:16` `documentEndOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/document-end.ts:48` `documentEnd` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/document-start.ts:17` `documentStartOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/document-start.ts:31` `documentStart` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/empty-lines.ts:17` `emptyLinesOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/empty-lines.ts:31` `emptyLines` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/eof-newline.ts:10` `eofNewlineOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/eof-newline.ts:15` `eofNewline` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/hyphen-spacing.ts:17` `hyphenSpacingOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/hyphen-spacing.ts:27` `hyphenSpacing` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/indentation.ts:38` `indentationOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/indentation.ts:122` `indentation` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/key-duplicates.ts:17` `keyDuplicatesOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/key-duplicates.ts:55` `keyDuplicates` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/line-length.ts:15` `lineLengthOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/line-length.ts:23` `lineLength` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/parse-validity.ts:17` `parseValidityOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/parse-validity.ts:20` `parseValidity` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/quoted-strings.ts:24` `quotedStringsOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/quoted-strings.ts:48` `quotedStrings` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/trailing-spaces.ts:13` `trailingSpacesOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/trailing-spaces.ts:18` `trailingSpaces` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/truthy.ts:23` `truthyOptions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/truthy.ts:59` `truthy` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:15` `nonNegativeIntegerOption` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:25` `positiveIntegerOption` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:32` `ScalarRole` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/rules/util.ts:35` `walkScalars` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:63` `isScalarContinuationLine` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:73` `coveringToken` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:96` `insideScalarSpan` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/rules/util.ts:105` `positionAt` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:42` `StringifyFailure` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:60` `StringifyDepthExceeded` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:285` `renderDoubleQuoted` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:336` `renderSingleQuoted` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:952` `stripNodeComments` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:1878` `stringifyValue` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/stringifier.ts:1892` `stringifyDocument` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/internal/token.ts:6` `YamlTokenKind` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/internal/token.ts:35` `YamlToken` (type/interface) missing=@category|@since findings=missing-required-tags
+

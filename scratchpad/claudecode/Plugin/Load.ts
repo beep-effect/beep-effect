@@ -8,6 +8,7 @@
  * filling in the default paths that `Plugin.write` uses when a manifest field
  * is omitted.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -574,15 +575,25 @@ const mergeMcpConfigs = (configs: ReadonlyArray<McpJsonFile>): McpJsonFile =>
  * Inspect a plugin directory and infer the canonical manifest paths for the
  * discovered component files.
  *
- * **Example** (Inspect a plugin scan Effect)
+ * **Example** (Scan a plugin written in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * const program = Plugin.scan("./my-plugin")
+ * const definition = Plugin.define({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
+ * })
+ * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
+ * const scanned = await Effect.runPromise(
+ *   Effect.provide(Plugin.scan("/plugin"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(scanned.inferredManifest.name) // "review-tools"
+ * console.log(O.isSome(scanned.manifestPath)) // true
+ * console.log(scanned.commandPaths) // ["/plugin/commands/hi.md"]
  * ```
  *
  * @effects Reads the plugin manifest and component directories through `FileSystem.FileSystem` and resolves paths with `Path.Path`.
@@ -728,15 +739,24 @@ export const scan = Effect.fn("Plugin.scan")(function* (
 /**
  * Load an existing plugin directory into a typed `PluginDefinition`.
  *
- * **Example** (Inspect a plugin load Effect)
+ * **Example** (Load a plugin written in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Plugin.load("./my-plugin")
+ * const definition = Plugin.define({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
+ * })
+ * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
+ * const loaded = await Effect.runPromise(
+ *   Effect.provide(Plugin.load("/plugin"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(loaded.manifest.name) // "review-tools"
+ * console.log(loaded.commands.length) // 1
+ * console.log(loaded.skills.length) // 0
  * ```
  *
  * @effects Reads and decodes the plugin manifest and referenced components through `FileSystem.FileSystem` and `Path.Path`.
@@ -794,15 +814,26 @@ export const load = Effect.fn("Plugin.load")(function* (
  * Normalize a plugin definition's manifest by preserving explicit layout
  * choices and filling in default paths for missing component/config entries.
  *
- * **Example** (Use sync)
+ * **Example** (Preserve custom command paths and collapse multi-file hooks)
  *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
  * const normalized = Plugin.sync(
- *   Plugin.define({ manifest: { name: "example-plugin" } })
+ *   Plugin.define({
+ *     manifest: {
+ *       name: "review-tools",
+ *       commands: "./slash",
+ *       hooks: ["./hooks/a.json", "./hooks/b.json"]
+ *     },
+ *     commands: [Plugin.command({ name: "hi", body: "# /hi\n" })],
+ *     hooksConfig: { PostToolUse: [] }
+ *   })
  * )
- * console.log(normalized.manifest.name)
+ *
+ * console.log(O.getOrUndefined(normalized.manifest.commands)) // "./slash"
+ * console.log(O.getOrUndefined(normalized.manifest.hooks)) // "./hooks/hooks.json"
  * ```
  *
  * @category normalization

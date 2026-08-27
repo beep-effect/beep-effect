@@ -7,6 +7,7 @@
  * and access members as `Plugin.define`, `Plugin.write`,
  * `Plugin.PluginManifest`, etc.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

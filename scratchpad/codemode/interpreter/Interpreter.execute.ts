@@ -1,3 +1,10 @@
+/**
+ * Limit-aware entry that parses, evaluates, copies out, times out, and truncates
+ * a guest CodeMode program.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Unknown } from "@beep/schema/Unknown";
 import { parse } from "acorn"
 import { A, O, P, Str, pipe } from "@beep/utils";
@@ -31,6 +38,49 @@ import {
 import { PromiseRuntime } from "./Interpreter.promises.ts"
 import { Interpreter } from "./Interpreter.runtime.ts"
 
+/**
+ * Parses TypeScript, evaluates it in a confined interpreter, copies the result
+ * out as data, then applies timeout and output-byte budgets.
+ *
+ * **Gotchas**
+ *
+ * Empty trimmed `code` short-circuits to a `FailureModel` `ParseError` and never
+ * allocates runtime state. Execution state is allocated inside `Effect.suspend`
+ * so a reused Effect does not share logs or tool state. TypeScript is wrapped as
+ * `async function __codemode__() { ... }` before Acorn parse; {@link sourceLocation}
+ * later undoes that wrapper. Copy-out uses `"nullify"` and is recorded *before*
+ * timeout inspection, so a timeout after a successful return is a `SuccessModel`
+ * whose first warning is `TimeoutExceeded` rather than a failure. Truncation
+ * keeps that timeout warning first, and warnings have a separate byte budget so
+ * result data cannot starve diagnostics. The last top-level
+ * `ExpressionStatement` is the program result.
+ *
+ * **Example** (Evaluate a tiny program to a SuccessModel value)
+ *
+ * ```ts
+ * import { CodeMode } from "@beep/scratchpad/codemode"
+ * import { Effect } from "effect"
+ * import { executeWithLimits } from "../../../codemode/interpreter/Interpreter.execute.ts"
+ *
+ * const result = await Effect.runPromise(
+ *   executeWithLimits({ code: "1 + 1" }, CodeMode.ExecutionLimits.make({})),
+ * )
+ *
+ * console.log(
+ *   CodeMode.ResultModel.match(result, {
+ *     Success: (success) => success.value,
+ *     Failure: (failure) => failure.error.message,
+ *   }),
+ * )
+ * // 2
+ * ```
+ *
+ * @see {@link Interpreter} for evaluation, builtin shadowing, and implicit async adoption.
+ * @see {@link PromiseRuntime} for un-awaited rejection diagnostics interrupted on completion.
+ * @see {@link ResultModel} for the encoded success-or-failure result.
+ * @category workflows
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
   options: ExecuteOptions<ToolkitType>,

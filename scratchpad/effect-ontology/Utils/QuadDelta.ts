@@ -67,7 +67,7 @@ const serializeQuad = (quad: Quad): string => {
  * console.log(delta.deltaCount) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(

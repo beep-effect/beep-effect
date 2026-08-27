@@ -19,14 +19,17 @@ import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/ExecutionDeduplicator");
 
 /**
- * Provides the execution failure service capability.
+ * Failure of a deduplicated in-flight execution.
  *
- * **Example** (Inspect execution failure)
+ * **Example** (Construct an execution failure)
  *
  * ```ts
  * import { ExecutionFailure } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
- * console.log(ExecutionFailure)
+ * const error = ExecutionFailure.make({
+ *   message: "Extractor timed out"
+ * })
+ * console.log(error._tag) // "ExecutionFailure"
  * ```
  *
  * @category errors
@@ -63,14 +66,23 @@ export interface ExecutionHandle {
 }
 
 /**
- * Constructs the make execution deduplicator value from its declared inputs.
+ * Build the in-memory get-or-create map used by {@link ExecutionDeduplicator}.
  *
- * **Example** (Inspect make execution deduplicator)
+ * **Example** (Share an in-flight handle)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeExecutionDeduplicator } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
- * console.log(makeExecutionDeduplicator)
+ * const reused = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const dedupe = yield* makeExecutionDeduplicator
+ *     yield* dedupe.getOrCreate("extract-ada")
+ *     const second = yield* dedupe.getOrCreate("extract-ada")
+ *     return second.isNew
+ *   })
+ * )
+ * console.log(reused) // false
  * ```
  *
  * @category constructors
@@ -151,17 +163,26 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
 });
 
 /**
- * Provides the execution deduplicator service capability.
+ * Context tag that shares in-flight executions by idempotency key.
  *
- * **Example** (Inspect execution deduplicator)
+ * **Example** (Reuse a running extraction)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ExecutionDeduplicator } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
- * console.log(ExecutionDeduplicator)
+ * const reused = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const dedupe = yield* ExecutionDeduplicator
+ *     yield* dedupe.getOrCreate("extract-ada")
+ *     const second = yield* dedupe.getOrCreate("extract-ada")
+ *     return second.isNew
+ *   }).pipe(Effect.provide(ExecutionDeduplicator.Default))
+ * )
+ * console.log(reused) // false
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class ExecutionDeduplicator extends Context.Service<ExecutionDeduplicator>()($I`ExecutionDeduplicator`, {
@@ -171,14 +192,22 @@ export class ExecutionDeduplicator extends Context.Service<ExecutionDeduplicator
 }
 
 /**
- * Provides the Effect layer for execution deduplicator live dependencies.
+ * Live alias for {@link ExecutionDeduplicator.Default}.
  *
- * **Example** (Inspect execution deduplicator live)
+ * **Example** (Provide the live deduplicator)
  *
  * ```ts
- * import { ExecutionDeduplicatorLive } from "@effect-ontology/Service/ExecutionDeduplicator"
+ * import { Effect } from "effect"
+ * import { ExecutionDeduplicator, ExecutionDeduplicatorLive } from "@effect-ontology/Service/ExecutionDeduplicator"
  *
- * console.log(ExecutionDeduplicatorLive)
+ * const created = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const dedupe = yield* ExecutionDeduplicator
+ *     const first = yield* dedupe.getOrCreate("extract-ada")
+ *     return first.isNew
+ *   }).pipe(Effect.provide(ExecutionDeduplicatorLive))
+ * )
+ * console.log(created) // true
  * ```
  *
  * @category layers

@@ -68,9 +68,8 @@ export type ExtractionStage =
  * ```ts
  * import type { StageRetrievalOptions } from "@effect-ontology/Service/Examples"
  *
- * const acceptsStageRetrievalOptions = (_value: StageRetrievalOptions): void => undefined
- *
- * console.log(acceptsStageRetrievalOptions)
+ * const options: StageRetrievalOptions = { k: 5, minSimilarity: 0.7 }
+ * console.log(options.k) // 5
  * ```
  *
  * @category type-level
@@ -98,9 +97,8 @@ export interface StageRetrievalOptions {
  * ```ts
  * import type { StageExamples } from "@effect-ontology/Service/Examples"
  *
- * const acceptsStageExamples = (_value: StageExamples): void => undefined
- *
- * console.log(acceptsStageExamples)
+ * const examples: StageExamples = { positives: [], negatives: [] }
+ * console.log(examples.positives.length) // 0
  * ```
  *
  * @category type-level
@@ -120,9 +118,8 @@ export interface StageExamples {
  * ```ts
  * import type { ExampleStats } from "@effect-ontology/Service/Examples"
  *
- * const acceptsExampleStats = (_value: ExampleStats): void => undefined
- *
- * console.log(acceptsExampleStats)
+ * const stats: ExampleStats = { total: 12, byType: { entity: 8 }, negativeCount: 4, avgSuccessRate: 0.8 }
+ * console.log(stats.total) // 12
  * ```
  *
  * @category type-level
@@ -145,9 +142,15 @@ export interface ExampleStats {
  * **Example** (Inspect examples service)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ExamplesService } from "@effect-ontology/Service/Examples"
  *
- * console.log(ExamplesService)
+ * const program = Effect.gen(function* () {
+ *   const examples = yield* ExamplesService
+ *   return examples
+ * }).pipe(Effect.provide(ExamplesService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

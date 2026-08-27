@@ -20,6 +20,7 @@
  * ```
  *
  * @category utilities
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -32,9 +33,12 @@ export {
   dispatch,
   type HookDefinition,
   hookTeardown,
+  processOutput,
+  rawStdout,
   runDispatchProgram,
   runHookProgram,
   runMain,
+  stderrExit,
 } from "./Hook/Runner.ts";
 
 // ---------------------------------------------------------------------------
@@ -98,7 +102,7 @@ export {
  *
  * @since 0.0.0
  */
-export { matchTool, testTool } from "./Hook/Matcher.ts";
+export { handleMatcher, matchFileName, matchTool, matchValue, testTool, testValue } from "./Hook/Matcher.ts";
 
 // ---------------------------------------------------------------------------
 // Transcript

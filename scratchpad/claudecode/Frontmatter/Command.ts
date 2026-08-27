@@ -28,13 +28,13 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
  * import * as S from "effect/Schema"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const command = yield* S.decodeUnknownEffect(Frontmatter.CommandFrontmatter)({
+ * const command = Effect.runSync(
+ *   S.decodeUnknownEffect(Frontmatter.CommandFrontmatter)({
  *     description: "Review staged changes",
  *     model: "sonnet"
  *   })
- *   console.log(O.getOrNull(command.model)) // "sonnet"
- * })
+ * )
+ * console.log(O.getOrNull(command.model)) // "sonnet"
  * ```
  *
  * @category models

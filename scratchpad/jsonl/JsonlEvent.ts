@@ -5,7 +5,8 @@
  * schema, defined once and collected into a group — so a reader who knows that
  * module recognizes this one. The mechanism is ours; the vocabulary is theirs.
  *
- * @since 0.1.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import type { Schema } from "effect";
 
@@ -20,28 +21,50 @@ import type { Schema } from "effect";
  * impossible. Bounding it here fails such a schema at **registration**, where
  * the mistake is, instead of at some consumer's call site later.
  *
+ * **Gotchas**
+ *
  * `Schema.Top` is deliberately not the bound: its service parameters are
  * `unknown`, so it does not satisfy the sync codecs and the constraint would
- * silently fail to bind. The value slots are `unknown` rather than `any`
- * because `Codec`'s type and encoded parameters are covariant, so `unknown`
- * admits every concrete payload schema while still rejecting a
- * service-requiring one — the precision costs nothing here.
+ * silently fail to bind. A payload-less event still has to name `data`
+ * (`Schema.Void`); omitting it is a type error rather than a silent void.
  *
+ * @see {@link JsonlEvent} for the factory that requires this bound on `data`.
+ * @see {@link Envelope} for the two-stage decode that uses the sync codecs.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type DataSchema = Schema.Codec<unknown, unknown, never, never>;
 
 /**
- * Unique type identifier marking a JSONL event definition.
+ * Brand carried on every {@link JsonlEvent} definition so a value can be
+ * recognized as one without trusting its shape.
  *
+ * @see {@link JsonlEventTypeId} for the runtime string this type names.
  * @public
+ * @category type-ids
+ * @since 0.0.0
  */
 export type JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
 
 /**
- * Runtime type identifier marking a JSONL event definition.
+ * Runtime brand written onto every {@link JsonlEvent} at `make`.
  *
+ * **Example** (Identity of a made event)
+ *
+ * ```ts
+ * import { JsonlEvent, JsonlEventTypeId } from "@beep/scratchpad/jsonl"
+ * import * as S from "effect/Schema"
+ *
+ * const Started = JsonlEvent.make("started", { data: S.Void })
+ * console.log(Started[JsonlEventTypeId] === JsonlEventTypeId) // true
+ * console.log(JsonlEventTypeId) // "~effected/jsonl/JsonlEvent"
+ * ```
+ *
+ * @see {@link JsonlEventTypeId} for the type-level twin of this string.
  * @public
+ * @category type-ids
+ * @since 0.0.0
  */
 export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
 
@@ -54,7 +77,18 @@ export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
  * survive into the derived envelope union, so `append` narrows on the tag and a
  * projection over a slice is exhaustively checkable.
  *
+ * **Gotchas**
+ *
+ * `data` is required rather than defaulted. A payload-less event says so
+ * explicitly with `Schema.Void`; a typo in the options object must not become
+ * a silent void payload. Codecs are `never`-service — see {@link DataSchema}.
+ *
+ * @see {@link DataSchema} for the no-services payload bound.
+ * @see {@link Envelope} for the discriminated union derived from a registry.
+ * @see {@link TerminalViolation} for the append failure a `terminal` tail raises.
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface JsonlEvent<
 	out Tag extends string,
@@ -81,7 +115,24 @@ export interface JsonlEvent<
 /**
  * Helper types for working with event definitions and registries.
  *
+ * **Example** (Tag union from a registry)
+ *
+ * ```ts
+ * import { JsonlEvent } from "@beep/scratchpad/jsonl"
+ * import * as S from "effect/Schema"
+ *
+ * const MailReceived = JsonlEvent.make("mail-received", {
+ *   data: S.Struct({ round: S.Number }),
+ * })
+ * const Unlinked = JsonlEvent.make("unlinked", { data: S.Void, terminal: true })
+ * const registry = [MailReceived, Unlinked] as const satisfies JsonlEvent.Registry
+ * const tag: JsonlEvent.Tag<typeof registry> = "unlinked"
+ * console.log(tag) // "unlinked"
+ * ```
+ *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace JsonlEvent {
 	/**
@@ -92,6 +143,8 @@ export declare namespace JsonlEvent {
 	 * the sync codecs depend on.
 	 *
 	 * @public
+	 * @category type-level
+	 * @since 0.0.0
 	 */
 	export interface Any {
 		readonly [JsonlEventTypeId]: JsonlEventTypeId;
@@ -101,25 +154,60 @@ export declare namespace JsonlEvent {
 		readonly reopen: boolean;
 	}
 
-	/** A registry: the set of events one journal may carry. */
+	/**
+	 * A registry: the set of events one journal may carry.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type Registry = ReadonlyArray<Any>;
 
-	/** The union of every event definition in a registry. */
+	/**
+	 * The union of every event definition in a registry.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type Events<R extends Registry> = R[number];
 
-	/** The union of every tag in a registry — the envelope discriminant. */
+	/**
+	 * The union of every tag in a registry — the envelope discriminant.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type Tag<R extends Registry> = Events<R>["tag"];
 
-	/** The event definition in a registry carrying a given tag. */
+	/**
+	 * The event definition in a registry carrying a given tag.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type WithTag<R extends Registry, T extends string> = Extract<Events<R>, { readonly tag: T }>;
 
-	/** The decoded payload type registered for a given tag. */
+	/**
+	 * The decoded payload type registered for a given tag.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type Data<R extends Registry, T extends string> = WithTag<R, T>["data"]["Type"];
 
-	/** The tags marked `terminal` in a registry. */
+	/**
+	 * The tags marked `terminal` in a registry.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type TerminalTags<R extends Registry> = Extract<Events<R>, { readonly terminal: true }>["tag"];
 
-	/** The tags marked `reopen` in a registry. */
+	/**
+	 * The tags marked `reopen` in a registry.
+	 *
+	 * @category type-level
+	 * @since 0.0.0
+	 */
 	export type ReopenTags<R extends Registry> = Extract<Events<R>, { readonly reopen: true }>["tag"];
 }
 
@@ -135,21 +223,37 @@ export declare namespace JsonlEvent {
  * explicitly with `Schema.Void`, because a silent default would make a typo in
  * the options object look like a deliberate void payload.
  *
- * @example
+ * **Gotchas**
+ *
+ * Payload schemas must satisfy {@link DataSchema} (`never` services in both
+ * directions). A schema that needs a service fails at registration, not on the
+ * hook read path.
+ *
+ * **Example** (Register terminal and reopen events)
+ *
  * ```ts
- * import { JsonlEvent } from "@effected/jsonl";
- * import { Schema } from "effect";
+ * import { JsonlEvent } from "@beep/scratchpad/jsonl"
+ * import * as S from "effect/Schema"
  *
  * const MailReceived = JsonlEvent.make("mail-received", {
- *   data: Schema.Struct({ round: Schema.Number }),
- * });
- * const Unlinked = JsonlEvent.make("unlinked", { data: Schema.Void, terminal: true });
- * const Relinked = JsonlEvent.make("relinked", { data: Schema.Void, reopen: true });
+ *   data: S.Struct({ round: S.Number }),
+ * })
+ * const Unlinked = JsonlEvent.make("unlinked", { data: S.Void, terminal: true })
+ * const Relinked = JsonlEvent.make("relinked", { data: S.Void, reopen: true })
+ * const registry = [MailReceived, Unlinked, Relinked] as const satisfies JsonlEvent.Registry
  *
- * const registry = [MailReceived, Unlinked, Relinked] as const;
+ * console.log(MailReceived.tag) // "mail-received"
+ * console.log(Unlinked.terminal) // true
+ * console.log(Relinked.reopen) // true
+ * console.log(registry.length) // 3
  * ```
  *
+ * @see {@link DataSchema} for the no-services payload bound `make` enforces.
+ * @see {@link Envelope} for decode/encode over a registry of these definitions.
+ * @see {@link TerminalViolation} for the append failure a `terminal` tail raises.
  * @public
+ * @category factories
+ * @since 0.0.0
  */
 export const JsonlEvent = {
 	make: <

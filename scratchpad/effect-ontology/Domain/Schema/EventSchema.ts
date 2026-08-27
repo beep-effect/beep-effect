@@ -150,14 +150,6 @@ export const CurationEventGroup = EventGroup.empty
 /**
  * Event definitions contained by {@link CurationEventGroup}.
  *
- * **Example** (Use CurationEvent)
- * ```ts
- * import type { CurationEvent } from "@effect-ontology/Schema/EventSchema"
- *
- * const acceptEvent = (_event: CurationEvent) => undefined
- * console.log(acceptEvent)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -285,10 +277,26 @@ const OntologyEventEntryDefinition = S.Union([
  *
  * **Example** (Inspect canonical ontology event cases)
  * ```ts
- * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
+ * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
  *
- * console.log(typeof S.is(OntologyEventEntry)) // "function"
+ * const entry = S.decodeUnknownOption(OntologyEventEntry)({
+ *   id: "evt-claim-corrected-1",
+ *   primaryKey: "football:correction:claim-abc123def456",
+ *   createdAt: DateTime.makeUnsafe("2026-07-25T12:00:00.000Z"),
+ *   event: "ClaimCorrected",
+ *   payload: {
+ *     ontologyId: "football",
+ *     originalClaimId: "claim-abc123def456",
+ *     newClaimId: "claim-def456abc123",
+ *     correctionId: "corr-1",
+ *     timestamp: "2026-07-25T12:00:00.000Z"
+ *   }
+ * })
+ * console.log(O.map(entry, (value) => value.event)) // Some("ClaimCorrected")
+ * console.log(O.map(entry, (value) => value.primaryKey)) // Some("football:correction:claim-abc123def456")
  * ```
  *
  * @category events
@@ -304,13 +312,6 @@ export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
 
 /**
  * Runtime journal entry decoded by {@link OntologyEventEntry}.
- *
- * **Example** (Use the OntologyEventEntry contract)
- * ```ts
- * import type { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
- * const eventName = (entry: OntologyEventEntry) => entry.event
- * console.log(eventName)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -350,14 +351,6 @@ export const ExtractionEventGroup = EventGroup.empty
 /**
  * Event definitions contained by {@link ExtractionEventGroup}.
  *
- * **Example** (Use ExtractionEvent)
- * ```ts
- * import type { ExtractionEvent } from "@effect-ontology/Schema/EventSchema"
- *
- * const acceptEvent = (_event: ExtractionEvent) => undefined
- * console.log(acceptEvent)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -380,14 +373,6 @@ export const OntologyEventGroups = Tuple.make(CurationEventGroup, ExtractionEven
 
 /**
  * Union of every effect-ontology EventLog event definition.
- *
- * **Example** (Use OntologyEvent)
- * ```ts
- * import type { OntologyEvent } from "@effect-ontology/Schema/EventSchema"
- *
- * const acceptEvent = (_event: OntologyEvent) => undefined
- * console.log(acceptEvent)
- * ```
  *
  * @category type-level
  * @since 0.0.0

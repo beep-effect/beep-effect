@@ -1,17 +1,24 @@
-// The `Jsonc` facade: parsing, comment stripping, semantic equality and the
-// flagship schema factories, plus the parse-error vocabulary they raise.
-//
-// `Jsonc` is a namespace of statics over the internal parser and the schema
-// layer — not itself a schema class. Per the package Effect-wrapping policy,
-// `parse`/`parseTree` and schema decoding carry a real `JsoncParseError`
-// channel; `stripComments`/`equals`/`equalsValue` are pure total functions.
-//
-// Cycle firewall: the internal parser returns raw error records
-// (`{ code, offset, length }`) and this module maps them into
-// `JsoncParseErrorDetail` — deriving `line`/`character` from `offset` — and
-// builds the aggregate `JsoncParseError`. The dependency edge runs facade →
-// parser only, so `noImportCycles` stays satisfied.
+/**
+ * The `Jsonc` facade: parsing, comment stripping, semantic equality and the
+ * flagship schema factories, plus the parse-error vocabulary they raise.
+ *
+ * `Jsonc` is a namespace of statics over the internal parser and the schema
+ * layer — not itself a schema class. `parse`/`parseTree` and schema decoding
+ * carry a real `JsoncParseError` channel; `stripComments`/`equals`/`equalsValue`
+ * are pure total functions.
+ *
+ * **Details**
+ *
+ * The internal parser returns raw error records (`{ code, offset, length }`).
+ * This module maps them into `JsoncParseErrorDetail` — deriving
+ * `line`/`character` from `offset` — and builds the aggregate
+ * `JsoncParseError`. The dependency edge runs facade → parser only.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Option, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import type { ParseFlags, RawParseError } from "./internal/parser.ts";
@@ -24,18 +31,41 @@ import type { SyntaxKind } from "./internal/scanner.ts";
 import { createScanner } from "./internal/scanner.ts";
 import type { JsoncNode } from "./JsoncNode.ts";
 
+const $I = $ScratchpadId.create("jsonc/Jsonc");
+
 /**
  * The single public parse-error code vocabulary, appearing as the `code` field
  * of {@link JsoncParseErrorDetail}.
  *
+ * **Example** (Recognize a parse-error code)
+ *
+ * ```ts
+ * import { JsoncParseErrorCode } from "@beep/scratchpad/jsonc";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(JsoncParseErrorCode)("ValueExpected")); // true
+ * console.log(S.is(JsoncParseErrorCode)("NestingDepthExceeded")); // true
+ * console.log(S.is(JsoncParseErrorCode)("not-a-code")); // false
+ * ```
+ *
+ * @see {@link JsoncParseErrorDetail} for the per-span record that carries this code.
  * @public
+ * @category constants
+ * @since 0.0.0
  */
-export const JsoncParseErrorCode = Schema.Literals(JSONC_PARSE_ERROR_CODES);
+export const JsoncParseErrorCode = Schema.Literals(JSONC_PARSE_ERROR_CODES).pipe(
+	$I.annoteSchema("JsoncParseErrorCode", {
+		description: "The public JSONC parse-error code vocabulary carried by each JsoncParseErrorDetail.",
+	}),
+);
 
 /**
  * The union of all JSONC parse-error code string literals.
  *
+ * @see {@link JsoncParseErrorCode} for the runtime literals schema.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncParseErrorCode = typeof JsoncParseErrorCode.Type;
 
@@ -44,15 +74,40 @@ export type JsoncParseErrorCode = typeof JsoncParseErrorCode.Type;
  * position (`offset`/`length`, plus zero-based `line`/`character`). A single
  * {@link JsoncParseError} reports a batch of these.
  *
+ * **Example** (Construct a per-span diagnostic)
+ *
+ * ```ts
+ * import { JsoncParseErrorDetail } from "@beep/scratchpad/jsonc";
+ *
+ * const detail = JsoncParseErrorDetail.make({
+ *   code: "ValueExpected",
+ *   offset: 2,
+ *   length: 3,
+ *   line: 0,
+ *   character: 2,
+ * });
+ *
+ * console.log(detail.code); // "ValueExpected"
+ * console.log(`${detail.line}:${detail.character}`); // 0:2
+ * ```
+ *
+ * @see {@link JsoncParseError} for the aggregate that batches these details.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class JsoncParseErrorDetail extends Schema.Class<JsoncParseErrorDetail>("JsoncParseErrorDetail")({
-	code: JsoncParseErrorCode,
-	offset: Schema.Number,
-	length: Schema.Number,
-	line: Schema.Number,
-	character: Schema.Number,
-}) {}
+export class JsoncParseErrorDetail extends Schema.Class<JsoncParseErrorDetail>($I`JsoncParseErrorDetail`)(
+	{
+		code: JsoncParseErrorCode,
+		offset: Schema.Number,
+		length: Schema.Number,
+		line: Schema.Number,
+		character: Schema.Number,
+	},
+	$I.annote("JsoncParseErrorDetail", {
+		description: "One recovered JSONC parse error with its code and exact source position.",
+	}),
+) {}
 
 /**
  * Error-recovery parse failure: aggregates every {@link JsoncParseErrorDetail}
@@ -60,12 +115,45 @@ export class JsoncParseErrorDetail extends Schema.Class<JsoncParseErrorDetail>("
  * {@link Jsonc.parse}, {@link Jsonc.parseTree} and the decode direction of the
  * schema factories.
  *
+ * **Gotchas**
+ *
+ * Any recovered value or tree from the internal parser is discarded: callers
+ * expecting Microsoft jsonc-parser `{ value, errors }` or a partial
+ * {@link JsoncNode} on failure get neither. Inspect `errors` (and `input`) on
+ * this tagged failure. `line`/`character` are derived from `offset` in this
+ * facade, not the scanner. {@link Jsonc.equals} and {@link Jsonc.equalsValue}
+ * treat any parse error as `false` rather than comparing recovery artifacts.
+ *
+ * **Example** (Read the aggregate failure)
+ *
+ * ```ts
+ * import { Jsonc } from "@beep/scratchpad/jsonc";
+ * import { Result } from "effect";
+ *
+ * const bad = Jsonc.parseResult("{ bad }");
+ * if (Result.isFailure(bad)) {
+ *   console.log(bad.failure._tag); // "JsoncParseError"
+ *   console.log(bad.failure.errors.length > 0); // true
+ * }
+ * ```
+ *
+ * @see {@link JsoncParseErrorDetail} for per-span codes and derived line/character.
+ * @see {@link Jsonc.parseResult} for the Result twin that raises this error.
+ * @see {@link parseValue} for the internal recovery pair the public API does not expose.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class JsoncParseError extends Schema.TaggedError<JsoncParseError>()("JsoncParseError", {
-	errors: Schema.Array(JsoncParseErrorDetail),
-	input: Schema.String,
-}) {
+export class JsoncParseError extends Schema.TaggedError<JsoncParseError>($I`JsoncParseError`)(
+	"JsoncParseError",
+	{
+		errors: Schema.Array(JsoncParseErrorDetail),
+		input: Schema.String,
+	},
+	$I.annote("JsoncParseError", {
+		description: "Aggregate JSONC parse failure carrying every recovered JsoncParseErrorDetail.",
+	}),
+) {
 	override get message(): string {
 		const count = this.errors.length;
 		const summary = this.errors.map((e) => `${e.code} at ${e.line}:${e.character}`).join("; ");
@@ -85,13 +173,34 @@ export class JsoncParseError extends Schema.TaggedError<JsoncParseError>()("Json
  *   valid, yielding `Option.none()` from {@link Jsonc.parseTree} instead of a
  *   `ValueExpected` parse error. Defaults to `false`.
  *
+ * **Example** (Reject comments)
+ *
+ * ```ts
+ * import { Jsonc, JsoncParseOptions } from "@beep/scratchpad/jsonc";
+ * import { Result } from "effect";
+ *
+ * const options = JsoncParseOptions.make({ disallowComments: true });
+ * const bad = Jsonc.parseResult('{ "port": 3000 // dev\n }', options);
+ *
+ * console.log(options.disallowComments); // true
+ * console.log(Result.isFailure(bad)); // true
+ * ```
+ *
+ * @see {@link Jsonc.parseResult} for the parser these options control.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class JsoncParseOptions extends Schema.Class<JsoncParseOptions>("JsoncParseOptions")({
-	disallowComments: Schema.optionalKey(Schema.Boolean),
-	allowTrailingComma: Schema.optionalKey(Schema.Boolean),
-	allowEmptyContent: Schema.optionalKey(Schema.Boolean),
-}) {}
+export class JsoncParseOptions extends Schema.Class<JsoncParseOptions>($I`JsoncParseOptions`)(
+	{
+		disallowComments: Schema.optionalKey(Schema.Boolean),
+		allowTrailingComma: Schema.optionalKey(Schema.Boolean),
+		allowEmptyContent: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("JsoncParseOptions", {
+		description: "Omissible JSONC parse knobs for comments, trailing commas, and empty content.",
+	}),
+) {}
 
 /**
  * The public stringify-error code vocabulary, appearing as the `code` field of
@@ -104,14 +213,38 @@ export class JsoncParseOptions extends Schema.Class<JsoncParseOptions>("JsoncPar
  * - `TopLevelUnrepresentable` — the top-level value (`undefined`, a function
  *   or a symbol) serializes to no output at all.
  *
+ * **Example** (Recognize a stringify-error code)
+ *
+ * ```ts
+ * import { JsoncStringifyErrorCode } from "@beep/scratchpad/jsonc";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(JsoncStringifyErrorCode)("BigIntValue")); // true
+ * console.log(S.is(JsoncStringifyErrorCode)("CircularReference")); // true
+ * ```
+ *
+ * @see {@link JsoncStringifyError} for the tagged error that carries this code.
  * @public
+ * @category constants
+ * @since 0.0.0
  */
-export const JsoncStringifyErrorCode = Schema.Literals(["CircularReference", "BigIntValue", "TopLevelUnrepresentable"]);
+export const JsoncStringifyErrorCode = Schema.Literals([
+	"CircularReference",
+	"BigIntValue",
+	"TopLevelUnrepresentable",
+]).pipe(
+	$I.annoteSchema("JsoncStringifyErrorCode", {
+		description: "The public JSONC stringify-error code vocabulary carried by JsoncStringifyError.",
+	}),
+);
 
 /**
  * The union of all JSONC stringify-error code string literals.
  *
+ * @see {@link JsoncStringifyErrorCode} for the runtime literals schema.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type JsoncStringifyErrorCode = typeof JsoncStringifyErrorCode.Type;
 
@@ -124,12 +257,33 @@ export type JsoncStringifyErrorCode = typeof JsoncStringifyErrorCode.Type;
  * - `insertSpaces` — indent with spaces (`tabSize` of them) when `true`, or a
  *   single tab character when `false`. Defaults to `true`.
  *
+ * **Example** (Request compact output)
+ *
+ * ```ts
+ * import { Jsonc, JsoncStringifyOptions } from "@beep/scratchpad/jsonc";
+ * import { Result } from "effect";
+ *
+ * const options = JsoncStringifyOptions.make({ tabSize: 0 });
+ * const text = Result.getOrThrow(Jsonc.stringifyResult({ port: 3000 }, options));
+ *
+ * console.log(options.tabSize); // 0
+ * console.log(text); // {"port":3000}
+ * ```
+ *
+ * @see {@link Jsonc.stringifyResult} for the encoder these options control.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
-export class JsoncStringifyOptions extends Schema.Class<JsoncStringifyOptions>("JsoncStringifyOptions")({
-	tabSize: Schema.optionalKey(Schema.Number),
-	insertSpaces: Schema.optionalKey(Schema.Boolean),
-}) {}
+export class JsoncStringifyOptions extends Schema.Class<JsoncStringifyOptions>($I`JsoncStringifyOptions`)(
+	{
+		tabSize: Schema.optionalKey(Schema.Number),
+		insertSpaces: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("JsoncStringifyOptions", {
+		description: "Omissible JSONC stringify knobs matching JsoncFormattingOptions indent vocabulary.",
+	}),
+) {}
 
 /**
  * Stringification failure: a `JsoncStringifyErrorCode` naming the
@@ -139,13 +293,36 @@ export class JsoncStringifyOptions extends Schema.Class<JsoncStringifyOptions>("
  * {@link Jsonc.stringifyResult} and the encode direction of the schema
  * factories.
  *
+ * **Example** (Catch a bigint stringify failure)
+ *
+ * ```ts
+ * import { Jsonc } from "@beep/scratchpad/jsonc";
+ * import { Result } from "effect";
+ *
+ * const bad = Jsonc.stringifyResult(0n);
+ * if (Result.isFailure(bad)) {
+ *   console.log(bad.failure._tag); // "JsoncStringifyError"
+ *   console.log(bad.failure.code); // "BigIntValue"
+ * }
+ * ```
+ *
+ * @see {@link JsoncStringifyErrorCode} for the failure-mode vocabulary.
+ * @see {@link Jsonc.stringifyResult} for the Result twin that raises this error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class JsoncStringifyError extends Schema.TaggedError<JsoncStringifyError>()("JsoncStringifyError", {
-	code: JsoncStringifyErrorCode,
-	detail: Schema.String,
-	value: Schema.Unknown,
-}) {
+export class JsoncStringifyError extends Schema.TaggedError<JsoncStringifyError>($I`JsoncStringifyError`)(
+	"JsoncStringifyError",
+	{
+		code: JsoncStringifyErrorCode,
+		detail: Schema.String,
+		value: Schema.Unknown,
+	},
+	$I.annote("JsoncStringifyError", {
+		description: "JSONC stringify failure naming the mode, engine detail, and offending value.",
+	}),
+) {
 	override get message(): string {
 		return `JSONC stringify failed: ${this.code} — ${this.detail}`;
 	}
@@ -235,7 +412,10 @@ const deepEqual = (a: unknown, b: unknown, depth = 0): boolean => {
  * returns) plus `decode` and `encode` functions derived from it once, so
  * callers need no generic `Schema` machinery at the use site.
  *
+ * @see {@link Jsonc.bind} for the factory that returns this codec.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface JsoncBoundCodec<T, RD = never, RE = never> {
 	/** The composed codec decoding a JSONC `string` straight into `T`. */
@@ -252,18 +432,36 @@ export interface JsoncBoundCodec<T, RD = never, RE = never> {
  * Static entry points for JSONC parsing, editing-adjacent utilities and the
  * schema factories. Not instantiable.
  *
- * @example
+ * **Details**
+ *
+ * {@link Jsonc.parse} is the Effect twin of {@link Jsonc.parseResult};
+ * {@link Jsonc.parseTree} of {@link Jsonc.parseTreeResult};
+ * {@link Jsonc.stringify} of {@link Jsonc.stringifyResult}. Reach for the
+ * Effect variant inside Effect code (it carries a tracing span) and the Result
+ * variant at synchronous boundaries. {@link Jsonc.stripComments} is a separate
+ * offset-sensitive transform — omit `replaceCh` only when no later offset is
+ * used.
+ *
+ * **Gotchas**
+ *
+ * A `"__proto__"` object member from {@link Jsonc.parse} / {@link Jsonc.parseResult}
+ * is defined as an own data property (`Object.defineProperty`), matching
+ * `JSON.parse` — it never mutates `Object.prototype`.
+ *
+ * **Example** (Parse JSONC with a line comment)
+ *
  * ```ts
- * import { Jsonc } from "@effected/jsonc";
+ * import { Jsonc } from "@beep/scratchpad/jsonc";
  * import { Effect } from "effect";
  *
- * const program = Effect.gen(function* () {
- *   const value = yield* Jsonc.parse('{ "port": 3000 // dev\n }');
- *   return value; // { port: 3000 }
- * });
+ * const value = Effect.runSync(Jsonc.parse('{ "port": 3000 // dev\n }'));
+ *
+ * console.log(value); // { port: 3000 }
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export class Jsonc {
 	private constructor() {}
@@ -277,33 +475,39 @@ export class Jsonc {
 	 * loader, a build script) can call this directly instead of wrapping
 	 * `Effect.runSync(Effect.result(Jsonc.parse(text)))`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Jsonc.parse} is defined in terms of this function; the two never
-	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
+	 * diverge. Reach for the Effect variant inside Effect code — it carries
 	 * the `Jsonc.parse` tracing span — and for this one at synchronous
 	 * boundaries.
 	 *
-	 * @example
+	 * **Gotchas**
+	 *
+	 * When `errors.length > 0` this fails with {@link JsoncParseError} and
+	 * discards any recovered value the internal parser produced.
+	 *
+	 * **Example** (Inspect success and aggregate failure)
+	 *
 	 * ```ts
-	 * import { Jsonc } from "@effected/jsonc";
+	 * import { Jsonc } from "@beep/scratchpad/jsonc";
 	 * import { Result } from "effect";
 	 *
 	 * const ok = Jsonc.parseResult('{ "port": 3000 // dev\n }');
 	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => { port: 3000 }
+	 *   console.log(ok.success); // { port: 3000 }
 	 * }
 	 *
 	 * const bad = Jsonc.parseResult("{ bad }");
 	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "JsoncParseError"
+	 *   console.log(bad.failure._tag); // "JsoncParseError"
 	 * }
 	 * ```
 	 *
 	 * @param text - The JSONC source to parse.
 	 * @param options - Optional {@link JsoncParseOptions}; defaults apply for
 	 *   omitted fields.
-	 * @returns A `Result` succeeding with the decoded value (`unknown`, never
-	 *   `any`), or failing with the aggregate {@link JsoncParseError}.
+	 * @see {@link JsoncParseError} for the aggregate failure that drops recovered values.
 	 */
 	static parseResult(text: string, options?: JsoncParseOptions): Result.Result<unknown, JsoncParseError> {
 		const { value, errors } = parseValueInternal(text, toFlags(options));
@@ -320,11 +524,14 @@ export class Jsonc {
 	 * of {@link Jsonc.parseResult} — synchronous callers can use that variant
 	 * directly.
 	 *
+	 * **Gotchas**
+	 *
+	 * Any recovered value is discarded on failure. See {@link JsoncParseError}.
+	 *
 	 * @param text - The JSONC source to parse.
 	 * @param options - Optional {@link JsoncParseOptions}; defaults apply for
 	 *   omitted fields.
-	 * @returns An `Effect` that succeeds with the decoded value, or fails with
-	 *   the aggregate {@link JsoncParseError}.
+	 * @see {@link JsoncParseError} for the aggregate failure that drops recovered values.
 	 */
 	static readonly parse = Effect.fn("Jsonc.parse")((text: string, options?: JsoncParseOptions) =>
 		Effect.fromResult(Jsonc.parseResult(text, options)),
@@ -339,34 +546,40 @@ export class Jsonc {
 	 * this directly instead of wrapping
 	 * `Effect.runSync(Effect.result(Jsonc.parseTree(text)))`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Jsonc.parseTree} is defined in terms of this function; the two
-	 * never diverge. Reach for the `Effect` variant inside Effect code — it
+	 * never diverge. Reach for the Effect variant inside Effect code — it
 	 * carries the `Jsonc.parseTree` tracing span — and for this one at
 	 * synchronous boundaries.
 	 *
-	 * @example
+	 * **Gotchas**
+	 *
+	 * When `errors.length > 0` this fails with {@link JsoncParseError} and
+	 * discards any recovered {@link JsoncNode}.
+	 *
+	 * **Example** (Inspect a tree or the aggregate failure)
+	 *
 	 * ```ts
-	 * import { Jsonc } from "@effected/jsonc";
-	 * import { Option, Result } from "effect";
+	 * import { Jsonc } from "@beep/scratchpad/jsonc";
+	 * import { Result } from "effect";
+	 * import * as O from "effect/Option";
 	 *
 	 * const ok = Jsonc.parseTreeResult('{ "port": 3000 // dev\n }');
-	 * if (Result.isSuccess(ok) && Option.isSome(ok.success)) {
-	 *   console.log(ok.success.value.type); // => "object"
+	 * if (Result.isSuccess(ok) && O.isSome(ok.success)) {
+	 *   console.log(ok.success.value.type); // "object"
 	 * }
 	 *
 	 * const bad = Jsonc.parseTreeResult("{ bad }");
 	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "JsoncParseError"
+	 *   console.log(bad.failure._tag); // "JsoncParseError"
 	 * }
 	 * ```
 	 *
 	 * @param text - The JSONC source to parse.
 	 * @param options - Optional {@link JsoncParseOptions}; defaults apply for
 	 *   omitted fields.
-	 * @returns A `Result` succeeding with `Option.some(root)` (or
-	 *   `Option.none()` for empty input), or failing with the aggregate
-	 *   {@link JsoncParseError}.
+	 * @see {@link JsoncParseError} for the aggregate failure that drops recovered trees.
 	 */
 	static parseTreeResult(
 		text: string,
@@ -386,12 +599,14 @@ export class Jsonc {
 	 * {@link Jsonc.parseTreeResult} — synchronous callers can use that variant
 	 * directly.
 	 *
+	 * **Gotchas**
+	 *
+	 * Any recovered tree is discarded on failure. See {@link JsoncParseError}.
+	 *
 	 * @param text - The JSONC source to parse.
 	 * @param options - Optional {@link JsoncParseOptions}; defaults apply for
 	 *   omitted fields.
-	 * @returns An `Effect` that succeeds with `Option.some(root)` (or
-	 *   `Option.none()` for empty input), or fails with the aggregate
-	 *   {@link JsoncParseError}.
+	 * @see {@link JsoncParseError} for the aggregate failure that drops recovered trees.
 	 */
 	static readonly parseTree = Effect.fn("Jsonc.parseTree")((text: string, options?: JsoncParseOptions) =>
 		Effect.fromResult(Jsonc.parseTreeResult(text, options)),
@@ -413,33 +628,34 @@ export class Jsonc {
 	 * `JsoncStringifyErrorCode`. A throwing `toJSON` method or getter is
 	 * caller code failing and rethrows as a defect, never a typed error.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Jsonc.stringify} is defined in terms of this function; the two
-	 * never diverge. Reach for the `Effect` variant inside Effect code — it
+	 * never diverge. Reach for the Effect variant inside Effect code — it
 	 * carries the `Jsonc.stringify` tracing span — and for this one at
 	 * synchronous boundaries.
 	 *
-	 * @example
+	 * **Example** (Stringify success and bigint failure)
+	 *
 	 * ```ts
-	 * import { Jsonc } from "@effected/jsonc";
+	 * import { Jsonc } from "@beep/scratchpad/jsonc";
 	 * import { Result } from "effect";
 	 *
 	 * const ok = Jsonc.stringifyResult({ port: 3000 });
 	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => '{\n  "port": 3000\n}'
+	 *   console.log(ok.success); // {\n  "port": 3000\n}
 	 * }
 	 *
 	 * const bad = Jsonc.stringifyResult(0n);
 	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure.code); // => "BigIntValue"
+	 *   console.log(bad.failure.code); // "BigIntValue"
 	 * }
 	 * ```
 	 *
 	 * @param value - The plain JavaScript value to stringify.
 	 * @param options - Optional {@link JsoncStringifyOptions}; defaults apply
 	 *   for omitted fields.
-	 * @returns A `Result` succeeding with the JSON text, or failing with a
-	 *   {@link JsoncStringifyError}.
+	 * @see {@link JsoncStringifyError} for circular, bigint and top-level failures.
 	 */
 	static stringifyResult(value: unknown, options?: JsoncStringifyOptions): Result.Result<string, JsoncStringifyError> {
 		const space = options?.insertSpaces === false ? "\t" : (options?.tabSize ?? 2);
@@ -489,8 +705,7 @@ export class Jsonc {
 	 * @param value - The plain JavaScript value to stringify.
 	 * @param options - Optional {@link JsoncStringifyOptions}; defaults apply
 	 *   for omitted fields.
-	 * @returns An `Effect` that succeeds with the JSON text, or fails with a
-	 *   {@link JsoncStringifyError}.
+	 * @see {@link Jsonc.stringifyResult} for the synchronous Result twin.
 	 */
 	static readonly stringify = Effect.fn("Jsonc.stringify")((value: unknown, options?: JsoncStringifyOptions) =>
 		Effect.fromResult(Jsonc.stringifyResult(value, options)),
@@ -502,11 +717,36 @@ export class Jsonc {
 	 * keeping all offsets stable (line breaks inside block comments are kept).
 	 * Pure and total.
 	 *
+	 * **Gotchas**
+	 *
+	 * Omit `replaceCh` only when no later offset is used. Pass a single
+	 * character (typically `" "`) to keep {@link JsoncEdit} and
+	 * {@link JsoncParseErrorDetail} offsets valid against the result; a
+	 * multi-character `replaceCh` is typed as `string` but expands offsets.
+	 * Block-comment `\n`/`\r` stay even when replacing; LS/PS (`U+2028` /
+	 * `U+2029`) are replaced. `//` inside strings is not stripped because the
+	 * scanner tokenizes strings whole.
+	 *
+	 * **Example** (Preserve offsets vs shift)
+	 *
+	 * ```ts
+	 * import { Jsonc } from "@beep/scratchpad/jsonc";
+	 *
+	 * const text = '{ "a": 1 // c\n }';
+	 * const shifted = Jsonc.stripComments(text);
+	 * const preserved = Jsonc.stripComments(text, " ");
+	 *
+	 * console.log(shifted.length === text.length); // false
+	 * console.log(preserved.length === text.length); // true
+	 * console.log(preserved.indexOf('"a"') === text.indexOf('"a"')); // true
+	 * ```
+	 *
 	 * @param text - The JSONC source to strip.
 	 * @param replaceCh - Optional single character replacing each stripped
 	 *   comment character (offset-preserving); when omitted, comments are
 	 *   deleted outright and offsets shift.
-	 * @returns The comment-free text.
+	 * @see {@link JsoncEdit} for edits that assume original document offsets.
+	 * @see {@link Jsonc.parse} when the goal is a value rather than JSON text.
 	 */
 	static stripComments(text: string, replaceCh?: string): string {
 		const scanner = createScanner(text);
@@ -586,16 +826,15 @@ export class Jsonc {
 	 * round-trip encode; a {@link JsoncStringifyError} on the encode side
 	 * surfaces as a schema issue.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * Schema-producing: each call returns a fresh schema whose derivation caches
 	 * are not shared across calls. Bind the result to a `const` on hot paths;
 	 * for the default-options case use {@link Jsonc.JsoncFromString}.
 	 *
 	 * @param options - Optional {@link JsoncParseOptions} controlling the
 	 *   decode direction.
-	 * @returns A codec decoding JSONC `string` to `unknown`, failing the decode
-	 *   direction with the aggregate {@link JsoncParseError} wrapped as a
-	 *   schema issue.
+	 * @see {@link Jsonc.schema} for composing this codec with a domain schema.
 	 */
 	static fromString(options?: JsoncParseOptions): Schema.Codec<unknown, string> {
 		const flags = toFlags(options);
@@ -632,14 +871,15 @@ export class Jsonc {
 	 * `Schema<A, string>` that decodes JSONC straight into a validated domain
 	 * value — the reason an Effect-native JSONC library exists.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * Schema-producing: bind the result to a `const` on hot paths (see
 	 * {@link Jsonc.fromString}).
 	 *
 	 * @param target - The domain schema decoded values must satisfy.
 	 * @param options - Optional {@link JsoncParseOptions} controlling the JSONC
 	 *   decode step.
-	 * @returns A codec decoding a JSONC `string` straight into `T`.
+	 * @see {@link Jsonc.bind} for pre-derived decode/encode directions.
 	 */
 	static schema<T, E, RD = never, RE = never>(
 		target: Schema.Codec<T, E, RD, RE>,
@@ -667,29 +907,30 @@ export class Jsonc {
 	 * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Jsonc.schema}
 	 * would; the target's decoding/encoding service requirements flow through.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * Schema-producing: each call composes a fresh schema and derives both
 	 * directions from it. Bind the result to a `const` — that single binding is
 	 * the point.
 	 *
-	 * @example
+	 * **Example** (Bind decode and encode once)
+	 *
 	 * ```ts
-	 * import { Jsonc } from "@effected/jsonc";
-	 * import { Effect, Schema } from "effect";
+	 * import { Jsonc } from "@beep/scratchpad/jsonc";
+	 * import { Effect } from "effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const Config = Schema.Struct({ port: Schema.Number });
+	 * const Config = S.Struct({ port: S.Number });
 	 * const config = Jsonc.bind(Config);
+	 * const value = Effect.runSync(config.decode('{ "port": 3000 // dev\n }'));
+	 * const text = Effect.runSync(config.encode(value));
 	 *
-	 * const program = Effect.gen(function* () {
-	 *   const value = yield* config.decode('{ "port": 3000 // dev\n }');
-	 *   const text = yield* config.encode(value);
-	 *   return [value, text] as const;
-	 * });
+	 * console.log(value.port); // 3000
+	 * console.log(text.includes('"port"')); // true
 	 * ```
 	 *
 	 * @param target - The domain schema decoded values must satisfy.
-	 * @returns A {@link JsoncBoundCodec} carrying the composed schema and its
-	 *   two pre-bound directions.
+	 * @see {@link JsoncBoundCodec} for the returned decode/encode pair.
 	 */
 	static bind<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): JsoncBoundCodec<T, RD, RE> {
 		const schema = Jsonc.schema(target);

@@ -72,16 +72,23 @@ const toUsage = (state: UsageState): ProviderTokenUsage => {
  * Each call to {@link captureExtractionTelemetry} installs a fresh collector,
  * so concurrent extractions cannot share counters.
  *
- * **Example** (Capture a provider attempt)
+ * **Gotchas**
+ *
+ * {@link recordProviderAttempt}, {@link recordProviderUsage}, and
+ * {@link recordExtractionChunkCount} are silent no-ops when no collector is
+ * in scope.
+ *
+ * **Example** (Capture a provider attempt into a snapshot)
  *
  * ```ts
  * import { Effect } from "effect"
  * import { captureExtractionTelemetry, recordProviderAttempt } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
- * const captured = captureExtractionTelemetry(Effect.as(recordProviderAttempt, "ok"))
- * console.log(Effect.isEffect(captured)) // true
+ * const [, snapshot] = Effect.runSync(captureExtractionTelemetry(recordProviderAttempt))
+ * console.log(snapshot.usage._tag) // "Unavailable"
  * ```
  *
+ * @see {@link captureExtractionTelemetry} for installing this collector around an extraction.
  * @category services
  * @since 0.0.0
  */
@@ -145,15 +152,22 @@ const makeExtractionTelemetry = Effect.fn("ExtractionTelemetry.make")(function* 
 /**
  * Records one provider attempt when an extraction telemetry scope is active.
  *
- * **Example** (Record optionally)
+ * **Gotchas**
+ *
+ * Outside {@link captureExtractionTelemetry} this effect succeeds and writes
+ * nothing.
+ *
+ * **Example** (Count an attempt without token totals)
  *
  * ```ts
  * import { Effect } from "effect"
- * import { recordProviderAttempt } from "@effect-ontology/Telemetry/ExtractionTelemetry"
+ * import { captureExtractionTelemetry, recordProviderAttempt } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
- * console.log(Effect.isEffect(recordProviderAttempt)) // true
+ * const [, snapshot] = Effect.runSync(captureExtractionTelemetry(recordProviderAttempt))
+ * console.log(snapshot.usage._tag) // "Unavailable"
  * ```
  *
+ * @see {@link recordProviderUsage} for attaching token totals to an attempt.
  * @category observability
  * @since 0.0.0
  */
@@ -167,17 +181,27 @@ export const recordProviderAttempt: Effect.Effect<void> = Effect.serviceOption(E
 );
 
 /**
- * Records provider-reported token totals when an extraction telemetry scope is active.
+ * Records provider-reported token totals when an extraction telemetry scope is
+ * active.
  *
- * **Example** (Record optional token totals)
+ * **Example** (Capture complete token usage)
  *
  * ```ts
  * import { Effect } from "effect"
- * import { recordProviderUsage } from "@effect-ontology/Telemetry/ExtractionTelemetry"
+ * import { captureExtractionTelemetry, recordProviderAttempt, recordProviderUsage } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
- * console.log(Effect.isEffect(recordProviderUsage({ inputTokens: 12, outputTokens: 4 }))) // true
+ * const [, snapshot] = Effect.runSync(
+ *   captureExtractionTelemetry(
+ *     Effect.gen(function* () {
+ *       yield* recordProviderAttempt
+ *       yield* recordProviderUsage({ inputTokens: 12, outputTokens: 4 })
+ *     })
+ *   )
+ * )
+ * console.log(snapshot.usage._tag) // "Complete"
  * ```
  *
+ * @see {@link captureExtractionTelemetry} for the scope that materializes Complete, Partial, or Unavailable usage.
  * @category observability
  * @since 0.0.0
  */
@@ -206,11 +230,15 @@ export const recordProviderUsage = (usage: {
  * ```ts
  * import { NonNegativeInt } from "@beep/schema/Int"
  * import { Effect } from "effect"
- * import { recordExtractionChunkCount } from "@effect-ontology/Telemetry/ExtractionTelemetry"
+ * import { captureExtractionTelemetry, recordExtractionChunkCount } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
- * console.log(Effect.isEffect(recordExtractionChunkCount(NonNegativeInt.make(2)))) // true
+ * const [, snapshot] = Effect.runSync(
+ *   captureExtractionTelemetry(recordExtractionChunkCount(NonNegativeInt.make(2)))
+ * )
+ * console.log(snapshot.chunkCount) // 2
  * ```
  *
+ * @see {@link captureExtractionTelemetry} for the scope that stores this chunk count.
  * @category observability
  * @since 0.0.0
  */
@@ -225,18 +253,34 @@ export const recordExtractionChunkCount = (chunkCount: NonNegativeInt): Effect.E
   );
 
 /**
- * Runs an extraction effect with an isolated usage collector and returns its snapshot.
+ * Runs an extraction effect with an isolated usage collector and returns the
+ * value paired with a usage snapshot.
  *
- * **Example** (Capture an extraction)
+ * **Gotchas**
+ *
+ * Record helpers invoked outside this wrapper do not share counters and do
+ * not throw.
+ *
+ * **Example** (Capture complete usage for one extraction)
  *
  * ```ts
  * import { Effect } from "effect"
- * import { captureExtractionTelemetry } from "@effect-ontology/Telemetry/ExtractionTelemetry"
+ * import { captureExtractionTelemetry, recordProviderAttempt, recordProviderUsage } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *
- * const program = captureExtractionTelemetry(Effect.succeed("graph"))
- * console.log(Effect.isEffect(program)) // true
+ * const [value, snapshot] = Effect.runSync(
+ *   captureExtractionTelemetry(
+ *     Effect.gen(function* () {
+ *       yield* recordProviderAttempt
+ *       yield* recordProviderUsage({ inputTokens: 12, outputTokens: 4 })
+ *       return "graph"
+ *     })
+ *   )
+ * )
+ * console.log(value) // "graph"
+ * console.log(snapshot.usage._tag) // "Complete"
  * ```
  *
+ * @see {@link ExtractionTelemetryCollector} for the request-local service this installs.
  * @category observability
  * @since 0.0.0
  */

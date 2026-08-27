@@ -1,13 +1,15 @@
-// truthy (#129): the YAML 1.1 boolean trap. `yes`/`no`/`on`/`off` parse as
-// STRINGS in YAML 1.2 but read as booleans to humans (the `on:` key of a
-// workflow file is the canonical victim), and `True`/`FALSE` are booleans in
-// spellings a config may not want. Flags plain scalars — keys included —
-// whose spelling is in the 1.1 boolean family but not in `allowed`.
-//
-// Two value-preserving fixes: a real boolean respells to the allowed
-// spelling of the same truth value; a string lookalike gets quoted so it
-// reads as the string it already is. A tagged scalar (`!!bool`, `!!str`) is
-// explicit intent and never flagged.
+/**
+ * truthy: the YAML 1.1 boolean trap. `yes`/`no`/`on`/`off` parse as strings
+ * in YAML 1.2 but read as booleans to humans (the `on:` key of a workflow
+ * file is the canonical victim).
+ *
+ * Flags plain scalars — keys included by default — whose spelling is in
+ * the 1.1 boolean family but not in `allowed`. Tagged `!!bool` / `!!str`
+ * is explicit intent and never flagged.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -19,6 +21,20 @@ import { positionAt, walkScalars } from "./util.ts";
  * Options for `truthy`: the `allowed` boolean spellings (default
  * `["true", "false"]`) and whether mapping keys are checked (`checkKeys`,
  * default `true` — the workflow `on:` key is the point).
+ *
+ * **Example** (Keep keys in scope)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { truthy: { checkKeys: true } } })
+ * console.log(config.rules.truthy)
+ * ```
+ *
+ * @see {@link truthy} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const truthyOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
@@ -55,7 +71,32 @@ const TRUTHY = new Set([
 
 const TRUE_SET = new Set(["yes", "on", "true"]);
 
-/** YAML 1.1 truthy spellings outside the allowed list. */
+/**
+ * YAML 1.1 truthy spellings outside the allowed list.
+ *
+ * **Details**
+ *
+ * Two value-preserving fixes: a real boolean respells to the allowed
+ * spelling of the same truth value; a string lookalike gets quoted so it
+ * reads as the string it already is.
+ *
+ * **Example** (Flag `on:` and leave tagged `!!bool yes` alone)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { truthy: "error" } })
+ * const workflow = YamlLint.run("on: push\n", YamlLint.builtins, config)
+ * console.log(workflow.some((d) => d.rule === "truthy")) // true
+ *
+ * const tagged = YamlLint.run("ok: !!bool yes\n", YamlLint.builtins, config)
+ * console.log(tagged.every((d) => d.rule !== "truthy")) // true
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const truthy: YamlRule = {
 	id: "truthy",
 	check: (ctx: LintContext, options) => {

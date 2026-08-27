@@ -6,12 +6,16 @@
  * call. That is a contract, not a convenience: a hook that had to construct an
  * Effect runtime to read one line would not adopt this package.
  *
- * @since 0.1.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
+import { $ScratchpadId } from "@beep/identity";
 import { Option, Result, Schema } from "effect";
 import { utf8Length } from "./internal/utf8.ts";
 import { MalformedLine } from "./JsonlError.ts";
 import { LineSlice } from "./LineSlice.ts";
+
+const $I = $ScratchpadId.create("jsonl/Line");
 
 /**
  * A line that parsed as JSON, paired with the slice it came from.
@@ -21,14 +25,39 @@ import { LineSlice } from "./LineSlice.ts";
  * envelope layer's job, and keeping the split means a malformed *envelope* and
  * a malformed *line* stay distinguishable failures.
  *
+ * **Example** (Parse a well-formed object line)
+ *
+ * ```ts
+ * import { Line } from "@beep/scratchpad/jsonl"
+ * import { Result } from "effect"
+ *
+ * const line = Line.split('{"round":1}\n')[0]
+ * if (line !== undefined) {
+ *   const parsed = Line.parseResult(line)
+ *   console.log(Result.isSuccess(parsed)) // true
+ *   if (Result.isSuccess(parsed)) {
+ *     console.log(parsed.success.value) // { round: 1 }
+ *   }
+ * }
+ * ```
+ *
+ * @see {@link Line} for split/parse/lastValid that produce this pairing.
+ * @see {@link LineSlice} for the byte-located slice `line` carries.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class ParsedLine extends Schema.Class<ParsedLine>("ParsedLine")({
-	/** Where this line lives in the source. */
-	line: LineSlice,
-	/** The parsed JSON value — any JSON value, not necessarily an object. */
-	value: Schema.Unknown,
-}) {}
+export class ParsedLine extends Schema.Class<ParsedLine>($I`ParsedLine`)(
+	{
+		/** Where this line lives in the source. */
+		line: LineSlice,
+		/** The parsed JSON value — any JSON value, not necessarily an object. */
+		value: Schema.Unknown,
+	},
+	$I.annote("ParsedLine", {
+		description: "A JSON-parsed line paired with the byte slice it came from.",
+	}),
+) {}
 
 /** Whether a line carries nothing but whitespace. */
 const isBlank = (line: LineSlice): boolean => line.text.trim() === "";
@@ -42,7 +71,42 @@ const isBlank = (line: LineSlice): boolean => line.text.trim() === "";
  * in the returned `Result`, because a journal is untrusted input and untrusted
  * input fails typed.
  *
+ * **Gotchas**
+ *
+ * `Line.lastValid` stops at JSON validity. A torn scalar tail (`42` cut
+ * mid-write leaves `4`) parses as a different value, so a JSON-level walk-back
+ * hands back corruption as the current state. Use {@link Envelope.lastValidResult}
+ * when the line must be an envelope. Offsets are UTF-8 bytes:
+ * `Line.byteLength("\u{1F600}")` is 4, while `"\u{1F600}".length` is 2.
+ *
+ * **Example** (Split offsets and last-valid walk-back)
+ *
+ * ```ts
+ * import { Line } from "@beep/scratchpad/jsonl"
+ * import * as O from "effect/Option"
+ *
+ * const text = '{"a":1}\r\n{"b":2}\n{"c":'
+ * const first = Line.split(text)[0]
+ * if (first !== undefined) {
+ *   console.log(first.text) // '{"a":1}'
+ *   console.log(first.offset) // 0
+ *   console.log(first.length) // 7
+ *   console.log(first.end) // 9
+ * }
+ *
+ * const last = Line.lastValid(text)
+ * console.log(O.isSome(last)) // true
+ * if (O.isSome(last)) {
+ *   console.log(last.value.value) // { b: 2 }
+ * }
+ * ```
+ *
+ * @see {@link LineSlice} for the byte-located slice `split` returns.
+ * @see {@link MalformedLine} for the typed JSON-parse failure.
+ * @see {@link Envelope} for the envelope walk-back that closes the torn-scalar hole.
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export class Line {
 	/**
@@ -57,12 +121,13 @@ export class Line {
 	 * even though the character itself cannot survive the round trip — text
 	 * read back from a UTF-8 journal never contains one.
 	 *
-	 * @example
-	 * ```ts
-	 * import { Line } from "@effected/jsonl";
+	 * **Example** (Emoji bytes vs String.length)
 	 *
-	 * Line.byteLength("\u{1F600}"); // 4
-	 * "\u{1F600}".length;           // 2 — the trap
+	 * ```ts
+	 * import { Line } from "@beep/scratchpad/jsonl"
+	 *
+	 * console.log(Line.byteLength("\u{1F600}")) // 4
+	 * console.log("\u{1F600}".length) // 2
 	 * ```
 	 */
 	static byteLength(text: string): number {
@@ -82,6 +147,17 @@ export class Line {
 	 * and hiding them would make the offsets lie.
 	 *
 	 * Only the final slice can have `terminated: false`.
+	 *
+	 * **Example** (CRLF split keeps content and end distinct)
+	 *
+	 * ```ts
+	 * import { Line } from "@beep/scratchpad/jsonl"
+	 *
+	 * const lines = Line.split('{"a":1}\r\n{"b":2}\n')
+	 * console.log(lines.length) // 2
+	 * console.log(lines[0]?.end) // 9
+	 * console.log(lines[1]?.offset) // 9
+	 * ```
 	 *
 	 * @param text - JSONL source text.
 	 * @returns One {@link LineSlice} per candidate line, in source order.
@@ -120,6 +196,15 @@ export class Line {
 	 * mid-append, and re-reading from this offset once the file grows sees the
 	 * completed line rather than gluing a stale fragment to fresh bytes.
 	 *
+	 * **Example** (Leave a torn tail unconsumed)
+	 *
+	 * ```ts
+	 * import { Line } from "@beep/scratchpad/jsonl"
+	 *
+	 * console.log(Line.consumedOffset('{"a":1}\n{"b":')) // 8
+	 * console.log(Line.consumedOffset('{"a":1}\n')) // 8
+	 * ```
+	 *
 	 * @param text - JSONL source text.
 	 * @returns The resume cursor, in UTF-8 bytes.
 	 */
@@ -137,6 +222,20 @@ export class Line {
 	 *
 	 * Any JSON value succeeds — objects, arrays and scalars alike. This layer
 	 * does not know what an envelope is.
+	 *
+	 * **Example** (Object succeeds, torn object fails)
+	 *
+	 * ```ts
+	 * import { Line } from "@beep/scratchpad/jsonl"
+	 * import { Result } from "effect"
+	 *
+	 * const good = Line.split('{"a":1}\n')[0]
+	 * const torn = Line.split('{"a":')[0]
+	 * if (good !== undefined && torn !== undefined) {
+	 *   console.log(Result.isSuccess(Line.parseResult(good))) // true
+	 *   console.log(Result.isFailure(Line.parseResult(torn))) // true
+	 * }
+	 * ```
 	 *
 	 * @param line - A slice from {@link Line.split}.
 	 * @returns The {@link ParsedLine}, or a {@link MalformedLine} carrying the
@@ -168,6 +267,22 @@ export class Line {
 	 * Whitespace-only lines are skipped rather than reported: they carry no
 	 * information to lose, and reporting them would make a hand-edited journal
 	 * look corrupt.
+	 *
+	 * **Example** (Keep the hole, skip the blank)
+	 *
+	 * ```ts
+	 * import { Line } from "@beep/scratchpad/jsonl"
+	 * import { Result } from "effect"
+	 *
+	 * const results = Line.parseAll('{"a":1}\n\n{"b":\n{"c":3}\n')
+	 * const first = results[0]
+	 * const hole = results[1]
+	 * const last = results[2]
+	 * console.log(results.length) // 3
+	 * console.log(first !== undefined && Result.isSuccess(first)) // true
+	 * console.log(hole !== undefined && Result.isFailure(hole)) // true
+	 * console.log(last !== undefined && Result.isSuccess(last)) // true
+	 * ```
 	 *
 	 * @param text - JSONL source text.
 	 * @returns One `Result` per non-blank line, in source order.
@@ -202,6 +317,19 @@ export class Line {
 	 * `4` is not an envelope, which is one more reason the envelope is the
 	 * package's contract rather than an option. Check `LineSlice.terminated` on
 	 * the result when it matters.
+	 *
+	 * **Example** (Walk back over a torn object)
+	 *
+	 * ```ts
+	 * import { Line } from "@beep/scratchpad/jsonl"
+	 * import * as O from "effect/Option"
+	 *
+	 * const last = Line.lastValid('{"round":1}\n{"round":')
+	 * console.log(O.isSome(last)) // true
+	 * if (O.isSome(last)) {
+	 *   console.log(last.value.value) // { round: 1 }
+	 * }
+	 * ```
 	 *
 	 * @param text - JSONL source text.
 	 * @returns The last parseable line, or `Option.none()` if none parses.

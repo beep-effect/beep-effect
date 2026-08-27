@@ -1,0 +1,118 @@
+# Pack yaml-public
+
+- modules: 11
+- owning exports: 80
+- re-exports: 16
+- open modules: 10
+- open owning exports: 80
+
+## Files
+
+- `yaml/Yaml.ts` owning=6 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlDiagnostic.ts` owning=13 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlDocument.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlEdit.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlFormat.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlLint.ts` owning=10 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlLintRule.ts` owning=9 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlNode.ts` owning=24 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlToken.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/YamlVisitor.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `yaml/index.ts` owning=0 moduleFindings=none
+
+## Open modules
+
+- `yaml/Yaml.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlDiagnostic.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlDocument.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlEdit.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlFormat.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlLint.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlLintRule.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlNode.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlToken.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `yaml/YamlVisitor.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+
+## Open owning exports
+
+- `yaml/Yaml.ts:55` `YamlParseOptions` (value/class) missing=@category|@since findings=legacy-example|missing-required-tags
+- `yaml/Yaml.ts:113` `YamlStringifyOptions` (value/class) missing=@category|@since findings=legacy-example|missing-required-tags
+- `yaml/Yaml.ts:186` `YamlParseError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/Yaml.ts:206` `YamlStringifyError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/Yaml.ts:423` `YamlBoundCodec` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/Yaml.ts:458` `Yaml` (value/class) missing=@category|@since findings=legacy-example|legacy-remarks|missing-required-tags
+- `yaml/YamlDiagnostic.ts:29` `YamlLexErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:36` `YamlLexErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:43` `YamlParseErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:50` `YamlParseErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:57` `YamlComposerErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:64` `YamlComposerErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:71` `YamlStringifyErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:78` `YamlStringifyErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:86` `YamlModifyErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:93` `YamlModifyErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:101` `YamlErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:114` `YamlErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlDiagnostic.ts:129` `YamlDiagnostic` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `yaml/YamlDocument.ts:28` `YamlDirective` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDocument.ts:50` `YamlDocument` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlDocument.ts:235` `documentFromRaw` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlEdit.ts:22` `YamlSegment` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlEdit.ts:30` `YamlPath` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlEdit.ts:39` `YamlRange` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlEdit.ts:55` `YamlEdit` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `yaml/YamlFormat.ts:38` `YamlRangeLike` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlFormat.ts:81` `YamlFormattingOptions` (value/class) missing=@category|@since findings=legacy-example|missing-required-tags
+- `yaml/YamlFormat.ts:103` `YamlModificationError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlFormat.ts:492` `YamlFormat` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `yaml/YamlLint.ts:30` `YamlLintRuleSetting` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:40` `YamlLintRuleSetting` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlLint.ts:96` `YamlLintConfig` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:199` `StyleVoteTally` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:218` `StyleFloorTally` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:263` `StyleEvidence` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:343` `StyleConflict` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:359` `YamlStyleConflictError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLint.ts:473` `YamlLintInference` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlLint.ts:527` `YamlLint` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `yaml/YamlLintRule.ts:22` `YamlLintSeverity` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLintRule.ts:29` `YamlLintSeverity` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlLintRule.ts:43` `YamlLintDiagnostic` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLintRule.ts:61` `LintLine` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlLintRule.ts:83` `LintContext` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlLintRule.ts:110` `StyleVote` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLintRule.ts:132` `StyleFloor` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlLintRule.ts:143` `StyleObservation` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlLintRule.ts:164` `YamlRule` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:18` `ScalarStyle` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:31` `ScalarStyle` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:38` `CollectionStyle` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:45` `CollectionStyle` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:56` `QuoteStyle` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:63` `QuoteStyle` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:79` `QuoteCompat` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:86` `QuoteCompat` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:94` `ScalarChomp` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:101` `ScalarChomp` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:131` `YamlScalar` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:193` `YamlAlias` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:229` `YamlScalarEncoded` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:237` `YamlMapEncoded` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:245` `YamlSeqEncoded` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:253` `YamlAliasEncoded` (type/interface) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:269` `YamlNode` (value/const) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `yaml/YamlNode.ts:279` `YamlNode` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlNode.ts:294` `YamlPair` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:314` `YamlMap` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:359` `YamlSeq` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:538` `AliasExpansionBudgetExceeded` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:556` `aliasExpansionLimit` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlNode.ts:581` `nodeToJsValue` (value/function) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlToken.ts:21` `YamlTokenKind` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlToken.ts:51` `YamlTokenKind` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlToken.ts:65` `YamlToken` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlToken.ts:119` `YamlTokens` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlVisitor.ts:33` `YamlVisitorEvent` (type/type) missing=@category|@since findings=missing-required-tags
+- `yaml/YamlVisitor.ts:84` `YamlVisitorEvent` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `yaml/YamlVisitor.ts:91` `YamlVisitor` (value/class) missing=@category|@since|@example findings=missing-required-tags
+

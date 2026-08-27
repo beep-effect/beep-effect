@@ -1,3 +1,12 @@
+/**
+ * Dispatch surface for guest intrinsics, globals, and collection callbacks.
+ *
+ * {@link invokeGlobalMethod} is synchronous and hard-rejects helpers that live
+ * on Effect adapters such as {@link invokeArrayFrom} and {@link invokeGroupBy}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Unknown } from "@beep/schema/Unknown";
 import {Effect} from "effect";
 import * as S from "effect/Schema";
@@ -87,6 +96,17 @@ import {
 
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
+/**
+ * Capability used to invoke guest functions and settle guest promises.
+ *
+ * Collection adapters, string replacers, and promise reactions all go through
+ * this runner rather than calling host functions directly.
+ *
+ * @see {@link SupportedCallback} for the closed set of callables this runner admits.
+ * @see {@link applyCollectionCallback} for the adapter that wraps `invokeCallable`.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CallbackRunner<R> = {
   readonly invokeFunction: (fn: CodeModeFunction, args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>
   readonly invokeCallable: (
@@ -97,10 +117,17 @@ export type CallbackRunner<R> = {
   readonly settlePromise: (promise: CodeModePromise) => Effect.Effect<unknown, InterpreterFailure>
 }
 
-// The single acceptance list for callbacks: collections, sort, string replacers,
-// Array.from mappers, and promise reactions all admit exactly these callables.
-// Admission means dispatchable, not necessarily invocable: new-requiring
-// constructors pass the gate and throw a TypeError on call, like JS.
+/**
+ * Closed set of callables admitted as collection, sort, replacer, or reaction callbacks.
+ *
+ * Admission means dispatchable, not necessarily invocable: new-requiring
+ * constructors pass this gate and throw a TypeError on call, like JavaScript.
+ *
+ * @see {@link isSupportedCallback} for the runtime guard over this union.
+ * @see {@link CallbackRunner} for the invocation capability those callbacks use.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SupportedCallback =
   | CodeModeFunction
   | CoercionFunction
@@ -126,6 +153,35 @@ const isSupportedRuntimeCallback = RuntimeReference.isAnyOf([
   "PromiseNamespace",
 ])
 
+/**
+ * Guards whether a value is an admitted collection or reaction callback.
+ *
+ * **Gotchas**
+ *
+ * Admission is not call-safe. `Map` / `Set` / `URL` pass because they are
+ * functions, then throw TypeError when called without `new`. Math, JSON, and
+ * console stay non-callable (`typeof` `"object"`). Passing this guard does not
+ * mean {@link invokeGlobalMethod} can run the value.
+ *
+ * **Example** (Array is admitted, Math is not)
+ *
+ * ```ts
+ * import { GlobalNamespace } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { isSupportedCallback } from "../../../codemode/interpreter/Interpreter.methods.ts"
+ *
+ * console.log(isSupportedCallback(GlobalNamespace.new("Array")))
+ * // true
+ * console.log(isSupportedCallback(GlobalNamespace.new("Map")))
+ * // true
+ * console.log(isSupportedCallback(GlobalNamespace.new("Math")))
+ * // false
+ * ```
+ *
+ * @see {@link SupportedCallback} for the closed union this guard narrows to.
+ * @see {@link applyCollectionCallback} for the call-site that still TypeErrors on host functions.
+ * @category guards
+ * @since 0.0.0
+ */
 export const isSupportedCallback = (value: unknown): value is SupportedCallback =>
   RuntimeReference.is(value) &&
   isSupportedRuntimeCallback(value) &&
@@ -133,6 +189,46 @@ export const isSupportedCallback = (value: unknown): value is SupportedCallback 
   // new-requiring constructors throw a TypeError. Math/JSON/console stay non-callable.
   (!RuntimeReference.guards.GlobalNamespace(value) || typeofValue(value) === "function");
 
+/**
+ * Dispatches a bound intrinsic method on a guest receiver.
+ *
+ * **Gotchas**
+ *
+ * Date setters snapshot `receiver.time` before coercing arguments whose
+ * callbacks may mutate the Date, matching native JS. String `replace` /
+ * `replaceAll` callbacks must be {@link SupportedCallback} values; wrap host
+ * callables in an arrow. Array/Map/Set/URLSearchParams methods that take
+ * callbacks go through {@link applyCollectionCallback}.
+ *
+ * **Example** (Uppercase a string receiver)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import {
+ *   IntrinsicMethod,
+ *   IntrinsicReference,
+ * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { invokeIntrinsic } from "../../../codemode/interpreter/Interpreter.methods.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ * }
+ * const ref = IntrinsicReference.new(
+ *   IntrinsicMethod.cases.String.make({ receiver: "Ada", name: "toUpperCase" }),
+ * )
+ * console.log(
+ *   await Effect.runPromise(invokeIntrinsic(runner, ref, [], { type: "CallExpression" })),
+ * )
+ * // ADA
+ * ```
+ *
+ * @see {@link applyCollectionCallback} for callback admission on collection methods.
+ * @see {@link isSupportedCallback} for the replace-callback gate.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeIntrinsic = <R>(
   runner: CallbackRunner<R>,
@@ -224,6 +320,58 @@ const coerceNumericArgument = <R>(
   });
 };
 
+/**
+ * Synchronously dispatches a static method on a guest global namespace.
+ *
+ * **Gotchas**
+ *
+ * This helper throws rather than returning `Effect`. It hard-rejects
+ * `Object.fromEntries`, `Object.groupBy`, `Math.random`, `Math.sumPrecise`,
+ * `Array.from`, `Date.now`, every `console.*`, and every `Map.*` with
+ * `"is not available."`. Those live on {@link invokeArrayFrom} /
+ * {@link invokeGroupBy} (Effect) or are intentionally blocked. Mixing this
+ * sync helper with the Effect intrinsic adapters will not typecheck the same way.
+ *
+ * **Example** (Call Math.abs and see Array.from blocked)
+ *
+ * ```ts
+ * import {
+ *   GlobalMethod,
+ *   GlobalMethodReference,
+ *   InterpreterFailure,
+ * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { invokeGlobalMethod } from "../../../codemode/interpreter/Interpreter.methods.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * console.log(
+ *   invokeGlobalMethod(
+ *     GlobalMethodReference.new(GlobalMethod.cases.Math.make({ name: "abs" })),
+ *     [-3],
+ *     node,
+ *   ),
+ * )
+ * // 3
+ *
+ * try {
+ *   invokeGlobalMethod(
+ *     GlobalMethodReference.new(GlobalMethod.cases.Array.make({ name: "from" })),
+ *     [[1, 2]],
+ *     node,
+ *   )
+ * } catch (error) {
+ *   console.log(
+ *     InterpreterFailure.guards.InterpreterRuntimeError(error) ? error.message : error,
+ *   )
+ * }
+ * // Array.from is not available.
+ * ```
+ *
+ * @see {@link invokeArrayFrom} for the Effect `Array.from` adapter.
+ * @see {@link invokeGroupBy} for the Effect `Object.groupBy` / `Map.groupBy` adapter.
+ * @throws InterpreterRuntimeError when the method is blocked or the stdlib adapter throws TypeError/RangeError.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown => {
   const unavailable = (namespace: string, name: string): never => {
@@ -458,6 +606,38 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
   );
 };
 
+/**
+ * Effect adapter for guest `Array.from` over iterables and array-likes.
+ *
+ * **Example** (Materialize an array-like source)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { invokeArrayFrom } from "../../../codemode/interpreter/Interpreter.methods.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ *   syncIterator: () => Effect.succeed(undefined),
+ * }
+ *
+ * const values = await Effect.runPromise(
+ *   invokeArrayFrom(
+ *     runner,
+ *     [{ 0: "a", 1: "b", length: 2 }],
+ *     { type: "CallExpression" },
+ *   ),
+ * )
+ * console.log(values)
+ * // [ "a", "b" ]
+ * ```
+ *
+ * @see {@link invokeGlobalMethod} which hard-rejects `Array.from` so callers reach this helper.
+ * @see {@link preserveConsumerError} for mapper-failure cleanup on iterable sources.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeArrayFrom = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
@@ -494,6 +674,53 @@ export const invokeArrayFrom = <R>(
   });
 };
 
+/**
+ * Effect adapter for guest `Object.groupBy` and `Map.groupBy`.
+ *
+ * **Example** (Group an array through a callback that echoes the item)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { CoercionFunction } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { invokeGroupBy } from "../../../codemode/interpreter/Interpreter.methods.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: (_callable: unknown, args: Array<unknown>) => Effect.succeed(args[0]),
+ *   settlePromise: () => Effect.succeed(undefined),
+ *   syncIterator: (value: unknown) => {
+ *     if (!Array.isArray(value)) return Effect.succeed(undefined)
+ *     let index = 0
+ *     const items = value
+ *     return Effect.succeed({
+ *       next: Effect.sync(() => {
+ *         if (index >= items.length) return { done: true, value: undefined }
+ *         const current = items[index]
+ *         index += 1
+ *         return { done: false, value: current }
+ *       }),
+ *       close: Effect.void,
+ *     })
+ *   },
+ * }
+ *
+ * const grouped = await Effect.runPromise(
+ *   invokeGroupBy(
+ *     runner,
+ *     "Object",
+ *     [[1, 1, 2], CoercionFunction.new("String")],
+ *     { type: "CallExpression" },
+ *   ),
+ * )
+ * console.log(Reflect.get(Object(grouped), "1"), Reflect.get(Object(grouped), "2"))
+ * // [ 1, 1 ] [ 2 ]
+ * ```
+ *
+ * @see {@link invokeGlobalMethod} which hard-rejects `Object.groupBy`.
+ * @see {@link applyCollectionCallback} for callback admission.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeGroupBy = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
@@ -653,6 +880,45 @@ const invokeStringReplacer = <R>(
   });
 };
 
+/**
+ * Admits a collection callback and returns an Effect-returning applicator.
+ *
+ * **Gotchas**
+ *
+ * Throws immediately — before returning the function — when the callback is not
+ * a {@link SupportedCallback}. Host functions that look callable must be wrapped
+ * in an arrow {@link CodeModeFunction}. The returned applicator delegates to
+ * {@link CallbackRunner.invokeCallable}.
+ *
+ * **Example** (Reject a non-function callback)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { InterpreterFailure } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { applyCollectionCallback } from "../../../codemode/interpreter/Interpreter.methods.ts"
+ *
+ * const runner = {
+ *   invokeFunction: () => Effect.succeed(undefined),
+ *   invokeCallable: () => Effect.succeed(undefined),
+ *   settlePromise: () => Effect.succeed(undefined),
+ * }
+ *
+ * try {
+ *   applyCollectionCallback(runner, 1, "Array.map", { type: "CallExpression" })
+ * } catch (error) {
+ *   console.log(
+ *     InterpreterFailure.guards.InterpreterRuntimeError(error) ? error.message : error,
+ *   )
+ * }
+ * // Array.map expects a function callback.
+ * ```
+ *
+ * @see {@link isSupportedCallback} for the admission guard used before throw.
+ * @see {@link invokeIntrinsic} for collection methods that call this helper.
+ * @throws InterpreterRuntimeError TypeError when `callback` is missing, or a wrap-in-arrow error when it is a non-supported function.
+ * @category combinators
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const applyCollectionCallback = <R>(
   runner: CallbackRunner<R>,

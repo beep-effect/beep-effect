@@ -1,22 +1,60 @@
+/**
+ * SchemaStore `catalog.json` entries as a class schema.
+ *
+ * Decoding an existing catalog row and encoding one for submission are the
+ * same artifact, including both unversioned (`url` only) and versioned
+ * (`versions` map plus latest-pointing `url`) modes.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
 import type { CatalogUrls, SchemaVersion } from "./SchemaVersioning.ts";
 import { SchemaVersioning } from "./SchemaVersioning.ts";
+
+const $I = $ScratchpadId.create("schemastore/CatalogEntry");
 
 /**
  * A fileMatch hygiene finding: a value in a lint report, not an error —
  * SchemaStore reviewers reject entries over these, so surfacing them
  * locally is the point, but a warned entry is still a valid entry.
  *
+ * **Example** (Construct a generic-fileMatch finding)
+ *
+ * ```ts
+ * import { CatalogLintFinding } from "@beep/scratchpad/schemastore"
+ *
+ * const finding = CatalogLintFinding.make({
+ *   check: "GenericFileMatch",
+ *   pattern: "*.json",
+ *   message: "\"*.json\" claims every .json file; SchemaStore rejects generic patterns",
+ * })
+ *
+ * console.log(finding.check)
+ * // => "GenericFileMatch"
+ * ```
+ *
+ * @see {@link CatalogEntry.lint} for the glob-shape analysis that produces these findings.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class CatalogLintFinding extends Schema.Class<CatalogLintFinding>("CatalogLintFinding")({
-	/** Which hygiene check fired. */
-	check: Schema.Literals(["GenericFileMatch", "ComplexFileMatch"]),
-	/** The `fileMatch` pattern the finding is about. */
-	pattern: Schema.String,
-	/** Human-readable explanation with the SchemaStore rationale. */
-	message: Schema.String,
-}) {}
+export class CatalogLintFinding extends Schema.Class<CatalogLintFinding>($I`CatalogLintFinding`)(
+	{
+		/** Which hygiene check fired. */
+		check: Schema.Literals(["GenericFileMatch", "ComplexFileMatch"]),
+		/** The `fileMatch` pattern the finding is about. */
+		pattern: Schema.String,
+		/** Human-readable explanation with the SchemaStore rationale. */
+		message: Schema.String,
+	},
+	$I.annote("CatalogLintFinding", {
+		description:
+			"A catalog fileMatch hygiene finding: a report value, never an error channel, for generic or complex glob patterns SchemaStore rejects.",
+	}),
+) {}
 
 // File extensions whose bare `*.<ext>` (or `**/*.<ext>`) patterns claim every
 // file of a common config format — the "generic pattern" SchemaStore rejects.
@@ -85,24 +123,61 @@ const lintPattern = (pattern: string): ReadonlyArray<CatalogLintFinding> => {
  * `versions` is present only for versioned catalogs
  * ({@link SchemaVersioning.catalogUrls} assembles both modes).
  *
+ * **Gotchas**
+ *
+ * `lint()` findings are values, not a typed error channel — a warned entry
+ * is still a valid {@link CatalogEntry}. `versions` key order is not a
+ * contract after JSON round-trip; derive ordering from the labels via
+ * {@link SchemaVersioning}. `lint` is pure glob-shape analysis, not a glob
+ * engine.
+ *
+ * **Example** (Assemble unversioned and lint a generic pattern)
+ *
+ * ```ts
+ * import { CatalogEntry } from "@beep/scratchpad/schemastore"
+ *
+ * const entry = CatalogEntry.assemble({
+ *   name: "config",
+ *   description: "Build configuration",
+ *   fileMatch: ["*.json"],
+ *   baseUrl: "https://example.com/schemas",
+ * })
+ * const findings = entry.lint()
+ *
+ * console.log(entry.url)
+ * // => "https://example.com/schemas/config.json"
+ * console.log(findings.map((finding) => finding.check))
+ * // => ["GenericFileMatch"]
+ * ```
+ *
+ * @see {@link SchemaVersioning.catalogUrls} for the URL assembly `assemble` delegates to.
+ * @see {@link CatalogLintFinding} for the finding values `lint` returns.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class CatalogEntry extends Schema.Class<CatalogEntry>("CatalogEntry")({
-	/** The schema's display name in the catalog. */
-	name: Schema.String,
-	/** The catalog description. */
-	description: Schema.String,
-	/** Glob patterns editors match files against. */
-	fileMatch: Schema.Array(Schema.String),
-	/** The schema URL — the unversioned file, or the latest version. */
-	url: Schema.String,
-	/**
-	 * Versioned mode only: label → schema URL. Inserted ascending, but key
-	 * order is not a contract — bare-major labels enumerate first (see
-	 * `SchemaVersioning.catalogUrls`); derive ordering from the labels.
-	 */
-	versions: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
-}) {
+export class CatalogEntry extends Schema.Class<CatalogEntry>($I`CatalogEntry`)(
+	{
+		/** The schema's display name in the catalog. */
+		name: Schema.String,
+		/** The catalog description. */
+		description: Schema.String,
+		/** Glob patterns editors match files against. */
+		fileMatch: Schema.Array(Schema.String),
+		/** The schema URL — the unversioned file, or the latest version. */
+		url: Schema.String,
+		/**
+		 * Versioned mode only: label → schema URL. Inserted ascending, but key
+		 * order is not a contract — bare-major labels enumerate first (see
+		 * `SchemaVersioning.catalogUrls`); derive ordering from the labels.
+		 */
+		versions: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+	},
+	$I.annote("CatalogEntry", {
+		description:
+			"A SchemaStore catalog.json entry: name, description, fileMatch patterns, url, and optional versioned URL map.",
+	}),
+) {
 	/**
 	 * Assembles an entry from a catalog identity plus
 	 * {@link SchemaVersioning.catalogUrls}' inputs: pass `versions` for the

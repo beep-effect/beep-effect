@@ -25,23 +25,14 @@ import { EventBroadcastHub } from "./EventBroadcastRouter.ts";
 // =============================================================================
 
 /**
- * EventBridge service interface
+ * Start/stop handle returned after bridging EventBusService into EventBroadcastHub.
  *
  * **Details**
  *
- * Provides methods to start/stop the bridge between EventBusService and EventBroadcastHub
+ * `start` forks the subscription as a scoped fiber. The handle's `stop` interrupts
+ * that fiber; `await` joins it and surfaces {@link EventBridgeError}.
  *
- *
- * **Example** (Use the EventBridgeServiceMethods contract)
- *
- * ```ts
- * import type { EventBridgeServiceMethods } from "@effect-ontology/Runtime/EventBridge"
- *
- * const acceptsEventBridgeServiceMethods = (_value: EventBridgeServiceMethods): void => undefined
- *
- * console.log(acceptsEventBridgeServiceMethods)
- * ```
- *
+ * @see {@link EventBridgeService} for the Context tag and {@link EventBridgeLive} for the layer.
  * @category type-level
  * @since 0.0.0
  */
@@ -63,14 +54,19 @@ export interface EventBridgeServiceMethods {
 const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBridge");
 
 /**
- * Provides the event bridge service service capability.
+ * Context tag for the EventBus-to-WebSocket bridge.
  *
- * **Example** (Inspect event bridge service)
+ * **Example** (Yield the start handle)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
  *
- * console.log(EventBridgeService)
+ * const start = Effect.gen(function* () {
+ *   const bridge = yield* EventBridgeService
+ *   return yield* bridge.start
+ * })
+ * console.log(Effect.isEffect(start)) // true
  * ```
  *
  * @category services
@@ -83,10 +79,17 @@ export class EventBridgeService extends Context.Service<EventBridgeService, Even
 /**
  * Typed setup or runtime failure from the EventBus-to-websocket bridge.
  *
- * **Example** (Inspect the typed event bridge failure)
+ * **Example** (Construct a setup-phase failure)
+ *
  * ```ts
  * import { EventBridgeError } from "@effect-ontology/Runtime/EventBridge"
- * console.log(EventBridgeError.make)
+ *
+ * const error = EventBridgeError.make({
+ *   phase: "setup",
+ *   message: "Failed to subscribe to ontology events.",
+ *   cause: new Error("pubsub unavailable")
+ * })
+ * console.log(error.phase) // "setup"
  * ```
  *
  * @category errors
@@ -171,12 +174,13 @@ const makeEventBridge = Effect.gen(function* () {
  *
  * Requires EventBusService and EventBroadcastHub
  *
- * **Example** (Inspect event bridge live)
+ * **Example** (Provide the bridge beside hub and bus tags)
  *
  * ```ts
- * import { EventBridgeLive } from "@effect-ontology/Runtime/EventBridge"
+ * import { EventBridgeLive, EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
  *
- * console.log(EventBridgeLive)
+ * const documented = [EventBridgeLive, EventBridgeService] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers
@@ -192,12 +196,13 @@ export const EventBridgeLive = Layer.effect(EventBridgeService, makeEventBridge)
  * Automatically starts the bridge when the layer is acquired.
  * Stops when the layer scope closes.
  *
- * **Example** (Inspect event bridge auto start)
+ * **Example** (Start the bridge when the layer is acquired)
  *
  * ```ts
- * import { EventBridgeAutoStart } from "@effect-ontology/Runtime/EventBridge"
+ * import { EventBridgeAutoStart, EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
  *
- * console.log(EventBridgeAutoStart)
+ * const documented = [EventBridgeAutoStart, EventBridgeService] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers

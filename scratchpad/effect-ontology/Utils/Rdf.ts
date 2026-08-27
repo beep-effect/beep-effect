@@ -13,19 +13,21 @@ import * as P from "effect/Predicate";
 import { dual2 } from "./Dual.ts";
 
 /**
- * Build and validate an IRI from a namespace and local identifier.
+ * Concatenates a namespace and local identifier, then validates the result as
+ * an IRI.
  *
- * **Example** (Inspect build iri)
+ * **Gotchas**
+ *
+ * {@link IRI.fromUnknown} throws if the concatenated string is not a valid IRI.
+ *
+ * **Example** (Build a person IRI)
  *
  * ```ts
  * import { buildIri } from "@effect-ontology/Utils/Rdf"
  *
- * console.log(buildIri)
+ * console.log(buildIri("https://example.com/", "ada")) // "https://example.com/ada"
  * ```
  *
- * @param baseNamespace - Namespace prepended to the local identifier.
- * @param localName - Local identifier appended to the namespace.
- * @returns The validated combined IRI.
  * @category factories
  * @since 0.0.0
  */

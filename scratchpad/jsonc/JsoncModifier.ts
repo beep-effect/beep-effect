@@ -1,15 +1,23 @@
-// Structural JSONC modification: compute the edits needed to set, replace or
-// delete a value at a path, without mutating the source.
-//
-// Navigation goes through the scanner-based `internal/navigate.ts` (a
-// correctness fix over v3's fragile string search); this module owns only edit
-// synthesis and the `JsoncModificationError` it raises on a navigation miss.
+/**
+ * Structural JSONC modification: compute the edits needed to set, replace or
+ * delete a value at a path, without mutating the source.
+ *
+ * Navigation goes through the scanner-based `internal/navigate.ts` (a
+ * correctness fix over v3's fragile string search); this module owns only edit
+ * synthesis and the `JsoncModificationError` it raises on a navigation miss.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Schema } from "effect";
 import { navigate } from "./internal/navigate.ts";
 import type { JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
 import { JsoncEdit } from "./JsoncEdit.ts";
 import type { JsoncPath } from "./JsoncNode.ts";
+
+const $I = $ScratchpadId.create("jsonc/JsoncModifier");
 
 /**
  * Raised when `JsoncModifier.modify` cannot navigate the requested path: the
@@ -24,7 +32,8 @@ import type { JsoncPath } from "./JsoncNode.ts";
  *   always omitted (navigation reports the mismatch structurally, without a
  *   text offset).
  *
- * @remarks
+ * **Details**
+ *
  * Follows the structure-preserving-errors house rule — the mismatch's
  * discriminating data is carried as typed fields (`path`, `expected`, `depth`,
  * optional `offset`), not collapsed into a `reason: string`. This mirrors
@@ -32,14 +41,41 @@ import type { JsoncPath } from "./JsoncNode.ts";
  * failures differ; the jsonc/yaml parity convention binds `Edit`/`Range`/`Path`,
  * not this error).
  *
+ * **Gotchas**
+ *
+ * `offset` is reserved and currently omitted — navigation is structural, so
+ * callers must not expect a source span on this error.
+ *
+ * **Example** (Catch a path mismatch)
+ *
+ * ```ts
+ * import { JsoncModificationError, JsoncModifier } from "@beep/scratchpad/jsonc";
+ * import { Effect, Result } from "effect";
+ *
+ * const failed = Effect.runSync(Effect.result(JsoncModifier.modify("[1, 2]", ["name"], "x")));
+ * if (Result.isFailure(failed) && failed.failure instanceof JsoncModificationError) {
+ *   console.log(failed.failure.expected); // "object"
+ *   console.log(failed.failure.depth); // 1
+ * }
+ * ```
+ *
+ * @see {@link JsoncModifier.modify} for the only producer of this error.
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class JsoncModificationError extends Schema.TaggedError<JsoncModificationError>()("JsoncModificationError", {
-	path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
-	expected: Schema.Literals(["object", "array"]),
-	depth: Schema.Number,
-	offset: Schema.optionalKey(Schema.Number),
-}) {
+export class JsoncModificationError extends Schema.TaggedError<JsoncModificationError>($I`JsoncModificationError`)(
+	"JsoncModificationError",
+	{
+		path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
+		expected: Schema.Literals(["object", "array"]),
+		depth: Schema.Number,
+		offset: Schema.optionalKey(Schema.Number),
+	},
+	$I.annote("JsoncModificationError", {
+		description: "Path-navigation miss from JsoncModifier.modify: expected container kind at depth.",
+	}),
+) {
 	override get message(): string {
 		const at = this.offset !== undefined ? ` (offset ${this.offset})` : "";
 		return `Modification failed at path [${this.path.join(", ")}]${at}: expected ${this.expected} at depth ${this.depth}`;
@@ -49,7 +85,10 @@ export class JsoncModificationError extends Schema.TaggedError<JsoncModification
 /**
  * Options for `JsoncModifier.modify`: formatting controls for generated text.
  *
+ * @see {@link JsoncFormattingOptionsLike} for the accepted formatting shape.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface JsoncModifyOptions {
 	/**
@@ -62,9 +101,31 @@ export interface JsoncModifyOptions {
 }
 
 /**
- * Structural JSONC modification statics. Not instantiable.
+ * Structural JSONC modification statics. Not instantiable. Path modify/delete
+ * is the comment-preserving alternative to a parse/stringify round-trip:
+ * apply the returned edits with {@link JsoncEdit.applyAll}.
  *
+ * **Example** (Set a key, then delete it)
+ *
+ * ```ts
+ * import { JsoncEdit, JsoncModifier } from "@beep/scratchpad/jsonc";
+ * import { Effect } from "effect";
+ *
+ * const source = '{ "port": 3000 // keep\n }';
+ * const setEdits = Effect.runSync(JsoncModifier.modify(source, ["port"], 8080));
+ * const updated = JsoncEdit.applyAll(source, setEdits);
+ * console.log(updated.includes("8080")); // true
+ * console.log(updated.includes("// keep")); // true
+ *
+ * const deleteEdits = Effect.runSync(JsoncModifier.modify(updated, ["port"], undefined));
+ * const removed = JsoncEdit.applyAll(updated, deleteEdits);
+ * console.log(removed.includes("port")); // false
+ * ```
+ *
+ * @see {@link JsoncEdit.applyAll} for applying the computed edits.
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class JsoncModifier {
 	private constructor() {}
@@ -84,9 +145,7 @@ export class JsoncModifier {
 	 *   `JSON.stringify`; `undefined` deletes the target instead.
 	 * @param options - Optional {@link JsoncModifyOptions} controlling
 	 *   formatting of generated content.
-	 * @returns An `Effect` that succeeds with the edits to apply (via
-	 *   `JsoncEdit.applyAll`), or fails with {@link JsoncModificationError} when
-	 *   `path` cannot be navigated.
+	 * @see {@link JsoncEdit.applyAll} for applying the successful edit list.
 	 */
 	static readonly modify = Effect.fn("JsoncModifier.modify")(function* (
 		text: string,

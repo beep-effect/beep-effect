@@ -1,14 +1,22 @@
-// The `SchemaFile` service — the package's only IO module. It reads and
-// writes emitted schema documents over core `FileSystem` / `Path` (v4, no
-// platform package), so the layer requires those services and the consumer
-// provides a platform implementation (`@effect/platform-node`) at the edge.
-// Mirrors `@effected/package-json`'s `PackageJsonFile` pattern.
+/**
+ * Read and write SchemaStore documents over core `FileSystem` / `Path`.
+ *
+ * The package's only IO surface: write-if-changed serialization plus a
+ * drift-check counterpart. The layer requires those services; provide a
+ * platform implementation at the edge.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Context, Effect, FileSystem, Layer, Path, Schema } from "effect";
 import type { CanonicalJsonError, CanonicalJsonOptions } from "./CanonicalJson.ts";
 import type { SchemaChange } from "./DocumentDiff.ts";
 import { DocumentDiff } from "./DocumentDiff.ts";
 import type { StoreDocument } from "./StoreDocument.ts";
+
+const $I = $ScratchpadId.create("schemastore/SchemaFile");
 
 // ── Errors ────────────────────────────────────────────────────────────────────
 
@@ -16,14 +24,33 @@ import type { StoreDocument } from "./StoreDocument.ts";
  * Indicates that a schema file could not be read from the filesystem (a
  * filesystem error other than not-found).
  *
+ * **Example** (Construct a read failure)
+ *
+ * ```ts
+ * import { SchemaFileReadError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = SchemaFileReadError.make({ path: "schemas/config.schema.json", cause: "EACCES" })
+ *
+ * console.log(error._tag)
+ * // => "SchemaFileReadError"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class SchemaFileReadError extends Schema.TaggedError<SchemaFileReadError>()("SchemaFileReadError", {
-	/** The path that could not be read. */
-	path: Schema.String,
-	/** The underlying filesystem failure, preserved structurally. */
-	cause: Schema.Defect(),
-}) {
+export class SchemaFileReadError extends Schema.TaggedError<SchemaFileReadError>($I`SchemaFileReadError`)(
+	"SchemaFileReadError",
+	{
+		/** The path that could not be read. */
+		path: Schema.String,
+		/** The underlying filesystem failure, preserved structurally. */
+		cause: Schema.Defect(),
+	},
+	$I.annote("SchemaFileReadError", {
+		description: "Raised when a schema file cannot be read for a reason other than not-found.",
+	}),
+) {
 	override get message(): string {
 		return `Failed to read schema file from "${this.path}"`;
 	}
@@ -33,12 +60,31 @@ export class SchemaFileReadError extends Schema.TaggedError<SchemaFileReadError>
  * Indicates that no schema file exists at the expected path. Carries its
  * own tag for `catchTag` routing.
  *
+ * **Example** (Construct a not-found failure)
+ *
+ * ```ts
+ * import { SchemaFileNotFoundError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = SchemaFileNotFoundError.make({ path: "schemas/missing.schema.json" })
+ *
+ * console.log(error._tag)
+ * // => "SchemaFileNotFoundError"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class SchemaFileNotFoundError extends Schema.TaggedError<SchemaFileNotFoundError>()("SchemaFileNotFoundError", {
-	/** The path where the schema file was expected. */
-	path: Schema.String,
-}) {
+export class SchemaFileNotFoundError extends Schema.TaggedError<SchemaFileNotFoundError>($I`SchemaFileNotFoundError`)(
+	"SchemaFileNotFoundError",
+	{
+		/** The path where the schema file was expected. */
+		path: Schema.String,
+	},
+	$I.annote("SchemaFileNotFoundError", {
+		description: "Raised when no schema file exists at the expected path.",
+	}),
+) {
 	override get message(): string {
 		return `Schema file not found at "${this.path}"`;
 	}
@@ -49,14 +95,34 @@ export class SchemaFileNotFoundError extends Schema.TaggedError<SchemaFileNotFou
  * Narrowed to the filesystem failure only — a serialization failure
  * surfaces as its own `CanonicalJsonError`, never wrapped here.
  *
+ * **Example** (Construct a write failure)
+ *
+ * ```ts
+ * import { SchemaFileWriteError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = SchemaFileWriteError.make({ path: "schemas/config.schema.json", cause: "ENOSPC" })
+ *
+ * console.log(error._tag)
+ * // => "SchemaFileWriteError"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class SchemaFileWriteError extends Schema.TaggedError<SchemaFileWriteError>()("SchemaFileWriteError", {
-	/** The path that could not be written. */
-	path: Schema.String,
-	/** The underlying filesystem failure, preserved structurally. */
-	cause: Schema.Defect(),
-}) {
+export class SchemaFileWriteError extends Schema.TaggedError<SchemaFileWriteError>($I`SchemaFileWriteError`)(
+	"SchemaFileWriteError",
+	{
+		/** The path that could not be written. */
+		path: Schema.String,
+		/** The underlying filesystem failure, preserved structurally. */
+		cause: Schema.Defect(),
+	},
+	$I.annote("SchemaFileWriteError", {
+		description:
+			"Raised when a schema file cannot be written; serialization failures stay CanonicalJsonError and are never wrapped here.",
+	}),
+) {
 	override get message(): string {
 		return `Failed to write schema file to "${this.path}"`;
 	}
@@ -67,7 +133,10 @@ export class SchemaFileWriteError extends Schema.TaggedError<SchemaFileWriteErro
  * when it wrote, `"unchanged"` when it left the file alone — reported as a
  * value so the caller decides what to surface, never a log.
  *
+ * @see {@link SchemaFileShape.write} for the operation that reports this outcome.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type WriteOutcome = "written" | "unchanged";
 
@@ -76,7 +145,11 @@ export type WriteOutcome = "written" | "unchanged";
  * {@link SchemaChange} plus `"created"` for a file that did not exist, so
  * there was nothing to compare against.
  *
+ * @see {@link SchemaFileShape.write} for the operation that reports this classification.
+ * @see {@link DocumentDiff.classify} for the content comparison behind `"none"` / `"annotations"` / `"contract"`.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type WriteChange = SchemaChange | "created";
 
@@ -92,7 +165,10 @@ export type WriteChange = SchemaChange | "created";
  * today. `outcome` answers only whether bytes were written, which under
  * `compare: "bytes"` can be `"written"` even when `change` is `"none"`.
  *
+ * @see {@link SchemaFileShape.write} for the operation that returns this pair.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WriteResult {
 	/**
@@ -114,7 +190,10 @@ export interface WriteResult {
  * answers "would `write` do anything with these same options", which
  * `change` alone cannot under `compare: "bytes"`.
  *
+ * @see {@link SchemaFileShape.check} for the operation that returns this pair.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CheckResult {
 	/** Whether a `write` with the same options would touch the file. */
@@ -129,7 +208,11 @@ export interface CheckResult {
  * document serializes under, plus how `write` decides whether to touch the
  * file.
  *
+ * @see {@link SchemaFileShape.write} for the writer these options configure.
+ * @see {@link SchemaFileShape.check} for the drift-check that honors the same options.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface SchemaWriteOptions extends CanonicalJsonOptions {
 	/**
@@ -155,7 +238,10 @@ export interface SchemaWriteOptions extends CanonicalJsonOptions {
  * The shape of the {@link SchemaFile} service — the value produced by
  * {@link SchemaFile.make} and carried by its layer.
  *
+ * @see {@link SchemaFile} for the service that carries this shape.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SchemaFileShape {
 	/**
@@ -213,25 +299,45 @@ export interface SchemaFileShape {
  * `SchemaVersioning` version is warranted). `check` makes the same
  * comparison without writing, which is what a CI drift job wants.
  *
- * @example
+ * **Gotchas**
+ *
+ * `outcome` answers whether the filesystem was touched; `change` answers
+ * what the difference meant. Under `compare: "bytes"` a `change` of
+ * `"none"` can still `outcome: "written"`. Unparsable on-disk JSON
+ * classifies as `"contract"` so write can repair it.
+ * {@link SchemaFileWriteError} never wraps {@link CanonicalJsonError}.
+ * There is no `exists` pre-check — a TOCTOU race would mis-tag NotFound
+ * as a read error.
+ *
+ * **Example** (Write if content changed)
+ *
  * ```ts
- * import { SchemaFile, StoreDocument } from "@effected/schemastore";
- * import { NodeFileSystem, NodePath } from "@effect/platform-node";
- * import { Effect, Layer, Schema } from "effect";
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { SchemaFile, StoreDocument } from "@beep/scratchpad/schemastore"
+ * import { Effect, Layer, Path } from "effect"
+ * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const files = yield* SchemaFile;
- *   const document = yield* StoreDocument.fromSchema(Schema.Struct({ name: Schema.String }), {
+ *   const files = yield* SchemaFile
+ *   const document = yield* StoreDocument.fromSchema(S.Struct({ name: S.String }), {
  *     $id: "https://example.com/config.schema.json",
- *   });
- *   return yield* files.write("schemas/config.schema.json", document);
+ *   })
+ *   return yield* files.write("/schemas/config.schema.json", document)
  * }).pipe(
  *   Effect.provide(SchemaFile.layer),
- *   Effect.provide(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)),
- * );
+ *   Effect.provide(Layer.mergeAll(MemoryFileSystem.layer, Path.layer)),
+ * )
+ *
+ * Effect.runPromise(program).then((result) => console.log(result))
+ * // => { outcome: "written", change: "created" }
  * ```
  *
+ * @see {@link DocumentDiff.classify} for the content comparison behind `change`.
+ * @see {@link SchemaFileShape.check} for the same comparison without writing.
+ * @see {@link CanonicalJson} for the serializer whose bytes `write` may persist.
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class SchemaFile extends Context.Service<SchemaFile, SchemaFileShape>()("@effected/schemastore/SchemaFile") {
 	/** Build the service implementation from `FileSystem` / `Path` in context; use {@link SchemaFile.layer} to provide it. */

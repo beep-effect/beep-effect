@@ -217,14 +217,35 @@ export interface EmbeddingProviderMethods {
 }
 
 /**
- * EmbeddingProvider service tag
+ * Context tag for a provider-agnostic embedding implementation.
  *
- * **Example** (Inspect embedding provider)
+ * **Example** (Embed with a test provider)
  *
  * ```ts
- * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
+ * import { Effect, Layer } from "effect"
+ * import {
+ *   EmbeddingProvider,
+ *   EmbeddingRequest,
+ *   ProviderMetadata,
+ *   cosineSimilarity
+ * } from "@effect-ontology/Service/EmbeddingProvider"
  *
- * console.log(EmbeddingProvider)
+ * const TestProvider = Layer.succeed(EmbeddingProvider, {
+ *   metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "demo", dimension: 2 }),
+ *   embedBatch: (requests) => Effect.succeed(requests.map(() => [1, 0])),
+ *   cosineSimilarity
+ * })
+ *
+ * const length = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const provider = yield* EmbeddingProvider
+ *     const embeddings = yield* provider.embedBatch([
+ *       EmbeddingRequest.make({ text: "Ada founded Acme.", taskType: "search_document" })
+ *     ])
+ *     return embeddings[0]?.length ?? 0
+ *   }).pipe(Effect.provide(TestProvider), Effect.orDie)
+ * )
+ * console.log(length) // 2
  * ```
  *
  * @category services
@@ -235,22 +256,29 @@ export class EmbeddingProvider extends Context.Service<EmbeddingProvider, Embedd
 ) {}
 
 /**
- * Compute cosine similarity between two vectors
+ * Compute cosine similarity between two finite embedding vectors.
  *
  * **Details**
  *
- * Extracted as a utility function since it's pure math and doesn't
- * depend on the provider. Can be shared across implementations.
+ * Pure math extracted from provider implementations so cache, fallback, and
+ * NLP layers can share one scoring function.
  *
- * **Example** (Inspect cosine similarity)
+ * **Gotchas**
+ *
+ * Unequal lengths, empty vectors, and zero-norm vectors return `0` rather than
+ * failing. Treat that `0` as incomparable, not as geometric orthogonality.
+ *
+ * **Example** (Score aligned and degenerate pairs)
  *
  * ```ts
  * import { cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  *
- * console.log(cosineSimilarity)
+ * console.log(cosineSimilarity([1, 0], [1, 0])) // 1
+ * console.log(cosineSimilarity([1, 0], [1])) // 0
+ * console.log(cosineSimilarity([0, 0], [1, 0])) // 0
  * ```
  *
- * @category services
+ * @category utilities
  * @since 0.0.0
  */
 export const cosineSimilarity: {

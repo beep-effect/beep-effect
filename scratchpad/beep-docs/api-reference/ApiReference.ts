@@ -44,12 +44,14 @@ const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.wi
 /**
  * Declaration kinds the module view renders with a dedicated name.
  *
- * **Example** (Read a kind name)
+ * **Example** (Guard a kind name)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DeclarationKind } from "./ApiReference.ts"
  *
- * console.log(DeclarationKind.Enum.function)
+ * console.log(S.is(DeclarationKind)(DeclarationKind.Enum.function)) // true
+ * console.log(S.is(DeclarationKind)("method")) // false
  * ```
  *
  * @category schemas
@@ -503,7 +505,14 @@ const isTypeDocProjectReflection = S.is(TypeDocProjectReflection);
  * with children is the module, its children become declarations grouped by
  * `@category`.
  *
- * **Example** (Render a module with one function)
+ * **Gotchas**
+ *
+ * When two children normalize to the same {@link DeclarationAnchor}, every
+ * colliding declaration is kind-suffixed; the bare name is not kept as a
+ * fragment id (`map` function + `map` type become `map-function` and
+ * `map-type`, never `#map`).
+ *
+ * **Example** (Suffix colliding declaration anchors)
  *
  * ```ts
  * import * as S from "effect/Schema"
@@ -525,12 +534,17 @@ const isTypeDocProjectReflection = S.is(TypeDocProjectReflection);
  *       variant: "declaration",
  *       kind: ReflectionKind.Module,
  *       flags: {},
- *       children: [{ id: 3, name: "sum", variant: "declaration", kind: ReflectionKind.Function, flags: {} }],
+ *       children: [
+ *         { id: 3, name: "map", variant: "declaration", kind: ReflectionKind.Function, flags: {} },
+ *         { id: 4, name: "map", variant: "declaration", kind: ReflectionKind.TypeAlias, flags: {} },
+ *       ],
  *     },
  *   ],
  * })
  * const view = moduleView(reflection, { modulePath: "Number" })
- * console.log(view.declarationCount, view.groups[0]?.slug) // 1 "category-other"
+ * console.log(view.declarationCount, view.groups[0]?.slug) // 2 "category-other"
+ * console.log(view.groups[0]?.declarations.map((declaration) => declaration.anchor))
+ * // ["map-function", "map-type"]
  * ```
  *
  * @category utilities
@@ -1036,6 +1050,16 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
  * Collects every fenced code example from a project reflection, walking
  * declarations, signatures, parameters, type parameters, and accessors.
  *
+ * **Details**
+ *
+ * Both titled Example summary fences and TypeDoc example block tags are
+ * collected. Tag-sourced fences have no title.
+ *
+ * **Gotchas**
+ *
+ * A fence whose info string is not a known snippet language is omitted, not
+ * raised as an error.
+ *
  * **Example** (Collect examples from a summary fence)
  *
  * ```ts
@@ -1061,6 +1085,7 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
  * console.log(codeExamples(reflection).length) // 1
  * ```
  *
+ * @see {@link languageFromInfoString} for the accepted language set and the empty-string default.
  * @category utilities
  * @since 0.0.0
  */

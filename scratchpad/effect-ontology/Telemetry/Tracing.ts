@@ -19,19 +19,21 @@ import { OtlpTracer } from "effect/unstable/observability";
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Tracing");
 
 /**
- * Tracing configuration
+ * Service identity, OTLP endpoint, and enablement policy for OpenTelemetry
+ * tracing.
  *
- * **Example** (Reference TracingConfig fields)
+ * **Example** (Construct tracing config with defaults)
  *
  * ```ts
- * import type { TracingConfig } from "@effect-ontology/Telemetry/Tracing"
+ * import { TracingConfig } from "@effect-ontology/Telemetry/Tracing"
  *
- * const tracingConfigFields: ReadonlyArray<keyof TracingConfig> = ["serviceName", "otlpEndpoint", "enabled"]
- *
- * console.log(tracingConfigFields)
+ * const config = TracingConfig.make({ serviceName: "effect-ontology" })
+ * console.log(config.serviceName) // "effect-ontology"
+ * console.log(config.enabled) // true
  * ```
  *
- * @category type-level
+ * @see {@link makeTracingLayer} for turning this config into an OTLP tracer layer.
+ * @category configuration
  * @since 0.0.0
  */
 export class TracingConfig extends S.Class<TracingConfig>($I`TracingConfig`)(
@@ -48,40 +50,35 @@ export class TracingConfig extends S.Class<TracingConfig>($I`TracingConfig`)(
 /**
  * Constructor input accepted by {@link TracingConfig}.
  *
- * **Example** (Configure tracing)
- *
- * ```ts
- * import type { TracingConfigInput } from "@effect-ontology/Telemetry/Tracing"
- *
- * const config: TracingConfigInput = { serviceName: "effect-ontology" }
- * console.log(config)
- * ```
- *
+ * @see {@link TracingConfig} for the runtime schema and constructor defaults.
  * @category type-level
  * @since 0.0.0
  */
 export type TracingConfigInput = (typeof TracingConfig)["~type.make.in"];
 
 /**
- * Create OpenTelemetry tracing layer using Effect's OtlpTracer.
+ * Builds an OTLP tracer layer from {@link TracingConfig} input.
  *
  * **Details**
  *
- * Uses Effect's built-in OTLP implementation which:
- * - Uses Effect's HttpClient for HTTP requests
- * - Has built-in batching and shutdown handling
- * - Avoids OpenTelemetry JS SDK version compatibility issues
+ * Uses Effect's built-in OtlpTracer (HttpClient export, batching, shutdown)
+ * instead of the OpenTelemetry JS SDK.
  *
- * **Example** (Inspect make tracing layer)
+ * **Gotchas**
+ *
+ * `enabled: false` returns {@link TracingTestLayer} (`Layer.empty`); no spans
+ * are exported.
+ *
+ * **Example** (Disable tracing with an empty layer)
  *
  * ```ts
- * import { makeTracingLayer } from "@effect-ontology/Telemetry/Tracing"
+ * import { TracingTestLayer, makeTracingLayer } from "@effect-ontology/Telemetry/Tracing"
  *
- * console.log(makeTracingLayer)
+ * const disabled = makeTracingLayer({ serviceName: "effect-ontology", enabled: false })
+ * console.log(disabled === TracingTestLayer) // true
  * ```
  *
- * @param input - Tracing configuration.
- * @returns Layer that provides tracing (requires HttpClient)
+ * @see {@link TracingConfig} for the decoded enablement and endpoint fields.
  * @category layers
  * @since 0.0.0
  */
@@ -104,20 +101,18 @@ export const makeTracingLayer = (input: TracingConfigInput) => {
 };
 
 /**
- * Test layer (no-op)
+ * No-op tracing layer used by tests and by {@link makeTracingLayer} when
+ * tracing is disabled.
  *
- * **Details**
- *
- * Use in tests to avoid OpenTelemetry setup overhead.
- *
- * **Example** (Inspect tracing test layer)
+ * **Example** (Reuse the empty tracer in tests)
  *
  * ```ts
- * import { TracingTestLayer } from "@effect-ontology/Telemetry/Tracing"
+ * import { TracingTestLayer, makeTracingLayer } from "@effect-ontology/Telemetry/Tracing"
  *
- * console.log(TracingTestLayer)
+ * console.log(TracingTestLayer === makeTracingLayer({ serviceName: "test", enabled: false })) // true
  * ```
  *
+ * @see {@link makeTracingLayer} for the production OTLP layer constructor.
  * @category layers
  * @since 0.0.0
  */

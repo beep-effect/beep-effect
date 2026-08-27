@@ -1,9 +1,23 @@
+/**
+ * Assemble a SchemaStore Draft-07 document from an Effect Schema source.
+ *
+ * Owns `$schema` + `$id` + root + `$defs`, the `#/definitions` → `#/$defs`
+ * `$ref` rewrite the lowering makes necessary, and the annotation-carrier
+ * re-graft so language-server keywords survive publication.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, JsonSchema, Result, Schema } from "effect";
 import { AnnotationCarriers } from "./AnnotationCarriers.ts";
 import type { CanonicalJsonError, CanonicalJsonOptions } from "./CanonicalJson.ts";
 import { CanonicalJson } from "./CanonicalJson.ts";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { KeywordFamilies } from "./KeywordFamilies.ts";
+
+const $I = $ScratchpadId.create("schemastore/StoreDocument");
 
 /**
  * The Draft-07 meta-schema URL SchemaStore documents declare as `$schema`.
@@ -12,7 +26,20 @@ import { KeywordFamilies } from "./KeywordFamilies.ts";
  * (and the extraction source's committed files) use the fragment form,
  * where core's `JsonSchema.META_SCHEMA_URI_DRAFT_07` omits it.
  *
+ * **Example** (The corpus URI includes a trailing hash)
+ *
+ * ```ts
+ * import { DRAFT_07_META_SCHEMA } from "@beep/scratchpad/schemastore"
+ *
+ * console.log(DRAFT_07_META_SCHEMA.endsWith("#"))
+ * // => true
+ * console.log(DRAFT_07_META_SCHEMA)
+ * // => "http://json-schema.org/draft-07/schema#"
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const DRAFT_07_META_SCHEMA = "http://json-schema.org/draft-07/schema#";
 
@@ -24,14 +51,37 @@ export const DRAFT_07_META_SCHEMA = "http://json-schema.org/draft-07/schema#";
  * Raised by {@link StoreDocument.fromSchema}. The `cause` carries the
  * underlying failure for the operator; calling code branches on the tag.
  *
+ * **Example** (Construct a conversion failure)
+ *
+ * ```ts
+ * import { SchemaConversionError } from "@beep/scratchpad/schemastore"
+ *
+ * const error = SchemaConversionError.make({
+ *   $id: "https://example.com/config.schema.json",
+ *   cause: "unsupported schema combinator",
+ * })
+ *
+ * console.log(error._tag)
+ * // => "SchemaConversionError"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
-export class SchemaConversionError extends Schema.TaggedError<SchemaConversionError>()("SchemaConversionError", {
-	/** The `$id` of the document that failed to build. */
-	$id: Schema.String,
-	/** The underlying conversion failure. */
-	cause: Schema.Defect(),
-}) {
+export class SchemaConversionError extends Schema.TaggedError<SchemaConversionError>($I`SchemaConversionError`)(
+	"SchemaConversionError",
+	{
+		/** The `$id` of the document that failed to build. */
+		$id: Schema.String,
+		/** The underlying conversion failure. */
+		cause: Schema.Defect(),
+	},
+	$I.annote("SchemaConversionError", {
+		description:
+			"Raised when an Effect Schema cannot be converted into a SchemaStore Draft-07 document.",
+	}),
+) {
 	override get message(): string {
 		return `Failed to build SchemaStore document "${this.$id}"`;
 	}
@@ -40,7 +90,10 @@ export class SchemaConversionError extends Schema.TaggedError<SchemaConversionEr
 /**
  * Options for {@link StoreDocument.fromSchema}.
  *
+ * @see {@link StoreDocument.fromSchema} for the pipeline these options configure.
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface StoreDocumentOptions {
 	/** The canonical `$id` URL the document declares. */
@@ -129,18 +182,59 @@ const restoreDefsRefs = (node: unknown, depth: number): unknown => {
  * families ({@link KeywordFamilies}) survive into the built document. The
  * package owns assembly and publication shape, not a JSON Schema engine.
  *
+ * **Gotchas**
+ *
+ * `$schema` always uses {@link DRAFT_07_META_SCHEMA}, including the trailing
+ * `#` (core's URI omits it). An empty `$defs` pool is omitted from
+ * {@link StoreDocument.toJson} rather than emitted as `{}`. Extra
+ * `includeAnnotationKey` keys die at lowering unless they belong to
+ * {@link KeywordFamilies}. Annotate definition nodes, not usage sites —
+ * {@link AnnotationCarriers} has nothing to graft otherwise.
+ *
+ * **Example** (Build a Draft-07 store document)
+ *
+ * ```ts
+ * import { StoreDocument } from "@beep/scratchpad/schemastore"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const result = StoreDocument.fromSchemaResult(S.Struct({ name: S.String }), {
+ *   $id: "https://example.com/config.schema.json",
+ * })
+ *
+ * if (Result.isSuccess(result)) {
+ *   const json = result.success.toJson()
+ *   console.log(json.$schema)
+ *   // => "http://json-schema.org/draft-07/schema#"
+ *   console.log("$defs" in json)
+ *   // => false
+ * }
+ * ```
+ *
+ * @see {@link AnnotationCarriers} for the post-lowering re-graft of declared language-server keys.
+ * @see {@link DRAFT_07_META_SCHEMA} for the `$schema` URI including the trailing `#`.
+ * @see {@link CanonicalJson} for the serializer `serializeResult` delegates to.
+ * @see {@link KeywordFamilies} for the annotation keys always admitted into generation.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class StoreDocument extends Schema.Class<StoreDocument>("StoreDocument")({
-	/** The meta-schema URL ({@link DRAFT_07_META_SCHEMA}). */
-	$schema: Schema.String,
-	/** The canonical `$id` URL. */
-	$id: Schema.String,
-	/** The root schema's keywords, without the definitions pool. */
-	root: Schema.Record(Schema.String, Schema.Unknown),
-	/** The definitions pool, emitted under `$defs`. */
-	defs: Schema.Record(Schema.String, Schema.Unknown),
-}) {
+export class StoreDocument extends Schema.Class<StoreDocument>($I`StoreDocument`)(
+	{
+		/** The meta-schema URL ({@link DRAFT_07_META_SCHEMA}). */
+		$schema: Schema.String,
+		/** The canonical `$id` URL. */
+		$id: Schema.String,
+		/** The root schema's keywords, without the definitions pool. */
+		root: Schema.Record(Schema.String, Schema.Unknown),
+		/** The definitions pool, emitted under `$defs`. */
+		defs: Schema.Record(Schema.String, Schema.Unknown),
+	},
+	$I.annote("StoreDocument", {
+		description:
+			"A SchemaStore-shaped Draft-07 JSON Schema document: $schema, $id, root keywords, and a $defs pool.",
+	}),
+) {
 	/**
 	 * Builds a Draft-07 document from its parts, filling `$schema` with
 	 * {@link DRAFT_07_META_SCHEMA}.
@@ -152,16 +246,6 @@ export class StoreDocument extends Schema.Class<StoreDocument>("StoreDocument")(
 	 * a document that does not say which dialect it is written in is worse
 	 * than one that repeats itself — so this is a constructor, not a
 	 * default.
-	 *
-	 * @example
-	 * ```ts
-	 * import { StoreDocument } from "@effected/schemastore";
-	 *
-	 * const document = StoreDocument.draft07({
-	 *   $id: "https://example.com/config.schema.json",
-	 *   root: { type: "object" },
-	 * });
-	 * ```
 	 */
 	static draft07(options: {
 		readonly $id: string;

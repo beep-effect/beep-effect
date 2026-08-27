@@ -1,6 +1,7 @@
 /**
  * Cross-file plugin validation, linting, and on-disk diagnostics.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -577,15 +578,26 @@ export const lint = (definition: PluginDefinition | LoadedPlugin): PluginLintRep
 /**
  * Validate a plugin definition and fail when any error-severity issue is found.
  *
- * **Example** (Inspect validate)
+ * **Example** (Fail validation on duplicate command names)
  *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Exit from "effect/Exit"
  *
- * const program = Plugin.validate(
- *   Plugin.define({ manifest: { name: "example-plugin" } })
+ * const exit = Effect.runSyncExit(
+ *   Plugin.validate(
+ *     Plugin.define({
+ *       manifest: { name: "review-tools" },
+ *       commands: [
+ *         Plugin.command({ name: "hi", body: "# /hi\n" }),
+ *         Plugin.command({ name: "hi", body: "# /hi again\n" })
+ *       ]
+ *     })
+ *   )
  * )
- * console.log(program)
+ *
+ * console.log(Exit.isFailure(exit)) // true
  * ```
  *
  * @category diagnostics
@@ -603,15 +615,24 @@ export const validate = (
 /**
  * Load a plugin directory from disk and return a structured diagnostic report.
  *
- * **Example** (Inspect a plugin doctor Effect)
+ * **Example** (Doctor a plugin written in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Plugin.doctor("./my-plugin")
+ * const definition = Plugin.define({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
+ * })
+ * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
+ * const report = await Effect.runPromise(
+ *   Effect.provide(Plugin.doctor("/plugin"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(report.loaded.manifest.name) // "review-tools"
+ * console.log(report.errors) // []
+ * console.log(report.warnings) // []
  * ```
  *
  * @effects Reads and decodes the plugin tree through `FileSystem.FileSystem` and `Path.Path`, failing with `PluginLoadError` on invalid sources.

@@ -6,9 +6,11 @@
  * Layer composition for production deployment.
  * Provides all services with correct dependency order.
  *
- * **Note**: LanguageModel.LanguageModel must be provided separately
- * by the application (e.g., from @effect/ai-anthropic or @effect/ai-openai).
- * Use `makeLanguageModelLayer()` helper to create it from ConfigService.
+ * **Gotchas**
+ *
+ * `LanguageModel.LanguageModel` must be provided separately by the application
+ * (for example from `@effect/ai-anthropic` or `@effect/ai-openai`). Use
+ * {@link makeLanguageModelLayer} to create it from ConfigService.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -61,12 +63,13 @@ export {
 /**
  *  Error raised when configuration selects an unavailable Effect v4 AI adapter.
  *
- * **Example** (Inspect unsupported llm provider error)
+ * **Example** (Construct an unsupported-provider failure)
  *
  * ```ts
  * import { UnsupportedLlmProviderError } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(UnsupportedLlmProviderError)
+ * const error = UnsupportedLlmProviderError.make({ provider: "google" })
+ * console.log(error.provider) // "google"
  * ```
  *
  * @category errors
@@ -117,13 +120,19 @@ const selectLanguageModelLayer = Match.type<AppConfig>().pipe(
  *
  * This is a Layer that depends on ConfigService and provides LanguageModel.
  *
- * **Example** (Use makeLanguageModelLayer)
+ * **Gotchas**
+ *
+ * The returned layer still requires ConfigService. Extraction layers compose
+ * it internally; a raw HTTP server does not.
+ *
+ * **Example** (Select Anthropic or OpenAI from ConfigService)
  *
  * ```ts
- * import { Layer } from "effect"
  * import { makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ConfigService } from "@effect-ontology/Service/Config"
  *
- * console.log(Layer.isLayer(makeLanguageModelLayer)) // true
+ * const documented = [makeLanguageModelLayer, ConfigService] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @returns Layer providing LanguageModel (with all dependencies satisfied)
@@ -151,12 +160,13 @@ export const makeLanguageModelLayer = Layer.unwrap(
  *
  * All services use the rate-limited LanguageModel automatically.
  *
- * **Example** (Inspect extraction layers live)
+ * **Example** (Compose extractors onto the language-model layer)
  *
  * ```ts
- * import { ExtractionLayersLive } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ExtractionLayersLive, makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(ExtractionLayersLive)
+ * const documented = [ExtractionLayersLive, makeLanguageModelLayer] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers
@@ -178,13 +188,13 @@ export const ExtractionLayersLive = Layer.mergeAll(
  * Run Jaeger locally with: docker run -d -p 16686:16686 -p 4318:4318 jaegertracing/all-in-one:latest
  * View traces at: https://localhost:16686
  *
- * **Example** (Use TracingLive)
+ * **Example** (Export traces to local Jaeger)
  *
  * ```ts
- * import { Layer } from "effect"
  * import { TracingLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(Layer.isLayer(TracingLive)) // true
+ * const documented = [TracingLive, "https://localhost:4318/v1/traces"] as const
+ * console.log(documented[1])
  * ```
  *
  * @category layers
@@ -206,12 +216,13 @@ export const TracingLive = makeTracingLayer({
  * - Rate-limited LLM
  * - OpenTelemetry tracing to Jaeger
  *
- * **Example** (Inspect production layers with tracing)
+ * **Example** (Merge extraction with tracing)
  *
  * ```ts
- * import { ProductionLayersWithTracing } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ExtractionLayersLive, ProductionLayersWithTracing, TracingLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(ProductionLayersWithTracing)
+ * const documented = [ProductionLayersWithTracing, ExtractionLayersLive, TracingLive] as const
+ * console.log(documented[0] !== documented[1])
  * ```
  *
  * @category layers
@@ -219,33 +230,6 @@ export const TracingLive = makeTracingLayer({
  */
 export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, TracingLive);
 
-/**
- * Production infrastructure layers
- *
- * Complete production infrastructure including:
- * - All extraction services with rate-limited LLM
- * - Health check service (liveness/readiness/deep probes)
- * - LLM semaphore for concurrency control
- * - OpenTelemetry tracing to Jaeger
- *
- * Does NOT include HTTP server layer - compose separately
- * based on your runtime (Bun, Node, etc.)
- *
- * **Example** (Use LlmControlLive)
- * ```ts
- * import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
- *
- * const ServerLive = HttpServerLive.pipe(
- *   Layer.provideMerge(ProductionInfrastructure),
- *   Layer.provideMerge(BunHttpServer.layer({ port: 8080 })),
- *   Layer.provideMerge(ConfigService.Default)
- * )
- *
- * BunRuntime.runMain(Layer.launch(ServerLive))
- * ```
- *
- * @since 0.0.0
- */
 /**
  * LLM Control layer stack
  *
@@ -256,12 +240,13 @@ export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, 
  * - StageTimeoutService: Soft/hard timeouts per stage
  * - CentralRateLimiterService: Rate limiting with circuit breaker
  *
- * **Example** (Inspect llm control live)
+ * **Example** (Merge token budget, stage timeout, and rate limiter)
  *
  * ```ts
  * import { LlmControlLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(LlmControlLive)
+ * const documented = [LlmControlLive, "TokenBudgetService"] as const
+ * console.log(documented[1]) // "TokenBudgetService"
  * ```
  *
  * @category layers
@@ -274,14 +259,34 @@ export const LlmControlLive = Layer.mergeAll(
 );
 
 /**
- * Exposes production infrastructure for composition by callers of this module.
+ * Production extraction, health, semaphore, LLM-control, and tracing stack.
  *
- * **Example** (Inspect production infrastructure)
+ * **Details**
+ *
+ * Does not include the HTTP server layer — compose that separately for Bun or
+ * Node.
+ *
+ * **Gotchas**
+ *
+ * `LanguageModel.LanguageModel` is not included. Provide {@link makeLanguageModelLayer}
+ * or an application-owned adapter before launching extractors.
+ *
+ * **Example** (Launch HTTP on Bun beside production infrastructure)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { BunHttpServer } from "@effect/platform-bun"
+ * import { HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
  * import { ProductionInfrastructure } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ConfigServiceDefault } from "@effect-ontology/Service/Config"
  *
- * console.log(ProductionInfrastructure)
+ * const ServerLive = HttpServerLive.pipe(
+ *   Layer.provideMerge(ProductionInfrastructure),
+ *   Layer.provideMerge(BunHttpServer.layer({ port: 8080 })),
+ *   Layer.provideMerge(ConfigServiceDefault)
+ * )
+ * const documented = [ServerLive, 8080] as const
+ * console.log(documented[1]) // 8080
  * ```
  *
  * @category layers

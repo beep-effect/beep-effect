@@ -54,12 +54,37 @@ const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 
 export type {SafeObject} from "@beep/schema/SafeObject";
 
-/** Services required to obtain Toolkit handlers and run their streams. */
+/**
+ * Services required to obtain Toolkit handlers and run their streams.
+ *
+ * @see {@link make} for the execution-local runtime that requires these services.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Services<ToolkitType extends Toolkit.Any> =
   | (ToolkitType extends Effect.Effect<unknown, never, infer Requirements> ? Requirements : never)
   | Tool.HandlerServices<Toolkit.Tools<ToolkitType>[keyof Toolkit.Tools<ToolkitType>]>;
 
-/** Canonical catalog entry exposed to the CodeMode host. */
+/**
+ * Canonical catalog entry exposed to the CodeMode host.
+ *
+ * **Example** (Construct a catalog entry)
+ *
+ * ```ts
+ * import { ToolDescription } from "@beep/scratchpad/codemode"
+ *
+ * const description = ToolDescription.new(
+ *   "search.docs",
+ *   "Search project documentation",
+ *   "tools.search.docs(input: { query: string }): Promise<string>"
+ * )
+ *
+ * console.log(description.path) // "search.docs"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription`)(
   {
     path: S.String,
@@ -74,7 +99,22 @@ export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription
     ToolDescription.make({path, description, signature});
 }
 
-/** A tool call admitted during one execution. */
+/**
+ * Canonical name of one admitted tool call.
+ *
+ * **Example** (Record an admitted call)
+ *
+ * ```ts
+ * import { ToolCall } from "@beep/scratchpad/codemode"
+ *
+ * const call = ToolCall.new("search")
+ *
+ * console.log(call.name) // "search"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
   {name: NonEmptyTrimmedStr},
   $I.annote("ToolCall", {
@@ -85,7 +125,23 @@ export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
     ToolCall.make({name: NonEmptyTrimmedStr.make(name)});
 }
 
-/** Hook payload emitted immediately before handler execution. */
+/**
+ * Hook payload emitted immediately before handler execution.
+ *
+ * **Example** (Build a start observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted } from "@beep/scratchpad/codemode"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), { query: "docs" })
+ *
+ * console.log(started.name) // "search"
+ * console.log(started.index) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted`)(
   {
     index: NonNegativeInt,
@@ -111,7 +167,30 @@ const endedFields = {
   durationMs: NonNegativeInt,
 };
 
-/** Successful terminal observation for one admitted tool call. */
+/**
+ * Successful terminal observation for one admitted tool call.
+ *
+ * **Gotchas**
+ *
+ * `message` is `S.optionalKey(S.Never)` so the ended field set is shared with
+ * {@link ToolCallFailed}; a success observation cannot carry a message.
+ *
+ * **Example** (Build a success observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted, ToolCallSucceeded } from "@beep/scratchpad/codemode"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallSucceeded.new(started, 5)
+ *
+ * console.log(ended._tag) // "success"
+ * console.log(ended.durationMs) // 5
+ * ```
+ *
+ * @see {@link ToolCallEnded} for the union of success, interruption, and failure.
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolCallSucceeded`)(
   "success",
   {
@@ -134,7 +213,30 @@ export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolC
     });
 }
 
-/** Interrupted terminal observation for one admitted tool call. */
+/**
+ * Interrupted terminal observation for one admitted tool call.
+ *
+ * **Gotchas**
+ *
+ * `message` is uninhabited (`S.Never`) so this observation shares ended fields
+ * with {@link ToolCallFailed} without carrying a failure message.
+ *
+ * **Example** (Build an interruption observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted } from "@beep/scratchpad/codemode"
+ * import { ToolCallInterrupted } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallInterrupted.new(started, 2)
+ *
+ * console.log(ended._tag) // "interrupted"
+ * ```
+ *
+ * @see {@link ToolCallEnded} for the union of success, interruption, and failure.
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`ToolCallInterrupted`)(
   "interrupted",
   {
@@ -157,7 +259,26 @@ export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`T
     });
 }
 
-/** Failed terminal observation for one admitted tool call. */
+/**
+ * Failed terminal observation for one admitted tool call.
+ *
+ * **Example** (Build a failure observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted } from "@beep/scratchpad/codemode"
+ * import { ToolCallFailed } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallFailed.new(started, 3, "search is disabled")
+ *
+ * console.log(ended._tag) // "failure"
+ * console.log(ended.message) // "search is disabled"
+ * ```
+ *
+ * @see {@link ToolCallEnded} for the union of success, interruption, and failure.
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFailed`)(
   "failure",
   {
@@ -182,7 +303,25 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
     });
 }
 
-/** Exhaustive terminal observation for one admitted tool call. */
+/**
+ * Exhaustive terminal observation for one admitted tool call.
+ *
+ * **Example** (Recognize a success member)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallEnded, ToolCallStarted, ToolCallSucceeded } from "@beep/scratchpad/codemode"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallSucceeded.new(started, 5)
+ *
+ * console.log(ToolCallEnded.is(ended)) // true
+ * console.log(ended._tag) // "success"
+ * ```
+ *
+ * @see {@link ToolCallSucceeded} for the success member whose `message` is uninhabited.
+ * @category models
+ * @since 0.0.0
+ */
 export const ToolCallEnded = S.Union([
   ToolCallSucceeded,
   ToolCallInterrupted,
@@ -195,16 +334,52 @@ export const ToolCallEnded = S.Union([
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime type for {@link ToolCallEnded}. */
+/**
+ * Decoded terminal observation produced by {@link ToolCallEnded}.
+ *
+ * @see {@link ToolCallEnded} for the runtime tagged union and membership guard.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolCallEnded = typeof ToolCallEnded.Type;
 
-/** Optional observers for tool execution. */
+/**
+ * Optional observers invoked around admitted tool execution.
+ *
+ * @see {@link ToolCallStarted} for the start payload passed to `onToolCallStart`.
+ * @see {@link ToolCallEnded} for the terminal payload passed to `onToolCallEnd`.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolCallHooks<R = never> = {
   readonly onToolCallStart?: (call: ToolCallStarted) => Effect.Effect<void, never, R>;
   readonly onToolCallEnd?: (call: ToolCallEnded) => Effect.Effect<void, never, R>;
 };
 
-/** Built-in discovery request. */
+/**
+ * Search query and pagination controls for the built-in discovery function.
+ *
+ * **Gotchas**
+ *
+ * Default page size is `limit=10` and `offset=0` when those keys are omitted.
+ *
+ * **Example** (Use discovery defaults)
+ *
+ * ```ts
+ * import { SearchInput } from "../../../codemode/Codemode.tool-runtime.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const input = S.decodeUnknownSync(SearchInput)({})
+ *
+ * console.log(input.limit) // 10
+ * console.log(input.offset) // 0
+ * console.log(O.isNone(input.query)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
   {
     query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -230,7 +405,26 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
     });
 }
 
-/** One discovery response item. */
+/**
+ * One tool matched by built-in discovery.
+ *
+ * **Example** (Construct a discovery hit)
+ *
+ * ```ts
+ * import { SearchItem } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const item = SearchItem.new(
+ *   "tools.search",
+ *   "Find tools",
+ *   "search(input: { query?: string }): { items: Array<unknown> }"
+ * )
+ *
+ * console.log(item.path) // "tools.search"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
   {
     path: S.String,
@@ -245,7 +439,27 @@ export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
     SearchItem.make({path, description, signature});
 }
 
-/** Built-in discovery response. */
+/**
+ * Paginated tool-discovery results.
+ *
+ * **Example** (Build a complete page)
+ *
+ * ```ts
+ * import { SearchItem, SearchOutput } from "../../../codemode/Codemode.tool-runtime.ts"
+ * import * as O from "effect/Option"
+ *
+ * const output = SearchOutput.new(
+ *   [SearchItem.new("tools.search", "Find tools", "search(...)")],
+ *   0
+ * )
+ *
+ * console.log(output.remaining) // 0
+ * console.log(O.isNone(output.next)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   {
     items: S.Array(SearchItem),
@@ -271,7 +485,23 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
     });
 }
 
-/** Indexed representation of one catalog entry. */
+/**
+ * Pre-tokenized catalog entry used by the discovery function.
+ *
+ * **Example** (Index one catalog path)
+ *
+ * ```ts
+ * import { SearchEntry, ToolDescription } from "@beep/scratchpad/codemode"
+ *
+ * const description = ToolDescription.new("search.docs", "Search docs", "tools.search.docs()")
+ * const entry = SearchEntry.new(description, "search", "search.docs\nsearch docs")
+ *
+ * console.log(entry.namespace) // "search"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchEntry extends S.Class<SearchEntry>($I`SearchEntry`)(
   {
     description: ToolDescription,
@@ -289,7 +519,24 @@ export class SearchEntry extends S.Class<SearchEntry>($I`SearchEntry`)(
   ): SearchEntry => SearchEntry.make({description, namespace, searchText});
 }
 
-/** Prepared immutable discovery data. */
+/**
+ * Stable catalog and search index for one Toolkit.
+ *
+ * **Example** (Build an empty plan)
+ *
+ * ```ts
+ * import { DiscoveryPlan } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const plan = DiscoveryPlan.new([], [])
+ *
+ * console.log(plan.catalog.length) // 0
+ * console.log(plan.searchIndex.length) // 0
+ * ```
+ *
+ * @see {@link prepare} for the function that builds this plan from a Toolkit.
+ * @category models
+ * @since 0.0.0
+ */
 export class DiscoveryPlan extends S.Class<DiscoveryPlan>($I`DiscoveryPlan`)(
   {
     catalog: S.Array(ToolDescription),
@@ -305,17 +552,61 @@ export class DiscoveryPlan extends S.Class<DiscoveryPlan>($I`DiscoveryPlan`)(
   ): DiscoveryPlan => DiscoveryPlan.make({catalog, searchIndex});
 }
 
-/** Boundary copy behavior. */
+/**
+ * Boundary copy behavior for bare `undefined` at the guest-to-host edge.
+ *
+ * **Gotchas**
+ *
+ * Non-finite numbers always become `null` in both modes. `json` drops undefined
+ * object keys and nullifies undefined array items; `nullify` preserves object
+ * keys while replacing undefined with `null`. {@link ToolReference} objects
+ * pass through uncopied.
+ *
+ * **Example** (Nullify undefined)
+ *
+ * ```ts
+ * import { CopyOutMode } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * console.log(CopyOutMode.is.json("json")) // true
+ * console.log(CopyOutMode.is.nullify("nullify")) // true
+ * ```
+ *
+ * @see {@link copyOut} for the copier that interprets these modes.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CopyOutMode = LiteralKit(["json", "nullify"]).pipe(
   $I.annoteSchema("CopyOutMode", {
     description: "Whether a bare undefined is preserved or normalized to null.",
   })
 );
 
-/** Runtime type for {@link CopyOutMode}. */
+/**
+ * Decoded copy-out mode produced by {@link CopyOutMode}.
+ *
+ * @see {@link CopyOutMode} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CopyOutMode = typeof CopyOutMode.Type;
 
-/** Runtime handle representing a namespace path below `tools`. */
+/**
+ * Runtime handle representing a namespace path below `tools`.
+ *
+ * **Example** (Build a nested tool path)
+ *
+ * ```ts
+ * import { ToolReference } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const reference = ToolReference.new(["search", "docs"])
+ *
+ * console.log(ToolReference.is(reference)) // true
+ * console.log(reference.path) // ["search", "docs"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolReference extends S.TaggedClass<ToolReference>($I`ToolReference`)(
   "ToolReference",
   {path: S.Array(S.String)},
@@ -327,7 +618,22 @@ export class ToolReference extends S.TaggedClass<ToolReference>($I`ToolReference
   static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({path});
 }
 
-/** Stable ToolRuntime failure categories. */
+/**
+ * Stable ToolRuntime failure categories owned by the Toolkit adapter.
+ *
+ * **Example** (Admit UnknownTool)
+ *
+ * ```ts
+ * import { ToolRuntimeErrorKind } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * console.log(ToolRuntimeErrorKind.is.UnknownTool("UnknownTool")) // true
+ * console.log(ToolRuntimeErrorKind.is.UnknownTool("TimeoutExceeded")) // false
+ * ```
+ *
+ * @see {@link ToolRuntimeError} for the tagged error that carries one of these kinds.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ToolRuntimeErrorKind = LiteralKit([
   "UnknownTool",
   "InvalidToolInput",
@@ -340,10 +646,33 @@ export const ToolRuntimeErrorKind = LiteralKit([
   })
 );
 
-/** Runtime type for {@link ToolRuntimeErrorKind}. */
+/**
+ * Decoded failure kind produced by {@link ToolRuntimeErrorKind}.
+ *
+ * @see {@link ToolRuntimeErrorKind} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolRuntimeErrorKind = typeof ToolRuntimeErrorKind.Type;
 
-/** Typed Toolkit adapter failure. */
+/**
+ * Normalized failure at the CodeMode Toolkit or plain-data boundary.
+ *
+ * **Example** (Construct an unknown-tool failure)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * const error = ToolRuntime.ToolRuntimeError.new("UnknownTool", "Unknown tool 'search.docs'.")
+ *
+ * console.log(ToolRuntime.ToolRuntimeError.is(error)) // true
+ * console.log(error.kind) // "UnknownTool"
+ * ```
+ *
+ * @see {@link ToolRuntimeErrorKind} for the finite kind domain carried on `kind`.
+ * @category errors
+ * @since 0.0.0
+ */
 export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRuntimeError`)(
   "ToolRuntimeError",
   {
@@ -366,7 +695,26 @@ export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRun
 const MAX_VALUE_DEPTH = 32;
 const blockedMemberNames = HashSet.fromIterable(["__proto__", "constructor", "prototype"]);
 
-/** Returns whether a property name is blocked at the guest object boundary. */
+/**
+ * Returns whether a property name is blocked at the guest object boundary.
+ *
+ * **Details**
+ *
+ * Blocked names are exactly `__proto__`, `constructor`, and `prototype`.
+ *
+ * **Example** (Reject constructor, admit name)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * console.log(ToolRuntime.isBlockedMember("constructor")) // true
+ * console.log(ToolRuntime.isBlockedMember("name")) // false
+ * ```
+ *
+ * @see {@link copyIn} for the copier that throws when a blocked member is present.
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isBlockedMember = (name: string): boolean => HashSet.has(blockedMemberNames, name);
 
 const isoFromEpochMillis = (millis: number): string | null =>
@@ -378,7 +726,45 @@ const isoFromEpochMillis = (millis: number): string | null =>
 /**
  * Copies host data into a bounded guest representation.
  *
- * Checkpoint mode preserves guest objects; boundary mode JSON-normalizes them.
+ * **Details**
+ *
+ * Checkpoint mode (`preserveCodeModeValues=true`) preserves guest objects and
+ * wraps native Date/Map/Set/URL/URLSearchParams as CodeMode adapters.
+ * Boundary mode JSON-normalizes those values (ISO dates, empty objects for
+ * Map/Set/RegExp) and rejects un-awaited {@link CodeModePromise} handles.
+ *
+ * **Gotchas**
+ *
+ * Depth is capped at 32. Circular values, blocked members (`__proto__`,
+ * `constructor`, `prototype`), non-plain prototypes, non-data values, and
+ * un-awaited promises throw {@link ToolRuntimeError}. Checkpoint mode copies
+ * enumerable named array properties; invalid Date values remain observable.
+ *
+ * **Example** (Normalize a Date and reject a circular value)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * const copied = ToolRuntime.copyIn(new Date("2020-01-01T00:00:00.000Z"), "value")
+ * console.log(copied) // "2020-01-01T00:00:00.000Z"
+ *
+ * const circular: { self?: unknown } = {}
+ * circular.self = circular
+ * try {
+ *   ToolRuntime.copyIn(circular, "value")
+ * } catch (error) {
+ *   console.log(ToolRuntime.ToolRuntimeError.is(error)) // true
+ * }
+ * ```
+ *
+ * @param label - Path label included in thrown {@link ToolRuntimeError} messages.
+ * @param preserveCodeModeValues - When true, keep guest adapters; when false, JSON-normalize.
+ * @throws ToolRuntimeError when depth exceeds 32, a value is circular, a blocked member is present, a prototype is not plain, a non-data value appears, or a CodeModePromise is un-awaited.
+ * @see {@link copyOut} for the guest-to-host copier.
+ * @see {@link isBlockedMember} for the blocked property-name predicate.
+ * @see {@link CopyOutMode} for how the reverse copy treats undefined.
+ * @category encoding
+ * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const copyIn = (value: unknown, label: string, preserveCodeModeValues = false): unknown =>
@@ -497,7 +883,37 @@ const copyBounded = (
   );
 };
 
-/** Copies a guest value out through JSON-compatible boundary semantics. */
+/**
+ * Copies a guest value out through JSON-compatible boundary semantics.
+ *
+ * **Gotchas**
+ *
+ * Arrays longer than 100000 items throw {@link ToolRuntimeError}. Index
+ * construction densifies holes. Non-finite numbers always become `null`.
+ * `json` drops undefined object keys and nullifies undefined array items;
+ * `nullify` replaces bare undefined with `null`. {@link ToolReference} objects
+ * pass through uncopied.
+ *
+ * **Example** (Nullify undefined and densify holes)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * console.log(ToolRuntime.copyOut(undefined, "nullify")) // null
+ * console.log(ToolRuntime.copyOut(Number.NaN, "json")) // null
+ *
+ * const sparse: Array<number | undefined> = []
+ * sparse[1] = 1
+ * console.log(ToolRuntime.copyOut(sparse, "json")) // [null, 1]
+ * ```
+ *
+ * @param mode - `json` drops undefined object keys; `nullify` replaces bare undefined with null.
+ * @throws ToolRuntimeError when an array exceeds the 100000-item boundary limit.
+ * @see {@link copyIn} for the host-to-guest copier.
+ * @see {@link CopyOutMode} for the literal kit of copy-out modes.
+ * @category serialization
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
   if (P.isUndefined(value) && CopyOutMode.is.nullify(mode)) return null;
@@ -628,7 +1044,21 @@ const byPath = Order.make(
   ): -1 | 0 | 1 => compareText(left.path, right.path)
 );
 
-/** Renders a canonical Toolkit path as a guest expression. */
+/**
+ * Renders a canonical Toolkit path as a guest expression.
+ *
+ * **Example** (Dot-access vs computed segment)
+ *
+ * ```ts
+ * import { toolExpression } from "@beep/scratchpad/codemode"
+ *
+ * console.log(toolExpression("search.docs")) // "tools.search.docs"
+ * console.log(toolExpression("foo-bar")) // "tools[\"foo-bar\"]"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const toolExpression = (path: string): string =>
   `tools${pipe(
     Str.split(path, "."),
@@ -700,7 +1130,26 @@ const toSearchEntry = (
     )
   );
 
-/** Prepares the stable catalog and search index for a Toolkit. */
+/**
+ * Prepares the stable catalog and search index for a Toolkit.
+ *
+ * **Example** (Prepare the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ * import { Result } from "effect"
+ *
+ * const plan = Result.getOrThrow(ToolRuntime.prepare(ToolRuntime.emptyToolkit))
+ *
+ * console.log(plan.catalog.length) // 0
+ * console.log(plan.searchIndex.length) // 0
+ * ```
+ *
+ * @see {@link searchIndex} for the helper that returns only the search index.
+ * @see {@link emptyToolkit} for the default Toolkit used when no host tools are provided.
+ * @category factories
+ * @since 0.0.0
+ */
 export const prepare = (
   toolkit: Toolkit.Any
 ): Result.Result<DiscoveryPlan, ToolRuntimeError> =>
@@ -719,7 +1168,29 @@ export const prepare = (
     })
   );
 
-/** Builds only the search index for a Toolkit. */
+/**
+ * Builds only the search index for a Toolkit.
+ *
+ * **Details**
+ *
+ * This is {@link prepare} then `.searchIndex`. Prefer {@link prepare} when the
+ * catalog is needed as well.
+ *
+ * **Example** (Index the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ * import { Result } from "effect"
+ *
+ * const index = Result.getOrThrow(ToolRuntime.searchIndex(ToolRuntime.emptyToolkit))
+ *
+ * console.log(index.length) // 0
+ * ```
+ *
+ * @see {@link prepare} for the full catalog-and-index constructor.
+ * @category factories
+ * @since 0.0.0
+ */
 export const searchIndex = (
   toolkit: Toolkit.Any
 ): Result.Result<ReadonlyArray<SearchEntry>, ToolRuntimeError> =>
@@ -796,7 +1267,20 @@ const search = (
   );
 };
 
-/** Exact callable signature of the built-in discovery function. */
+/**
+ * Exact callable signature of the built-in discovery function.
+ *
+ * **Example** (Inspect the printed search signature)
+ *
+ * ```ts
+ * import { searchSignature } from "@beep/scratchpad/codemode"
+ *
+ * console.log(searchSignature.startsWith("search(")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const searchSignature =
   "search(input: { query?: string; namespace?: string; limit?: number; offset?: number }): { items: Array<{ path: string; description: string; signature: string }>; remaining: number; next: { offset: number } | null }";
 
@@ -828,7 +1312,21 @@ const normalizeAiError = (name: string, error: AiError.AiError): ToolRuntimeErro
   );
 };
 
-/** Runtime state and operations owned by one execution. */
+/**
+ * Runtime state and operations owned by one execution.
+ *
+ * **Gotchas**
+ *
+ * `keys` throws {@link ToolRuntimeError} synchronously via `Result.getOrElse`
+ * even though its type is `ReadonlyArray<string>`. `execute` and `search`
+ * require exactly one input object. Tool `failureMode "return"` yields
+ * `encodedResult` to the guest; `"error"` hits the Stream error path as
+ * {@link ToolError}.
+ *
+ * @see {@link make} for the constructor that returns this runtime.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolRuntime<R = never> = {
   readonly root: ToolReference;
   readonly calls: Effect.Effect<ReadonlyArray<ToolCall>>;
@@ -842,7 +1340,48 @@ export type ToolRuntime<R = never> = {
   readonly keys: (path: ReadonlyArray<string>) => ReadonlyArray<string>;
 };
 
-/** Creates execution-local state around a Toolkit with installed handlers. */
+/**
+ * Creates execution-local state around a Toolkit with installed handlers.
+ *
+ * **Gotchas**
+ *
+ * This constructor is not the public `CodeMode.make` runtime factory. The
+ * returned `keys` method throws {@link ToolRuntimeError} for unknown
+ * namespaces. `execute` and `search` require exactly one input object.
+ * `failureMode "return"` yields encoded failures to the guest; `"error"`
+ * surfaces {@link ToolError} on the Stream error path.
+ *
+ * **Example** (List keys of the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ * import { Effect, Result } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const handlers = yield* ToolRuntime.emptyToolkit
+ *     const index = Result.getOrThrow(ToolRuntime.searchIndex(ToolRuntime.emptyToolkit))
+ *     const runtime = yield* ToolRuntime.make(
+ *       ToolRuntime.emptyToolkit,
+ *       handlers,
+ *       O.none(),
+ *       index
+ *     )
+ *     return runtime.keys([])
+ *   })
+ * ).then((keys) => {
+ *   console.log(keys) // []
+ * })
+ * ```
+ *
+ * @throws ToolRuntimeError from the returned `keys` method when the namespace is unknown.
+ * @see {@link prepare} for catalog construction used before this runtime is created.
+ * @see {@link searchIndex} for the search-index-only helper used by this constructor.
+ * @see {@link emptyToolkit} for the default Toolkit when CodeMode omits host tools.
+ * @category factories
+ * @since 0.0.0
+ */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const make = <R>(
   toolkit: Toolkit.Any,
@@ -1031,5 +1570,19 @@ export const make = <R>(
     };
   });
 
-/** Empty default Toolkit used when no host tools are provided. */
+/**
+ * Empty default Toolkit used when no host tools are provided.
+ *
+ * **Example** (Inspect the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * console.log(Object.keys(ToolRuntime.emptyToolkit.tools)) // []
+ * ```
+ *
+ * @see {@link make} for the execution-local adapter built around this toolkit.
+ * @category constants
+ * @since 0.0.0
+ */
 export const emptyToolkit = Toolkit.empty;

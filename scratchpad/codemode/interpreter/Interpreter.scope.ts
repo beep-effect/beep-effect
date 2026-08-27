@@ -1,3 +1,13 @@
+/**
+ * Lexical scope stack for the confined CodeMode interpreter.
+ *
+ * Bindings themselves are immutable; updates replace the {@link Binding} value
+ * inside a `MutableHashMap`. `let`/`const` hoisting uses reserve then initialize
+ * so temporal-dead-zone reads fail; `var` uses {@link ScopeStack.declare}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { A, O, pipe } from "@beep/utils";
 import { MutableHashMap } from "effect";
 import {
@@ -9,7 +19,53 @@ import {
 
 type ResolvedBinding = readonly [scope: Scope, binding: Binding];
 
-/** Mutable stack of Effect hash maps containing immutable binding models. */
+/**
+ * Mutable stack of Effect hash maps containing immutable binding models.
+ *
+ * **Gotchas**
+ *
+ * `reserve` inserts an uninitialized slot and throws if the name already exists
+ * in the current frame. `initialize` requires that reserved uninitialized slot
+ * and is the only legal first write. `declare` requires absence and stores an
+ * already-initialized binding — using it for `let`/`const` skips TDZ.
+ * `get`/`set` throw `ReferenceError` for unknown or TDZ names; `set` throws
+ * `TypeError` for `const`. `current` throws `"Interpreter scope stack is empty."`
+ * when the stack has been popped past the last frame.
+ *
+ * **Example** (Reserve then initialize vs assign to const)
+ *
+ * ```ts
+ * import { MutableHashMap } from "effect"
+ * import {
+ *   type Binding,
+ *   InterpreterFailure,
+ * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { ScopeStack } from "../../../codemode/interpreter/Interpreter.scope.ts"
+ *
+ * const node = { type: "VariableDeclarator" }
+ * const scopes = ScopeStack.new([MutableHashMap.empty<string, Binding>()])
+ * scopes.reserve("count", true, node)
+ * scopes.initialize("count", 0, node)
+ * console.log(scopes.get("count", node))
+ * // 0
+ *
+ * scopes.declare("limit", 10, false, node)
+ * try {
+ *   scopes.set("limit", 11, node)
+ * } catch (error) {
+ *   console.log(
+ *     InterpreterFailure.guards.InterpreterRuntimeError(error) ? error.message : error,
+ *   )
+ * }
+ * // Cannot assign to constant 'limit'.
+ * ```
+ *
+ * @see {@link Binding} for the immutable slot stored in each map.
+ * @see {@link Scope} for the `MutableHashMap` frame type.
+ * @throws InterpreterRuntimeError on duplicate reserve/declare, TDZ reads, const assignment, missing names, and empty-stack `current()`.
+ * @category constructors
+ * @since 0.0.0
+ */
 export class ScopeStack {
   private scopes: ReadonlyArray<Scope>;
 

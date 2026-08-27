@@ -39,7 +39,10 @@ const $I = $ScratchpadId.create("effect-ontology/Service/WikidataClient");
  * ```ts
  * import { WikidataApiError } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataApiError)
+ * const error = WikidataApiError.make({
+ *   message: "Wikidata returned HTTP 503"
+ * })
+ * console.log(error._tag) // "WikidataApiError"
  * ```
  *
  * @category errors
@@ -71,9 +74,13 @@ export class WikidataApiError extends S.TaggedError<WikidataApiError>($I`Wikidat
  * **Example** (Inspect wikidata rate limit error)
  *
  * ```ts
+ * import { Duration } from "effect"
  * import { WikidataRateLimitError } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataRateLimitError)
+ * const error = WikidataRateLimitError.make({
+ *   retryAfter: Duration.seconds(2)
+ * })
+ * console.log(error._tag) // "WikidataRateLimitError"
  * ```
  *
  * @category errors
@@ -140,9 +147,20 @@ export type WikidataMatchType = typeof WikidataMatchType.Type;
  * **Example** (Inspect the candidate schema)
  *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { WikidataCandidate } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataCandidate)
+ * const decoded = S.decodeUnknownOption(WikidataCandidate)({
+ *   qid: "Q7259",
+ *   label: "Ada Lovelace",
+ *   description: { _tag: "Some", value: "English mathematician" },
+ *   matchType: "label",
+ *   matchLanguage: "en",
+ *   score: 91,
+ *   conceptUri: "http://www.wikidata.org/entity/Q7259"
+ * })
+ * console.log(O.isSome(decoded)) // true
  * ```
  *
  * @category schemas
@@ -367,14 +385,20 @@ const calculateScore = (
 const WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php";
 
 /**
- * Validates and represents wikidata client values at runtime.
+ * HTTP client for Wikidata `wbsearchentities` lookups.
  *
- * **Example** (Inspect wikidata client)
+ * **Example** (Search Wikidata entities)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { WikidataClient } from "@effect-ontology/Service/WikidataClient"
  *
- * console.log(WikidataClient)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* WikidataClient
+ *   return yield* client.searchEntities("Ada Lovelace")
+ * }).pipe(Effect.provide(WikidataClient.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

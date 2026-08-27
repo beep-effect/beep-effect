@@ -153,9 +153,16 @@ const makeProtectedProvider = (
  * **Example** (Inspect embedding provider fallback live)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbeddingProviderFallbackLive } from "@effect-ontology/Service/EmbeddingFallback"
  *
- * console.log(EmbeddingProviderFallbackLive)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(EmbeddingProviderFallbackLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -315,9 +322,16 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
  * **Example** (Inspect embedding provider fallback default)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbeddingProviderFallbackDefault } from "@effect-ontology/Service/EmbeddingFallback"
  *
- * console.log(EmbeddingProviderFallbackDefault)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(EmbeddingProviderFallbackDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

@@ -1,3 +1,14 @@
+/**
+ * One Effect Schema plus `$id`/`path` publication wiring for SchemaStore emit.
+ *
+ * A repo generating SchemaStore artifacts declares one target per emitted
+ * document. Versioned catalog naming requires `name` whenever `version` is
+ * set; the typed overloads make that pairing unrepresentable to omit.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import type { Schema } from "effect";
 import type { SchemaVersion } from "./SchemaVersioning.ts";
 
@@ -10,7 +21,10 @@ import type { SchemaVersion } from "./SchemaVersioning.ts";
  * Not a `Schema.Class`: a target carries a live Effect Schema value, which
  * is program wiring rather than serializable data.
  *
+ * @see {@link SchemaTarget.make} for the constructor that builds this shape.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SchemaTarget {
 	/** The Effect Schema source the document is generated from. */
@@ -34,9 +48,54 @@ export interface SchemaTarget {
 }
 
 /**
- * Constructors for `SchemaTarget` values.
+ * Builds a publication target, making versioned catalog naming (`name`
+ * required with `version`) unrepresentable in the typed overloads.
  *
+ * **Gotchas**
+ *
+ * Empty `$id` or `path`, an empty `name` when one is given, and `version`
+ * without `name` throw a bare `Error` outside any tagged channel. The
+ * `name`-with-`version` invariant is also enforced at runtime for untyped
+ * callers.
+ *
+ * **Example** (Make unversioned and versioned targets)
+ *
+ * ```ts
+ * import { SchemaTarget, SchemaVersioning } from "@beep/scratchpad/schemastore"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const Config = S.Struct({ name: S.String })
+ * const unversioned = SchemaTarget.make({
+ *   schema: Config,
+ *   $id: "https://example.com/config.schema.json",
+ *   path: "schemas/config.schema.json",
+ * })
+ *
+ * console.log(unversioned.version)
+ * // => undefined
+ *
+ * const parsed = SchemaVersioning.parseResult("1.0.0")
+ * if (Result.isSuccess(parsed)) {
+ *   const versioned = SchemaTarget.make({
+ *     schema: Config,
+ *     $id: "https://example.com/config.schema.json",
+ *     name: "config",
+ *     path: "schemas/config-1.0.0.schema.json",
+ *     version: parsed.success,
+ *   })
+ *   console.log(versioned.name)
+ *   // => "config"
+ * }
+ * ```
+ *
+ * @throws Throws `Error` when `$id` or `path` is empty, when `name` is given
+ * but empty, or when `version` is given without `name`.
+ * @see {@link SchemaPipeline.run} for the emit loop that consumes these targets.
+ * @see {@link SchemaVersion} for the branded version label a versioned target carries.
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: deliberate — the class carries only statics and a private constructor, so it contributes no instance members to the merge; the interface (above) remains the sole shape of a SchemaTarget value.
 export class SchemaTarget {

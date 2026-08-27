@@ -6,6 +6,8 @@
  * firewall the other pure-tier packages use.
  *
  * @internal
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 /**
@@ -20,7 +22,24 @@
  * that an unpaired surrogate encodes as U+FFFD (3 bytes), but without
  * allocating a buffer per call.
  *
+ * **Gotchas**
+ *
+ * An unpaired high or low surrogate is counted as 3 bytes (U+FFFD), not 1 or
+ * 4. Text read back from a UTF-8 journal never contains one, but offsets stay
+ * true to what a UTF-8 write actually emits.
+ *
+ * **Example** (Emoji vs unpaired surrogate)
+ *
+ * ```ts
+ * console.log(utf8Length("\u{1F600}")) // 4
+ * console.log("\u{1F600}".length) // 2
+ * console.log(utf8Length("\uD800")) // 3
+ * ```
+ *
+ * @see {@link Line.byteLength} for the public wrapper callers should measure with.
  * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export const utf8Length = (text: string): number => {
 	let bytes = 0;

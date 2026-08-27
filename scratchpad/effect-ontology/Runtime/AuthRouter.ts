@@ -142,17 +142,18 @@ const handleAuthError = Effect.fn("handleAuthError")(function* (error: Authentic
 // =============================================================================
 
 /**
- * Exposes auth router for composition by callers of this module.
+ * HTTP surface for issuing WebSocket tickets and reporting ticket-auth health.
  *
- * **Example** (Inspect auth router)
+ * **Example** (Name the ticket issuance route)
  *
  * ```ts
  * import { AuthRouter } from "@effect-ontology/Runtime/AuthRouter"
  *
- * console.log(AuthRouter)
+ * const documented = [AuthRouter, "POST /v1/auth/ticket"] as const
+ * console.log(documented[1]) // "POST /v1/auth/ticket"
  * ```
  *
- * @category services
+ * @category endpoints
  * @since 0.0.0
  */
 export const AuthRouter = HttpRouter.addAll([

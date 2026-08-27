@@ -314,15 +314,6 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
 /**
  * Runtime value decoded by {@link MentionEvidence}.
  *
- * **Example** (Use MentionEvidence)
- * ```ts
- * import type { MentionEvidence } from "@effect-ontology/Model/CoreOntology"
- *
- * const width = (evidence: MentionEvidence): number =>
- *   evidence.endChar - evidence.startChar
- * console.log(typeof width) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -645,14 +636,6 @@ export const EventInterval = EventIntervalDefinition.annotate({
 
 /**
  * Runtime value decoded by {@link EventInterval}.
- *
- * **Example** (Use EventInterval)
- * ```ts
- * import type { EventInterval } from "@effect-ontology/Model/CoreOntology"
- *
- * const hasEnd = (interval: EventInterval): boolean => interval.end._tag === "Some"
- * console.log(typeof hasEnd) // "function"
- * ```
  *
  * @category type-level
  * @since 0.0.0

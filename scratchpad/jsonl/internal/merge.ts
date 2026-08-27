@@ -6,6 +6,8 @@
  * object in the patch replaces the one beneath it rather than merging into it.
  *
  * @internal
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 /**
@@ -39,7 +41,29 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
  * `Object.prototype.toString` distinguishes them where a `typeof` check does
  * not.
  *
+ * **Gotchas**
+ *
+ * A `Schema.Class` instance is record-like on purpose. Tightening this guard
+ * to plain objects would make `appendPatch` replace class payloads instead of
+ * merging into them.
+ *
+ * **Example** (Class instance is record-like)
+ *
+ * ```ts
+ * class MailPayload {
+ *   round = 1
+ * }
+ *
+ * console.log(isRecordLike(new MailPayload())) // true
+ * console.log(isRecordLike([1, 2])) // false
+ * console.log(isRecordLike(null)) // false
+ * ```
+ *
+ * @see {@link canMerge} for the asymmetric patch-into-base guard built on this.
+ * @see {@link JournalShape.appendPatch} for the public inherit-and-patch primitive.
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isRecordLike = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && Object.prototype.toString.call(value) === "[object Object]";
@@ -47,7 +71,21 @@ export const isRecordLike = (value: unknown): value is Record<string, unknown> =
 /**
  * Whether a plain record, not a class instance, `Date`, array or `null`.
  *
+ * **Example** (Plain literal vs class instance)
+ *
+ * ```ts
+ * class MailPayload {
+ *   round = 1
+ * }
+ *
+ * console.log(isPlainRecord({ round: 1 })) // true
+ * console.log(isPlainRecord(new MailPayload())) // false
+ * ```
+ *
+ * @see {@link isRecordLike} for the broader guard that admits class payloads.
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
 	if (!isRecordLike(value)) {
@@ -72,7 +110,28 @@ export const isPlainRecord = (value: unknown): value is Record<string, unknown> 
  * prototype — it is either a plain object (the normal case) or shares the
  * base's. Two instances of different classes do not merge.
  *
+ * **Gotchas**
+ *
+ * Do not symmetrize this guard. A plain patch into a class base must succeed;
+ * a class instance as the patch against a plain base must not.
+ *
+ * **Example** (Plain patch merges into a class base)
+ *
+ * ```ts
+ * class MailPayload {
+ *   round = 1
+ * }
+ *
+ * console.log(canMerge(new MailPayload(), { round: 2 })) // true
+ * console.log(canMerge({ round: 1 }, new MailPayload())) // false
+ * ```
+ *
+ * @see {@link isRecordLike} for the record-like test both sides must pass.
+ * @see {@link shallowMerge} for the copy that runs after this guard.
+ * @see {@link JournalShape.appendPatch} for the public inherit-and-patch primitive.
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const canMerge = (base: unknown, patch: unknown): boolean => {
 	if (!isRecordLike(base) || !isRecordLike(patch)) {
@@ -95,16 +154,38 @@ export const canMerge = (base: unknown, patch: unknown): boolean => {
  * The result is built on `base`'s prototype so a decoded payload survives as
  * whatever it was, rather than being flattened into a bare object literal.
  *
- * **The merged value is TRANSIENT, and that is what makes this safe.** Building
- * on `base`'s prototype means a class-based payload passes `instanceof`
- * **without its constructor having run** — the object was assembled by
- * `Object.create` plus `defineProperty`, not by `new`. That is acceptable here
- * only because the value's sole use is to be encoded: the caller receives a
- * genuine instance produced by the subsequent decode, never this one. If a
- * future refactor ever returns the merged value to a caller directly, any
- * invariant a constructor establishes is silently bypassed.
+ * **Gotchas**
  *
+ * The merged value is TRANSIENT: it is assembled by `Object.create` plus
+ * `defineProperty`, so a class-based payload passes `instanceof` without its
+ * constructor having run. That is safe only because the value's sole use is to
+ * be encoded — the caller receives a genuine instance from the subsequent
+ * decode, never this one. Nested objects in the patch replace the ones beneath
+ * them; they are not deep-merged. Pollution keys (`__proto__`, `constructor`,
+ * `prototype`) are dropped from both sides.
+ *
+ * **Example** (Nested replace and dropped pollution keys)
+ *
+ * ```ts
+ * const base: Record<string, unknown> = { round: 1, nested: { a: 1 } }
+ * const patch: Record<string, unknown> = { nested: { b: 2 } }
+ * Object.defineProperty(patch, "__proto__", {
+ *   value: { polluted: true },
+ *   enumerable: true,
+ *   configurable: true,
+ *   writable: true,
+ * })
+ * const merged = shallowMerge(base, patch)
+ * console.log(merged.nested) // { b: 2 }
+ * console.log(Object.getPrototypeOf(merged) === Object.prototype) // true
+ * console.log(Object.hasOwn(merged, "__proto__")) // false
+ * ```
+ *
+ * @see {@link canMerge} for the guard that decides merge vs replace.
+ * @see {@link JournalShape.appendPatch} for the public inherit-and-patch primitive.
  * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export const shallowMerge = (
 	base: Record<string, unknown>,

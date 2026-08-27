@@ -1,15 +1,24 @@
-// Ported from minimatch@10.2.5 (https://github.com/isaacs/minimatch)
-// Copyright: Isaac Z. Schlueter and Contributors
-// License: BlueOak-1.0.0 (https://blueoakcouncil.org/license/1.0.0)
-// Port notes: the shared option/type declarations extracted from upstream's
-// index.ts into a leaf module. Upstream let ast.ts and index.ts import each
-// other's types circularly; the house noImportCycles lint (error-level)
-// forbids that, so the types both sides need live here. Changes from the
-// upstream shapes: `platform` gains "posix" and is the DEFAULT (no ambient
-// process.platform detection anywhere); the deprecated allowWindowsEscape,
-// the debug flag and the nonull flag (match-list only) are dropped.
+/**
+ * Shared option and parse-return types for the glob engine.
+ *
+ * Extracted from upstream minimatch so ast.ts and the engine can share
+ * declarations without an import cycle. `platform` includes `"posix"` and is
+ * the default — the engine never reads ambient `process.platform`.
+ *
+ * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
+ * License: BlueOak-1.0.0.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
-/** The platforms the engine distinguishes; only "win32" changes behavior. */
+/**
+ * The platforms the engine distinguishes; only `"win32"` changes behavior.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Platform =
 	| "posix"
 	| "aix"
@@ -29,6 +38,16 @@ export type Platform =
  * Validation lives in the facade's GlobPatternOptions schema; the engine only
  * hard-validates the numeric caps (assertCap) because a bad cap is a wiring
  * bug wherever it comes from.
+ *
+ * **Gotchas**
+ *
+ * There is no ambient platform: omitted `platform` is `"posix"`.
+ * `maxGlobstarRecursion` over-cap is a silent `false` at match time.
+ * `nonegate` / `flipNegate` do not change GlobSet's leading-bang exclusion.
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
  */
 export interface EngineOptions {
 	/** do not expand `{x,y}` style braces */
@@ -84,14 +103,55 @@ export interface EngineOptions {
 	readonly maxExtglobRecursion?: number;
 }
 
-/** A compiled part regexp carrying its source and original glob text. */
+/**
+ * A compiled part regexp carrying its source and original glob text.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MMRegExp = RegExp & {
 	_src?: string;
 	_glob?: string;
 };
 
-/** The globstar marker in a compiled pattern set. */
+/**
+ * The globstar marker in a compiled pattern set.
+ *
+ * **Example** (Detect a recursive walk)
+ *
+ * ```ts
+ * import { Minimatch } from "../../glob/internal/minimatch.ts"
+ * import { GLOBSTAR } from "../../glob/internal/types.ts"
+ *
+ * const recursive = new Minimatch("**/*.ts", {})
+ * console.log(recursive.set.some((parts) => parts.includes(GLOBSTAR))) // true
+ * const oneLevel = new Minimatch("src/*.ts", {})
+ * console.log(oneLevel.set.some((parts) => parts.includes(GLOBSTAR))) // false
+ * ```
+ *
+ * @internal
+ * @category symbols
+ * @since 0.0.0
+ */
 export const GLOBSTAR: unique symbol = Symbol("globstar **");
 
+/**
+ * One compiled path segment: a literal string, a part regexp, or the
+ * {@link GLOBSTAR} marker.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseReturnFiltered = string | MMRegExp | typeof GLOBSTAR;
+
+/**
+ * Segment parse result: {@link ParseReturnFiltered} or `false` when the
+ * segment is not a matchable part.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseReturn = ParseReturnFiltered | false;

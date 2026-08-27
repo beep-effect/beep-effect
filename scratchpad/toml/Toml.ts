@@ -1,14 +1,20 @@
-// The `Toml` facade: value-level parsing, canonical stringification and the
-// flagship schema factories, plus the stringify options and the errors the
-// entry points raise.
-//
-// Cycle firewall: the internal engine throws raw carriers (`RawTomlError`
-// with a `{ code, message, offset, length }` record, `GuardExceeded` from the
-// depth guards); this module materializes `TomlDiagnostic` instances
-// (deriving `line`/`character` from `offset`) and constructs the tagged
-// TomlParseError / TomlStringifyError. The dependency edge runs facade →
-// engine only, so `noImportCycles` stays satisfied.
+/**
+ * Typed TOML 1.1 parse, conservative 1.0 stringify, and schema factories.
+ *
+ * **Details**
+ *
+ * Cycle firewall: the internal engine throws raw carriers (`RawTomlError`
+ * with a `{ code, message, offset, length }` record, `GuardExceeded` from the
+ * depth guards); this module materializes {@link TomlDiagnostic} instances
+ * (deriving `line`/`character` from `offset`) and constructs the tagged
+ * {@link TomlParseError} / {@link TomlStringifyError}. The dependency edge
+ * runs facade → engine only, so `noImportCycles` stays satisfied.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { isRawTomlError } from "./internal/diagnostics.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
@@ -17,34 +23,77 @@ import { buildValue } from "./internal/semantic.ts";
 import { stringifyValue } from "./internal/stringifyValue.ts";
 import { TomlDiagnostic } from "./TomlDiagnostic.ts";
 
+const $I = $ScratchpadId.create("toml/Toml");
+
 /**
  * Options controlling stringify behavior. The only knob is `newline` —
  * omitted, it resolves to `"\n"`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Stringify deliberately emits only TOML 1.0.0 spellings — seconds always
  * present in times, no `\e`/`\xHH` escapes, single-line inline tables — even
  * though {@link Toml.parse} accepts the full TOML 1.1.0 grammar. Every 1.0
  * document is valid 1.1, so this conservative-write/liberal-read asymmetry
  * keeps emitted documents readable by 1.0-only consumers.
  *
- * @public
+ * **Example** (Stringify with CRLF newlines)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Toml, TomlStringifyOptions } from "@beep/scratchpad/toml"
+ *
+ * const options = TomlStringifyOptions.make({ newline: "\r\n" })
+ * const encoded = Toml.stringifyResult({ name: "Alice" }, options)
+ * console.log(Result.isSuccess(encoded) && encoded.success) // "name = \"Alice\"\r\n"
+ * ```
+ *
+ * @see {@link Toml.stringify} for the Effect entry point that consumes these options.
+ * @see {@link Toml.stringifyResult} for the synchronous Result entry point.
+ * @category configuration
+ * @since 0.0.0
  */
-export class TomlStringifyOptions extends Schema.Class<TomlStringifyOptions>("TomlStringifyOptions")({
-	newline: Schema.optionalKey(Schema.Literals(["\n", "\r\n"])),
-}) {}
+export class TomlStringifyOptions extends Schema.Class<TomlStringifyOptions>($I`TomlStringifyOptions`)(
+	{
+		newline: Schema.optionalKey(Schema.Literals(["\n", "\r\n"])),
+	},
+	$I.annote("TomlStringifyOptions", {
+		description: "Stringify options whose only knob is newline; omitted, it resolves to LF.",
+	}),
+) {}
 
 /**
  * Parse failure: the {@link TomlDiagnostic} entries describing why the
  * document was rejected (first violation wins, so there is one today; the
- * array shape matches `@effected/yaml`'s aggregate contract). Raised by
- * {@link Toml.parse} and the decode direction of the schema factories.
+ * array shape matches yaml's aggregate contract). Raised by {@link Toml.parse}
+ * and the decode direction of the schema factories.
  *
- * @public
+ * **Example** (Inspect the first diagnostic)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Toml } from "@beep/scratchpad/toml"
+ *
+ * const bad = Toml.parseResult("name = ")
+ * console.log(Result.isFailure(bad) && bad.failure._tag) // "TomlParseError"
+ * console.log(Result.isFailure(bad) && bad.failure.diagnostics[0]?.code) // "ExpectedValue"
+ * ```
+ *
+ * @see {@link TomlDiagnostic} for the positioned diagnostic each entry carries.
+ * @see {@link Toml.parseResult} for the synchronous entry point that raises this error.
+ * @category errors
+ * @since 0.0.0
  */
-export class TomlParseError extends Schema.TaggedError<TomlParseError>()("TomlParseError", {
-	diagnostics: Schema.Array(TomlDiagnostic),
-}) {
+export class TomlParseError extends Schema.TaggedError<TomlParseError>($I`TomlParseError`)(
+	"TomlParseError",
+	{
+		diagnostics: Schema.Array(TomlDiagnostic),
+	},
+	$I.annote("TomlParseError", {
+		description: "Tagged parse failure carrying positioned TomlDiagnostic entries (first violation wins).",
+	}),
+) {
+	/** @internal */
 	override get message(): string {
 		const count = this.diagnostics.length;
 		const first = this.diagnostics[0];
@@ -59,11 +108,32 @@ export class TomlParseError extends Schema.TaggedError<TomlParseError>()("TomlPa
  * {@link TomlDiagnostic} (offset `0` — there is no source text). Raised by
  * {@link Toml.stringify} and the encode direction of the schema factories.
  *
- * @public
+ * **Example** (Reject a null value)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Toml } from "@beep/scratchpad/toml"
+ *
+ * const bad = Toml.stringifyResult({ nope: null })
+ * console.log(Result.isFailure(bad) && bad.failure._tag) // "TomlStringifyError"
+ * console.log(Result.isFailure(bad) && bad.failure.diagnostic.code) // "UnsupportedValue"
+ * ```
+ *
+ * @see {@link TomlDiagnostic} for the single diagnostic this error carries.
+ * @see {@link Toml.stringifyResult} for the synchronous entry point that raises this error.
+ * @category errors
+ * @since 0.0.0
  */
-export class TomlStringifyError extends Schema.TaggedError<TomlStringifyError>()("TomlStringifyError", {
-	diagnostic: TomlDiagnostic,
-}) {
+export class TomlStringifyError extends Schema.TaggedError<TomlStringifyError>($I`TomlStringifyError`)(
+	"TomlStringifyError",
+	{
+		diagnostic: TomlDiagnostic,
+	},
+	$I.annote("TomlStringifyError", {
+		description: "Tagged stringify failure carrying one TomlDiagnostic at offset 0.",
+	}),
+) {
+	/** @internal */
 	override get message(): string {
 		return `TOML stringify failed: ${this.diagnostic.code} ${this.diagnostic.message}`;
 	}
@@ -138,7 +208,10 @@ const stringifyToResult = (
  * plus `decode` and `encode` functions derived from it once, so callers need
  * no generic `Schema` machinery at the use site.
  *
- * @public
+ * @see {@link Toml.bind} to construct this codec from a target schema.
+ * @see {@link Toml.schema} for the same composition without pre-derived directions.
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TomlBoundCodec<T, RD = never, RE = never> {
 	/** The composed codec decoding a TOML `string` straight into `T`. */
@@ -152,29 +225,47 @@ export interface TomlBoundCodec<T, RD = never, RE = never> {
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
- * Static entry points for TOML parsing, stringification and the schema
- * factories. Not instantiable.
+ * Static entry points for TOML 1.1 parsing, conservative 1.0 stringification,
+ * and the schema factories that decode TOML text into a validated domain value.
  *
- * @remarks
- * `parse`, `stringify` and the schema factories carry real typed error
+ * **Details**
+ *
+ * `parse`, `stringify`, and the schema factories carry real typed error
  * channels — including the hardening guards (nesting-depth caps on both
  * sides, circular-reference detection on encode) that keep malformed or
  * adversarial input on the typed channel instead of surfacing as an
  * unhandled defect. `parse` takes no options: TOML 1.1.0 parsing has no
- * knobs.
+ * knobs. This class is not instantiable.
  *
- * @example
+ * **Gotchas**
+ *
+ * Stringify emits only TOML 1.0.0 spellings while parse accepts 1.1.0, so a
+ * round-trip of a 1.1-only document silently drops 1.1 spellings.
+ * {@link Toml.parse} / {@link Toml.stringify} exist for the tracing span and
+ * are defined in terms of the `*Result` variants — reach for
+ * {@link Toml.parseResult} at a synchronous boundary. `fromString` /
+ * `schema` / `bind` are schema-producing: each call returns a fresh derivation
+ * cache, so bind the result to a `const` on hot paths (`TomlFromString` is the
+ * pre-bound common case). First violation wins. Integers become `number` or
+ * `bigint` past 2^53. `__proto__` is defined as an own data property.
+ *
+ * **Example** (Parse a document to a plain value)
+ *
  * ```ts
- * import { Toml } from "@effected/toml";
- * import { Effect } from "effect";
+ * import { Effect } from "effect"
+ * import { Toml } from "@beep/scratchpad/toml"
  *
- * const program = Effect.gen(function* () {
- *   const value = yield* Toml.parse('name = "Alice"\nage = 30');
- *   return value; // { name: "Alice", age: 30 }
- * });
+ * const value = Effect.runSync(Toml.parse('name = "Alice"\nage = 30'))
+ * console.log(value) // { name: "Alice", age: 30 }
  * ```
  *
- * @public
+ * @see {@link Toml.parseResult} for the synchronous Result form of parse.
+ * @see {@link Toml.stringifyResult} for the synchronous Result form of stringify.
+ * @see {@link Toml.bind} to pre-bind a domain schema's decode/encode directions.
+ * @see {@link TomlParseError} for the tagged parse failure.
+ * @see {@link TomlStringifyError} for the tagged stringify failure.
+ * @category codecs
+ * @since 0.0.0
  */
 export class Toml {
 	private constructor() {}
@@ -192,31 +283,29 @@ export class Toml {
 	 * fails through {@link TomlParseError} with a `NestingDepthExceeded`
 	 * diagnostic, never as an unhandled defect.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Toml.parse} is defined in terms of this function; the two never
 	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
 	 * the `Toml.parse` tracing span — and for this one at synchronous
 	 * boundaries such as a lint-staged handler.
 	 *
-	 * @example
+	 * **Example** (Inspect success and failure)
+	 *
 	 * ```ts
-	 * import { Toml } from "@effected/toml";
-	 * import { Result } from "effect";
+	 * import { Result } from "effect"
+	 * import { Toml } from "@beep/scratchpad/toml"
 	 *
-	 * const ok = Toml.parseResult('name = "Alice"');
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => { name: "Alice" }
-	 * }
+	 * const ok = Toml.parseResult('name = "Alice"')
+	 * console.log(Result.isSuccess(ok) && ok.success) // { name: "Alice" }
 	 *
-	 * const bad = Toml.parseResult("name = ");
-	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "TomlParseError"
-	 * }
+	 * const bad = Toml.parseResult("name = ")
+	 * console.log(Result.isFailure(bad) && bad.failure._tag) // "TomlParseError"
 	 * ```
 	 *
 	 * @param text - The TOML source to parse.
-	 * @returns A `Result` succeeding with the decoded value (`unknown`, never
-	 *   `any`), or failing with {@link TomlParseError}.
+	 * @see {@link Toml.parse} for the Effect form that wraps this Result with a tracing span.
+	 * @see {@link TomlParseError} for the tagged failure this Result carries.
 	 */
 	static parseResult(text: string): Result.Result<unknown, TomlParseError> {
 		return parseToResult(text);
@@ -228,8 +317,7 @@ export class Toml {
 	 * variant directly.
 	 *
 	 * @param text - The TOML source to parse.
-	 * @returns An `Effect` that succeeds with the decoded value, or fails with
-	 *   {@link TomlParseError}.
+	 * @see {@link Toml.parseResult} for the synchronous Result form.
 	 */
 	static readonly parse = Effect.fn("Toml.parse")((text: string) => Effect.fromResult(Toml.parseResult(text)));
 
@@ -243,33 +331,30 @@ export class Toml {
 	 * null), out-of-int64-range `bigint`s, circular references and
 	 * depth-guard trips — all on the typed channel.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * {@link Toml.stringify} is defined in terms of this function; the two
 	 * never diverge. Reach for the `Effect` variant inside Effect code — it
 	 * carries the `Toml.stringify` tracing span — and for this one at
 	 * synchronous boundaries.
 	 *
-	 * @example
+	 * **Example** (Inspect success and an unsupported value)
+	 *
 	 * ```ts
-	 * import { Toml } from "@effected/toml";
-	 * import { Result } from "effect";
+	 * import { Result } from "effect"
+	 * import { Toml } from "@beep/scratchpad/toml"
 	 *
-	 * const ok = Toml.stringifyResult({ name: "Alice" });
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => 'name = "Alice"\n'
-	 * }
+	 * const ok = Toml.stringifyResult({ name: "Alice" })
+	 * console.log(Result.isSuccess(ok) && ok.success) // 'name = "Alice"\n'
 	 *
-	 * const bad = Toml.stringifyResult({ nope: null });
-	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "TomlStringifyError"
-	 * }
+	 * const bad = Toml.stringifyResult({ nope: null })
+	 * console.log(Result.isFailure(bad) && bad.failure._tag) // "TomlStringifyError"
 	 * ```
 	 *
 	 * @param value - The plain JavaScript value to stringify.
-	 * @param options - Optional {@link TomlStringifyOptions}; `newline`
-	 *   defaults to `"\n"`.
-	 * @returns A `Result` succeeding with the TOML text, or failing with
-	 *   {@link TomlStringifyError}.
+	 * @param options - Optional {@link TomlStringifyOptions}; `newline` defaults to `"\n"`.
+	 * @see {@link Toml.stringify} for the Effect form that wraps this Result with a tracing span.
+	 * @see {@link TomlStringifyError} for the tagged failure this Result carries.
 	 */
 	static stringifyResult(value: unknown, options?: TomlStringifyOptions): Result.Result<string, TomlStringifyError> {
 		return stringifyToResult(value, options);
@@ -281,10 +366,8 @@ export class Toml {
 	 * that variant directly.
 	 *
 	 * @param value - The plain JavaScript value to stringify.
-	 * @param options - Optional {@link TomlStringifyOptions}; `newline`
-	 *   defaults to `"\n"`.
-	 * @returns An `Effect` that succeeds with the TOML text, or fails with
-	 *   {@link TomlStringifyError}.
+	 * @param options - Optional {@link TomlStringifyOptions}; `newline` defaults to `"\n"`.
+	 * @see {@link Toml.stringifyResult} for the synchronous Result form.
 	 */
 	static readonly stringify = Effect.fn("Toml.stringify")((value: unknown, options?: TomlStringifyOptions) =>
 		Effect.fromResult(Toml.stringifyResult(value, options)),
@@ -297,6 +380,21 @@ export class Toml {
 	 * Schema-producing: each call returns a fresh schema whose derivation
 	 * caches are not shared across calls. Bind the result to a `const` on hot
 	 * paths; the pre-bound {@link Toml.TomlFromString} covers the common case.
+	 *
+	 * **Example** (Decode TOML through a bound schema)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { Toml } from "@beep/scratchpad/toml"
+	 *
+	 * const schema = Toml.fromString()
+	 * const value = Effect.runSync(S.decodeUnknownEffect(schema)('name = "Alice"'))
+	 * console.log(value) // { name: "Alice" }
+	 * ```
+	 *
+	 * @see {@link Toml.TomlFromString} for the pre-bound common case.
+	 * @see {@link Toml.schema} to compose this codec with a domain schema.
 	 */
 	static fromString(): Schema.Codec<unknown, string> {
 		return Schema.String.pipe(
@@ -329,6 +427,22 @@ export class Toml {
 	 *
 	 * Schema-producing: bind the result to a `const` on hot paths (see
 	 * {@link Toml.fromString}).
+	 *
+	 * **Example** (Decode TOML into a struct)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { Toml } from "@beep/scratchpad/toml"
+	 *
+	 * const Config = S.Struct({ name: S.String })
+	 * const schema = Toml.schema(Config)
+	 * const value = Effect.runSync(S.decodeUnknownEffect(schema)('name = "Alice"'))
+	 * console.log(value) // { name: "Alice" }
+	 * ```
+	 *
+	 * @see {@link Toml.bind} to also pre-derive `decode`/`encode` functions.
+	 * @see {@link Toml.fromString} for the untyped TOML codec this composes.
 	 */
 	static schema<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): Schema.Codec<T, string, RD, RE> {
 		return Toml.TomlFromString.pipe(
@@ -347,29 +461,29 @@ export class Toml {
 	 * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Toml.schema}
 	 * would; the target's decoding/encoding service requirements flow through.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * Schema-producing: each call composes a fresh schema and derives both
 	 * directions from it. Bind the result to a `const` — that single binding is
 	 * the point.
 	 *
-	 * @example
+	 * **Example** (Decode and encode through a bound codec)
+	 *
 	 * ```ts
-	 * import { Toml } from "@effected/toml";
-	 * import { Effect, Schema } from "effect";
+	 * import { Effect, Schema } from "effect"
+	 * import { Toml } from "@beep/scratchpad/toml"
 	 *
-	 * const Config = Schema.Struct({ name: Schema.String });
-	 * const config = Toml.bind(Config);
-	 *
-	 * const program = Effect.gen(function* () {
-	 *   const value = yield* config.decode('name = "Alice"');
-	 *   const text = yield* config.encode(value);
-	 *   return [value, text] as const;
-	 * });
+	 * const Config = Schema.Struct({ name: Schema.String })
+	 * const config = Toml.bind(Config)
+	 * const value = Effect.runSync(config.decode('name = "Alice"'))
+	 * const text = Effect.runSync(config.encode(value))
+	 * console.log(value) // { name: "Alice" }
+	 * console.log(text) // 'name = "Alice"\n'
 	 * ```
 	 *
 	 * @param target - The domain schema decoded values must satisfy.
-	 * @returns A {@link TomlBoundCodec} carrying the composed schema and its
-	 *   two pre-bound directions.
+	 * @see {@link Toml.schema} for the same composition without pre-derived directions.
+	 * @see {@link TomlBoundCodec} for the shape this method returns.
 	 */
 	static bind<T, E, RD = never, RE = never>(target: Schema.Codec<T, E, RD, RE>): TomlBoundCodec<T, RD, RE> {
 		const schema = Toml.schema(target);

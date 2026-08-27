@@ -55,12 +55,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
 /**
  * Failure caused by progress-stream backpressure policy enforcement.
  *
- * **Example** (Inspect progress streaming error)
+ * **Example** (Construct a backpressure timeout)
  *
  * ```ts
  * import { ProgressStreamingError } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(ProgressStreamingError)
+ * const error = ProgressStreamingError.make({
+ *   reason: "BackpressureTimeout",
+ *   message: "Client stopped consuming events"
+ * })
+ * console.log(error._tag) // "ProgressStreamingError"
  * ```
  *
  * @category errors
@@ -87,14 +91,21 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  * Progress builder state
  *
  *
- * **Example** (Use the ProgressBuilderState contract)
+ * **Example** (Start a four-chunk run)
  *
  * ```ts
- * import type { ProgressBuilderState } from "@effect-ontology/Service/ProgressStreaming"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Percentage } from "@beep/schema/Percentage"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { ProgressBuilderState } from "@effect-ontology/Service/ProgressStreaming"
  *
- * const acceptsProgressBuilderState = (_value: ProgressBuilderState): void => undefined
- *
- * console.log(acceptsProgressBuilderState)
+ * const state = ProgressBuilderState.make({
+ *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
+ *   totalChunks: PosInt.make(4),
+ *   processedChunks: NonNegativeInt.make(0),
+ *   currentPhaseProgress: Percentage.make(0)
+ * })
+ * console.log(state.totalChunks) // 4
  * ```
  *
  * @category type-level
@@ -119,12 +130,22 @@ export class ProgressBuilderState extends S.Class<ProgressBuilderState>($I`Progr
 /**
  * Create a new progress builder state
  *
- * **Example** (Inspect make progress builder)
+ * **Example** (Create a progress builder)
  *
  * ```ts
+ * import { Effect, Ref } from "effect"
+ * import { PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(makeProgressBuilder)
+ * const totalChunks = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const state = yield* Ref.get(builder)
+ *     return state.totalChunks
+ *   })
+ * )
+ * console.log(totalChunks) // 4
  * ```
  *
  * @category constructors
@@ -153,12 +174,25 @@ const calculateOverallProgress = (state: ProgressBuilderState, phaseProgress: nu
 /**
  * Create ExtractionStartedEvent
  *
- * **Example** (Inspect create extraction started)
+ * **Example** (Emit extraction started)
  *
  * ```ts
- * import { createExtractionStarted } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createExtractionStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createExtractionStarted)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createExtractionStarted(builder, {
+ *       characterCount: PosInt.make(1200),
+ *       estimatedAvgChunkSize: PosInt.make(300)
+ *     })
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "extraction_started"
  * ```
  *
  * @category constructors
@@ -208,12 +242,27 @@ export const createExtractionStarted: {
 /**
  * Create ChunkingProgressEvent
  *
- * **Example** (Inspect create chunking progress)
+ * **Example** (Emit chunking progress)
  *
  * ```ts
- * import { createChunkingProgress } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createChunkingProgress, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createChunkingProgress)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createChunkingProgress(
+ *       builder,
+ *       NonNegativeInt.make(1),
+ *       NonNegativeInt.make(1),
+ *       PosInt.make(300)
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "chunking_progress"
  * ```
  *
  * @category constructors
@@ -256,12 +305,27 @@ export const createChunkingProgress: {
 /**
  * Create ChunkProcessingStartedEvent
  *
- * **Example** (Inspect create chunk processing started)
+ * **Example** (Start processing a chunk)
  *
  * ```ts
- * import { createChunkProcessingStarted } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createChunkProcessingStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createChunkProcessingStarted)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createChunkProcessingStarted(
+ *       builder,
+ *       NonNegativeInt.make(0),
+ *       PosInt.make(18),
+ *       "Ada founded Acme."
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "chunk_processing_started"
  * ```
  *
  * @category constructors
@@ -304,12 +368,28 @@ export const createChunkProcessingStarted: {
 /**
  * Create EntityFoundEvent
  *
- * **Example** (Inspect create entity found)
+ * **Example** (Emit an entity-found event)
  *
  * ```ts
- * import { createEntityFound } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createEntityFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createEntityFound)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createEntityFound(
+ *       builder,
+ *       NonNegativeInt.make(0),
+ *       "https://example.org/Ada",
+ *       "Ada",
+ *       ["Person"]
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "entity_found"
  * ```
  *
  * @category constructors
@@ -360,12 +440,29 @@ export const createEntityFound: {
 /**
  * Create RelationFoundEvent
  *
- * **Example** (Inspect create relation found)
+ * **Example** (Emit a relation-found event)
  *
  * ```ts
- * import { createRelationFound } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createRelationFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createRelationFound)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createRelationFound(
+ *       builder,
+ *       NonNegativeInt.make(0),
+ *       "https://example.org/Ada",
+ *       "https://example.org/founded",
+ *       "https://example.org/Acme",
+ *       true
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "relation_found"
  * ```
  *
  * @category constructors
@@ -420,12 +517,28 @@ export const createRelationFound: {
 /**
  * Create ChunkProcessingCompleteEvent
  *
- * **Example** (Inspect create chunk processing complete)
+ * **Example** (Complete a chunk)
  *
  * ```ts
- * import { createChunkProcessingComplete } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createChunkProcessingComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createChunkProcessingComplete)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createChunkProcessingComplete(
+ *       builder,
+ *       NonNegativeInt.make(0),
+ *       NonNegativeInt.make(1),
+ *       NonNegativeInt.make(1),
+ *       PosInt.make(40)
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "chunk_processing_complete"
  * ```
  *
  * @category constructors
@@ -476,12 +589,30 @@ export const createChunkProcessingComplete: {
 /**
  * Create ExtractionCompleteEvent
  *
- * **Example** (Inspect create extraction complete)
+ * **Example** (Complete an extraction)
  *
  * ```ts
- * import { createExtractionComplete } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createExtractionComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createExtractionComplete)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createExtractionComplete(
+ *       builder,
+ *       NonNegativeInt.make(2),
+ *       NonNegativeInt.make(1),
+ *       NonNegativeInt.make(1),
+ *       PosInt.make(250),
+ *       NonNegativeInt.make(4),
+ *       NonNegativeInt.make(0)
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "extraction_complete"
  * ```
  *
  * @category constructors
@@ -547,12 +678,27 @@ type CreateExtractionFailedOptions = {
 /**
  * Create ExtractionFailedEvent
  *
- * **Example** (Inspect create extraction failed)
+ * **Example** (Emit extraction failed)
  *
  * ```ts
- * import { createExtractionFailed } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createExtractionFailed, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createExtractionFailed)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createExtractionFailed(
+ *       builder,
+ *       "LanguageModelError",
+ *       "The model returned empty output",
+ *       true
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "extraction_failed"
  * ```
  *
  * @category constructors
@@ -606,12 +752,29 @@ export const createExtractionFailed: {
 /**
  * Create RecoverableErrorEvent
  *
- * **Example** (Inspect create recoverable error)
+ * **Example** (Emit a recoverable error)
  *
  * ```ts
- * import { createRecoverableError } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { createRecoverableError, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(createRecoverableError)
+ * const tag = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     const event = yield* createRecoverableError(
+ *       builder,
+ *       NonNegativeInt.make(0),
+ *       "Timeout",
+ *       "Chunk processing timed out",
+ *       "extracting",
+ *       "Retry the chunk"
+ *     )
+ *     return event._tag
+ *   })
+ * )
+ * console.log(tag) // "error_recoverable"
  * ```
  *
  * @category errors
@@ -661,12 +824,22 @@ export const createRecoverableError: {
 /**
  * Increment processed chunks
  *
- * **Example** (Inspect mark chunk processed)
+ * **Example** (Increment processed chunks)
  *
  * ```ts
- * import { markChunkProcessed } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect, Ref } from "effect"
+ * import { PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { makeProgressBuilder, markChunkProcessed } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(markChunkProcessed)
+ * const processed = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     yield* markChunkProcessed(builder)
+ *     return (yield* Ref.get(builder)).processedChunks
+ *   })
+ * )
+ * console.log(processed) // 1
  * ```
  *
  * @category services
@@ -681,12 +854,23 @@ export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.E
 /**
  * Set phase progress
  *
- * **Example** (Inspect set phase progress)
+ * **Example** (Set phase progress)
  *
  * ```ts
- * import { setPhaseProgress } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect, Ref } from "effect"
+ * import { PosInt } from "@beep/schema"
+ * import { Percentage } from "@beep/schema/Percentage"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { makeProgressBuilder, setPhaseProgress } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(setPhaseProgress)
+ * const progress = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
+ *     yield* setPhaseProgress(builder, Percentage.make(50))
+ *     return (yield* Ref.get(builder)).currentPhaseProgress
+ *   })
+ * )
+ * console.log(progress) // 50
  * ```
  *
  * @category services
@@ -708,14 +892,18 @@ export const setPhaseProgress = dual2(
  * Backpressure handler state
  *
  *
- * **Example** (Use the BackpressureState contract)
+ * **Example** (Create an empty backpressure queue)
  *
  * ```ts
- * import type { BackpressureState } from "@effect-ontology/Service/ProgressStreaming"
+ * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
+ * import { BackpressureState } from "@effect-ontology/Service/ProgressStreaming"
  *
- * const acceptsBackpressureState = (_value: BackpressureState): void => undefined
- *
- * console.log(acceptsBackpressureState)
+ * const state = BackpressureState.make({
+ *   config: BackpressureConfig.make({}),
+ *   eventQueue: [],
+ *   lastWarnTime: 0
+ * })
+ * console.log(state.eventQueue.length) // 0
  * ```
  *
  * @category type-level
@@ -737,12 +925,19 @@ export class BackpressureState extends S.Class<BackpressureState>($I`Backpressur
 /**
  * Create backpressure handler state
  *
- * **Example** (Inspect make backpressure handler)
+ * **Example** (Create a backpressure handler)
  *
  * ```ts
- * import { makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { getQueueSize, makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(makeBackpressureHandler)
+ * const size = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const handler = yield* makeBackpressureHandler({})
+ *     return yield* getQueueSize(handler)
+ *   })
+ * )
+ * console.log(size) // 0
  * ```
  *
  * @category constructors
@@ -835,12 +1030,33 @@ const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
  * Returns O.some with warning event if backpressure warning needed,
  * O.none otherwise
  *
- * **Example** (Inspect enqueue event)
+ * **Example** (Enqueue a started event)
  *
  * ```ts
- * import { enqueueEvent } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import {
+ *   createExtractionStarted,
+ *   enqueueEvent,
+ *   getQueueSize,
+ *   makeBackpressureHandler,
+ *   makeProgressBuilder
+ * } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(enqueueEvent)
+ * const size = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const handler = yield* makeBackpressureHandler({})
+ *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(1))
+ *     const started = yield* createExtractionStarted(builder, {
+ *       characterCount: PosInt.make(18),
+ *       estimatedAvgChunkSize: PosInt.make(18)
+ *     })
+ *     yield* enqueueEvent(handler, started)
+ *     return yield* getQueueSize(handler)
+ *   }).pipe(Effect.orDie)
+ * )
+ * console.log(size) // 1
  * ```
  *
  * @category services
@@ -913,12 +1129,20 @@ export const enqueueEvent: {
 /**
  * Dequeue next event
  *
- * **Example** (Inspect dequeue event)
+ * **Example** (Dequeue from an empty handler)
  *
  * ```ts
- * import { dequeueEvent } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { dequeueEvent, makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(dequeueEvent)
+ * const empty = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const handler = yield* makeBackpressureHandler({})
+ *     return yield* dequeueEvent(handler)
+ *   })
+ * )
+ * console.log(O.isNone(empty)) // true
  * ```
  *
  * @category services
@@ -935,12 +1159,19 @@ export const dequeueEvent = (ref: Ref.Ref<BackpressureState>): Effect.Effect<O.O
 /**
  * Get current queue size
  *
- * **Example** (Inspect get queue size)
+ * **Example** (Read queue size)
  *
  * ```ts
- * import { getQueueSize } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import { getQueueSize, makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(getQueueSize)
+ * const size = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const handler = yield* makeBackpressureHandler({})
+ *     return yield* getQueueSize(handler)
+ *   })
+ * )
+ * console.log(size) // 0
  * ```
  *
  * @category services
@@ -960,12 +1191,14 @@ export const getQueueSize = (ref: Ref.Ref<BackpressureState>): Effect.Effect<num
 /**
  * Combine multiple progress streams with backpressure handling
  *
- * **Example** (Inspect combine progress streams)
+ * **Example** (Merge an empty stream list)
  *
  * ```ts
+ * import { Effect, Stream } from "effect"
  * import { combineProgressStreams } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(combineProgressStreams)
+ * const count = Effect.runSync(Stream.runCount(combineProgressStreams([], 1)))
+ * console.log(count) // 0
  * ```
  *
  * @category services
@@ -990,12 +1223,17 @@ export const combineProgressStreams: {
 /**
  * Apply backpressure to a stream
  *
- * **Example** (Inspect with backpressure)
+ * **Example** (Apply backpressure to an empty stream)
  *
  * ```ts
+ * import { Effect, Stream } from "effect"
+ * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
  * import { withBackpressure } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(withBackpressure)
+ * const count = Effect.runSync(
+ *   Stream.runCount(withBackpressure(Stream.empty, BackpressureConfig.make({}))).pipe(Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category services
@@ -1044,14 +1282,20 @@ export const withBackpressure: {
  * State for resumable extractions
  *
  *
- * **Example** (Use the ResumableExtractionState contract)
+ * **Example** (Checkpoint a paused extraction)
  *
  * ```ts
- * import type { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
  *
- * const acceptsResumableExtractionState = (_value: ResumableExtractionState): void => undefined
- *
- * console.log(acceptsResumableExtractionState)
+ * const state = ResumableExtractionState.make({
+ *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
+ *   lastSuccessfulChunkIndex: NonNegativeInt.make(2),
+ *   partialResults: { entityCount: NonNegativeInt.make(4), relationCount: NonNegativeInt.make(1) },
+ *   pausedAt: new Date("2026-01-01T00:00:00.000Z")
+ * })
+ * console.log(state.lastSuccessfulChunkIndex) // 2
  * ```
  *
  * @category type-level
@@ -1082,12 +1326,20 @@ class PauseReason extends S.Class<PauseReason>($I`PauseReason`)(
 /**
  * Checkpoint and recovery context retained for a resumable extraction.
  *
- * **Example** (Inspect resumable extraction state)
+ * **Example** (Create a resume checkpoint)
  *
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(ResumableExtractionState)
+ * const state = ResumableExtractionState.make({
+ *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
+ *   lastSuccessfulChunkIndex: NonNegativeInt.make(2),
+ *   partialResults: { entityCount: NonNegativeInt.make(4), relationCount: NonNegativeInt.make(1) },
+ *   pausedAt: new Date("2026-01-01T00:00:00.000Z")
+ * })
+ * console.log(state.runId)
  * ```
  *
  * @category models
@@ -1109,12 +1361,28 @@ export class ResumableExtractionState extends S.Class<ResumableExtractionState>(
 /**
  * Extract resumable state from ExtractionFailedEvent
  *
- * **Example** (Inspect extract resumable state)
+ * **Example** (Extract resume state from a failure)
  *
  * ```ts
- * import { extractResumableState } from "@effect-ontology/Service/ProgressStreaming"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { PosInt } from "@beep/schema"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
+ * import {
+ *   createExtractionFailed,
+ *   extractResumableState,
+ *   makeProgressBuilder
+ * } from "@effect-ontology/Service/ProgressStreaming"
  *
- * console.log(extractResumableState)
+ * const resumable = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const runId = ExtractionRunId.make("doc-deadbeefcafe")
+ *     const builder = yield* makeProgressBuilder(runId, PosInt.make(4))
+ *     const failed = yield* createExtractionFailed(builder, "Timeout", "The extractor timed out", true)
+ *     return extractResumableState(runId, failed)
+ *   })
+ * )
+ * console.log(O.isNone(resumable)) // true
  * ```
  *
  * @category services

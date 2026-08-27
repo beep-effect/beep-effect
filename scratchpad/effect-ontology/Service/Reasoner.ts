@@ -42,7 +42,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
  * ```ts
  * import { ReasoningError } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(ReasoningError)
+ * const error = ReasoningError.make({ message: "Reasoning failed" })
+ * console.log(error._tag) // "ReasoningError"
  * ```
  *
  * @category errors
@@ -73,7 +74,11 @@ export class ReasoningError extends S.TaggedError<ReasoningError>($I`ReasoningEr
  * ```ts
  * import { RuleParseError } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(RuleParseError)
+ * const error = RuleParseError.make({
+ *   message: "Invalid N3 syntax",
+ *   rule: "{ ?a <p> ?b }"
+ * })
+ * console.log(error._tag) // "RuleParseError"
  * ```
  *
  * @category errors
@@ -111,13 +116,17 @@ export class RuleParseError extends S.TaggedError<RuleParseError>($I`RuleParseEr
  * ```ts
  * import { ReasoningProfile } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(ReasoningProfile)
+ * console.log(ReasoningProfile.is.rdfs("rdfs")) // true
  * ```
  *
- * @category services
+ * @category schemas
  * @since 0.0.0
  */
-export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]);
+export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]).annotate(
+  $I.annote("ReasoningProfile", {
+    description: "Closed set of RDFS/OWL reasoning profiles applied to an RDF store.",
+  })
+);
 /**
  * Describes the reasoning profile data exposed by this module.
  *
@@ -135,17 +144,23 @@ export type ReasoningProfile = typeof ReasoningProfile.Type;
  * ```ts
  * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(ReasoningConfig)
+ * const config = ReasoningConfig.make({})
+ * console.log(config.profile) // "rdfs"
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class ReasoningConfig extends S.Class<ReasoningConfig>("ReasoningConfig")({
-  profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs")),
-  customRules: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
-  maxIterations: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
-}) {
+export class ReasoningConfig extends S.Class<ReasoningConfig>($I`ReasoningConfig`)(
+  {
+    profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs")),
+    customRules: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
+    maxIterations: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
+  },
+  $I.annote("ReasoningConfig", {
+    description: "Reasoning profile, optional custom rules, and iteration bound.",
+  })
+) {
   /**
    * Create default RDFS reasoning config
    *
@@ -154,7 +169,8 @@ export class ReasoningConfig extends S.Class<ReasoningConfig>("ReasoningConfig")
    * ```ts
    * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
    *
-   * console.log(ReasoningConfig)
+   * const config = ReasoningConfig.rdfs()
+   * console.log(config.profile) // "rdfs"
    * ```
    *
    * @returns Result produced by this operation.
@@ -171,7 +187,8 @@ export class ReasoningConfig extends S.Class<ReasoningConfig>("ReasoningConfig")
    * ```ts
    * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
    *
-   * console.log(ReasoningConfig)
+   * const config = ReasoningConfig.subclassOnly()
+   * console.log(config.profile) // "rdfs-subclass"
    * ```
    *
    * @returns Result produced by this operation.
@@ -188,7 +205,8 @@ export class ReasoningConfig extends S.Class<ReasoningConfig>("ReasoningConfig")
    * ```ts
    * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
    *
-   * console.log(ReasoningConfig)
+   * const config = ReasoningConfig.custom(["{ ?a <p> ?b } => { ?b <p> ?a } ."])
+   * console.log(config.profile) // "custom"
    * ```
    *
    * @param rules - Input consumed by this operation.
@@ -205,20 +223,33 @@ export class ReasoningConfig extends S.Class<ReasoningConfig>("ReasoningConfig")
  * **Example** (Inspect reasoning result)
  *
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegNum } from "@beep/schema/Number"
  * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(ReasoningResult)
+ * const result = ReasoningResult.make({
+ *   inferredTripleCount: NonNegativeInt.make(3),
+ *   totalTripleCount: NonNegativeInt.make(10),
+ *   rulesApplied: NonNegativeInt.make(2),
+ *   durationMs: NonNegNum.make(12)
+ * })
+ * console.log(result.hasInferences) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class ReasoningResult extends S.Class<ReasoningResult>("ReasoningResult")({
-  inferredTripleCount: NonNegativeInt,
-  totalTripleCount: NonNegativeInt,
-  rulesApplied: NonNegativeInt,
-  durationMs: NonNegNum,
-}) {
+export class ReasoningResult extends S.Class<ReasoningResult>($I`ReasoningResult`)(
+  {
+    inferredTripleCount: NonNegativeInt,
+    totalTripleCount: NonNegativeInt,
+    rulesApplied: NonNegativeInt,
+    durationMs: NonNegNum,
+  },
+  $I.annote("ReasoningResult", {
+    description: "Inferred triple counts, rules applied, and elapsed milliseconds.",
+  })
+) {
   /**
    * True if any new triples were inferred
    *
@@ -227,7 +258,17 @@ export class ReasoningResult extends S.Class<ReasoningResult>("ReasoningResult")
    * ```ts
    * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
    *
-   * console.log(ReasoningResult)
+   * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegNum } from "@beep/schema/Number"
+ * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
+ *
+ * const result = ReasoningResult.make({
+ *   inferredTripleCount: NonNegativeInt.make(3),
+ *   totalTripleCount: NonNegativeInt.make(10),
+ *   rulesApplied: NonNegativeInt.make(2),
+ *   durationMs: NonNegNum.make(12)
+ * })
+ * console.log(result.hasInferences) // true
    * ```
    *
    * @returns Result produced by this operation.
@@ -383,9 +424,15 @@ const getRulesForProfile = Match.type<ReasoningProfile>().pipe(
  *
  * ```ts
  * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { Reasoner } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(Layer.isLayer(Reasoner.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const reasoner = yield* Reasoner
+ *   return reasoner
+ * }).pipe(Effect.provide(Reasoner.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -575,9 +622,15 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
  * **Example** (Inspect the reasoner layer)
  * ```ts
  * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { Reasoner } from "@effect-ontology/Service/Reasoner"
  *
- * console.log(Layer.isLayer(Reasoner.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const reasoner = yield* Reasoner
+ *   return reasoner
+ * }).pipe(Effect.provide(Reasoner.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

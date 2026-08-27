@@ -56,16 +56,19 @@ const PromptRole = LiteralKit(["user", "assistant"]).pipe(
 /**
  * Ontology definitions and prior-stage values available while building a prompt.
  *
- * **Example** (Create entity-extraction context)
+ * **Example** (Create an empty-ontology mention context)
  *
  * ```ts
  * import { OntologyPromptContext } from "@effect-ontology/Prompt/PromptGenerator"
+ * import * as O from "effect/Option"
  *
  * const context = OntologyPromptContext.make({
  *   classes: [],
  *   objectProperties: [],
  *   datatypeProperties: []
  * })
+ * console.log(context.classes.length) // 0
+ * console.log(O.isNone(context.imageContexts)) // true
  * ```
  *
  * @category models

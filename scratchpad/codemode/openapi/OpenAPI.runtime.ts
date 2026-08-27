@@ -905,7 +905,59 @@ const errorBodySummary = (value: unknown): string => {
  * Executes one planned OpenAPI operation through the ambient Effect HTTP
  * client.
  *
- * @category execution
+ * **Gotchas**
+ *
+ * Non-record tool input is treated as `{}`. An {@link AuthResolver} returning
+ * `Option.none` marks that requirement unavailable and the next OR alternative
+ * is tried; a {@link ToolError} from the resolver aborts the call. Cookie
+ * apiKey schemes fail at apply time even if they appear on the {@link Plan}.
+ * An empty JSON body becomes `null`; a non-JSON success body is returned as
+ * text; malformed JSON on a JSON content-type is {@link ToolError}. Non-2xx
+ * statuses are also {@link ToolError}, not thrown HTTP errors.
+ *
+ * **Example** (Execute a planned GET through a stub HttpClient)
+ *
+ * ```ts
+ * import { Effect, HashMap } from "effect"
+ * import * as O from "effect/Option"
+ * import { HttpClient, HttpClientResponse } from "effect/unstable/http"
+ * import { ApiPath, Operation, Plan } from "../../../codemode/openapi/OpenAPI.types.ts"
+ * import { invoke } from "../../../codemode/openapi/OpenAPI.runtime.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const plan = Plan.new(
+ *   Operation.new(O.none(), "GET", S.decodeUnknownSync(ApiPath)("/health"), O.none(), O.none()),
+ *   "https://api.example.test/health",
+ *   [],
+ *   O.none(),
+ *   [],
+ *   HashMap.empty<string, never>(),
+ *   O.none(),
+ *   HashMap.empty<string, string>(),
+ * )
+ * const client = HttpClient.make((request) =>
+ *   Effect.succeed(
+ *     HttpClientResponse.fromWeb(
+ *       request,
+ *       new Response(JSON.stringify({ ok: true }), {
+ *         status: 200,
+ *         headers: { "content-type": "application/json" },
+ *       }),
+ *     ),
+ *   )
+ * )
+ * const payload = await Effect.runPromise(
+ *   invoke(plan, {}).pipe(Effect.provideService(HttpClient.HttpClient, client))
+ * )
+ * console.log(payload)
+ * ```
+ *
+ * @see {@link Plan} for the execution plan captured by a generated tool.
+ * @see {@link fromSpec} for compiling a document into tools that call this function.
+ * @see {@link AuthResolver} for none-versus-fail credential resolution.
+ * @see {@link ToolError} for non-2xx, malformed JSON, and cookie-scheme failures.
+ * @see {@link ApiKeyCookie} for the diagnostic-only cookie carrier this rejects.
+ * @category clients
  * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.

@@ -1,26 +1,38 @@
-// The provenance state machine (G8): every defined name records HOW it came
-// to exist (value, inline, static-array, table-explicit, table-implicit,
-// table-dotted, array-tables) and — for dotted-created tables — WHICH
-// document section created it. Each expression either legally extends the
-// tree or throws RawTomlError at the offending key, first violation wins.
-//
-// One corpus-driven deviation from the G8 matrix as originally written:
-// header navigation PASSES THROUGH `table-dotted` intermediates (the spec's
-// "[table] form can be used to define sub-tables within tables defined via
-// dotted keys" — valid/spec-1.1.0/common-46.toml, valid/table/
-// array-within-dotted.toml); only landing the FINAL header segment on an
-// existing `table-dotted` is an error (invalid/table/redefine-02, -03).
-//
-// Header and dotted-key navigation is ITERATIVE — path depth is data, never
-// recursion. Only value materialization recurses, and inline values are
-// already depth-capped by the parser.
+/**
+ * G8 provenance state machine: every defined name records how it came to
+ * exist, and each expression either legally extends the tree or throws
+ * {@link RawTomlError} at the offending key.
+ *
+ * **Details**
+ *
+ * Provenance kinds are value, inline, static-array, table-explicit,
+ * table-implicit, table-dotted, and array-tables; dotted-created tables also
+ * record which document section created them. First violation wins. Header
+ * navigation **passes through** `table-dotted` intermediates (the spec's
+ * `[table]` form can define sub-tables within tables defined via dotted keys
+ * — `common-46.toml`); only landing the **final** header segment on an
+ * existing `table-dotted` is an error. Header and dotted-key navigation is
+ * iterative — path depth is data, never recursion. Only value materialization
+ * recurses, and inline values are already depth-capped by the parser.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { TomlExpression, TomlKey, TomlKeyValue, TomlValueNode } from "../TomlNode.ts";
 import { TomlArray, TomlArrayTableHeader, TomlInlineTable, TomlTableHeader, TomlTrivia } from "../TomlNode.ts";
 import type { TomlSemanticErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 
-/** Semantic-pass callbacks, fired in document order after each expression validates. */
+/**
+ * Semantic-pass callbacks, fired in document order after each expression
+ * validates.
+ *
+ * @see {@link analyze} for the walk that invokes these callbacks.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface SemanticVisitor {
 	/** A table becomes current: the root (header `undefined`, once, first) or a `[t]` header. */
 	readonly onTableStart?: (path: ReadonlyArray<string>, header: TomlTableHeader | undefined) => void;
@@ -224,6 +236,34 @@ const inlineNode = (node: TomlInlineTable, context: Context): SemNode => {
 /**
  * Walk the expressions through the G8 state machine, firing the visitor after
  * each expression validates; throws `RawTomlError` at the first violation.
+ *
+ * **Gotchas**
+ *
+ * First violation wins. Header navigation passes through `table-dotted`
+ * intermediates; only landing the final header segment on an existing
+ * `table-dotted` is an error. Treating any dotted-key table as frozen
+ * rejects valid 1.1 documents (`common-46.toml`).
+ *
+ * **Example** (Throw on a duplicate key)
+ *
+ * ```ts
+ * import { isRawTomlError } from "../../../toml/internal/diagnostics.ts"
+ * import { parseExpressions } from "../../../toml/internal/parser.ts"
+ * import { analyze } from "../../../toml/internal/semantic.ts"
+ *
+ * try {
+ *   analyze(parseExpressions("a = 1\na = 2\n"))
+ * } catch (error) {
+ *   console.log(isRawTomlError(error) && error.diagnostic.code) // "DuplicateKey"
+ * }
+ * ```
+ *
+ * @throws A {@link RawTomlError} at the first semantic violation.
+ * @see {@link parseExpressions} for the CST this function walks.
+ * @see {@link Toml.parse} for the typed facade that materializes this throw.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const analyze = (expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void => {
 	const root = makeNode("table-explicit");
@@ -317,6 +357,29 @@ const materialize = (value: TomlValueNode): unknown => {
  * decoded values (`TomlInteger` → number | bigint, `TomlDateTimeLiteral` →
  * its date-time class instance), arrays to plain arrays, tables and inline
  * tables to plain objects with `__proto__` as an own data property.
+ *
+ * **Gotchas**
+ *
+ * `__proto__` is defined as an own data property (`Object.defineProperty`),
+ * matching `JSON.parse` and yaml. Assigning with `target[key] =` would mutate
+ * the prototype; the engine deliberately does not.
+ *
+ * **Example** (Build a table and keep __proto__ as own data)
+ *
+ * ```ts
+ * import { parseExpressions } from "../../../toml/internal/parser.ts"
+ * import { buildValue } from "../../../toml/internal/semantic.ts"
+ *
+ * console.log(buildValue(parseExpressions('name = "Alice"\n'))) // { name: "Alice" }
+ * const proto = buildValue(parseExpressions('__proto__ = "x"\n'))
+ * console.log(Object.hasOwn(Object(proto), "__proto__")) // true
+ * ```
+ *
+ * @see {@link parseExpressions} for the CST this function materializes.
+ * @see {@link Toml.parse} for the typed facade that wraps this function.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown => {
 	const result: Record<string, unknown> = {};

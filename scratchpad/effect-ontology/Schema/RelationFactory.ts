@@ -203,37 +203,18 @@ CRITICAL RULES:
 );
 
 /**
- * Type helpers
+ * Runtime schema returned by {@link makeRelationSchema} for Stage-2 relation extraction.
  *
- * **Example** (Reference the relation graph schema factory result)
- *
- * ```ts
- * import { makeRelationSchema, type RelationGraphSchema } from "@effect-ontology/Schema/RelationFactory"
- *
- * const relationGraphSchemaFactory: typeof makeRelationSchema = makeRelationSchema
- * const describeRelationGraphSchema = (_schema: RelationGraphSchema): string => "relation graph schema"
- *
- * console.log(relationGraphSchemaFactory.length, describeRelationGraphSchema.length)
- * ```
- *
+ * @see {@link makeRelationSchema} for constructing the schema from Stage-1 entity IDs.
  * @category type-level
  * @since 0.0.0
  */
 export type RelationGraphSchema = ReturnType<typeof makeRelationSchema>;
 
 /**
- * Describes the relation graph type data exposed by this module.
+ * Decoded relation graph produced by {@link makeRelationSchema}.
  *
- * **Example** (Reference RelationGraph fields)
- *
- * ```ts
- * import type { RelationGraph } from "@effect-ontology/Schema/RelationFactory"
- *
- * const relationGraphFields: ReadonlyArray<keyof RelationGraph> = ["relations"]
- *
- * console.log(relationGraphFields)
- * ```
- *
+ * @see {@link makeRelationSchema} for Stage-2 predicate and object constraints.
  * @category type-level
  * @since 0.0.0
  */

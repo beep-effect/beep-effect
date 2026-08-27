@@ -1,12 +1,11 @@
 /**
- * Notification hook event.
- *
- * Fires when Claude Code sends a notification to the user — permission
- * prompts, idle prompts, auth success, elicitation dialog. Supports a
- * matcher on `notification_type`. The hook cannot block or modify the
- * notification; use common output fields for user-visible side effects.
+ * Fires when Claude Code sends a notification (permission prompt, idle
+ * prompt, auth success, or elicitation dialog). The hook cannot block or
+ * rewrite the notification; common output fields such as `systemMessage`
+ * remain available as side effects. Matcher is on `notification_type`.
  * See https://code.claude.com/docs/en/hooks#notification.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -24,18 +23,20 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/Notification");
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `NotificationType`.
+ * Notification category Claude Code emitted with this event.
  *
- * **Example** (Inspect the NotificationType schema)
+ * **Example** (Decode a notification type)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Notification.NotificationType)
+ * const kind = S.decodeUnknownSync(Hook.Notification.NotificationType)("idle_prompt")
+ * console.log(kind) // "idle_prompt"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this type.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const NotificationType = LiteralKit([
@@ -52,35 +53,38 @@ export const NotificationType = LiteralKit([
 );
 
 /**
- * Type-level model for `NotificationType`.
+ * Decoded value produced by {@link NotificationType}.
  *
- * **Example** (Use NotificationType as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.Notification.NotificationType
- * ```
- *
+ * @see {@link NotificationType} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type NotificationType = typeof NotificationType.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a Notification hook, including `message` and
+ * `notification_type`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode an idle prompt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Notification.Input)
+ * const input = S.decodeUnknownSync(Hook.Notification.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "Notification",
+ *   message: "Claude is waiting for input",
+ *   notification_type: "idle_prompt",
+ * })
+ *
+ * console.log(input.notification_type) // "idle_prompt"
  * ```
  *
+ * @see {@link NotificationType} for the matcher field on this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`NotificationInput`)(
@@ -101,18 +105,26 @@ export class Input extends S.Class<Input>($I`NotificationInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `Output`.
+ * JSON response a Notification handler may return. It cannot suppress or
+ * rewrite the notification itself.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * There is no `block` helper. JSON cannot hide the notification; only
+ * `systemMessage` / `terminalSequence` side effects apply.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Notification.Output)
+ * const output = Hook.Notification.Output.make()
+ * console.log(O.isNone(output.systemMessage)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`NotificationOutput`)(
@@ -133,16 +145,23 @@ export class Output extends S.Class<Output>($I`NotificationOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * No-op output — notification proceeds unchanged.
+ * No-op output — the notification proceeds unchanged.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * Returning this (or any JSON) cannot suppress the notification.
+ *
+ * **Example** (Acknowledge the notification)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Notification.passthrough)
+ * const output = Hook.Notification.passthrough()
+ * console.log(O.isNone(output.systemMessage)) // true
  * ```
  *
+ * @see {@link define} for wrapping this result in a handler.
  * @category constructors
  * @since 0.0.0
  */
@@ -153,18 +172,28 @@ export const passthrough = (): Output => Output.make();
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable Notification hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * JSON cannot suppress the notification; only `systemMessage` /
+ * `terminalSequence` side effects apply.
+ *
+ * **Example** (Define a Notification hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Notification.define)
+ * const hook = Hook.Notification.define({
+ *   handler: () => Effect.succeed(Hook.Notification.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "Notification"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `notification_type`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -177,17 +206,24 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Build a Notification hook that only handles matching `notification_type`
- * values.
+ * Build a Notification hook that only handles matching
+ * `notification_type` values.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Handle idle prompts)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Notification.onMatcher)
+ * const hook = Hook.Notification.onMatcher({
+ *   matcher: "idle_prompt",
+ *   handler: () => Effect.succeed(Hook.Notification.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "Notification"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

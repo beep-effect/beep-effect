@@ -1,3 +1,17 @@
+/**
+ * Extglob AST compiler for nested `! ? + * @` operators.
+ *
+ * `#parseAST` has a structural depth backstop at `MAX_NESTING_DEPTH`
+ * independent of `maxExtglobRecursion`. A long `@(@(@` chain that overflows
+ * real minimatch 10.2.5 throws `NestingDepthExceeded`. Over-limit
+ * `maxExtglobRecursion` still degrades to a literal instead of throwing.
+ *
+ * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
+ * License: BlueOak-1.0.0.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // Ported from minimatch@10.2.5 (https://github.com/isaacs/minimatch)
 // Copyright: Isaac Z. Schlueter and Contributors
 // License: BlueOak-1.0.0 (https://blueoakcouncil.org/license/1.0.0)
@@ -66,6 +80,14 @@ import { unescape as unescapePattern } from "./unescape.ts";
 // ['^a', '(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)', 'b$']
 // ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
 
+/**
+ * The five extglob operators: `!` none, `?` optional, `+` one-or-more,
+ * `*` any, and `@` exactly one of the listed alternatives.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExtglobType = "!" | "?" | "+" | "*" | "@";
 const types = new Set<ExtglobType>(["!", "?", "+", "*", "@"]);
 const isExtglobType = (c: string | null): c is ExtglobType => types.has(c as ExtglobType);
@@ -177,6 +199,33 @@ const guardDepth = (depth: number): void => {
 };
 
 let ID = 0;
+/**
+ * Extglob tree minimatch compiles into a regular expression source.
+ *
+ * **Gotchas**
+ *
+ * Over-limit `maxExtglobRecursion` degrades nested extglobs to literals — it
+ * does not throw. `MAX_NESTING_DEPTH` is the structural throw
+ * (`NestingDepthExceeded`) for hostile `@(@(@` chains. Globstar over-cap is
+ * a silent false `false`; brace-budget over-cap throws
+ * `ExpansionBudgetExceeded`.
+ *
+ * **Example** (Compile a shallow extglob)
+ *
+ * ```ts
+ * import { AST } from "../../glob/internal/ast.ts"
+ *
+ * const ast = AST.fromGlob("+(js|ts)")
+ * const pattern = ast.toMMPattern()
+ * console.log(ast.toString()) // "+(js|ts)"
+ * console.log(pattern instanceof RegExp && pattern.test("ts")) // true
+ * console.log(pattern instanceof RegExp && pattern.test("tsx")) // false
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export class AST {
 	type: ExtglobType | null;
 	readonly #root: AST;

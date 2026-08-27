@@ -171,22 +171,30 @@ const processBackgroundJob = Effect.fn("processBackgroundJob")(function* (job: B
 // =============================================================================
 
 /**
- * Job Push Handler Router
+ * Pub/Sub push ingress for background jobs, including a health probe.
  *
  * **Details**
  *
  * Provides endpoints for Pub/Sub push subscriptions:
  * - POST /v1/jobs/process - Receive and process pushed jobs
+ * - GET /v1/jobs/health - Handler liveness
  *
- * **Example** (Inspect job push router)
+ * **Gotchas**
+ *
+ * Return 400 for job schema / parse failures so Pub/Sub does not retry a
+ * permanently invalid payload. Return 500 for processing failures so the
+ * subscriber retries.
+ *
+ * **Example** (Name the health probe)
  *
  * ```ts
  * import { JobPushRouter } from "@effect-ontology/Runtime/JobPushHandler"
  *
- * console.log(JobPushRouter)
+ * const documented = [JobPushRouter, "GET /v1/jobs/health"] as const
+ * console.log(documented[1]) // "GET /v1/jobs/health"
  * ```
  *
- * @category schemas
+ * @category endpoints
  * @since 0.0.0
  */
 export const JobPushRouter = HttpRouter.addAll([
@@ -299,7 +307,4 @@ export const JobPushRouter = HttpRouter.addAll([
   ),
 ]);
 
-/**
- * Export the router
- */
 export default JobPushRouter;

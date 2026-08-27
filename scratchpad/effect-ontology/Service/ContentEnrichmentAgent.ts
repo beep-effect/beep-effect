@@ -10,15 +10,6 @@
  * - Key named entities and topics
  * - Author and organization attribution
  *
- * **Example** (Inspect the enrichment layer)
- *
- * ```ts
- * import { Layer } from "effect"
- * import { ContentEnrichmentAgent } from "@effect-ontology/Service/ContentEnrichmentAgent"
- *
- * console.log(Layer.isLayer(ContentEnrichmentAgent.Default)) // true
- * ```
- *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -46,14 +37,18 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ContentEnrichmentAgent"
 // =============================================================================
 
 /**
- * Error: Failed to enrich content
+ * Failure to enrich fetched content with structured metadata.
  *
- * **Example** (Inspect content enrichment error)
+ * **Example** (Construct an enrichment error)
  *
  * ```ts
  * import { ContentEnrichmentError } from "@effect-ontology/Service/ContentEnrichmentAgent"
  *
- * console.log(ContentEnrichmentError)
+ * const error = ContentEnrichmentError.make({
+ *   message: "Language model returned empty metadata",
+ *   url: "https://example.org/articles/ada"
+ * })
+ * console.log(error._tag) // "ContentEnrichmentError"
  * ```
  *
  * @category errors
@@ -157,14 +152,20 @@ ${truncatedContent}`;
 // =============================================================================
 
 /**
- * Validates and represents content enrichment agent values at runtime.
+ * LLM agent that turns fetched article text into structured metadata.
  *
- * **Example** (Inspect content enrichment agent)
+ * **Example** (Enrich fetched article text)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ContentEnrichmentAgent } from "@effect-ontology/Service/ContentEnrichmentAgent"
  *
- * console.log(ContentEnrichmentAgent)
+ * const program = Effect.gen(function* () {
+ *   const agent = yield* ContentEnrichmentAgent
+ *   return yield* agent.enrich("Ada founded Acme in 1843.")
+ * }).pipe(Effect.provide(ContentEnrichmentAgent.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

@@ -6,6 +6,7 @@
  * (e.g. `import { HookInputDecodeError } from 'effect-claudecode'`) and
  * use them in `Effect.catchTag`.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";

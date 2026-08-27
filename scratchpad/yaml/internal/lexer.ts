@@ -1,8 +1,14 @@
-// YAML 1.2 lexer — tokenizes raw YAML text into YamlToken records.
-//
-// This is the only mutable module in the pipeline: the scanner uses
-// imperative character-by-character scanning with position tracking.
-// `createScanner` IS the state machine; `lexAll` drives it to completion.
+/**
+ * YAML 1.2 lexer — tokenizes raw YAML text into YamlToken records.
+ *
+ * This is the only mutable module in the pipeline: the scanner uses
+ * imperative character-by-character scanning with position tracking.
+ * `createScanner` is the state machine; `lexAll` drives it to completion.
+ * Lexical errors are `"error"` tokens, not throws.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { YamlToken, YamlTokenKind } from "./token.ts";
 
@@ -16,6 +22,17 @@ import type { YamlToken, YamlTokenKind } from "./token.ts";
  * Provides a pull-based accessor API: call {@link YamlScanner.scan} to advance
  * to the next token, then use the `getToken*` methods to inspect the current
  * token without advancing again.
+ *
+ * **Gotchas**
+ *
+ * {@link YamlScanner.setPosition} resets indent/flow/pending-token state.
+ * Pass an offset previously returned by {@link YamlScanner.getTokenOffset},
+ * not an arbitrary mid-token position such as `indexOf(":")` inside a scalar.
+ *
+ * @see {@link createScanner} for the factory that constructs this scanner.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlScanner {
 	/** Advance to the next token and return its kind, or `null` at end-of-input. */
@@ -50,6 +67,26 @@ export interface YamlScanner {
  *
  * Returns a stateful, pull-based scanner. Call {@link YamlScanner.scan} to
  * advance to the next token, then use `getToken*` methods to inspect it.
+ *
+ * **Gotchas**
+ *
+ * `setPosition` is only reliable at a previous `getTokenOffset()`. Seeking
+ * to a colon inside a scalar desynchronizes indent/flow state.
+ *
+ * **Example** (Public tokenizer wraps this scanner)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { YamlTokens } from "@beep/scratchpad/yaml"
+ *
+ * const result = YamlTokens.tokenize("a: 1")
+ * console.log(Result.isSuccess(result) && result.success.some((t) => t.kind === "scalar")) // true
+ * ```
+ *
+ * @see {@link YamlScanner} for the `setPosition` contract.
+ * @internal
+ * @category factories
+ * @since 0.0.0
  */
 export function createScanner(text: string): YamlScanner {
 	let pos = 0;
@@ -1503,6 +1540,24 @@ export function createScanner(text: string): YamlScanner {
  *
  * Lexer errors are embedded as `"error"` tokens in the result; the downstream
  * parser/composer collects them and records diagnostics as needed.
+ *
+ * **Example** (`"a: 1"` and an unterminated quote)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { YamlTokens } from "@beep/scratchpad/yaml"
+ *
+ * const ok = YamlTokens.tokenize("a: 1")
+ * console.log(Result.isSuccess(ok) && ok.success.some((t) => t.kind === "scalar")) // true
+ *
+ * const bad = YamlTokens.tokenize("\"unterminated")
+ * console.log(Result.isSuccess(bad) && bad.success.some((t) => t.kind === "error")) // true
+ * ```
+ *
+ * @see {@link YamlTokens.tokenize} for the public promotion of these tokens.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function lexAll(text: string): ReadonlyArray<YamlToken> {
 	const scanner = createScanner(text);

@@ -1,9 +1,14 @@
-// Shared hardening limits. Private implementation, zero dependencies.
-//
-// Lives in its own leaf module so every recursive surface — the parser, the
-// AST value-extractor, the semantic-equality walker and the SAX visitor — can
-// import the same cap without an import cycle (the parser imports
-// `JsoncNode`, so `JsoncNode` must not import the parser).
+/**
+ * Shared hardening limits for every recursive walk over untrusted JSONC.
+ *
+ * Lives in its own leaf module so the parser, AST value-extractor, semantic
+ * equality walker and SAX visitor can import the same cap without an import
+ * cycle (the parser imports `JsoncNode`, so `JsoncNode` must not import the
+ * parser).
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 /**
  * Maximum collection-nesting depth any recursive walk over untrusted input will
@@ -18,5 +23,19 @@
  * 256 is far beyond any real document and leaves a wide margin under the
  * observed single-frame overflow point. Mirrors `@effected/yaml`'s composer cap
  * for cross-package parity.
+ *
+ * **Example** (The shared depth cap)
+ *
+ * ```ts
+ * import { MAX_NESTING_DEPTH } from "../../jsonc/internal/limits.ts";
+ *
+ * console.log(MAX_NESTING_DEPTH === 256); // true
+ * ```
+ *
+ * @see {@link JsoncParseErrorCode} for the parse-error vocabulary that includes `NestingDepthExceeded`.
+ * @see {@link JsoncVisitor} for the in-band `Error` event emitted at the same cap.
+ * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const MAX_NESTING_DEPTH = 256;

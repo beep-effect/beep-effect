@@ -24,6 +24,7 @@
  * The seeding, fault-injection and volume-inspection APIs are kit extensions.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export {

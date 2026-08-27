@@ -1,10 +1,15 @@
-// Pure JSONC formatting: compute the minimal set of whitespace edits that
-// bring a document to canonical shape, or apply them in one step.
-//
-// Kept as its own concept module (rather than folded into the `Jsonc` facade)
-// so the jsonc and yaml surfaces stay structurally symmetric — `YamlFormatter`
-// will want the identical shape. Both statics are pure and total: computing
-// edits never fails, so there is no `Effect` wrapper.
+/**
+ * Pure JSONC formatting: compute the minimal set of whitespace edits that
+ * bring a document to canonical shape, or apply them in one step.
+ *
+ * Kept as its own concept module (rather than folded into the `Jsonc` facade)
+ * so the jsonc and yaml surfaces stay structurally symmetric — `YamlFormatter`
+ * will want the identical shape. Both statics are pure and total: computing
+ * edits never fails, so there is no `Effect` wrapper.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { SyntaxKind } from "./internal/scanner.ts";
 import { createScanner } from "./internal/scanner.ts";
@@ -12,9 +17,26 @@ import type { JsoncFormattingOptions, JsoncRange } from "./JsoncEdit.ts";
 import { JsoncEdit } from "./JsoncEdit.ts";
 
 /**
- * Pure JSONC formatting statics. Not instantiable.
+ * Pure JSONC formatting statics. Not instantiable. `format` returns the
+ * whitespace edits; apply them with {@link JsoncEdit.applyAll}. `formatToString`
+ * is `applyAll ∘ format` in one step.
  *
+ * **Example** (Pretty-print compact JSONC)
+ *
+ * ```ts
+ * import { JsoncEdit, JsoncFormatter } from "@beep/scratchpad/jsonc";
+ *
+ * const text = '{"a":1,"b":2}';
+ * const formatted = JsoncEdit.applyAll(text, JsoncFormatter.format(text));
+ *
+ * console.log(formatted); // '{\n  "a": 1,\n  "b": 2\n}'
+ * ```
+ *
+ * @see {@link JsoncEdit.applyAll} for applying the computed edits.
+ * @see {@link JsoncFormattingOptions} for indent, EOL and keep-lines controls.
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class JsoncFormatter {
 	private constructor() {}
@@ -27,8 +49,7 @@ export class JsoncFormatter {
 	 * @param range - Optional sub-range; only edits within it are returned.
 	 * @param options - Optional {@link JsoncFormattingOptions}; absent fields use
 	 *   defaults (tabSize 2, spaces, `"\n"`, no final newline, reflow).
-	 * @returns The edits that bring `text` (or `range`) to canonical shape;
-	 *   apply them with `JsoncEdit.applyAll`.
+	 * @see {@link JsoncEdit.applyAll} for applying the returned edits.
 	 */
 	static format(text: string, range?: JsoncRange, options?: JsoncFormattingOptions): ReadonlyArray<JsoncEdit> {
 		return formatImpl(text, range, options);
@@ -43,7 +64,6 @@ export class JsoncFormatter {
 	 * @param range - Optional sub-range; only edits within it are applied.
 	 * @param options - Optional {@link JsoncFormattingOptions}; see
 	 *   {@link JsoncFormatter.format} for defaults.
-	 * @returns The formatted text.
 	 */
 	static formatToString(text: string, range?: JsoncRange, options?: JsoncFormattingOptions): string {
 		return JsoncEdit.applyAll(text, formatImpl(text, range, options));

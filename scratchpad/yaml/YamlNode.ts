@@ -1,19 +1,39 @@
-// The mutually-recursive YAML AST: YamlScalar, YamlMap, YamlSeq, YamlPair,
-// YamlAlias and the YamlNode union, co-located in one module to break the
-// import cycle inherent in the recursive node types.
-//
-// Nodes deliberately carry no parent pointers (circular references would
-// break structural equality, serialization and Schema encode/decode). Child
-// relationships are expressed via `items`/`key`/`value`, and the recursive
-// types are handled with `Schema.suspend`.
+/**
+ * Mutually recursive YAML AST nodes: scalar, map, seq, pair, alias and the
+ * {@link YamlNode} union.
+ *
+ * Nodes deliberately carry no parent pointers (circular references would
+ * break structural equality, serialization and Schema encode/decode). Child
+ * relationships are expressed via `items`/`key`/`value`, and the recursive
+ * types are handled with `Schema.suspend`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Option, Schema } from "effect";
 import type { YamlPath } from "./YamlEdit.ts";
 
+const $I = $ScratchpadId.create("yaml/YamlNode");
+
 /**
- * YAML scalar presentation styles.
+ * YAML scalar presentation styles stored on composed {@link YamlScalar} nodes.
  *
+ * **Example** (Decode a scalar style)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ScalarStyle } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.decodeUnknownSync(ScalarStyle)("plain")) // "plain"
+ * console.log(S.is(ScalarStyle)("double-quoted")) // true
+ * ```
+ *
+ * @see {@link QuoteStyle} for the stringify-option fallback, which is not a node field.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ScalarStyle = Schema.Literals([
 	"plain",
@@ -21,26 +41,53 @@ export const ScalarStyle = Schema.Literals([
 	"double-quoted",
 	"block-literal",
 	"block-folded",
-]);
+]).pipe(
+	$I.annoteSchema("ScalarStyle", {
+		description: "YAML scalar presentation styles stored on composed scalar nodes.",
+	}),
+);
 
 /**
- * The union of all scalar style string literals.
+ * Decoded literal union produced by {@link ScalarStyle}.
  *
+ * @see {@link ScalarStyle} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ScalarStyle = typeof ScalarStyle.Type;
 
 /**
- * YAML collection presentation styles.
+ * YAML collection presentation styles stored on composed maps and sequences.
  *
+ * **Example** (Match a collection style)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CollectionStyle } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(CollectionStyle)("block")) // true
+ * console.log(S.is(CollectionStyle)("flow")) // true
+ * ```
+ *
+ * @see {@link YamlMap} for a mapping node that carries this style.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export const CollectionStyle = Schema.Literals(["block", "flow"]);
+export const CollectionStyle = Schema.Literals(["block", "flow"]).pipe(
+	$I.annoteSchema("CollectionStyle", {
+		description: "YAML collection presentation styles stored on composed maps and sequences.",
+	}),
+);
 
 /**
- * The union of all collection style string literals.
+ * Decoded literal union produced by {@link CollectionStyle}.
  *
+ * @see {@link CollectionStyle} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CollectionStyle = typeof CollectionStyle.Type;
 
@@ -51,14 +98,40 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  * unlike `ScalarStyle` it is a stringify-option vocabulary, never a property
  * of a composed node.
  *
+ * **Gotchas**
+ *
+ * {@link QuoteStyle} is not a {@link YamlScalar} field. Set it on
+ * {@link YamlStringifyOptions}, never on a node.
+ *
+ * **Example** (Match a fallback quote style)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { QuoteStyle } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(QuoteStyle)("single")) // true
+ * console.log(S.is(QuoteStyle)("plain")) // false
+ * ```
+ *
+ * @see {@link ScalarStyle} for the node-field presentation vocabulary this option is not.
+ * @see {@link YamlStringifyOptions} for the stringify options that consume this fallback.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export const QuoteStyle = Schema.Literals(["single", "double"]);
+export const QuoteStyle = Schema.Literals(["single", "double"]).pipe(
+	$I.annoteSchema("QuoteStyle", {
+		description: "Quote characters used when a plain-styled scalar requires quoting during stringify.",
+	}),
+);
 
 /**
- * The union of all fallback quote style string literals.
+ * Decoded literal union produced by {@link QuoteStyle}.
  *
+ * @see {@link QuoteStyle} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type QuoteStyle = typeof QuoteStyle.Type;
 
@@ -74,14 +147,34 @@ export type QuoteStyle = typeof QuoteStyle.Type;
  * `QuoteStyle` it is a stringify-option vocabulary, never a property of a
  * composed node.
  *
+ * **Example** (Match the YAML 1.1 compat dialect)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { QuoteCompat } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(QuoteCompat)("yaml-1.1")) // true
+ * ```
+ *
+ * @see {@link QuoteStyle} for the quote-character fallback used with this dialect.
+ * @see {@link YamlStringifyOptions} for the stringify options that consume `quoteCompat`.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export const QuoteCompat = Schema.Literals(["yaml-1.1"]);
+export const QuoteCompat = Schema.Literals(["yaml-1.1"]).pipe(
+	$I.annoteSchema("QuoteCompat", {
+		description: "Foreign resolution dialects the stringifier can defend against when quoting plain scalars.",
+	}),
+);
 
 /**
- * The union of all quote-compat dialect string literals.
+ * Decoded literal union produced by {@link QuoteCompat}.
  *
+ * @see {@link QuoteCompat} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type QuoteCompat = typeof QuoteCompat.Type;
 
@@ -89,14 +182,34 @@ export type QuoteCompat = typeof QuoteCompat.Type;
  * Block-scalar chomping indicators (`-` strip, default clip, `+` keep).
  * Referenced by the {@link YamlScalar} `chomp` field schema.
  *
+ * **Example** (Match a chomping indicator)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ScalarChomp } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(ScalarChomp)("strip")) // true
+ * console.log(S.is(ScalarChomp)("keep")) // true
+ * ```
+ *
+ * @see {@link YamlScalar} for the node that stores this indicator on block scalars.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export const ScalarChomp = Schema.Literals(["strip", "clip", "keep"]);
+export const ScalarChomp = Schema.Literals(["strip", "clip", "keep"]).pipe(
+	$I.annoteSchema("ScalarChomp", {
+		description: "Block-scalar chomping indicators stored on composed scalar nodes.",
+	}),
+);
 
 /**
- * The union of all block-scalar chomping indicator string literals.
+ * Decoded literal union produced by {@link ScalarChomp}.
  *
+ * @see {@link ScalarChomp} for the runtime schema and decoding behavior.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ScalarChomp = typeof ScalarChomp.Type;
 
@@ -126,23 +239,55 @@ export type ScalarChomp = typeof ScalarChomp.Type;
  *   absent on synthetic nodes.
  * - `offset` / `length` — the node's span in the source.
  *
+ * **Gotchas**
+ *
+ * Construct via {@link YamlScalar.make}, never `new` (the engine hot path is
+ * the recorded exception). Nodes have no parent pointers. Unresolvable aliases
+ * yield `null` from `toValue`. `pathOf` is reference identity; `find` only
+ * string scalar keys.
+ *
+ * **Example** (Make a scalar and read its value)
+ *
+ * ```ts
+ * import { YamlScalar } from "@beep/scratchpad/yaml"
+ *
+ * const scalar = YamlScalar.make({
+ *   value: "Alice",
+ *   style: "plain",
+ *   offset: 0,
+ *   length: 5,
+ * })
+ *
+ * console.log(scalar.toValue()) // "Alice"
+ * console.log(scalar.style) // "plain"
+ * ```
+ *
+ * @see {@link YamlNode} for the union that includes this node.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
-	value: Schema.Unknown,
-	tag: Schema.optionalKey(Schema.String),
-	style: ScalarStyle,
-	anchor: Schema.optionalKey(Schema.String),
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-	chomp: Schema.optionalKey(ScalarChomp),
-	blockIndent: Schema.optionalKey(Schema.Number),
-	raw: Schema.optionalKey(Schema.String),
-	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Number,
-	length: Schema.Number,
-}) {
+export class YamlScalar extends Schema.TaggedClass<YamlScalar>()(
+	"YamlScalar",
+	{
+		value: Schema.Unknown,
+		tag: Schema.optionalKey(Schema.String),
+		style: ScalarStyle,
+		anchor: Schema.optionalKey(Schema.String),
+		commentBefore: Schema.optionalKey(Schema.String),
+		comment: Schema.optionalKey(Schema.String),
+		spaceBefore: Schema.optionalKey(Schema.Boolean),
+		chomp: Schema.optionalKey(ScalarChomp),
+		blockIndent: Schema.optionalKey(Schema.Number),
+		raw: Schema.optionalKey(Schema.String),
+		sourceMultiline: Schema.optionalKey(Schema.Boolean),
+		offset: Schema.Number,
+		length: Schema.Number,
+	},
+	$I.annote("YamlScalar", {
+		description: "A YAML scalar AST node representing a leaf value such as a string, number, boolean, or null.",
+	}),
+) {
 	/**
 	 * Navigate to a descendant by path (string segments for mapping keys,
 	 * numbers for sequence indices). `Option.none()` when any segment cannot
@@ -188,16 +333,36 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()("YamlScalar", {
  * {@link YamlScalar} for the field semantics. An alias is a node like any
  * other and a comment can legally sit above or after one.
  *
+ * **Example** (Make an unresolved alias)
+ *
+ * ```ts
+ * import { YamlAlias } from "@beep/scratchpad/yaml"
+ *
+ * const alias = YamlAlias.make({ name: "item", offset: 0, length: 5 })
+ *
+ * console.log(alias.name) // "item"
+ * console.log(alias.toValue()) // null
+ * ```
+ *
+ * @see {@link YamlScalar} for the comment-field semantics shared by every node class.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlAlias extends Schema.TaggedClass<YamlAlias>()("YamlAlias", {
-	name: Schema.String,
-	offset: Schema.Number,
-	length: Schema.Number,
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-}) {
+export class YamlAlias extends Schema.TaggedClass<YamlAlias>()(
+	"YamlAlias",
+	{
+		name: Schema.String,
+		offset: Schema.Number,
+		length: Schema.Number,
+		commentBefore: Schema.optionalKey(Schema.String),
+		comment: Schema.optionalKey(Schema.String),
+		spaceBefore: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("YamlAlias", {
+		description: "A YAML alias AST node referencing a previously defined anchor by name.",
+	}),
+) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): Option.Option<YamlNode> {
 		return findByPath(this, path);
@@ -224,7 +389,10 @@ export class YamlAlias extends Schema.TaggedClass<YamlAlias>()("YamlAlias", {
  * without the instance methods. Named so the recursive {@link (YamlNode:variable)}
  * codec can state its encoded side without a circular type annotation.
  *
+ * @see {@link YamlScalar} for the runtime class this encoded form corresponds to.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlScalarEncoded extends Schema.Codec.Encoded<typeof YamlScalar> {}
 
@@ -232,7 +400,10 @@ export interface YamlScalarEncoded extends Schema.Codec.Encoded<typeof YamlScala
  * The encoded (plain-object) form of a {@link YamlMap}. See
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
  *
+ * @see {@link YamlMap} for the runtime class this encoded form corresponds to.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlMapEncoded extends Schema.Codec.Encoded<typeof YamlMap> {}
 
@@ -240,7 +411,10 @@ export interface YamlMapEncoded extends Schema.Codec.Encoded<typeof YamlMap> {}
  * The encoded (plain-object) form of a {@link YamlSeq}. See
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
  *
+ * @see {@link YamlSeq} for the runtime class this encoded form corresponds to.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlSeqEncoded extends Schema.Codec.Encoded<typeof YamlSeq> {}
 
@@ -248,7 +422,10 @@ export interface YamlSeqEncoded extends Schema.Codec.Encoded<typeof YamlSeq> {}
  * The encoded (plain-object) form of a {@link YamlAlias}. See
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
  *
+ * @see {@link YamlAlias} for the runtime class this encoded form corresponds to.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlAliasEncoded extends Schema.Codec.Encoded<typeof YamlAlias> {}
 
@@ -258,23 +435,48 @@ export interface YamlAliasEncoded extends Schema.Codec.Encoded<typeof YamlAlias>
  * Defined lazily via `Schema.suspend` to break the recursive reference chain
  * `YamlNode → YamlMap → YamlPair → YamlNode`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Construct member nodes via their `.make(...)` static (e.g.
  * `YamlScalar.make(...)`), never `new YamlScalar(...)` — the internal
  * composer's hot-path `new` construction is the one recorded exception, kept
- * internal to the engine for its allocation-sensitive walk.
+ * internal to the engine for its allocation-sensitive walk. Nodes have no
+ * parent pointers. `toValue` resolves aliases incrementally; unresolvable
+ * aliases yield `null`. `pathOf` is reference identity; `find` only string
+ * scalar keys. `__proto__` keys become own data properties.
  *
+ * **Example** (Guard a made scalar as a YamlNode)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YamlNode, YamlScalar } from "@beep/scratchpad/yaml"
+ *
+ * const scalar = YamlScalar.make({ value: 1, style: "plain", offset: 0, length: 1 })
+ * console.log(S.is(YamlNode)(scalar)) // true
+ * console.log(scalar.toValue()) // 1
+ * ```
+ *
+ * @see {@link YamlScalar.make} for the constructor to use on synthetic scalars.
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlNode: Schema.Codec<
 	YamlScalar | YamlMap | YamlSeq | YamlAlias,
 	YamlScalarEncoded | YamlMapEncoded | YamlSeqEncoded | YamlAliasEncoded
-> = Schema.suspend(() => Schema.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias]));
+> = Schema.suspend(() => Schema.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias])).pipe(
+	$I.annoteSchema("YamlNode", {
+		description: "Discriminated union of YAML AST value nodes: scalar, map, seq and alias.",
+	}),
+);
 
 /**
  * The union of all YAML AST value node types.
  *
+ * @see {@link (YamlNode:variable)} for the runtime schema that decodes this union.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
 
@@ -289,12 +491,34 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  * its comment where the author wrote it instead of relocating it onto the
  * value's line.
  *
+ * **Example** (Make a mapping pair)
+ *
+ * ```ts
+ * import { YamlPair, YamlScalar } from "@beep/scratchpad/yaml"
+ *
+ * const pair = YamlPair.make({
+ *   key: YamlScalar.make({ value: "name", style: "plain", offset: 0, length: 4 }),
+ *   value: YamlScalar.make({ value: "Alice", style: "plain", offset: 6, length: 5 }),
+ * })
+ *
+ * console.log(pair.key instanceof YamlScalar && pair.key.value) // "name"
+ * ```
+ *
+ * @see {@link YamlMap} for the mapping that stores these pairs in `items`.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlPair extends Schema.TaggedClass<YamlPair>()("YamlPair", {
-	key: Schema.suspend((): typeof YamlNode => YamlNode),
-	value: Schema.NullOr(Schema.suspend((): typeof YamlNode => YamlNode)),
-}) {}
+export class YamlPair extends Schema.TaggedClass<YamlPair>()(
+	"YamlPair",
+	{
+		key: Schema.suspend((): typeof YamlNode => YamlNode),
+		value: Schema.NullOr(Schema.suspend((): typeof YamlNode => YamlNode)),
+	},
+	$I.annote("YamlPair", {
+		description: "A YAML key-value pair AST node representing one mapping entry.",
+	}),
+) {}
 
 /**
  * A YAML mapping AST node, representing a collection of {@link YamlPair}
@@ -309,20 +533,51 @@ export class YamlPair extends Schema.TaggedClass<YamlPair>()("YamlPair", {
  * - `sourceMultiline` — `true` when the source span covers two or more lines;
  *   used by the canonical stringifier. Absent on synthetic nodes.
  *
+ * **Example** (Make a mapping and resolve a key)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { YamlMap, YamlPair, YamlScalar } from "@beep/scratchpad/yaml"
+ *
+ * const map = YamlMap.make({
+ *   items: [
+ *     YamlPair.make({
+ *       key: YamlScalar.make({ value: "name", style: "plain", offset: 0, length: 4 }),
+ *       value: YamlScalar.make({ value: "Alice", style: "plain", offset: 6, length: 5 }),
+ *     }),
+ *   ],
+ *   style: "block",
+ *   offset: 0,
+ *   length: 12,
+ * })
+ *
+ * console.log(map.toValue()) // { name: "Alice" }
+ * console.log(O.isSome(map.find(["name"]))) // true
+ * ```
+ *
+ * @see {@link YamlPair} for the entries stored in `items`.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlMap extends Schema.TaggedClass<YamlMap>()("YamlMap", {
-	items: Schema.Array(Schema.suspend((): typeof YamlPair => YamlPair)),
-	tag: Schema.optionalKey(Schema.String),
-	anchor: Schema.optionalKey(Schema.String),
-	style: CollectionStyle,
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Number,
-	length: Schema.Number,
-}) {
+export class YamlMap extends Schema.TaggedClass<YamlMap>()(
+	"YamlMap",
+	{
+		items: Schema.Array(Schema.suspend((): typeof YamlPair => YamlPair)),
+		tag: Schema.optionalKey(Schema.String),
+		anchor: Schema.optionalKey(Schema.String),
+		style: CollectionStyle,
+		commentBefore: Schema.optionalKey(Schema.String),
+		comment: Schema.optionalKey(Schema.String),
+		spaceBefore: Schema.optionalKey(Schema.Boolean),
+		sourceMultiline: Schema.optionalKey(Schema.Boolean),
+		offset: Schema.Number,
+		length: Schema.Number,
+	},
+	$I.annote("YamlMap", {
+		description: "A YAML mapping AST node representing a collection of key-value pairs.",
+	}),
+) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): Option.Option<YamlNode> {
 		return findByPath(this, path);
@@ -354,20 +609,44 @@ export class YamlMap extends Schema.TaggedClass<YamlMap>()("YamlMap", {
  *   same-line trailing comment for a flow sequence.
  * - `spaceBefore` — `true` when a blank line precedes the sequence.
  *
+ * **Example** (Make a sequence and read its value)
+ *
+ * ```ts
+ * import { YamlScalar, YamlSeq } from "@beep/scratchpad/yaml"
+ *
+ * const seq = YamlSeq.make({
+ *   items: [YamlScalar.make({ value: "a", style: "plain", offset: 2, length: 1 })],
+ *   style: "block",
+ *   offset: 0,
+ *   length: 3,
+ * })
+ *
+ * console.log(seq.toValue()) // ["a"]
+ * ```
+ *
+ * @see {@link YamlNode} for the item union stored in `items`.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlSeq extends Schema.TaggedClass<YamlSeq>()("YamlSeq", {
-	items: Schema.Array(Schema.suspend((): typeof YamlNode => YamlNode)),
-	tag: Schema.optionalKey(Schema.String),
-	anchor: Schema.optionalKey(Schema.String),
-	style: CollectionStyle,
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	spaceBefore: Schema.optionalKey(Schema.Boolean),
-	sourceMultiline: Schema.optionalKey(Schema.Boolean),
-	offset: Schema.Number,
-	length: Schema.Number,
-}) {
+export class YamlSeq extends Schema.TaggedClass<YamlSeq>()(
+	"YamlSeq",
+	{
+		items: Schema.Array(Schema.suspend((): typeof YamlNode => YamlNode)),
+		tag: Schema.optionalKey(Schema.String),
+		anchor: Schema.optionalKey(Schema.String),
+		style: CollectionStyle,
+		commentBefore: Schema.optionalKey(Schema.String),
+		comment: Schema.optionalKey(Schema.String),
+		spaceBefore: Schema.optionalKey(Schema.Boolean),
+		sourceMultiline: Schema.optionalKey(Schema.Boolean),
+		offset: Schema.Number,
+		length: Schema.Number,
+	},
+	$I.annote("YamlSeq", {
+		description: "A YAML sequence AST node representing an ordered list of nodes.",
+	}),
+) {
 	/** See `YamlScalar.find`. Pure. */
 	find(path: YamlPath): Option.Option<YamlNode> {
 		return findByPath(this, path);
@@ -534,6 +813,32 @@ function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknow
  * Not re-exported from the package entry point (`index.ts`) — the facade
  * catches it and materializes a fatal `AliasCountExceeded` `YamlParseError`
  * (or, for `Yaml.equals`, treats the input as malformed).
+ *
+ * **Gotchas**
+ *
+ * Callers catching {@link Yaml.parse} errors will never see this class — the
+ * facade maps it to `AliasCountExceeded` on {@link YamlParseError}.
+ *
+ * **Example** (Public parse maps the budget blow-up to AliasCountExceeded)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml, YamlParseOptions } from "@beep/scratchpad/yaml"
+ *
+ * const parsed = Yaml.parseResult(
+ *   "a: &id 1\nb: *id\n",
+ *   YamlParseOptions.make({ maxAliasCount: 0 }),
+ * )
+ * console.log(Result.isFailure(parsed)) // true
+ * if (Result.isFailure(parsed)) {
+ *   console.log(parsed.failure.diagnostics[0]?.code) // "AliasCountExceeded"
+ * }
+ * ```
+ *
+ * @see {@link YamlParseError} for the facade error that materializes `AliasCountExceeded`.
+ * @internal
+ * @category errors
+ * @since 0.0.0
  */
 export class AliasExpansionBudgetExceeded extends Error {
 	constructor(limit: number) {
@@ -552,7 +857,29 @@ export class AliasExpansionBudgetExceeded extends Error {
  */
 const ALIAS_EXPANSION_FACTOR = 10_000;
 
-/** The output-node cap for a given `maxAliasCount`. */
+/**
+ * Convert a `maxAliasCount` parse budget into the output-node cap used while
+ * expanding aliases.
+ *
+ * Alias-free content never ticks the counter, so a large but benign document
+ * stays far under the cap; an exponential alias chain accumulates across the
+ * shared budget and trips it long before the heap is exhausted.
+ *
+ * **Example** (Parse with a tight alias budget still succeeds for alias-free YAML)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml, YamlParseOptions } from "@beep/scratchpad/yaml"
+ *
+ * const parsed = Yaml.parseResult("a: 1", YamlParseOptions.make({ maxAliasCount: 1 }))
+ * console.log(Result.isSuccess(parsed)) // true
+ * ```
+ *
+ * @see {@link nodeToJsValue} for the walk that enforces this cap.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function aliasExpansionLimit(maxAliasCount: number): number {
 	return (maxAliasCount + 1) * ALIAS_EXPANSION_FACTOR;
 }
@@ -577,6 +904,25 @@ function defaultBudget(): ExpansionBudget {
  * options bounds the "billion laughs" expansion; throws
  * {@link AliasExpansionBudgetExceeded} when the cap is exceeded. Not
  * re-exported from the package entry point.
+ *
+ * **Example** (Resolve an alias through the value-level parse)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const parsed = Yaml.parseResult("a: &x 1\nb: *x\n")
+ * console.log(Result.isSuccess(parsed)) // true
+ * if (Result.isSuccess(parsed)) {
+ *   console.log(parsed.success) // { a: 1, b: 1 }
+ * }
+ * ```
+ *
+ * @throws Throws {@link AliasExpansionBudgetExceeded} when alias expansion materializes more nodes than the budget derived from `maxAliasCount`.
+ * @see {@link YamlParseError} for the facade mapping of that throw to `AliasCountExceeded`.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown {
 	return nodeToValue(node, anchors, { count: 0, limit: aliasExpansionLimit(maxAliasCount) });

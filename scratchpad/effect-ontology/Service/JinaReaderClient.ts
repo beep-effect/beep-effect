@@ -40,11 +40,10 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
  * **Example** (Use the FetchOptions contract)
  *
  * ```ts
- * import type { FetchOptions } from "@effect-ontology/Service/JinaReaderClient"
+ * import { FetchOptions } from "@effect-ontology/Service/JinaReaderClient"
  *
- * const acceptsFetchOptions = (_value: FetchOptions): void => undefined
- *
- * console.log(acceptsFetchOptions)
+ * const options = FetchOptions.make({ includeImages: true })
+ * console.log(options.includeImages) // true
  * ```
  *
  * @category type-level
@@ -85,14 +84,20 @@ export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
  * Response from Jina Reader API with parsed content
  *
  *
- * **Example** (Use the JinaResponse contract)
+ * **Example** (Record a reader response)
  *
  * ```ts
- * import type { JinaResponse } from "@effect-ontology/Service/JinaReaderClient"
+ * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
+ * import { JinaResponse } from "@effect-ontology/Service/JinaReaderClient"
  *
- * const acceptsJinaResponse = (_value: JinaResponse): void => undefined
- *
- * console.log(acceptsJinaResponse)
+ * const response = JinaResponse.make({
+ *   content: JinaContent.make({
+ *     url: "https://example.org/ada",
+ *     title: "Ada Lovelace",
+ *     content: "Ada founded Acme."
+ *   })
+ * })
+ * console.log(response.content.title) // "Ada Lovelace"
  * ```
  *
  * @category type-level
@@ -163,14 +168,20 @@ const makeRateLimiter = (maxRequests: number, window: Duration.Duration = Durati
 // =============================================================================
 
 /**
- * Validates and represents jina reader client values at runtime.
+ * HTTP client for Jina Reader URL-to-markdown fetches.
  *
  * **Example** (Inspect jina reader client)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { JinaReaderClient } from "@effect-ontology/Service/JinaReaderClient"
  *
- * console.log(JinaReaderClient)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* JinaReaderClient
+ *   return client
+ * }).pipe(Effect.provide(JinaReaderClient.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

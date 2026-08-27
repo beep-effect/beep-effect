@@ -1,6 +1,14 @@
-// Anchor/alias machinery: alias node construction, anchor registration and
-// name scanning, plus the anchor-map/value-extraction helpers the facade and
-// compliance harness drive (`buildAnchorMap`, `getNodeValue`).
+/**
+ * Anchor and alias machinery: alias construction, anchor registration, name
+ * scanning, and the value-extraction helpers the facade drives.
+ *
+ * Alias budget counting and DuplicateAnchor channel reuse (error vs
+ * warning) live here. `__proto__` mapping keys round-trip as own data
+ * properties, not prototype mutation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
@@ -12,9 +20,30 @@ import type { ComposerState, NodeMeta } from "./state.ts";
  * Aliases represent references to existing anchored nodes and cannot have their own anchors.
  *
  * Uses `DuplicateAnchor` error code as a pragmatic reuse — semantically this is
- * "anchor on alias" rather than "same anchor name defined twice", but adding a
+ * "anchor on alias" rather than "same name defined twice", but adding a
  * dedicated `AnchorOnAlias` code would be a public API change. The error message
  * distinguishes the two cases for consumers inspecting the message text.
+ *
+ * **Gotchas**
+ *
+ * Same code, different channel: this path pushes to `state.errors` (fatal
+ * if it lands in errors). {@link registerAnchor} pushes the same code to
+ * `state.warnings` and last-write-wins the map. Inspect `message` to tell
+ * the cases apart. Do not invent an `AnchorOnAlias` code.
+ *
+ * **Example** (Anchor on alias is a fatal parse)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Result.isFailure(Yaml.parseResult("&a *b\n"))) // true
+ * ```
+ *
+ * @see {@link registerAnchor} for the warning-channel DuplicateAnchor path.
+ * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export function checkAnchorOnAlias(pendingMeta: NodeMeta, cst: CstNode, state: ComposerState): void {
 	if (pendingMeta.anchor !== undefined) {
@@ -27,6 +56,31 @@ export function checkAnchorOnAlias(pendingMeta: NodeMeta, cst: CstNode, state: C
 	}
 }
 
+/**
+ * Build an alias node, recording `UndefinedAlias` or `AliasCountExceeded`.
+ *
+ * **Gotchas**
+ *
+ * Undefined aliases emit `UndefinedAlias` and do **not** increment
+ * `aliasCount`. `AliasCountExceeded` fires only after a defined alias
+ * pushes the count past `options.maxAliasCount`. A hostile document of
+ * dangling `*x` references does not trip the DoS guard.
+ *
+ * **Example** (Defined alias resolves; dangling alias is fatal)
+ *
+ * ```ts
+ * import { Effect, Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: &id 1\nb: *id\n"))) // { a: 1, b: 1 }
+ * console.log(Result.isFailure(Yaml.parseResult("*missing\n"))) // true
+ * ```
+ *
+ * @see {@link ParseOptionsInput} for the default `maxAliasCount` of 100.
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export function makeAlias(cst: CstNode, state: ComposerState): YamlAlias {
 	const name = getAliasName(cst, state.text);
 
@@ -55,6 +109,29 @@ export function makeAlias(cst: CstNode, state: ComposerState): YamlAlias {
 	return new YamlAlias({ name, offset: cst.offset, length: cst.length });
 }
 
+/**
+ * Register `node` under `anchor`, warning on a reused name.
+ *
+ * **Gotchas**
+ *
+ * Duplicate names emit `DuplicateAnchor` on the **warning** channel and
+ * last-write-wins the map. Contrast {@link checkAnchorOnAlias}, which uses
+ * the same code on the error channel.
+ *
+ * **Example** (Last duplicate anchor wins)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: &id 1\nb: &id 2\nc: *id\n"))) // { a: 1, b: 2, c: 2 }
+ * ```
+ *
+ * @see {@link checkAnchorOnAlias} for the error-channel DuplicateAnchor path.
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export function registerAnchor(node: YamlNode, anchor: string, state: ComposerState, offset: number): void {
 	if (state.anchors.has(anchor)) {
 		state.warnings.push({
@@ -67,6 +144,23 @@ export function registerAnchor(node: YamlNode, anchor: string, state: ComposerSt
 	state.anchors.set(anchor, node);
 }
 
+/**
+ * Read an anchor name from a CST node, scanning past the `&` sigil.
+ *
+ * **Example** (Parse an anchored scalar)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: &id 1\n"))) // { a: 1 }
+ * ```
+ *
+ * @see {@link scanName} for the ns-anchor-char scan used after the sigil.
+ * @internal
+ * @category getters
+ * @since 0.0.0
+ */
 export function getAnchorName(cst: CstNode, text: string): string {
 	// The CST anchor node carries the lexer token's span, which covers the
 	// "&" sigil plus the name. Scan the name from the original text starting
@@ -79,6 +173,23 @@ export function getAnchorName(cst: CstNode, text: string): string {
 	return cst.source;
 }
 
+/**
+ * Read an alias name from a CST node, scanning past the `*` sigil.
+ *
+ * **Example** (Resolve a named alias)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: &id hi\nb: *id\n"))) // { a: "hi", b: "hi" }
+ * ```
+ *
+ * @see {@link scanName} for the ns-anchor-char scan used after the sigil.
+ * @internal
+ * @category getters
+ * @since 0.0.0
+ */
 export function getAliasName(cst: CstNode, text: string): string {
 	const rawStart = text[cst.offset];
 	if (rawStart === "*") {
@@ -87,6 +198,23 @@ export function getAliasName(cst: CstNode, text: string): string {
 	return cst.source;
 }
 
+/**
+ * Scan a YAML 1.2 ns-anchor-char name from `start` (any non-whitespace
+ * except flow indicators).
+ *
+ * **Example** (Anchors stop at flow indicators)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("{&id a: 1, b: *id}\n"))) // { a: 1, b: 1 }
+ * ```
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
 export function scanName(text: string, start: number): string {
 	let end = start;
 	// YAML 1.2 ns-anchor-char: any non-whitespace char except c-flow-indicator
@@ -119,6 +247,21 @@ export function scanName(text: string, start: number): string {
  * Build an anchor map by walking the AST, collecting nodes that have anchors.
  * Used to resolve aliases when extracting plain JavaScript values from
  * parsed YAML documents.
+ *
+ * **Example** (Alias resolution through the public value path)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlDocument } from "@beep/scratchpad/yaml"
+ *
+ * const doc = Effect.runSync(YamlDocument.parse("a: &id 1\nb: *id\n"))
+ * console.log(doc.toValue()) // { a: 1, b: 1 }
+ * ```
+ *
+ * @see {@link getNodeValue} for value extraction that consults this map.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export function buildAnchorMap(node: YamlNode | null): Map<string, YamlNode> {
 	const anchors = new Map<string, YamlNode>();
@@ -150,6 +293,27 @@ function collectAnchors(node: YamlNode | null, anchors: Map<string, YamlNode>): 
  * single implementation on the public node classes (`YamlNode.toValue`),
  * which resolves aliases through the optional anchor map with incremental
  * registration and handles `__proto__` keys as own data properties.
+ *
+ * **Gotchas**
+ *
+ * `__proto__` is data, not a setter. Do not "sanitize" by dropping the key
+ * — it round-trips as an own property on the plain object, not as
+ * `Object.prototype` mutation.
+ *
+ * **Example** (`__proto__` is an own mapping key)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const value = Effect.runSync(Yaml.parse("__proto__: 1\n"))
+ * console.log(typeof value === "object" && value !== null && Object.hasOwn(value, "__proto__")) // true
+ * ```
+ *
+ * @see {@link YamlNode.toValue} for the public node method this delegates to.
+ * @internal
+ * @category getters
+ * @since 0.0.0
  */
 export function getNodeValue(node: YamlNode | null, anchors?: Map<string, YamlNode>): unknown {
 	return node === null ? null : node.toValue(anchors);

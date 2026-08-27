@@ -1,3 +1,10 @@
+/**
+ * Guest `JSON.parse` and `JSON.stringify` with native reviver and replacer
+ * semantics for the CodeMode interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import {DateTime, Effect, MutableHashSet, Result} from "effect";
 import type {CallbackRunner} from "../interpreter/Interpreter.methods.ts";
 import {applyCollectionCallback} from "../interpreter/Interpreter.methods.ts";
@@ -24,12 +31,48 @@ import {
 } from "../Codemode.values.ts";
 
 /**
- * Guest ECMAScript JSON adapter.
+ * Guest JSON.parse/stringify adapter with reviver and replacer callbacks.
  *
- * Native JSON parsing/stringification is deliberate in this file: schema JSON
+ * **Details**
+ *
+ * Native `JSON.parse` and `JSON.stringify` are used deliberately: schema JSON
  * codecs cannot preserve guest reviver/replacer call order, sparse-array
- * omission semantics, or native error behavior. Host and protocol JSON uses
- * Effect Schema codecs elsewhere in CodeMode.
+ * omission, or native error objects. Host and protocol JSON uses Effect Schema
+ * codecs elsewhere in CodeMode.
+ *
+ * **Gotchas**
+ *
+ * Circular structures throw `TypeError` during stringify. {@link CodeModeDate}
+ * and {@link CodeModeURL} contribute via `toJSON` (ISO or `null` for invalid
+ * dates; `href` for URLs). Values are copied in and out through {@link copyIn}
+ * and {@link copyOut} so guest objects do not leak host identity.
+ *
+ * **Example** (Parse then stringify an object)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { invokeJsonMethod } from "../../../codemode/stdlib/StdLib.json.ts"
+ *
+ * const node = { type: "CallExpression" }
+ * const runner = {
+ *   invokeFunction: () => Effect.die("unused"),
+ *   invokeCallable: () => Effect.die("unused"),
+ *   settlePromise: () => Effect.die("unused"),
+ * }
+ * const parsed = await Effect.runPromise(
+ *   invokeJsonMethod(runner, "parse", ['{"ok":true}'], node)
+ * )
+ * const text = await Effect.runPromise(
+ *   invokeJsonMethod(runner, "stringify", [parsed], node)
+ * )
+ * console.log(parsed)
+ * console.log(text)
+ * ```
+ *
+ * @see {@link copyIn} for the inbound guest-data copy used by parse.
+ * @see {@link copyOut} for the outbound copy used by stringify without a replacer.
+ * @category serialization
+ * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeJsonMethod = <R>(

@@ -1,17 +1,24 @@
-// The GlobSet facade: multi-pattern include/exclude sets with glob-core's SET
-// semantics — a leading bang marks an exclusion filter applied after positive
-// matching. This is deliberately distinct from minimatch's whole-pattern
-// negation: both exist, at different levels, on purpose.
-//
-// GlobSet pins DEFAULT options internally: it is the drift-free workspaces
-// contract and takes no options surface of its own. Braced patterns classify
-// per expanded alternative (the pinned implementation decision), so
-// {tools/cli,packages/*} contributes a literal AND a wildcard.
-
+/**
+ * Multi-pattern include/exclude sets with glob-core SET semantics: a leading
+ * bang marks an exclusion filter applied after positive matching. This is
+ * deliberately distinct from minimatch's whole-pattern negation — both exist,
+ * at different levels, on purpose.
+ *
+ * GlobSet pins default options internally: it is the drift-free workspaces
+ * contract and takes no options surface of its own. Braced patterns classify
+ * per expanded alternative, so `{tools/cli,packages/*}` contributes a literal
+ * AND a wildcard.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Effect, Result, Schema } from "effect";
 import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { Minimatch, braceExpand } from "./internal/minimatch.ts";
+
+const $I = $ScratchpadId.create("glob/GlobSet");
 
 // Strip exactly ONE leading bang: the set-level exclusion marker. A remaining
 // bang is then ordinary minimatch whole-pattern negation inside the exclude —
@@ -53,12 +60,58 @@ interface Classified {
  * reads from their `enumerationPrefix`, and `crossesSegments` triggers the
  * bounded recursive descent — the issue-#62 fix end to end.
  *
+ * **Details**
+ *
+ * Classification is per expanded alternative: `{tools/cli,packages/*}` is a
+ * literal AND a wildcard. Literal keys use the engine's unescaped single row
+ * so `foo\*bar` still matches `foo*bar`. Comments contribute nothing; leftover
+ * negate/non-string rows go to `wildcards`.
+ *
+ * **Gotchas**
+ *
+ * A leading `!` here is an exclusion filter applied after positive matching,
+ * not minimatch whole-pattern negation. `GlobSet.compile(["!foo"])` excludes
+ * `foo`; `GlobPattern.compile("!foo")` inverts `matches`. `nonegate` /
+ * `flipNegate` only affect the engine, not this leading-bang strip. A remaining
+ * bang after stripping exactly one `!` is inner minimatch negate.
+ *
+ * **Example** (Include packages and exclude docs)
+ *
+ * ```ts
+ * import { GlobSet } from "@beep/scratchpad/glob"
+ * import { Result } from "effect"
+ *
+ * const compiled = GlobSet.compileResult(["packages/*", "!packages/docs"])
+ * console.log(Result.isSuccess(compiled) && compiled.success.matches("packages/cli")) // true
+ * console.log(Result.isSuccess(compiled) && compiled.success.matches("packages/docs")) // false
+ * ```
+ *
+ * **Example** (Classify braces, escaped literals, and comments)
+ *
+ * ```ts
+ * import { GlobSet } from "@beep/scratchpad/glob"
+ * import { Result } from "effect"
+ *
+ * const compiled = GlobSet.compileResult(["{tools/cli,packages/*}", "foo\\*bar", "# comment"])
+ * if (Result.isSuccess(compiled)) {
+ *   console.log(compiled.success.literals) // ["tools/cli", "foo*bar"]
+ *   console.log(compiled.success.wildcards.map((pattern) => pattern.source)) // ["packages/*"]
+ *   console.log(compiled.success.excludes.length) // 0
+ * }
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
+export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 	Schema.Struct({ patterns: Schema.Array(Schema.String) }).check(
 		Schema.makeFilter((v) => allCompileUnderDefaults(v.patterns), { title: "compilable glob pattern set" }),
 	),
+	$I.annote("GlobSet", {
+		description:
+			"A compiled include/exclude glob set whose leading bang is an exclusion filter, not whole-pattern negation.",
+	}),
 ) {
 	#classified: Classified | undefined;
 	#literalSet: ReadonlySet<string> | undefined;
@@ -126,12 +179,22 @@ export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
 	 * names the offending source pattern in `pattern` (bang included for
 	 * exclusions).
 	 *
-	 * @remarks
-	 * For synchronous call sites that cannot host an Effect — a lint-staged
-	 * handler, a config predicate — this removes the
-	 * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
-	 * `Result.isSuccess` and read `.success` directly. Effect call sites should
-	 * prefer {@link GlobSet.compile}, which carries the tracing span.
+	 * **When to use**
+	 *
+	 * Use when the call site cannot host an Effect — a lint-staged handler or a
+	 * config predicate — so `Result.isSuccess` can read `.success` without
+	 * `Effect.runSync(Effect.result(...))`.
+	 *
+	 * **Example** (Compile includes and an exclusion)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["packages/*", "!packages/docs"])
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("packages/cli")) // true
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("packages/docs")) // false
+	 * ```
 	 */
 	static compileResult(patterns: ReadonlyArray<string>): Result.Result<GlobSet, GlobPatternError> {
 		for (const pattern of patterns) {
@@ -158,6 +221,17 @@ export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
 	 * Defined in terms of {@link GlobSet.compileResult} — synchronous callers
 	 * can use that variant directly. Same semantics, same errors; this form
 	 * adds only the `GlobSet.compile` tracing span.
+	 *
+	 * **Example** (Compile a set inside Effect)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Effect } from "effect"
+	 *
+	 * const compiled = Effect.runSync(GlobSet.compile(["*.ts", "!skip.ts"]))
+	 * console.log(compiled.matches("keep.ts")) // true
+	 * console.log(compiled.matches("skip.ts")) // false
+	 * ```
 	 */
 	static readonly compile = Effect.fn("GlobSet.compile")(function* (patterns: ReadonlyArray<string>) {
 		return yield* Effect.fromResult(GlobSet.compileResult(patterns));
@@ -166,6 +240,23 @@ export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
 	/**
 	 * Whether `candidate` matches the set: some include accepts it (literal
 	 * exact-match fast path, then wildcards) and no exclude does. Total.
+	 *
+	 * **Gotchas**
+	 *
+	 * Exclusion is SET-level: a member `"!foo"` never becomes a negated
+	 * {@link GlobPattern} matcher. A set that is only exclusions matches
+	 * nothing because no include accepted the candidate.
+	 *
+	 * **Example** (Match after exclusion)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["packages/*", "!packages/docs"])
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("packages/cli")) // true
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("packages/docs")) // false
+	 * ```
 	 */
 	matches(candidate: string): boolean {
 		const { wildcards, excludes } = this.#classify();
@@ -174,12 +265,43 @@ export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
 		return !excludes.some((e) => e.matches(candidate));
 	}
 
-	/** Whether `candidate` is caught by the exclusion filter, independently of inclusion. */
+	/**
+	 * Whether `candidate` is caught by the exclusion filter, independently of inclusion.
+	 *
+	 * **Example** (Inspect exclusion without inclusion)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["packages/*", "!packages/docs"])
+	 * console.log(Result.isSuccess(compiled) && compiled.success.isExcluded("packages/docs")) // true
+	 * console.log(Result.isSuccess(compiled) && compiled.success.isExcluded("packages/cli")) // false
+	 * ```
+	 */
 	isExcluded(candidate: string): boolean {
 		return this.#classify().excludes.some((e) => e.matches(candidate));
 	}
 
-	/** The deduped effective literal include paths (unescaped), in first-seen order. */
+	/**
+	 * The deduped effective literal include paths (unescaped), in first-seen order.
+	 *
+	 * **Gotchas**
+	 *
+	 * Keys are the engine's unescaped single row, never the raw source, so
+	 * `foo\*bar` lands as `foo*bar`. Brace alternatives classify independently —
+	 * a mixed brace set is not one wildcard.
+	 *
+	 * **Example** (Read unescaped literals)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["tools/cli", "foo\\*bar"])
+	 * console.log(Result.isSuccess(compiled) && compiled.success.literals) // ["tools/cli", "foo*bar"]
+	 * ```
+	 */
 	get literals(): ReadonlyArray<string> {
 		return this.#classify().literals;
 	}
@@ -188,12 +310,38 @@ export class GlobSet extends Schema.Class<GlobSet>("GlobSet")(
 	 * The include alternatives the engine must match, compiled: every magic
 	 * alternative, plus the rare non-magic shapes an exact-string key cannot
 	 * represent (whole-pattern negation from a brace alternative).
+	 *
+	 * **Example** (Collect wildcard members)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["{tools/cli,packages/*}"])
+	 * console.log(
+	 *   Result.isSuccess(compiled) && compiled.success.wildcards.map((pattern) => pattern.source),
+	 * ) // ["packages/*"]
+	 * ```
 	 */
 	get wildcards(): ReadonlyArray<GlobPattern> {
 		return this.#classify().wildcards;
 	}
 
-	/** The exclusion patterns (leading bang stripped), compiled. */
+	/**
+	 * The exclusion patterns (leading bang stripped), compiled.
+	 *
+	 * **Example** (Read stripped exclusions)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["packages/*", "!packages/docs"])
+	 * console.log(
+	 *   Result.isSuccess(compiled) && compiled.success.excludes.map((pattern) => pattern.source),
+	 * ) // ["packages/docs"]
+	 * ```
+	 */
 	get excludes(): ReadonlyArray<GlobPattern> {
 		return this.#classify().excludes;
 	}

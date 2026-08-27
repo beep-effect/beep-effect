@@ -48,22 +48,32 @@ interface CachedArticleRepositoryShape extends Context.Service.Shape<typeof Arti
 }
 
 /**
- * CachedArticleRepository service
+ * Article repository wrapper that caches id and URI lookups with Effect.Cache.
  *
  * **Details**
  *
- * Wraps ArticleRepository with Effect.Cache for hot-path queries.
- * Maintains same interface as ArticleRepository.
+ * Same query surface as {@link ArticleRepository}, plus `cacheStats` and
+ * `invalidateAll`.
  *
- * **Example** (Inspect cached article repository)
+ * **Example** (Inspect cache stats and invalidate)
  *
  * ```ts
  * import { CachedArticleRepository } from "@effect-ontology/Repository/CachedArticle"
+ * import { Effect } from "effect"
  *
- * console.log(CachedArticleRepository)
+ * const inspectCache = Effect.gen(function* () {
+ *   const articles = yield* CachedArticleRepository
+ *   const before = yield* articles.cacheStats
+ *   yield* articles.invalidateAll
+ *   const after = yield* articles.cacheStats
+ *   return { before, after }
+ * })
+ * console.log(inspectCache.pipe !== undefined) // true
  * ```
  *
- * @category layers
+ * @see {@link ArticleRepository} for the uncached persistence service this wraps.
+ * @see {@link CachedArticleRepositoryLayer} for the Default layer export.
+ * @category repositories
  * @since 0.0.0
  */
 export class CachedArticleRepository extends Context.Service<CachedArticleRepository, CachedArticleRepositoryShape>()(
@@ -192,16 +202,17 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
 }
 
 /**
- * Layer that provides CachedArticleRepository
+ * Layer providing {@link CachedArticleRepository} over {@link ArticleRepository}.
  *
- * **Example** (Inspect cached article repository layer)
+ * **Example** (Reuse the default cache layer)
  *
  * ```ts
- * import { CachedArticleRepositoryLayer } from "@effect-ontology/Repository/CachedArticle"
+ * import { CachedArticleRepository, CachedArticleRepositoryLayer } from "@effect-ontology/Repository/CachedArticle"
  *
- * console.log(CachedArticleRepositoryLayer)
+ * console.log(CachedArticleRepositoryLayer === CachedArticleRepository.Default) // true
  * ```
  *
+ * @see {@link CachedArticleRepository} for `cacheStats` and `invalidateAll`.
  * @category layers
  * @since 0.0.0
  */

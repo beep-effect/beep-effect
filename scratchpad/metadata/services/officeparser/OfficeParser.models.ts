@@ -1,3 +1,10 @@
+/**
+ * OfficeParser parse and generate AST, diagnostics, chunking, and destination
+ * configuration types.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $ScratchpadId } from "@beep/identity";
 // import * as Context from "effect/Context";
 // import officeparser from "officeparser";
@@ -16,14 +23,16 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 const $I = $ScratchpadId.create("metadata/services/officeparser/OfficeParser.models");
 
 /**
- * Enumerates stable failure codes emitted by OfficeParser parsing and generation operations.
+ * Stable failure codes from OfficeParser parse and generate operations.
  *
- * **Example** (Inspect an error code)
+ * **Example** (Guard a parser failure code)
  *
  * ```ts
- * const code = OfficeErrorType.Options[0]
+ * import * as S from "effect/Schema"
+ * import { OfficeErrorType } from "./OfficeParser.models.ts"
  *
- * console.log(code)
+ * console.log(S.is(OfficeErrorType)("REQUIRED_PART_MISSING")) // true
+ * console.log(S.is(OfficeErrorType)("NOT_A_CODE")) // false
  * ```
  *
  * @category constants
@@ -78,7 +87,7 @@ export const OfficeErrorType = LiteralKit([
   "EMBEDDING_TIMEOUT",
 ]).pipe(
   $I.annoteSchema("OfficeErrorType", {
-    description: "",
+    description: "Stable failure codes from OfficeParser parse and generate operations.",
   })
 );
 
@@ -92,14 +101,16 @@ export const OfficeErrorType = LiteralKit([
 export type OfficeErrorType = typeof OfficeErrorType.Type;
 
 /**
- * Enumerates stable warning codes for non-fatal OfficeParser conditions.
+ * Stable warning codes for non-fatal OfficeParser parse and generate conditions.
  *
- * **Example** (Inspect a warning code)
+ * **Example** (Guard a non-fatal warning code)
  *
  * ```ts
- * const code = OfficeWarningType.Options[0]
+ * import * as S from "effect/Schema"
+ * import { OfficeWarningType } from "./OfficeParser.models.ts"
  *
- * console.log(code)
+ * console.log(S.is(OfficeWarningType)("OCR_FAILED")) // true
+ * console.log(S.is(OfficeWarningType)("NOT_A_CODE")) // false
  * ```
  *
  * @category constants
@@ -150,7 +161,11 @@ export const OfficeWarningType = LiteralKit([
   "NO_WORKSHEETS_FOUND",
   /** A presentation archive contains no slides (a zero-slide presentation is legitimate) */
   "NO_SLIDES_FOUND",
-]);
+]).pipe(
+  $I.annoteSchema("OfficeWarningType", {
+    description: "Stable warning codes for non-fatal OfficeParser parse and generate conditions.",
+  })
+);
 
 /**
  * Decoded warning-code value selected by the runtime `OfficeWarningType` literal kit.
@@ -162,15 +177,17 @@ export const OfficeWarningType = LiteralKit([
 export type OfficeWarningType = typeof OfficeWarningType.Type;
 
 /**
- * Consolidated timeout settings for OCR operations.
- * Preferred over the individual flat timeout properties on {@link OcrConfig},
- * which are now deprecated.
+ * Nested millisecond timeouts for OCR worker-pool lifecycle, language load, and recognition.
  *
  * **Details**
  *
- * If a key is present here, it takes priority over the corresponding deprecated
- * flat property (e.g. `timeout.autoTerminate` wins over `autoTerminateTimeout`).
- * Set any value to `0` to disable that specific timeout.
+ * Set any key to `0` to disable that specific timeout. The keys are
+ * `autoTerminate`, `workerLoad`, and `recognition`.
+ *
+ * **Gotchas**
+ *
+ * These nested keys on {@link OcrConfig} `timeout` are the only timeout surface.
+ * {@link OcrConfig} has no sibling flat timeout fields.
  *
  * @category configuration
  * @since 0.0.0
@@ -187,8 +204,8 @@ export interface OcrTimeoutConfig {
    * worker pool is torn down so that no background threads keep the Node.js
    * process alive unnecessarily.
    *
-   * Set to `0` to keep workers alive indefinitely (useful when you want to
-   * call {@link terminateOcr} manually at shutdown time).
+   * Set to `0` to keep workers alive indefinitely, for example when tearing
+   * the pool down at process shutdown.
    * Default is 10,000 ms (10 seconds).
    */
   readonly autoTerminate?: undefined | number;
@@ -274,12 +291,13 @@ export interface OcrConfig {
    */
   readonly langPath?: undefined | string;
   /**
-   * Consolidated timeout settings for all OCR operations.
+   * Nested OCR timeouts from {@link OcrTimeoutConfig}.
    *
-   * **Details**
+   * **Gotchas**
    *
-   * Prefer this over the deprecated flat timeout properties.
-   * If `timeout.autoTerminate` is set, it takes priority over the deprecated `autoTerminateTimeout`.
+   * Configure timeouts only through these nested keys (`autoTerminate`,
+   * `workerLoad`, `recognition`). {@link OcrConfig} has no sibling flat timeout
+   * fields.
    */
   readonly timeout?: undefined | OcrTimeoutConfig;
   /**
@@ -351,8 +369,12 @@ export interface CommonOfficeParserConfig {
    */
   readonly ocr?: undefined | boolean;
   /**
-   * Shared OCR configuration for worker pooling and offline support.
-   * If provided, `ocrLanguage` will be ignored in favor of `ocrConfig.language`.
+   * Shared OCR configuration for worker pooling, language data, and timeouts.
+   *
+   * **Details**
+   *
+   * Language is {@link OcrConfig} `language` (default `'eng'`). There is no
+   * sibling language field on this config object.
    */
   readonly ocrConfig?: undefined | OcrConfig;
   /**
@@ -610,6 +632,8 @@ export interface OfficeIssue {
  * **Example** (Inspect a structured parser error)
  *
  * ```ts
+ * import { OfficeError, OfficeIssue } from "./OfficeParser.models.ts"
+ *
  * const issue: OfficeIssue = {
  *   type: "error",
  *   message: "Required DOCX part is missing",
@@ -1362,7 +1386,7 @@ export type DefinitionListSyntax = "colon" | "none";
  */
 export type FootnoteSyntax = "caret" | "none";
 /**
- * Selects `[@citekey]` citations or disables citation syntax.
+ * Selects Pandoc-style at-citekey citations (`[@` + `citekey]`) or disables citation syntax.
  *
  * @category type-level
  * @since 0.0.0
@@ -1428,9 +1452,9 @@ export interface MarkdownDialectConfig {
    */
   readonly footnotes?: undefined | FootnoteSyntax;
   /**
-   * Pandoc-style `[@citekey]` citations (`'at'`), or `'none'` to emit `[citekey]` (brackets, no
-   * `@`). Omit to inherit from `extends`. Passing a boolean is deprecated: `true` = `'at'`,
-   * `false` = `'none'` (removed next major).
+   * Pandoc-style at-citekey citations (`[@` + `citekey]`, `'at'`), or `'none'` to emit
+   * `[citekey]` without the at-sign. Omit to inherit from `extends`. Passing a boolean is
+   * deprecated: `true` = `'at'`, `false` = `'none'` (removed next major).
    */
   readonly citations?: undefined | CitationSyntax;
   /**
@@ -1963,6 +1987,20 @@ export type TextAlignment = "left" | "center" | "right" | "justify";
 /**
  * Captures formatting that was explicitly applied to a text run.
  *
+ * **Example** (Format a heading run)
+ *
+ * ```ts
+ * import { TextFormatting } from "./OfficeParser.models.ts"
+ *
+ * const formatting: TextFormatting = {
+ *   bold: true,
+ *   size: "12pt",
+ *   font: "Arial",
+ * }
+ *
+ * console.log(formatting.font)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1970,104 +2008,48 @@ export interface TextFormatting {
   /**
    * Whether the text is bold.
    * Corresponds to `<w:b/>` in OOXML, `\b` in RTF.
-   *
-   * **Example** (Mark text as bold)
-   *
-   * ```ts
-   * const bold: TextFormatting["bold"] = true
-   * console.log(bold)
-   * ```
    */
   readonly bold?: undefined | boolean;
 
   /**
    * Whether the text is italic.
    * Corresponds to `<w:i/>` in OOXML, `\i` in RTF.
-   *
-   * **Example** (Mark text as italic)
-   *
-   * ```ts
-   * const italic: TextFormatting["italic"] = true
-   * console.log(italic)
-   * ```
    */
   readonly italic?: undefined | boolean;
 
   /**
    * Whether the text is underlined.
    * Corresponds to `<w:u/>` in OOXML, `\ul` in RTF.
-   *
-   * **Example** (Mark text as underlined)
-   *
-   * ```ts
-   * const underline: TextFormatting["underline"] = true
-   * console.log(underline)
-   * ```
    */
   readonly underline?: undefined | boolean;
 
   /**
    * Whether the text has a strikethrough.
    * Corresponds to `<w:strike/>` in OOXML, `\strike` in RTF.
-   *
-   * **Example** (Mark text as struck through)
-   *
-   * ```ts
-   * const strikethrough: TextFormatting["strikethrough"] = true
-   * console.log(strikethrough)
-   * ```
    */
   readonly strikethrough?: undefined | boolean;
 
   /**
    * Text color in hex format (#RRGGBB).
    * Extracted from color tables in RTF or XML color attributes in OOXML.
-   *
-   * **Example** (Set a foreground color)
-   *
-   * ```ts
-   * const color: TextFormatting["color"] = "#ff0000"
-   * console.log(color)
-   * ```
    */
   readonly color?: undefined | string;
 
   /**
    * Background/highlight color in hex format (#RRGGBB).
    * Preserves either a background fill or source text highlighting.
-   *
-   * **Example** (Set a highlight color)
-   *
-   * ```ts
-   * const backgroundColor: TextFormatting["backgroundColor"] = "#ffff00"
-   * console.log(backgroundColor)
-   * ```
    */
   readonly backgroundColor?: undefined | string;
 
   /**
    * Font size with units.
    * Most parsers append 'pt' (points), but ODF may use other units like 'in' (inches) or 'cm'.
-   *
-   * **Example** (Set a font size)
-   *
-   * ```ts
-   * const size: TextFormatting["size"] = "12pt"
-   * console.log(size)
-   * ```
    */
   readonly size?: undefined | string;
 
   /**
    * Font family/typeface name.
    * Extracted from font tables in RTF or font definitions in OOXML.
-   *
-   * **Example** (Set a font family)
-   *
-   * ```ts
-   * const font: TextFormatting["font"] = "Arial"
-   * console.log(font)
-   * ```
    */
   readonly font?: undefined | string;
 
@@ -2075,13 +2057,6 @@ export interface TextFormatting {
    * Whether the text is subscript (e.g., H₂O).
    * Corresponds to `\sub` in RTF, `<w:vertAlign w:val="subscript"/>` in OOXML.
    * Mutually exclusive with superscript.
-   *
-   * **Example** (Mark text as subscript)
-   *
-   * ```ts
-   * const subscript: TextFormatting["subscript"] = true
-   * console.log(subscript)
-   * ```
    */
   readonly subscript?: undefined | boolean;
 
@@ -2089,32 +2064,31 @@ export interface TextFormatting {
    * Whether the text is superscript (e.g., E=mc²).
    * Corresponds to `\super` in RTF, `<w:vertAlign w:val="superscript"/>` in OOXML.
    * Mutually exclusive with subscript.
-   *
-   * **Example** (Mark text as superscript)
-   *
-   * ```ts
-   * const superscript: TextFormatting["superscript"] = true
-   * console.log(superscript)
-   * ```
    */
   readonly superscript?: undefined | boolean;
 
   /**
    * The alignment of the text.
    * Common in spreadsheet cells or paragraph styles.
-   *
-   * **Example** (Align a text run)
-   *
-   * ```ts
-   * const alignment: TextFormatting["alignment"] = "center"
-   * console.log(alignment)
-   * ```
    */
   readonly alignment?: undefined | TextAlignment;
 }
 
 /**
  * Locates a content node within a presentation slide and its related note or anchors.
+ *
+ * **Example** (Locate a slide note)
+ *
+ * ```ts
+ * import { SlideMetadata } from "./OfficeParser.models.ts"
+ *
+ * const slide: SlideMetadata = {
+ *   slideNumber: 1,
+ *   noteId: "slide-note-1",
+ * }
+ *
+ * console.log(slide.noteId)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -2125,13 +2099,6 @@ export interface SlideMetadata {
 
   /**
    * The unique ID of the note associated with this slide (if any).
-   *
-   * **Example** (Reference a slide note)
-   *
-   * ```ts
-   * const noteId: SlideMetadata["noteId"] = "slide-note-1"
-   * console.log(noteId)
-   * ```
    */
   readonly noteId?: undefined | string;
 
@@ -2212,31 +2179,34 @@ export interface ParagraphMetadata {
 /**
  * Identifies a list item and records its nesting, alignment, task state, and source style.
  *
+ * **Example** (Describe a nested ordered item)
+ *
+ * ```ts
+ * import { ListMetadata } from "./OfficeParser.models.ts"
+ *
+ * const item: ListMetadata = {
+ *   listType: "ordered",
+ *   indentation: 1,
+ *   alignment: "left",
+ *   listId: "2",
+ *   itemIndex: 0,
+ *   style: "ListParagraph",
+ * }
+ *
+ * console.log(item.listType, item.indentation)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export interface ListMetadata {
   /**
    * The type of list: 'ordered' (numbered) or 'unordered' (bulleted).
-   *
-   * **Example** (Identify an ordered list)
-   *
-   * ```ts
-   * const listType: ListMetadata["listType"] = "ordered"
-   * console.log(listType)
-   * ```
    */
   readonly listType: "ordered" | "unordered";
 
   /**
    * The nesting level (indent level) of the list item, starting from 0.
-   *
-   * **Example** (Represent a nested list item)
-   *
-   * ```ts
-   * const indentation: ListMetadata["indentation"] = 1
-   * console.log(indentation)
-   * ```
    */
   readonly indentation: number;
 
@@ -2245,51 +2215,23 @@ export interface ListMetadata {
 
   /**
    * Text alignment of the list item.
-   *
-   * **Example** (Align a list item)
-   *
-   * ```ts
-   * const alignment: ListMetadata["alignment"] = "justify"
-   * console.log(alignment)
-   * ```
    */
   readonly alignment: TextAlignment;
 
   /**
    * The list ID from the Word document's numbering definition.
    * Used to identify which list definition this item belongs to.
-   *
-   * **Example** (Identify a list definition)
-   *
-   * ```ts
-   * const listId: ListMetadata["listId"] = "2"
-   * console.log(listId)
-   * ```
    */
   readonly listId: string;
 
   /**
    * The zero-based index of this item within its list.
    * Continues incrementing even across paragraph interruptions for the same listId.
-   *
-   * **Example** (Index a list item)
-   *
-   * ```ts
-   * const itemIndex: ListMetadata["itemIndex"] = 2
-   * console.log(itemIndex)
-   * ```
    */
   readonly itemIndex: number;
 
   /**
    * The style name of the list item.
-   *
-   * **Example** (Name a list style)
-   *
-   * ```ts
-   * const style: ListMetadata["style"] = "ListParagraph"
-   * console.log(style)
-   * ```
    */
   readonly style?: undefined | string;
   /** Unique anchor IDs for internal linking. */
@@ -2304,30 +2246,32 @@ export interface ListMetadata {
 /**
  * Locates a cell within a parsed table and records spans, alignment, style, and color.
  *
+ * **Example** (Locate a merged header cell)
+ *
+ * ```ts
+ * import { CellMetadata } from "./OfficeParser.models.ts"
+ *
+ * const cell: CellMetadata = {
+ *   row: 0,
+ *   col: 1,
+ *   rowSpan: 2,
+ *   colSpan: 2,
+ *   align: "center",
+ * }
+ *
+ * console.log(cell.row, cell.colSpan)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export interface CellMetadata {
   /**
    * The row index of the cell (0-based).
-   *
-   * **Example** (Index the first row)
-   *
-   * ```ts
-   * const row: CellMetadata["row"] = 0
-   * console.log(row)
-   * ```
    */
   readonly row: number;
   /**
    * The column index of the cell (0-based).
-   *
-   * **Example** (Index the first column)
-   *
-   * ```ts
-   * const column: CellMetadata["col"] = 0
-   * console.log(column)
-   * ```
    */
   readonly col: number;
   /**
@@ -2338,24 +2282,10 @@ export interface CellMetadata {
   readonly align?: undefined | "left" | "center" | "right";
   /**
    * The number of rows this cell spans (merges).
-   *
-   * **Example** (Span two rows)
-   *
-   * ```ts
-   * const rowSpan: CellMetadata["rowSpan"] = 2
-   * console.log(rowSpan)
-   * ```
    */
   readonly rowSpan?: undefined | number;
   /**
    * The number of columns this cell spans (merges).
-   *
-   * **Example** (Span two columns)
-   *
-   * ```ts
-   * const columnSpan: CellMetadata["colSpan"] = 2
-   * console.log(columnSpan)
-   * ```
    */
   readonly colSpan?: undefined | number;
   /** The style of the cell. */
@@ -2369,6 +2299,19 @@ export interface CellMetadata {
 /**
  * Preserves table anchors and page alignment.
  *
+ * **Example** (Center a table on the page)
+ *
+ * ```ts
+ * import { TableMetadata } from "./OfficeParser.models.ts"
+ *
+ * const table: TableMetadata = {
+ *   align: "center",
+ *   anchorIds: ["tbl-q4"],
+ * }
+ *
+ * console.log(table.align)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2377,19 +2320,22 @@ export interface TableMetadata {
   readonly anchorIds?: undefined | string[];
   /**
    * Layout alignment of the table on the page (e.g. an editor's custom table node).
-   *
-   * **Example** (Center a table)
-   *
-   * ```ts
-   * const alignment: TableMetadata["align"] = "center"
-   * console.log(alignment)
-   * ```
    */
   readonly align?: undefined | "left" | "center" | "right";
 }
 
 /**
  * Links a chart node to the attachment that stores its extracted chart data.
+ *
+ * **Example** (Point a chart node at its attachment)
+ *
+ * ```ts
+ * import { ChartMetadata } from "./OfficeParser.models.ts"
+ *
+ * const chart: ChartMetadata = { attachmentName: "chart1.xml" }
+ *
+ * console.log(chart.attachmentName)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -2398,13 +2344,6 @@ export interface ChartMetadata {
   /**
    * The name of the attachment that contains the actual chart data.
    * Use this to look up the full chart data from the attachments array.
-   *
-   * **Example** (Reference chart data)
-   *
-   * ```ts
-   * const attachmentName: ChartMetadata["attachmentName"] = "chart1.xml"
-   * console.log(attachmentName)
-   * ```
    */
   readonly attachmentName: string;
   /** Unique anchor IDs for internal linking. */
@@ -2414,6 +2353,21 @@ export interface ChartMetadata {
 /**
  * Links an image node to its attachment and preserves display metadata.
  *
+ * **Example** (Describe a centered logo)
+ *
+ * ```ts
+ * import { ImageMetadata } from "./OfficeParser.models.ts"
+ *
+ * const image: ImageMetadata = {
+ *   attachmentName: "image1.png",
+ *   altText: "Company logo",
+ *   width: "50%",
+ *   align: "center",
+ * }
+ *
+ * console.log(image.altText)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2421,63 +2375,28 @@ export interface ImageMetadata {
   /**
    * The name of the attachment that contains the actual image data.
    * Use this to look up the full image data from the attachments array.
-   *
-   * **Example** (Reference an image)
-   *
-   * ```ts
-   * const attachmentName: ImageMetadata["attachmentName"] = "image1.png"
-   * console.log(attachmentName)
-   * ```
    */
   readonly attachmentName: string;
 
   /**
    * Alt text (alternative text) describing the image.
    * Extracted from image properties in the document.
-   *
-   * **Example** (Describe an image)
-   *
-   * ```ts
-   * const altText: ImageMetadata["altText"] = "Company logo"
-   * console.log(altText)
-   * ```
    */
   readonly altText?: undefined | string;
 
   /**
    * URL of the image if it is an external link.
    * Typical for HTML or Markdown images that point to remote servers.
-   *
-   * **Example** (Reference an external image)
-   *
-   * ```ts
-   * const url: ImageMetadata["url"] = "https://example.com/image.png"
-   * console.log(url)
-   * ```
    */
   readonly url?: undefined | string;
   /** Unique anchor IDs for internal linking. */
   readonly anchorIds?: undefined | string[];
   /**
    * Display width of the image (e.g. an editor's custom image node), as a CSS length or percentage.
-   *
-   * **Example** (Set an image width)
-   *
-   * ```ts
-   * const width: ImageMetadata["width"] = "50%"
-   * console.log(width)
-   * ```
    */
   readonly width?: undefined | string;
   /**
    * Layout alignment of the image (e.g. an editor's custom image node).
-   *
-   * **Example** (Center an image)
-   *
-   * ```ts
-   * const alignment: ImageMetadata["align"] = "center"
-   * console.log(alignment)
-   * ```
    */
   readonly align?: undefined | "left" | "center" | "right";
   /** Advisory image title (Markdown `![alt](url "title")`, HTML `<img title>`), if any. */
@@ -2528,25 +2447,41 @@ export interface AdmonitionMetadata {
 /**
  * Identifies the source PDF page for a content node.
  *
+ * **Example** (Tag a node with its PDF page)
+ *
+ * ```ts
+ * import { PageMetadata } from "./OfficeParser.models.ts"
+ *
+ * const page: PageMetadata = { pageNumber: 1 }
+ *
+ * console.log(page.pageNumber)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export interface PageMetadata {
   /**
    * The page number (1-based) from the PDF document.
-   *
-   * **Example** (Identify the first page)
-   *
-   * ```ts
-   * const pageNumber: PageMetadata["pageNumber"] = 1
-   * console.log(pageNumber)
-   * ```
    */
   readonly pageNumber: number;
 }
 
 /**
  * Preserves links, citations, abbreviations, wikilinks, and style data for a text run.
+ *
+ * **Example** (Link a text run)
+ *
+ * ```ts
+ * import { TextMetadata } from "./OfficeParser.models.ts"
+ *
+ * const run: TextMetadata = {
+ *   link: "https://example.com",
+ *   linkType: "external",
+ * }
+ *
+ * console.log(run.link)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -2557,13 +2492,6 @@ export interface TextMetadata {
 
   /**
    * The hyperlink URL (for external links) or anchor reference (for internal links).
-   *
-   * **Example** (Link a text run)
-   *
-   * ```ts
-   * const link: TextMetadata["link"] = "https://example.com"
-   * console.log(link)
-   * ```
    */
   readonly link?: undefined | string;
 
@@ -2583,7 +2511,7 @@ export interface TextMetadata {
 
   /**
    * When set, this text is a Pandoc/MultiMarkdown-style citation reference
-   * (`[@citekey]`), and this is the bare citekey (e.g. "smith2024"). Bibliography
+   * (`[@` + `citekey]`), and this is the bare citekey (e.g. "smith2024"). Bibliography
    * resolution (author/year display, .bib management) is left to the consuming app.
    */
   readonly citationKey?: undefined | string;
@@ -2602,6 +2530,19 @@ export interface TextMetadata {
 /**
  * Identifies a footnote or endnote and records its source anchors and reference state.
  *
+ * **Example** (Identify a footnote)
+ *
+ * ```ts
+ * import { NoteMetadata } from "./OfficeParser.models.ts"
+ *
+ * const note: NoteMetadata = {
+ *   noteType: "footnote",
+ *   noteId: "1",
+ * }
+ *
+ * console.log(note.noteId)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2613,13 +2554,6 @@ export interface NoteMetadata {
 
   /**
    * The unique ID of the note from the source document.
-   *
-   * **Example** (Identify a note)
-   *
-   * ```ts
-   * const noteId: NoteMetadata["noteId"] = "1"
-   * console.log(noteId)
-   * ```
    */
   readonly noteId?: undefined | string;
   /** Unique anchor IDs for internal linking. */
@@ -2747,6 +2681,8 @@ export type ContentMetadata =
  * **Example** (Represent shared paragraph fields)
  *
  * ```ts
+ * import { BaseContentNode } from "./OfficeParser.models.ts"
+ *
  * const paragraph: BaseContentNode = {
  *   text: "Hello world",
  *   children: [
@@ -2761,6 +2697,8 @@ export type ContentMetadata =
  * **Example** (Represent shared heading fields)
  *
  * ```ts
+ * import { BaseContentNode } from "./OfficeParser.models.ts"
+ *
  * const heading: BaseContentNode = {
  *   text: "Chapter 1",
  *   children: []
@@ -2777,13 +2715,6 @@ export interface BaseContentNode {
    * The complete text content of the node and all its children combined.
    * For container nodes (paragraph, heading), this is the concatenation of all child text.
    * For leaf nodes (text), this is the actual text content.
-   *
-   * **Example** (Store combined node text)
-   *
-   * ```ts
-   * const text: BaseContentNode["text"] = "Hello world"
-   * console.log(text)
-   * ```
    */
   readonly text?: undefined | string;
 
@@ -2794,13 +2725,6 @@ export interface BaseContentNode {
    * - Tables contain rows
    * - Rows contain cells
    * - Cells contain paragraphs
-   *
-   * **Example** (Add a formatted child node)
-   *
-   * ```ts
-   * const children: BaseContentNode["children"] = [{ type: "text", text: "Hello", formatting: { bold: true } }]
-   * console.log(children)
-   * ```
    */
   readonly children?: undefined | OfficeContentNode[];
 
@@ -2820,13 +2744,6 @@ export interface BaseContentNode {
    * Text formatting applied to this node.
    * Only applicable to text-containing nodes.
    * For container nodes like paragraphs, formatting typically appears on child text nodes.
-   *
-   * **Example** (Describe text formatting)
-   *
-   * ```ts
-   * const formatting: BaseContentNode["formatting"] = { bold: true, size: "12pt", font: "Arial" }
-   * console.log(formatting)
-   * ```
    */
   readonly formatting?: undefined | TextFormatting;
 
@@ -2837,13 +2754,6 @@ export interface BaseContentNode {
    * - For PDF: typically not available
    * Only populated when `config.includeRawContent` is true.
    * Useful for debugging or when you need access to format-specific features.
-   *
-   * **Example** (Retain source markup)
-   *
-   * ```ts
-   * const rawContent: BaseContentNode["rawContent"] = "<w:p><w:r><w:t>Hello</w:t></w:r></w:p>"
-   * console.log(rawContent)
-   * ```
    */
   readonly rawContent?: undefined | string;
 
@@ -2863,13 +2773,6 @@ export interface BaseContentNode {
    *
    * Ignored by the non-HTML generators (Markdown, RTF, CSV, text, chunking) by design - these
    * are HTML attributes and have no meaning in those targets.
-   *
-   * **Example** (Retain HTML attributes)
-   *
-   * ```ts
-   * const htmlAttributes: BaseContentNode["htmlAttributes"] = { "data-tracking-id": "abc123", class: "lead" }
-   * console.log(htmlAttributes)
-   * ```
    */
   readonly htmlAttributes?: undefined | Record<string, string>;
 }
@@ -2880,6 +2783,8 @@ export interface BaseContentNode {
  * **Example** (Build a paragraph node)
  *
  * ```ts
+ * import { OfficeContentNode } from "./OfficeParser.models.ts"
+ *
  * const paragraph: OfficeContentNode = {
  *   type: "paragraph",
  *   text: "Hello world",
@@ -2895,6 +2800,8 @@ export interface BaseContentNode {
  * **Example** (Build a heading node)
  *
  * ```ts
+ * import { OfficeContentNode } from "./OfficeParser.models.ts"
+ *
  * const heading: OfficeContentNode = {
  *   type: "heading",
  *   text: "Chapter 1",
@@ -3013,6 +2920,8 @@ export interface ChartData {
  * **Example** (Describe an extracted image)
  *
  * ```ts
+ * import { OfficeAttachment } from "./OfficeParser.models.ts"
+ *
  * const attachment: OfficeAttachment = {
  *   type: "image",
  *   mimeType: "image/png",
@@ -3032,26 +2941,12 @@ export interface OfficeAttachment {
   /**
    * The category of the attachment.
    * Helps identify what kind of content this represents.
-   *
-   * **Example** (Identify an image attachment)
-   *
-   * ```ts
-   * const type: OfficeAttachment["type"] = "image"
-   * console.log(type)
-   * ```
    */
   readonly type: "image" | "chart";
 
   /**
    * The MIME type of the attachment data.
    * Indicates the file format and how the data should be interpreted.
-   *
-   * **Example** (Record an image media type)
-   *
-   * ```ts
-   * const mimeType: OfficeAttachment["mimeType"] = "image/png"
-   * console.log(mimeType)
-   * ```
    */
   readonly mimeType: OfficeMimeType;
 
@@ -3059,13 +2954,6 @@ export interface OfficeAttachment {
    * The attachment content encoded as Base64.
    * This is the actual binary data of the image/chart/etc. encoded for text transmission.
    * Can be used directly in HTML img tags with data URIs or decoded to binary.
-   *
-   * **Example** (Store Base64 attachment data)
-   *
-   * ```ts
-   * const data: OfficeAttachment["data"] = "iVBORw0KGgoAAAANSUhEUgAA..."
-   * console.log(data)
-   * ```
    */
   readonly data: string;
 
@@ -3073,26 +2961,12 @@ export interface OfficeAttachment {
    * A unique name for this attachment file.
    * May be derived from the source file or auto-generated.
    * Used to link `ImageMetadata` nodes to their corresponding attachments.
-   *
-   * **Example** (Name an attachment)
-   *
-   * ```ts
-   * const name: OfficeAttachment["name"] = "image1.png"
-   * console.log(name)
-   * ```
    */
   readonly name: string;
 
   /**
    * The file extension (without the dot).
    * Derived from the MIME type or original filename.
-   *
-   * **Example** (Record a file extension)
-   *
-   * ```ts
-   * const extension: OfficeAttachment["extension"] = "png"
-   * console.log(extension)
-   * ```
    */
   readonly extension: string;
 
@@ -3102,27 +2976,13 @@ export interface OfficeAttachment {
    * - `config.ocr` is true
    * - `config.extractAttachments` is true
    * - The attachment is an image containing text
-   * Uses Tesseract.js with the language specified in `config.ocrLanguage`.
-   *
-   * **Example** (Store OCR output)
-   *
-   * ```ts
-   * const ocrText: OfficeAttachment["ocrText"] = "Annual Revenue: $1.2M"
-   * console.log(ocrText)
-   * ```
+   * Uses Tesseract.js with the language specified in `ocrConfig.language`.
    */
   readonly ocrText?: undefined | string;
 
   /**
    * Alt text or description associated with the image in the document.
    * Extracted from the document markup (e.g., wp:docPr descr attribute in DOCX).
-   *
-   * **Example** (Describe an attachment)
-   *
-   * ```ts
-   * const altText: OfficeAttachment["altText"] = "A chart showing sales growth"
-   * console.log(altText)
-   * ```
    */
   readonly altText?: undefined | string;
 
@@ -3130,18 +2990,6 @@ export interface OfficeAttachment {
    * Structured data extracted from a chart attachment.
    * Only present if the attachment is a chart and data extraction was successful.
    * Contains series names, values, labels, and titles.
-   *
-   * **Example** (Attach structured chart data)
-   *
-   * ```ts
-   * const chartData: OfficeAttachment["chartData"] = {
-   *   dataSets: [],
-   *   labels: [],
-   *   rawTexts: []
-   * }
-   *
-   * console.log(chartData?.dataSets.length)
-   * ```
    */
   readonly chartData?: undefined | ChartData;
 }
@@ -3217,14 +3065,26 @@ export interface OfficeAuxiliaryContent {
  * main node tree, `metadata` holds document properties, `attachments` holds extracted binary
  * assets, and `auxiliary` holds headers, footers, and slide masters.
  *
- * **Example** (Inspect source and destination types)
+ * **Example** (Inspect a parsed document tree)
  *
  * ```ts
- * const sourceType: OfficeParserAST["type"] = "docx"
- * type Destination = Parameters<OfficeParserAST["to"]>[0]
- * const destination: Destination = "md"
+ * import { OfficeParserAST } from "./OfficeParser.models.ts"
  *
- * console.log({ sourceType, destination })
+ * const ast: Pick<OfficeParserAST, "type" | "metadata" | "content" | "attachments" | "warnings"> = {
+ *   type: "docx",
+ *   metadata: {
+ *     title: "Annual Report",
+ *     author: "John Smith",
+ *   },
+ *   content: [
+ *     { type: "heading", text: "Chapter 1", metadata: { level: 1 } },
+ *     { type: "paragraph", text: "Hello world" },
+ *   ],
+ *   attachments: [],
+ *   warnings: [],
+ * }
+ *
+ * console.log(ast.type, ast.content[0]?.text)
  * ```
  *
  * @category models
@@ -3240,13 +3100,6 @@ export interface OfficeParserAST {
   /**
    * The type of the parsed file.
    * Indicates which parser was used and what format the input was in.
-   *
-   * **Example** (Identify the source format)
-   *
-   * ```ts
-   * const sourceType: OfficeParserAST["type"] = "docx"
-   * console.log(sourceType)
-   * ```
    */
   readonly type: SupportedFileType;
 
@@ -3254,18 +3107,6 @@ export interface OfficeParserAST {
    * Document metadata extracted from the file properties.
    * Includes information like author, title, creation date, etc.
    * Availability depends on the file format and whether metadata was present in the source.
-   *
-   * **Example** (Describe parsed document metadata)
-   *
-   * ```ts
-   * const metadata: OfficeParserAST["metadata"] = {
-   *   author: "John Smith",
-   *   title: "Annual Report",
-   *   created: new Date("2024-01-01")
-   * }
-   *
-   * console.log(metadata.title)
-   * ```
    */
   readonly metadata: OfficeMetadata;
 
@@ -3277,17 +3118,6 @@ export interface OfficeParserAST {
    * - XLSX: Array of sheets, each containing rows
    * - PPTX: Array of slides, each containing content nodes
    * - PDF: Array of pages, each containing paragraphs
-   *
-   * **Example** (Store top-level content nodes)
-   *
-   * ```ts
-   * const content: OfficeParserAST["content"] = [
-   *   { type: "paragraph", text: "Hello" },
-   *   { type: "heading", text: "Chapter 1", metadata: { level: 1 } }
-   * ]
-   *
-   * console.log(content.length)
-   * ```
    */
   readonly content: ReadonlyArray<OfficeContentNode>;
 
@@ -3305,16 +3135,6 @@ export interface OfficeParserAST {
    * - Base64-encoded data
    * - MIME type
    * - Optional OCR text (if `config.ocr` is true)
-   *
-   * **Example** (Store extracted attachments)
-   *
-   * ```ts
-   * const attachments: OfficeParserAST["attachments"] = [
-   *   { type: "image", mimeType: "image/png", data: "base64...", name: "image1.png", extension: "png" }
-   * ]
-   *
-   * console.log(attachments.length)
-   * ```
    */
   readonly attachments: ReadonlyArray<OfficeAttachment>;
 
@@ -3323,16 +3143,6 @@ export interface OfficeParserAST {
 
   /**
    * Converts the parsed document to another format without reparsing the source.
-   *
-   * **Example** (Select a conversion destination)
-   *
-   * ```ts
-   * type Convert = OfficeParserAST["to"]
-   * const destination: Parameters<Convert>[0] = "html"
-   *
-   * console.log(destination)
-   * ```
-   *
    */
   readonly to: <T extends this, D extends SupportedDestination<T["type"]>>(
     this: T,

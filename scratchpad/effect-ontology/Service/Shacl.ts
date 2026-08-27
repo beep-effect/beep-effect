@@ -132,9 +132,8 @@ export interface ShaclWorkflowServiceMethods {
  * ```ts
  * import type { ShaclWorkflowServiceTestConfig } from "@effect-ontology/Service/Shacl"
  *
- * const acceptsShaclWorkflowServiceTestConfig = (_value: ShaclWorkflowServiceTestConfig): void => undefined
- *
- * console.log(acceptsShaclWorkflowServiceTestConfig)
+ * const config: ShaclWorkflowServiceTestConfig = { conforms: false, violations: [] }
+ * console.log(config.conforms) // false
  * ```
  *
  * @category type-level
@@ -155,10 +154,10 @@ export interface ShaclWorkflowServiceTestConfig {
  * ```ts
  * import { defaultTestConfig } from "@effect-ontology/Service/Shacl"
  *
- * console.log(defaultTestConfig)
+ * console.log(defaultTestConfig.conforms) // true
  * ```
  *
- * @category services
+ * @category testing
  * @since 0.0.0
  */
 export const defaultTestConfig: ShaclWorkflowServiceTestConfig = {
@@ -172,9 +171,21 @@ export const defaultTestConfig: ShaclWorkflowServiceTestConfig = {
  * **Example** (Inspect shacl workflow service)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ShaclWorkflowService } from "@effect-ontology/Service/Shacl"
  *
- * console.log(ShaclWorkflowService)
+ * const program = Effect.gen(function* () {
+ *   const shacl = yield* ShaclWorkflowService
+ *   return shacl
+ * }).pipe(
+ *   Effect.provide(
+ *     ShaclWorkflowService.Test({
+ *       conforms: false,
+ *       violations: [{ focusNode: "https://example.org/Ada", message: "Missing founded relation" }]
+ *     })
+ *   )
+ * )
+ * console.log(program)
  * ```
  *
  * @category layers

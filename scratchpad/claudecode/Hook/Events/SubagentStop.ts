@@ -1,11 +1,10 @@
 /**
- * SubagentStop hook event.
+ * Fires when a subagent finishes responding. Like Stop, returning
+ * `block` forces the subagent to continue rather than halt. Matcher is
+ * on `agent_type`. See
+ * https://code.claude.com/docs/en/hooks#subagentstop.
  *
- * Fires when a subagent finishes responding. Like Stop, a handler can
- * return `block` to force the subagent to continue. Supports a matcher
- * on `agent_type`. Carries the subagent's transcript path and last
- * assistant message. See https://code.claude.com/docs/en/hooks#subagentstop.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -25,18 +24,32 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/SubagentStop");
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a SubagentStop hook, including the subagent's
+ * transcript path and last assistant message.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a finished Explore agent)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.SubagentStop.Input)
+ * const input = S.decodeUnknownSync(Hook.SubagentStop.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "SubagentStop",
+ *   stop_hook_active: false,
+ *   agent_id: "agent-1",
+ *   agent_type: "Explore",
+ *   agent_transcript_path: "/tmp/agent-1.jsonl",
+ *   last_assistant_message: "Search complete",
+ * })
+ *
+ * console.log(input.agent_type) // "Explore"
  * ```
  *
+ * @see {@link block} for forcing the subagent to continue.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`SubagentStopInput`)(
@@ -61,18 +74,25 @@ export class Input extends S.Class<Input>($I`SubagentStopInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that injects `additionalContext` while the
+ * subagent is stopping or being told to continue.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect additional context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStop.HookSpecificOutput)
+ * const specific = Hook.SubagentStop.HookSpecificOutput.make({
+ *   hookEventName: "SubagentStop",
+ *   additionalContext: O.some("Check the failing test first"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "Check the failing test first"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentStopHookSpecificOutput`)(
@@ -86,18 +106,22 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SubagentS
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a SubagentStop handler returns. `decision: "block"`
+ * forces the subagent to continue; empty output lets it stop.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStop.Output)
+ * const output = Hook.SubagentStop.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link allowStop} for letting the subagent finish.
+ * @see {@link block} for forcing continuation.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`SubagentStopOutput`)(
@@ -121,52 +145,68 @@ export class Output extends S.Class<Output>($I`SubagentStopOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `allowStop`.
+ * Allow the subagent to stop (the default). Equivalent to empty
+ * `Output.make()`.
  *
- * **Example** (Use allowStop)
+ * **Example** (Let the subagent finish)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStop.allowStop)
+ * const output = Hook.SubagentStop.allowStop()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for forcing the subagent to continue.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const allowStop = (): Output => Output.make();
 
 /**
- * Constructor for `block`.
+ * Force the subagent to continue by emitting `decision: "block"`. The
+ * `reason` is fed back as instructions for the continuation.
  *
- * **Example** (Use block)
+ * **Gotchas**
+ *
+ * This is not a halt. Unlike ConfigChange/PreCompact `block`, Stop-family
+ * `block` means "keep going".
+ *
+ * **Example** (Keep the subagent working)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStop.block)
+ * const output = Hook.SubagentStop.block("search the failing test first")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "search the failing test first"
  * ```
  *
+ * @see {@link allowStop} for letting the subagent finish.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
- * Constructor for `addContext`.
+ * Inject additional context without forcing continuation.
  *
- * **Example** (Use addContext)
+ * **Example** (Add a reminder as the subagent stops)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.SubagentStop.addContext)
+ * const output = Hook.SubagentStop.addContext("Check the failing test first")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "Check the failing test first"
  * ```
  *
+ * @see {@link block} for forcing continuation instead.
+ * @see {@link allowStop} for letting the subagent finish.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
@@ -184,18 +224,23 @@ export const addContext = (additionalContext: string): Output =>
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable SubagentStop hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a SubagentStop hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SubagentStop.define)
+ * const hook = Hook.SubagentStop.define({
+ *   handler: () => Effect.succeed(Hook.SubagentStop.allowStop()),
+ * })
+ *
+ * console.log(hook.event) // "SubagentStop"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `agent_type`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -208,17 +253,25 @@ export const define = <E, R>(config: {
 });
 
 /**
- * Build a SubagentStop hook that only handles matching `agent_type` values.
- * Non-matching inputs default to `allowStop()`.
+ * Build a SubagentStop hook that only handles matching `agent_type`
+ * values. Non-matching inputs default to `allowStop()`.
  *
- * **Example** (Build SubagentStop hook that only handles matching `agent_type` values)
+ * **Example** (Keep Explore agents working)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.SubagentStop.onMatcher)
+ * const hook = Hook.SubagentStop.onMatcher({
+ *   matcher: "Explore",
+ *   handler: () => Effect.succeed(Hook.SubagentStop.block("search the failing test first")),
+ * })
+ *
+ * console.log(hook.event) // "SubagentStop"
  * ```
  *
+ * @see {@link allowStop} for the default mismatch output.
+ * @see {@link block} for the matched-handler decision used here.
  * @category constructors
  * @since 0.0.0
  */

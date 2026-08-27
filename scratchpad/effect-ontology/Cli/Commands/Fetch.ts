@@ -132,14 +132,21 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
 });
 
 /**
- * Retrieves fetch command data for downstream processing.
+ * Previews URL content through Jina Reader without writing it to storage.
  *
- * **Example** (Inspect fetch command)
+ * **Details**
+ *
+ * `--metadata` prints Jina title/site fields; `--enrich` runs the optional
+ * LLM enrichment pass; `--truncate` limits printed body length.
+ *
+ * **Example** (Fetch a URL for preview)
  *
  * ```ts
  * import { fetchCommand } from "@effect-ontology/Cli/Commands/Fetch"
  *
- * console.log(fetchCommand)
+ * console.log(fetchCommand.name) // "fetch"
+ * console.log(fetchCommand.description)
+ * // effect-onto fetch https://example.com/ada --metadata
  * ```
  *
  * @category cli-commands
@@ -219,16 +226,24 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
 });
 
 /**
- * Exposes ingest link command for composition by callers of this module.
+ * Fetches a URL through Jina Reader and persists the document for extraction.
  *
- * **Example** (Inspect ingest link command)
+ * **Details**
+ *
+ * Unlike {@link fetchCommand}, this writes storage metadata. `--skip-enrich`
+ * stores the raw fetch; `--allow-duplicates` bypasses content-hash dedupe.
+ *
+ * **Example** (Ingest one URL into storage)
  *
  * ```ts
  * import { ingestLinkCommand } from "@effect-ontology/Cli/Commands/Fetch"
  *
- * console.log(ingestLinkCommand)
+ * console.log(ingestLinkCommand.name) // "ingest-link"
+ * console.log(ingestLinkCommand.description)
+ * // effect-onto ingest-link https://example.com/ada --ontology-id people
  * ```
  *
+ * @see {@link fetchCommand} for a storage-free content preview of the same URL.
  * @category cli-commands
  * @since 0.0.0
  */
@@ -327,16 +342,20 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
 });
 
 /**
- * Exposes documents command for composition by callers of this module.
+ * Lists documents previously ingested from URLs, with optional status and
+ * source-type filters.
  *
- * **Example** (Inspect documents command)
+ * **Example** (List ingested documents)
  *
  * ```ts
  * import { documentsCommand } from "@effect-ontology/Cli/Commands/Fetch"
  *
- * console.log(documentsCommand)
+ * console.log(documentsCommand.name) // "documents"
+ * console.log(documentsCommand.description)
+ * // effect-onto documents --status ingested --limit 20
  * ```
  *
+ * @see {@link ingestLinkCommand} for the command that creates these documents.
  * @category cli-commands
  * @since 0.0.0
  */
@@ -425,16 +444,19 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
 });
 
 /**
- * Exposes ingest batch command for composition by callers of this module.
+ * Bulk-ingests URLs from a file, one URL per line, into storage.
  *
- * **Example** (Inspect ingest batch command)
+ * **Example** (Ingest a URL list)
  *
  * ```ts
  * import { ingestBatchCommand } from "@effect-ontology/Cli/Commands/Fetch"
  *
- * console.log(ingestBatchCommand)
+ * console.log(ingestBatchCommand.name) // "ingest-batch"
+ * console.log(ingestBatchCommand.description)
+ * // effect-onto ingest-batch urls.txt --ontology-id people --concurrency 4
  * ```
  *
+ * @see {@link ingestLinkCommand} for ingesting a single URL instead of a file.
  * @category cli-commands
  * @since 0.0.0
  */

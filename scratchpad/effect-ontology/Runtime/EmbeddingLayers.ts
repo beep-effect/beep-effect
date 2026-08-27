@@ -37,15 +37,23 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * Selects between NomicEmbeddingProvider and VoyageEmbeddingProvider
  * based on EMBEDDING_PROVIDER config value.
  *
- * Note: Uses Layer.unwrap with proper type annotation for the union
- * of all possible layer requirements.
+ * Uses Layer.unwrap so the provider is selected once ConfigService is available.
  *
- * **Example** (Inspect embedding provider from config)
+ * **Gotchas**
+ *
+ * The unwrapped Nomic or Voyage layer still needs ConfigService internally, so
+ * this constructor provides it from the surrounding ConfigService. After that
+ * unwrap, leftover requirements depend on the selected vendor: Nomic needs
+ * `NomicNlpService`, while Voyage needs `EmbeddingRateLimiter` or `HttpClient`.
+ *
+ * **Example** (Keep ConfigService as a remaining requirement)
  *
  * ```ts
  * import { EmbeddingProviderFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { ConfigService } from "@effect-ontology/Service/Config"
  *
- * console.log(EmbeddingProviderFromConfig)
+ * const documented = [EmbeddingProviderFromConfig, ConfigService] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers
@@ -83,12 +91,14 @@ export const EmbeddingProviderFromConfig: Layer.Layer<EmbeddingProvider, AnyEmbe
  * Uses EMBEDDING_RATE_LIMIT_RPM and EMBEDDING_MAX_CONCURRENT from config.
  * Falls back to provider defaults if not specified.
  *
- * **Example** (Inspect embedding rate limiter from config)
+ * **Example** (Select rate-limit settings from ConfigService)
  *
  * ```ts
  * import { EmbeddingRateLimiterFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { ConfigService } from "@effect-ontology/Service/Config"
  *
- * console.log(EmbeddingRateLimiterFromConfig)
+ * const documented = [EmbeddingRateLimiterFromConfig, ConfigService] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers
@@ -119,12 +129,15 @@ export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, n
  *
  * Complete local embedding stack with in-memory cache.
  *
- * **Example** (Inspect nomic embedding infrastructure)
+ * **Example** (Compose the local Nomic embedding stack)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { NomicEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
  *
- * console.log(NomicEmbeddingInfrastructure)
+ * const stack = Layer.mergeAll(NomicEmbeddingInfrastructure)
+ * const documented = [stack, "nomic"] as const
+ * console.log(documented[1]) // "nomic"
  * ```
  *
  * @category layers
@@ -143,12 +156,15 @@ export const NomicEmbeddingInfrastructure: Layer.Layer<
  *
  * Complete Voyage API embedding stack with rate limiting and cache.
  *
- * **Example** (Inspect voyage embedding infrastructure)
+ * **Example** (Compose the Voyage API embedding stack)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { VoyageEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
  *
- * console.log(VoyageEmbeddingInfrastructure)
+ * const stack = Layer.mergeAll(VoyageEmbeddingInfrastructure)
+ * const documented = [stack, "voyage"] as const
+ * console.log(documented[1]) // "voyage"
  * ```
  *
  * @category layers
@@ -178,12 +194,14 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  * - EmbeddingRateLimiterFromConfig needs: ConfigService
  * - FetchHttpClient.layer needs: nothing
  *
- * **Example** (Inspect embedding infrastructure)
+ * **Example** (Select Nomic or Voyage from EMBEDDING_PROVIDER)
  *
  * ```ts
  * import { EmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { ConfigService } from "@effect-ontology/Service/Config"
  *
- * console.log(EmbeddingInfrastructure)
+ * const documented = [EmbeddingInfrastructure, ConfigService] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers
@@ -211,12 +229,14 @@ export const EmbeddingInfrastructure: Layer.Layer<
  * Self-contained layer that includes ConfigService.
  * May fail with ConfigError if environment is not properly configured.
  *
- * **Example** (Inspect embedding infrastructure default)
+ * **Example** (Provide ConfigService into the embedding stack)
  *
  * ```ts
  * import { EmbeddingInfrastructureDefault } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { ConfigServiceDefault } from "@effect-ontology/Service/Config"
  *
- * console.log(EmbeddingInfrastructureDefault)
+ * const documented = [EmbeddingInfrastructureDefault, ConfigServiceDefault] as const
+ * console.log(documented[1] !== undefined) // true
  * ```
  *
  * @category layers

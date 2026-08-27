@@ -85,12 +85,30 @@ export interface EmbeddingServiceMethods {
 /**
  * EmbeddingService service tag
  *
- * **Example** (Inspect embedding service)
+ * **Example** (Embed text through a test layer)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
  * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
+ * import { ProviderMetadata, cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  *
- * console.log(EmbeddingService)
+ * const TestEmbeddings = Layer.succeed(EmbeddingService, {
+ *   embed: () => Effect.succeed([1, 0]),
+ *   embedBatch: (texts) => Effect.succeed(texts.map(() => [1, 0])),
+ *   cosineSimilarity,
+ *   getProviderMetadata: Effect.succeed(
+ *     ProviderMetadata.make({ providerId: "nomic", modelId: "demo", dimension: 2 })
+ *   )
+ * })
+ *
+ * const length = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const embeddings = yield* EmbeddingService
+ *     const vector = yield* embeddings.embed("Ada founded Acme.")
+ *     return vector.length
+ *   }).pipe(Effect.provide(TestEmbeddings), Effect.orDie)
+ * )
+ * console.log(length) // 2
  * ```
  *
  * @category services
@@ -110,12 +128,36 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
  * - EmbeddingCache with versioned keys (includes model/dimension)
  * - Effect Request API for automatic batching via RequestResolver
  *
- * **Example** (Inspect embedding service live)
+ * **Example** (Compose live embed with a test provider)
  *
  * ```ts
- * import { EmbeddingServiceLive } from "@effect-ontology/Service/Embedding"
+ * import { Effect, Layer } from "effect"
+ * import { EmbeddingService, EmbeddingServiceLive } from "@effect-ontology/Service/Embedding"
+ * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ * import {
+ *   EmbeddingProvider,
+ *   ProviderMetadata,
+ *   cosineSimilarity
+ * } from "@effect-ontology/Service/EmbeddingProvider"
+ * import { MetricsService } from "@effect-ontology/Telemetry/Metrics"
  *
- * console.log(EmbeddingServiceLive)
+ * const TestProvider = Layer.succeed(EmbeddingProvider, {
+ *   metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "demo", dimension: 2 }),
+ *   embedBatch: (requests) => Effect.succeed(requests.map(() => [1, 0])),
+ *   cosineSimilarity
+ * })
+ *
+ * const program = Effect.gen(function* () {
+ *   const embeddings = yield* EmbeddingService
+ *   return yield* embeddings.embed("Ada founded Acme.")
+ * }).pipe(
+ *   Effect.provide(EmbeddingServiceLive),
+ *   Effect.provide(TestProvider),
+ *   Effect.provide(EmbeddingCache.Default),
+ *   Effect.provide(MetricsService.Default)
+ * )
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -200,12 +242,39 @@ export const EmbeddingServiceLive: Layer.Layer<
  * Provides complete embedding infrastructure including provider,
  * cache, and metrics.
  *
- * **Example** (Inspect embedding service default)
+ * **Example** (Provide default embedding infrastructure)
  *
  * ```ts
- * import { EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
+ * import { Effect, Layer } from "effect"
+ * import { EmbeddingService, EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
+ * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ * import {
+ *   EmbeddingProvider,
+ *   ProviderMetadata,
+ *   cosineSimilarity
+ * } from "@effect-ontology/Service/EmbeddingProvider"
+ * import { MetricsService } from "@effect-ontology/Telemetry/Metrics"
  *
- * console.log(EmbeddingServiceDefault)
+ * const TestProvider = Layer.succeed(EmbeddingProvider, {
+ *   metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "demo", dimension: 2 }),
+ *   embedBatch: (requests) => Effect.succeed(requests.map(() => [1, 0])),
+ *   cosineSimilarity
+ * })
+ *
+ * const length = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const embeddings = yield* EmbeddingService
+ *     const vector = yield* embeddings.embed("Ada founded Acme.")
+ *     return vector.length
+ *   }).pipe(
+ *     Effect.provide(EmbeddingServiceDefault),
+ *     Effect.provide(TestProvider),
+ *     Effect.provide(EmbeddingCache.Default),
+ *     Effect.provide(MetricsService.Default),
+ *     Effect.orDie
+ *   )
+ * )
+ * console.log(length) // 2
  * ```
  *
  * @category layers

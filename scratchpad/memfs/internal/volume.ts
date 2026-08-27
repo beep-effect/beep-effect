@@ -1,3 +1,16 @@
+/**
+ * Vendored in-memory `FileSystem` engine: an isolated POSIX volume behind
+ * Effect's `FileSystem` service, with no host filesystem IO.
+ *
+ * Public callers should use {@link MemoryFileSystem} rather than this module.
+ * Deliberate divergences from the pinned upstream — watch recursion, nesting
+ * bounds, `access` ignoring mode, `copy` AlreadyExists path — are listed in
+ * the port notes below.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 // Ported from Effect-TS/effect PR #6573 "feat: add MemoryFileSystem module"
 // (https://github.com/Effect-TS/effect/pull/6573), pinned head
 // c0528bd5cf12154aa95a7ceec243fd2045876853, by lloydrichards, built on fubhy's
@@ -2738,7 +2751,30 @@ const makeReadyVolume: Effect.Effect<Volume> = Effect.gen(function* () {
   return volume;
 });
 
-/** @internal */
+/**
+ * Builds a `FileSystem` backed by a fresh empty in-memory volume (`/tmp`
+ * is pre-created). Public callers should use {@link MemoryFileSystem.make}.
+ *
+ * **Example** (Write then read through the public constructor)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make
+ *   yield* fs.writeFileString("/note.txt", "in memory")
+ *   return yield* fs.readFileString("/note.txt")
+ * })
+ *
+ * Effect.runPromise(program).then(console.log)
+ * // in memory
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(makeReadyVolume, toFileSystem);
 
 // Kit extension (volume inspection): a literal, synchronous walk of the tree
@@ -2746,7 +2782,21 @@ export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(makeReadyVo
 // followed); hard links surface once per directory entry, each path carrying
 // the same underlying data reference.
 
-/** @internal */
+/**
+ * One inode in a live volume walk: path, kind, optional file bytes, mtime, and
+ * unresolved symlink target.
+ *
+ * **Details**
+ *
+ * `data` is the live `Uint8Array` for a `File` entry, not a copy. Mutating it
+ * mutates the volume; callers that persist a snapshot must copy first.
+ * Directory and symlink entries have `data: undefined`. `target` is the stored
+ * symlink destination (never resolved) and is `undefined` otherwise.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface VolumeEntrySnapshot {
   readonly path: string;
   readonly type: "File" | "Directory" | "SymbolicLink";
@@ -2825,18 +2875,78 @@ const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
   return output;
 };
 
-/** @internal */
+/**
+ * Engine-level pair of a `FileSystem` and a live `entries()` walk of the same
+ * volume. Public callers should use {@link MemoryFileSystem.makeInspectable}
+ * instead of importing this module.
+ *
+ * **Details**
+ *
+ * `entries` walks current state at call time — never a copy taken at build —
+ * so a write through `fileSystem` is visible on the next `entries()` call.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface InspectableFileSystem {
   readonly fileSystem: FileSystem.FileSystem;
   /** Walks the volume's live state at call time — never a copy taken at build. */
   readonly entries: () => Array<VolumeEntrySnapshot>;
 }
 
-/** @internal */
+/**
+ * Builds a fresh empty volume exposed as a `FileSystem` plus a live `entries()`
+ * walk. Public callers should use {@link MemoryFileSystem.makeInspectable}.
+ *
+ * **Example** (Read back a write through the inspectable volume)
+ *
+ * ```ts
+ * import { makeInspectable } from "../../memfs/internal/volume.ts"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const { fileSystem, entries } = yield* makeInspectable
+ *   yield* fileSystem.writeFileString("/out.txt", "wrote")
+ *   const data = entries().find((e) => e.path === "/out.txt")?.data
+ *   return data === undefined ? undefined : new TextDecoder().decode(data.slice())
+ * })
+ *
+ * Effect.runPromise(program).then(console.log)
+ * // wrote
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeInspectable: Effect.Effect<InspectableFileSystem> = Effect.map(makeReadyVolume, (volume) => ({
   fileSystem: toFileSystem(volume),
   entries: () => collectEntrySnapshots(volume.currentState()),
 }));
 
-/** @internal */
+/**
+ * Provides `FileSystem.FileSystem` from a fresh empty in-memory volume.
+ * Public callers should use {@link MemoryFileSystem.layer}.
+ *
+ * **Example** (Provide the public empty-volume layer)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import { Effect, FileSystem } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   yield* fs.writeFileString("/tmp/hello.txt", "ok")
+ *   return yield* fs.readFileString("/tmp/hello.txt")
+ * })
+ *
+ * Effect.runPromise(program.pipe(Effect.provide(MemoryFileSystem.layer))).then(console.log)
+ * // ok
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
 export const layer = Layer.effect(FileSystem.FileSystem, make);

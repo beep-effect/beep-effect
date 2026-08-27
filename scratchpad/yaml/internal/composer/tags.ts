@@ -1,7 +1,13 @@
-// Tag-handle resolution and directive parsing/validation local to tags.
-// `parseDirective` lives here (not in `document.ts`) because
-// `validateTagHandlesInDocument` needs it and `document.ts` already imports
-// this module — the reverse import would be a cycle.
+/**
+ * Tag-handle resolution and directive parsing local to a document.
+ *
+ * `parseDirective` lives here (not in `document.ts`) because
+ * `validateTagHandlesInDocument` needs it and `document.ts` already imports
+ * this module — the reverse import would be a cycle.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import type { CstNode } from "../cst.ts";
 import type { RawDirective } from "../raw-document.ts";
@@ -13,6 +19,21 @@ import type { ComposerState } from "./state.ts";
  * resolves to `tag:example.com,2000:app/int`.
  *
  * Returns the resolved tag URI, or the original tag if no directive matches.
+ *
+ * **Example** (Default `!!int` vs undeclared named handle)
+ *
+ * ```ts
+ * import { Effect, Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * console.log(Effect.runSync(Yaml.parse("a: !!int 1\n"))) // { a: 1 }
+ * console.log(Result.isFailure(Yaml.parseResult("!e!foo: 1\n"))) // true
+ * ```
+ *
+ * @see {@link validateTagHandlesInDocument} for same-document handle checks.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function resolveTagHandle(tag: string, state: ComposerState): string {
 	// Verbatim tags: !<...> — return the content as-is
@@ -53,6 +74,29 @@ export function resolveTagHandle(tag: string, state: ComposerState): string {
 	return tag;
 }
 
+/**
+ * Parse a `%NAME args` directive line into a raw name/parameters record.
+ *
+ * **Gotchas**
+ *
+ * Lives here so `document.ts` does not import it back from tags (cycle).
+ * Trailing `#` comments on the directive line are stripped from parameters.
+ *
+ * **Example** (Document-local `%TAG` does not leak across `---`)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const leaked = Yaml.parseAllResult("%TAG !e! tag:example.com,2000:app/\n---\n!e!foo: 1\n")
+ * console.log(Result.isFailure(leaked)) // true
+ * ```
+ *
+ * @see {@link FlowComposers} for the other composer cycle firewall.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export function parseDirective(source: string): RawDirective | null {
 	const trimmed = source.trim();
 	if (!trimmed.startsWith("%")) return null;
@@ -73,6 +117,26 @@ export function parseDirective(source: string): RawDirective | null {
  * is declared by a `%TAG` directive in the SAME document. %TAG directives
  * are local to a single document and do not leak across `---` boundaries.
  * The `!!` shorthand and the primary `!` handle are always available.
+ *
+ * **Gotchas**
+ *
+ * Copying `%TAG !e!` into document 1 and using `!e!` in document 2 looks
+ * like a resolver bug; it is this rule. `!!` and `!` are always available.
+ *
+ * **Example** (Named handle must be declared in the same document)
+ *
+ * ```ts
+ * import { Result } from "effect"
+ * import { Yaml } from "@beep/scratchpad/yaml"
+ *
+ * const leaked = Yaml.parseAllResult("%TAG !e! tag:example.com,2000:app/\n---\n!e!foo: 1\n")
+ * console.log(Result.isFailure(leaked)) // true
+ * ```
+ *
+ * @see {@link validateCrossDocumentDirectives} for the stream-level companion check.
+ * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function validateTagHandlesInDocument(docCst: CstNode, state: ComposerState): void {
 	const children = docCst.children ?? [];

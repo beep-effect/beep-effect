@@ -1,23 +1,28 @@
-// The non-mutating text-edit vocabulary shared by the formatter and modifier:
-// YamlEdit, YamlRange, YamlPath and YamlSegment.
-//
-// Edits describe replacements as `offset`/`length`/`content`; applying them in
-// reverse-offset order is byte-minimal and preserves comments and whitespace —
-// the library's real differentiator over `yaml` round-trips.
-//
-// `YamlEdit`, `YamlRange`, `YamlPath`, `YamlSegment` and
-// `YamlFormattingOptions` are bound by the jsonc/yaml parity convention: they
-// are structurally identical to their `Jsonc*` counterparts (same field names,
-// types, optionality and semantics) so consumer code can be written once over
-// "a document codec's Edit/Range/Path".
+/**
+ * Non-mutating YAML text edits shared by the formatter and modifier.
+ *
+ * Edits describe replacements as `offset`/`length`/`content`. Applying them in
+ * reverse-offset order is byte-minimal and preserves comments and whitespace —
+ * the differentiator over round-trip stringify.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
+
+const $I = $ScratchpadId.create("yaml/YamlEdit");
 
 /**
  * A single path segment: a `string` for mapping keys or a `number` for
  * sequence indices.
  *
+ * @see {@link YamlPath} for an ordered sequence of segments naming a tree location.
+ * @see {@link YamlFormat.modify} for the path-targeted editor that consumes these segments.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlSegment = string | number;
 
@@ -25,43 +30,105 @@ export type YamlSegment = string | number;
  * An ordered sequence of {@link (YamlSegment:type)} values describing a
  * location within a YAML document tree.
  *
+ * @see {@link YamlSegment} for the string-key / numeric-index members.
+ * @see {@link YamlFormat.modify} for applying a path against a composed document.
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlPath = ReadonlyArray<YamlSegment>;
 
 /**
  * A range within a YAML document, expressed as a zero-based character
- * `offset` and a `length` in UTF-16 code units. Pass to `YamlFormat.format`
+ * `offset` and a `length` in UTF-16 code units. Pass to {@link YamlFormat.format}
  * to restrict formatting to a region.
  *
+ * **Example** (Make a range and restrict formatting)
+ *
+ * ```ts
+ * import { YamlFormat, YamlFormattingOptions, YamlRange } from "@beep/scratchpad/yaml"
+ *
+ * const text = "key:\n- a\n- b\n"
+ * const options = YamlFormattingOptions.make({ indentSequences: true })
+ * const range = YamlRange.make({ offset: 0, length: 4 })
+ *
+ * console.log(YamlFormat.formatToString(text, range, options) === text) // true
+ * console.log(YamlFormat.formatToString(text, undefined, options).includes("  - a")) // true
+ * ```
+ *
+ * @see {@link YamlRangeLike} for the structurally interchangeable plain `{ offset, length }` literal.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlRange extends Schema.Class<YamlRange>("YamlRange")({
-	offset: Schema.Number,
-	length: Schema.Number,
-}) {}
+export class YamlRange extends Schema.Class<YamlRange>("YamlRange")(
+	{
+		offset: Schema.Number,
+		length: Schema.Number,
+	},
+	$I.annote("YamlRange", {
+		description: "A zero-based UTF-16 span used to restrict YAML formatting to a region.",
+	}),
+) {}
 
 /**
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
  * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
  *
- * @remarks
+ * **Details**
+ *
  * Structurally identical to `@effected/jsonc`'s edit shape (same field names,
  * types and semantics) per the jsonc/yaml parity convention, so consumer code
  * can be written once over "a document codec's Edit/Range/Path".
  *
+ * **Gotchas**
+ *
+ * {@link YamlEdit.applyAll} throws when edits overlap. That throw is a
+ * programmer defect outside any typed error channel — {@link YamlFormat} never
+ * produces overlapping edits, so hand-built arrays must not either. Treat
+ * `applyAll` as total only for non-overlapping input.
+ *
+ * **Example** (Apply non-overlapping replacements)
+ *
+ * ```ts
+ * import { YamlEdit } from "@beep/scratchpad/yaml"
+ *
+ * const updated = YamlEdit.applyAll("a: 1\nb: 2\n", [
+ *   YamlEdit.make({ offset: 3, length: 1, content: "9" }),
+ *   YamlEdit.make({ offset: 8, length: 1, content: "8" }),
+ * ])
+ *
+ * console.log(updated) // "a: 9\nb: 8\n"
+ * ```
+ *
+ * @see {@link YamlFormat.format} for the producer that never emits overlapping edits.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlEdit extends Schema.Class<YamlEdit>("YamlEdit")({
-	offset: Schema.Number,
-	length: Schema.Number,
-	content: Schema.String,
-}) {
+export class YamlEdit extends Schema.Class<YamlEdit>("YamlEdit")(
+	{
+		offset: Schema.Number,
+		length: Schema.Number,
+		content: Schema.String,
+	},
+	$I.annote("YamlEdit", {
+		description: "A byte-span replacement used to format or modify YAML without mutating the source string.",
+	}),
+) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`
-	 * array is not mutated. Overlapping edits are a programmer error and throw
-	 * as a defect — `YamlFormat` never produces them.
+	 * array is not mutated.
+	 *
+	 * **Gotchas**
+	 *
+	 * Overlapping edits — including two insertions at the same offset — are a
+	 * programmer error and throw as a defect. {@link YamlFormat} never produces
+	 * them.
+	 *
+	 * @throws Overlapping edits abort as a programmer defect because {@link YamlFormat} never produces them.
+	 * @see {@link YamlFormat.format} for the producer that never overlaps.
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<YamlEdit>): string {
 		const sorted = [...edits].sort((a, b) => b.offset - a.offset);

@@ -1,14 +1,22 @@
-// The canonical TOML document emitter over plain JavaScript values — the
-// encode side of the value pipeline. Layout contract: within a table,
-// non-table pairs emit first (document order), then sub-tables as
-// `[dotted.header]` sections depth-first, then arrays whose every element is
-// a plain object as `[[dotted.header]]` sections; a blank line precedes every
-// header line except at document start.
-//
-// Error carriers per the engine firewall: RawTomlError for value errors
-// (UnsupportedValue, IntegerOutOfRange, CircularReference — offsets 0, there
-// is no source text) and GuardExceeded for the nesting-depth cap. ONLY the
-// public facade catches them.
+/**
+ * Canonical TOML document emitter over plain JavaScript values — the encode
+ * side of the value pipeline.
+ *
+ * **Details**
+ *
+ * Layout contract: within a table, non-table pairs emit first (document
+ * order), then sub-tables as `[dotted.header]` sections depth-first, then
+ * arrays whose every element is a plain object as `[[dotted.header]]`
+ * sections; a blank line precedes every header line except at document start.
+ * Error carriers per the engine firewall: {@link RawTomlError} for value
+ * errors (`UnsupportedValue`, `IntegerOutOfRange`, `CircularReference` —
+ * offsets 0, there is no source text) and {@link GuardExceeded} for the
+ * nesting-depth cap. ONLY the public facade catches them. Stringify emits
+ * only TOML 1.0.0 spellings.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import type { TomlStringifyErrorCodeRaw } from "./diagnostics.ts";
@@ -91,7 +99,23 @@ const renderString = (value: string): string => {
 	return `${out}"`;
 };
 
-/** A key: bare when it matches the bare-key grammar, else basic-quoted. */
+/**
+ * A key: bare when it matches the bare-key grammar, else basic-quoted.
+ *
+ * **Example** (Quote only when needed)
+ *
+ * ```ts
+ * import { renderKey } from "../../../toml/internal/stringifyValue.ts"
+ *
+ * console.log(renderKey("dotted-key")) // "dotted-key"
+ * console.log(renderKey("has space")) // '"has space"'
+ * ```
+ *
+ * @see {@link Toml.stringify} for the typed facade that uses this helper.
+ * @internal
+ * @category serialization
+ * @since 0.0.0
+ */
 export const renderKey = (key: string): string => (BARE_KEY.test(key) ? key : renderString(key));
 
 /** A dotted header path, quoting per-segment by the key rule. */
@@ -209,6 +233,28 @@ const renderInline = (value: unknown, path: Path, depth: number, ancestors: Set<
  * Render a single value as an inline TOML fragment (scalars, arrays and
  * objects all inline). The single-value seam the document modify entry point
  * rides on.
+ *
+ * **Gotchas**
+ *
+ * A JS `1.0` is indistinguishable from `1` — every JS emitter shares this
+ * divergence. `-0` emits as `-0.0`. Stringify uses 1.0 spellings (seconds
+ * always present, single-line inline tables). Diagnostics for this helper
+ * use offset `0`.
+ *
+ * **Example** (Render an inline table)
+ *
+ * ```ts
+ * import { renderInlineValue } from "../../../toml/internal/stringifyValue.ts"
+ *
+ * console.log(renderInlineValue({ a: 1 })) // "{ a = 1 }"
+ * console.log(renderInlineValue([1, 2])) // "[1, 2]"
+ * ```
+ *
+ * @see {@link Toml.stringify} for the document-level encoder.
+ * @see {@link TomlStringifyOptions} for the newline knob on the public facade.
+ * @internal
+ * @category serialization
+ * @since 0.0.0
  */
 export const renderInlineValue = (value: unknown): string => renderInline(value, [], 0, new Set());
 
@@ -292,6 +338,35 @@ const emitTable = (
  * Stringify a plain value as a canonical TOML document. The root must be a
  * plain object (a TOML document is a table); an empty root emits the empty
  * string, anything else ends with `newline`.
+ *
+ * **Gotchas**
+ *
+ * `stringifyValue([1, 2], "\\n")` is `UnsupportedValue`, not an array
+ * document. `stringifyValue({ n: 1.0 }, "\\n")` prints `n = 1`. An empty
+ * object prints the empty string, not a trailing newline. Value errors use
+ * offset `0` (no source text). Only TOML 1.0.0 spellings are emitted.
+ *
+ * **Example** (Encode a table and reject an array root)
+ *
+ * ```ts
+ * import { isRawTomlError } from "../../../toml/internal/diagnostics.ts"
+ * import { stringifyValue } from "../../../toml/internal/stringifyValue.ts"
+ *
+ * const lf = String.fromCharCode(10)
+ * console.log(stringifyValue({ name: "Alice" }, lf)) // 'name = "Alice"\n'
+ * console.log(stringifyValue({}, lf)) // ""
+ * try {
+ *   stringifyValue([1, 2], lf)
+ * } catch (error) {
+ *   console.log(isRawTomlError(error) && error.diagnostic.code) // "UnsupportedValue"
+ * }
+ * ```
+ *
+ * @see {@link Toml.stringify} for the typed facade that wraps this function.
+ * @see {@link TomlStringifyOptions} for the newline knob on the public facade.
+ * @internal
+ * @category serialization
+ * @since 0.0.0
  */
 export const stringifyValue = (value: unknown, newline: string): string => {
 	if (!isPlainObject(value)) {

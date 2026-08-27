@@ -32,13 +32,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/DocumentClassifier");
 /**
  * Classification result for a single document
  *
- * **Example** (Validate document classification)
+ * **Example** (Decode a classified article)
  *
  * ```ts
- * import { DocumentClassification } from "@effect-ontology/Service/DocumentClassifier"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { DocumentClassification } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(S.is(DocumentClassification)({}))
+ * const decoded = S.decodeUnknownOption(DocumentClassification)({
+ *   documentType: "article",
+ *   domainTags: ["history", "computing"],
+ *   complexityScore: 0.4,
+ *   entityDensity: "moderate"
+ * })
+ * console.log(O.map(decoded, (value) => value.documentType)) // Some("article")
  * ```
  *
  * @category schemas
@@ -79,7 +86,11 @@ export const DocumentClassification = S.Struct({
   title: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
     description: "Document title if detectable",
   }),
-});
+}).pipe(
+  $I.annoteSchema("DocumentClassification", {
+    description: "Document type, domain tags, complexity, and entity density from classification.",
+  })
+);
 /**
  * Describes the document classification data exposed by this module.
  *
@@ -92,13 +103,27 @@ export type DocumentClassification = typeof DocumentClassification.Type;
 /**
  * Batch classification response for multiple documents
  *
- * **Example** (Validate batch classification response)
+ * **Example** (Decode a batch of classifications)
  *
  * ```ts
- * import { BatchClassificationResponse } from "@effect-ontology/Service/DocumentClassifier"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { BatchClassificationResponse } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(S.is(BatchClassificationResponse)({}))
+ * const decoded = S.decodeUnknownOption(BatchClassificationResponse)({
+ *   classifications: [
+ *     {
+ *       index: 0,
+ *       classification: {
+ *         documentType: "article",
+ *         domainTags: ["history"],
+ *         complexityScore: 0.3,
+ *         entityDensity: "sparse"
+ *       }
+ *     }
+ *   ]
+ * })
+ * console.log(O.isSome(decoded)) // true
  * ```
  *
  * @category schemas
@@ -113,7 +138,11 @@ export const BatchClassificationResponse = S.Struct({
       classification: DocumentClassification,
     })
   ),
-});
+}).pipe(
+  $I.annoteSchema("BatchClassificationResponse", {
+    description: "Indexed classification results for one document batch.",
+  })
+);
 /**
  * Describes the batch classification response data exposed by this module.
  *
@@ -126,13 +155,17 @@ export type BatchClassificationResponse = typeof BatchClassificationResponse.Typ
 /**
  * Input for single document classification
  *
- * **Example** (Validate classify input)
+ * **Example** (Build a single-document preview)
  *
  * ```ts
- * import { ClassifyInput } from "@effect-ontology/Service/DocumentClassifier"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { ClassifyInput } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(S.is(ClassifyInput)({}))
+ * const input = S.decodeUnknownOption(ClassifyInput)({
+ *   preview: "Ada founded Acme in 1843."
+ * })
+ * console.log(O.map(input, (value) => value.preview))
  * ```
  *
  * @category schemas
@@ -143,7 +176,11 @@ export const ClassifyInput = S.Struct({
   preview: S.String,
   /** Content type hint (e.g., "text/plain", "text/markdown") */
   contentType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  $I.annoteSchema("ClassifyInput", {
+    description: "Document preview and optional content-type hint for single classification.",
+  })
+);
 /**
  * Describes the classify input data exposed by this module.
  *
@@ -156,13 +193,17 @@ export type ClassifyInput = typeof ClassifyInput.Type;
 /**
  * Input for batch document classification
  *
- * **Example** (Validate classify batch input)
+ * **Example** (Build a batch of previews)
  *
  * ```ts
- * import { ClassifyBatchInput } from "@effect-ontology/Service/DocumentClassifier"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { ClassifyBatchInput } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(S.is(ClassifyBatchInput)({}))
+ * const input = S.decodeUnknownOption(ClassifyBatchInput)({
+ *   documents: [{ index: 0, preview: "Ada founded Acme in 1843." }]
+ * })
+ * console.log(O.isSome(input)) // true
  * ```
  *
  * @category schemas
@@ -180,7 +221,11 @@ export const ClassifyBatchInput = S.Struct({
       contentType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     })
   ),
-});
+}).pipe(
+  $I.annoteSchema("ClassifyBatchInput", {
+    description: "Indexed document previews submitted for batch classification.",
+  })
+);
 /**
  * Describes the classify batch input data exposed by this module.
  *
@@ -197,12 +242,15 @@ export type ClassifyBatchInput = typeof ClassifyBatchInput.Type;
 /**
  * Error when document classification fails
  *
- * **Example** (Inspect classification error)
+ * **Example** (Construct a classification error)
  *
  * ```ts
  * import { ClassificationError } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(ClassificationError)
+ * const error = ClassificationError.make({
+ *   message: "Language model returned an empty classification"
+ * })
+ * console.log(error._tag) // "ClassificationError"
  * ```
  *
  * @category errors
@@ -300,12 +348,12 @@ Respond with classifications for each document by index.`;
 /**
  * Default classification when LLM fails or is unavailable
  *
- * **Example** (Inspect default classification)
+ * **Example** (Inspect the fallback classification)
  *
  * ```ts
  * import { defaultClassification } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(defaultClassification)
+ * console.log(defaultClassification.documentType) // "unknown"
  * ```
  *
  * @category services
@@ -334,13 +382,18 @@ export const defaultClassification: DocumentClassification = {
  * Mode: effect (requires LanguageModel)
  * Dependencies: ConfigService, LanguageModel
  *
- * **Example** (Inspect the classifier layer)
+ * **Example** (Classify a document preview)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { DocumentClassifier } from "@effect-ontology/Service/DocumentClassifier"
  *
- * console.log(Layer.isLayer(DocumentClassifier.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const classifier = yield* DocumentClassifier
+ *   return yield* classifier.classify({ preview: "Ada founded Acme in 1843." })
+ * }).pipe(Effect.provide(DocumentClassifier.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

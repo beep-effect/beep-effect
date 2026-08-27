@@ -194,69 +194,76 @@ class RuleSetBase extends S.Class<RuleSetBase>($I`RuleSetBase`)(
   })
 ) {
   /**
-   *  Returns static rules followed by ontology-derived rules.
+   * Returns static rules followed by ontology-derived rules.
    *
-   * **Example** (Inspect rule set.all rules)
+   * **Example** (List every mention rule)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.allRules.length > 0) // true
    * ```
    *
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   get allRules(): ReadonlyArray<ExtractionRule> {
     return A.appendAll(this.staticRules, this.dynamicRules);
   }
 
   /**
-   *  Returns only schema-enforced rules.
+   * Returns only schema-enforced hard rules.
    *
-   * **Example** (Inspect rule set.error rules)
+   * **Example** (Count hard mention rules)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.errorRules.length > 0) // true
    * ```
    *
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   get errorRules(): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => RuleSeverity.is.error(rule.severity));
   }
 
   /**
-   *  Returns only prompt-level preferences.
+   * Returns only prompt-level preference rules.
    *
-   * **Example** (Inspect rule set.warning rules)
+   * **Example** (Count soft mention rules)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.warningRules.length > 0) // true
    * ```
    *
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   get warningRules(): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => RuleSeverity.is.warning(rule.severity));
   }
 
   /**
-   *  Returns rules belonging to the requested behavioral category.
+   * Returns rules belonging to the requested behavioral category.
    *
-   * **Example** (Inspect rule set.get rules by category)
+   * **Example** (Filter mention id-format rules)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.getRulesByCategory("id_format").length > 0) // true
    * ```
    *
-   * @param category - Input consumed by this operation.
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   getRulesByCategory(category: RuleCategory): ReadonlyArray<ExtractionRule> {
     return A.filter(

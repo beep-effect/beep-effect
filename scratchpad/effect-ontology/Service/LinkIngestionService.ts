@@ -7,15 +7,6 @@
  * Handles fetching via Jina, content-addressed storage, and optional
  * AI enrichment for metadata extraction.
  *
- * **Example** (Inspect the ingestion layer)
- *
- * ```ts
- * import { Layer } from "effect"
- * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
- *
- * console.log(Layer.isLayer(LinkIngestionService.Default)) // true
- * ```
- *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -76,7 +67,12 @@ const decodeIngestedLinkRows = (rows: unknown) =>
  * ```ts
  * import { LinkIngestionError } from "@effect-ontology/Service/LinkIngestionService"
  *
- * console.log(LinkIngestionError)
+ * const error = LinkIngestionError.make({
+ *   message: "Jina fetch failed",
+ *   url: "https://example.org/ada",
+ *   phase: "fetch"
+ * })
+ * console.log(error._tag) // "LinkIngestionError"
  * ```
  *
  * @category errors
@@ -107,9 +103,8 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
  * ```ts
  * import type { IngestOptions } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsIngestOptions = (_value: IngestOptions): void => undefined
- *
- * console.log(acceptsIngestOptions)
+ * const options: IngestOptions = { ontologyId: "core", enrich: true }
+ * console.log(options.ontologyId) // "core"
  * ```
  *
  * @category type-level
@@ -139,9 +134,13 @@ export interface IngestOptions {
  * ```ts
  * import type { IngestResult } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsIngestResult = (_value: IngestResult): void => undefined
- *
- * console.log(acceptsIngestResult)
+ * const result: IngestResult = {
+ *   id: "link-1",
+ *   contentHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ *   storageUri: "documents/aaa/content.md",
+ *   duplicate: false
+ * }
+ * console.log(result.duplicate) // false
  * ```
  *
  * @category type-level
@@ -173,9 +172,8 @@ export interface IngestResult {
  * ```ts
  * import type { BulkIngestOptions } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsBulkIngestOptions = (_value: BulkIngestOptions): void => undefined
- *
- * console.log(acceptsBulkIngestOptions)
+ * const options: BulkIngestOptions = { ontologyId: "core", concurrency: 3 }
+ * console.log(options.concurrency) // 3
  * ```
  *
  * @category type-level
@@ -197,9 +195,8 @@ export interface BulkIngestOptions extends IngestOptions {
  * ```ts
  * import type { IngestedLinkFilter } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsIngestedLinkFilter = (_value: IngestedLinkFilter): void => undefined
- *
- * console.log(acceptsIngestedLinkFilter)
+ * const filter: IngestedLinkFilter = { ontologyId: "core", limit: 20 }
+ * console.log(filter.limit) // 20
  * ```
  *
  * @category type-level
@@ -245,9 +242,15 @@ class ContentHashCacheKey extends S.Class<ContentHashCacheKey>($I`ContentHashCac
  * **Example** (Inspect link ingestion service)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
  *
- * console.log(LinkIngestionService)
+ * const program = Effect.gen(function* () {
+ *   const ingestion = yield* LinkIngestionService
+ *   return ingestion
+ * }).pipe(Effect.provide(LinkIngestionService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

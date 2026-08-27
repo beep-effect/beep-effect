@@ -245,14 +245,6 @@ export const BackgroundJob = BackgroundJobDefinition.pipe(
 /**
  * Runtime job decoded by {@link BackgroundJob}.
  *
- * **Example** (Use BackgroundJob)
- * ```ts
- * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema"
- *
- * const jobName = (job: BackgroundJob) => job._tag
- * console.log(jobName)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -311,14 +303,6 @@ export const JobMetadata = JobMetadataDefinition.annotate({
 
 /**
  * Runtime metadata decoded by {@link JobMetadata}.
- *
- * **Example** (Use JobMetadata)
- * ```ts
- * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema"
- *
- * const attempts = (metadata: JobMetadata) => metadata.attempts
- * console.log(attempts)
- * ```
  *
  * @category type-level
  * @since 0.0.0

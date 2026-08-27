@@ -81,17 +81,23 @@ type JobMeta = { readonly id: string; readonly attempts: number };
 // =============================================================================
 
 /**
- * Provides the curation job processor service capability.
+ * Drains queued curation jobs and updates processing statistics.
  *
- * **Example** (Inspect curation job processor)
+ * **Example** (Compose job processing against Default)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { CurationJobProcessor } from "@effect-ontology/Service/CurationJobProcessor"
  *
- * console.log(CurationJobProcessor)
+ * const program = Effect.gen(function* () {
+ *   const processor = yield* CurationJobProcessor
+ *   return yield* processor.processOnce
+ * }).pipe(Effect.provide(CurationJobProcessor.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class CurationJobProcessor extends Context.Service<CurationJobProcessor>()($I`CurationJobProcessor`, {

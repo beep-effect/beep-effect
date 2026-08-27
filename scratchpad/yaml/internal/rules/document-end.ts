@@ -1,10 +1,14 @@
-// document-end (#129): the `...` marker at the tail of the stream —
-// required (`present: true`, the default when the rule is enabled) or
-// forbidden (`present: false`). Tail-of-stream scope only, mirroring
-// document-start's head-of-stream scope: mid-stream `...` markers are
-// document structure.
-//
-// Opt-in: absent from both presets.
+/**
+ * document-end: the `...` marker at the tail of the stream — required
+ * (`present: true`, the default when the rule is enabled) or forbidden
+ * (`present: false`).
+ *
+ * Tail-of-stream scope only: mid-stream `...` markers are document
+ * structure. Opt-in — absent from both presets.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -12,7 +16,28 @@ import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlToken } from "../../YamlToken.ts";
 
-/** Options for `document-end`: require (`true`, default) or forbid the marker. */
+/**
+ * Options for `document-end`: require (`true`, default) or forbid the marker.
+ *
+ * **Gotchas**
+ *
+ * Scope is the stream tail only. Mid-stream `...` is structure and is not
+ * this rule's business.
+ *
+ * **Example** (Require a stream-tail `...`)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const config = YamlLintConfig.make({ rules: { "document-end": { present: true } } })
+ * console.log(config.rules["document-end"])
+ * ```
+ *
+ * @see {@link documentEnd} for the rule that consumes these options.
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
 export const documentEndOptions = Schema.Struct({
 	severity: Schema.optionalKey(YamlLintSeverity),
 	present: Schema.optionalKey(Schema.Boolean),
@@ -44,7 +69,30 @@ const endOfStreamPosition = (
 	};
 };
 
-/** The `...` marker at the tail of the stream. */
+/**
+ * The `...` marker at the tail of the stream.
+ *
+ * **Gotchas**
+ *
+ * Applying this as "every document marker must match `present`" will flag
+ * separators in multi-document streams. Mid-stream `...` is structure.
+ *
+ * **Example** (Flag a missing stream-tail marker)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const hits = YamlLint.run("a: 1\n", YamlLint.builtins, YamlLintConfig.make({
+ *   rules: { "document-end": { present: true } },
+ * }))
+ * console.log(hits.some((d) => d.rule === "document-end")) // true
+ * ```
+ *
+ * @see {@link documentStart} for the matching stream-head marker rule.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export const documentEnd: YamlRule = {
 	id: "document-end",
 	check: (ctx, options) => {

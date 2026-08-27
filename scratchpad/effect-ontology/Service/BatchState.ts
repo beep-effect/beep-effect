@@ -99,17 +99,40 @@ export class BatchStateDecodeError extends S.TaggedError<BatchStateDecodeError>(
 const BATCH_STATE_HUB_CAPACITY = 1000;
 
 /**
- * Provides the batch state hub service capability.
+ * In-memory PubSub hub for live batch-state updates.
  *
- * **Example** (Inspect batch state hub)
+ * **Example** (Publish a pending batch)
  *
  * ```ts
+ * import { DateTime, Effect, PubSub } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"
  * import { BatchStateHub } from "@effect-ontology/Service/BatchState"
  *
- * console.log(BatchStateHub)
+ * const published = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const hub = yield* BatchStateHub
+ *     const now = DateTime.formatIso(DateTime.nowUnsafe())
+ *     const state = S.decodeUnknownOption(BatchState)({
+ *       _tag: "Pending",
+ *       batchId: "batch-deadbeefcafe",
+ *       ontologyId: "premier_league",
+ *       manifestUri: "gs://beep-ontology/manifest.json",
+ *       ontologyVersion: "football/premier_league@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ *       createdAt: now,
+ *       updatedAt: now,
+ *       documentCount: 0
+ *     })
+ *     if (O.isNone(state)) return false
+ *     yield* PubSub.publish(hub, state.value)
+ *     return true
+ *   }).pipe(Effect.provide(BatchStateHub.Default))
+ * )
+ * console.log(published) // true
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class BatchStateHub extends Context.Service<BatchStateHub>()($I`BatchStateHub`, {
@@ -119,14 +142,21 @@ export class BatchStateHub extends Context.Service<BatchStateHub>()($I`BatchStat
 }
 
 /**
- * Provides the Effect layer for batch state hub layer dependencies.
+ * Default layer for {@link BatchStateHub}.
  *
- * **Example** (Inspect batch state hub layer)
+ * **Example** (Provide the hub layer)
  *
  * ```ts
- * import { BatchStateHubLayer } from "@effect-ontology/Service/BatchState"
+ * import { Effect, PubSub } from "effect"
+ * import { BatchStateHub, BatchStateHubLayer } from "@effect-ontology/Service/BatchState"
  *
- * console.log(BatchStateHubLayer)
+ * const empty = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const hub = yield* BatchStateHub
+ *     return yield* PubSub.isActive(hub)
+ *   }).pipe(Effect.provide(BatchStateHubLayer))
+ * )
+ * console.log(empty) // true
  * ```
  *
  * @category layers
@@ -135,14 +165,17 @@ export class BatchStateHub extends Context.Service<BatchStateHub>()($I`BatchStat
 export const BatchStateHubLayer = BatchStateHub.Default;
 
 /**
- * Provides the Effect layer for batch state persistence layer dependencies.
+ * Persistence layer that stores batch state through {@link StorageService}.
  *
- * **Example** (Inspect batch state persistence layer)
+ * **Example** (Provide persistence over test storage)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { BatchStatePersistenceLayer } from "@effect-ontology/Service/BatchState"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(BatchStatePersistenceLayer)
+ * const layer = Layer.provide(BatchStatePersistenceLayer, StorageServiceTest)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -153,17 +186,40 @@ export const BatchStatePersistenceLayer = Persistence.layerKvs.pipe(
 );
 
 /**
- * Provides the persist state service capability.
+ * Encode a batch snapshot and write it to {@link StorageService}.
  *
- * **Example** (Inspect persist state)
+ * **Example** (Persist a pending batch)
  *
  * ```ts
+ * import { DateTime, Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"
  * import { persistState } from "@effect-ontology/Service/BatchState"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(persistState)
+ * const persisted = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const now = DateTime.formatIso(DateTime.nowUnsafe())
+ *     const state = S.decodeUnknownOption(BatchState)({
+ *       _tag: "Pending",
+ *       batchId: "batch-deadbeefcafe",
+ *       ontologyId: "premier_league",
+ *       manifestUri: "gs://beep-ontology/manifest.json",
+ *       ontologyVersion: "football/premier_league@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ *       createdAt: now,
+ *       updatedAt: now,
+ *       documentCount: 0
+ *     })
+ *     if (O.isNone(state)) return false
+ *     yield* persistState(state.value)
+ *     return true
+ *   }).pipe(Effect.provide(StorageServiceTest), Effect.orDie)
+ * )
+ * console.log(persisted) // true
  * ```
  *
- * @category services
+ * @category utilities
  * @since 0.0.0
  */
 export const persistState = Effect.fn("BatchState.persistState")(function* (state: BatchState) {
@@ -189,17 +245,27 @@ export const persistState = Effect.fn("BatchState.persistState")(function* (stat
 });
 
 /**
- * Retrieves get batch state from store data for downstream processing.
+ * Load a persisted batch snapshot, returning none when the key is absent.
  *
- * **Example** (Inspect get batch state from store)
+ * **Example** (Read a missing batch)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { BatchId } from "@effect-ontology/Identity"
  * import { getBatchStateFromStore } from "@effect-ontology/Service/BatchState"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(getBatchStateFromStore)
+ * const found = Effect.runSync(
+ *   getBatchStateFromStore(BatchId.make("batch-deadbeefcafe")).pipe(
+ *     Effect.provide(StorageServiceTest),
+ *     Effect.orDie
+ *   )
+ * )
+ * console.log(O.isNone(found)) // true
  * ```
  *
- * @category services
+ * @category utilities
  * @since 0.0.0
  */
 export const getBatchStateFromStore = Effect.fn("BatchState.getFromStore")(function* (batchId: BatchId) {
@@ -232,17 +298,43 @@ export const getBatchStateFromStore = Effect.fn("BatchState.getFromStore")(funct
 });
 
 /**
- * Provides the publish state service capability.
+ * Persist a batch snapshot and publish it on {@link BatchStateHub}.
  *
- * **Example** (Inspect publish state)
+ * **Example** (Publish after persist)
  *
  * ```ts
- * import { publishState } from "@effect-ontology/Service/BatchState"
+ * import { DateTime, Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"
+ * import { BatchStateHub, publishState } from "@effect-ontology/Service/BatchState"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(publishState)
+ * const published = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const now = DateTime.formatIso(DateTime.nowUnsafe())
+ *     const state = S.decodeUnknownOption(BatchState)({
+ *       _tag: "Pending",
+ *       batchId: "batch-deadbeefcafe",
+ *       ontologyId: "premier_league",
+ *       manifestUri: "gs://beep-ontology/manifest.json",
+ *       ontologyVersion: "football/premier_league@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ *       createdAt: now,
+ *       updatedAt: now,
+ *       documentCount: 0
+ *     })
+ *     if (O.isNone(state)) return false
+ *     yield* publishState(state.value)
+ *     return true
+ *   }).pipe(
+ *     Effect.provide(Layer.merge(BatchStateHub.Default, StorageServiceTest)),
+ *     Effect.orDie
+ *   )
+ * )
+ * console.log(published) // true
  * ```
  *
- * @category services
+ * @category utilities
  * @since 0.0.0
  */
 export const publishState = Effect.fn("BatchState.publishState")(function* (state: BatchState) {

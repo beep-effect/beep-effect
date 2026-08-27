@@ -181,14 +181,22 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
 // =============================================================================
 
 /**
- * Exposes ingest command for composition by callers of this module.
+ * Uploads local documents from a directory into storage and writes a batch
+ * manifest for later extraction.
  *
- * **Example** (Inspect ingest command)
+ * **Details**
+ *
+ * This is filesystem ingest, not URL fetch. `--ontology` / `--ontology-id`
+ * scope the batch; `--output` writes the generated manifest JSON.
+ *
+ * **Example** (Ingest a local document directory)
  *
  * ```ts
  * import { ingestCommand } from "@effect-ontology/Cli/Commands/Ingest"
  *
- * console.log(ingestCommand)
+ * console.log(ingestCommand.name) // "ingest"
+ * console.log(ingestCommand.description)
+ * // effect-onto ingest ./articles --ontology ontologies/people.ttl --output manifest.json
  * ```
  *
  * @category cli-commands

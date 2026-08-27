@@ -8,12 +8,17 @@
  * - Swappable SQL client so prod can use Postgres/MySQL without code changes
  * - ShardingConfig pulled from environment (Effect config)
  *
- * **Example** (Choose a cluster runtime)
+ * **Example** (Choose sqlite-dev versus an injected SQL client)
  *
  * ```ts
  * import { ClusterSqliteLive, ClusterWithSqlClient } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ClusterSqliteLive, ClusterWithSqlClient)
+ * const useSqlite = true
+ * const cluster = useSqlite
+ *   ? ClusterSqliteLive({ filename: "output/cluster.db", runnerStorage: "memory" })
+ *   : ClusterWithSqlClient({ runnerStorage: "memory" })
+ * const documented = [cluster, useSqlite] as const
+ * console.log(documented[1]) // true
  * ```
  *
  * @packageDocumentation
@@ -30,12 +35,14 @@ import { ShardingConfig, SingleRunner } from "effect/unstable/cluster";
 /**
  * Build a durable single-runner cluster layer using sqlite (dev-friendly).
  *
- * **Example** (Inspect cluster sqlite live)
+ * **Example** (Build a memory-backed sqlite cluster)
  *
  * ```ts
  * import { ClusterSqliteLive } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ClusterSqliteLive)
+ * const cluster = ClusterSqliteLive({ filename: "output/cluster.db", runnerStorage: "memory" })
+ * const documented = [cluster, "output/cluster.db"] as const
+ * console.log(documented[1]) // "output/cluster.db"
  * ```
  *
  * @param options.filename - Path to sqlite file (default: output/cluster.db)
@@ -65,17 +72,19 @@ export const ClusterSqliteLive = (options?: { readonly filename?: string; readon
  * by the caller (e.g., Postgres/MySQL). This keeps composition aligned with
  * Effect patterns: you provide SqlClient elsewhere, then merge this layer.
  *
- * **Example** (Inspect cluster with sql client)
+ * **Example** (Build a cluster that expects an injected SQL client)
  *
  * ```ts
  * import { ClusterWithSqlClient } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ClusterWithSqlClient)
+ * const cluster = ClusterWithSqlClient({ runnerStorage: "memory" })
+ * const documented = [cluster, "memory"] as const
+ * console.log(documented[1]) // "memory"
  * ```
  *
  * @param options.prefix - Table prefix for cluster tables (default: corev2)
  * @param options.runnerStorage - Optional "memory" for tests
- * @category services
+ * @category layers
  * @since 0.0.0
  */
 export const ClusterWithSqlClient = (options?: { readonly runnerStorage?: "memory" }) =>
@@ -87,15 +96,17 @@ export const ClusterWithSqlClient = (options?: { readonly runnerStorage?: "memor
  * ShardingConfig layer sourced from environment, exposed for convenience.
  * Can be provided to override defaults (e.g., shardsPerGroup, lock TTL).
  *
- * **Example** (Inspect cluster sharding config from env)
+ * **Example** (Build sharding config from environment)
  *
  * ```ts
  * import { ClusterShardingConfigFromEnv } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ClusterShardingConfigFromEnv)
+ * const sharding = ClusterShardingConfigFromEnv()
+ * const documented = [sharding, "shardsPerGroup"] as const
+ * console.log(documented[1]) // "shardsPerGroup"
  * ```
  *
- * @category services
+ * @category layers
  * @since 0.0.0
  */
 export const ClusterShardingConfigFromEnv = (options?: Parameters<typeof ShardingConfig.layerFromEnv>[0]) =>
@@ -106,12 +117,13 @@ export const ClusterShardingConfigFromEnv = (options?: Parameters<typeof Shardin
  * - CLUSTER_DB_FILE (default: output/cluster.db)
  * - CLUSTER_RUNNER_STORAGE (default: durable; set to "memory" for tests)
  *
- * **Example** (Inspect cluster sqlite live from env)
+ * **Example** (Select sqlite cluster storage from env)
  *
  * ```ts
  * import { ClusterSqliteLiveFromEnv } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ClusterSqliteLiveFromEnv)
+ * const documented = [ClusterSqliteLiveFromEnv, "CLUSTER_DB_FILE"] as const
+ * console.log(documented[1]) // "CLUSTER_DB_FILE"
  * ```
  *
  * @category layers
@@ -136,12 +148,13 @@ export const ClusterSqliteLiveFromEnv = Layer.unwrap(
  * Note: pg/mysql drivers are not wired yet; non-sqlite URLs will log a warning
  * and fall back to sqlite.
  *
- * **Example** (Inspect cluster auto live from env)
+ * **Example** (Auto-select cluster storage from CLUSTER_DB_URL)
  *
  * ```ts
  * import { ClusterAutoLiveFromEnv } from "@effect-ontology/Runtime/ClusterRuntime"
  *
- * console.log(ClusterAutoLiveFromEnv)
+ * const documented = [ClusterAutoLiveFromEnv, "CLUSTER_DB_URL"] as const
+ * console.log(documented[1]) // "CLUSTER_DB_URL"
  * ```
  *
  * @category layers

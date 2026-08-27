@@ -88,16 +88,6 @@ export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
     (token) => Str.length(token) > 2 && !HashSet.has(BlockingTokenStopWords, token)
   );
 
-/**
- * Text Processing Utilities
- *
- * Pure text transformation functions for search enhancement.
- * These are domain-agnostic string operations.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-
 // =============================================================================
 // CamelCase Splitting
 // =============================================================================
@@ -115,14 +105,10 @@ export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
  * ```ts
  * import { splitCamelCase } from "@effect-ontology/Utils/Text"
  *
- * splitCamelCase("birthPlace")     // => "birth Place"
- * splitCamelCase("FirstName")       // => "First Name"
- * splitCamelCase("XMLHttpRequest") // => "XML Http Request"
- * splitCamelCase("already spaced") // => "already spaced"
+ * console.log(splitCamelCase("birthPlace")) // "birth Place"
+ * console.log(splitCamelCase("XMLHttpRequest")) // "XML Http Request"
  * ```
  *
- * @param text - Text possibly containing camelCase
- * @returns Space-separated words
  * @category utilities
  * @since 0.0.0
  */
@@ -149,16 +135,13 @@ export const splitCamelCase = (text: string): string =>
  * ```ts
  * import { generateNGrams } from "@effect-ontology/Utils/Text"
  *
- * generateNGrams(["birth", "place", "location"], 2)
- * // => ["birth place", "place location"]
- *
- * generateNGrams(["person", "name"], 3)
- * // => ["person name"] (only one trigram possible)
+ * console.log(generateNGrams(["birth", "place", "location"], 2))
+ * // ["birth place", "place location"]
+ * console.log(generateNGrams(["person", "name"], 3))
+ * // []
  * ```
  *
- * @param tokens - Array of tokens
- * @param n - N-gram size (default: 2 for bigrams)
- * @returns Array of n-gram strings
+ * @param n - Window size; must be supplied (no default).
  * @category utilities
  * @since 0.0.0
  */
@@ -191,13 +174,13 @@ export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): 
  * ```ts
  * import { enhanceTextForSearch } from "@effect-ontology/Utils/Text"
  *
- * enhanceTextForSearch("birthPlace location", 2)
- * // => "birthPlace location birth place location birth place place location"
+ * console.log(enhanceTextForSearch("birthPlace location", 2))
+ * // "birthPlace location birth Place location birth place place location"
  * ```
  *
- * @param text - Input text
- * @param ngramSize - Size of n-grams to generate (default: 2)
- * @returns Enhanced text with camelCase split and n-grams
+ * @param ngramSize - Window size passed to {@link generateNGrams}; must be supplied.
+ * @see {@link generateNGrams} for the n-gram constructor this calls.
+ * @see {@link splitCamelCase} for the camelCase split applied before tokenization.
  * @category utilities
  * @since 0.0.0
  */

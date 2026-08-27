@@ -1,11 +1,15 @@
-// The parsed-document concept: YamlDocument (root AST node plus
-// errors/warnings-as-data, directives and document framing) and
-// YamlDirective.
-//
-// The recoverable-parse design lives here: non-fatal diagnostics surface as
-// data on `errors`/`warnings` while fatal ones fail `parse`/`parseAll` with a
-// typed `YamlParseError`.
+/**
+ * Parsed YAML documents: the root AST plus recovered diagnostics, directives
+ * and document framing.
+ *
+ * Non-fatal diagnostics surface as data on `errors`/`warnings` while fatal
+ * ones fail `parse`/`parseAll` with a typed {@link YamlParseError}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Effect, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { composeAllDocuments, composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
@@ -17,18 +21,39 @@ import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlNode as YamlNodeType } from "./YamlNode.ts";
 import { YamlNode } from "./YamlNode.ts";
 
+const $I = $ScratchpadId.create("yaml/YamlDocument");
+
 /**
  * A YAML directive appearing before a document (e.g. `%YAML 1.2` or
  * `%TAG ! tag:example.com,2000:`). `"YAML"` and `"TAG"` are the YAML 1.2
  * spec-defined directives; any other name is a reserved directive preserved
  * for round-trip fidelity.
  *
+ * **Example** (Make a YAML version directive)
+ *
+ * ```ts
+ * import { YamlDirective } from "@beep/scratchpad/yaml"
+ *
+ * const directive = YamlDirective.make({ name: "YAML", parameters: ["1.2"] })
+ *
+ * console.log(directive.name) // "YAML"
+ * console.log(directive.parameters) // ["1.2"]
+ * ```
+ *
+ * @see {@link YamlDocument} for the parsed document that stores these directives.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")({
-	name: Schema.String,
-	parameters: Schema.Array(Schema.String),
-}) {}
+export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")(
+	{
+		name: Schema.String,
+		parameters: Schema.Array(Schema.String),
+	},
+	$I.annote("YamlDirective", {
+		description: "A YAML directive appearing before a document, preserved for round-trip fidelity.",
+	}),
+) {}
 
 /**
  * A parsed YAML document: the root {@link (YamlNode:type)} (or `null` when
@@ -45,19 +70,50 @@ export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")(
  * Construct via `YamlDocument.parse` / `parseAll`; `YamlDocument.make` is for
  * synthetic documents.
  *
+ * **Gotchas**
+ *
+ * `YamlStringifyOptions.lineWidth` is threaded into {@link YamlDocument.stringify}
+ * but never read — folding requires `Yaml.stringify(doc.toValue(), options)` via
+ * {@link Yaml.stringify} at the cost of framing and styles. `commentBefore` vs
+ * `comment` ownership is marker-relative as above. {@link YamlDocument.parseAll}
+ * fails the whole Effect on any fatal diagnostic in any document.
+ *
+ * **Example** (Parse a document, read the value, and stringify)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { YamlDocument } from "@beep/scratchpad/yaml"
+ *
+ * const doc = Effect.runSync(YamlDocument.parse("name: Alice\n"))
+ * console.log(doc.toValue()) // { name: "Alice" }
+ * console.log(Effect.runSync(doc.stringify()).includes("Alice")) // true
+ *
+ * const docs = Effect.runSync(YamlDocument.parseAll("a: 1\n---\nb: 2\n"))
+ * console.log(docs.map((document) => document.toValue())) // [{ a: 1 }, { b: 2 }]
+ * ```
+ *
+ * @see {@link Yaml.parse} for the value-level parse that drops AST, comments and framing.
+ * @see {@link Yaml.stringify} for column-based scalar folding on the value path.
  * @public
+ * @category models
+ * @since 0.0.0
  */
-export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
-	contents: Schema.NullOr(Schema.suspend((): Schema.Schema<YamlNodeType> => YamlNode)),
-	errors: Schema.Array(YamlDiagnostic),
-	warnings: Schema.Array(YamlDiagnostic),
-	directives: Schema.Array(YamlDirective),
-	commentBefore: Schema.optionalKey(Schema.String),
-	comment: Schema.optionalKey(Schema.String),
-	hasDocumentStart: Schema.optionalKey(Schema.Boolean),
-	hasDocumentEnd: Schema.optionalKey(Schema.Boolean),
-	hasDocumentStartTab: Schema.optionalKey(Schema.Boolean),
-}) {
+export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
+	{
+		contents: Schema.NullOr(Schema.suspend((): Schema.Schema<YamlNodeType> => YamlNode)),
+		errors: Schema.Array(YamlDiagnostic),
+		warnings: Schema.Array(YamlDiagnostic),
+		directives: Schema.Array(YamlDirective),
+		commentBefore: Schema.optionalKey(Schema.String),
+		comment: Schema.optionalKey(Schema.String),
+		hasDocumentStart: Schema.optionalKey(Schema.Boolean),
+		hasDocumentEnd: Schema.optionalKey(Schema.Boolean),
+		hasDocumentStartTab: Schema.optionalKey(Schema.Boolean),
+	},
+	$I.annote("YamlDocument", {
+		description: "A parsed YAML document carrying AST contents, recovered diagnostics, directives and framing.",
+	}),
+) {
 	/**
 	 * Parse a single YAML document, keeping the full AST, directives and
 	 * recovered diagnostics. Fails with the aggregate {@link YamlParseError}
@@ -131,16 +187,16 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")({
 	 * — both surface through the typed error channel rather than as an
 	 * unhandled stack-overflow defect.
 	 *
-	 * @remarks
+	 * **Gotchas**
+	 *
 	 * `YamlStringifyOptions.lineWidth` is not honored here: column-based
 	 * scalar folding exists only on the value path, through the entry points
 	 * that accept stringify options ({@link Yaml.stringify} and
-	 * {@link Yaml.stringifyResult}). The
-	 * document/node path threads `lineWidth` into its render context but
-	 * never reads it, so long scalars are emitted unfolded regardless of the
-	 * option. Callers that need folding should render the plain value
-	 * instead — `Yaml.stringify(doc.toValue(), options)` — at the cost of
-	 * the document-level framing and styles this path preserves.
+	 * {@link Yaml.stringifyResult}). The document/node path threads `lineWidth`
+	 * into its render context but never reads it, so long scalars are emitted
+	 * unfolded regardless of the option. Callers that need folding should
+	 * render the plain value instead — `Yaml.stringify(doc.toValue(), options)`
+	 * — at the cost of the document-level framing and styles this path preserves.
 	 */
 	stringify(options?: YamlStringifyOptions): Effect.Effect<string, YamlStringifyError> {
 		return Effect.try({
@@ -230,7 +286,19 @@ const toStringifyInput = (options?: YamlStringifyOptions) =>
  * malformed input; it is NOT a second public parse entry point (not
  * re-exported from the package index).
  *
+ * **Example** (Lint recovered documents that parse refuses)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+ *
+ * const findings = YamlLint.run("[", YamlLint.builtins, YamlLintConfig.default)
+ * console.log(findings.some((diagnostic) => diagnostic.rule === "parse-validity")) // true
+ * ```
+ *
+ * @see {@link YamlLint.run} for the public consumer that materializes recovered documents this way.
  * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument {
 	return fromRawDocument(raw, text);

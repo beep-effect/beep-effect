@@ -30,7 +30,7 @@ const $I = $ScratchpadId.create("beep-docs/api-reference/CodeSnippet");
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { CodeSnippetLanguageFromExtension } from "./CodeSnippet.ts"
+ * import { CodeSnippetLanguageFromExtension } from "../../../beep-docs/api-reference/CodeSnippet.ts"
  *
  * console.log(S.decodeUnknownSync(CodeSnippetLanguageFromExtension)("sh")) // "bash"
  * ```
@@ -64,19 +64,28 @@ export const CodeSnippetLanguageFromExtension = MappedLiteralKit([
 );
 
 /**
- * Encoded (extension) side of {@link CodeSnippetLanguageFromExtension}.
+ * Encoded companions for {@link CodeSnippetLanguageFromExtension}.
  *
- * @category models
+ * @see {@link CodeSnippetLanguageFromExtension} for the runtime codec that maps extensions to language names.
+ * @category type-level
  * @since 0.0.0
  */
 export declare namespace CodeSnippetLanguageFromExtension {
+  /**
+   * File-extension input accepted by {@link CodeSnippetLanguageFromExtension} before mapping.
+   *
+   * @see {@link CodeSnippetLanguageFromExtension} for the runtime codec that maps extensions to language names.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = typeof CodeSnippetLanguageFromExtension.Encoded;
 }
 
 /**
- * Decoded (language) side of {@link CodeSnippetLanguageFromExtension}.
+ * Decoded language name produced by {@link CodeSnippetLanguageFromExtension}.
  *
- * @category models
+ * @see {@link CodeSnippetLanguageFromExtension} for the runtime codec and encoded extension side.
+ * @category type-level
  * @since 0.0.0
  */
 export type CodeSnippetLanguageFromExtension = typeof CodeSnippetLanguageFromExtension.Type;
@@ -87,9 +96,11 @@ export type CodeSnippetLanguageFromExtension = typeof CodeSnippetLanguageFromExt
  * **Example** (Guard a language name)
  *
  * ```ts
- * import { CodeSnippetLanguage } from "./CodeSnippet.ts"
+ * import * as S from "effect/Schema"
+ * import { CodeSnippetLanguage } from "../../../beep-docs/api-reference/CodeSnippet.ts"
  *
- * console.log(CodeSnippetLanguage.Enum.typescript)
+ * console.log(S.is(CodeSnippetLanguage)(CodeSnippetLanguage.Enum.typescript)) // true
+ * console.log(S.is(CodeSnippetLanguage)("cobol")) // false
  * ```
  *
  * @category schemas
@@ -104,7 +115,8 @@ export const CodeSnippetLanguage = LiteralKit(CodeSnippetLanguageFromExtension.T
 /**
  * Literal type extracted from {@link CodeSnippetLanguage}.
  *
- * @category models
+ * @see {@link CodeSnippetLanguage} for the runtime schema and membership guard.
+ * @category type-level
  * @since 0.0.0
  */
 export type CodeSnippetLanguage = typeof CodeSnippetLanguage.Type;
@@ -139,13 +151,20 @@ const decodeInfoString = (info: string): Effect.Effect<CodeSnippetLanguage, Sche
  * through {@link CodeSnippetLanguageFromExtension}; anything else must
  * already be a canonical language name.
  *
+ * **Gotchas**
+ *
+ * Encode is passthrough of the canonical language id and does not restore the
+ * original info string or extension (`" ts "` and `"ts"` both decode to
+ * `"typescript"`; encoding `"typescript"` stays `"typescript"`).
+ *
  * **Example** (Normalize an info string)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { CodeSnippetLanguageFromInfoString } from "./CodeSnippet.ts"
+ * import { CodeSnippetLanguageFromInfoString } from "../../../beep-docs/api-reference/CodeSnippet.ts"
  *
  * console.log(S.decodeUnknownSync(CodeSnippetLanguageFromInfoString)(" ts ")) // "typescript"
+ * console.log(S.encodeUnknownSync(CodeSnippetLanguageFromInfoString)("typescript")) // "typescript"
  * ```
  *
  * @category codecs
@@ -165,25 +184,33 @@ export const CodeSnippetLanguageFromInfoString = S.String.pipe(
 /**
  * Decoded type of {@link CodeSnippetLanguageFromInfoString}.
  *
- * @category models
+ * @see {@link CodeSnippetLanguageFromInfoString} for the runtime codec that normalizes info strings.
+ * @category type-level
  * @since 0.0.0
  */
 export type CodeSnippetLanguageFromInfoString = typeof CodeSnippetLanguageFromInfoString.Type;
 
 /**
- * Resolves a fenced-code info string to a {@link CodeSnippetLanguage}, or
- * `None` when it names no known language.
+ * Resolves a fenced-code info string to a {@link CodeSnippetLanguage} without
+ * throwing.
  *
- * **Example** (Resolve a known and an unknown language)
+ * **Details**
+ *
+ * Empty and whitespace-only info strings become `typescript` (`Some`), not
+ * `None`. An unknown token such as `cobol` is `None`.
+ *
+ * **Example** (Resolve a known, empty, and unknown language)
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { languageFromInfoString } from "./CodeSnippet.ts"
+ * import { languageFromInfoString } from "../../../beep-docs/api-reference/CodeSnippet.ts"
  *
  * console.log(O.getOrUndefined(languageFromInfoString("mjs"))) // "javascript-esm"
+ * console.log(O.getOrUndefined(languageFromInfoString(""))) // "typescript"
  * console.log(O.isNone(languageFromInfoString("cobol"))) // true
  * ```
  *
+ * @see {@link CodeSnippetLanguageFromInfoString} for the Issue-bearing codec that fails instead of returning `None`.
  * @category decoding
  * @since 0.0.0
  */
@@ -216,7 +243,7 @@ const TsComputedPropertyKey = S.String.check(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { BareTsPropertyName } from "./CodeSnippet.ts"
+ * import { BareTsPropertyName } from "../../../beep-docs/api-reference/CodeSnippet.ts"
  *
  * const isBare = S.is(BareTsPropertyName)
  * console.log(isBare("value"), isBare("[Symbol.iterator]"), isBare("needs quotes"))
@@ -234,7 +261,8 @@ export const BareTsPropertyName = S.Union([TsIdentifier, TsComputedPropertyKey])
 /**
  * String type extracted from {@link BareTsPropertyName}.
  *
- * @category models
+ * @see {@link BareTsPropertyName} for the runtime schema and membership guard.
+ * @category type-level
  * @since 0.0.0
  */
 export type BareTsPropertyName = typeof BareTsPropertyName.Type;
@@ -249,7 +277,7 @@ const encodeJsonString = S.encodeOption(S.fromJsonString(S.String));
  * **Example** (Quote only when needed)
  *
  * ```ts
- * import { typescriptPropertyName } from "./CodeSnippet.ts"
+ * import { typescriptPropertyName } from "../../../beep-docs/api-reference/CodeSnippet.ts"
  *
  * console.log(typescriptPropertyName("value")) // value
  * console.log(typescriptPropertyName("content-type")) // "content-type"
