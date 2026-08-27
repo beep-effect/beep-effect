@@ -30,9 +30,22 @@ Vetted, license-checked ontology artifacts for the IP-practice DMS/KG.
   "verdictRationale": "one or two sentences",
   "phase": "P1 | P2 | P3 | P4",
   "verified": false,
+  "loadKind": "folio-alignment (optional; opts the row into the package loader)",
+  "loadStatus": "VETTED | UNVETTED (required with loadKind)",
+  "path": "vendor-root-relative fetched filename (required with loadKind)",
+  "localConceptIri": "https://ns.beep.sh/... (required with folio-alignment)",
+  "conceptIri": "exact FOLIO class IRI (required with folio-alignment)",
+  "mappingKind": "exactMatch | closeMatch (required with folio-alignment)",
   "notes": ""
 }
 ```
 
 `verified` flips to `true` only when the verification pass has re-checked
 license, IRI resolution, and checksum.
+
+Most rows are research references and are not loaded. An asset-pack row opts
+into alignment loading by declaring `loadKind`; the loader then requires
+`verified:true`, `loadStatus`, and all kind-specific fields. For compatibility
+with the original loader API, a `loadStatus`-only row still denotes a complete
+`TaxonomySeed` JSON-LD slice. `VETTED` is an implementation admission decision
+in addition to `verified`, not a synonym for it.

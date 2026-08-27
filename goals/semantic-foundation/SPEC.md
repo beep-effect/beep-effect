@@ -103,25 +103,25 @@ cannot widen non-goals without a dated `SPEC.md` change.
 
 ## Acceptance Criteria
 
-- [ ] M1 taxonomy seed is committed as repo-owned TTL/JSON-LD and schema-first
+- [x] M1 taxonomy seed is committed as repo-owned TTL/JSON-LD and schema-first
       data, with concept IRIs minted under `https://ns.beep.sh/`.
-- [ ] M1 includes document-class vocabulary for `draft`, `redline`, `filed`,
+- [x] M1 includes document-class vocabulary for `draft`, `redline`, `filed`,
       `received`, `privileged`, and `extracted-child`.
-- [ ] M1 registry/loader can load the committed seed plus vetted gitignored
+- [x] M1 registry/loader can load the committed seed plus vetted gitignored
       vendor slices listed by the exploration asset-pack manifest, without
       tracking third-party TTL/OWL.
-- [ ] M1 exposes filing-path semantics for local vault plus Box mirror as
+- [x] M1 exposes filing-path semantics for local vault plus Box mirror as
       vocabulary/registry data, not document-slice placement code.
-- [ ] M1 intake librarian loop can classify a sample document against the
+- [x] M1 intake librarian loop can classify a sample document against the
       taxonomy seed and produce a filing path plus document class with
       FOLIO-aligned concept IRIs.
-- [ ] `@beep/rdf` constants are added only when P1/P2 research verdicts justify
+- [x] `@beep/rdf` constants are added only when P1/P2 research verdicts justify
       them; otherwise existing SKOS/RDF vocabulary constants are reused.
-- [ ] `@beep/semantic-web` bounded SHACL and
+- [x] `@beep/semantic-web` bounded SHACL and
       `UnsupportedSparqlQueryServiceLive` contracts remain unchanged.
-- [ ] `bun run beep yeet verify` passes, or unrelated baseline failures are
+- [x] `bun run beep yeet verify` passes, or unrelated baseline failures are
       reproduced and recorded separately.
-- [ ] No unrelated refactors, package-source churn outside target surfaces, or
+- [x] No unrelated refactors, package-source churn outside target surfaces, or
       expansion beyond the ontology-survey scope absorbed from
       `explorations/legal-ontology-landscape`; the removed packet's fence is
       moot as of 2026-07-14.

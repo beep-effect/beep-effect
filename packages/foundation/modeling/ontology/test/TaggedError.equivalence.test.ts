@@ -4,6 +4,8 @@ import {
   TaxonomyManifestParseError,
   TaxonomyManifestReadError,
   UnsupportedDocumentClass,
+  VendorAlignmentTargetNotFound,
+  VendorSliceConceptMismatch,
   VendorSliceParseError,
   VendorSlicePathEscape,
   VendorSliceReadError,
@@ -103,6 +105,41 @@ describe("ontology modeling tagged-error declared equivalence", () => {
     const first = VendorSlicePathEscape.make({ id: "folio", path: "../folio.jsonld", vendorRoot: "/vendor" });
     const second = VendorSlicePathEscape.make({ id: "folio", path: "../folio.jsonld", vendorRoot: "/vendor" });
     const different = VendorSlicePathEscape.make({ id: "folio", path: "../folio.jsonld", vendorRoot: "/other" });
+
+    expectDeclaredEquivalence(same, first, second, different);
+  });
+
+  it("compares VendorSliceConceptMismatch by declared fields", () => {
+    const same = S.toEquivalence(VendorSliceConceptMismatch);
+    const expectedConceptIri = IRIReference.make("https://folio.openlegalstandard.org/expected");
+    const first = VendorSliceConceptMismatch.make({
+      actualConceptIri: IRIReference.make("https://folio.openlegalstandard.org/actual"),
+      expectedConceptIri,
+      id: "folio",
+      path: "folio.jsonld",
+    });
+    const second = VendorSliceConceptMismatch.make({
+      actualConceptIri: IRIReference.make("https://folio.openlegalstandard.org/actual"),
+      expectedConceptIri,
+      id: "folio",
+      path: "folio.jsonld",
+    });
+    const different = VendorSliceConceptMismatch.make({
+      actualConceptIri: expectedConceptIri,
+      expectedConceptIri,
+      id: "folio",
+      path: "folio.jsonld",
+    });
+
+    expectDeclaredEquivalence(same, first, second, different);
+  });
+
+  it("compares VendorAlignmentTargetNotFound by declared fields", () => {
+    const same = S.toEquivalence(VendorAlignmentTargetNotFound);
+    const localConceptIri = IRIReference.make("https://ns.beep.sh/missing");
+    const first = VendorAlignmentTargetNotFound.make({ id: "folio", localConceptIri });
+    const second = VendorAlignmentTargetNotFound.make({ id: "folio", localConceptIri });
+    const different = VendorAlignmentTargetNotFound.make({ id: "other", localConceptIri });
 
     expectDeclaredEquivalence(same, first, second, different);
   });
