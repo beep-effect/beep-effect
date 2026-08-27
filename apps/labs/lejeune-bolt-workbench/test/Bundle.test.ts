@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { Sha256Hex } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import {
   ImmutableDemoBundle,
   NormalizedFixture,
@@ -16,6 +17,7 @@ import {
   ProjectionSnapshot,
   ProviderRecording,
   ProviderRecordingFromJsonString,
+  RetentionAuthorization,
   RuleResult,
   verifyProviderRecording,
 } from "@/domain/Bundle";
@@ -39,6 +41,16 @@ const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 const makeInMemoryProjectionLayer = () => makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }));
 
 describe("LeJeune deterministic fixture bundle", () => {
+  it("round-trips schema-derived retention authorizations", () => {
+    const decode = S.decodeUnknownSync(RetentionAuthorization);
+    const encode = S.encodeSync(RetentionAuthorization);
+    const equivalent = S.toEquivalence(RetentionAuthorization);
+    fc.assert(
+      fc.property(S.toArbitrary(RetentionAuthorization)(fc), (value) => equivalent(decode(encode(value)), value)),
+      fcRuns(20)
+    );
+  });
+
   it.effect(
     "generates exactly four stable synthetic source records across the two authorized layouts",
     Effect.fnUntraced(function* () {

@@ -60,7 +60,7 @@ loop closes only at zero required findings, followed by full Yeet and hosted mer
 
 ## Round 1 fix integration
 
-- The lab audit passed with production build, typecheck, three test files, 18 tests, and lint.
+- The lab audit passed with production build, typecheck, three test files, 19 tests, and lint.
 - Transactional builder tests cover existing-root preservation, same/nested-root rejection,
   staging cleanup, byte-identical fresh builds, cutoff refusal, and reviewed retention extension.
 - Persisted provider, receipt, and projection metadata now carry explicit schema and contract
@@ -70,3 +70,6 @@ loop closes only at zero required findings, followed by full Yeet and hosted mer
   bundle, receipt, projection metadata, and mutable-ledger JSON.
 - `docgen:local` correctly reported that this global-input change requires the full docgen proof;
   that proof remains part of `PROOF-001`, not a waiver.
+- The schema-first gate initially exposed missing schema-derived arbitrary coverage after the
+  codec suite grew. A focused retention-authorization round-trip property closed it; the rerun
+  reported zero missing/stale entries and zero schema-first advisories.

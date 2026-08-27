@@ -10,7 +10,7 @@ generators, frozen expectations, and the sanitized provider recording are tracke
 ## Fixture and extraction proof
 
 `bun run --cwd apps/labs/lejeune-bolt-workbench audit` passed on 2026-08-27 with three test
-files and 18 tests.
+files and 19 tests, including schema-derived retention-authorization round trips.
 
 The fixture test generated the same four sources twice and matched these frozen SHA-256 hashes:
 
