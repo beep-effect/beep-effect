@@ -992,7 +992,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                   concurrentText
                 );
                 return yield* fs.writeFileString(target, content, options);
-              })
+              }).pipe(Effect.catchTag("SchemaError", Effect.die))
             : fs.writeFileString(target, content, options),
       });
       const traceRaceOutcome = yield* traceRaceApplier.apply(traceRaceLocator);
@@ -1056,7 +1056,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                   })
                 )
               );
-            })
+            }),
+            Effect.catchTag("SchemaError", Effect.die)
           ),
       };
       const traceRollbackApplier = yield* makeApplier(
