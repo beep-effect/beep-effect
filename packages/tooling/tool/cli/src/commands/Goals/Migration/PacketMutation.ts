@@ -102,6 +102,8 @@ export class PacketForkRepairApplier extends Context.Service<PacketForkRepairApp
 
 const streamError = (packet: string, message: string): PacketStreamError => PacketStreamError.new(packet, message);
 
+const FORK_TRACE_PUBLICATION_ATTEMPTS = 8;
+
 const listingIdentity = flow(
   A.map((stored: StoredPacketEvent) => `${stored.fileName}:${stored.id}`),
   A.sort(Order.String)
@@ -172,6 +174,52 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
 
   const foldListing = (locator: PacketStreamLocator, listing: PacketStreamListing): PacketDerivedState =>
     foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
+
+  const publishCurrentForkTrace = Effect.fn("PacketForkRepairApplier.publishCurrentTrace")(function* (input: {
+    readonly locator: PacketStreamLocator;
+    readonly tracePath: string;
+    readonly listing: PacketStreamListing;
+    readonly derived: PacketDerivedState;
+  }) {
+    let listing = input.listing;
+    let derived = input.derived;
+    const publication = yield* Effect.repeat(
+      Effect.gen(function* () {
+        const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived, listing.events)).pipe(
+          Effect.mapError((error) =>
+            streamError(input.locator.packet, `repaired trace render failed: ${error.message}`)
+          )
+        );
+        yield* fs
+          .writeFileString(input.tracePath, traceText)
+          .pipe(
+            Effect.mapError((error) =>
+              streamError(input.locator.packet, `repaired trace write failed: ${error.message}`)
+            )
+          );
+        const observed = yield* store.list(input.locator);
+        const observedDerived = foldListing(input.locator, observed);
+        if (A.isReadonlyArrayNonEmpty(observed.issues) || A.isReadonlyArrayNonEmpty(observedDerived.issues)) {
+          return yield* streamError(
+            input.locator.packet,
+            "stream changed invalidly during trace publication; current bytes preserved"
+          );
+        }
+        const stable = sameListing(listing.events, observed.events);
+        listing = observed;
+        derived = observedDerived;
+        return { stable, derived };
+      }),
+      { until: (attempt) => attempt.stable, times: FORK_TRACE_PUBLICATION_ATTEMPTS - 1 }
+    );
+    if (!publication.stable) {
+      return yield* streamError(
+        input.locator.packet,
+        "stream kept changing during trace publication; current bytes preserved"
+      );
+    }
+    return publication.derived;
+  });
 
   const restoreIsolatedForkRepair = Effect.fnUntraced(function* (input: {
     readonly backupDirectory: string;
@@ -326,18 +374,16 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         ) {
           return yield* streamError(locator.packet, "promoted stream failed verification; current bytes preserved");
         }
-        const traceText = yield* renderPacketTraceFile(projectPacketTrace(committedDerived, committed.events)).pipe(
-          Effect.mapError((error) => streamError(locator.packet, `repaired trace render failed: ${error.message}`))
-        );
-        yield* fs
-          .writeFileString(tracePath, traceText)
-          .pipe(
-            Effect.mapError((error) => streamError(locator.packet, `repaired trace write failed: ${error.message}`))
-          );
+        const publishedDerived = yield* publishCurrentForkTrace({
+          locator,
+          tracePath,
+          listing: committed,
+          derived: committedDerived,
+        });
         // A concurrent writer can still hold an open handle into the renamed
         // original stream. Retain that recovery backup because its ownership
         // cannot be revalidated and deleted atomically.
-        return O.some(PacketForkRepairOutcome.make({ plan: repair, revision: committedDerived.revision }));
+        return O.some(PacketForkRepairOutcome.make({ plan: repair, revision: publishedDerived.revision }));
       }),
       cleanup
     );

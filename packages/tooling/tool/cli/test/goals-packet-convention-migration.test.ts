@@ -19,7 +19,9 @@ import {
   parseGoalManifestText,
   planManifestTranslation,
   planPacketGenesisSeed,
+  projectPacketTrace,
   renderPacketEventFile,
+  renderPacketTraceFile,
   renderTranslationReport,
   TranslationAssumption,
   TranslationIssue,
@@ -952,6 +954,57 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       });
       expect(O.isSome(yield* lateBackupApplier.apply(lateBackupLocator))).toBe(true);
       expect(yield* fs.readFileString(lateBackupEvent)).toBe("late concurrent event\n");
+
+      const traceRaceLocator = yield* makeFixture("trace-publication-race");
+      const traceRacePath = `${traceRaceLocator.packetPath}/ops/trace.json`;
+      const traceRaceEvents = `${traceRaceLocator.packetPath}/ops/events`;
+      let appended = false;
+      const traceRaceApplier = yield* makeApplier({
+        ...fs,
+        writeFileString: (target, content, options) =>
+          target === traceRacePath && !appended
+            ? Effect.gen(function* () {
+                appended = true;
+                const beforeAppend = yield* store.list(traceRaceLocator);
+                const beforeAppendDerived = foldPacketEvents({
+                  packet: "forked",
+                  root: "goals",
+                  events: beforeAppend.events,
+                });
+                expect(beforeAppendDerived.tip).toBeDefined();
+                if (beforeAppendDerived.tip === undefined) return yield* fs.writeFileString(target, content, options);
+                const concurrent = PacketEvent.make({
+                  schemaVersion: "packet-event/v1",
+                  packet: "forked",
+                  root: "goals",
+                  seq: beforeAppendDerived.revision + 1,
+                  parent: beforeAppendDerived.tip.id,
+                  expectedRevision: beforeAppendDerived.revision,
+                  at: "2026-08-17T03:00:00.000Z",
+                  actor: "concurrent-writer",
+                  body: { type: "status-set", status: "paused", previous: "active" },
+                });
+                const concurrentId = yield* packetEventDigest(concurrent);
+                const concurrentText = yield* renderPacketEventFile(concurrent);
+                yield* fs.writeFileString(
+                  `${traceRaceEvents}/${packetEventFileName(concurrent, concurrentId)}`,
+                  concurrentText
+                );
+                return yield* fs.writeFileString(target, content, options);
+              })
+            : fs.writeFileString(target, content, options),
+      });
+      const traceRaceOutcome = yield* traceRaceApplier.apply(traceRaceLocator);
+      expect(O.isSome(traceRaceOutcome)).toBe(true);
+      const traceRaceListing = yield* store.list(traceRaceLocator);
+      const traceRaceDerived = foldPacketEvents({
+        packet: "forked",
+        root: "goals",
+        events: traceRaceListing.events,
+      });
+      const expectedTrace = yield* renderPacketTraceFile(projectPacketTrace(traceRaceDerived, traceRaceListing.events));
+      expect(yield* fs.readFileString(traceRacePath)).toBe(expectedTrace);
+      expect(O.getOrUndefined(traceRaceOutcome)?.revision).toBe(traceRaceDerived.revision);
 
       const moveLocator = yield* makeFixture("move-failure");
       const moveEvents = `${moveLocator.packetPath}/ops/events`;
