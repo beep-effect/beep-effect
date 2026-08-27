@@ -109,7 +109,7 @@ describe("OpenAI model Layers", () => {
   );
 
   it.effect(
-    "forwards an explicit language model through the stubbed client boundary",
+    "forwards an explicit language model and exposes its model metadata through the stubbed client boundary",
     Effect.fnUntraced(function* () {
       let capturedRequest: HttpClientRequest.HttpClientRequest | undefined;
       const clientLayer = makeOpenAiClientLayer((request) => {
@@ -141,7 +141,11 @@ describe("OpenAI model Layers", () => {
         OpenAiLanguageModelOptions.make({ model: "gpt-4.1-mini" })
       ).pipe(Layer.provide(clientLayer));
 
-      yield* LanguageModel.generateText({ prompt: "test" }).pipe(provideScopedLayer(languageLayer));
+      const result = yield* Effect.all({
+        modelName: AiModel.ModelName,
+        providerName: AiModel.ProviderName,
+        response: LanguageModel.generateText({ prompt: "test" }),
+      }).pipe(provideScopedLayer(languageLayer));
 
       expect(capturedRequest).toBeDefined();
       if (capturedRequest === undefined) {
@@ -152,6 +156,8 @@ describe("OpenAI model Layers", () => {
       expect(capturedRequest.method).toBe("POST");
       expect(capturedRequest.url).toBe("https://api.openai.com/v1/responses");
       expect(requestBody.model).toBe("gpt-4.1-mini");
+      expect(result.modelName).toBe("gpt-4.1-mini");
+      expect(result.providerName).toBe("openai");
     })
   );
 

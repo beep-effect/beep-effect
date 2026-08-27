@@ -49,6 +49,12 @@ export const OpenAiLive: Layer.Layer<OpenAiClient.OpenAiClient, Config.ConfigErr
 /**
  * Builds an OpenAI language-model Layer while leaving `OpenAiClient` to the caller.
  *
+ * **Details**
+ *
+ * This factory uses `OpenAiLanguageModel.model()` rather than `.layer()` so
+ * consumers receive both `LanguageModel.LanguageModel` and Effect AI model
+ * metadata. It leaves `OpenAiClient` to the caller.
+ *
  * **Example** (Build a language-model Layer)
  *
  * ```ts
@@ -67,7 +73,7 @@ export const OpenAiLive: Layer.Layer<OpenAiClient.OpenAiClient, Config.ConfigErr
  */
 export const makeOpenAiLanguageModelLayer = (
   options: OpenAiLanguageModelOptions = OpenAiLanguageModelOptions.make({})
-) => OpenAiLanguageModel.layer({ model: options.model });
+) => OpenAiLanguageModel.model(options.model);
 
 /**
  * Builds an OpenAI embedding-model Layer that also provides its vector dimensions.
@@ -127,7 +133,9 @@ export const makeOpenAiEmbeddingModelLayer = (options: OpenAiEmbeddingModelOptio
 export const OpenAiLanguageModelLive = Layer.unwrap(
   Config.nonEmptyString(OPENAI_MODEL_ENV).pipe(
     Config.withDefault(OPENAI_DEFAULT_MODEL),
-    Effect.map((model) => OpenAiLanguageModel.model(model).pipe(Layer.provide(OpenAiLive)))
+    Effect.map((model) =>
+      makeOpenAiLanguageModelLayer(OpenAiLanguageModelOptions.make({ model })).pipe(Layer.provide(OpenAiLive))
+    )
   )
 );
 
