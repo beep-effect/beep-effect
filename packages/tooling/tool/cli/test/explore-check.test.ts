@@ -51,7 +51,7 @@ describe("explore --check", () => {
             expect(Exit.isSuccess(exit)).toBe(true);
             const output = yield* consoleText();
             expect(output).toContain("streams=0 findings=0");
-            expect(output).toContain("OK: no stream findings");
+            expect(output).toContain("OK: no stream-integrity or fleet-graph findings");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
@@ -320,6 +320,36 @@ describe("explore --check", () => {
             expect(Exit.isSuccess(exit)).toBe(true);
             const output = yield* consoleText();
             expect(output).toContain("content drifts from the folded stream");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "reports every fleet-graph finding kind as an advisory",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile(
+              "goals/a/ops/manifest.json",
+              '{"schemaVersion":"initiative-manifest/v2","initiative":{"id":"same","status":"active"},"blockedBy":["goals/b","goals/missing"]}\n'
+            );
+            yield* writeProjectFile(
+              "goals/b/ops/manifest.json",
+              '{"schemaVersion":"initiative-manifest/v1","initiative":{"id":"same","status":"active"},"blockedBy":["goals/a"]}\n'
+            );
+
+            const exit = yield* Effect.exit(runExploreCommand(["--check"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+            const output = yield* consoleText();
+            expect(output).toContain("[packet-fleet-duplicate-slug]");
+            expect(output).toContain("[packet-fleet-dependency-cycle]");
+            expect(output).toContain("[packet-fleet-unreachable]");
+            expect(output).toContain("[packet-fleet-unmigrated-reference]");
+            expect(output).toContain("violation: blockedBy dependency cycle");
+            expect(output).toContain("warning: packet reference");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

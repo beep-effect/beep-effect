@@ -97,6 +97,11 @@
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
   "ignorePatterns": [
+    // Impeccable is a vendored agent skill mirrored for Claude Code and GitHub
+    // Copilot. Its standalone detector scripts are invoked by editor hooks and
+    // are not authored workspace source.
+    ".claude/skills/impeccable/**",
+    ".github/skills/impeccable/**",
     "goals/**",
     "scratchpad/**",
     "infra/ci-runners/sdks/**",
