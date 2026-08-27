@@ -42,7 +42,7 @@ const $I = $ScratchpadId.create("beep-docs/api-reference/ApiReferenceDataset");
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiReferenceDatasetEntry } from "./ApiReferenceDataset.ts"
+ * import { ApiReferenceDatasetEntry } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * const entry = S.decodeUnknownSync(ApiReferenceDatasetEntry)({
  *   id: "v4/effect/Option",
@@ -88,7 +88,7 @@ export class ApiReferenceDatasetEntry extends S.Class<ApiReferenceDatasetEntry>(
  * **Example** (Construct the error)
  *
  * ```ts
- * import { DatasetReadFailed } from "./ApiReferenceDataset.ts"
+ * import { DatasetReadFailed } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * console.log(DatasetReadFailed.make({ path: "/data/v4/manifest.json", cause: "EACCES" })._tag)
  * ```
@@ -113,7 +113,7 @@ export class DatasetReadFailed extends S.TaggedError<DatasetReadFailed>($I`Datas
  * **Example** (Construct the error)
  *
  * ```ts
- * import { DatasetDecodeFailed } from "./ApiReferenceDataset.ts"
+ * import { DatasetDecodeFailed } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * console.log(DatasetDecodeFailed.make({ path: "/data/v4/manifest.json", cause: "bad json" })._tag)
  * ```
@@ -139,9 +139,10 @@ export class DatasetDecodeFailed extends S.TaggedError<DatasetDecodeFailed>($I`D
  * **Example** (Construct the error)
  *
  * ```ts
- * import { DatasetChannelMismatch } from "./ApiReferenceDataset.ts"
+ * import * as S from "effect/Schema"
+ * import { DatasetChannelMismatch } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
- * const error = DatasetChannelMismatch.make({ manifestPath: "/data/v4/manifest.json", expected: "v4", declared: "v3" })
+ * const error = S.decodeSync(DatasetChannelMismatch)({ _tag: "DatasetChannelMismatch", manifestPath: "/data/v4/manifest.json", expected: "v4", declared: "v3" })
  * console.log(error.declared)
  * ```
  *
@@ -167,7 +168,7 @@ export class DatasetChannelMismatch extends S.TaggedError<DatasetChannelMismatch
  * **Example** (Construct the error)
  *
  * ```ts
- * import { PackageManifestMismatch } from "./ApiReferenceDataset.ts"
+ * import { PackageManifestMismatch } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * console.log(PackageManifestMismatch.make({ manifestPath: "/data/v4/effect/manifest.json" })._tag)
  * ```
@@ -192,7 +193,7 @@ export class PackageManifestMismatch extends S.TaggedError<PackageManifestMismat
  * **Example** (Construct the error)
  *
  * ```ts
- * import { PackageSlugCollision } from "./ApiReferenceDataset.ts"
+ * import { PackageSlugCollision } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * const error = PackageSlugCollision.make({ slug: "platform", packageNames: ["@effect/platform", "platform"] })
  * console.log(error.packageNames.length)
@@ -218,7 +219,7 @@ export class PackageSlugCollision extends S.TaggedError<PackageSlugCollision>($I
  * **Example** (Construct the error)
  *
  * ```ts
- * import { UnknownBarrel } from "./ApiReferenceDataset.ts"
+ * import { UnknownBarrel } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * const error = UnknownBarrel.make({ manifestPath: "/data/v4/effect/manifest.json", moduleExport: "./Option", barrel: "./missing" })
  * console.log(error.barrel)
@@ -245,7 +246,7 @@ export class UnknownBarrel extends S.TaggedError<UnknownBarrel>($I`UnknownBarrel
  * **Example** (Construct the error)
  *
  * ```ts
- * import { PackageSlugDerivationFailed } from "./ApiReferenceDataset.ts"
+ * import { PackageSlugDerivationFailed } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * console.log(PackageSlugDerivationFailed.make({ packageName: "@other/Pkg", cause: "invalid slug" })._tag)
  * ```
@@ -272,7 +273,7 @@ export class PackageSlugDerivationFailed extends S.TaggedError<PackageSlugDeriva
  * **Example** (Construct the error)
  *
  * ```ts
- * import { ModulePathDerivationFailed } from "./ApiReferenceDataset.ts"
+ * import { ModulePathDerivationFailed } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * console.log(ModulePathDerivationFailed.make({ exportPath: "./../x", cause: "invalid segment" })._tag)
  * ```
@@ -299,7 +300,7 @@ export class ModulePathDerivationFailed extends S.TaggedError<ModulePathDerivati
  * **Example** (Guard a failure)
  *
  * ```ts
- * import { DatasetReadFailed, LoadApiReferenceDatasetError } from "./ApiReferenceDataset.ts"
+ * import { DatasetReadFailed, LoadApiReferenceDatasetError } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * const error = DatasetReadFailed.make({ path: "/data/v4/manifest.json", cause: "EACCES" })
  * console.log(LoadApiReferenceDatasetError.guards.DatasetReadFailed(error)) // true
@@ -543,7 +544,7 @@ const loadChannel = Effect.fn("ApiReferenceDataset.loadChannel")(function* (base
  * ```ts
  * import { BunServices } from "@effect/platform-bun"
  * import { Effect } from "effect"
- * import { loadApiReferenceDataset } from "./ApiReferenceDataset.ts"
+ * import { loadApiReferenceDataset } from "@beep/scratchpad/beep-docs/api-reference/ApiReferenceDataset"
  *
  * const program = loadApiReferenceDataset(".data/api-reference").pipe(
  *   Effect.map((entries) => entries.map((entry) => entry.id)),

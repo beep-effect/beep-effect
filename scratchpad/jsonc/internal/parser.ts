@@ -75,8 +75,6 @@ export const JSONC_PARSE_ERROR_CODES = [
 /**
  * A single parse-error code.
  *
- * @see {@link JSONC_PARSE_ERROR_CODES} for the source array of these literals.
- *
  * **Example** (Guard a parse-error code)
  *
  * ```ts
@@ -86,6 +84,7 @@ export const JSONC_PARSE_ERROR_CODES = [
  * console.log(Schema.is(ParseCode)("ValueExpected")) // true
  * ```
  *
+ * @see {@link JSONC_PARSE_ERROR_CODES} for the source array of these literals.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -109,9 +108,6 @@ export type ParseCode = typeof ParseCode.Type;
 /**
  * A raw parse error record — position only; the facade derives line/character.
  *
- * @see {@link JsoncParseError} for the public aggregate that maps these records.
- * @see {@link parseValue} for the recovery pair that carries this record.
- *
  * **Example** (Construct a raw parse error)
  *
  * ```ts
@@ -121,6 +117,8 @@ export type ParseCode = typeof ParseCode.Type;
  * console.log(error.code) // "ValueExpected"
  * ```
  *
+ * @see {@link JsoncParseError} for the public aggregate that maps these records.
+ * @see {@link parseValue} for the recovery pair that carries this record.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -149,8 +147,6 @@ export type RawParseError = typeof RawParseError.Type;
  * Plain flags accepted by the parser, decoded from `JsoncParseOptions` by the
  * facade.
  *
- * @see {@link JsoncParseOptions} for the public options the facade maps into these flags.
- *
  * **Example** (Construct permissive parse flags)
  *
  * ```ts
@@ -160,6 +156,7 @@ export type RawParseError = typeof RawParseError.Type;
  * console.log(flags.allowTrailingComma) // true
  * ```
  *
+ * @see {@link JsoncParseOptions} for the public options the facade maps into these flags.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -187,9 +184,6 @@ export type ParseFlags = typeof ParseFlags.Type;
 /**
  * Value-mode result: the recovered value plus every error encountered.
  *
- * @see {@link parseValue} for the function that returns this pair.
- * @see {@link JsoncParseError} for the public failure that discards `value`.
- *
  * **Example** (Construct a recovered value result)
  *
  * ```ts
@@ -199,6 +193,8 @@ export type ParseFlags = typeof ParseFlags.Type;
  * console.log(result.errors.length) // 0
  * ```
  *
+ * @see {@link parseValue} for the function that returns this pair.
+ * @see {@link JsoncParseError} for the public failure that discards `value`.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -225,9 +221,6 @@ export type ParseValueResult = typeof ParseValueResult.Type;
 /**
  * Tree-mode result: the root node (or `undefined` for empty input) plus errors.
  *
- * @see {@link parseTree} for the function that returns this pair.
- * @see {@link JsoncParseError} for the public failure that discards `root`.
- *
  * **Example** (Construct an empty tree result)
  *
  * ```ts
@@ -237,6 +230,8 @@ export type ParseValueResult = typeof ParseValueResult.Type;
  * console.log(result.root) // undefined
  * ```
  *
+ * @see {@link parseTree} for the function that returns this pair.
+ * @see {@link JsoncParseError} for the public failure that discards `root`.
  * @internal
  * @category schemas
  * @since 0.0.0

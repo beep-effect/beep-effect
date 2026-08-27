@@ -64,7 +64,6 @@ export type CircuitState = typeof CircuitState.Type;
 /**
  * Rate limiter state
  *
- *
  * **Example** (Use the RateLimiterState contract)
  *
  * ```ts
@@ -100,7 +99,6 @@ export class RateLimiterState extends S.Class<RateLimiterState>($I`RateLimiterSt
 
 /**
  * Rate limiter configuration
- *
  *
  * **Example** (Use the RateLimiterConfig contract)
  *
@@ -386,7 +384,7 @@ export const CentralRateLimiterServiceLive = Layer.effect(CentralRateLimiterServ
  * const program = Effect.gen(function* () {
  *   const limiter = yield* CentralRateLimiterService
  *   return limiter
- * }).pipe(Effect.provide(CentralRateLimiterServiceTest))
+ * }).pipe(Effect.provide(CentralRateLimiterServiceTest()))
  *
  * console.log(program)
  * ```

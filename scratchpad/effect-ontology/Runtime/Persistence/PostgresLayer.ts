@@ -281,7 +281,7 @@ export const DatabaseReadyLive = PgDrizzleLive.pipe(
  * ```ts
  * import { MessageStorageLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(MessageStorageLive !== RunnerStorageLive) // true
+ * console.log(MessageStorageLive)
  * ```
  *
  * @category layers
@@ -308,7 +308,7 @@ export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflo
  * ```ts
  * import { MessageStorageLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(RunnerStorageLive !== MessageStorageLive) // true
+ * console.log(RunnerStorageLive)
  * ```
  *
  * @category layers
@@ -332,7 +332,7 @@ export const RunnerStorageLive = SqlRunnerStorage.layerWith({ prefix: "workflow_
  * ```ts
  * import { PgClientLive, ShardingConfigLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(ShardingConfigLive !== PgClientLive) // true
+ * console.log(ShardingConfigLive)
  * ```
  *
  * @category layers

@@ -20,7 +20,7 @@ const $I = $ScratchpadId.create("beep-docs/api-reference/DatasetPath");
  * **Example** (Construct the error)
  *
  * ```ts
- * import { PathEscapesDataset } from "./DatasetPath.ts"
+ * import { PathEscapesDataset } from "@beep/scratchpad/beep-docs/api-reference/DatasetPath"
  *
  * const error = PathEscapesDataset.make({ baseDirectory: "/data/v4", path: "../secrets.json" })
  * console.log(error._tag)
@@ -54,7 +54,7 @@ export class PathEscapesDataset extends S.TaggedError<PathEscapesDataset>($I`Pat
  * ```ts
  * import { Effect } from "effect"
  * import * as Path from "effect/Path"
- * import { resolveWithinDataset } from "./DatasetPath.ts"
+ * import { resolveWithinDataset } from "@beep/scratchpad/beep-docs/api-reference/DatasetPath"
  *
  * const program = resolveWithinDataset("/data/api-reference", "v4/effect/manifest.json").pipe(
  *   Effect.provide(Path.layer)

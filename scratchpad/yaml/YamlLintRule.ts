@@ -2,6 +2,8 @@
  * Lint rule model: context, severity, diagnostics, style observations and the
  * public rule interface.
  *
+ * **Details**
+ *
  * Built-in rules construct {@link YamlLintDiagnostic} while the facade imports
  * the catalog, so this model lives here to break `YamlLint → rules → YamlLint`.
  *
@@ -55,6 +57,8 @@ export type YamlLintSeverity = typeof YamlLintSeverity.Type;
 /**
  * A single lint finding: the reporting rule, its severity, a positioned span
  * and optionally a surgical fix.
+ *
+ * **Details**
  *
  * Deliberately separate from the engine's `YamlDiagnostic`: that type is the
  * lexer/parser/composer/stringifier error-code union and the single source
@@ -137,6 +141,12 @@ export const LintLine = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of one YAML lint source line with its text, starting offset and zero-based line number.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LintLine = typeof LintLine.Type;
 
 /**
@@ -146,14 +156,14 @@ export type LintLine = typeof LintLine.Type;
  * so the context is eager by nature; the streaming token form exists for
  * other consumers.
  *
+ * **Details**
+ *
  * `text`, `lines` and `tokens` cover the FULL source; `document` is the
  * FIRST document of the stream (matching `Yaml.parse` — split the stream
  * `Yaml.parseAll`-style to lint every document). It is always present,
  * including for input that does not parse: it is built from the engine's
  * recovered compose, and its `errors`/`warnings` carry what went wrong (the
  * `parse-validity` rule reports them).
- *
- * **Details**
  *
  * `text`, `lines` and `tokens` cover the FULL source; `document` is the FIRST
  * document of the stream only (matching {@link Yaml.parse}). It is always
@@ -162,10 +172,9 @@ export type LintLine = typeof LintLine.Type;
  * **Example** (Decode a minimal lint context)
  *
  * ```ts
- * import * as S from "effect/Schema"
  * import { LintContext, YamlDocument } from "@beep/scratchpad/yaml"
  *
- * const context = S.decodeUnknownSync(LintContext)({
+ * const context = LintContext.make({
  *   text: "",
  *   lines: [{ text: "", offset: 0, number: 0 }],
  *   tokens: [],
@@ -191,11 +200,19 @@ export const LintContext = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of shared eager source, line, token and recovered-document context handed to every YAML lint rule.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LintContext = typeof LintContext.Type;
 
 /**
  * One categorical style observation (#345): a single occurrence of a style
  * choice in the source, voting a `value` for an inference `dimension`.
+ *
+ * **Details**
  *
  * The `dimension` IS the rule's option key and the `value` IS that option's
  * value (`"double"` for `quoteType`, `2` for `spaces`, `false` for
@@ -263,6 +280,8 @@ export class StyleVote extends Schema.TaggedClass<StyleVote>()(
  * never resolved into config options; fabricating a max from the largest
  * value one happened to see would be lying with a straight face.
  *
+ * **Details**
+ *
  * The `_tag` literal discriminates a floor from a {@link StyleVote} at
  * runtime (see there); `.make` defaults it.
  *
@@ -313,7 +332,7 @@ export class StyleFloor extends Schema.TaggedClass<StyleFloor>()(
  * import * as S from "effect/Schema"
  * import { StyleObservation, StyleVote } from "@beep/scratchpad/yaml"
  *
- * const vote = StyleVote.make({ dimension: "quoteType", value: "double", offset: 0, length: 3 })
+ * const vote = StyleVote.make({ dimension: "quoteType", value: "double", offset: 0, length: 3, line: 0, character: 0 })
  * console.log(S.is(StyleObservation)(vote)) // true
  * ```
  *
@@ -329,12 +348,20 @@ export const StyleObservation = Schema.Union([StyleVote, StyleFloor]).pipe(
 	}),
 );
 
+/**
+ * TypeScript representation of discriminated union of categorical style votes and measured style floors.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StyleObservation = typeof StyleObservation.Type;
 
 /**
  * The public rule interface — built-ins and custom rules are the same
  * shape, and config references either by `id`; there is no privileged
  * built-in mechanism a custom rule cannot reach.
+ *
+ * **Details**
  *
  * `options` is the validated per-rule options object from the config entry
  * (or `undefined` when the entry was a bare severity literal); built-in
@@ -347,6 +374,10 @@ export type StyleObservation = typeof StyleObservation.Type;
  * dimension (and shares its fixtures). Rules with no detectable style — the
  * policy rules, whose only evidence is violations — simply omit the hook and
  * stay default-driven under every resolver.
+ *
+ * This deliberately remains an interface: a rule is an executable strategy
+ * whose `check` and optional `infer` callbacks consume a shared context. It
+ * is a service/protocol contract, not serializable pure data.
  *
  * **Example** (Run a one-off custom rule)
  *
@@ -375,12 +406,6 @@ export type StyleObservation = typeof StyleObservation.Type;
  * const findings = YamlLint.run("TODO: later\n", [rule], YamlLintConfig.make({ rules: { "no-todo": "warning" } }))
  * console.log(findings[0]?.rule) // "no-todo"
  * ```
- *
- * **Details**
- *
- * This deliberately remains an interface: a rule is an executable strategy
- * whose `check` and optional `infer` callbacks consume a shared context. It
- * is a service/protocol contract, not serializable pure data.
  *
  * @see {@link YamlLint.run} for executing a rule list under a config.
  * @see {@link YamlLintDiagnostic} for the finding shape `check` yields.

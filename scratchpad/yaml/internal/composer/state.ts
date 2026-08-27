@@ -2,6 +2,8 @@
  * Composer state, shared metadata types, and position/text utilities used
  * across the composer seams.
  *
+ * **Details**
+ *
  * Imports nothing from the other composer modules so every seam can depend
  * on it without cycles. Holds the `FlowComposers` dispatch, alias budget
  * (`maxAliasCount` default 100), and nesting-depth budget (256).
@@ -240,6 +242,13 @@ export const NodeMeta = Schema.Struct({
   }),
 );
 
+/**
+ * TypeScript representation of mutable pending anchor, tag and comment metadata applied to the next composed YAML node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NodeMeta = typeof NodeMeta.Type;
 
 /**
@@ -329,15 +338,15 @@ export function commentProps(n: {
  * (which imports the shared pair-building machinery from `block.ts` —
  * `noImportCycles` is error-level).
  *
- * **Gotchas**
- *
- * Dispatch is injected. Do not import `flow.ts` from `block.ts`. Examples
- * construct state with the `FLOW` dispatch object, not a block→flow import.
- *
  * **Details**
  *
  * This deliberately remains an interface: it is an injected dispatch port
  * whose fields are mutually-recursive composer functions, not pure data.
+ *
+ * **Gotchas**
+ *
+ * Dispatch is injected. Do not import `flow.ts` from `block.ts`. Examples
+ * construct state with the `FLOW` dispatch object, not a block→flow import.
  *
  * @see {@link createState} for where this dispatch is stored.
  * @internal

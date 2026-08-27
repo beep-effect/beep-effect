@@ -167,7 +167,7 @@ const makeAiProtection = Effect.fn("RateLimitedAiClient.makeProtection")(functio
  * ```ts
  * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
- * console.log(RateLimitedAnthropicClientLayer !== RateLimitedOpenAiClientLayer) // true
+ * console.log(RateLimitedAnthropicClientLayer)
  * ```
  *
  * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.
@@ -206,7 +206,7 @@ export const RateLimitedAnthropicClientLayer = Layer.effect(
  * ```ts
  * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
- * console.log(RateLimitedOpenAiClientLayer !== RateLimitedAnthropicClientLayer) // true
+ * console.log(RateLimitedOpenAiClientLayer)
  * ```
  *
  * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.

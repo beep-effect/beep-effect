@@ -2,6 +2,8 @@
  * Hook module hub — re-exports the runner, context service, envelope,
  * matcher helpers, transcript reader, and every hook event namespace.
  *
+ * **Details**
+ *
  * Users import this as a namespace: `import { Hook } from 'effect-claudecode'`
  * and access members as `Hook.PreToolUse`, `Hook.runMain`, `Hook.dispatch`,
  * `Hook.Context`, `Hook.matchTool`, `Hook.readTranscript`, etc.

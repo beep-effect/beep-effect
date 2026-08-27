@@ -1,6 +1,8 @@
 /**
  * Guest iterator consumption helpers for collection adapters.
  *
+ * **Details**
+ *
  * {@link invokeArrayFrom} and {@link invokeGroupBy} obtain a
  * {@link IteratorCursor} through {@link SyncIteratorRunner} and use
  * {@link preserveConsumerError} so mapper failures stay visible after close.
@@ -14,6 +16,8 @@ import type { AstNode, InterpreterFailure } from "./Interpreter.model.ts";
 
 /**
  * Pull-based cursor over a guest synchronous iterable.
+ *
+ * **Details**
  *
  * `next` yields `{ done, value }` steps. `close` releases the underlying
  * iterator and must be treated as best-effort when a consumer already failed.
@@ -30,6 +34,8 @@ export type IteratorCursor<R> = {
 
 /**
  * Capability that opens a synchronous iterator cursor for a guest value.
+ *
+ * **Details**
  *
  * Returns `undefined` when the value is not a supported synchronous iterable so
  * callers can fall back to array-like paths.

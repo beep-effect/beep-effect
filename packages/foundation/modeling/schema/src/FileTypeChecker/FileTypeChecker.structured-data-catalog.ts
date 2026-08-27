@@ -16,6 +16,14 @@ type StructuredDataCatalog = {
 /**
  * Internal structured-data metadata keyed by canonical extension.
  *
+ * **Example** (Read structured-data metadata)
+ *
+ * ```ts
+ * import { structuredDataCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.structured-data-catalog"
+ *
+ * console.log(structuredDataCatalog.orc.extension) // "orc"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

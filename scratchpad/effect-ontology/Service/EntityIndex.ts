@@ -73,9 +73,15 @@ export class PersistentEntityIndexConfigError extends S.TaggedError<PersistentEn
  * **Example** (Pair an entity with its similarity)
  *
  * ```ts
+ * import { Entity } from "@effect-ontology/Model/Entity"
  * import { ScoredEntity } from "@effect-ontology/Service/EntityIndex"
+ * import * as S from "effect/Schema"
  *
- * declare const entity: ScoredEntity["entity"]
+ * const entity = S.decodeUnknownSync(Entity)({
+ *   id: "ada_lovelace",
+ *   mention: "Ada Lovelace",
+ *   types: ["https://schema.org/Person"]
+ * })
  * const scored = ScoredEntity.make({ entity, score: 0.92 })
  * console.log(scored.score) // 0.92
  * ```
@@ -95,7 +101,6 @@ export class ScoredEntity extends S.Class<ScoredEntity>($I`ScoredEntity`)(
 
 /**
  * Options for similarity search
- *
  *
  * **Example** (Filter by type and score)
  *
@@ -142,7 +147,6 @@ const emptyState: IndexState = {
 
 /**
  * EntityIndex service interface
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -430,7 +434,6 @@ export const SerializedEntityIndex = S.Struct({
 /**
  * Describes the serialized entity index data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -442,7 +445,6 @@ const decodeSerializedEntityIndex = S.decodeOption(SerializedEntityIndexJson);
 
 /**
  * Extended EntityIndex interface with persistence capabilities
- *
  *
  * @category type-level
  * @since 0.0.0

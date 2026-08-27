@@ -1,6 +1,8 @@
 /**
  * Bridges host diagnostics and guest Error objects for the confined interpreter.
  *
+ * **Details**
+ *
  * Public execution surfaces consume {@link normalizeError}. Guest `try/catch`
  * bindings consume {@link caughtErrorValue}. `new Error` / `new AggregateError`
  * dispatch through the constructors.

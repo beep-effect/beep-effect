@@ -14,6 +14,14 @@ type AudioCatalog = { readonly [K in AudioFileType]: FileTypeInfo & { readonly e
 /**
  * Internal audio metadata keyed by canonical extension.
  *
+ * **Example** (Read audio metadata)
+ *
+ * ```ts
+ * import { audioCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.audio-catalog"
+ *
+ * console.log(audioCatalog.aac.extension) // "aac"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

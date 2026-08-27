@@ -22,7 +22,7 @@ const $I = $ScratchpadId.create("ontoskills/registry/Registry.models");
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TrustTier } from "./Registry.models.ts"
+ * import { TrustTier } from "@beep/scratchpad/ontoskills/registry"
  *
  * console.log(S.is(TrustTier)(TrustTier.Enum.community)) // true
  * console.log(S.is(TrustTier)("unknown")) // false
@@ -58,7 +58,7 @@ export type TrustTier = typeof TrustTier.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SourceKind } from "./Registry.models.ts"
+ * import { SourceKind } from "@beep/scratchpad/ontoskills/registry"
  *
  * console.log(S.is(SourceKind)(SourceKind.Enum.ontology)) // true
  * console.log(S.is(SourceKind)("registry")) // false
@@ -98,7 +98,7 @@ export type SourceKind = typeof SourceKind.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { PackageSkillManifest } from "./Registry.models.ts"
+ * import { PackageSkillManifest } from "@beep/scratchpad/ontoskills/registry"
  *
  * const manifest = PackageSkillManifest.make({})
  * console.log(S.encodeSync(PackageSkillManifest)(manifest))
@@ -127,7 +127,7 @@ export class PackageSkillManifest extends S.Class<PackageSkillManifest>($I`Packa
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { PackageManifest } from "./Registry.models.ts"
+ * import { PackageManifest } from "@beep/scratchpad/ontoskills/registry"
  *
  * const manifest = PackageManifest.make({})
  * console.log(S.encodeSync(PackageManifest)(manifest))
@@ -157,7 +157,7 @@ export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledSkillState } from "./Registry.models.ts"
+ * import { InstalledSkillState } from "@beep/scratchpad/ontoskills/registry"
  *
  * const state = InstalledSkillState.make({})
  * console.log(S.encodeSync(InstalledSkillState)(state))
@@ -182,9 +182,9 @@ export class InstalledSkillState extends S.Class<InstalledSkillState>($I`Install
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledSkillStateValueBase } from "./Registry.models.ts"
+ * import { InstalledSkillStateValueBase } from "@beep/scratchpad/ontoskills/registry"
  *
- * const installed = S.decodeUnknownSync(InstalledSkillStateValueBase)({
+ * const installed = S.decodeSync(InstalledSkillStateValueBase)({
  *   version: "1.0.0",
  *   packageId: "office",
  *   installedAt: "2026-01-15T12:00:00.000Z",
@@ -225,9 +225,9 @@ export class InstalledSkillStateValueBase extends S.Class<InstalledSkillStateVal
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageVerifiedStateValue } from "./Registry.models.ts"
+ * import { InstalledPackageVerifiedStateValue } from "@beep/scratchpad/ontoskills/registry"
  *
- * const verified = S.decodeUnknownSync(InstalledPackageVerifiedStateValue)({
+ * const verified = S.decodeSync(InstalledPackageVerifiedStateValue)({
  *   version: "1.0.0",
  *   packageId: "office",
  *   installedAt: "2026-01-15T12:00:00.000Z",
@@ -262,9 +262,9 @@ export class InstalledPackageVerifiedStateValue extends InstalledSkillStateValue
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageOfficialStateValue } from "./Registry.models.ts"
+ * import { InstalledPackageOfficialStateValue } from "@beep/scratchpad/ontoskills/registry"
  *
- * const official = S.decodeUnknownSync(InstalledPackageOfficialStateValue)({
+ * const official = S.decodeSync(InstalledPackageOfficialStateValue)({
  *   version: "1.0.0",
  *   packageId: "office",
  *   installedAt: "2026-01-15T12:00:00.000Z",
@@ -299,9 +299,9 @@ export class InstalledPackageOfficialStateValue extends InstalledSkillStateValue
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageCommunityStateValue } from "./Registry.models.ts"
+ * import { InstalledPackageCommunityStateValue } from "@beep/scratchpad/ontoskills/registry"
  *
- * const community = S.decodeUnknownSync(InstalledPackageCommunityStateValue)({
+ * const community = S.decodeSync(InstalledPackageCommunityStateValue)({
  *   version: "1.0.0",
  *   packageId: "office",
  *   installedAt: "2026-01-15T12:00:00.000Z",
@@ -336,9 +336,9 @@ export class InstalledPackageCommunityStateValue extends InstalledSkillStateValu
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageLocalStateValue } from "./Registry.models.ts"
+ * import { InstalledPackageLocalStateValue } from "@beep/scratchpad/ontoskills/registry"
  *
- * const local = S.decodeUnknownSync(InstalledPackageLocalStateValue)({
+ * const local = S.decodeSync(InstalledPackageLocalStateValue)({
  *   version: "1.0.0",
  *   packageId: "office",
  *   installedAt: "2026-01-15T12:00:00.000Z",
@@ -373,9 +373,9 @@ export class InstalledPackageLocalStateValue extends InstalledSkillStateValueBas
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageStateValue } from "./Registry.models.ts"
+ * import { InstalledPackageStateValue } from "@beep/scratchpad/ontoskills/registry"
  *
- * const value = S.decodeUnknownSync(InstalledPackageStateValue)({
+ * const value = S.decodeSync(InstalledPackageStateValue)({
  *   version: "1.0.0",
  *   packageId: "office",
  *   installedAt: "2026-01-15T12:00:00.000Z",
@@ -424,9 +424,9 @@ export type InstalledPackageStateValue = typeof InstalledPackageStateValue.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageStateBase } from "./Registry.models.ts"
+ * import { InstalledPackageStateBase } from "@beep/scratchpad/ontoskills/registry"
  *
- * const wrapped = S.decodeUnknownSync(InstalledPackageStateBase)({
+ * const wrapped = S.decodeSync(InstalledPackageStateBase)({
  *   state: {
  *     version: "1.0.0",
  *     packageId: "office",
@@ -462,9 +462,9 @@ export class InstalledPackageStateBase extends S.Class<InstalledPackageStateBase
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledOntologyPackageState } from "./Registry.models.ts"
+ * import { InstalledOntologyPackageState } from "@beep/scratchpad/ontoskills/registry"
  *
- * const ontology = S.decodeUnknownSync(InstalledOntologyPackageState)({
+ * const ontology = S.decodeSync(InstalledOntologyPackageState)({
  *   sourceKind: "ontology",
  *   state: {
  *     version: "1.0.0",
@@ -500,9 +500,9 @@ export class InstalledOntologyPackageState extends InstalledPackageStateBase.ext
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledSourcePackageState } from "./Registry.models.ts"
+ * import { InstalledSourcePackageState } from "@beep/scratchpad/ontoskills/registry"
  *
- * const source = S.decodeUnknownSync(InstalledSourcePackageState)({
+ * const source = S.decodeSync(InstalledSourcePackageState)({
  *   sourceKind: "source",
  *   state: {
  *     version: "1.0.0",
@@ -538,9 +538,9 @@ export class InstalledSourcePackageState extends InstalledPackageStateBase.exten
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstalledPackageState } from "./Registry.models.ts"
+ * import { InstalledPackageState } from "@beep/scratchpad/ontoskills/registry"
  *
- * const locked = S.decodeUnknownSync(InstalledPackageState)({
+ * const locked = S.decodeSync(InstalledPackageState)({
  *   sourceKind: "ontology",
  *   state: {
  *     version: "1.0.0",
@@ -585,9 +585,9 @@ export type InstalledPackageState = typeof InstalledPackageState.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { RegistryLock } from "./Registry.models.ts"
+ * import { RegistryLock } from "@beep/scratchpad/ontoskills/registry"
  *
- * const lock = S.decodeUnknownSync(RegistryLock)({
+ * const lock = S.decodeSync(RegistryLock)({
  *   packages: {
  *     "acme/office": {
  *       sourceKind: "ontology",
@@ -627,9 +627,9 @@ export class RegistryLock extends S.Class<RegistryLock>($I`RegistryLock`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { RegistrySource } from "./Registry.models.ts"
+ * import { RegistrySource } from "@beep/scratchpad/ontoskills/registry"
  *
- * const source = S.decodeUnknownSync(RegistrySource)({
+ * const source = S.decodeSync(RegistrySource)({
  *   name: "acme",
  *   indexUrl: "https://skills.example.com/index.json",
  * })
@@ -661,9 +661,9 @@ export class RegistrySource extends S.Class<RegistrySource>($I`RegistrySource`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { RegistryPackageEntry } from "./Registry.models.ts"
+ * import { RegistryPackageEntry } from "@beep/scratchpad/ontoskills/registry"
  *
- * const entry = S.decodeUnknownSync(RegistryPackageEntry)({
+ * const entry = S.decodeSync(RegistryPackageEntry)({
  *   packageId: "office",
  *   manifestPath: "skills/office/SKILL.md",
  * })
@@ -692,9 +692,9 @@ export class RegistryPackageEntry extends S.Class<RegistryPackageEntry>($I`Regis
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { EmbeddingModelInfo } from "./Registry.models.ts"
+ * import { EmbeddingModelInfo } from "@beep/scratchpad/ontoskills/registry"
  *
- * const model = S.decodeUnknownSync(EmbeddingModelInfo)({})
+ * const model = S.decodeSync(EmbeddingModelInfo)({})
  * console.log(model.dimension) // 384
  * console.log(model.modelName) // "sentence-transformers/all-MiniLM-L6-v2"
  * ```
@@ -721,9 +721,9 @@ export class EmbeddingModelInfo extends S.Class<EmbeddingModelInfo>($I`Embedding
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { RegistryIndex } from "./Registry.models.ts"
+ * import { RegistryIndex } from "@beep/scratchpad/ontoskills/registry"
  *
- * const index = S.decodeUnknownSync(RegistryIndex)({
+ * const index = S.decodeSync(RegistryIndex)({
  *   embeddingModel: {},
  * })
  * console.log(index.packages) // []
@@ -736,7 +736,7 @@ export class EmbeddingModelInfo extends S.Class<EmbeddingModelInfo>($I`Embedding
  */
 export class RegistryIndex extends S.Class<RegistryIndex>($I`RegistryIndex`)(
   {
-    packages: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+    packages: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
     embeddingModel: EmbeddingModelInfo,
   },
   $I.annote("RegistryIndex", {
@@ -751,9 +751,9 @@ export class RegistryIndex extends S.Class<RegistryIndex>($I`RegistryIndex`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { AuthorTarget } from "./Registry.models.ts"
+ * import { AuthorTarget } from "@beep/scratchpad/ontoskills/registry"
  *
- * const target = S.decodeUnknownSync(AuthorTarget)({
+ * const target = S.decodeSync(AuthorTarget)({
  *   _tag: "AuthorTarget",
  *   author: "acme",
  * })
@@ -770,7 +770,7 @@ export class AuthorTarget extends S.TaggedClass<AuthorTarget>($I`AuthorTarget`)(
   "AuthorTarget",
   {
     author: S.String,
-    packages: RegistryPackageEntry.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults)
+    packages: RegistryPackageEntry.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<RegistryPackageEntry>())
   },
   $I.annote("AuthorTarget", {
     description: "Resolution result for an author-level install covering every package under that author."
@@ -784,9 +784,9 @@ export class AuthorTarget extends S.TaggedClass<AuthorTarget>($I`AuthorTarget`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { PackageTarget } from "./Registry.models.ts"
+ * import { PackageTarget } from "@beep/scratchpad/ontoskills/registry"
  *
- * const target = S.decodeUnknownSync(PackageTarget)({
+ * const target = S.decodeSync(PackageTarget)({
  *   _tag: "PackageTarget",
  *   package: {
  *     packageId: "office",
@@ -818,9 +818,9 @@ export class PackageTarget extends S.TaggedClass<PackageTarget>($I`PackageTarget
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SkillTarget } from "./Registry.models.ts"
+ * import { SkillTarget } from "@beep/scratchpad/ontoskills/registry"
  *
- * const target = S.decodeUnknownSync(SkillTarget)({
+ * const target = S.decodeSync(SkillTarget)({
  *   _tag: "SkillTarget",
  *   package: {
  *     packageId: "office",
@@ -844,7 +844,7 @@ export class SkillTarget extends S.TaggedClass<SkillTarget>($I`SkillTarget`)(
     package:RegistryPackageEntry,
     skillId: S.String,
     standalone: S.Boolean,
-    siblingDeps: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults)
+    siblingDeps: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>())
   },
   $I.annote("SkillTarget", {
     description: "Resolution result for a skill-level install, including sibling dependency identifiers."
@@ -858,9 +858,9 @@ export class SkillTarget extends S.TaggedClass<SkillTarget>($I`SkillTarget`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { InstallTarget } from "./Registry.models.ts"
+ * import { InstallTarget } from "@beep/scratchpad/ontoskills/registry"
  *
- * const target = S.decodeUnknownSync(InstallTarget)({
+ * const target = S.decodeSync(InstallTarget)({
  *   _tag: "PackageTarget",
  *   package: {
  *     packageId: "office",

@@ -94,12 +94,12 @@ class InferenceCliError extends S.TaggedError<InferenceCliError>($I`InferenceCli
  * import { inferenceCommand } from "@effect-ontology/Cli/Commands/Inference"
  * import * as Command from "effect/unstable/cli/Command"
  *
- * const argv = ["--input", "graph.ttl", "--output", "enriched.ttl", "--delta-only"] as const
+ * const argv = ["--input", "graph.ttl", "--output", "enriched.ttl", "--delta-only"]
  * const program = Command.runWith(inferenceCommand, { version: "0.0.0" })([...argv])
  * console.log(inferenceCommand.name) // "inference"
  * console.log(argv.includes("--input")) // true
  * console.log(argv.includes("--delta-only")) // true
- * console.log(program !== inferenceCommand)
+ * console.log(program)
  * ```
  *
  * @category cli-commands

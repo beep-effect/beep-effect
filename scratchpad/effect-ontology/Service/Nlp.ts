@@ -64,7 +64,6 @@ const NlpIndexKind = LiteralKit(["bm25", "semantic"]).pipe(
 /**
  * Tokenization result
  *
- *
  * **Example** (Represent tokenized text)
  *
  * ```ts
@@ -90,7 +89,6 @@ export class TokenizeResult extends S.Class<TokenizeResult>($I`TokenizeResult`)(
 
 /**
  * BM25 similarity result
- *
  *
  * **Example** (Represent a ranked document)
  *

@@ -1,6 +1,8 @@
 /**
  * Structured YAML diagnostics and the staged error-code unions they carry.
  *
+ * **Details**
+ *
  * The engine emits raw `{ code, message, offset, length }` records; this
  * module materializes {@link YamlDiagnostic}, deriving `line`/`character` from
  * `offset` against the source text. Fatality is a property of `code` via

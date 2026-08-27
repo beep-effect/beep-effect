@@ -142,6 +142,8 @@ const AstValue: S.Codec<unknown, unknown> = S.suspend(() =>
 /**
  * Open Acorn node boundary decoded once before evaluation.
  *
+ * **Details**
+ *
  * Supported-node closure is enforced by the evaluator's exhaustive matcher, not
  * by this schema. The rest record preserves parser-specific opaque values such
  * as a native `RegExp` on a literal.
@@ -224,6 +226,8 @@ export type ProgramNode = typeof ProgramNode.Type;
 
 /**
  * Immutable lexical binding stored in a mutable scope map.
+ *
+ * **Details**
  *
  * Scope updates replace this value rather than mutating it. `initialized` is
  * false after {@link ScopeStack.reserve} and true after initialize/declare.
@@ -462,9 +466,10 @@ const MemberReferenceTarget = S.declare<MemberReferenceTarget>(
  * **Example** (Point at an object field)
  *
  * ```ts
+ * import { SafeObject } from "@beep/schema"
  * import { MemberReference } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
- * const target = { count: 1 }
+ * const target = SafeObject.make({ count: 1 })
  * const reference = MemberReference.new(target, "count")
  * console.log(reference.key, Reflect.get(reference.target, reference.key))
  * // count 1
@@ -938,7 +943,7 @@ export class SymbolNamespace extends S.TaggedClass<SymbolNamespace>($I`SymbolNam
  *   IteratorSymbol,
  * } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
- * console.log(AsyncIteratorSymbol === IteratorSymbol)
+ * console.log(String(AsyncIteratorSymbol))
  * // false
  * console.log(typeof AsyncIteratorSymbol)
  * // symbol
@@ -976,7 +981,7 @@ export const IteratorSymbol: unique symbol = Symbol("codemode.iterator");
  * ```ts
  * import { IteratorSymbols } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
- * console.log(IteratorSymbols.length, IteratorSymbols[0] === IteratorSymbols[1])
+ * console.log(IteratorSymbols.map(String))
  * // 2 false
  * ```
  *
@@ -1759,6 +1764,8 @@ export const OptionalShortCircuit: unique symbol = Symbol("codemode.optional-sho
 
 /**
  * Human-readable summary of orchestration syntax the evaluator accepts.
+ *
+ * **Details**
  *
  * Embedded both as the suffix of {@link unsupportedSyntax} messages and as the
  * suggestions array on those failures.

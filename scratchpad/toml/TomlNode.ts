@@ -61,6 +61,8 @@ export type TomlKeyKind = typeof TomlKeyKind.Type;
 /**
  * One simple key within a (possibly dotted) key path.
  *
+ * **Details**
+ *
  * - `value` — the decoded key text (escapes resolved, quotes stripped).
  * - `kind` — how the key was spelled in the source.
  * - `offset` / `length` — the key's span in the source, quotes included.

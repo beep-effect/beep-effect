@@ -307,11 +307,10 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
 /**
  * Voyage embedding provider configuration
  *
- *
  * **Example** (Configure a Voyage provider)
  *
  * ```ts
- * import { Duration, Redacted } from "effect"
+ * import { Duration, Effect, Redacted } from "effect"
  * import { VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
  * const config = VoyageProviderConfig.make({
@@ -341,7 +340,7 @@ export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`Voyag
  * **Example** (Reference Voyage provider input)
  *
  * ```ts
- * import { Duration, Redacted } from "effect"
+ * import { Duration, Effect, Redacted } from "effect"
  * import type { VoyageProviderConfigInput } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
  * const input: VoyageProviderConfigInput = {
@@ -362,7 +361,7 @@ export type VoyageProviderConfigInput = (typeof VoyageProviderConfig)["~type.mak
  * **Example** (Inspect make voyage provider)
  *
  * ```ts
- * import { Duration, Redacted } from "effect"
+ * import { Duration, Effect, Redacted } from "effect"
  * import { makeVoyageProvider, VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
  * const provider = makeVoyageProvider(
@@ -371,7 +370,7 @@ export type VoyageProviderConfigInput = (typeof VoyageProviderConfig)["~type.mak
  *     timeout: Duration.seconds(10)
  *   })
  * )
- * console.log(provider.metadata.providerId)
+ * console.log(Effect.isEffect(provider)) // true
  * ```
  *
  * @category constructors

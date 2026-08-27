@@ -1,6 +1,8 @@
 /**
  * Schemas and loaders for Claude Code MCP configuration files.
  *
+ * **Details**
+ *
  * Project scope uses `.mcp.json`; user and local scopes live in
  * `~/.claude.json`; enterprise deployments may provide a system
  * `managed-mcp.json`. Loaders read through the Effect `FileSystem`
@@ -127,6 +129,8 @@ export declare namespace ClaudeJsonProject {
 
 /**
  * Tolerant schema for the MCP-related portions of `~/.claude.json`.
+ *
+ * **Details**
  *
  * User-scope servers live at top-level `mcpServers`; local-scope
  * servers live under `projects[projectPath].mcpServers`. Other
@@ -436,6 +440,8 @@ const mergeServerRecords = (
 /**
  * Merge MCP config files in increasing precedence order.
  *
+ * **Details**
+ *
  * Later files replace earlier files by server name and also remove any
  * lower-precedence server with the same URL or stdio command/arguments.
  * Fields inside an individual server entry are never merged.
@@ -542,6 +548,8 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
 /**
  * Convert an MCP config into the current Claude Code JSON shape.
  *
+ * **Details**
+ *
  * The result contains only fields represented by the current MCP transport
  * schemas and omits the reserved `workspace` server name.
  *
@@ -577,6 +585,8 @@ const projectClaudeJsonEntry = (file: ClaudeJsonFile, cwd: string, resolvedCwd: 
 
 /**
  * Read a `.mcp.json` or `managed-mcp.json` file from disk.
+ *
+ * **Details**
  *
  * Missing files are errors for this strict loader; use `loadEffective`
  * or `loadManagedMcp` for optional discovery. A server named
@@ -669,6 +679,8 @@ const loadManagedMcpWithOptions = Effect.fn("Mcp.loadManagedMcp")(function* (
 
 /**
  * Discovers the first system `managed-mcp.json` file that exists.
+ *
+ * **Details**
  *
  * Claude Code treats this file as exclusive enterprise control: when it
  * exists, user, project, local, and plugin MCP configs are suppressed.
@@ -778,6 +790,8 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
 
 /**
  * Loads the effective MCP configuration for a Claude Code project.
+ *
+ * **Details**
  *
  * Normal precedence is local (`~/.claude.json` project entry) > project
  * (`.mcp.json`) > user (`~/.claude.json` top-level) > plugins. Whole

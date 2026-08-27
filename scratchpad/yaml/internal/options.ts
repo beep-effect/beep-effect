@@ -1,6 +1,8 @@
 /**
  * Internal option records consumed by the YAML engine.
  *
+ * **Details**
+ *
  * The public facade owns the `Schema.Class` option types
  * (`YamlParseOptions`, `YamlStringifyOptions`, `YamlFormattingOptions`);
  * the engine takes these plain records so it never imports the facade.
@@ -48,6 +50,7 @@ export const ParseOptionsInput = Schema.Struct({
 	/** Max alias nodes per document (DoS guard). Default `100`. */
 	maxAliasCount: Schema.optional(Schema.Finite),
 	/** Treat duplicate mapping keys as errors. Default `true`. */
+/** Treat duplicate mapping keys as errors. Default `true`. */
 	uniqueKeys: Schema.optional(Schema.Boolean),
 }).pipe(
 	$I.annoteSchema("ParseOptionsInput", {
@@ -55,6 +58,13 @@ export const ParseOptionsInput = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of plain optional parse settings consumed by the internal YAML composer.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseOptionsInput = typeof ParseOptionsInput.Type;
 
 /**
@@ -105,6 +115,7 @@ export const StringifyOptionsInput = Schema.Struct({
 	/** End output with a trailing newline. Default `true`. */
 	finalNewline: Schema.optional(Schema.Boolean),
 	/** Ignore per-node styles and force the defaults. Default `false`. */
+/** Ignore per-node styles and force the defaults. Default `false`. */
 	forceDefaultStyles: Schema.optional(Schema.Boolean),
 }).pipe(
 	$I.annoteSchema("StringifyOptionsInput", {
@@ -112,4 +123,11 @@ export const StringifyOptionsInput = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of plain optional stringify settings consumed by the internal YAML renderer.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StringifyOptionsInput = typeof StringifyOptionsInput.Type;

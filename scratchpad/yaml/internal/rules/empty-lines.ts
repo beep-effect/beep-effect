@@ -2,6 +2,8 @@
  * empty-lines: caps runs of consecutive blank lines — in the body (`max`),
  * at document start (`maxStart`) and at document end (`maxEnd`).
  *
+ * **Details**
+ *
  * Blank lines inside scalar content are the value's business and are
  * skipped. The fix deletes the excess lines surgically.
  *

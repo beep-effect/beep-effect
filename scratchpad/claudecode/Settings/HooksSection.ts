@@ -1,6 +1,8 @@
 /**
  * Schema for the `hooks` subtree of a Claude Code settings.json file.
  *
+ * **Details**
+ *
  * Claude Code's hooks wire-up format looks like:
  *
  * ```jsonc

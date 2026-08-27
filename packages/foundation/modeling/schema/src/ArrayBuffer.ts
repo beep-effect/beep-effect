@@ -1,6 +1,8 @@
 /**
  * Schema for native `ArrayBuffer` values.
  *
+ * **Details**
+ *
  * Use this module when a boundary carries raw binary buffers (file contents,
  * crypto material, transferable payloads) and the model should keep the native
  * `ArrayBuffer` while remaining JSON-serializable.
@@ -108,6 +110,8 @@ export const ArrayBuf = S.instanceOf(globalThis.ArrayBuffer, {
 
 /**
  * Type-level value inferred from {@link ArrayBuf}.
+ *
+ * **Details**
  *
  * This is the native `ArrayBuffer` type; the schema adds no branding, so the
  * alias exists to keep the schema/type same-name convention.

@@ -1,6 +1,8 @@
 /**
  * Matcher helpers for hooks that support a `matcher` field in settings.json.
  *
+ * **Details**
+ *
  * Claude Code matcher strings are exact/pipe-list matchers for plain
  * tokens, match-all for `*` or the empty string, and JavaScript regular
  * expressions only when they contain other characters. These helpers mirror

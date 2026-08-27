@@ -2,6 +2,8 @@
  * Parsed YAML documents: the root AST plus recovered diagnostics, directives
  * and document framing.
  *
+ * **Details**
+ *
  * Non-fatal diagnostics surface as data on `errors`/`warnings` while fatal
  * ones fail `parse`/`parseAll` with a typed {@link YamlParseError}.
  *
@@ -64,6 +66,8 @@ export class YamlDirective extends Schema.Class<YamlDirective>("YamlDirective")(
  * empty), recovered `errors` and `warnings` as {@link YamlDiagnostic} data,
  * the {@link YamlDirective} list, the optional document-level comments and the
  * `---`/`...` framing flags (absent flags read as `false`).
+ *
+ * **Details**
  *
  * `commentBefore` is a header block sitting AHEAD of a `---` marker; `comment`
  * is the trailing block after the content or the `...` marker. A header with

@@ -57,7 +57,6 @@ export const BudgetedStage = LiteralKit([
 /**
  * Describes the budgeted stage data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -67,7 +66,6 @@ const isBudgetedStage = S.is(BudgetedStage);
 
 /**
  * Token budget state tracking usage across stages
- *
  *
  * **Example** (Use the TokenBudgetState contract)
  *
@@ -277,7 +275,7 @@ export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make());
  * const program = Effect.gen(function* () {
  *   const budget = yield* TokenBudgetService
  *   return budget
- * }).pipe(Effect.provide(TokenBudgetServiceTest))
+ * }).pipe(Effect.provide(TokenBudgetServiceTest()))
  *
  * console.log(program)
  * ```

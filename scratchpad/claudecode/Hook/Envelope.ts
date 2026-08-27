@@ -1,6 +1,8 @@
 /**
  * Base envelope fields shared by every Claude Code hook event.
  *
+ * **Details**
+ *
  * `envelopeFields` is the reusable field record each event spreads into
  * its own input schema. `HookEnvelope` is the named `S.Class` that
  * decodes the base shape alone (useful for tooling and tests that only
@@ -117,6 +119,8 @@ export class HookEffort extends S.Class<HookEffort>($I`HookEffort`)(
 
 /**
  * Reusable field record shared by every hook input schema.
+ *
+ * **Details**
  *
  * `hook_event_name` remains `S.String` here; individual event schemas
  * override it with their event-specific literal.

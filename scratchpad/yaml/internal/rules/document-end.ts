@@ -3,6 +3,8 @@
  * (`present: true`, the default when the rule is enabled) or forbidden
  * (`present: false`).
  *
+ * **Details**
+ *
  * Tail-of-stream scope only: mid-stream `...` markers are document
  * structure. Opt-in — absent from both presets.
  *

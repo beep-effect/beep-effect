@@ -130,7 +130,6 @@ export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas
 /**
  * Describes the reasoning profile data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -256,19 +255,17 @@ export class ReasoningResult extends S.Class<ReasoningResult>($I`ReasoningResult
    * **Example** (Inspect reasoning result.has inferences)
    *
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { NonNegNum } from "@beep/schema/Number"
    * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
    *
-   * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
- * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
- *
- * const result = ReasoningResult.make({
- *   inferredTripleCount: NonNegativeInt.make(3),
- *   totalTripleCount: NonNegativeInt.make(10),
- *   rulesApplied: NonNegativeInt.make(2),
- *   durationMs: NonNegNum.make(12)
- * })
- * console.log(result.hasInferences) // true
+   * const result = ReasoningResult.make({
+   *   inferredTripleCount: NonNegativeInt.make(3),
+   *   totalTripleCount: NonNegativeInt.make(10),
+   *   rulesApplied: NonNegativeInt.make(2),
+   *   durationMs: NonNegNum.make(12)
+   * })
+   * console.log(result.hasInferences) // true
    * ```
    *
    * @returns Result produced by this operation.

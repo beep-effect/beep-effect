@@ -90,7 +90,7 @@ export const ClusterWithSqlClient = (options?: { readonly runnerStorage?: "memor
  *
  * const sharding = ClusterShardingConfigFromEnv()
  * const cluster = ClusterSqliteLive({ filename: "output/cluster.db", runnerStorage: "memory" })
- * console.log(sharding !== cluster) // true
+ * console.log(sharding)
  * ```
  *
  * @category layers

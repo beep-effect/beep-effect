@@ -28,6 +28,20 @@ type CatalogFileTypeInfo<Extension extends FileType = FileType> = {
 /**
  * Converts concise authored catalog data into schema-validated file-type metadata.
  *
+ * **Example** (Construct PNG metadata)
+ *
+ * ```ts
+ * import { makeCatalogFileTypeInfo } from "@beep/schema/FileTypeChecker/FileTypeChecker.catalog-constructor"
+ *
+ * const info = makeCatalogFileTypeInfo({
+ *   extension: "png",
+ *   mimeType: "image/png",
+ *   description: "Portable Network Graphics",
+ *   signatures: [{ sequence: [0x89, 0x50, 0x4e, 0x47] }]
+ * })
+ * console.log(info.extension) // "png"
+ * ```
+ *
  * @internal
  * @category factories
  * @since 0.0.0

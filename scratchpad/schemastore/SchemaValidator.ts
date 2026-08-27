@@ -1,6 +1,8 @@
 /**
  * Closed ajv validation for SchemaStore documents; findings are values.
  *
+ * **Details**
+ *
  * Document rejection is a {@link ValidationFinding} list. The error channel
  * is reserved for the engine failing as a mechanism.
  *
@@ -28,6 +30,8 @@ class UnstubbedSchemaValidator extends Schema.TaggedError<UnstubbedSchemaValidat
 /**
  * Indicates that the validation engine behind the {@link SchemaValidator}
  * contract failed as a *mechanism* — it could not run at all.
+ *
+ * **Details**
  *
  * By convention the error channel is reserved for exactly that: a document
  * that fails the engine's gate is a {@link ValidationFinding} list (a
@@ -218,6 +222,8 @@ const notStubbed = (method: string) => () => Effect.die(UnstubbedSchemaValidator
 /**
  * Real-engine JSON Schema document validation, closed by default over ajv —
  * the engine SchemaStore's own gate is defined in terms of.
+ *
+ * **Details**
  *
  * {@link SchemaValidator.layer} is the shipped implementation: provide it and
  * validation works, with no adapter to write. The service stays an interface

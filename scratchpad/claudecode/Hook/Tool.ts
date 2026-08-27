@@ -1,6 +1,8 @@
 /**
  * Typed adapters for common Claude Code tool payloads.
  *
+ * **Details**
+ *
  * The core hook event schemas intentionally preserve Claude Code's raw wire
  * format (`tool_input` / `tool_response` as loose records). This module adds a
  * thin typed layer for the built-in tool shapes documented by Claude Code.

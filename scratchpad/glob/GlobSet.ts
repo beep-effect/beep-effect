@@ -4,6 +4,8 @@
  * deliberately distinct from minimatch's whole-pattern negation — both exist,
  * at different levels, on purpose.
  *
+ * **Details**
+ *
  * GlobSet pins default options internally: it is the drift-free workspaces
  * contract and takes no options surface of its own. Braced patterns classify
  * per expanded alternative, so `{tools/cli,packages/*}` contributes a literal
@@ -55,13 +57,13 @@ interface Classified {
  * `patterns` — the source text of every member, preserved verbatim; the
  * classified indexes live in a private field the schema never encodes.
  *
+ * **Details**
+ *
  * The structural accessors ({@link GlobSet.literals},
  * {@link GlobSet.wildcards}, {@link GlobSet.excludes}) serve the workspaces
  * enumerator: literals fast-path an exact lookup, wildcards drive directory
  * reads from their `enumerationPrefix`, and `crossesSegments` triggers the
  * bounded recursive descent — the issue-#62 fix end to end.
- *
- * **Details**
  *
  * Classification is per expanded alternative: `{tools/cli,packages/*}` is a
  * literal AND a wildcard. Literal keys use the engine's unescaped single row

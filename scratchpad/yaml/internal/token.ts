@@ -1,6 +1,8 @@
 /**
  * Internal lexical token types for the YAML engine.
  *
+ * **Details**
+ *
  * This layer is not public surface — a `Stream<YamlToken>` tokenizer is
  * deferred until an LSP-style consumer needs it. Public callers consume
  * {@link YamlTokens} instead; those tokens rename `value`/`column` to
@@ -17,6 +19,15 @@ const $I = $ScratchpadId.create("yaml/internal/token");
 
 /**
  * The 22 token kinds produced by the YAML lexer.
+ *
+ * **Example** (Recognize a comment token kind)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YamlTokenKind } from "@beep/scratchpad/yaml/internal/token"
+ *
+ * console.log(S.is(YamlTokenKind)("comment")) // true
+ * ```
  *
  * @see {@link YamlToken} for the positioned token that carries one of these kinds.
  * @internal
@@ -52,6 +63,13 @@ export const YamlTokenKind = Schema.Literals([
 	}),
 );
 
+/**
+ * TypeScript representation of token kinds produced by the internal YAML lexer.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type YamlTokenKind = typeof YamlTokenKind.Type;
 
 /**
@@ -86,4 +104,11 @@ export const YamlToken = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of internal YAML lexer token with its raw source text and UTF-16 position.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type YamlToken = typeof YamlToken.Type;

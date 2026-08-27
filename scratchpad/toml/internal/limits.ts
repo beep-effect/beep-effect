@@ -1,3 +1,15 @@
+/**
+ * Zero-dependency nesting-depth guards shared by every TOML engine file.
+ *
+ * **Details**
+ *
+ * This leaf module lets public facades translate internal guard failures into
+ * typed diagnostics without creating an engine-to-facade import cycle.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { dual } from "effect/Function";
@@ -5,19 +17,6 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("toml/internal/limits");
 
-/**
- * Zero-dependency nesting-depth guards shared by every TOML engine file.
- *
- * **Details**
- *
- * This is a leaf module: no import cycle is possible through here
- * (jsonc/yaml/glob precedent). Public facades catch {@link GuardExceeded}
- * and materialize a typed `NestingDepthExceeded` diagnostic; the engine
- * throws it.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
 
 /**
  * House parity constant for depth guards (yaml/jsonc/glob precedent).

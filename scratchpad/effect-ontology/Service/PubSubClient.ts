@@ -125,6 +125,15 @@ export const PubSubClientConfigSchema = S.Struct({
 );
 
 /**
+ * Decoded value produced by {@link PubSubClientConfigSchema}.
+ *
+ * @see {@link PubSubClientConfigSchema} for the runtime configuration schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PubSubClientConfigSchema = typeof PubSubClientConfigSchema.Type;
+
+/**
  * Runtime Pub/Sub configuration decoded by {@link PubSubClientConfigSchema}.
  *
  * @category type-level

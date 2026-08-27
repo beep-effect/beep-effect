@@ -1,6 +1,8 @@
 /**
  * Append-only, schema-validated JSONL journals as a definable Effect service.
  *
+ * **Details**
+ *
  * The subject is not the format — one JSON value per line needs no library.
  * The subject is the file as a live object: a journal that only ever grows,
  * whose current state is its last valid line, whose tail may be torn mid-append,

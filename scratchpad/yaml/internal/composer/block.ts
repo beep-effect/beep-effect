@@ -3,6 +3,8 @@
  * CST shape), block sequences, flat block maps, and the shared pair-building
  * machinery (`SemanticItem`, `buildPairs`) that flow composition also uses.
  *
+ * **Details**
+ *
  * Cross-seam recursion into flow composition goes through `state.flow` so
  * this module never imports `flow.ts`. Exhausted `enterNesting` returns an
  * empty collection placeholder.
@@ -82,6 +84,8 @@ const $I = $ScratchpadId.create("yaml/internal/composer/block");
 
 /**
  * Compose a block map from its CST children, with an optional external first key.
+ *
+ * **Details**
  *
  * CST pattern for `a: 1, b: true`:
  *   `[flow-scalar("a"), block-map(children: [":"," ","1","\\n","b",":"," ","true"])]`
@@ -228,6 +232,13 @@ export const SemanticItem = Schema.Struct({
   }),
 );
 
+/**
+ * TypeScript representation of flattened semantic block-map item used while pairing keys, separators, nodes and comments.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SemanticItem = typeof SemanticItem.Type;
 
 /**

@@ -82,7 +82,7 @@ export class ExecutionLimits extends S.Class<ExecutionLimits>($I`ExecutionLimits
  *
  * const error = CodeMode.InvalidExecutionLimits.new({ timeoutMs: 0 })
  *
- * console.log(CodeMode.InvalidExecutionLimits.is(error)) // true
+ * console.log(error._tag === "InvalidExecutionLimits") // true
  * console.log(error.message.startsWith("Execution limits must contain")) // true
  * ```
  *

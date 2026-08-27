@@ -115,8 +115,8 @@ const DEFAULT_CONFIG = ReconciliationConfig.make({});
  * ```ts
  * import { ReconciliationDecision } from "@effect-ontology/Service/ReconciliationService"
  *
- * console.log(ReconciliationDecision.is("queued")) // true
- * console.log(ReconciliationDecision.is("manual")) // false
+ * console.log(ReconciliationDecision.is.queued("queued")) // true
+ * console.log(ReconciliationDecision.is.queued("manual")) // false
  * ```
  *
  * @category schemas
@@ -225,7 +225,6 @@ export const VerificationTask = S.Struct({
 );
 /**
  * Describes the verification task data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0

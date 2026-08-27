@@ -2,6 +2,8 @@
  * Hook runner — the FFI boundary between Claude Code's stdio process API
  * and Effect.
  *
+ * **Details**
+ *
  * `Hook.runMain(hookDefinition)` is the primary entry point for scripts
  * that handle a single event. `Hook.dispatch(map)` is for scripts that
  * handle multiple events from one entry file — it reads stdin once,
@@ -188,6 +190,8 @@ export interface HookDefinition<In extends HookInputEnvelope, Out, E, R> {
  * Dispatch map for `Hook.dispatch` — keys are hook event names and values
  * are complete `HookDefinition`s for that event.
  *
+ * **Details**
+ *
  * The error and service parameters capture the union shared by entries
  * while each event factory preserves its own narrow input and output.
  *
@@ -334,6 +338,8 @@ const runHookFromParsed = Effect.fn("Hook.runHookFromParsed")(function* <In exte
 /**
  * Build the Effect program that executes one hook invocation end-to-end.
  *
+ * **Details**
+ *
  * Pure Effect form of the runner, exposed primarily for testing.
  * Production code should use `runMain`.
  *
@@ -431,6 +437,8 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
 /**
  * Custom teardown that maps the runner's typed errors to Claude Code's
  * hook exit-code convention:
+ *
+ * **Details**
  *
  * - `0` success
  * - handler-authored `HookProcessOutput` exits use their requested code

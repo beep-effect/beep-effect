@@ -603,7 +603,6 @@ const domainTermToN3Term = (
 /**
  * Options for adding triples to a store with optional named graph
  *
- *
  * **Example** (Target a named graph)
  *
  * ```ts

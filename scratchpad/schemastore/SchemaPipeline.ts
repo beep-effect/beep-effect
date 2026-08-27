@@ -1,6 +1,8 @@
 /**
  * Orchestrate generate → lint → validate → gate → write for SchemaStore targets.
  *
+ * **Details**
+ *
  * Adds no JSON Schema capability of its own: every step belongs to a module
  * this package already owns. Requires `SchemaFile` and `SchemaValidator` in
  * `R`.
@@ -27,6 +29,8 @@ const $I = $ScratchpadId.create("schemastore/SchemaPipeline");
 /**
  * One problem found while emitting a target, from either gate, normalized
  * so a single policy predicate can judge both.
+ *
+ * **Details**
  *
  * `DocumentLint` findings keep their own severity; engine findings are
  * `"warning"` — a document the engine rejects is not advisory.
@@ -297,6 +301,8 @@ export type PipelineCheckResult = typeof PipelineCheckResult.Type;
 /**
  * Options for {@link SchemaPipeline.run} and {@link SchemaPipeline.check}.
  *
+ * **Details**
+ *
  * Not a runtime schema: `blocking` is an executable policy predicate, so this
  * interface is program wiring rather than serializable configuration data.
  * The nested data-only option shapes remain schema-backed.
@@ -384,6 +390,8 @@ const gate = (
 /**
  * The emit pipeline over a target manifest: generate, lint, validate, gate,
  * write — the loop every consumer of this package was writing by hand.
+ *
+ * **Details**
  *
  * Requires `SchemaFile` and `SchemaValidator` in `R`; provide
  * `SchemaFile.layer` and `SchemaValidator.layer` (plus a platform

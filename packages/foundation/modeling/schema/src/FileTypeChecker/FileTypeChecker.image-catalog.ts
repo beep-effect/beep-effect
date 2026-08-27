@@ -30,6 +30,14 @@ type ImageCatalog = { readonly [K in ImageFileType]: FileTypeInfo & { readonly e
 /**
  * Internal image metadata keyed by canonical extension.
  *
+ * **Example** (Read image metadata)
+ *
+ * ```ts
+ * import { imageCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.image-catalog"
+ *
+ * console.log(imageCatalog.avif.extension) // "avif"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

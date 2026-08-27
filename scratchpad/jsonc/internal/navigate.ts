@@ -1,6 +1,8 @@
 /**
  * Scanner-based path navigation for the modifier. Private implementation.
  *
+ * **Details**
+ *
  * Resolves a {@link JsoncPath} through scanner tokens rather than a
  * `lastIndexOf('"segment"')` search of the raw text, so keys containing quote
  * characters are located from the key token itself. Returns a plain
@@ -27,9 +29,6 @@ const $I = $ScratchpadId.create("jsonc/internal/navigate");
 /**
  * The target property/element was located.
  *
- * @see {@link navigate} for the function that produces this variant.
- * @see {@link NavigateResult} for the closed result union.
- *
  * **Example** (Construct a located object member)
  *
  * ```ts
@@ -39,6 +38,8 @@ const $I = $ScratchpadId.create("jsonc/internal/navigate");
  * console.log(result._tag) // "Located"
  * ```
  *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -79,9 +80,6 @@ export type Located = typeof Located.Type;
 /**
  * The target does not exist; an insertion point was resolved instead.
  *
- * @see {@link navigate} for the function that produces this variant.
- * @see {@link NavigateResult} for the closed result union.
- *
  * **Example** (Construct an insertion point)
  *
  * ```ts
@@ -91,6 +89,8 @@ export type Located = typeof Located.Type;
  * console.log(result._tag) // "Insert"
  * ```
  *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -122,9 +122,6 @@ export type Insert = typeof Insert.Type;
 /**
  * A structural type mismatch: expected an object or array but found otherwise.
  *
- * @see {@link navigate} for the function that produces this variant.
- * @see {@link NavigateResult} for the closed result union.
- *
  * **Example** (Construct a container mismatch)
  *
  * ```ts
@@ -134,6 +131,8 @@ export type Insert = typeof Insert.Type;
  * console.log(result.expected) // "object"
  * ```
  *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -160,9 +159,6 @@ export type Mismatch = typeof Mismatch.Type;
 /**
  * Nothing to resolve (for example navigating an empty path segment set).
  *
- * @see {@link navigate} for the function that produces this variant.
- * @see {@link NavigateResult} for the closed result union.
- *
  * **Example** (Construct the no-op variant)
  *
  * ```ts
@@ -171,6 +167,8 @@ export type Mismatch = typeof Mismatch.Type;
  * console.log(NoOp.make({})._tag) // "NoOp"
  * ```
  *
+ * @see {@link navigate} for the function that produces this variant.
+ * @see {@link NavigateResult} for the closed result union.
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -194,8 +192,6 @@ export type NoOp = typeof NoOp.Type;
 /**
  * The outcome of navigating a {@link JsoncPath} through JSONC source.
  *
- * @see {@link navigate} for the function that returns this union.
- *
  * **Example** (Guard a navigation result)
  *
  * ```ts
@@ -205,6 +201,7 @@ export type NoOp = typeof NoOp.Type;
  * console.log(Schema.is(NavigateResult)(NoOp.make({}))) // true
  * ```
  *
+ * @see {@link navigate} for the function that returns this union.
  * @internal
  * @category schemas
  * @since 0.0.0

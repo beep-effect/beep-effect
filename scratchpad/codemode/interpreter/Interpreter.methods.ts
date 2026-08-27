@@ -1,6 +1,8 @@
 /**
  * Dispatch surface for guest intrinsics, globals, and collection callbacks.
  *
+ * **Details**
+ *
  * {@link invokeGlobalMethod} is synchronous and hard-rejects helpers that live
  * on Effect adapters such as {@link invokeArrayFrom} and {@link invokeGroupBy}.
  *
@@ -76,6 +78,8 @@ const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 /**
  * Capability used to invoke guest functions and settle guest promises.
  *
+ * **Details**
+ *
  * Collection adapters, string replacers, and promise reactions all go through
  * this runner rather than calling host functions directly.
  *
@@ -99,6 +103,8 @@ export type CallbackRunner<R> = {
 
 /**
  * Closed set of callables admitted as collection, sort, replacer, or reaction callbacks.
+ *
+ * **Details**
  *
  * Admission means dispatchable, not necessarily invocable: new-requiring
  * constructors pass this gate and throw a TypeError on call, like JavaScript.

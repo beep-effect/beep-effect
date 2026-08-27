@@ -1,6 +1,8 @@
 /**
  * Non-mutating YAML text edits shared by the formatter and modifier.
  *
+ * **Details**
+ *
  * Edits describe replacements as `offset`/`length`/`content`. Applying them in
  * reverse-offset order is byte-minimal and preserves comments and whitespace —
  * the differentiator over round-trip stringify.
@@ -55,6 +57,12 @@ export const YamlSegment = Schema.Union([Schema.String, Schema.Finite]).pipe(
 	}),
 );
 
+/**
+ * TypeScript representation of a YAML path segment: a mapping key string or finite sequence index.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type YamlSegment = typeof YamlSegment.Type;
 
 /**
@@ -82,6 +90,12 @@ export const YamlPath = Schema.Array(YamlSegment).pipe(
 	}),
 );
 
+/**
+ * TypeScript representation of ordered YAML path from the document root through mapping keys and sequence indices.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type YamlPath = typeof YamlPath.Type;
 
 /**

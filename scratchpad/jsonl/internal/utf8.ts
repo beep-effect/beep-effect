@@ -1,6 +1,8 @@
 /**
  * UTF-8 byte accounting.
  *
+ * **Details**
+ *
  * A zero-dependency leaf so that both the line splitter and the error taxonomy
  * can measure bytes without either importing the other — the same cycle
  * firewall the other pure-tier packages use.
@@ -12,6 +14,8 @@
 
 /**
  * The UTF-8 byte length of a JavaScript string.
+ *
+ * **Details**
  *
  * Journal offsets are **bytes**, because that is what `FileSystem.stream`'s
  * `offset` option and every persisted cursor mean. `String.length` counts

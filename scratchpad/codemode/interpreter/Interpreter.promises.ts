@@ -1,6 +1,8 @@
 /**
  * Guest Promise scheduling, observation, and constructor/static/instance dispatch.
  *
+ * **Details**
+ *
  * Observation controls un-awaited rejection reporting; program completion
  * interrupts all remaining promise work via {@link PromiseRuntime.interrupt}.
  *
@@ -77,7 +79,7 @@ const failureFromCause = (cause: Cause.Cause<InterpreterFailure>): InterpreterFa
  *
  * const program = Effect.gen(function* () {
  *   const scope = yield* Scope.make()
- *   const runtime = new PromiseRuntime(scope)
+ *   const runtime = new PromiseRuntime<never>(scope)
  *   const promise = yield* runtime.create(Effect.succeed(1))
  *   runtime.markObserved(promise)
  *   const exit = yield* runtime.await(promise)
@@ -120,7 +122,7 @@ export class PromiseRuntime<R> {
    * const promise = await Effect.runPromise(
    *   Effect.gen(function* () {
    *     const scope = yield* Scope.make()
-   *     return yield* new PromiseRuntime(scope).create(Effect.succeed(1))
+   *     return yield* new PromiseRuntime<never>(scope).create(Effect.succeed(1))
    *   }),
    * )
    * console.log(CodeModePromise.is(promise))
@@ -176,7 +178,7 @@ export class PromiseRuntime<R> {
    * const exit = await Effect.runPromise(
    *   Effect.gen(function* () {
    *     const scope = yield* Scope.make()
-   *     const runtime = new PromiseRuntime(scope)
+   *     const runtime = new PromiseRuntime<never>(scope)
    *     const promise = yield* runtime.create(Effect.succeed("ready"))
    *     runtime.markObserved(promise)
    *     return yield* runtime.await(promise)
@@ -208,7 +210,7 @@ export class PromiseRuntime<R> {
    * const exit = await Effect.runPromise(
    *   Effect.gen(function* () {
    *     const scope = yield* Scope.make()
-   *     const runtime = new PromiseRuntime(scope)
+   *     const runtime = new PromiseRuntime<never>(scope)
    *     const promise = yield* runtime.create(Effect.succeed(7))
    *     runtime.markObserved(promise)
    *     return yield* runtime.await(promise)
@@ -237,7 +239,7 @@ export class PromiseRuntime<R> {
    *   Effect.gen(function* () {
    *     const scope = yield* Scope.make()
    *     const flag = MutableRef.make(false)
-   *     yield* new PromiseRuntime(scope).fork(Effect.sync(() => MutableRef.set(flag, true)))
+   *     yield* new PromiseRuntime<never>(scope).fork(Effect.sync(() => MutableRef.set(flag, true)))
    *     yield* Effect.yieldNow
    *     return MutableRef.get(flag)
    *   }),
@@ -265,7 +267,7 @@ export class PromiseRuntime<R> {
    * const messages = await Effect.runPromise(
    *   Effect.gen(function* () {
    *     const scope = yield* Scope.make()
-   *     const runtime = new PromiseRuntime(scope)
+   *     const runtime = new PromiseRuntime<never>(scope)
    *     yield* runtime.create(Effect.fail(InterpreterRuntimeError.new("boom")))
    *     yield* Effect.yieldNow
    *     return runtime.diagnostics().map((diagnostic) => diagnostic.message)
@@ -298,7 +300,7 @@ export class PromiseRuntime<R> {
    * const leftover = await Effect.runPromise(
    *   Effect.gen(function* () {
    *     const scope = yield* Scope.make()
-   *     const runtime = new PromiseRuntime(scope)
+   *     const runtime = new PromiseRuntime<never>(scope)
    *     yield* runtime.create(Effect.never)
    *     return yield* runtime.interrupt()
    *   }),
@@ -446,7 +448,7 @@ export const resolvePromiseValue = <R>(
  *     const scope = yield* Scope.make()
  *     return yield* resolvePromise(
  *       runner,
- *       new PromiseRuntime(scope),
+ *       new PromiseRuntime<never>(scope),
  *       1,
  *       { type: "CallExpression" },
  *     )
@@ -498,6 +500,7 @@ export const resolvePromise = <R>(
  *   InterpreterFailure,
  *   PromiseMethodReference,
  * } from "../../../codemode/interpreter/Interpreter.model.ts"
+ * import { CodeModePromise } from "../../../codemode/Codemode.values.ts"
  *
  * const runner = {
  *   invokeFunction: () => Effect.succeed(undefined),
@@ -522,7 +525,7 @@ export const resolvePromise = <R>(
  * const message = await Effect.runPromise(
  *   Effect.gen(function* () {
  *     const scope = yield* Scope.make()
- *     const promises = new PromiseRuntime(scope)
+ *     const promises = new PromiseRuntime<never>(scope)
  *     const promise = yield* invokePromiseMethod(
  *       runner,
  *       promises,
@@ -530,6 +533,7 @@ export const resolvePromise = <R>(
  *       [[]],
  *       { type: "CallExpression" },
  *     )
+ *     if (!CodeModePromise.is(promise)) throw new TypeError("Expected Promise.race to return a guest promise")
  *     promises.markObserved(promise)
  *     const exit = yield* promises.await(promise)
  *     const failure = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
@@ -683,7 +687,7 @@ export const invokePromiseMethod = <R>(
  * const chained = await Effect.runPromise(
  *   Effect.gen(function* () {
  *     const scope = yield* Scope.make()
- *     const promises = new PromiseRuntime(scope)
+ *     const promises = new PromiseRuntime<never>(scope)
  *     const source = yield* promises.create(Effect.succeed(1))
  *     return yield* invokePromiseInstanceMethod(
  *       runner,
@@ -771,7 +775,7 @@ export const invokePromiseInstanceMethod = <R>(
  *
  * const scope = await Effect.runPromise(Scope.make())
  * try {
- *   constructPromise(runner, new PromiseRuntime(scope), 1, { type: "NewExpression" })
+ *   constructPromise(runner, new PromiseRuntime<never>(scope), 1, { type: "NewExpression" })
  * } catch (error) {
  *   console.log(
  *     InterpreterFailure.guards.InterpreterRuntimeError(error) ? error.message : error,

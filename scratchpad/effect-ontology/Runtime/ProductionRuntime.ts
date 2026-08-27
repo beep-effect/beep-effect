@@ -133,7 +133,7 @@ const selectLanguageModelLayer = Match.type<AppConfig>().pipe(
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
  * const closed = makeLanguageModelLayer.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
- * console.log(closed !== ExtractionLayersLive) // true
+ * console.log(closed)
  * ```
  *
  * @returns Layer providing LanguageModel (with all dependencies satisfied)
@@ -166,7 +166,7 @@ export const makeLanguageModelLayer = Layer.unwrap(
  * ```ts
  * import { ExtractionLayersLive, makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(ExtractionLayersLive !== makeLanguageModelLayer) // true
+ * console.log(ExtractionLayersLive)
  * ```
  *
  * @category layers
@@ -193,7 +193,7 @@ export const ExtractionLayersLive = Layer.mergeAll(
  * ```ts
  * import { ExtractionLayersLive, TracingLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(TracingLive !== ExtractionLayersLive) // true
+ * console.log(TracingLive)
  * ```
  *
  * @category layers
@@ -243,7 +243,7 @@ export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, 
  * ```ts
  * import { ExtractionLayersLive, LlmControlLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * console.log(LlmControlLive !== ExtractionLayersLive) // true
+ * console.log(LlmControlLive)
  * ```
  *
  * @category layers

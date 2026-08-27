@@ -18,6 +18,8 @@ const $I = $ScratchpadId.create("semver/Range");
 /**
  * Indicates that a string could not be parsed as a range expression.
  *
+ * **Details**
+ *
  * Raised by {@link Range.parse} and `VersionCache.resolveString` (which
  * parses through it). The decode direction of {@link Range.FromString}
  * reports the same failure through a generic `Schema` parse error instead of
@@ -553,6 +555,8 @@ export class Range extends Schema.Class<Range>($I`Range`)(
 
 /**
  * Indicates that intersecting ranges produced no satisfiable comparator set.
+ *
+ * **Details**
  *
  * Raised by {@link Range.intersect} when the constraints are mutually
  * exclusive. Carries the conflicting ranges.

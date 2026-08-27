@@ -1,6 +1,8 @@
 /**
  * Deterministic JSON text for committed SchemaStore files.
  *
+ * **Details**
+ *
  * Object keys stay in insertion order, line endings are LF, and every
  * document ends with a trailing newline so committed schema files are
  * byte-stable across runs.
@@ -27,6 +29,8 @@ class InvalidCanonicalJsonIndent extends Schema.TaggedError<InvalidCanonicalJson
  * Indicates that a value reachable from the serialization input is not a
  * JSON value: `undefined`, a function, a symbol, a `bigint`, a non-finite
  * number, or an object that is neither an array nor a plain object.
+ *
+ * **Details**
  *
  * Raised by {@link CanonicalJson.serialize}. Unlike `JSON.stringify` — which
  * silently drops `undefined` members and rewrites `NaN`/`Infinity` to
@@ -90,6 +94,8 @@ export class NonJsonValueError extends Schema.TaggedError<NonJsonValueError>($I`
  * Indicates that the serialization input nests deeper than the package's
  * hardening cap (256 levels), which also intercepts cyclic values before
  * they can recurse forever.
+ *
+ * **Details**
  *
  * Raised by {@link CanonicalJson.serialize}.
  *
@@ -212,6 +218,8 @@ const escapePointerSegment = (segment: string): string => segment.replace(/~/g, 
  * Deterministic, canonical JSON text: the package's owned serializer, so a
  * consumer never shells out to an external formatter to produce a stable
  * committed schema file.
+ *
+ * **Details**
  *
  * The canonical form is fully specified: object keys in insertion order
  * (document assembly owns meaningful ordering — keys are never sorted),

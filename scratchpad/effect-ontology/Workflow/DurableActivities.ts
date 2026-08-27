@@ -172,14 +172,15 @@ export type ResolutionOutput = typeof ResolutionOutput.Type;
  * ```ts
  * import { ValidationOutput } from "@effect-ontology/Workflow/DurableActivities"
  * import { GcsUri } from "@effect-ontology/Identity"
+ * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const output = ValidationOutput.make({
  *   validatedUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/graphs/validated.ttl"),
  *   conforms: true,
- *   violations: 0,
+ *   violations: NonNegativeInt.make(0),
  *   reportUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/reports/shacl.json"),
- *   durationMs: 18
+ *   durationMs: NonNegativeInt.make(18)
  * })
  * console.log(output.conforms) // true
  * ```
@@ -290,13 +291,14 @@ export type ClaimPersistenceOutput = typeof ClaimPersistenceOutput.Type;
  *
  * ```ts
  * import { Duration } from "effect"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { CrossBatchResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
  *
  * const output = CrossBatchResolutionOutput.make({
- *   entitiesTotal: 10,
- *   matchedToExisting: 6,
- *   newCanonicals: 4,
- *   candidatesEvaluated: 12,
+ *   entitiesTotal: NonNegativeInt.make(10),
+ *   matchedToExisting: NonNegativeInt.make(6),
+ *   newCanonicals: NonNegativeInt.make(4),
+ *   candidatesEvaluated: NonNegativeInt.make(12),
  *   duration: Duration.millis(40)
  * })
  * console.log(output.matchedToExisting) // 6

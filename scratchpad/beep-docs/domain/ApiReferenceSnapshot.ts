@@ -17,7 +17,7 @@ const $I = $ScratchpadId.create("beep-docs/domain/ApiReferenceSnapshot");
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { GitRevision } from "./ApiReferenceSnapshot.ts"
+ * import { GitRevision } from "@beep/scratchpad/beep-docs/domain/ApiReferenceSnapshot"
  *
  * console.log(S.decodeUnknownSync(GitRevision)("0".repeat(40)))
  * ```
@@ -55,7 +55,7 @@ export type GitRevision = typeof GitRevision.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SnapshotDigest } from "./ApiReferenceSnapshot.ts"
+ * import { SnapshotDigest } from "@beep/scratchpad/beep-docs/domain/ApiReferenceSnapshot"
  *
  * console.log(S.decodeUnknownSync(SnapshotDigest)("f".repeat(64)))
  * ```
@@ -92,7 +92,7 @@ export type SnapshotDigest = typeof SnapshotDigest.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SnapshotChannel } from "./ApiReferenceSnapshot.ts"
+ * import { SnapshotChannel } from "@beep/scratchpad/beep-docs/domain/ApiReferenceSnapshot"
  *
  * const pin = S.decodeUnknownSync(SnapshotChannel)({ revision: "0".repeat(40) })
  * console.log(pin.revision)
@@ -117,7 +117,7 @@ export class SnapshotChannel extends S.Class<SnapshotChannel>($I`SnapshotChannel
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SnapshotChannels } from "./ApiReferenceSnapshot.ts"
+ * import { SnapshotChannels } from "@beep/scratchpad/beep-docs/domain/ApiReferenceSnapshot"
  *
  * const channels = S.decodeUnknownSync(SnapshotChannels)({
  *   v3: { revision: "0".repeat(40) },
@@ -146,7 +146,7 @@ export class SnapshotChannels extends S.Class<SnapshotChannels>($I`SnapshotChann
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiReferenceSnapshotManifest } from "./ApiReferenceSnapshot.ts"
+ * import { ApiReferenceSnapshotManifest } from "@beep/scratchpad/beep-docs/domain/ApiReferenceSnapshot"
  *
  * const manifest = S.decodeUnknownSync(ApiReferenceSnapshotManifest)({
  *   schemaVersion: 1,

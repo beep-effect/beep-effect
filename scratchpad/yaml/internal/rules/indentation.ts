@@ -3,6 +3,8 @@
  * reasons about structure rather than a token and its neighbours, built
  * last by design. Two checks:
  *
+ * **Details**
+ *
  *   1. Every new block level indents by the same unit (`spaces`: a number,
  *      or "consistent" — the first observed delta decides).
  *   2. Sequences under a mapping key follow one policy (`indentSequences`:

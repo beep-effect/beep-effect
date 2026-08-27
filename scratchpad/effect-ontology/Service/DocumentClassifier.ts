@@ -94,7 +94,6 @@ export const DocumentClassification = S.Struct({
 /**
  * Describes the document classification data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -146,7 +145,6 @@ export const BatchClassificationResponse = S.Struct({
 /**
  * Describes the batch classification response data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -183,7 +181,6 @@ export const ClassifyInput = S.Struct({
 );
 /**
  * Describes the classify input data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -228,7 +225,6 @@ export const ClassifyBatchInput = S.Struct({
 );
 /**
  * Describes the classify batch input data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -386,11 +382,12 @@ export const defaultClassification: DocumentClassification = {
  *
  * ```ts
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  * import { DocumentClassifier } from "@effect-ontology/Service/DocumentClassifier"
  *
  * const program = Effect.gen(function* () {
  *   const classifier = yield* DocumentClassifier
- *   return yield* classifier.classify({ preview: "Ada founded Acme in 1843." })
+ *   return yield* classifier.classify({ preview: "Ada founded Acme in 1843.", contentType: O.none() })
  * }).pipe(Effect.provide(DocumentClassifier.Default))
  *
  * console.log(program)

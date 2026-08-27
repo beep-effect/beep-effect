@@ -37,7 +37,7 @@ const NonNegativeInt = S.Int.check(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiChannel } from "./ApiReference.ts"
+ * import { ApiChannel } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const channel = S.decodeUnknownSync(ApiChannel)("v4")
  * console.log(channel) // "v4"
@@ -75,7 +75,7 @@ export type ApiChannel = typeof ApiChannel.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TypedocSchemaVersion } from "./ApiReference.ts"
+ * import { TypedocSchemaVersion } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * console.log(S.decodeUnknownSync(TypedocSchemaVersion)("2.0"))
  * ```
@@ -104,7 +104,7 @@ export type TypedocSchemaVersion = typeof TypedocSchemaVersion.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { PackageSlug } from "./ApiReference.ts"
+ * import { PackageSlug } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * console.log(S.decodeUnknownSync(PackageSlug)("platform-node"))
  * ```
@@ -147,7 +147,7 @@ export type PackageSlug = typeof PackageSlug.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { PackageSlugFromPackageName } from "./ApiReference.ts"
+ * import { PackageSlugFromPackageName } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * console.log(S.decodeUnknownSync(PackageSlugFromPackageName)("@effect/platform-node"))
  * // "platform-node"
@@ -181,7 +181,7 @@ export type PackageSlugFromPackageName = typeof PackageSlugFromPackageName.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ModulePath } from "./ApiReference.ts"
+ * import { ModulePath } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * console.log(S.decodeUnknownSync(ModulePath)("unstable/http/HttpClient"))
  * ```
@@ -225,7 +225,7 @@ const exportPathFromModulePath = (modulePath: string): string =>
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ModulePathFromExportPath } from "./ApiReference.ts"
+ * import { ModulePathFromExportPath } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const modulePath = S.decodeUnknownSync(ModulePathFromExportPath)(".")
  * console.log(modulePath) // "index"
@@ -261,7 +261,7 @@ export type ModulePathFromExportPath = typeof ModulePathFromExportPath.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiReferenceEntry } from "./ApiReference.ts"
+ * import { ApiReferenceEntry } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const entry = S.decodeUnknownSync(ApiReferenceEntry)({
  *   version: "v4",
@@ -334,7 +334,7 @@ const isProjectReflectionShape = S.is(ProjectReflectionShape);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TypeDocProjectReflection } from "./ApiReference.ts"
+ * import { TypeDocProjectReflection } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const project = S.decodeUnknownSync(TypeDocProjectReflection)({
  *   schemaVersion: "2.0",
@@ -374,7 +374,7 @@ export type TypeDocProjectReflection = JSONOutput.ProjectReflection;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TypeDocProjectReflectionFromJsonString } from "./ApiReference.ts"
+ * import { TypeDocProjectReflectionFromJsonString } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const json = '{"schemaVersion":"2.0","variant":"project","id":1,"name":"effect","kind":1,"flags":{}}'
  * console.log(S.decodeUnknownSync(TypeDocProjectReflectionFromJsonString)(json).name)
@@ -407,7 +407,7 @@ const utf8Encoder = new TextEncoder();
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Utf8TextFromBytes } from "./ApiReference.ts"
+ * import { Utf8TextFromBytes } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * console.log(S.decodeUnknownSync(Utf8TextFromBytes)(new Uint8Array([104, 105]))) // "hi"
  * ```
@@ -441,7 +441,7 @@ export type Utf8TextFromBytes = typeof Utf8TextFromBytes.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TypeDocProjectReflectionFromBytes } from "./ApiReference.ts"
+ * import { TypeDocProjectReflectionFromBytes } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const bytes = new TextEncoder().encode(
  *   '{"schemaVersion":"2.0","variant":"project","id":1,"name":"effect","kind":1,"flags":{}}'
@@ -474,7 +474,7 @@ export type TypeDocProjectReflectionFromBytes = typeof TypeDocProjectReflectionF
  * **Example** (Construct a package listing)
  *
  * ```ts
- * import { ApiReferenceDatasetPackage } from "./ApiReference.ts"
+ * import { ApiReferenceDatasetPackage } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const listing = new ApiReferenceDatasetPackage({
  *   name: "effect",
@@ -507,7 +507,7 @@ export class ApiReferenceDatasetPackage extends S.Class<ApiReferenceDatasetPacka
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiReferenceDatasetManifest } from "./ApiReference.ts"
+ * import { ApiReferenceDatasetManifest } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const manifest = S.decodeUnknownSync(ApiReferenceDatasetManifest)({
  *   datasetSchemaVersion: 1,
@@ -545,7 +545,7 @@ export class ApiReferenceDatasetManifest extends S.Class<ApiReferenceDatasetMani
  * **Example** (Construct a barrel)
  *
  * ```ts
- * import { ApiReferenceBarrel } from "./ApiReference.ts"
+ * import { ApiReferenceBarrel } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * console.log(new ApiReferenceBarrel({ export: ".", source: "src/index.ts" }).source)
  * ```
@@ -570,9 +570,10 @@ export class ApiReferenceBarrel extends S.Class<ApiReferenceBarrel>($I`ApiRefere
  * **Example** (Construct a module listing)
  *
  * ```ts
- * import { ApiReferenceModule } from "./ApiReference.ts"
+ * import * as S from "effect/Schema"
+ * import { ApiReferenceModule } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
- * const module = new ApiReferenceModule({
+ * const module = S.decodeSync(ApiReferenceModule)({
  *   export: "./Option",
  *   source: "src/Option.ts",
  *   json: "Option.json",
@@ -604,7 +605,7 @@ export class ApiReferenceModule extends S.Class<ApiReferenceModule>($I`ApiRefere
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiReferencePackageManifest } from "./ApiReference.ts"
+ * import { ApiReferencePackageManifest } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  *
  * const manifest = S.decodeUnknownSync(ApiReferencePackageManifest)({
  *   schemaVersion: 3,

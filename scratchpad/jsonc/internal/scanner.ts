@@ -1,6 +1,8 @@
 /**
  * JSONC scanner (lexer): converts a JSONC string into a stream of tokens.
  *
+ * **Details**
+ *
  * Private implementation, zero dependencies. There is no public tokenizer
  * surface — a `Stream<JsoncToken>` tokenizer is deferred until a consumer
  * materializes. Line/character tracking is intentionally dropped here: the

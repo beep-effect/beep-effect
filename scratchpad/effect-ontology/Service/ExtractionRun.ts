@@ -167,7 +167,6 @@ export class ExtractionRunError extends S.TaggedError<ExtractionRunError>($I`Ext
 /**
  * Describes the extraction run service methods data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -2,6 +2,8 @@
  * The `JsoncFingerprint` facade: canonical JSON serialization (RFC 8785, JSON
  * Canonicalization Scheme) and SHA-256 content fingerprints over it.
  *
+ * **Details**
+ *
  * The pure core is the JCS emitter — compact output, object keys sorted by
  * UTF-16 code units, ES number serialization — with the package's usual
  * `Result` primitive / spanned `Effect` twin arrangement. Hashing is the one
@@ -31,6 +33,8 @@ const $I = $ScratchpadId.create("jsonc/JsoncFingerprint");
 /**
  * The public canonicalize-error code vocabulary, appearing as the `code` field
  * of {@link JsoncCanonicalizeError}:
+ *
+ * **Details**
  *
  * - `UnrepresentableValue` — an `undefined`, function or symbol anywhere in
  *   the value. Unlike `Jsonc.stringify` (which follows `JSON.stringify`'s
@@ -160,6 +164,8 @@ export class JsoncCanonicalizeError extends Schema.TaggedError<JsoncCanonicalize
 /**
  * Options controlling {@link JsoncFingerprint.hashText}. All fields are
  * omissible.
+ *
+ * **Details**
  *
  * - `normalizeEol` — normalize `\r\n` and bare `\r` line endings to `\n`
  *   before hashing, so the same file content fingerprints identically across
@@ -359,12 +365,12 @@ const digestHex = (text: string): Effect.Effect<string, PlatformError.PlatformEr
  * Static entry points for canonical JSON serialization (RFC 8785, the JSON
  * Canonicalization Scheme) and SHA-256 content fingerprints. Not instantiable.
  *
+ * **Details**
+ *
  * Canonicalization is pure; the two hashing statics require core's
  * `Crypto.Crypto` service in `R` and own no backend — provide
  * `@effect/platform-node`'s `NodeCrypto.layer` (or any `Crypto` layer, e.g.
  * one built with `Crypto.make` over WebCrypto) at the application edge.
- *
- * **Details**
  *
  * `hash` and `hashText` require `Crypto.Crypto` in `R` and are not shown as
  * runnable examples here. Canonicalization is the pure core: equal JSON

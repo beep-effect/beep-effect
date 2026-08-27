@@ -312,7 +312,7 @@ const isAbsoluteUrlString = flow(S.decodeUnknownOption(S.URLFromString), O.isSom
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlYearString } from "./Microdata.model.ts"
+ * import { HtmlYearString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlYearString.decodeUnknownEffect("2024"))
  *
@@ -349,7 +349,7 @@ export type HtmlYearString = typeof HtmlYearString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlMonthString } from "./Microdata.model.ts"
+ * import { HtmlMonthString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlMonthString.decodeUnknownEffect("2024-02"))
  *
@@ -386,7 +386,7 @@ export type HtmlMonthString = typeof HtmlMonthString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlDateString } from "./Microdata.model.ts"
+ * import { HtmlDateString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlDateString.decodeUnknownEffect("2024-02-29"))
  *
@@ -423,7 +423,7 @@ export type HtmlDateString = typeof HtmlDateString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlYearlessDateString } from "./Microdata.model.ts"
+ * import { HtmlYearlessDateString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlYearlessDateString.decodeUnknownEffect("--02-29"))
  *
@@ -459,7 +459,7 @@ export type HtmlYearlessDateString = typeof HtmlYearlessDateString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlTimeString } from "./Microdata.model.ts"
+ * import { HtmlTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlTimeString.decodeUnknownEffect("12:30:45.125"))
  *
@@ -496,7 +496,7 @@ export type HtmlTimeString = typeof HtmlTimeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlLocalDateTimeString } from "./Microdata.model.ts"
+ * import { HtmlLocalDateTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlLocalDateTimeString.decodeUnknownEffect("2024-02-29 12:30"))
  *
@@ -535,7 +535,7 @@ export type HtmlLocalDateTimeString = typeof HtmlLocalDateTimeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlTimeZoneOffsetString } from "./Microdata.model.ts"
+ * import { HtmlTimeZoneOffsetString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlTimeZoneOffsetString.decodeUnknownEffect("+05:30"))
  *
@@ -570,7 +570,7 @@ export type HtmlTimeZoneOffsetString = typeof HtmlTimeZoneOffsetString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlGlobalDateTimeString } from "./Microdata.model.ts"
+ * import { HtmlGlobalDateTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlGlobalDateTimeString.decodeUnknownEffect("2024-02-29T12:30:45Z"))
  *
@@ -607,7 +607,7 @@ export type HtmlGlobalDateTimeString = typeof HtmlGlobalDateTimeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlWeekString } from "./Microdata.model.ts"
+ * import { HtmlWeekString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlWeekString.decodeUnknownEffect("2024-W01"))
  *
@@ -644,7 +644,7 @@ const HtmlDurationUnitBase = LiteralKit(["W", "D", "H", "M", "S"]);
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
- * import { HtmlDurationUnit } from "./Microdata.model.ts"
+ * import { HtmlDurationUnit } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(S.decodeUnknownEffect(HtmlDurationUnit)("H"))
  *
@@ -679,7 +679,7 @@ const htmlDurationUnit = flow(Str.toUpperCase, O.liftPredicate(S.is(HtmlDuration
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlIsoDurationString } from "./Microdata.model.ts"
+ * import { HtmlIsoDurationString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlIsoDurationString.decodeUnknownEffect("PT1H"))
  *
@@ -721,7 +721,7 @@ export type HtmlIsoDurationString = typeof HtmlIsoDurationString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlHumanDurationString } from "./Microdata.model.ts"
+ * import { HtmlHumanDurationString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlHumanDurationString.decodeUnknownEffect("1h 30m"))
  *
@@ -756,7 +756,7 @@ export type HtmlHumanDurationString = typeof HtmlHumanDurationString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlDurationString } from "./Microdata.model.ts"
+ * import { HtmlDurationString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlDurationString.decodeUnknownEffect("PT1H"))
  *
@@ -788,7 +788,7 @@ export type HtmlDurationString = typeof HtmlDurationString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlUrlTokenString } from "./Microdata.model.ts"
+ * import { HtmlUrlTokenString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlUrlTokenString.decodeUnknownEffect("/item"))
  *
@@ -830,7 +830,7 @@ export type HtmlUrlTokenString = typeof HtmlUrlTokenString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { HtmlUrlPotentiallySurroundedBySpaces } from "./Microdata.model.ts"
+ * import { HtmlUrlPotentiallySurroundedBySpaces } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(HtmlUrlPotentiallySurroundedBySpaces.decodeUnknownEffect("  /item  "))
  *
@@ -874,7 +874,7 @@ export type HtmlUrlPotentiallySurroundedBySpaces = typeof HtmlUrlPotentiallySurr
  *
  * ```ts
  * import { Effect } from "effect"
- * import { makeHtmlUrlFromString } from "./Microdata.model.ts"
+ * import { makeHtmlUrlFromString } from "@beep/scratchpad/microdata"
  *
  * const HtmlUrlFromString = makeHtmlUrlFromString(new URL("https://example.com/base/"))
  * const value = Effect.runSync(HtmlUrlFromString.decodeUnknownEffect("../item"))
@@ -908,7 +908,7 @@ export const makeHtmlUrlFromString = (base: URL) =>
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataSerializedUrlString } from "./Microdata.model.ts"
+ * import { MicrodataSerializedUrlString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataSerializedUrlString.decodeUnknownEffect("https://example.com/item"))
  *
@@ -950,7 +950,7 @@ export type MicrodataSerializedUrlString = typeof MicrodataSerializedUrlString.T
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataUrlFromString } from "./Microdata.model.ts"
+ * import { MicrodataUrlFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataUrlFromString.decodeUnknownEffect("https://example.com/item"))
  *
@@ -1102,7 +1102,7 @@ const formatHtmlDuration = (value: Duration.Duration): O.Option<string> =>
  *
  * ```ts
  * import { Duration } from "effect"
- * import { HtmlDurationValue } from "./Microdata.model.ts"
+ * import { HtmlDurationValue } from "@beep/scratchpad/microdata"
  *
  * console.log(HtmlDurationValue.is(Duration.seconds(1))) // true
  * ```
@@ -1152,7 +1152,7 @@ export type HtmlDurationValue = typeof HtmlDurationValue.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataDurationFromString } from "./Microdata.model.ts"
+ * import { MicrodataDurationFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataDurationFromString.decodeUnknownEffect("1h 30m"))
  * const encoded = Effect.runSync(MicrodataDurationFromString.encodeEffect(value))
@@ -1212,7 +1212,7 @@ const normalizeHtmlGlobalDateTime: (value: HtmlGlobalDateTimeString) => string =
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataDateTimeFromString } from "./Microdata.model.ts"
+ * import { MicrodataDateTimeFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataDateTimeFromString.decodeUnknownEffect("2024-02-29T12:30:45Z"))
  *
@@ -1250,7 +1250,7 @@ export type MicrodataDateTimeFromString = typeof MicrodataDateTimeFromString.Typ
  *
  * ```ts
  * import { Effect } from "effect"
- * import { XsdIntegerString } from "./Microdata.model.ts"
+ * import { XsdIntegerString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(XsdIntegerString.decodeUnknownEffect("+42"))
  *
@@ -1286,7 +1286,7 @@ export type XsdIntegerString = typeof XsdIntegerString.Type;
  * **Example** (Validate an arbitrary-precision integer)
  *
  * ```ts
- * import { XsdIntegerValue } from "./Microdata.model.ts"
+ * import { XsdIntegerValue } from "@beep/scratchpad/microdata"
  *
  * console.log(XsdIntegerValue.is(42n)) // true
  * ```
@@ -1319,7 +1319,7 @@ export type XsdIntegerValue = typeof XsdIntegerValue.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { XsdIntegerFromString } from "./Microdata.model.ts"
+ * import { XsdIntegerFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(XsdIntegerFromString.decodeUnknownEffect("+42"))
  *
@@ -1384,7 +1384,7 @@ const formatXsdDouble = Match.type<number>().pipe(
  *
  * ```ts
  * import { Effect } from "effect"
- * import { XsdDoubleString } from "./Microdata.model.ts"
+ * import { XsdDoubleString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(XsdDoubleString.decodeUnknownEffect("1.25E2"))
  *
@@ -1429,7 +1429,7 @@ export type XsdDoubleString = typeof XsdDoubleString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { XsdDoubleFromString } from "./Microdata.model.ts"
+ * import { XsdDoubleFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(XsdDoubleFromString.decodeUnknownEffect("1.25E2"))
  * const encoded = Effect.runSync(XsdDoubleFromString.encodeEffect(value))
@@ -1469,7 +1469,7 @@ export type XsdDoubleFromString = typeof XsdDoubleFromString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataNumericValueFromString } from "./Microdata.model.ts"
+ * import { MicrodataNumericValueFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataNumericValueFromString.decodeUnknownEffect("42"))
  *
@@ -1515,7 +1515,7 @@ const MicrodataNonNumericString = S.String.check(
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataDataValueFromString } from "./Microdata.model.ts"
+ * import { MicrodataDataValueFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataDataValueFromString.decodeUnknownEffect("plain text"))
  *
@@ -1560,7 +1560,7 @@ const xsdDateTimeFromHtmlPattern =
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataXsdDateString } from "./Microdata.model.ts"
+ * import { MicrodataXsdDateString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataXsdDateString.decodeUnknownEffect("2024-02-29"))
  *
@@ -1597,7 +1597,7 @@ export type MicrodataXsdDateString = typeof MicrodataXsdDateString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataXsdYearMonthString } from "./Microdata.model.ts"
+ * import { MicrodataXsdYearMonthString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataXsdYearMonthString.decodeUnknownEffect("2024-02"))
  *
@@ -1638,7 +1638,7 @@ export type MicrodataXsdYearMonthString = typeof MicrodataXsdYearMonthString.Typ
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataXsdYearString } from "./Microdata.model.ts"
+ * import { MicrodataXsdYearString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataXsdYearString.decodeUnknownEffect("2024"))
  *
@@ -1675,7 +1675,7 @@ export type MicrodataXsdYearString = typeof MicrodataXsdYearString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataXsdTimeString } from "./Microdata.model.ts"
+ * import { MicrodataXsdTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataXsdTimeString.decodeUnknownEffect("12:30:45"))
  *
@@ -1715,7 +1715,7 @@ const isMicrodataXsdDateTime = (value: string): boolean =>
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataXsdDateTimeString } from "./Microdata.model.ts"
+ * import { MicrodataXsdDateTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataXsdDateTimeString.decodeUnknownEffect("2024-02-29T12:30:45Z"))
  *
@@ -1761,7 +1761,7 @@ export type MicrodataXsdDateTimeString = typeof MicrodataXsdDateTimeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataRdfTimeValueFromString } from "./Microdata.model.ts"
+ * import { MicrodataRdfTimeValueFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataRdfTimeValueFromString.decodeUnknownEffect("2024-02-29"))
  *
@@ -1808,7 +1808,7 @@ export type MicrodataRdfTimeValueFromString = typeof MicrodataRdfTimeValueFromSt
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataRuntimeValueFromString } from "./Microdata.model.ts"
+ * import { MicrodataRuntimeValueFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataRuntimeValueFromString.decodeUnknownEffect("PT1H"))
  *
@@ -1943,7 +1943,7 @@ const VCardValueTypeBase = LiteralKit([
  * ```ts
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
- * import { VCardValueType } from "./Microdata.model.ts"
+ * import { VCardValueType } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(S.decodeUnknownEffect(VCardValueType)("text"))
  *
@@ -1979,7 +1979,7 @@ const isVCardPredefinedValueType = flow(Str.toLowerCase, S.is(VCardValueType));
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardValueTypeString } from "./Microdata.model.ts"
+ * import { VCardValueTypeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardValueTypeString.decodeUnknownEffect("TEXT"))
  *
@@ -2017,7 +2017,7 @@ export type VCardValueTypeString = typeof VCardValueTypeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardValueTypeFromString } from "./Microdata.model.ts"
+ * import { VCardValueTypeFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardValueTypeFromString.decodeUnknownEffect("TEXT"))
  *
@@ -2055,7 +2055,7 @@ export type VCardValueTypeFromString = typeof VCardValueTypeFromString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardIanaValueTypeString } from "./Microdata.model.ts"
+ * import { VCardIanaValueTypeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardIanaValueTypeString.decodeUnknownEffect("vendor-token"))
  *
@@ -2098,7 +2098,7 @@ export type VCardIanaValueTypeString = typeof VCardIanaValueTypeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardExperimentalValueTypeString } from "./Microdata.model.ts"
+ * import { VCardExperimentalValueTypeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardExperimentalValueTypeString.decodeUnknownEffect("x-example"))
  *
@@ -2138,7 +2138,7 @@ export type VCardExperimentalValueTypeString = typeof VCardExperimentalValueType
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardDeclaredValueTypeString } from "./Microdata.model.ts"
+ * import { VCardDeclaredValueTypeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardDeclaredValueTypeString.decodeUnknownEffect("text"))
  *
@@ -2176,7 +2176,7 @@ export type VCardDeclaredValueTypeString = typeof VCardDeclaredValueTypeString.T
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardTextString } from "./Microdata.model.ts"
+ * import { VCardTextString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardTextString.decodeUnknownEffect("hello\\, world"))
  *
@@ -2210,7 +2210,7 @@ export type VCardTextString = typeof VCardTextString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardUriString } from "./Microdata.model.ts"
+ * import { VCardUriString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardUriString.decodeUnknownEffect("urn:example:item"))
  *
@@ -2244,7 +2244,7 @@ export type VCardUriString = typeof VCardUriString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardDateString } from "./Microdata.model.ts"
+ * import { VCardDateString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardDateString.decodeUnknownEffect("20240229"))
  *
@@ -2282,7 +2282,7 @@ export type VCardDateString = typeof VCardDateString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardTimeString } from "./Microdata.model.ts"
+ * import { VCardTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardTimeString.decodeUnknownEffect("123045Z"))
  *
@@ -2318,7 +2318,7 @@ export type VCardTimeString = typeof VCardTimeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardDateTimeString } from "./Microdata.model.ts"
+ * import { VCardDateTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardDateTimeString.decodeUnknownEffect("20240229T123045Z"))
  *
@@ -2357,7 +2357,7 @@ const isVCardDateAndOrTime = (value: string): boolean =>
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardDateAndOrTimeString } from "./Microdata.model.ts"
+ * import { VCardDateAndOrTimeString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardDateAndOrTimeString.decodeUnknownEffect("T123045Z"))
  *
@@ -2391,7 +2391,7 @@ export type VCardDateAndOrTimeString = typeof VCardDateAndOrTimeString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardTimestampString } from "./Microdata.model.ts"
+ * import { VCardTimestampString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardTimestampString.decodeUnknownEffect("20240229T123045Z"))
  *
@@ -2425,7 +2425,7 @@ export type VCardTimestampString = typeof VCardTimestampString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardZonedTimestampString } from "./Microdata.model.ts"
+ * import { VCardZonedTimestampString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardZonedTimestampString.decodeUnknownEffect("20240229T123045Z"))
  *
@@ -2466,7 +2466,7 @@ export type VCardZonedTimestampString = typeof VCardZonedTimestampString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardBooleanString } from "./Microdata.model.ts"
+ * import { VCardBooleanString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardBooleanString.decodeUnknownEffect("true"))
  *
@@ -2503,7 +2503,7 @@ export type VCardBooleanString = typeof VCardBooleanString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardIntegerString } from "./Microdata.model.ts"
+ * import { VCardIntegerString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardIntegerString.decodeUnknownEffect("+42"))
  *
@@ -2537,7 +2537,7 @@ export type VCardIntegerString = typeof VCardIntegerString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardFloatString } from "./Microdata.model.ts"
+ * import { VCardFloatString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardFloatString.decodeUnknownEffect("12.50"))
  *
@@ -2572,7 +2572,7 @@ export type VCardFloatString = typeof VCardFloatString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardUtcOffsetString } from "./Microdata.model.ts"
+ * import { VCardUtcOffsetString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardUtcOffsetString.decodeUnknownEffect("+0530"))
  *
@@ -2607,7 +2607,7 @@ export type VCardUtcOffsetString = typeof VCardUtcOffsetString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardLanguageTagString } from "./Microdata.model.ts"
+ * import { VCardLanguageTagString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardLanguageTagString.decodeUnknownEffect("en-US"))
  *
@@ -2645,7 +2645,7 @@ export type VCardLanguageTagString = typeof VCardLanguageTagString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardBooleanFromString } from "./Microdata.model.ts"
+ * import { VCardBooleanFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardBooleanFromString.decodeUnknownEffect("true"))
  * const encoded = Effect.runSync(VCardBooleanFromString.encodeEffect(value))
@@ -2689,7 +2689,7 @@ export type VCardBooleanFromString = typeof VCardBooleanFromString.Type;
  * **Example** (Validate a vCard integer)
  *
  * ```ts
- * import { VCardIntegerValue } from "./Microdata.model.ts"
+ * import { VCardIntegerValue } from "@beep/scratchpad/microdata"
  *
  * console.log(VCardIntegerValue.is(42n)) // true
  * ```
@@ -2728,7 +2728,7 @@ export type VCardIntegerValue = typeof VCardIntegerValue.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardIntegerFromString } from "./Microdata.model.ts"
+ * import { VCardIntegerFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardIntegerFromString.decodeUnknownEffect("+42"))
  *
@@ -2771,7 +2771,7 @@ export type VCardIntegerFromString = typeof VCardIntegerFromString.Type;
  *
  * ```ts
  * import { BigDecimal } from "effect"
- * import { VCardFloatValue } from "./Microdata.model.ts"
+ * import { VCardFloatValue } from "@beep/scratchpad/microdata"
  *
  * console.log(VCardFloatValue.is(BigDecimal.make(125n, 2))) // true
  * ```
@@ -2824,7 +2824,7 @@ export type VCardFloatValue = typeof VCardFloatValue.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardFloatFromString } from "./Microdata.model.ts"
+ * import { VCardFloatFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardFloatFromString.decodeUnknownEffect("12.50"))
  *
@@ -2913,7 +2913,7 @@ const formatVCardUtcOffset = (value: Duration.Duration): O.Option<string> =>
  *
  * ```ts
  * import { Duration } from "effect"
- * import { VCardUtcOffsetValue } from "./Microdata.model.ts"
+ * import { VCardUtcOffsetValue } from "@beep/scratchpad/microdata"
  *
  * console.log(VCardUtcOffsetValue.is(Duration.minutes(330))) // true
  * ```
@@ -2961,7 +2961,7 @@ export type VCardUtcOffsetValue = typeof VCardUtcOffsetValue.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardUtcOffsetFromString } from "./Microdata.model.ts"
+ * import { VCardUtcOffsetFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardUtcOffsetFromString.decodeUnknownEffect("+05"))
  * const encoded = Effect.runSync(VCardUtcOffsetFromString.encodeEffect(value))
@@ -3035,7 +3035,7 @@ const isWholeSecondDateTimeUtc = (value: DateTime.Utc): boolean => DateTime.toEp
  *
  * ```ts
  * import { DateTime } from "effect"
- * import { VCardTimestampValue } from "./Microdata.model.ts"
+ * import { VCardTimestampValue } from "@beep/scratchpad/microdata"
  *
  * console.log(VCardTimestampValue.is(DateTime.makeUnsafe("2024-02-29T12:30:45.000Z"))) // true
  * ```
@@ -3082,7 +3082,7 @@ export type VCardTimestampValue = typeof VCardTimestampValue.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardTimestampFromString } from "./Microdata.model.ts"
+ * import { VCardTimestampFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardTimestampFromString.decodeUnknownEffect("20240229T123045Z"))
  *
@@ -3127,7 +3127,7 @@ export type VCardTimestampFromString = typeof VCardTimestampFromString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardUrlFromString } from "./Microdata.model.ts"
+ * import { VCardUrlFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardUrlFromString.decodeUnknownEffect("https://example.com/item"))
  *
@@ -3170,7 +3170,7 @@ export type VCardUrlFromString = typeof VCardUrlFromString.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { MicrodataContextualValueFromString } from "./Microdata.model.ts"
+ * import { MicrodataContextualValueFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(MicrodataContextualValueFromString.decodeUnknownEffect({ _tag: "TextProperty", value: "plain text" }))
  *
@@ -3223,7 +3223,7 @@ export type MicrodataContextualValueFromString = typeof MicrodataContextualValue
  *
  * ```ts
  * import { Effect } from "effect"
- * import { VCardTypedScalarFromString } from "./Microdata.model.ts"
+ * import { VCardTypedScalarFromString } from "@beep/scratchpad/microdata"
  *
  * const value = Effect.runSync(VCardTypedScalarFromString.decodeUnknownEffect({ _tag: "text", value: "plain text" }))
  *

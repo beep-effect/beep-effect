@@ -1,6 +1,8 @@
 /**
  * line-length: lines must not exceed the configured maximum.
  *
+ * **Details**
+ *
  * No fix — a line can only be shortened by reflowing content, and
  * reflowing is formatting, not fixing. Default `max` is 120 (kit-native,
  * not yamllint's).

@@ -8,9 +8,13 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Effect, FileSystem } from "effect";
+import { Crypto, Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
-import { ApiReferenceEntry, TypeDocProjectReflectionFromBytes } from "../domain/ApiReference.ts";
+import {
+  ApiReferenceEntry,
+  type TypeDocProjectReflection,
+  TypeDocProjectReflectionFromBytes,
+} from "../domain/ApiReference.ts";
 import { PathEscapesDataset, resolveWithinDataset } from "./DatasetPath.ts";
 
 const $I = $ScratchpadId.create("beep-docs/api-reference/Reflection");
@@ -21,7 +25,7 @@ const $I = $ScratchpadId.create("beep-docs/api-reference/Reflection");
  * **Example** (Read the default)
  *
  * ```ts
- * import { defaultBaseDirectory } from "./Reflection.ts"
+ * import { defaultBaseDirectory } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
  * console.log(defaultBaseDirectory) // ".data/api-reference"
  * ```
@@ -37,7 +41,7 @@ export const defaultBaseDirectory = ".data/api-reference";
  * **Example** (Use the default base directory)
  *
  * ```ts
- * import { ReflectionOptions } from "./Reflection.ts"
+ * import { ReflectionOptions } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
  * console.log(ReflectionOptions.make({}).baseDirectory) // ".data/api-reference"
  * ```
@@ -60,7 +64,7 @@ export class ReflectionOptions extends S.Class<ReflectionOptions>($I`ReflectionO
  * **Example** (Construct the error)
  *
  * ```ts
- * import { ReflectionReadFailed } from "./Reflection.ts"
+ * import { ReflectionReadFailed } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
  * console.log(ReflectionReadFailed.make({ path: "v4/effect/Option.json", cause: "ENOENT" })._tag)
  * ```
@@ -86,9 +90,11 @@ export class ReflectionReadFailed extends S.TaggedError<ReflectionReadFailed>($I
  * **Example** (Construct the error)
  *
  * ```ts
- * import { ReflectionDigestMismatch } from "./Reflection.ts"
+ * import * as S from "effect/Schema"
+ * import { ReflectionDigestMismatch } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
- * const error = ReflectionDigestMismatch.make({
+ * const error = S.decodeSync(ReflectionDigestMismatch)({
+ *   _tag: "ReflectionDigestMismatch",
  *   entryId: "v4/effect/Option",
  *   expected: "a".repeat(64),
  *   received: "b".repeat(64),
@@ -119,7 +125,7 @@ export class ReflectionDigestMismatch extends S.TaggedError<ReflectionDigestMism
  * **Example** (Construct the error)
  *
  * ```ts
- * import { ReflectionDecodeFailed } from "./Reflection.ts"
+ * import { ReflectionDecodeFailed } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
  * console.log(ReflectionDecodeFailed.make({ path: "v4/effect/Option.json", cause: "not json" })._tag)
  * ```
@@ -144,7 +150,7 @@ export class ReflectionDecodeFailed extends S.TaggedError<ReflectionDecodeFailed
  * **Example** (Branch on the failure)
  *
  * ```ts
- * import { LoadReflectionError, ReflectionReadFailed } from "./Reflection.ts"
+ * import { LoadReflectionError, ReflectionReadFailed } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
  * const error = ReflectionReadFailed.make({ path: "v4/effect/Option.json", cause: "ENOENT" })
  * const describe = LoadReflectionError.match({
@@ -199,8 +205,8 @@ const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.
  * import { BunServices } from "@effect/platform-bun"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
- * import { ApiReferenceEntry } from "../domain/ApiReference.ts"
- * import { loadReflection, ReflectionOptions } from "./Reflection.ts"
+ * import { ApiReferenceEntry } from "@beep/scratchpad/beep-docs/domain/ApiReference"
+ * import { loadReflection, ReflectionOptions } from "@beep/scratchpad/beep-docs/api-reference/Reflection"
  *
  * const entry = S.decodeUnknownSync(ApiReferenceEntry)({
  *   version: "v4",
@@ -233,10 +239,12 @@ const entryId = (entry: ApiReferenceEntry): string => `${entry.version}/${entry.
  * @category utilities
  * @since 0.0.0
  */
-export const loadReflection = Effect.fn("Reflection.loadReflection")(function* (
+export const loadReflection: (
   entry: ApiReferenceEntry,
-  options: ReflectionOptions = ReflectionOptions.make({})
-) {
+  options?: ReflectionOptions
+) => Effect.Effect<TypeDocProjectReflection, LoadReflectionError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "Reflection.loadReflection"
+)(function* (entry: ApiReferenceEntry, options: ReflectionOptions = ReflectionOptions.make({})) {
   const fs = yield* FileSystem.FileSystem;
   const reflectionPath = yield* resolveWithinDataset(options.baseDirectory, entry.reflectionPath);
   const bytes = yield* fs

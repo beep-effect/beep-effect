@@ -13,6 +13,8 @@ const $I = $ScratchpadId.create("jsonl/LineSlice");
  * A single candidate line: its text, and where it lives in the source **in
  * bytes**.
  *
+ * **Details**
+ *
  * Every offset on this class is a UTF-8 byte offset, never a UTF-16 code-unit
  * index, because these values are cursors into a file: they are handed to
  * `FileSystem.stream`'s `offset` option and persisted across process restarts.

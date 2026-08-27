@@ -1,6 +1,8 @@
 /**
  * Raw composed-document records produced by the internal composer.
  *
+ * **Details**
+ *
  * The public `YamlDocument` class (a `Schema.Class` carrying materialized
  * `YamlDiagnostic` arrays) is built from this record by the facade; the
  * engine never constructs public classes, keeping the import arrow
@@ -43,6 +45,13 @@ export const RawDirective = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of internal YAML directive represented by its name and raw parameter strings.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RawDirective = typeof RawDirective.Type;
 
 /**
@@ -93,8 +102,8 @@ export const RawYamlDocument = Schema.Struct({
 	hasDocumentStart: Schema.Boolean,
 	hasDocumentEnd: Schema.Boolean,
 	/**
-	 * `true` when the `---` marker was followed by a tab in the source; the
-	 * canonical stringifier emits a `...` terminator for this shape.
+ * `true` when the `---` marker was followed by a tab in the source; the
+ * canonical stringifier emits a `...` terminator for this shape.
 	 */
 	hasDocumentStartTab: Schema.Boolean,
 }).pipe(
@@ -103,4 +112,11 @@ export const RawYamlDocument = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of internal composed YAML document with raw diagnostics, directives, framing and optional comments.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RawYamlDocument = typeof RawYamlDocument.Type;

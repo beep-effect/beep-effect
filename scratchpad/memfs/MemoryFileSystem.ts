@@ -2,6 +2,8 @@
  * In-memory `FileSystem` test double: seed a volume, inject faults, and inspect
  * what a program wrote — a kit facade over the vendored engine.
  *
+ * **Details**
+ *
  * Public constructors and layers live on {@link MemoryFileSystem}. This module
  * adds seeding, the delegate-by-default fault wrapper, and the synchronous
  * inspectable view; the engine itself stays in `internal/volume.ts`.
@@ -209,6 +211,8 @@ export interface MemoryFileSystemSyncFileSystem {
  * the same underlying volume — the value-level pair returned by
  * {@link MemoryFileSystem.makeInspectable} and
  * {@link MemoryFileSystem.makeInspectableWith}.
+ *
+ * **Details**
  *
  * Not a runtime schema: both fields are live behavioral services, not data
  * that can cross an encode/decode boundary.

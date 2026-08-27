@@ -2,6 +2,8 @@
  * The non-mutating text-edit vocabulary shared by the formatter and modifier:
  * `JsoncEdit`, `JsoncRange` and `JsoncFormattingOptions`.
  *
+ * **Details**
+ *
  * Edits describe replacements as `offset`/`length`/`content`; applying them in
  * reverse-offset order is byte-minimal and preserves comments and whitespace —
  * the core value proposition over `JSON.parse`/`JSON.stringify` round-trips.
@@ -61,6 +63,8 @@ export class JsoncRange extends Schema.Class<JsoncRange>($I`JsoncRange`)(
 
 /**
  * Options controlling JSONC formatting. All fields are omissible.
+ *
+ * **Details**
  *
  * - `tabSize` — the indent width in columns when `insertSpaces` is `true`.
  *   Defaults to `2`.

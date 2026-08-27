@@ -30,7 +30,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageExtractor");
 /**
  * Input for image extraction - can be JinaContent or raw markdown
  *
- *
  * **Example** (Use the ImageExtractionInput contract)
  *
  * ```ts

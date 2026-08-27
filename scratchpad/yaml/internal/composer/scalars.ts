@@ -4,6 +4,8 @@
  * CST-scanning helpers those routines share with the block/flow/document
  * seams.
  *
+ * **Details**
+ *
  * Placed here because this is the lowest seam that uses them — everything
  * above already imports this module. `makeScalar` captures block-scalar
  * header comments (#341). `shouldPreserveRaw` keeps `0xFFEEBB` but not
@@ -167,6 +169,21 @@ interface ResolveScalarOptions {
 	readonly state?: ComposerState;
 }
 
+/**
+ * Resolves a raw scalar according to its YAML style and optional explicit tag.
+ *
+ * **Example** (Resolve a plain hexadecimal scalar)
+ *
+ * ```ts
+ * import { resolveScalar } from "@beep/scratchpad/yaml/internal/composer/scalars"
+ *
+ * console.log(resolveScalar("0x10", { style: "plain" })) // 16
+ * ```
+ *
+ * @internal
+ * @category decoding
+ * @since 0.0.0
+ */
 export const resolveScalar: {
 	(rawValue: string, options: ResolveScalarOptions): unknown;
 	(options: ResolveScalarOptions): (rawValue: string) => unknown;
@@ -516,6 +533,26 @@ export function foldFlowLines(text: string): string {
  */
 type CollectedMultilineKey = { readonly value: string; readonly nextIdx: number };
 
+/**
+ * Collects a plain YAML mapping key from consecutive CST children.
+ *
+ * **Example** (Collect a scalar key)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { collectMultilineKey } from "@beep/scratchpad/yaml/internal/composer/scalars"
+ * import { CstNode } from "@beep/scratchpad/yaml/internal/cst"
+ *
+ * const nodes = S.decodeUnknownSync(S.Array(CstNode))([
+ *   { type: "flow-scalar", source: "name", offset: 0, length: 4 }
+ * ])
+ * console.log(collectMultilineKey(nodes, 0).value) // "name"
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const collectMultilineKey: {
 	(children: readonly CstNode[], startIdx: number): CollectedMultilineKey;
 	(startIdx: number): (children: readonly CstNode[]) => CollectedMultilineKey;
@@ -597,6 +634,8 @@ function skipChildrenOnLine(children: readonly CstNode[], startIdx: number, line
  * same value. Returns the folded scalar text and the index after the last
  * consumed child.
  *
+ * **Details**
+ *
  * A continuation scalar must:
  * - Be a plain flow-scalar (not quoted)
  * - NOT be followed by a value-sep (`:`) — that makes it a mapping key
@@ -631,6 +670,26 @@ type CollectedMultilineScalar = {
 	readonly endOffset: number;
 };
 
+/**
+ * Collects a plain YAML scalar and any valid continuation-line fragments.
+ *
+ * **Example** (Collect a one-line scalar)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { collectMultilinePlainScalar } from "@beep/scratchpad/yaml/internal/composer/scalars"
+ * import { CstNode } from "@beep/scratchpad/yaml/internal/cst"
+ *
+ * const nodes = S.decodeUnknownSync(S.Array(CstNode))([
+ *   { type: "flow-scalar", source: "hello", offset: 0, length: 5 }
+ * ])
+ * console.log(collectMultilinePlainScalar(nodes, 0).value) // "hello"
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const collectMultilinePlainScalar: {
 	(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): CollectedMultilineScalar;
 	(startIdx: number, minContinuationColumn?: number, sourceText?: string): (children: readonly CstNode[]) => CollectedMultilineScalar;
@@ -1038,6 +1097,27 @@ export const hasValueSepThroughPlainScalars: {
  */
 type ContentAtIndex = { readonly node: CstNode; readonly idx: number };
 
+/**
+ * Finds the next non-trivia CST child at or after the supplied index.
+ *
+ * **Example** (Skip a comment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { findNextContentInList } from "@beep/scratchpad/yaml/internal/composer/scalars"
+ * import { CstNode } from "@beep/scratchpad/yaml/internal/cst"
+ *
+ * const nodes = S.decodeUnknownSync(S.Array(CstNode))([
+ *   { type: "comment", source: "# note", offset: 0, length: 6 },
+ *   { type: "flow-scalar", source: "value", offset: 7, length: 5 }
+ * ])
+ * console.log(findNextContentInList(nodes, 0)?.node.source) // "value"
+ * ```
+ *
+ * @internal
+ * @category getters
+ * @since 0.0.0
+ */
 export const findNextContentInList: {
 	(children: readonly CstNode[], startIdx: number): ContentAtIndex | null;
 	(startIdx: number): (children: readonly CstNode[]) => ContentAtIndex | null;
@@ -1607,6 +1687,8 @@ export const makeScalar: {
  * Returns true when the scalar's source representation should be preserved
  * for canonical round-trip — i.e. the source form differs from `String(value)`
  * but resolves to the same value.
+ *
+ * **Details**
  *
  * Special-float values (NaN, +/-Infinity) are excluded: their canonical YAML
  * spelling is the lowercase `.inf` / `.nan` form per spec §10.3, so source

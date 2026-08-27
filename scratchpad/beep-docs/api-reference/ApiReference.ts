@@ -279,9 +279,10 @@ export class ApiCodeExample extends S.Class<ApiCodeExample>($I`ApiCodeExample`)(
  * **Example** (Construct a declaration)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ApiDeclaration } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
- * const declaration = ApiDeclaration.make({
+ * const declaration = S.decodeSync(ApiDeclaration)({
  *   anchor: "map",
  *   category: "Mapping",
  *   examples: [],
@@ -321,9 +322,10 @@ export class ApiDeclaration extends S.Class<ApiDeclaration>($I`ApiDeclaration`)(
  * **Example** (Construct a group)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ApiDeclarationGroup } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
- * const group = ApiDeclarationGroup.make({ declarations: [], name: "Mapping", slug: "category-mapping" })
+ * const group = S.decodeSync(ApiDeclarationGroup)({ declarations: [], name: "Mapping", slug: "category-mapping" })
  * console.log(group.slug)
  * ```
  *
@@ -517,7 +519,7 @@ const isTypeDocProjectReflection = S.is(TypeDocProjectReflection);
  * ```ts
  * import * as S from "effect/Schema"
  * import { ReflectionKind } from "typedoc"
- * import { TypeDocProjectReflection } from "../domain/ApiReference.ts"
+ * import { TypeDocProjectReflection } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  * import { moduleView } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const reflection = S.decodeUnknownSync(TypeDocProjectReflection)({
@@ -1065,7 +1067,7 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
  * ```ts
  * import * as S from "effect/Schema"
  * import { ReflectionKind } from "typedoc"
- * import { TypeDocProjectReflection } from "../domain/ApiReference.ts"
+ * import { TypeDocProjectReflection } from "@beep/scratchpad/beep-docs/domain/ApiReference"
  * import { codeExamples } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const reflection = S.decodeUnknownSync(TypeDocProjectReflection)({
@@ -1078,7 +1080,7 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
  *   comment: {
  *     summary: [
  *       { kind: "text", text: "**Example** (Add)\n\n" },
- *       { kind: "code", text: "```ts\nconsole.log(1 + 1)\n```" },
+ *       { kind: "code", text: "``" + "`ts\nconsole.log(1 + 1)\n" + "``" + "`" },
  *     ],
  *   },
  * })

@@ -2,6 +2,8 @@
  * document-start: the `---` marker at the head of the stream — required
  * (`present: true`, the default) or forbidden (`present: false`).
  *
+ * **Details**
+ *
  * Scope is the stream head only: `---` separators between documents are
  * structure — removing one would merge documents. Opt-in and absent from
  * both presets. Directives require `---`.

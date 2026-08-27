@@ -36,7 +36,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
 /**
  * Options for fetching URL content
  *
- *
  * **Example** (Use the FetchOptions contract)
  *
  * ```ts
@@ -83,16 +82,16 @@ export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
 /**
  * Response from Jina Reader API with parsed content
  *
- *
  * **Example** (Record a reader response)
  *
  * ```ts
+ * import { URLStr } from "@beep/schema/URL"
  * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
  * import { JinaResponse } from "@effect-ontology/Service/JinaReaderClient"
  *
  * const response = JinaResponse.make({
  *   content: JinaContent.make({
- *     url: "https://example.org/ada",
+ *     url: URLStr.make("https://example.org/ada"),
  *     title: "Ada Lovelace",
  *     content: "Ada founded Acme."
  *   })

@@ -13,6 +13,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/OutputStyle");
 /**
  * Runtime model for the YAML frontmatter of a Claude Code output-style file.
  *
+ * **Details**
+ *
  * Output styles influence response phrasing. All supported wire keys are
  * optional and decode to `Option`.
  *

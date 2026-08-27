@@ -2,6 +2,8 @@
  * comments-spacing: a `#` needs a space after it to read as prose, and a
  * trailing comment needs breathing room from the content before it.
  *
+ * **Details**
+ *
  * Own-line versus trailing is decided from token adjacency. A shebang
  * (`#!` at the very start of the stream) is exempt.
  *

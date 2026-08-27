@@ -2,6 +2,8 @@
  * `Plugin.define` + `Plugin.write` — the ergonomic builder for
  * Claude Code plugins.
  *
+ * **Details**
+ *
  * `Plugin.define` validates a plugin manifest and bundles it with the
  * component files (commands, agents, skills, output styles) plus
  * optional hooks/MCP inline configs. `Plugin.write` materializes a
@@ -845,6 +847,8 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
 
 /**
  * Materialize a `PluginDefinition` to a destination directory.
+ *
+ * **Details**
  *
  * The write order is deterministic: manifest first, then component
  * directories in the order `commands`, `agents`, `skills`,

@@ -85,7 +85,7 @@ export const DrizzleLive = CanonicalDrizzleLive;
  * import { Layer } from "effect"
  *
  * const withPg = Layer.provide(DrizzleLive, PgClientLive)
- * console.log(withPg !== PgClientLive) // true
+ * console.log(withPg)
  * ```
  *
  * @see {@link makeTestRepositoriesLayer} for an explicit host/port/password constructor.
@@ -136,7 +136,7 @@ export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(Da
  * ```ts
  * import { ClaimRepositoryLive, ConflictRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(ConflictRepositoryLive !== ClaimRepositoryLive) // true
+ * console.log(ConflictRepositoryLive)
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -153,7 +153,7 @@ export const ConflictRepositoryLive = ConflictRepository.Default.pipe(Layer.prov
  * ```ts
  * import { ArticleRepositoryLive, ClaimRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(ArticleRepositoryLive !== ClaimRepositoryLive) // true
+ * console.log(ArticleRepositoryLive)
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -174,7 +174,7 @@ export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provid
  * ```ts
  * import { ClaimRepositoryLive, EntityRegistryRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(EntityRegistryRepositoryLive !== ClaimRepositoryLive) // true
+ * console.log(EntityRegistryRepositoryLive)
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -195,7 +195,7 @@ export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pip
  * ```ts
  * import { ClaimRepositoryLive, EmbeddingRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(EmbeddingRepositoryLive !== ClaimRepositoryLive) // true
+ * console.log(EmbeddingRepositoryLive)
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.

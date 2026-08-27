@@ -51,7 +51,6 @@ export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError
 /**
  * Job processing statistics
  *
- *
  * **Example** (Create job processing statistics)
  *
  * ```ts

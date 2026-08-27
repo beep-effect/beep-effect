@@ -52,6 +52,8 @@ export type SubagentColor = typeof SubagentColor.Type;
 /**
  * Runtime model for the YAML frontmatter of a Claude Code subagent file.
  *
+ * **Details**
+ *
  * `name` and `description` remain required by the wire contract. Every
  * optional key decodes to `Option`.
  *

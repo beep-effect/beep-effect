@@ -26,6 +26,8 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  * concept in this package where serialized tag discrimination earns its
  * keep.
  *
+ * **Details**
+ *
  * The `type` field is the highest-precedence field that differs: `"major"`,
  * `"minor"`, `"patch"`, `"prerelease"` (only prerelease identifiers differ),
  * `"build"` (only build metadata differs) or `"none"`.
@@ -48,7 +50,7 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  *   const a = yield* SemVer.parse("1.2.3");
  *   const b = yield* SemVer.parse("2.0.0");
  *   const diff = VersionDiff.between(a, b);
- *   return [diff.type, diff.major] as const;
+ *   return [diff.type, diff.major];
  * });
  *
  * console.log(Effect.runSync(program));

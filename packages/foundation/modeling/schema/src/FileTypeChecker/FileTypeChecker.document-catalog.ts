@@ -14,6 +14,14 @@ type DocumentCatalog = { readonly [K in DocumentFileType]: FileTypeInfo & { read
 /**
  * Internal document metadata keyed by canonical extension.
  *
+ * **Example** (Read document metadata)
+ *
+ * ```ts
+ * import { documentCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.document-catalog"
+ *
+ * console.log(documentCatalog.doc.extension) // "doc"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

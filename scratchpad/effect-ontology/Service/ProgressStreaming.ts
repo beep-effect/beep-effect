@@ -95,7 +95,6 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
 /**
  * Progress builder state
  *
- *
  * **Example** (Start a four-chunk run)
  *
  * ```ts
@@ -895,7 +894,6 @@ export const setPhaseProgress = dual2(
 
 /**
  * Backpressure handler state
- *
  *
  * **Example** (Create an empty backpressure queue)
  *

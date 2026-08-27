@@ -1,6 +1,8 @@
 /**
  * Confined evaluator for parsed CodeMode programs.
  *
+ * **Details**
+ *
  * Host callers should prefer {@link executeWithLimits}, which constructs this
  * class, copies results out, and applies budgets. Direct `run` is the inner
  * evaluation loop used by that entry.

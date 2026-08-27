@@ -3,6 +3,8 @@
  * text, including the canonical-output logic exercised by the yaml-test-suite
  * byte-equality assertion family.
  *
+ * **Details**
+ *
  * Sync throughout; circular references throw `StringifyFailure` and nesting
  * overflow throws `StringifyDepthExceeded`. The public facade catches both
  * and materializes typed errors. Nothing in the engine imports the facade.
@@ -341,6 +343,8 @@ function hasNonAscii(s: string): boolean {
 
 /**
  * Renders a string scalar using double-quote style.
+ *
+ * **Details**
  *
  * When `canonical` is true, non-ASCII characters are escaped as `\uXXXX`
  * (or `\UXXXXXXXX` for supplementary plane) and C0 control characters use
@@ -1975,6 +1979,8 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 /**
  * Converts a JavaScript value into a YAML text string.
  *
+ * **Details**
+ *
  * Handles all primitive types, arrays, and plain objects. Special numbers
  * (`Infinity`, `-Infinity`, `NaN`) are rendered as `.inf`, `-.inf`, and
  * `.nan` respectively. Circular references throw {@link StringifyFailure}.
@@ -2017,6 +2023,8 @@ export const stringifyValue: {
 /**
  * Converts a composed YAML document AST into a YAML text string, preserving
  * the style metadata encoded in each AST node.
+ *
+ * **Details**
  *
  * Scalar nodes use their `style` field to control rendering; collection
  * nodes use their `style` field (`"block"` or `"flow"`). Nodes without an

@@ -1,3 +1,10 @@
+/**
+ * Stateful YAML scanner implementation used by the internal lexer pipeline.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { MutableHashMap } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -31,21 +38,21 @@ const LEXER_SIMPLE_ESCAPE_VALUES: Readonly<Record<string, string>> = {
 /**
  * A stateful YAML scanner that produces tokens one at a time.
  *
+ * **Details**
+ *
  * Provides a pull-based accessor API: call {@link YamlScanner.scan} to advance
  * to the next token, then use the `getToken*` methods to inspect the current
  * token without advancing again.
+ *
+ * This deliberately remains an interface: it is a stateful pull protocol
+ * with command and query methods, not a data record suitable for Schema
+ * decoding. The tokens it produces are schema-owned by `internal/token.ts`.
  *
  * **Gotchas**
  *
  * {@link YamlScanner.setPosition} resets indent/flow/pending-token state.
  * Pass an offset previously returned by {@link YamlScanner.getTokenOffset},
  * not an arbitrary mid-token position such as `indexOf(":")` inside a scalar.
- *
- * **Details**
- *
- * This deliberately remains an interface: it is a stateful pull protocol
- * with command and query methods, not a data record suitable for Schema
- * decoding. The tokens it produces are schema-owned by `internal/token.ts`.
  *
  * @see {@link createScanner} for the factory that constructs this scanner.
  * @internal
@@ -82,6 +89,8 @@ export interface YamlScanner {
 
 /**
  * Create a new YAML scanner for the given source text.
+ *
+ * **Details**
  *
  * Returns a stateful, pull-based scanner. Call {@link YamlScanner.scan} to
  * advance to the next token, then use `getToken*` methods to inspect it.
@@ -1478,6 +1487,8 @@ export function createScanner(text: string): YamlScanner {
 
 /**
  * Tokenize a YAML source string into an array of {@link YamlToken} records.
+ *
+ * **Details**
  *
  * Lexer errors are embedded as `"error"` tokens in the result; the downstream
  * parser/composer collects them and records diagnostics as needed.

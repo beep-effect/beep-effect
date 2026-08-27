@@ -1,6 +1,8 @@
 /**
  * Extglob AST compiler for nested `! ? + * @` operators.
  *
+ * **Details**
+ *
  * `#parseAST` has a structural depth backstop at `MAX_NESTING_DEPTH`
  * independent of `maxExtglobRecursion`. A long `@(@(@` chain that overflows
  * real minimatch 10.2.5 throws `NestingDepthExceeded`. Over-limit

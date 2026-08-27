@@ -1,6 +1,8 @@
 /**
  * Event definitions and the registry they form.
  *
+ * **Details**
+ *
  * Modeled on core's `effect/unstable/eventlog` `Event` — a tag plus a payload
  * schema, defined once and collected into a group — so a reader who knows that
  * module recognizes this one. The mechanism is ours; the vocabulary is theirs.
@@ -13,6 +15,8 @@ import type { Schema } from "effect";
 /**
  * The bound every registered payload schema must satisfy: a codec requiring
  * **no services** in either direction.
+ *
+ * **Details**
  *
  * This is a contract, not an implementation detail. The pure core decodes with
  * `Schema.decodeUnknownResult` and encodes with `Schema.encodeUnknownResult`,
@@ -72,6 +76,8 @@ export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
  * One event definition: a tag, the schema its `data` must satisfy, and the two
  * lifecycle markings.
  *
+ * **Details**
+ *
  * The type parameters are what make a registry more than a runtime list — the
  * literal `Tag`, the payload schema and the `terminal`/`reopen` flags all
  * survive into the derived envelope union, so `append` narrows on the tag and a
@@ -130,7 +136,7 @@ export interface JsonlEvent<
  *   data: S.Struct({ round: S.Number }),
  * })
  * const Unlinked = JsonlEvent.make("unlinked", { data: S.Void, terminal: true })
- * const registry = [MailReceived, Unlinked] as const satisfies JsonlEvent.Registry
+ * const registry = [MailReceived, Unlinked] satisfies JsonlEvent.Registry
  * const tag: JsonlEvent.Tag<typeof registry> = "unlinked"
  * console.log(tag) // "unlinked"
  * ```
@@ -219,6 +225,8 @@ export declare namespace JsonlEvent {
 /**
  * Defines an event.
  *
+ * **Details**
+ *
  * The `const` type parameters are load-bearing: they keep `"unlinked"` a
  * literal rather than widening it to `string`, and keep `terminal: true` a
  * literal `true`, so both survive into the derived envelope union where the
@@ -245,7 +253,7 @@ export declare namespace JsonlEvent {
  * })
  * const Unlinked = JsonlEvent.make("unlinked", { data: S.Void, terminal: true })
  * const Relinked = JsonlEvent.make("relinked", { data: S.Void, reopen: true })
- * const registry = [MailReceived, Unlinked, Relinked] as const satisfies JsonlEvent.Registry
+ * const registry = [MailReceived, Unlinked, Relinked] satisfies JsonlEvent.Registry
  *
  * console.log(MailReceived.tag) // "mail-received"
  * console.log(Unlinked.terminal) // true

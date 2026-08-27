@@ -4,6 +4,8 @@
  * uses the Effect `FileSystem` service and parses each line as an
  * unknown JSON value, returning a read-only array.
  *
+ * **Details**
+ *
  * This module requires a platform `FileSystem` layer to be provided by
  * the caller (e.g. `NodeFileSystem.layer` from
  * `@effect/platform-node-shared/NodeFileSystem`).
@@ -36,6 +38,8 @@ const JsonValue = S.fromJsonString(Unknown).pipe(
 /**
  * Read a Claude Code transcript file and return each JSONL line as a
  * parsed unknown value.
+ *
+ * **Details**
  *
  * Requires `FileSystem.FileSystem` in the environment.
  *

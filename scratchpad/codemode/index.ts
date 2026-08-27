@@ -11,10 +11,12 @@ export * as CodeMode from "./Codemode.service.ts";
 export { ToolError } from "./Codemode.tool-error.ts";
 export * as ToolRuntime from "./Codemode.tool-runtime.ts";
 export {
+  SearchEntry,
   searchSignature,
   ToolCall,
   ToolCallEnded,
   ToolCallStarted,
+  ToolCallSucceeded,
   ToolDescription,
   toolExpression,
 } from "./Codemode.tool-runtime.ts";

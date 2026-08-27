@@ -1,6 +1,8 @@
 /**
  * The pure, synchronous line layer of a JSONL journal.
  *
+ * **Details**
+ *
  * Nothing here touches `FileSystem`, builds an `Effect`, or needs a runtime —
  * a `PreToolUse` hook script reads the current state of a journal with one
  * call. That is a contract, not a convenience: a hook that had to construct an
@@ -19,6 +21,8 @@ const $I = $ScratchpadId.create("jsonl/Line");
 
 /**
  * A line that parsed as JSON, paired with the slice it came from.
+ *
+ * **Details**
  *
  * `value` is deliberately `unknown`: this layer knows JSON, not envelopes.
  * Validating `event`, `at`, `scope` and the registered payload schema is the
@@ -64,6 +68,8 @@ const isBlank = (line: LineSlice): boolean => line.text.trim() === "";
 
 /**
  * Splitting, parsing and corrupt-tail walk-back over JSONL text.
+ *
+ * **Details**
  *
  * Every operation is total and synchronous: it returns a value for every
  * input, including empty text, torn tails, and text that is not JSONL at all.

@@ -4,6 +4,8 @@
  * scalars, plus the whitespace analyses that decide when block styles cannot
  * represent a value faithfully.
  *
+ * **Details**
+ *
  * Width folding is best-effort and must not corrupt values. TAB is not a
  * control char in {@link isControlChar}.
  *
@@ -22,6 +24,8 @@ import { dual } from "effect/Function";
  * the leading indentation of continuation lines is absorbed as separation
  * whitespace. The original space at the break point is consumed, replaced by
  * the break, so no content whitespace is added or lost.
+ *
+ * **Details**
  *
  * Continuation lines are prefixed with `indent`. `indentAtStart` is the column
  * the first line begins at (its content is already `indentAtStart` columns in),
@@ -96,6 +100,8 @@ export const foldScalarLine: {
 /**
  * Apply {@link foldScalarLine} to an already-rendered scalar according to its
  * style, inferred from the leading character:
+ *
+ * **Details**
  *
  * - `|` block-literal — returned unchanged; literal blocks preserve bytes by
  *   definition and must never be folded.
@@ -271,6 +277,8 @@ export function hasNewlineSpacesTab(s: string): boolean {
 /**
  * Renders a multi-line value as a single-quoted scalar with proper fold encoding.
  *
+ * **Details**
+ *
  * Single-quoted scalars use line folding rules (YAML 1.2 §7.4): bare newlines
  * between non-empty lines fold to a space; empty lines preserve as literal
  * newlines. To round-trip a value with N consecutive literal newlines, the
@@ -365,6 +373,21 @@ interface BlockLiteralRenderOptions {
 	readonly explicitIndent?: number;
 }
 
+/**
+ * Renders a string with YAML block-literal syntax and explicit indentation policy.
+ *
+ * **Example** (Render one literal line)
+ *
+ * ```ts
+ * import { renderBlockLiteral } from "@beep/scratchpad/yaml/internal/fold"
+ *
+ * console.log(renderBlockLiteral("hello\n", { indent: "  ", preserveKeep: false }).startsWith("|")) // true
+ * ```
+ *
+ * @internal
+ * @category formatting
+ * @since 0.0.0
+ */
 export const renderBlockLiteral: {
 	(s: string, options: BlockLiteralRenderOptions): string;
 	(options: BlockLiteralRenderOptions): (s: string) => string;
@@ -420,6 +443,8 @@ export const renderBlockLiteral: {
 /**
  * Renders a string scalar using block folded style (greater-than `>`).
  *
+ * **Details**
+ *
  * In folded block scalars, a single newline between content lines is folded
  * into a space by the reader. To preserve a literal newline in the value,
  * the output must contain an empty line (double newline). Each empty line
@@ -445,6 +470,21 @@ interface BlockFoldedRenderOptions {
 	readonly explicitIndent?: number;
 }
 
+/**
+ * Renders a string with YAML block-folded syntax and explicit indentation policy.
+ *
+ * **Example** (Render one folded line)
+ *
+ * ```ts
+ * import { renderBlockFolded } from "@beep/scratchpad/yaml/internal/fold"
+ *
+ * console.log(renderBlockFolded("hello\n", { indent: "  " }).startsWith(">")) // true
+ * ```
+ *
+ * @internal
+ * @category formatting
+ * @since 0.0.0
+ */
 export const renderBlockFolded: {
 	(s: string, options: BlockFoldedRenderOptions): string;
 	(options: BlockFoldedRenderOptions): (s: string) => string;

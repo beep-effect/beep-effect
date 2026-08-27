@@ -64,7 +64,6 @@ export const CachedExtractionResult = S.Struct({
 /**
  * Describes the cached extraction result data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -94,7 +93,6 @@ export const DEFAULT_CACHE_DIR = "output/cache";
 
 /**
  * Describes the extraction cache service data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -220,7 +218,7 @@ export const ExtractionCacheLive = ExtractionCache.Default;
  * const program = Effect.gen(function* () {
  *   const cache = yield* ExtractionCache
  *   return yield* cache.get("ada")
- * }).pipe(Effect.provide(FileSystemExtractionCacheLive))
+ * }).pipe(Effect.provide(FileSystemExtractionCacheLive(".cache/extractions")))
  *
  * console.log(program)
  * ```

@@ -2,6 +2,8 @@
  * Value-level YAML 1.2 parsing, stringification, comment stripping, semantic
  * equality and schema factories.
  *
+ * **Details**
+ *
  * `Yaml` is a namespace of statics over the internal engine and the schema
  * layer — not itself a schema class. `parse`/`parseAll`/`stringify` and schema
  * decoding carry real typed error channels; `stripComments`/`equals`/
@@ -42,6 +44,8 @@ const $I = $ScratchpadId.create("yaml/Yaml");
  * resolve to `strict` `true`, `maxAliasCount` `100` (the alias-based
  * denial-of-service guard) and `uniqueKeys` `true` (duplicate mapping keys
  * are errors).
+ *
+ * **Details**
  *
  * Construct with the validated `YamlParseOptions.make({ ... })` static — the
  * kit convention (never `new`). Call sites that take a `YamlParseOptions`
@@ -85,6 +89,8 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
  * `indentSequences` `false`, `quoteStyle` `"single"`, `quoteCompat` absent
  * (no dialect-compat quoting), `finalNewline` `true` and `forceDefaultStyles`
  * `false`.
+ *
+ * **Details**
  *
  * `lineWidth` controls column-based scalar folding. The default `0` (and any
  * value `<= 0`) never wraps, emitting byte-identical output to the historic

@@ -187,17 +187,15 @@ export const makeAuthMiddleware = Effect.gen(function* () {
  * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  * import { ShutdownService } from "@effect-ontology/Runtime/Shutdown"
  *
- * const rejected = Effect.runSync(
- *   Effect.gen(function* () {
- *     const shutdown = yield* ShutdownService
- *     yield* shutdown.initiateShutdown
- *     const middleware = yield* makeShutdownMiddleware
- *     return yield* middleware(Effect.succeed(HttpServerResponse.empty())).pipe(
- *       Effect.catchTag("ShutdownError", (error) => Effect.succeed(error._tag))
- *     )
- *   }).pipe(Effect.provide(ShutdownService.Default))
- * )
- * console.log(rejected) // "ShutdownError"
+ * const rejected = Effect.gen(function* () {
+ *   const shutdown = yield* ShutdownService
+ *   yield* shutdown.initiateShutdown
+ *   const middleware = yield* makeShutdownMiddleware
+ *   return yield* middleware(Effect.succeed(HttpServerResponse.empty())).pipe(
+ *     Effect.catchTag("ShutdownError", (error) => Effect.succeed(error._tag))
+ *   )
+ * }).pipe(Effect.provide(ShutdownService.Default))
+ * console.log(Effect.isEffect(rejected)) // true
  * ```
  *
  * @category constructors

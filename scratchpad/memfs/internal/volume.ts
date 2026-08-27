@@ -2,6 +2,8 @@
  * Vendored in-memory `FileSystem` engine: an isolated POSIX volume behind
  * Effect's `FileSystem` service, with no host filesystem IO.
  *
+ * **Details**
+ *
  * Public callers should use {@link MemoryFileSystem} rather than this module.
  * Deliberate divergences from the pinned upstream — watch recursion, nesting
  * bounds, `access` ignoring mode, `copy` AlreadyExists path — are listed in

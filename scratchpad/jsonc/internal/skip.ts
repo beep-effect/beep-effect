@@ -1,6 +1,8 @@
 /**
  * Iterative bracket-balance skip shared by the parser, navigator and visitor.
  *
+ * **Details**
+ *
  * Counting `Open*`/`Close*` bracket depth over the flat token stream skips any
  * value — scalar or arbitrarily-nested collection — without recursing, so it
  * cannot overflow the stack on hostile deeply-nested input. Strings tokenize
@@ -40,6 +42,8 @@ export interface SkipCursor {
 /**
  * Iteratively consume the value beginning at the cursor's current token and
  * return its tight end offset (excludes trailing whitespace/comments).
+ *
+ * **Details**
  *
  * Malformed input can route a non-value token here — a value slot may actually
  * hold a container closer (e.g. `{"k":}`) or EOF. There is no value to skip:

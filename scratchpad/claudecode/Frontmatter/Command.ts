@@ -16,6 +16,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
 /**
  * Runtime model for the YAML frontmatter of a legacy slash-command file.
  *
+ * **Details**
+ *
  * Claude Code merged custom commands into skills, but files under `commands/`
  * still accept the same optional metadata and tool-policy keys. Every optional
  * wire key decodes to `Option`.

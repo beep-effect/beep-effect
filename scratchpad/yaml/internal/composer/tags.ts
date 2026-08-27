@@ -1,6 +1,8 @@
 /**
  * Tag-handle resolution and directive parsing local to a document.
  *
+ * **Details**
+ *
  * `parseDirective` lives here (not in `document.ts`) because
  * `validateTagHandlesInDocument` needs it and `document.ts` already imports
  * this module — the reverse import would be a cycle.
@@ -20,6 +22,8 @@ import type { ComposerState } from "./state.ts";
  * Resolve a tag shorthand using the document's %TAG directives.
  * For example, with `%TAG !! tag:example.com,2000:app/`, the tag `!!int`
  * resolves to `tag:example.com,2000:app/int`.
+ *
+ * **Details**
  *
  * Returns the resolved tag URI, or the original tag if no directive matches.
  *

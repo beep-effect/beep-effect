@@ -216,6 +216,9 @@ export const OntologyFilePath = S.TemplateLiteral([
     "OntologyFilePath",
     "Versioned Turtle ontology path keyed by namespace, ontology name, and complete content hash."
   ),
+  $I.annoteSchema("OntologyFilePath", {
+    description: "Versioned Turtle ontology path keyed by namespace, ontology name, and complete content hash.",
+  }),
   S.brand("OntologyFilePath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
@@ -281,6 +284,9 @@ export const OntologyManifestPath = S.TemplateLiteral([
   "/manifest.json",
 ]).pipe(
   annotateStoragePath("OntologyManifestPath", "Ontology manifest path used for latest-version resolution."),
+  $I.annoteSchema("OntologyManifestPath", {
+    description: "Ontology manifest path used for latest-version resolution.",
+  }),
   S.brand("OntologyManifestPath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
@@ -682,6 +688,7 @@ const RunMetadataPathParts = S.TemplateLiteralParser(["runs/", DocumentId, "/met
  */
 export const RunMetadataPath = S.TemplateLiteral(["runs/", DocumentId, "/metadata.json"]).pipe(
   annotateStoragePath("RunMetadataPath", "Extraction-run metadata path."),
+  $I.annoteSchema("RunMetadataPath", { description: "Extraction-run metadata path." }),
   S.brand("RunMetadataPath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
@@ -719,6 +726,7 @@ export type RunMetadataPath = typeof RunMetadataPath.Type;
  */
 export const RunInputPath = S.TemplateLiteral(["runs/", DocumentId, "/input/document.txt"]).pipe(
   annotateStoragePath("RunInputPath", "Extraction-run normalized input path."),
+  $I.annoteSchema("RunInputPath", { description: "Extraction-run normalized input path." }),
   S.brand("RunInputPath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
@@ -785,6 +793,9 @@ export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chun
   .check(RunChunkCanonicalIndexCheck)
   .pipe(
     annotateStoragePath("RunChunkPath", "Extraction-run chunk path with a canonical non-negative decimal index."),
+    $I.annoteSchema("RunChunkPath", {
+      description: "Extraction-run chunk path with a canonical non-negative decimal index.",
+    }),
     S.brand("RunChunkPath"),
     SchemaUtils.withCodecStatics,
     SchemaUtils.withStatics((schema) => ({
@@ -839,6 +850,9 @@ const RunOutputPathParts = S.TemplateLiteralParser(["runs/", DocumentId, "/outpu
  */
 export const RunOutputPath = S.TemplateLiteral(["runs/", DocumentId, "/outputs/", OutputFilename]).pipe(
   annotateStoragePath("RunOutputPath", "Extraction-run output path constrained to the registered artifact filenames."),
+  $I.annoteSchema("RunOutputPath", {
+    description: "Extraction-run output path constrained to the registered artifact filenames.",
+  }),
   S.brand("RunOutputPath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
@@ -1045,6 +1059,9 @@ export const ImageVariantPath = S.TemplateLiteral([
   ".jpg",
 ]).pipe(
   annotateStoragePath("ImageVariantPath", "Content-addressed derived JPEG image variant path."),
+  $I.annoteSchema("ImageVariantPath", {
+    description: "Content-addressed derived JPEG image variant path.",
+  }),
   S.brand("ImageVariantPath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
@@ -1137,6 +1154,9 @@ export type ImageManifestPath = typeof ImageManifestPath.Type;
  */
 export const CanonicalNamespacePath = S.TemplateLiteral(["canonical/", Namespace, "/entities.ttl"]).pipe(
   annotateStoragePath("CanonicalNamespacePath", "Namespace-level canonical entities graph path."),
+  $I.annoteSchema("CanonicalNamespacePath", {
+    description: "Namespace-level canonical entities graph path.",
+  }),
   S.brand("CanonicalNamespacePath"),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({

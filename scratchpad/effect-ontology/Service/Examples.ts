@@ -50,7 +50,6 @@ const SimilarityThreshold = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 
 /**
  * Combined error type for examples service operations
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -95,7 +94,6 @@ export type ExtractionStage = typeof ExtractionStage.Type;
 /**
  * Options for stage-based retrieval
  *
- *
  * **Example** (Use the StageRetrievalOptions contract)
  *
  * ```ts
@@ -128,7 +126,6 @@ export class StageRetrievalOptions extends S.Class<StageRetrievalOptions>($I`Sta
 /**
  * Retrieved examples for a stage
  *
- *
  * **Example** (Use the StageExamples contract)
  *
  * ```ts
@@ -153,7 +150,6 @@ export class StageExamples extends S.Class<StageExamples>($I`StageExamples`)(
 
 /**
  * Example statistics
- *
  *
  * **Example** (Use the ExampleStats contract)
  *

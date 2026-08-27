@@ -1,6 +1,8 @@
 /**
  * The JSONL error taxonomy.
  *
+ * **Details**
+ *
  * Every tag names a distinct recovery a caller would actually make, and every
  * cause is carried structurally rather than stringified. Core's `PlatformError`
  * passes through untranslated rather than being wrapped.
@@ -27,6 +29,8 @@ const SchemaErrorFromSelf = Schema.declare(Schema.isSchemaError);
 
 /**
  * A journal line that is not valid JSON.
+ *
+ * **Details**
  *
  * This is the expected steady state at the tail of a live journal, not
  * necessarily corruption: a writer caught mid-`write` leaves a partial final
@@ -81,6 +85,8 @@ export class MalformedLine extends Schema.TaggedError<MalformedLine>($I`Malforme
 /**
  * A line whose `event` tag is not in the registry.
  *
+ * **Details**
+ *
  * Typed rather than a defect on purpose: a journal written by an older or newer
  * version of the same application is hostile input in the technical sense, and
  * a reader that crashed on an unrecognized tag would be unable to skip forward
@@ -128,6 +134,8 @@ export class UnknownEvent extends Schema.TaggedError<UnknownEvent>($I`UnknownEve
 
 /**
  * A line whose envelope or payload failed schema validation.
+ *
+ * **Details**
  *
  * Covers both stages of the two-stage decode, distinguished by `event`: the
  * frame itself (`Option.none()` — the line is JSON but not an envelope) and a
@@ -199,6 +207,8 @@ export class InvalidData extends Schema.TaggedError<InvalidData>($I`InvalidData`
 /**
  * An append attempted after a terminal event, by an event not marked `reopen`.
  *
+ * **Details**
+ *
  * A journal whose tail is terminal is quiescent: it is finished, and appending
  * to it would silently resurrect a closed loop. Reopening is legal but must be
  * declared, which is what `reopen` marks.
@@ -245,6 +255,8 @@ export class TerminalViolation extends Schema.TaggedError<TerminalViolation>($I`
 /**
  * An operation against a journal file that does not exist.
  *
+ * **Details**
+ *
  * A missing journal is a **legal state** — building the layer over a path that
  * does not exist yet succeeds, and the watcher activates once the file appears.
  * What is not legal is materializing it implicitly: `append`, `query` and
@@ -284,6 +296,8 @@ export class JournalNotFound extends Schema.TaggedError<JournalNotFound>($I`Jour
 
 /**
  * A payload that validated against its schema but cannot be serialized to JSON.
+ *
+ * **Details**
  *
  * The two reachable causes are a `bigint` anywhere in the encoded value and a
  * reference cycle; `JSON.stringify` throws a `TypeError` for both. A payload
@@ -345,6 +359,8 @@ export class UnserializableData extends Schema.TaggedError<UnserializableData>($
 /**
  * An append refused because the journal's scope has closed.
  *
+ * **Details**
+ *
  * Its own tag rather than a flavour of {@link TerminalViolation}, because the
  * recoveries have nothing in common: a terminal journal is a *state* the
  * consumer can reason about and reopen from with a `reopen` event, while a
@@ -388,6 +404,8 @@ export class JournalClosed extends Schema.TaggedError<JournalClosed>($I`JournalC
 
 /**
  * The journal file was truncated or replaced beneath a reader.
+ *
+ * **Details**
  *
  * The cooperative-writer contract is append-only: a journal only ever grows,
  * and every cursor this package hands out depends on that. When the file shrinks
@@ -463,6 +481,8 @@ export class JournalResync extends Schema.TaggedError<JournalResync>($I`JournalR
 
 /**
  * Every error this package raises from the pure core and the journal service.
+ *
+ * **Details**
  *
  * Core's `PlatformError` is deliberately **not** a member: IO failures pass
  * through untranslated rather than being wrapped in a taxonomy that would add

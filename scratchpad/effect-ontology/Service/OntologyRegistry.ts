@@ -136,7 +136,6 @@ export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError>(
 /**
  * Describes the registry error data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */

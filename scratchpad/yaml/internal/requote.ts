@@ -3,6 +3,8 @@
  * `YamlFormat`'s opt-in `requoteScalars` option cannot drift into two
  * dialects of "re-quotable".
  *
+ * **Details**
+ *
  * Two modes, deliberately distinct: `"conservative"` is the lint fix's
  * byte-exact shipped behavior; `"escaping"` is the format path's
  * semantics-preserving transform through the stringifier's quote renderers.
@@ -55,6 +57,13 @@ export const RequoteScalarInput = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of structural YAML scalar slice needed to decide whether a source quote can be changed safely.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RequoteScalarInput = typeof RequoteScalarInput.Type;
 
 /**
@@ -70,6 +79,15 @@ export type RequoteScalarInput = typeof RequoteScalarInput.Type;
  * `renderSingleQuoted`; double→single returns `undefined` when the value
  * carries characters single-quoted style cannot express.
  *
+ * **Example** (Recognize conservative mode)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RequoteMode } from "@beep/scratchpad/yaml/internal/requote"
+ *
+ * console.log(S.is(RequoteMode)("conservative")) // true
+ * ```
+ *
  * @see {@link quotedStrings} for the lint rule that always uses `"conservative"`.
  * @internal
  * @category type-level
@@ -81,6 +99,13 @@ export const RequoteMode = Schema.Literals(["conservative", "escaping"]).pipe(
 	}),
 );
 
+/**
+ * TypeScript representation of yAML scalar re-quoting modes: byte-conservative lint fixes or escaping format transforms.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RequoteMode = typeof RequoteMode.Type;
 
 /**

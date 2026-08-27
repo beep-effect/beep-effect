@@ -1,6 +1,8 @@
 /**
  * Pure YAML linting: strings in, diagnostics or a fixed string out.
  *
+ * **Details**
+ *
  * The rule-aware config schema and the {@link YamlLint} facade (`run`, `fix`,
  * `builtins`). The rule model lives in `YamlLintRule.ts` to break the
  * catalog cycle. No file discovery, config-file loading, IO or CLI lives here.
@@ -108,6 +110,8 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 /**
  * The lint configuration: a `rules` map keying rule ids (built-in or custom)
  * to a severity literal or a typed per-rule options object.
+ *
+ * **Details**
  *
  * Validation is rule-aware for the built-in catalog — a mistyped option on a
  * built-in rule fails schema validation with a typed error naming the rule,
@@ -353,6 +357,8 @@ const byTallyOrder = (
  * Per-dimension style evidence (#345): what the observed sources say about
  * each inferable `(rule, dimension)` — vote histograms with first-seen
  * positions, and measured floors.
+ *
+ * **Details**
  *
  * Evidence is a MONOID: {@link StyleEvidence.empty} is the identity and
  * {@link StyleEvidence.combine} is associative, so multi-file inference is
@@ -744,6 +750,12 @@ export const YamlLintInference = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of lenient YAML style-inference report containing the inferred config and residual diagnostics.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type YamlLintInference = typeof YamlLintInference.Type;
 
 // ── Facade ──────────────────────────────────────────────────────────────────

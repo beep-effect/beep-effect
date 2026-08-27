@@ -1324,7 +1324,7 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
  * ```ts
  * import { ApiRouter, HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(HttpServerLive !== ApiRouter) // true
+ * console.log(HttpServerLive)
  * ```
  *
  * @category layers

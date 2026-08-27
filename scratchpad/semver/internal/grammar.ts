@@ -1,6 +1,8 @@
 /**
  * Strict SemVer 2.0.0 recursive-descent parser and printer.
  *
+ * **Details**
+ *
  * Parsing is pure and total: failures propagate as a private exception
  * carrying the failure position and are converted to `ParseResult` at the
  * three entry points. The concept modules (`SemVer`, `Range`, `Comparator`)

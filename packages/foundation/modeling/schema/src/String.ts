@@ -292,5 +292,16 @@ export const OptionFromOptionalStrWithNoneDefault = S.String.pipe(
   S.OptionFromOptionalKey,
   SchemaUtils.withNoneDefault,
   SchemaUtils.withEffectCodecStatics,
-  SchemaUtils.withOptionCodecStatics
+  SchemaUtils.withOptionCodecStatics,
+  $I.annoteSchema("OptionFromOptionalStrWithNoneDefault", {
+    description: "Optional string property codec decoded as Option with None as the missing-key default.",
+  })
 );
+
+/**
+ * Decoded value produced by {@link OptionFromOptionalStrWithNoneDefault}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OptionFromOptionalStrWithNoneDefault = typeof OptionFromOptionalStrWithNoneDefault.Type;

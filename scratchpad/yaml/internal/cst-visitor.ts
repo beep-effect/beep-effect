@@ -1,6 +1,8 @@
 /**
  * SAX-style CST visitor for YAML documents.
  *
+ * **Details**
+ *
  * `cstEvents()` walks YAML source text and yields CstVisitorEvent values in
  * document order. All content is delivered as raw source strings — no type
  * resolution occurs at the CST level. Errors are `CstErrorEvent` records;
@@ -49,6 +51,13 @@ const CstDocumentStartEventModel = Schema.TaggedStruct("CstDocumentStartEvent", 
 	depth: Schema.Finite,
 }).pipe($I.annoteSchema("CstDocumentStartEvent", { description: "CST visitor document-entry event." }));
 
+/**
+ * TypeScript representation of cST visitor document-entry event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstDocumentStartEvent = typeof CstDocumentStartEventModel.Type;
 
 /**
@@ -63,6 +72,13 @@ const CstDocumentEndEventModel = Schema.TaggedStruct("CstDocumentEndEvent", {
 	depth: Schema.Finite,
 }).pipe($I.annoteSchema("CstDocumentEndEvent", { description: "CST visitor document-exit event." }));
 
+/**
+ * TypeScript representation of cST visitor document-exit event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstDocumentEndEvent = typeof CstDocumentEndEventModel.Type;
 
 /**
@@ -78,6 +94,13 @@ const CstMapStartEventModel = Schema.TaggedStruct("CstMapStartEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstMapStartEvent", { description: "CST visitor mapping-entry event." }));
 
+/**
+ * TypeScript representation of cST visitor mapping-entry event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstMapStartEvent = typeof CstMapStartEventModel.Type;
 
 /**
@@ -92,6 +115,13 @@ const CstMapEndEventModel = Schema.TaggedStruct("CstMapEndEvent", {
 	depth: Schema.Finite,
 }).pipe($I.annoteSchema("CstMapEndEvent", { description: "CST visitor mapping-exit event." }));
 
+/**
+ * TypeScript representation of cST visitor mapping-exit event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstMapEndEvent = typeof CstMapEndEventModel.Type;
 
 /**
@@ -107,6 +137,13 @@ const CstSeqStartEventModel = Schema.TaggedStruct("CstSeqStartEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstSeqStartEvent", { description: "CST visitor sequence-entry event." }));
 
+/**
+ * TypeScript representation of cST visitor sequence-entry event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstSeqStartEvent = typeof CstSeqStartEventModel.Type;
 
 /**
@@ -121,6 +158,13 @@ const CstSeqEndEventModel = Schema.TaggedStruct("CstSeqEndEvent", {
 	depth: Schema.Finite,
 }).pipe($I.annoteSchema("CstSeqEndEvent", { description: "CST visitor sequence-exit event." }));
 
+/**
+ * TypeScript representation of cST visitor sequence-exit event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstSeqEndEvent = typeof CstSeqEndEventModel.Type;
 
 /**
@@ -143,6 +187,13 @@ const CstKeyEventModel = Schema.TaggedStruct("CstKeyEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstKeyEvent", { description: "CST visitor mapping-key event." }));
 
+/**
+ * TypeScript representation of cST visitor mapping-key event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstKeyEvent = typeof CstKeyEventModel.Type;
 
 /**
@@ -158,6 +209,13 @@ const CstValueEventModel = Schema.TaggedStruct("CstValueEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstValueEvent", { description: "CST visitor mapping-value event." }));
 
+/**
+ * TypeScript representation of cST visitor mapping-value event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstValueEvent = typeof CstValueEventModel.Type;
 
 /**
@@ -174,6 +232,13 @@ const CstScalarEventModel = Schema.TaggedStruct("CstScalarEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstScalarEvent", { description: "CST visitor standalone-scalar event." }));
 
+/**
+ * TypeScript representation of cST visitor standalone-scalar event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstScalarEvent = typeof CstScalarEventModel.Type;
 
 /**
@@ -189,6 +254,13 @@ const CstAliasEventModel = Schema.TaggedStruct("CstAliasEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstAliasEvent", { description: "CST visitor alias-reference event." }));
 
+/**
+ * TypeScript representation of cST visitor alias-reference event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstAliasEvent = typeof CstAliasEventModel.Type;
 
 /**
@@ -204,6 +276,13 @@ const CstCommentEventModel = Schema.TaggedStruct("CstCommentEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstCommentEvent", { description: "CST visitor source-comment event." }));
 
+/**
+ * TypeScript representation of cST visitor source-comment event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstCommentEvent = typeof CstCommentEventModel.Type;
 
 /**
@@ -219,6 +298,13 @@ const CstDirectiveEventModel = Schema.TaggedStruct("CstDirectiveEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstDirectiveEvent", { description: "CST visitor YAML-directive event." }));
 
+/**
+ * TypeScript representation of cST visitor YAML-directive event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstDirectiveEvent = typeof CstDirectiveEventModel.Type;
 
 /**
@@ -234,6 +320,13 @@ const CstErrorEventModel = Schema.TaggedStruct("CstErrorEvent", {
 	source: Schema.String,
 }).pipe($I.annoteSchema("CstErrorEvent", { description: "CST visitor parse-error event." }));
 
+/**
+ * TypeScript representation of cST visitor parse-error event.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstErrorEvent = typeof CstErrorEventModel.Type;
 
 /**
@@ -273,6 +366,13 @@ export const CstVisitorEvent = Schema.Union([
 	}),
 );
 
+/**
+ * TypeScript representation of discriminated union of SAX-style events emitted while walking YAML concrete syntax.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstVisitorEvent = typeof CstVisitorEvent.Type;
 
 // ---------------------------------------------------------------------------
@@ -659,6 +759,8 @@ function* walkDocument(doc: CstNode): Generator<CstVisitorEvent> {
 /**
  * Walk YAML source text at the CST level and yield {@link CstVisitorEvent}
  * values in document order.
+ *
+ * **Details**
  *
  * Events are emitted for every CST node encountered during traversal,
  * including `CstDocumentStartEvent`/`CstDocumentEndEvent` pairs, collection

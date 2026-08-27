@@ -141,7 +141,6 @@ export interface ShaclWorkflowServiceMethods {
 /**
  * Configuration accepted by the deterministic SHACL test layer.
  *
- *
  * **Example** (Validate a non-conforming test setup)
  *
  * ```ts
@@ -214,8 +213,8 @@ export const defaultTestConfig: ShaclWorkflowServiceTestConfig = {
  * }).pipe(
  *   Effect.provide(
  *     ShaclWorkflowService.Test({
- *       conforms: false,
- *       violations: [{ focusNode: "https://example.org/Ada", message: "Missing founded relation" }]
+ *       conforms: true,
+ *       violations: []
  *     })
  *   )
  * )

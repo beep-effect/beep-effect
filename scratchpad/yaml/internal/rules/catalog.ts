@@ -3,6 +3,8 @@
  * `YamlLint.builtins`, and the per-rule options schemas the config layer
  * validates against.
  *
+ * **Details**
+ *
  * Aggregates values (an array and a map) — not a re-export barrel. Rules
  * accrete here batch by batch; `indentation` lands last by design.
  *

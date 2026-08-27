@@ -3,6 +3,8 @@
  * before it (a `key :` reads as a key containing a space), at most one
  * after it.
  *
+ * **Details**
+ *
  * An explicit-value `:` at the head of its line is structure, not spacing,
  * and a comment after the colon belongs to comments-spacing.
  *

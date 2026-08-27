@@ -1,6 +1,8 @@
 /**
  * Deep structural equality for plain JavaScript values.
  *
+ * **Details**
+ *
  * This is the primitive behind the facade's semantic `equals` /
  * `equalsValue` statics. Mapping key order is insignificant; sequence order
  * is significant. `NaN` equals `NaN` so YAML `.nan` values from two
@@ -17,6 +19,8 @@ import * as R from "effect/Record";
 
 /**
  * Deep-compare two plain JS values for structural equality.
+ *
+ * **Details**
  *
  * Object key order is ignored (recursively at all nesting levels). Array
  * order is significant. `NaN` is treated as equal to `NaN` (unlike `===`)

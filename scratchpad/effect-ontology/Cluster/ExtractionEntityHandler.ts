@@ -158,7 +158,7 @@ const toExtractionParams = (
  * ```ts
  * import { ExtractionEntityHandlerLayer, makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
  *
- * console.log(makeExtractionEntityHandler !== ExtractionEntityHandlerLayer) // true
+ * console.log(makeExtractionEntityHandler)
  * ```
  *
  * @category constructors

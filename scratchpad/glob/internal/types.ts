@@ -1,6 +1,8 @@
 /**
  * Shared option and parse-return types for the glob engine.
  *
+ * **Details**
+ *
  * Extracted from upstream minimatch so ast.ts and the engine can share
  * declarations without an import cycle. `platform` includes `"posix"` and is
  * the default — the engine never reads ambient `process.platform`.
@@ -202,7 +204,7 @@ export class MMRegExp extends RegExp {
  * **Example** (Detect a recursive walk)
  *
  * ```ts
- * import { Minimatch } from "../../glob/internal/minimatch.ts"
+ * import { Minimatch } from "@beep/scratchpad/glob/internal/minimatch"
  * import { GLOBSTAR } from "../../glob/internal/types.ts"
  *
  * const recursive = new Minimatch("**\/*.ts", {})

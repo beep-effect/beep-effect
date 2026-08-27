@@ -1,6 +1,8 @@
 /**
  * The bounded tail read.
  *
+ * **Details**
+ *
  * `latest` and every `lastValid`-backed read go through this: `Line.lastValid`
  * takes whole text, so "just read the file" is the easy wrong move — it makes
  * the cost of answering "what is the current state" grow with the age of the
@@ -38,6 +40,8 @@ const LF = 0x0a;
 /**
  * The default tail window.
  *
+ * **Details**
+ *
  * Large enough that a snapshot journal's last line is almost always inside it
  * on the first read, small enough that reading it is cheap against a journal of
  * any age. When it misses, {@link readTail} widens rather than failing.
@@ -59,12 +63,12 @@ export const DEFAULT_WINDOW = 8192;
 /**
  * A decoded tail window of JSONL text, starting at a line boundary.
  *
+ * **Details**
+ *
  * Offsets this package hands out are relative to the post-BOM start of the
  * file, so the first line of a BOM'd journal begins at 0 exactly as it does
  * in one without. Add `start` to a `LineSlice.offset` computed over `text` to
  * get the offset in the journal.
- *
- * @see {@link readTail} for the operation that produces this window.
  *
  * **Example** (Construct a decoded tail window)
  *
@@ -75,6 +79,7 @@ export const DEFAULT_WINDOW = 8192;
  * console.log(window.atFileStart) // true
  * ```
  *
+ * @see {@link readTail} for the operation that produces this window.
  * @internal
  * @category models
  * @since 0.0.0
@@ -117,6 +122,8 @@ const hasBom = (bytes: Uint8Array): boolean =>
 
 /**
  * Probe the first three bytes of a file for a BOM.
+ *
+ * **Details**
  *
  * This is a property of the FILE, so it is read once from the start rather than
  * inferred from whatever window happens to be in hand. Inferring it from window
@@ -169,6 +176,8 @@ export const probeBomBytes: {
 
 /**
  * Read the last `window` bytes of a journal, decoded from a line boundary.
+ *
+ * **Details**
  *
  * Three disciplines, each load-bearing:
  *
@@ -276,6 +285,8 @@ export const readTail: {
  * Read widening windows until `decode` finds something, or the whole file has
  * been seen.
  *
+ * **Details**
+ *
  * The widening is what makes the bounded read *correct* rather than merely
  * cheap: a journal whose last line is longer than the initial window would
  * otherwise report "no valid envelope" for a perfectly healthy file.
@@ -350,6 +361,8 @@ export const readTailUntil: {
 
 /**
  * Read a byte range and decode it as text, safely across chunk boundaries.
+ *
+ * **Details**
  *
  * The byte→string seam lives here, in the service layer, because `Line.split`
  * is string-in by design and the pure core must never learn about buffers.

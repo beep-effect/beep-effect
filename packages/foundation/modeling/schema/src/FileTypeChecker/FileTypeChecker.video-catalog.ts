@@ -14,6 +14,14 @@ type VideoCatalog = { readonly [K in VideoFileType]: FileTypeInfo & { readonly e
 /**
  * Internal video metadata keyed by canonical extension.
  *
+ * **Example** (Read video metadata)
+ *
+ * ```ts
+ * import { videoCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.video-catalog"
+ *
+ * console.log(videoCatalog.avi.extension) // "avi"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

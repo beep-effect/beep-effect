@@ -1,6 +1,8 @@
 /**
  * Bash 4.3-style brace expansion with a depth guard and a throwing budget.
  *
+ * **Details**
+ *
  * Over-deep nesting throws `NestingDepthExceeded`. Budget exhaustion throws
  * `ExpansionBudgetExceeded` instead of silently truncating. Invalid `max` is
  * a schema-backed invariant defect via `assertCap`.

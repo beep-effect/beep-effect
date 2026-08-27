@@ -14,6 +14,14 @@ type AssetCatalog = { readonly [K in AssetFileType]: FileTypeInfo & { readonly e
 /**
  * Internal asset metadata keyed by canonical extension.
  *
+ * **Example** (Read asset metadata)
+ *
+ * ```ts
+ * import { assetCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.asset-catalog"
+ *
+ * console.log(assetCatalog.blend.extension) // "blend"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

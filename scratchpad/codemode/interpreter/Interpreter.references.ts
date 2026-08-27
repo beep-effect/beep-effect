@@ -1,6 +1,8 @@
 /**
  * Identity-bearing guest values and walks that detect them before copy-out.
  *
+ * **Details**
+ *
  * {@link containsRuntimeReference} treats CodeMode dates/maps as references.
  * {@link containsOpaqueReference} treats those same values as data. Use the
  * latter at copy-out and throw rendering so branded guest collections survive.
@@ -21,6 +23,8 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
 
 /**
  * Union of every identity-bearing value retained by the CodeMode runtime.
+ *
+ * **Details**
  *
  * Includes schema-owned {@link RuntimeReference}s, tool handles, promises, and
  * mutable CodeMode collections. Decode or guard with the attached codec statics.

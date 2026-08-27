@@ -2,6 +2,8 @@
  * Structural JSONC modification: compute the edits needed to set, replace or
  * delete a value at a path, without mutating the source.
  *
+ * **Details**
+ *
  * Navigation goes through the scanner-based `internal/navigate.ts` (a
  * correctness fix over v3's fragile string search); this module owns only edit
  * synthesis and the `JsoncModificationError` it raises on a navigation miss.
@@ -25,6 +27,8 @@ const $I = $ScratchpadId.create("jsonc/JsoncModifier");
  * value at `depth` is not the container kind (`expected`) the next path segment
  * requires.
  *
+ * **Details**
+ *
  * - `path` — the full path that was passed to `JsoncModifier.modify`.
  * - `expected` — the container kind (`"object"` or `"array"`) the segment at
  *   `depth` required.
@@ -32,8 +36,6 @@ const $I = $ScratchpadId.create("jsonc/JsoncModifier");
  * - `offset` — reserved for a future source-position annotation; currently
  *   always omitted (navigation reports the mismatch structurally, without a
  *   text offset).
- *
- * **Details**
  *
  * Follows the structure-preserving-errors house rule — the mismatch's
  * discriminating data is carried as typed fields (`path`, `expected`, `depth`,

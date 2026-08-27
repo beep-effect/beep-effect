@@ -23,6 +23,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Parser");
 /**
  * A markdown document split into a YAML-decoded value and its opaque body.
  *
+ * **Details**
+ *
  * The raw `frontmatter` remains `unknown` until one of the typed parse helpers
  * validates it against the corresponding Claude Code schema.
  *
@@ -165,6 +167,8 @@ const decodeFrontmatter = <Schema extends S.Top>(
 
 /**
  * Parse a raw markdown string into YAML-decoded frontmatter and its body.
+ *
+ * **Details**
  *
  * Missing or malformed delimiters are treated as a body-only document.
  * Invalid YAML fails with {@link FrontmatterParseError}.

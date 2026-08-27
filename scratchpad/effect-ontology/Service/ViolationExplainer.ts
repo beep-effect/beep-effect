@@ -43,7 +43,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
  *
  * import { makeNamedNode } from "@beep/rdf/Rdf"
  * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
- * import { ExplanationError } from "@effect-ontology/Service/ViolationExplainer"
  *
  * const error = ExplanationError.make({
  *   message: "The model returned an empty explanation",
@@ -232,7 +231,6 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>($I
  *
  * import { NonNegativeInt } from "@beep/schema"
  * import { NonNegNum } from "@beep/schema/Number"
- * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
  *
  * const batch = BatchExplanationResult.make({
  *   explanations: [],
@@ -263,19 +261,17 @@ export class BatchExplanationResult extends S.Class<BatchExplanationResult>($I`B
    * **Example** (Inspect batch explanation result.is complete)
    *
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { NonNegNum } from "@beep/schema/Number"
    * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
    *
-   * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
- * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
- *
- * const batch = BatchExplanationResult.make({
- *   explanations: [],
- *   totalViolations: NonNegativeInt.make(1),
- *   explainedCount: NonNegativeInt.make(0),
- *   durationMs: NonNegNum.make(20)
- * })
- * console.log(batch.explainedCount) // 0
+   * const batch = BatchExplanationResult.make({
+   *   explanations: [],
+   *   totalViolations: NonNegativeInt.make(1),
+   *   explainedCount: NonNegativeInt.make(0),
+   *   durationMs: NonNegNum.make(20)
+   * })
+   * console.log(batch.explainedCount) // 0
    * ```
    *
    * @returns Result produced by this operation.

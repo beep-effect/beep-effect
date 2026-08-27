@@ -241,6 +241,7 @@ const makeTicketService = Effect.gen(function* () {
  * **Example** (Count active tickets)
  *
  * ```ts
+ * import { BunCrypto } from "@effect/platform-bun"
  * import { Effect } from "effect"
  * import { TicketService } from "@effect-ontology/Service/Ticket"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
@@ -249,7 +250,7 @@ const makeTicketService = Effect.gen(function* () {
  *   Effect.gen(function* () {
  *     const tickets = yield* TicketService
  *     return yield* tickets.getActiveCount
- *   }).pipe(Effect.provide(TicketService.Default), Effect.provide(StorageServiceTest), Effect.orDie)
+ *   }).pipe(Effect.provide(TicketService.Default), Effect.provide(StorageServiceTest), Effect.provide(BunCrypto.layer), Effect.orDie)
  * )
  * console.log(count) // 0
  * ```
@@ -269,6 +270,7 @@ export class TicketService extends Context.Service<TicketService>()($I`TicketSer
  * **Example** (Provide live ticket storage)
  *
  * ```ts
+ * import { BunCrypto } from "@effect/platform-bun"
  * import { Effect } from "effect"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  * import { TicketService, TicketServiceLive } from "@effect-ontology/Service/Ticket"
@@ -277,7 +279,7 @@ export class TicketService extends Context.Service<TicketService>()($I`TicketSer
  *   Effect.gen(function* () {
  *     const tickets = yield* TicketService
  *     return yield* tickets.getActiveCount
- *   }).pipe(Effect.provide(TicketServiceLive), Effect.provide(StorageServiceTest), Effect.orDie)
+ *   }).pipe(Effect.provide(TicketServiceLive), Effect.provide(StorageServiceTest), Effect.provide(BunCrypto.layer), Effect.orDie)
  * )
  * console.log(count) // 0
  * ```

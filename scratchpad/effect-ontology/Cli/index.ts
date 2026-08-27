@@ -141,7 +141,7 @@ const CliLive = Layer.mergeAll(
  *   "ontologies/people.ttl",
  *   "--text",
  *   "Ada Lovelace was a mathematician"
- * ] as const
+ * ]
  * console.log(runCli.length) // 1
  * console.log(argv[1]) // "extract"
  * console.log(argv.includes("--text")) // true

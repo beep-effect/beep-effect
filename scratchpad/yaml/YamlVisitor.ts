@@ -3,6 +3,8 @@
  * parsed document, enabling early termination (`Stream.take`) without building
  * a full in-memory result beyond the AST itself.
  *
+ * **Details**
+ *
  * The event union is a `Data.TaggedEnum` — serializable tagged values with
  * structural equality. v3's `visitCollect` is dropped: `Stream.filter` +
  * `Stream.runCollect` cover it. Lexical tokens are public via {@link YamlTokens};

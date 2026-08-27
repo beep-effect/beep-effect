@@ -570,7 +570,7 @@ export const EmbeddingBundleOpen = EmbeddingServiceLive.pipe(
  * ```ts
  * import { EmbeddingBundleOpen, RdfBuilderBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(RdfBuilderBundleOpen !== EmbeddingBundleOpen) // true
+ * console.log(RdfBuilderBundleOpen)
  * ```
  *
  * @category layers

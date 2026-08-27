@@ -1,6 +1,8 @@
 /**
  * Typed in-process event bus for hook invocations.
  *
+ * **Details**
+ *
  * Built on `PubSub` + `Stream.fromPubSub`, this lets consumers build reactive
  * pipelines over decoded hook events without inventing their own subscription
  * plumbing.

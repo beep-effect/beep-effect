@@ -4,6 +4,8 @@
  * legitimately consumed by editor toolchains, which ajv strict mode would
  * otherwise reject:
  *
+ * **Details**
+ *
  * - **vscode-json-languageservice** (exact names): `allowTrailingCommas`,
  *   `defaultSnippets`, `enumDescriptions`, `markdownDescription`,
  *   `markdownEnumDescriptions`.

@@ -145,11 +145,11 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
  * import { fetchCommand } from "@effect-ontology/Cli/Commands/Fetch"
  * import * as Command from "effect/unstable/cli/Command"
  *
- * const argv = ["https://example.com/ada", "--metadata"] as const
+ * const argv = ["https://example.com/ada", "--metadata"]
  * const program = Command.runWith(fetchCommand, { version: "0.0.0" })([...argv])
  * console.log(fetchCommand.name) // "fetch"
  * console.log(argv.includes("--metadata")) // true
- * console.log(program !== fetchCommand)
+ * console.log(program)
  * ```
  *
  * @category cli-commands
@@ -242,11 +242,11 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
  * import { ingestLinkCommand } from "@effect-ontology/Cli/Commands/Fetch"
  * import * as Command from "effect/unstable/cli/Command"
  *
- * const argv = ["https://example.com/ada", "--ontology-id", "people"] as const
+ * const argv = ["https://example.com/ada", "--ontology-id", "people"]
  * const program = Command.runWith(ingestLinkCommand, { version: "0.0.0" })([...argv])
  * console.log(ingestLinkCommand.name) // "ingest-link"
  * console.log(argv.includes("--ontology-id")) // true
- * console.log(program !== ingestLinkCommand)
+ * console.log(program)
  * ```
  *
  * @see {@link fetchCommand} for a storage-free content preview of the same URL.
@@ -357,11 +357,11 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
  * import { documentsCommand } from "@effect-ontology/Cli/Commands/Fetch"
  * import * as Command from "effect/unstable/cli/Command"
  *
- * const argv = ["--status", "pending", "--limit", "20"] as const
+ * const argv = ["--status", "pending", "--limit", "20"]
  * const program = Command.runWith(documentsCommand, { version: "0.0.0" })([...argv])
  * console.log(documentsCommand.name) // "documents"
  * console.log(argv.includes("--status")) // true
- * console.log(program !== documentsCommand)
+ * console.log(program)
  * ```
  *
  * @see {@link ingestLinkCommand} for the command that creates these documents.
@@ -461,11 +461,11 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
  * import { ingestBatchCommand } from "@effect-ontology/Cli/Commands/Fetch"
  * import * as Command from "effect/unstable/cli/Command"
  *
- * const argv = ["urls.txt", "--ontology-id", "people", "--concurrency", "4"] as const
+ * const argv = ["urls.txt", "--ontology-id", "people", "--concurrency", "4"]
  * const program = Command.runWith(ingestBatchCommand, { version: "0.0.0" })([...argv])
  * console.log(ingestBatchCommand.name) // "ingest-batch"
  * console.log(argv.includes("--ontology-id")) // true
- * console.log(program !== ingestBatchCommand)
+ * console.log(program)
  * ```
  *
  * @see {@link ingestLinkCommand} for ingesting a single URL instead of a file.

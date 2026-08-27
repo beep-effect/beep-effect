@@ -3,6 +3,8 @@
  * schema-validated options, the FromString codec, and escape statics — plus
  * GlobPatternError, the package's typed compile-time failure vocabulary.
  *
+ * **Details**
+ *
  * Cycle firewall: this module imports the engine; the engine never imports
  * it. The engine throws raw GuardExceeded records at compile time; only this
  * facade materializes them into the typed GlobPatternError.
@@ -117,6 +119,8 @@ export class GlobPatternError extends Schema.TaggedError<GlobPatternError>($I`Gl
  * developer wiring error and throw at `make` — a defect at construction; the
  * typed channel stays reserved for malformed patterns.
  *
+ * **Details**
+ *
  * `platform` is explicit and defaults to `"posix"`: the engine never reads
  * ambient process state. `braceExpandMax` is bounded above by the stock
  * budget (100,000) — caps tighten, never raise — which is what keeps a
@@ -220,6 +224,8 @@ const compilesUnderDefaults = (source: string): true | string => {
  * `source`; the compiled matcher lives in a private field the schema never
  * encodes, built lazily for `make`/decode-constructed instances and pre-warmed
  * by {@link GlobPattern.compile}.
+ *
+ * **Details**
  *
  * A GlobPattern value is ALWAYS a pattern that compiles under default options
  * — the schema check enforces it on every construction path. Options refine

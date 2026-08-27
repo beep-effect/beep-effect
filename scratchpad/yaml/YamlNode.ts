@@ -2,6 +2,8 @@
  * Mutually recursive YAML AST nodes: scalar, map, seq, pair, alias and the
  * {@link YamlNode} union.
  *
+ * **Details**
+ *
  * Nodes deliberately carry no parent pointers (circular references would
  * break structural equality, serialization and Schema encode/decode). Child
  * relationships are expressed via `items`/`key`/`value`, and the recursive
@@ -221,6 +223,8 @@ export type ScalarChomp = typeof ScalarChomp.Type;
  * A YAML scalar AST node, representing a leaf value such as a string,
  * number, boolean, or null.
  *
+ * **Details**
+ *
  * - `value` — the resolved JavaScript value (null, boolean, number, bigint or
  *   string).
  * - `style` — the scalar presentation style in the source document.
@@ -373,6 +377,8 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>()(
 /**
  * A YAML alias AST node, referencing a previously defined anchor by name
  * (without the leading `*`).
+ *
+ * **Details**
  *
  * Carries the same comment triple as every other node class — see
  * {@link YamlScalar} for the field semantics. An alias is a node like any
@@ -603,6 +609,8 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  * A YAML key-value pair AST node, representing one entry within a mapping.
  * `value` is `null` when absent (e.g. `key:` with no value).
  *
+ * **Details**
+ *
  * A pair carries **no comment fields**. Comments belong to the pair's `key`
  * and `value` nodes, which have one comment slot each: an own-line comment
  * above the entry leads the `key`, and a trailing comment on the entry's line
@@ -643,6 +651,8 @@ export class YamlPair extends S.TaggedClass<YamlPair>()(
 /**
  * A YAML mapping AST node, representing a collection of {@link YamlPair}
  * entries.
+ *
+ * **Details**
  *
  * - `style` — the presentation style: `"block"` or `"flow"`.
  * - `commentBefore` — own-line comment text directly above the mapping.
@@ -771,6 +781,8 @@ export class YamlMap extends S.TaggedClass<YamlMap>()(
 /**
  * A YAML sequence AST node, representing an ordered list of
  * {@link (YamlNode:type)} values.
+ *
+ * **Details**
  *
  * - `commentBefore` — own-line comment text directly above the sequence.
  * - `comment` — trailing comment text: own-line comment lines after the
@@ -1033,6 +1045,8 @@ function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknow
  * count stays small, so the composer's per-token `maxAliasCount` limit does
  * not catch it; only bounding the expanded node count does.
  *
+ * **Details**
+ *
  * Not re-exported from the package entry point (`index.ts`) — the facade
  * catches it and materializes a fatal `AliasCountExceeded` `YamlParseError`
  * (or, for `Yaml.equals`, treats the input as malformed).
@@ -1092,6 +1106,8 @@ const ALIAS_EXPANSION_FACTOR = 10_000;
 /**
  * Convert a `maxAliasCount` parse budget into the output-node cap used while
  * expanding aliases.
+ *
+ * **Details**
  *
  * Alias-free content never ticks the counter, so a large but benign document
  * stays far under the cap; an exponential alias chain accumulates across the

@@ -104,6 +104,8 @@ export type FrontmatterShell = typeof FrontmatterShell.Type;
 /**
  * Runtime model for the YAML frontmatter of a Claude Code `SKILL.md` file.
  *
+ * **Details**
+ *
  * Optional wire keys decode to `Option`, keeping absence explicit inside the
  * harness while preserving Claude Code's original optional-key encoding.
  *

@@ -78,7 +78,6 @@ interface AssertionOverride {
 /**
  * Input for creating an assertion from claims
  *
- *
  * **Example** (Accept claims into an assertion)
  *
  * ```ts
@@ -120,7 +119,6 @@ export class CreateAssertionInput extends S.Class<CreateAssertionInput>($I`Creat
 /**
  * Filter for querying assertions
  *
- *
  * **Example** (Filter accepted assertions)
  *
  * ```ts
@@ -154,11 +152,11 @@ export class AssertionFilter extends S.Class<AssertionFilter>($I`AssertionFilter
 /**
  * Assertion with full provenance information
  *
- *
  * **Example** (Attach source claims)
  *
  * ```ts
- * import { AssertionWithProvenance } from "@effect-ontology/Service/Assertion"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { AssertionRow, AssertionWithProvenance } from "@effect-ontology/Service/Assertion"
  *
  * const result = AssertionWithProvenance.make({
  *   assertion: AssertionRow.make({
@@ -172,7 +170,7 @@ export class AssertionFilter extends S.Class<AssertionFilter>($I`AssertionFilter
  *     assertedAt: new Date(0),
  *     derivedFrom: ["claim-1"],
  *     curatedBy: null,
- *     confidence: 0.9,
+ *     confidence: UnitInterval.make(0.9),
  *     validFrom: null,
  *     validTo: null,
  *     rejectedAt: null,
@@ -199,10 +197,10 @@ export class AssertionWithProvenance extends S.Class<AssertionWithProvenance>($I
 /**
  * Internal assertion row type (matches what we store)
  *
- *
  * **Example** (Read assertion identity)
  *
  * ```ts
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { AssertionRow } from "@effect-ontology/Service/Assertion"
  *
  * const row = AssertionRow.make({
@@ -216,7 +214,7 @@ export class AssertionWithProvenance extends S.Class<AssertionWithProvenance>($I
  *   assertedAt: new Date("2026-01-01T00:00:00.000Z"),
  *   derivedFrom: ["claim-ada-founded"],
  *   curatedBy: null,
- *   confidence: 0.9,
+ *   confidence: UnitInterval.make(0.9),
  *   validFrom: null,
  *   validTo: null,
  *   rejectedAt: null,

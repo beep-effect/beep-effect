@@ -1,6 +1,8 @@
 /**
  * Positioned YAML token stream for lint and LSP consumers.
  *
+ * **Details**
+ *
  * Promotes the internal lexer token to the public surface. The internal token
  * spells two fields differently (`value`, `column`); promotion reconciles them
  * to the positioned-diagnostic vocabulary already used by {@link YamlDiagnostic}
@@ -78,6 +80,8 @@ export type YamlTokenKind = typeof YamlTokenKind.Type;
 
 /**
  * A single positioned YAML lexical token.
+ *
+ * **Details**
  *
  * - `kind` — the {@link (YamlTokenKind:type)}.
  * - `text` — the raw source slice the token covers; the position-fidelity

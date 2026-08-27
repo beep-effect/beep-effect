@@ -29,7 +29,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
 /**
  * Metadata for the source article
  *
- *
  * **Example** (Describe a source article)
  *
  * ```ts
@@ -63,7 +62,6 @@ export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata
 
 /**
  * Result of claim persistence operation
- *
  *
  * **Example** (Record inserted claims)
  *

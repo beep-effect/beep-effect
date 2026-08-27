@@ -1,6 +1,8 @@
 /**
  * Read and write SchemaStore documents over core `FileSystem` / `Path`.
  *
+ * **Details**
+ *
  * The package's only IO surface: write-if-changed serialization plus a
  * drift-check counterpart. The layer requires those services; provide a
  * platform implementation at the edge.
@@ -246,6 +248,8 @@ export type WriteChange = typeof WriteChange.Type;
  * The result of {@link SchemaFileShape.write}: what happened to the file,
  * and what the difference MEANT.
  *
+ * **Details**
+ *
  * The two are independent on purpose. `change` answers the versioning
  * question — `"annotations"` means only prose and editor affordances moved,
  * so the document replaces its predecessor transparently and needs no new
@@ -296,6 +300,8 @@ export type WriteResult = typeof WriteResult.Type;
 /**
  * The result of {@link SchemaFileShape.check}: the same two answers
  * {@link WriteResult} carries, for a call that touched nothing.
+ *
+ * **Details**
  *
  * `wouldWrite` is `outcome`'s counterpart — it honors `compare`, so it
  * answers "would `write` do anything with these same options", which
@@ -445,6 +451,8 @@ export interface SchemaFileShape {
  * `Path` — the package's one IO surface. The layer requires those
  * services; provide `@effect/platform-node`'s `NodeFileSystem` / `NodePath`
  * (or a bun equivalent) at the application boundary.
+ *
+ * **Details**
  *
  * `write` is write-if-changed, and by default compares **content**: an
  * unchanged document never touches the file even if another tool has

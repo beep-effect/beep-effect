@@ -1,6 +1,8 @@
 /**
  * Minimatch engine: compile a glob to a total string matcher.
  *
+ * **Details**
+ *
  * Platform is an explicit option defaulting to `"posix"` — there is no ambient
  * `process.platform`. `match()` is total: exceeding `maxGlobstarRecursion`
  * is an intentional false negative and never throws. Brace expansion keeps
@@ -57,7 +59,7 @@ import { GLOBSTAR } from "./types.ts";
  * **Example** (Escape a star)
  *
  * ```ts
- * import { escape } from "../../glob/internal/minimatch.ts"
+ * import { escape } from "@beep/scratchpad/glob/internal/minimatch"
  *
  * console.log(escape("*.ts")) // "\\*.ts"
  * ```
@@ -74,7 +76,7 @@ export { escape } from "./escape.ts";
  * **Example** (Declare engine options)
  *
  * ```ts
- * import type { EngineOptions } from "../../glob/internal/minimatch.ts"
+ * import type { EngineOptions } from "@beep/scratchpad/glob/internal/minimatch"
  *
  * const options = { dot: true } satisfies EngineOptions
  * console.log(options.dot) // true
@@ -92,7 +94,7 @@ export type { EngineOptions, MMRegExp, ParseReturn, ParseReturnFiltered, Platfor
  * **Example** (Unescape a star)
  *
  * ```ts
- * import { unescape } from "../../glob/internal/minimatch.ts"
+ * import { unescape } from "@beep/scratchpad/glob/internal/minimatch"
  *
  * console.log(unescape("\\*.ts")) // "*.ts"
  * ```
@@ -109,7 +111,7 @@ export { unescape } from "./unescape.ts";
  * **Example** (Compare a marker)
  *
  * ```ts
- * import { GLOBSTAR } from "../../glob/internal/minimatch.ts"
+ * import { GLOBSTAR } from "@beep/scratchpad/glob/internal/minimatch"
  *
  * console.log(typeof GLOBSTAR) // "symbol"
  * ```
@@ -222,7 +224,7 @@ const braceExpandImpl = (pattern: string, options: EngineOptions = {}): Array<st
  * **Example** (Expand braces or skip them)
  *
  * ```ts
- * import { braceExpand } from "../../glob/internal/minimatch.ts"
+ * import { braceExpand } from "@beep/scratchpad/glob/internal/minimatch"
  *
  * console.log(braceExpand("a{b,c}", {})) // ["ab", "ac"]
  * console.log(braceExpand({ nobrace: true })("a{b,c}")) // ["a{b,c}"]
@@ -256,7 +258,7 @@ const regExpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g
  * **Example** (Match a recursive TypeScript glob)
  *
  * ```ts
- * import { Minimatch } from "../../glob/internal/minimatch.ts"
+ * import { Minimatch } from "@beep/scratchpad/glob/internal/minimatch"
  *
  * const matcher = new Minimatch("**\/*.ts", {})
  * console.log(matcher.match("src/index.ts")) // true

@@ -2,6 +2,8 @@
  * Plugin module hub — schemas and materializer for Claude Code plugin
  * manifests, marketplaces, and directory layouts.
  *
+ * **Details**
+ *
  * Users import this as a namespace:
  * `import { Plugin } from 'effect-claudecode'`
  * and access members as `Plugin.define`, `Plugin.write`,

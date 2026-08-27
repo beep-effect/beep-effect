@@ -2,6 +2,8 @@
  * key-duplicates: duplicate mapping keys, reported at every occurrence after
  * the first.
  *
+ * **Details**
+ *
  * Detection walks the composed AST with the same key identity the engine
  * uses (type and value — `!!int 1` never collides with `"1"`), on the lint
  * context's `uniqueKeys`-disabled compose so the policy is fully owned

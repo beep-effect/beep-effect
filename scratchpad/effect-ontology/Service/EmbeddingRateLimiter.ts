@@ -35,7 +35,6 @@ interface RateLimiterState {
 /**
  * Rate limiter configuration
  *
- *
  * **Example** (Create embedding rate limits)
  *
  * ```ts

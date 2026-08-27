@@ -29,7 +29,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
 /**
  * Supported embedding provider identifiers managed by circuit breakers.
  *
- *
  * **Example** (Use the EmbeddingProviderId contract)
  *
  * ```ts
@@ -67,7 +66,6 @@ export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
 /**
  * Provider-specific circuit breaker configuration
  *
- *
  * **Example** (Use the ProviderCircuitConfig contract)
  *
  * ```ts
@@ -93,7 +91,6 @@ export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`Pro
 
 /**
  * Circuit breaker status for observability
- *
  *
  * **Example** (Use the CircuitStatus contract)
  *

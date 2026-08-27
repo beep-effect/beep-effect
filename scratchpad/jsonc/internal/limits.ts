@@ -1,6 +1,8 @@
 /**
  * Shared hardening limits for every recursive walk over untrusted JSONC.
  *
+ * **Details**
+ *
  * Lives in its own leaf module so the parser, AST value-extractor, semantic
  * equality walker and SAX visitor can import the same cap without an import
  * cycle (the parser imports `JsoncNode`, so `JsoncNode` must not import the
@@ -19,6 +21,8 @@
  * out here and fails through its typed channel (a `NestingDepthExceeded` parse
  * error, an in-band visitor `Error` event, or a bounded placeholder) instead of
  * throwing `RangeError: Maximum call stack size exceeded` as a defect.
+ *
+ * **Details**
  *
  * 256 is far beyond any real document and leaves a wide margin under the
  * observed single-frame overflow point. Mirrors `@effected/yaml`'s composer cap

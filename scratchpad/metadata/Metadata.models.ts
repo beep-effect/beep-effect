@@ -21,7 +21,7 @@ const $I = $ScratchpadId.create("metadata/Metadata.models");
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FileCategory } from "./Metadata.models.ts"
+ * import { FileCategory } from "@beep/scratchpad/metadata"
  *
  * console.log(S.is(FileCategory)(FileCategory.Enum.image)) // true
  * console.log(S.is(FileCategory)("exe")) // false
@@ -52,7 +52,7 @@ export type FileCategory = typeof FileCategory.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { MetadataSource } from "./Metadata.models.ts"
+ * import { MetadataSource } from "@beep/scratchpad/metadata"
  *
  * console.log(S.is(MetadataSource)(MetadataSource.Enum.exif)) // true
  * console.log(S.is(MetadataSource)("unknown")) // false
@@ -99,7 +99,7 @@ export type MetadataSource = typeof MetadataSource.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { MetadataConfidence } from "./Metadata.models.ts"
+ * import { MetadataConfidence } from "@beep/scratchpad/metadata"
  *
  * console.log(S.is(MetadataConfidence)(MetadataConfidence.Enum.exact)) // true
  * console.log(S.is(MetadataConfidence)("guess")) // false

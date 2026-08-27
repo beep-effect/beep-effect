@@ -1,6 +1,8 @@
 /**
  * Shared nesting cap for every recursive walk over SchemaStore documents.
  *
+ * **Details**
+ *
  * Carriers, lint, canonical JSON, and the `$ref` rewrite all fail through a
  * typed channel — or degrade to a lint finding — rather than overflowing the
  * call stack as an unhandled defect.
@@ -13,6 +15,8 @@
  * Maximum collection-nesting depth accepted by the package's recursive
  * document walks (the `$ref` rewrite, the document lint and the canonical
  * JSON emitter).
+ *
+ * **Details**
  *
  * The kit-wide parity constant (matching `@effected/yaml`, `@effected/jsonc`
  * and `@effected/toml`): deeply-nested hostile input must fail through a

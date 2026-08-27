@@ -1,6 +1,8 @@
 /**
  * Undo glob magic escaping produced by the matching escape helper.
  *
+ * **Details**
+ *
  * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
  * License: BlueOak-1.0.0. Verbatim except the options type now comes from the
  * extracted types leaf.
@@ -31,6 +33,8 @@ const unescapePattern = (
 
 /**
  * Un-escape a string that has been escaped with `escape`.
+ *
+ * **Details**
  *
  * If the `windowsPathsNoEscape` option is used, then square-bracket escapes
  * are removed, but not backslash escapes. For example, it will turn the

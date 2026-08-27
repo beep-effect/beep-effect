@@ -1,6 +1,8 @@
 /**
  * Zero-dependency JSONC parsing, editing and formatting as Effect schemas.
  *
+ * **Details**
+ *
  * Parse JSONC into values or an AST, strip comments offset-preservingly,
  * compute byte-minimal edits, format, modify by path and visit as a `Stream` —
  * all pure (no IO), with a single aggregate parse error and string→domain

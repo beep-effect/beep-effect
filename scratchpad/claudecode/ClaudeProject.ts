@@ -1,6 +1,8 @@
 /**
  * Project-scoped cached loaders for effect-claudecode programs.
  *
+ * **Details**
+ *
  * `ClaudeProject` centralizes repeated reads of the current repository's Claude
  * Code state (`settings.json`, `.mcp.json`, plugin directories) behind a
  * service with explicit invalidation effects.

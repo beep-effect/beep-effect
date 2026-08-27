@@ -50,10 +50,11 @@ import { Interpreter } from "./Interpreter.runtime.ts";
  * ```ts
  * import { CodeMode } from "@beep/scratchpad/codemode"
  * import { Effect } from "effect"
+ * import * as Toolkit from "effect/unstable/ai/Toolkit"
  * import { executeWithLimits } from "../../../codemode/interpreter/Interpreter.execute.ts"
  *
  * const result = await Effect.runPromise(
- *   executeWithLimits({ code: "1 + 1" }, CodeMode.ExecutionLimits.make({})),
+ *   executeWithLimits<typeof Toolkit.empty>({ code: "1 + 1" }, CodeMode.ExecutionLimits.make({})),
  * )
  *
  * console.log(

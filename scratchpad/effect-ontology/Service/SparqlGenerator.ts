@@ -197,11 +197,12 @@ type SparqlResponse = typeof SparqlResponseSchema.Type;
  *
  * ```ts
  * import { Effect } from "effect"
+ * import { OntologyContext } from "@effect-ontology/Model/Ontology"
  * import { SparqlGenerator } from "@effect-ontology/Service/SparqlGenerator"
  *
  * const program = Effect.gen(function* () {
  *   const generator = yield* SparqlGenerator
- *   return yield* generator.generate("Who founded Acme?")
+ *   return yield* generator.generate("Who founded Acme?", OntologyContext.make({}))
  * }).pipe(Effect.provide(SparqlGenerator.Default))
  *
  * console.log(program)

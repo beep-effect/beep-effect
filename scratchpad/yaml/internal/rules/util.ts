@@ -2,6 +2,8 @@
  * Shared lint-rule helpers: span queries over the eager token array, the
  * scalar walk the style rules share, and the bounded numeric option schemas.
  *
+ * **Details**
+ *
  * Schemas use the YAML scratchpad identity composer so diagnostics and
  * generated documentation retain stable identifiers.
  *
@@ -115,6 +117,13 @@ export const ScalarRole = Schema.Literals(["key", "value", "item", "root"]).pipe
 	}),
 );
 
+/**
+ * TypeScript representation of structural role occupied by a scalar while a YAML lint rule walks the AST.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScalarRole = typeof ScalarRole.Type;
 
 /**

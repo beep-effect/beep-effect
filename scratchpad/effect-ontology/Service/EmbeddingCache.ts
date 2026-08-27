@@ -50,7 +50,6 @@ export const Embedding = S.Array(S.Finite).pipe(
 /**
  * Describes the embedding data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -153,7 +152,6 @@ export const defaultCacheConfig = EmbeddingCacheConfig.make({});
 
 /**
  * EmbeddingCache service interface
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -300,7 +298,6 @@ export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(Emb
 
 /**
  * Extended cache interface with persistence and warm-up capabilities
- *
  *
  * @category type-level
  * @since 0.0.0

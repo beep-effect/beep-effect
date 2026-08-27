@@ -43,10 +43,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ContentEnrichmentAgent"
  *
  * ```ts
  * import { ContentEnrichmentError } from "@effect-ontology/Service/ContentEnrichmentAgent"
+ * import * as O from "effect/Option"
  *
  * const error = ContentEnrichmentError.make({
  *   message: "Language model returned empty metadata",
- *   url: "https://example.org/articles/ada"
+ *   url: O.some("https://example.org/articles/ada")
  * })
  * console.log(error._tag) // "ContentEnrichmentError"
  * ```

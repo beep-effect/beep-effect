@@ -1,6 +1,8 @@
 /**
  * Lexical scope stack for the confined CodeMode interpreter.
  *
+ * **Details**
+ *
  * Bindings themselves are immutable; updates replace the {@link Binding} value
  * inside a `MutableHashMap`. `let`/`const` hoisting uses reserve then initialize
  * so temporal-dead-zone reads fail; `var` uses {@link ScopeStack.declare}.
@@ -44,7 +46,8 @@ type ResolvedBinding = readonly [scope: Scope, binding: Binding];
  * console.log(scopes.get("count", node))
  * // 0
  *
- * scopes.declare("limit", 10, false, node)
+ * scopes.reserve("limit", false, node)
+ * scopes.initialize("limit", 10, node)
  * try {
  *   scopes.set("limit", 11, node)
  * } catch (error) {

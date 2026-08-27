@@ -106,7 +106,6 @@ export type Embedding = typeof Embedding.Type;
 /**
  * Embedding request for batching
  *
- *
  * **Example** (Create an embedding request)
  *
  * ```ts
@@ -130,7 +129,6 @@ export class EmbeddingRequest extends S.Class<EmbeddingRequest>($I`EmbeddingRequ
 
 /**
  * Provider metadata for cache key generation and configuration
- *
  *
  * **Example** (Create provider metadata)
  *

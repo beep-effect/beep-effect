@@ -2,6 +2,8 @@
  * trailing-spaces: no trailing whitespace at line ends — except inside
  * scalar content, where trailing whitespace is part of the parsed value.
  *
+ * **Details**
+ *
  * Recorded divergence from yamllint, which flags content too. A layout
  * rule must not corrupt values, and its fix certainly must not.
  *

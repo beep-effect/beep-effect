@@ -57,7 +57,10 @@
       "@beep/scratchpad/schemastore": ["schemastore/index.ts"],
       "@beep/scratchpad/memfs": ["memfs/index.ts"],
       "@beep/scratchpad/codemode": ["codemode/index.ts"],
-      "@beep/scratchpad/beep-docs": ["beep-docs/api-reference/index.ts"]
+      "@beep/scratchpad/beep-docs": ["beep-docs/api-reference/index.ts"],
+      "@beep/scratchpad/metadata": ["metadata/Metadata.models.ts"],
+      "@beep/scratchpad/microdata": ["microdata/Microdata.model.ts"],
+      "@beep/scratchpad/ontoskills/registry": ["ontoskills/registry/Registry.models.ts"]
     }
   },
   "examplesCompilerOptions": {
@@ -76,8 +79,8 @@
     "types": ["node", "bun"],
     "allowJs": false,
     "erasableSyntaxOnly": true,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "sourceMap": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -86,6 +89,43 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "jsx": "react-jsx",
-    "paths": { "effect-claudecode": ["../../claudecode/index.ts"] }
+    "paths": {
+      "effect-claudecode": ["../../../claudecode/index.ts"],
+      "@effect-ontology/index": ["../../../effect-ontology/index.ts"],
+      "@effect-ontology/Identity": ["../../../effect-ontology/Domain/Identity.ts"],
+      "@effect-ontology/PathLayout": ["../../../effect-ontology/Domain/PathLayout.ts"],
+      "@effect-ontology/Schema/EntityFactory": ["../../../effect-ontology/Schema/EntityFactory.ts"],
+      "@effect-ontology/Schema/Errors": ["../../../effect-ontology/Schema/Errors.ts"],
+      "@effect-ontology/Schema/MentionFactory": ["../../../effect-ontology/Schema/MentionFactory.ts"],
+      "@effect-ontology/Schema/RelationFactory": ["../../../effect-ontology/Schema/RelationFactory.ts"],
+      "@effect-ontology/Error/*": ["../../../effect-ontology/Domain/Error/*.ts"],
+      "@effect-ontology/Model/*": ["../../../effect-ontology/Domain/Model/*.ts"],
+      "@effect-ontology/Rdf/*": ["../../../effect-ontology/Domain/Rdf/*.ts"],
+      "@effect-ontology/Schema/*": ["../../../effect-ontology/Domain/Schema/*.ts"],
+      "@effect-ontology/*": ["../../../effect-ontology/*.ts"],
+      "@beep/scratchpad/yaml": ["../../../yaml/index.ts"],
+      "@beep/scratchpad/yaml/*": ["../../../yaml/*.ts"],
+      "@beep/scratchpad/jsonc": ["../../../jsonc/index.ts"],
+      "@beep/scratchpad/jsonc/*": ["../../../jsonc/*.ts"],
+      "@beep/scratchpad/jsonl": ["../../../jsonl/index.ts"],
+      "@beep/scratchpad/jsonl/*": ["../../../jsonl/*.ts"],
+      "@beep/scratchpad/toml": ["../../../toml/index.ts"],
+      "@beep/scratchpad/toml/*": ["../../../toml/*.ts"],
+      "@beep/scratchpad/glob": ["../../../glob/index.ts"],
+      "@beep/scratchpad/glob/*": ["../../../glob/*.ts"],
+      "@beep/scratchpad/semver": ["../../../semver/index.ts"],
+      "@beep/scratchpad/semver/*": ["../../../semver/*.ts"],
+      "@beep/scratchpad/schemastore": ["../../../schemastore/index.ts"],
+      "@beep/scratchpad/schemastore/*": ["../../../schemastore/*.ts"],
+      "@beep/scratchpad/memfs": ["../../../memfs/index.ts"],
+      "@beep/scratchpad/memfs/*": ["../../../memfs/*.ts"],
+      "@beep/scratchpad/codemode": ["../../../codemode/index.ts"],
+      "@beep/scratchpad/codemode/*": ["../../../codemode/*.ts"],
+      "@beep/scratchpad/beep-docs": ["../../../beep-docs/api-reference/index.ts"],
+      "@beep/scratchpad/beep-docs/*": ["../../../beep-docs/*.ts"],
+      "@beep/scratchpad/metadata": ["../../../metadata/Metadata.models.ts"],
+      "@beep/scratchpad/microdata": ["../../../microdata/Microdata.model.ts"],
+      "@beep/scratchpad/ontoskills/registry": ["../../../ontoskills/registry/Registry.models.ts"]
+    }
   }
 }

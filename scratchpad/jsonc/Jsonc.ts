@@ -2,12 +2,12 @@
  * The `Jsonc` facade: parsing, comment stripping, semantic equality and the
  * flagship schema factories, plus the parse-error vocabulary they raise.
  *
+ * **Details**
+ *
  * `Jsonc` is a namespace of statics over the internal parser and the schema
  * layer — not itself a schema class. `parse`/`parseTree` and schema decoding
  * carry a real `JsoncParseError` channel; `stripComments`/`equals`/`equalsValue`
  * are pure total functions.
- *
- * **Details**
  *
  * The internal parser returns raw error records (`{ code, offset, length }`).
  * This module maps them into `JsoncParseErrorDetail` — deriving
@@ -187,6 +187,8 @@ export class JsoncParseError extends Schema.TaggedError<JsoncParseError>($I`Json
 /**
  * Options controlling parse behavior. All fields are omissible.
  *
+ * **Details**
+ *
  * - `disallowComments` — reject line and block comments as a parse error
  *   instead of the JSONC default of allowing them. Defaults to `false`.
  * - `allowTrailingComma` — accept a trailing comma before a closing `}`/`]`.
@@ -228,6 +230,8 @@ export class JsoncParseOptions extends Schema.Class<JsoncParseOptions>($I`JsoncP
 /**
  * The public stringify-error code vocabulary, appearing as the `code` field of
  * {@link JsoncStringifyError}:
+ *
+ * **Details**
  *
  * - `CircularReference` — the value contains a reference cycle, so no finite
  *   JSON text exists for it.
@@ -274,6 +278,8 @@ export type JsoncStringifyErrorCode = typeof JsoncStringifyErrorCode.Type;
 /**
  * Options controlling stringify behavior. All fields are omissible; the
  * vocabulary matches `JsoncFormattingOptions`.
+ *
+ * **Details**
  *
  * - `tabSize` — the indent width in spaces when `insertSpaces` is `true`.
  *   Defaults to `2`; `0` produces compact single-line output.

@@ -14,6 +14,14 @@ type CompressedCatalog = { readonly [K in CompressedFileType]: FileTypeInfo & { 
 /**
  * Internal archive metadata keyed by canonical extension.
  *
+ * **Example** (Read compressed metadata)
+ *
+ * ```ts
+ * import { compressedCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.compressed-catalog"
+ *
+ * console.log(compressedCatalog.lzh.extension) // "lzh"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

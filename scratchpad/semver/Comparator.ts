@@ -15,6 +15,8 @@ const $I = $ScratchpadId.create("semver/Comparator");
 /**
  * Indicates that a string could not be parsed as a single comparator.
  *
+ * **Details**
+ *
  * Raised by {@link Comparator.parse}. The decode direction of
  * {@link Comparator.FromString} reports the same failure through a generic
  * `Schema` parse error instead of this class, carrying the same message.

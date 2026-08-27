@@ -1,6 +1,8 @@
 /**
  * YAML 1.2 CST parser — transforms a token stream into a Concrete Syntax Tree.
  *
+ * **Details**
+ *
  * The CST preserves every character of the original input, including
  * whitespace, comments, and structural indicators. No value interpretation
  * occurs at this stage — `true` is still the string `"true"`. Nesting is
@@ -1071,6 +1073,8 @@ function parseDocuments(tokens: ReadonlyArray<YamlToken>, text: string): CstNode
 
 /**
  * Parse YAML source text and collect all CST document nodes into an array.
+ *
+ * **Details**
  *
  * Each CST node preserves every character of the original input, including
  * whitespace, comments, and structural indicators. No value interpretation

@@ -1,6 +1,8 @@
 /**
  * Compile-time guard caps for hostile glob input.
  *
+ * **Details**
+ *
  * This is the zero-dependency leaf every guard imports — no import cycle is
  * possible through here. Pattern length, brace-expansion budget, globstar
  * backtracking, extglob parse depth, and structural nesting each have a
@@ -323,7 +325,7 @@ const PositiveSafeInteger = S.Int.check(S.isGreaterThan(0)).pipe(
  * }
  * ```
  *
- * @throws {@link GlobInvariantError} when `value` is not a positive safe integer.
+ * @throws When `value` is not a positive safe integer, with {@link GlobInvariantError}.
  * @internal
  * @category assertions
  * @since 0.0.0

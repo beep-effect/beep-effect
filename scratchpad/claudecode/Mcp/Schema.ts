@@ -1,6 +1,8 @@
 /**
  * Schema-backed Claude Code MCP server transports.
  *
+ * **Details**
+ *
  * The decoded domain uses `Option` for absent wire keys while preserving
  * Claude Code's current transport shapes on the encoded side.
  *

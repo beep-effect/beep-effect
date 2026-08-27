@@ -70,8 +70,8 @@ export class NomicNlpError extends S.TaggedError<NomicNlpError>($I`NomicNlpError
  * ```ts
  * import { NomicTaskType } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicTaskType.is("search_query")) // true
- * console.log(NomicTaskType.is("rerank")) // false
+ * console.log(NomicTaskType.is.search_query("search_query")) // true
+ * console.log(NomicTaskType.is.search_query("rerank")) // false
  * ```
  *
  * @category schemas

@@ -198,7 +198,7 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
  * const closed = EmbeddingInfrastructure.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
- * console.log(closed !== NomicEmbeddingInfrastructure) // true
+ * console.log(closed)
  * ```
  *
  * @category layers

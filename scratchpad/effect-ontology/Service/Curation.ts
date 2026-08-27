@@ -61,7 +61,6 @@ const CurationActionTag = LiteralKit([
 /**
  * Combined error type for curation service operations
  *
- *
  * @category type-level
  * @since 0.0.0
  */

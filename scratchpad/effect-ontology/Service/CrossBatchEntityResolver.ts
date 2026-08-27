@@ -50,7 +50,6 @@ const ResolutionMethod = LiteralKit(["embedding_similarity", "new_canonical"]).p
 /**
  * Combined error type for cross-batch resolution operations
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -62,7 +61,6 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
 
 /**
  * Result of cross-batch entity resolution
- *
  *
  * **Example** (Create an empty resolution result)
  *
@@ -101,7 +99,6 @@ export class CrossBatchResolutionResult extends S.Class<CrossBatchResolutionResu
 
 /**
  * Describes the merged entity data exposed by this module.
- *
  *
  * **Example** (Create a resolved entity)
  *
@@ -144,7 +141,6 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
 
 /**
  * Describes the resolution stats data exposed by this module.
- *
  *
  * **Example** (Record resolution counts)
  *

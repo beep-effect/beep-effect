@@ -189,7 +189,6 @@ export const WikidataCandidate = S.Struct({
 /**
  * Describes the wikidata candidate data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -197,7 +196,6 @@ export type WikidataCandidate = typeof WikidataCandidate.Type;
 
 /**
  * Wikidata entity families accepted by entity search.
- *
  *
  * **Example** (Inspect Wikidata entity types)
  *

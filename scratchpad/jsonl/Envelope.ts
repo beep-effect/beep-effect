@@ -1,6 +1,8 @@
 /**
  * The envelope layer: the one opinion this package imposes.
  *
+ * **Details**
+ *
  * Every line is an envelope — `at`, `event`, an optional `scope`, and the
  * payload under `data` — and the payload is validated by the schema registered
  * for its tag. Everything the read vocabulary is built on lives on the
@@ -32,6 +34,8 @@ const $I = $ScratchpadId.create("jsonl/Envelope");
 
 /**
  * Stage one of the read path: the envelope with its payload left undecoded.
+ *
+ * **Details**
  *
  * A `Schema.Struct` rather than a `Schema.Class` deliberately. This is the hot
  * path — it runs for every line of every read, including the lines a `Slice` is
@@ -89,6 +93,8 @@ export const EnvelopeFrame = Schema.Struct({
 /**
  * Decoded stage-one envelope produced by {@link EnvelopeFrame}.
  *
+ * **Details**
+ *
  * `data` is still the raw JSON value; the registered payload schema has not run.
  *
  * @see {@link EnvelopeFrame} for the runtime schema and two-stage decode contract.
@@ -100,6 +106,8 @@ export type EnvelopeFrame = typeof EnvelopeFrame.Type;
 /**
  * A decoded envelope: the frame, its validated payload, and where it sits in
  * the source.
+ *
+ * **Details**
  *
  * This interface is what the "derived discriminated union" derives *into*.
  * A registry of event definitions produces a union of these discriminated on
@@ -228,6 +236,8 @@ const completeResult = <const R extends JsonlEvent.Registry>(
 /**
  * Decoding, encoding and the envelope-level walk-back.
  *
+ * **Details**
+ *
  * Every operation here is synchronous and `Result`-based; the `Effect` forms are
  * defined **in terms of** the sync ones via `Effect.fromResult`, so the two can
  * never drift into two implementations of the same rule.
@@ -252,7 +262,7 @@ const completeResult = <const R extends JsonlEvent.Registry>(
  *   data: S.Struct({ round: S.Number }),
  * })
  * const Unlinked = JsonlEvent.make("unlinked", { data: S.Void, terminal: true })
- * const events = [MailReceived, Unlinked] as const
+ * const events = [MailReceived, Unlinked]
  * const at = DateTime.makeUnsafe("2026-01-15T12:00:00.000Z")
  *
  * const line = Line.split(

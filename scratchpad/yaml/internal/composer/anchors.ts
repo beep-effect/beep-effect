@@ -2,6 +2,8 @@
  * Anchor and alias machinery: alias construction, anchor registration, name
  * scanning, and the value-extraction helpers the facade drives.
  *
+ * **Details**
+ *
  * Alias budget counting and DuplicateAnchor channel reuse (error vs
  * warning) live here. `__proto__` mapping keys round-trip as own data
  * properties, not prototype mutation.
@@ -20,6 +22,8 @@ import type { ComposerState, NodeMeta } from "./state.ts";
 /**
  * Check if a pending anchor is being applied to an alias node (invalid in YAML 1.2 §3.2.2).
  * Aliases represent references to existing anchored nodes and cannot have their own anchors.
+ *
+ * **Details**
  *
  * Uses `DuplicateAnchor` error code as a pragmatic reuse — semantically this is
  * "anchor on alias" rather than "same name defined twice", but adding a

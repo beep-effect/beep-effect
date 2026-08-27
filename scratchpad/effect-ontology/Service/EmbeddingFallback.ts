@@ -39,7 +39,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
 /**
  * Fallback chain configuration
  *
- *
  * **Example** (Create a fallback chain)
  *
  * ```ts
@@ -63,7 +62,6 @@ export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`Fallbac
 
 /**
  * Active provider tracking for observability
- *
  *
  * **Example** (Create active-provider state)
  *

@@ -1,6 +1,8 @@
 /**
  * Engine entry guard for glob pattern strings.
  *
+ * **Details**
+ *
  * Rejects a non-string as a schema-backed invariant defect and an over-length string as
  * the typed {@link GuardExceeded} `PatternTooLong` signal the facade
  * materializes into {@link GlobPatternError}. A non-string cannot arrive
@@ -43,7 +45,7 @@ import { GlobInvariantError, GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.
  * }
  * ```
  *
- * @throws {@link GlobInvariantError} when `pattern` is not a string — a programmer defect
+ * @throws When `pattern` is not a string — a {@link GlobInvariantError} programmer defect
  * outside the typed error channel.
  * @throws `GuardExceeded` with reason `PatternTooLong` when the string
  * exceeds 64 KiB.

@@ -128,7 +128,6 @@ const isLocalStorageKey = S.is(LocalStorageKey);
 /**
  * Result of getWithGeneration - includes content and version for optimistic locking
  *
- *
  * **Example** (Read content with a generation)
  *
  * ```ts
@@ -161,11 +160,12 @@ export class ObjectWithGeneration extends S.Class<ObjectWithGeneration>($I`Objec
  *
  * ```ts
  * import { GenerationMismatchError } from "@effect-ontology/Service/Storage"
+ * import * as O from "effect/Option"
  *
  * const error = GenerationMismatchError.make({
  *   key: "docs/ada.txt",
  *   expectedGeneration: "1",
- *   actualGeneration: "2"
+ *   actualGeneration: O.some("2")
  * })
  * console.log(error._tag) // "GenerationMismatchError"
  * ```

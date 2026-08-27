@@ -1883,8 +1883,9 @@ export type BackpressureStrategy = typeof BackpressureStrategy.Type;
  * ```ts
  * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
  * import { Duration } from "effect"
+ * import * as S from "effect/Schema"
  *
- * const config = BackpressureConfig.make({
+ * const config = S.decodeSync(BackpressureConfig)({
  *   maxQueueSize: 500,
  *   warningThreshold: 0.75,
  *   strategy: "block_producer",

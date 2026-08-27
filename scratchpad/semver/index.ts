@@ -1,6 +1,8 @@
 /**
  * Strict SemVer 2.0.0 versions, ranges and comparators as Effect schemas.
  *
+ * **Details**
+ *
  * Domain classes carry their own behavior — instance methods are the
  * canonical API, cross-cutting operations are dual statics on the owning
  * class, and each class doubles as its schema (`SemVer.FromString`,
@@ -17,7 +19,7 @@
  *   const version = yield* SemVer.parse("1.2.3");
  *   const next = version.bump.minor();
  *   const range = yield* Range.parse("^1.0.0");
- *   return [next.toString(), range.test(version), version.gt(next)] as const;
+ *   return [next.toString(), range.test(version), version.gt(next)];
  * });
  *
  * console.log(Effect.runSync(program));

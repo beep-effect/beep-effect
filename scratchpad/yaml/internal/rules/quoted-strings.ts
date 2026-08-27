@@ -2,6 +2,8 @@
  * quoted-strings: quote-style policy for string VALUE scalars (and sequence
  * items). Keys are out of scope (they belong to `truthy` when they matter).
  *
+ * **Details**
+ *
  * `quoteType` defaults to double. Fixes are conservative: a quote swap or
  * wrap happens only when it provably preserves the parsed value; otherwise
  * the diagnostic ships without a fix.

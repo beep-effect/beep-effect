@@ -84,7 +84,6 @@ export const CorrectionStrategy = LiteralKit([
 /**
  * Correction strategy based on violation type
  *
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -1,6 +1,8 @@
 /**
  * The one filter shape, shared by every read surface.
  *
+ * **Details**
+ *
  * One vocabulary means one thing to learn: a consumer who can express a
  * subscription can express a query and a projection without translating. It is
  * also what makes the filter-before-decode guarantee expressible — every field
@@ -16,6 +18,8 @@ import type { JsonlEvent } from "./JsonlEvent.ts";
 
 /**
  * A filter over envelope fields.
+ *
+ * **Details**
  *
  * Every field is optional and they combine with AND. An omitted field does not
  * filter; an empty `events: []` or `scopes: []` matches nothing, which is the
@@ -65,6 +69,8 @@ export interface Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R
 /**
  * Resume a historical or live read from a persisted byte cursor.
  *
+ * **Details**
+ *
  * Persist a processed envelope's `line.end` — not `line.offset` — and pass it
  * back as `cursor` so replay starts at the next line: nothing is redelivered
  * and nothing is skipped. Offsets are post-BOM, matching every offset this
@@ -91,6 +97,8 @@ export interface CursoredSlice<R extends JsonlEvent.Registry, T extends JsonlEve
 
 /**
  * Whether a frame satisfies a slice.
+ *
+ * **Details**
  *
  * Takes the **frame**, never a decoded envelope — that is what keeps matching
  * ahead of the payload schema on the read path.

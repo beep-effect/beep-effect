@@ -96,7 +96,6 @@ const isRetryableImageError = (error: ImageError): boolean =>
 /**
  * Options for image fetching
  *
- *
  * **Example** (Use the ImageFetchOptions contract)
  *
  * ```ts

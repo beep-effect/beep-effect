@@ -2,6 +2,8 @@
  * Pure JSONC formatting: compute the minimal set of whitespace edits that
  * bring a document to canonical shape, or apply them in one step.
  *
+ * **Details**
+ *
  * Kept as its own concept module (rather than folded into the `Jsonc` facade)
  * so the jsonc and yaml surfaces stay structurally symmetric — `YamlFormatter`
  * will want the identical shape. Both statics are pure and total: computing

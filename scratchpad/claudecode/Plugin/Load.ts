@@ -1,6 +1,8 @@
 /**
  * Plugin directory scanning and loading.
  *
+ * **Details**
+ *
  * Complements `Plugin.write` with the inverse operations for existing plugin
  * directories: `scan` inspects canonical component locations and infers a
  * normalized manifest, `load` parses the discovered files into a typed

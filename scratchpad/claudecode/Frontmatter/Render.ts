@@ -119,6 +119,8 @@ const encodeFrontmatter = <Schema extends S.Top>(schema: Schema, input: Schema["
 /**
  * Render a markdown document with optional YAML frontmatter.
  *
+ * **Details**
+ *
  * Rendering is effectful because both schema validation and YAML serialization
  * can fail. Empty or absent frontmatter produces the body unchanged.
  *

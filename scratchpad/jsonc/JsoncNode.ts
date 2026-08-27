@@ -1,6 +1,8 @@
 /**
  * The recursive JSONC AST node and the path vocabulary used to navigate it.
  *
+ * **Details**
+ *
  * `JsoncNode` is a `Schema.Class` with a `Schema.suspend` self-reference for
  * `children`; it deliberately carries no parent pointers (circular references
  * would break structural equality, serialization and Schema encode/decode).
@@ -132,6 +134,8 @@ export type JsoncNodeType = typeof JsoncNodeType.Type;
 
 /**
  * An immutable JSONC AST node produced by `Jsonc.parseTree`.
+ *
+ * **Details**
  *
  * The `parent` field present in Microsoft's `jsonc-parser` is intentionally
  * omitted: circular references would break structural equality, serialization
@@ -348,6 +352,8 @@ export class JsoncNode extends Schema.Class<JsoncNode>($I`JsoncNode`)(
  * Validation-free constructor used by the trusted tree builder in
  * `internal/parser.ts`. Not re-exported from the package barrel; external
  * callers construct via the validating {@link JsoncNode.make}.
+ *
+ * **Details**
  *
  * Assigns props onto `JsoncNode.prototype` so methods, branding and
  * structural equality match a `make`-built instance without re-parsing the

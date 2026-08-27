@@ -2,6 +2,8 @@
  * Document-level composition: the per-CST-document compose walk, directive
  * validation, and the engine entry points the facade drives.
  *
+ * **Details**
+ *
  * This is the only composer module that imports both `block.ts` and
  * `flow.ts`; nothing in the engine imports it back. Fatal-code filtering is
  * the facade's job — these entry points return raw diagnostics unfiltered.
@@ -953,6 +955,8 @@ function findNestedDirective(node: CstNode): CstNode | null {
 /**
  * Validate directive placement across a multi-document CST stream.
  *
+ * **Details**
+ *
  * YAML 1.2 requires that directives appearing between documents must be
  * preceded by a document-end marker (`...`). This function checks each
  * CST document node after the first: if it contains directives, the
@@ -1222,6 +1226,22 @@ export const composeFirstDocument: {
  */
 type CountedDocument = { readonly document: RawYamlDocument; readonly documentCount: number };
 
+/**
+ * Composes the first YAML document and reports the stream's CST document count.
+ *
+ * **Example** (Count a two-document stream)
+ *
+ * ```ts
+ * import { composeFirstDocumentCounted } from "@beep/scratchpad/yaml/internal/composer/document"
+ *
+ * const result = composeFirstDocumentCounted("a: 1\n---\nb: 2\n")
+ * console.log(result.documentCount) // 2
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const composeFirstDocumentCounted: {
 	(text: string, options?: ParseOptionsInput): CountedDocument;
 	(options?: ParseOptionsInput): (text: string) => CountedDocument;
@@ -1273,6 +1293,22 @@ type ComposedDocuments = {
 	readonly streamErrors: ReadonlyArray<RawDiagnostic>;
 };
 
+/**
+ * Composes every document in a YAML stream and retains stream-level diagnostics.
+ *
+ * **Example** (Compose two documents)
+ *
+ * ```ts
+ * import { composeAllDocuments } from "@beep/scratchpad/yaml/internal/composer/document"
+ *
+ * const result = composeAllDocuments("a: 1\n---\nb: 2\n")
+ * console.log(result.documents.length) // 2
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const composeAllDocuments: {
 	(text: string, options?: ParseOptionsInput): ComposedDocuments;
 	(options?: ParseOptionsInput): (text: string) => ComposedDocuments;

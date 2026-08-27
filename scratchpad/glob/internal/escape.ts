@@ -1,6 +1,8 @@
 /**
  * Escape glob magic characters so a literal string matches only itself.
  *
+ * **Details**
+ *
  * Ported from minimatch@10.2.5. Copyright Isaac Z. Schlueter and Contributors.
  * License: BlueOak-1.0.0. Verbatim except the options type now comes from the
  * extracted types leaf.
@@ -30,6 +32,8 @@ const escapePattern = (
 
 /**
  * Escape all magic characters in a glob pattern.
+ *
+ * **Details**
  *
  * If the `windowsPathsNoEscape` option is used, then characters are escaped
  * by wrapping in `[]`, because a magic character wrapped in a character class

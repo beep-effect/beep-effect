@@ -1,6 +1,8 @@
 /**
  * Prewired ManagedRuntime for effect-claudecode programs.
  *
+ * **Details**
+ *
  * `ClaudeRuntime` bundles the platform services most library consumers
  * otherwise have to wire manually (`FileSystem`, `Path`, and logger
  * configuration) into a reusable `ManagedRuntime`. Callers may replace the
@@ -83,6 +85,8 @@ export type LoggerKind = typeof LoggerKind.Type;
 /**
  * Runtime construction options.
  *
+ * **Details**
+ *
  * `platformLayer` replaces the default Node-backed `FileSystem` / `Path`
  * layer, which is useful in tests. `layer` merges in additional services.
  *
@@ -108,6 +112,8 @@ export interface RuntimeOptions<R = never, E = never, EP = never> {
 /**
  * Runtime construction options for `ClaudeRuntime.project(...)`.
  *
+ * **Details**
+ *
  * Adds the cached `ClaudeProject` service for one concrete project root while
  * preserving the same platform / logger overrides as `ClaudeRuntime.make(...)`.
  *
@@ -130,6 +136,8 @@ export interface ProjectRuntimeOptions<R = never, E = never, EP = never> extends
 
 /**
  * Runtime construction options for `ClaudeRuntime.plugin(...)`.
+ *
+ * **Details**
  *
  * Like `ClaudeRuntime.project(...)`, but requires an explicit plugin root so
  * plugin scans and named component lookups resolve against the plugin
@@ -327,6 +335,8 @@ export const defaultRuntime = <R = never, E = never, EP = never>(
  * Create a prewired runtime that also includes the cached `ClaudeProject`
  * service for one project root.
  *
+ * **Details**
+ *
  * This is the recommended entry point for project-aware scripts that need
  * settings, `.mcp.json`, or plugin component lookups in addition to the base
  * platform services.
@@ -350,6 +360,8 @@ export const project = <R = never, E = never, EP = never>(
 
 /**
  * Create a prewired runtime for plugin-aware scripts.
+ *
+ * **Details**
  *
  * Compared with `ClaudeRuntime.project(...)`, this preset requires an explicit
  * `pluginRoot` so `ClaudeProject.plugin` and named component lookups read from

@@ -1,6 +1,8 @@
 /**
  * Effect service carrying per-invocation hook context.
  *
+ * **Details**
+ *
  * Every hook handler has access to `HookContext.Service` via `yield*`
  * (or the individual accessor effects). The service is constructed by
  * the runner from the decoded envelope of the incoming stdin payload,

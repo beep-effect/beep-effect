@@ -22,8 +22,9 @@ const $I = $ScratchpadId.create("codemode/Codemode.result");
  *
  * ```ts
  * import { CodeMode } from "@beep/scratchpad/codemode"
+ * import * as S from "effect/Schema"
  *
- * const location = CodeMode.DiagnosticLocation.make({ line: 1, column: 1 })
+ * const location = S.decodeSync(CodeMode.DiagnosticLocation)({ line: 1, column: 1 })
  *
  * console.log(location.line) // 1
  * console.log(location.column) // 1

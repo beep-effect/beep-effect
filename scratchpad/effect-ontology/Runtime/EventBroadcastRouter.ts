@@ -761,7 +761,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
  * )
  * const program = broadcastDomainEvent(entry)
  * console.log(entry.payload.ontologyId) // "football"
- * console.log(program !== entry)
+ * console.log(program)
  * ```
  *
  * @category handlers

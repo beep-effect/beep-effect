@@ -53,7 +53,6 @@ const randomUuid = Effect.all([
 /**
  * Input for creating a new claim
  *
- *
  * **Example** (Create a claim payload)
  *
  * ```ts
@@ -101,7 +100,6 @@ export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimIn
 
 /**
  * Result of deprecating a claim
- *
  *
  * **Example** (Record a deprecation)
  *

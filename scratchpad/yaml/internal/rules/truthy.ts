@@ -3,6 +3,8 @@
  * in YAML 1.2 but read as booleans to humans (the `on:` key of a workflow
  * file is the canonical victim).
  *
+ * **Details**
+ *
  * Flags plain scalars — keys included by default — whose spelling is in
  * the 1.1 boolean family but not in `allowed`. Tagged `!!bool` / `!!str`
  * is explicit intent and never flagged.

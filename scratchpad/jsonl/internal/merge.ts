@@ -1,6 +1,8 @@
 /**
  * Pollution-safe shallow merge for `appendPatch`.
  *
+ * **Details**
+ *
  * Ported from `@effected/config-file`'s `internal/deepMerge.ts` recipe, minus
  * the recursion: `appendPatch` is a **shallow** merge by decision, so a nested
  * object in the patch replaces the one beneath it rather than merging into it.
@@ -39,6 +41,8 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
 
 /**
  * Whether a value can take part in a merge at all.
+ *
+ * **Details**
  *
  * Record-**like**, deliberately: a decoded `Schema.Class` payload is a class
  * instance, and excluding those would make the kit's dominant payload idiom
@@ -103,6 +107,8 @@ export const isPlainRecord = (value: unknown): value is Record<string, unknown> 
 /**
  * Whether `patch` may be merged into `base`.
  *
+ * **Details**
+ *
  * **Asymmetric, and deliberately unlike `@effected/config-file`'s `canMerge`.**
  * There, two *peer documents* are merged and requiring an identical prototype
  * keeps the merge honest. Here the patch is a caller-supplied **partial** —
@@ -151,6 +157,8 @@ export const canMerge: {
 
 /**
  * Shallow-merge `patch` over `base`, with `patch` winning.
+ *
+ * **Details**
  *
  * **Assignment is the hazard, not the keys.** `result[key] = value` and
  * `Object.assign` both use `[[Set]]`, which for a key named `__proto__` reaches

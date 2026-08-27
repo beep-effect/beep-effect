@@ -2,6 +2,8 @@
  * SchemaStore catalog versioning: unversioned `name.json` and versioned
  * `name-<version>.json` with full three-component SemVer labels.
  *
+ * **Details**
+ *
  * Two-part corpus labels (`1.2`, `1`) are rejected on purpose so a label
  * splits unambiguously out of a file name or URL.
  *
@@ -50,6 +52,8 @@ const isVersionLabel = (input: string): boolean => {
 
 /**
  * Indicates that a string is not a valid SchemaStore version label.
+ *
+ * **Details**
  *
  * Raised by {@link SchemaVersioning.parse}.
  *
@@ -110,6 +114,8 @@ export class InvalidSchemaVersionError extends Schema.TaggedError<InvalidSchemaV
  * A schema version label: a branded string holding a **full three-component
  * SemVer** — `major.minor.patch` with an optional prerelease, validated by
  * `@effected/semver` itself. Build metadata is rejected (see below).
+ *
+ * **Details**
  *
  * `1.2` and `1` are NOT accepted, though SchemaStore's own corpus uses such
  * labels: requiring all three components makes a label unambiguous to split
@@ -247,6 +253,8 @@ export type CatalogUrls = typeof CatalogUrls.Type;
  * `name.json` file, `url` only) and versioned (`name-<version>.json` files
  * — SchemaStore's own suffix convention — a `versions` map, and `url`
  * pointing at the latest version).
+ *
+ * **Details**
  *
  * Version labels are full three-component SemVer, so ordering is plain
  * SemVer precedence: `1.10.0` above `1.9.0`, `2.0.0-beta` below `2.0.0`.

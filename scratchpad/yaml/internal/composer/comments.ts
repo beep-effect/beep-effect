@@ -4,6 +4,8 @@
  * comment field triple (`commentBefore` / `comment` / `spaceBefore`) onto an
  * already-composed node.
  *
+ * **Details**
+ *
  * Comments live on nodes; `YamlPair` carries none. An own-line comment
  * attaches forward to the following entry's KEY as `commentBefore`; a
  * same-line trailing comment attaches to the VALUE; absent-value trailing
@@ -56,6 +58,13 @@ export const CommentFields = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of optional leading, trailing and blank-line fidelity carried by a YAML node.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CommentFields = typeof CommentFields.Type;
 
 /**
@@ -281,6 +290,8 @@ function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
  * deliberately NOT excluded — their emission drops the trailing blank from
  * the value, so the `spaceBefore` capture is exactly what re-creates it.
  *
+ * **Details**
+ *
  * `prev` is the last composed node before `offset` (a pair's value, a seq
  * item); the check descends to its deepest trailing scalar and requires the
  * blank line to start inside that scalar's token span.
@@ -351,6 +362,8 @@ export const hasBlankLineBelow: {
  * The stored text of a comment token: the RAW post-`#` slice, reference
  * parity with the `yaml` npm package — `# section` stores `" section"`,
  * `#no-space` stores `"no-space"`, `#   aligned` keeps its alignment.
+ *
+ * **Details**
  *
  * The one reserved string is `""`, which encodes an embedded blank line
  * inside a joined comment run — so a spaces-only raw slice stores with ONE
@@ -435,6 +448,16 @@ export const columnAt: {
  * block). Escaped comments ride `ComposerState` up one level, where the
  * enclosing composer re-injects them into its own item stream.
  *
+ * **Example** (Decode an escaped comment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EscapedComment } from "@beep/scratchpad/yaml/internal/composer/comments"
+ *
+ * const comment = S.decodeUnknownSync(EscapedComment)({ text: "# next", offset: 12 })
+ * console.log(comment.offset) // 12
+ * ```
+ *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -448,6 +471,13 @@ export const EscapedComment = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of comment promoted from a nested collection for attachment by an outer composer scope.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EscapedComment = typeof EscapedComment.Type;
 
 /**

@@ -1,6 +1,8 @@
 /**
  * eof-newline: a non-empty document must end with a newline.
  *
+ * **Details**
+ *
  * The fix inserts one — a zero-length surgical edit at end-of-input.
  * Empty documents are skipped.
  *

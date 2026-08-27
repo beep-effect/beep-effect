@@ -1,6 +1,8 @@
 /**
  * Schema-backed model of Claude Code 2.1.220 `settings.json`.
  *
+ * **Details**
+ *
  * The official settings reference is the primary contract. The published
  * SchemaStore schema supplies additional structural detail where it agrees
  * with that reference. Unknown top-level keys are retained separately by the
@@ -1719,6 +1721,8 @@ const AllowedChannelPlugin = S.Struct({
 
 /**
  * A Claude Code 2.1.220 `settings.json` file.
+ *
+ * **Details**
  *
  * Every wire key is optional and decodes to `Option`; this preserves the
  * distinction between an absent lower-priority value and an explicit

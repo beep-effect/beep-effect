@@ -1,6 +1,8 @@
 /**
  * Comment-preserving YAML formatting and path-targeted modification.
  *
+ * **Details**
+ *
  * Computes non-mutating edits that reformat a document or change a value at a
  * path via parse → transform AST → stringify → diff. `StringifyFailure` is
  * left as a defect: format/modify never stringify a cyclic graph, so that
@@ -51,6 +53,8 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * region; a positional `range` argument to {@link YamlFormat.format} wins
  * over this field) and `requoteScalars` (default `false`).
  *
+ * **Details**
+ *
  * `requoteScalars` makes `quoteStyle` apply to scalars **already quoted in
  * the source** on the format path — by default formatting preserves an
  * existing scalar's own quote style, and `quoteStyle` governs only quotes the
@@ -70,8 +74,6 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * Construct with the validated `YamlFormattingOptions.make({ ... })` static —
  * the kit convention (never `new`). Call sites that take a
  * `YamlFormattingOptions` also accept a structurally-matching plain literal.
- *
- * **Details**
  *
  * `requoteScalars` is format-only: it is deliberately absent from
  * {@link Yaml.stringify} and {@link YamlFormat.modify}. A re-quote happens

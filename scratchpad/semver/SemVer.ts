@@ -31,6 +31,8 @@ const $I = $ScratchpadId.create("semver/SemVer");
 /**
  * Indicates that a string could not be parsed as a valid SemVer 2.0.0 version.
  *
+ * **Details**
+ *
  * Raised by {@link SemVer.parse}. The decode direction of
  * {@link SemVer.FromString} reports the same failure through a generic
  * `Schema` parse error instead of this class, carrying the same message.
@@ -124,6 +126,8 @@ const buildIdentifier = Schema.String.check(Schema.isPattern(/^[0-9A-Za-z-]+$/))
  * validated in-schema (non-negative integer components, well-formed
  * identifiers), so `SemVer.make` only produces valid versions.
  *
+ * **Details**
+ *
  * Instance methods are the canonical API; cross-cutting operations exist as
  * dual statics on the class. The string representation is the schema's
  * encoded form via {@link SemVer.FromString}.
@@ -151,7 +155,7 @@ const buildIdentifier = Schema.String.check(Schema.isPattern(/^[0-9A-Za-z-]+$/))
  * const program = Effect.gen(function* () {
  *   const v = yield* SemVer.parse("1.2.3");
  *   const next = v.bump.minor();
- *   return [next.toString(), v.gt(next), next.isStable] as const;
+ *   return [next.toString(), v.gt(next), next.isStable];
  * });
  *
  * console.log(Effect.runSync(program));

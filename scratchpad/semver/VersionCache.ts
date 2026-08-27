@@ -222,6 +222,8 @@ export class UnsatisfiedRangeError extends Schema.TaggedError<UnsatisfiedRangeEr
 /**
  * Operations of the {@link VersionCache} service.
  *
+ * **Details**
+ *
  * Queries over the whole cache (`versions`,
  * `filter`) never fail and return `[]` when nothing matches, while
  * extremum and navigation operations fail typed. `next`/`prev` layer two
@@ -291,6 +293,8 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  * An in-memory sorted version cache: mutation, query, resolution and
  * navigation over a set of {@link SemVer} versions ordered by SemVer
  * precedence. Pure state (a `Ref` of a sorted array) — no IO.
+ *
+ * **Details**
  *
  * Provide {@link VersionCache.layer} to construct the live implementation.
  *

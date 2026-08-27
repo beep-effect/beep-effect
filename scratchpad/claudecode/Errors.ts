@@ -1,6 +1,8 @@
 /**
  * Tagged errors for effect-claudecode.
  *
+ * **Details**
+ *
  * All cross-module errors are declared here and re-exported from
  * `src/index.ts` at the top level so consumers can import them directly
  * (e.g. `import { HookInputDecodeError } from 'effect-claudecode'`) and
@@ -40,6 +42,8 @@ const HookToolPayload = LiteralKit(["tool_name", "tool_input", "tool_response"])
 /**
  * Raised when reading from stdin fails.
  *
+ * **Details**
+ *
  * Exit-code mapping: 1 (non-blocking).
  *
  * **Example** (Inspect a stdin failure)
@@ -65,6 +69,8 @@ export class HookStdinReadError extends S.TaggedError<HookStdinReadError>($I`Hoo
 /**
  * Raised when decoding hook input fails. The `phase` field distinguishes
  * JSON parse failure (`'json'`) from schema validation failure (`'schema'`).
+ *
+ * **Details**
  *
  * Exit-code mapping: 2. Claude Code interprets exit 2 per event: it
  * blocks/denies some gate events and is feedback-only or ignored for
@@ -96,6 +102,8 @@ export class HookInputDecodeError extends S.TaggedError<HookInputDecodeError>($I
 /**
  * Raised when the user-supplied hook handler fails.
  *
+ * **Details**
+ *
  * Exit-code mapping: 1 (non-blocking).
  *
  * **Example** (Inspect a handler failure)
@@ -121,6 +129,8 @@ export class HookHandlerError extends S.TaggedError<HookHandlerError>($I`HookHan
 /**
  * Raised when encoding the handler output to JSON fails.
  *
+ * **Details**
+ *
  * Exit-code mapping: 1 (non-blocking).
  *
  * **Example** (Inspect an output encode failure)
@@ -145,6 +155,8 @@ export class HookOutputEncodeError extends S.TaggedError<HookOutputEncodeError>(
 
 /**
  * Raised when writing to stdout fails.
+ *
+ * **Details**
  *
  * Exit-code mapping: 1 (non-blocking).
  *

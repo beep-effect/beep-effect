@@ -1,6 +1,8 @@
 /**
  * The `Journal` service: one append-only, schema-validated JSONL file.
  *
+ * **Details**
+ *
  * Each registry gets its own uniquely-keyed class, so several journals coexist
  * in one layer graph with each one's operations typed by *its* registry.
  *
@@ -82,6 +84,8 @@ export type JournalReadError = JournalNotFound | PlatformError.PlatformError;
 
 /**
  * Per-append options: currently only the partition key stamped on the envelope.
+ *
+ * **Details**
  *
  * `at` is not caller-supplied — the service stamps it from the Effect `Clock`.
  *
@@ -1233,6 +1237,8 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
 /**
  * Define a `Journal` service class over a registry.
  *
+ * **Details**
+ *
  * A `Context.Service` cannot itself be generic over the registry — the shape
  * binds at declaration and a Key cannot be parameterized at retrieval — so each
  * registry gets its own uniquely-keyed class, and several journals coexist in
@@ -1251,7 +1257,7 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
  * import { Journal, JsonlEvent } from "@beep/scratchpad/jsonl"
  * import * as S from "effect/Schema"
  *
- * const events = [JsonlEvent.make("started", { data: S.Void })] as const
+ * const events = [JsonlEvent.make("started", { data: S.Void })]
  *
  * class MailJournal extends Journal.Service<MailJournal>()("dogfood/MailJournal", { events }) {}
  *

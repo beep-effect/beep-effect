@@ -3,6 +3,8 @@
  * document, enabling early termination (`Stream.take`) without building an
  * AST.
  *
+ * **Details**
+ *
  * The event union is a `Data.TaggedEnum` — serializable tagged values with
  * structural equality, consistent with the rest of the library. Malformed
  * input surfaces as `Error` events inside the union, so the stream stays
@@ -27,6 +29,8 @@ import type { JsoncPath, JsoncSegment } from "./JsoncNode.ts";
  * The discriminated union of JSONC visitor events. Every variant carries
  * `offset` and `length`; `ObjectBegin`, `ArrayBegin`, `ObjectProperty` and
  * `LiteralValue` also carry `path` context (the location being entered).
+ *
+ * **Details**
  *
  * - `ObjectBegin` / `ObjectEnd` — an object's opening `{` / closing `}`.
  * - `ObjectProperty` — an object key, ahead of its value; `property` is the

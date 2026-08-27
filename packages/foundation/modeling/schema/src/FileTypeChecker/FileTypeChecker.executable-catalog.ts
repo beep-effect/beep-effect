@@ -14,6 +14,14 @@ type ExecutableCatalog = { readonly [K in ExecutableFileType]: FileTypeInfo & { 
 /**
  * Internal executable metadata keyed by canonical extension.
  *
+ * **Example** (Read executable metadata)
+ *
+ * ```ts
+ * import { executableCatalog } from "@beep/schema/FileTypeChecker/FileTypeChecker.executable-catalog"
+ *
+ * console.log(executableCatalog.elf.extension) // "elf"
+ * ```
+ *
  * @internal
  * @category constants
  * @since 0.0.0

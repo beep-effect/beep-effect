@@ -67,7 +67,6 @@ export class GenerateWithFeedbackPolicy extends S.Class<GenerateWithFeedbackPoli
 /**
  * Constructor input accepted by {@link GenerateWithFeedbackPolicy}.
  *
- *
  * @category type-level
  * @since 0.0.0
  */

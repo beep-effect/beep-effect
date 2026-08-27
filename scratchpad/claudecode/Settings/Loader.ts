@@ -1,6 +1,8 @@
 /**
  * Effect-native loader for Claude Code `settings.json` files.
  *
+ * **Details**
+ *
  * Each source is parsed and validated independently, then merged in Claude
  * Code precedence order. Scalars use the higher-priority value, arrays are
  * concatenated and de-duplicated, and objects are merged recursively.
@@ -346,6 +348,8 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
 
 /**
  * Load and merge Claude Code settings for a working directory.
+ *
+ * **Details**
  *
  * Priority is user, project, local, optional `--settings`, then managed
  * settings. Files that do not exist are skipped. Malformed JSON and invalid

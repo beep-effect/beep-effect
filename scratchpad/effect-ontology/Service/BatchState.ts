@@ -150,13 +150,13 @@ export class BatchStateHub extends Context.Service<BatchStateHub>()($I`BatchStat
  * import { Effect, PubSub } from "effect"
  * import { BatchStateHub, BatchStateHubLayer } from "@effect-ontology/Service/BatchState"
  *
- * const empty = Effect.runSync(
+ * const capacity = Effect.runSync(
  *   Effect.gen(function* () {
  *     const hub = yield* BatchStateHub
- *     return yield* PubSub.isActive(hub)
+ *     return PubSub.capacity(hub)
  *   }).pipe(Effect.provide(BatchStateHubLayer))
  * )
- * console.log(empty) // true
+ * console.log(capacity) // 256
  * ```
  *
  * @category layers

@@ -77,7 +77,7 @@ const isAttributeValue = (value: unknown): value is string | number | boolean =>
  * **Example** (Inspect entity extractor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Chunk, Effect } from "effect"
  * import { EntityExtractor } from "@effect-ontology/Service/Extraction"
  *
  * const program = Effect.gen(function* () {
@@ -312,7 +312,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
  * **Example** (Inspect mention extractor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Chunk, Effect } from "effect"
  * import { MentionExtractor } from "@effect-ontology/Service/Extraction"
  *
  * const program = Effect.gen(function* () {
@@ -415,12 +415,12 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
  * **Example** (Inspect relation extractor)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Chunk, Effect } from "effect"
  * import { RelationExtractor } from "@effect-ontology/Service/Extraction"
  *
  * const program = Effect.gen(function* () {
  *   const extractor = yield* RelationExtractor
- *   return yield* extractor.extract("Ada founded Acme.", [], [])
+ *   return yield* extractor.extract("Ada founded Acme.", Chunk.empty(), [])
  * }).pipe(Effect.provide(RelationExtractor.Test))
  *
  * console.log(program)

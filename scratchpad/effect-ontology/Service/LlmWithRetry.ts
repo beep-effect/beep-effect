@@ -34,7 +34,6 @@ import { RetryPolicy, retryEffect } from "./Retry.ts";
 /**
  * Options for generateObjectWithRetry
  *
- *
  * @category type-level
  * @since 0.0.0
  */

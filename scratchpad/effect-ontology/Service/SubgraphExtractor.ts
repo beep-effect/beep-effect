@@ -84,7 +84,6 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
 /**
  * Constructor input accepted by {@link Subgraph}.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,7 +126,6 @@ export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
 
 /**
  * Constructor input accepted by {@link ExtractOptions}.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -175,7 +173,6 @@ export class ExtractRelevantOptions extends S.Class<ExtractRelevantOptions>($I`E
 
 /**
  * Constructor input accepted by {@link ExtractRelevantOptions}.
- *
  *
  * @category type-level
  * @since 0.0.0

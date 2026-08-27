@@ -1,6 +1,8 @@
 /**
  * Re-graft language-server annotation keywords that Draft-07 lowering drops.
  *
+ * **Details**
+ *
  * Core's `JsonSchema.toDocumentDraft07` copies a fixed keyword subset, so
  * vscode / taplo / tombi / IntelliJ keys admitted into the Draft 2020-12
  * document never survive lowering on their own. This module walks the two
@@ -25,6 +27,8 @@ const $I = $ScratchpadId.create("schemastore/AnnotationCarriers");
  * Indicates that the carrier re-graft walk nested past the package's
  * hardening cap (256 levels), which also intercepts cyclic inputs before
  * they can recurse forever.
+ *
+ * **Details**
  *
  * Raised by {@link AnnotationCarriers.carry}.
  *
@@ -204,6 +208,8 @@ const graft = (source: unknown, target: unknown, path: string, depth: number): u
  * ({@link KeywordFamilies}) from a Draft 2020-12 schema node onto its
  * lowered Draft-07 counterpart.
  *
+ * **Details**
+ *
  * Why this exists: annotation keys admitted into the Draft 2020-12 document
  * (core's `includeAnnotationKey`) are **dropped by core's Draft-07 lowering**,
  * whose keyword walk copies a fixed subset — verified against the installed
@@ -229,8 +235,6 @@ const graft = (source: unknown, target: unknown, path: string, depth: number): u
  * `Person.annotate({...})` inside a struct field — reaches neither the
  * `$ref` node nor the pool entry, even in the 2020-12 document, so there is
  * nothing to carry.
- *
- * **Details**
  *
  * {@link AnnotationCarriers.carryResult} is the synchronous primitive;
  * {@link AnnotationCarriers.carry} wraps the same walk in an Effect span.

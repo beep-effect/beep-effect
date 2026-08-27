@@ -1,6 +1,8 @@
 /**
  * SemVer 2.0.0 §11 comparison primitives over structural version parts.
  *
+ * **Details**
+ *
  * Every module in the package compares versions through these functions, so
  * precedence rules live exactly once. Operating on parts (not the `SemVer`
  * class) keeps this module import-cycle-free: the grammar, desugar, and

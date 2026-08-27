@@ -1,6 +1,8 @@
 /**
  * Iterative balanced-delimiter search for brace expansion.
  *
+ * **Details**
+ *
  * Fully iterative: this module has no recursion surface and therefore no
  * depth guard. Do not add one.
  *

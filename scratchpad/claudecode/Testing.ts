@@ -1,6 +1,8 @@
 /**
  * Test helpers for effect-claudecode.
  *
+ * **Details**
+ *
  * Provides a test harness (`runHookWithMockStdin`) that exercises the entire
  * runner pipeline — stdin → decode → handler → encode → stdout — without
  * spawning a process. Plus mock constructors and assertion helpers.
@@ -269,6 +271,8 @@ export class RunHookResult extends S.Class<RunHookResult>($I`RunHookResult`)(
  * Run a hook definition end-to-end against a mock stdin payload and capture
  * the stdout the runner would have written.
  *
+ * **Details**
+ *
  * This exercises the full runner pipeline (stdin read → JSON parse →
  * schema decode → handler → schema encode → stdout write) using
  * `Stdio.layerTest` instead of the real `process.stdin`/`process.stdout`.
@@ -359,6 +363,8 @@ const makeFixture =
  * Fixture builders for every Claude Code hook event. Each entry
  * returns a JSON string suitable for passing to
  * `runHookWithMockStdin`.
+ *
+ * **Details**
  *
  * Defaults carry only the minimum fields required by the event
  * schema; callers override only what matters for the test.
@@ -666,6 +672,8 @@ export const expectAskDecision = (output: unknown, reason?: string): void => {
 /**
  * Assert that `output` is a top-level `block` decision. If `reason`
  * is provided, it must match `reason`.
+ *
+ * **Details**
  *
  * Applies to events that encode a top-level JSON `decision: "block"`, such
  * as UserPromptSubmit, PostToolUse, PostToolUseFailure, PostToolBatch, Stop,
@@ -992,6 +1000,8 @@ const recursiveDirectoryEntries = (
  * Build a stateful in-memory file system harness with a ready-to-provide
  * `FileSystem` + `Path` layer and snapshot helpers for assertions.
  *
+ * **Details**
+ *
  * Unlike the earlier read-only helper, this harness supports directory
  * listings and writes, so it can exercise `Plugin.write`, `Plugin.scan`,
  * `Plugin.load`, `Settings.load`, frontmatter parsing, transcript reads, and
@@ -1208,6 +1218,8 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
 
 /**
  * Assert that a written plugin tree matches the expected file set exactly.
+ *
+ * **Details**
  *
  * String expectations must match exactly. `RegExp` expectations must match the
  * full file content via `expect(...).toMatch(...)`.

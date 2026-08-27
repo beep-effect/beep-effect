@@ -2,6 +2,8 @@
  * Build, version and lint SchemaStore-shaped Draft-07 JSON Schema documents
  * from Effect Schema sources.
  *
+ * **Details**
+ *
  * The pipeline is core's: `Schema.toJsonSchemaDocument` (Draft 2020-12)
  * lowered with `JsonSchema.toDocumentDraft07`. This package owns what core
  * does not: the SchemaStore publication shape (`$schema` + `$id` + root +
@@ -33,7 +35,7 @@
  *   })
  *   const findings = DocumentLint.lint(document)
  *   const text = yield* Effect.fromResult(document.serializeResult())
- *   return [findings.length, text.endsWith("\n")] as const
+ *   return [findings.length, text.endsWith("\n")]
  * })
  *
  * console.log(Effect.runSync(program))

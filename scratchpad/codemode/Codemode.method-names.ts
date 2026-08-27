@@ -61,11 +61,19 @@ export const arrayMethods = LiteralKit([
   "keys",
   "values",
   "entries",
-]).annotate(
-  $I.annote("arrayMethods", {
+]).pipe(
+  $I.annoteSchema("arrayMethods", {
     description: "Finite Array.prototype method names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link arrayMethods}.
+ *
+ * @see {@link arrayMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type arrayMethods = typeof arrayMethods.Type;
 
 /**
  * One Array instance method name admitted by {@link arrayMethods}.
@@ -91,11 +99,19 @@ export type ArrayMethod = typeof arrayMethods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const arrayStatics = LiteralKit(["isArray", "of", "from"]).annotate(
-  $I.annote("arrayStatics", {
+export const arrayStatics = LiteralKit(["isArray", "of", "from"]).pipe(
+  $I.annoteSchema("arrayStatics", {
     description: "Finite Array constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link arrayStatics}.
+ *
+ * @see {@link arrayStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type arrayStatics = typeof arrayStatics.Type;
 
 /**
  * One Array constructor name admitted by {@link arrayStatics}.
@@ -131,11 +147,19 @@ export const mapMethods = LiteralKit([
   "keys",
   "values",
   "entries",
-]).annotate(
-  $I.annote("mapMethods", {
+]).pipe(
+  $I.annoteSchema("mapMethods", {
     description: "Finite Map.prototype method names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link mapMethods}.
+ *
+ * @see {@link mapMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mapMethods = typeof mapMethods.Type;
 
 /**
  * One Map instance method name admitted by {@link mapMethods}.
@@ -161,11 +185,19 @@ export type MapMethod = typeof mapMethods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const mapStatics = LiteralKit(["groupBy"]).annotate(
-  $I.annote("mapStatics", {
+export const mapStatics = LiteralKit(["groupBy"]).pipe(
+  $I.annoteSchema("mapStatics", {
     description: "Finite Map constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link mapStatics}.
+ *
+ * @see {@link mapStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mapStatics = typeof mapStatics.Type;
 
 /**
  * One Map constructor name admitted by {@link mapStatics}.
@@ -207,11 +239,19 @@ export const setMethods = LiteralKit([
   "isSubsetOf",
   "isSupersetOf",
   "isDisjointFrom",
-]).annotate(
-  $I.annote("setMethods", {
+]).pipe(
+  $I.annoteSchema("setMethods", {
     description: "Finite Set.prototype method names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link setMethods}.
+ *
+ * @see {@link setMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type setMethods = typeof setMethods.Type;
 
 /**
  * One Set instance method name admitted by {@link setMethods}.
@@ -267,11 +307,19 @@ export const stringMethods = LiteralKit([
   "search",
   "localeCompare",
   "normalize",
-]).annotate(
-  $I.annote("stringMethods", {
+]).pipe(
+  $I.annoteSchema("stringMethods", {
     description: "Finite String.prototype method names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link stringMethods}.
+ *
+ * @see {@link stringMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type stringMethods = typeof stringMethods.Type;
 
 /**
  * One String instance method name admitted by {@link stringMethods}.
@@ -297,11 +345,19 @@ export type StringMethod = typeof stringMethods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const stringStatics = LiteralKit(["fromCharCode", "fromCodePoint"]).annotate(
-  $I.annote("stringStatics", {
+export const stringStatics = LiteralKit(["fromCharCode", "fromCodePoint"]).pipe(
+  $I.annoteSchema("stringStatics", {
     description: "Finite String constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link stringStatics}.
+ *
+ * @see {@link stringStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type stringStatics = typeof stringStatics.Type;
 
 /**
  * One String constructor name admitted by {@link stringStatics}.
@@ -446,11 +502,19 @@ export const dateMethods = LiteralKit([
   "getUTCMilliseconds",
   "getTimezoneOffset",
   ...DateSetterName.Options,
-]).annotate(
-  $I.annote("dateMethods", {
+]).pipe(
+  $I.annoteSchema("dateMethods", {
     description: "Finite Date.prototype method names, including mutating setters.",
   })
 );
+/**
+ * Decoded value produced by {@link dateMethods}.
+ *
+ * @see {@link dateMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type dateMethods = typeof dateMethods.Type;
 
 /**
  * One Date instance method name admitted by {@link dateMethods}.
@@ -476,11 +540,19 @@ export type DateMethod = typeof dateMethods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const dateStatics = LiteralKit(["now", "parse", "UTC"]).annotate(
-  $I.annote("dateStatics", {
+export const dateStatics = LiteralKit(["now", "parse", "UTC"]).pipe(
+  $I.annoteSchema("dateStatics", {
     description: "Finite Date constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link dateStatics}.
+ *
+ * @see {@link dateStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type dateStatics = typeof dateStatics.Type;
 
 /**
  * One Date constructor name admitted by {@link dateStatics}.
@@ -506,11 +578,19 @@ export type DateStatic = typeof dateStatics.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const regexpMethods = LiteralKit(["test", "exec", "toString"]).annotate(
-  $I.annote("regexpMethods", {
+export const regexpMethods = LiteralKit(["test", "exec", "toString"]).pipe(
+  $I.annoteSchema("regexpMethods", {
     description: "Finite RegExp.prototype method names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link regexpMethods}.
+ *
+ * @see {@link regexpMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type regexpMethods = typeof regexpMethods.Type;
 
 /**
  * One RegExp instance method name admitted by {@link regexpMethods}.
@@ -536,11 +616,19 @@ export type RegExpMethod = typeof regexpMethods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const regexpStatics = LiteralKit(["escape"]).annotate(
-  $I.annote("regexpStatics", {
+export const regexpStatics = LiteralKit(["escape"]).pipe(
+  $I.annoteSchema("regexpStatics", {
     description: "Finite RegExp constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link regexpStatics}.
+ *
+ * @see {@link regexpStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type regexpStatics = typeof regexpStatics.Type;
 
 /**
  * One RegExp constructor name admitted by {@link regexpStatics}.
@@ -575,11 +663,19 @@ export const objectStatics = LiteralKit([
   "assign",
   "fromEntries",
   "groupBy",
-]).annotate(
-  $I.annote("objectStatics", {
+]).pipe(
+  $I.annoteSchema("objectStatics", {
     description: "Finite Object constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link objectStatics}.
+ *
+ * @see {@link objectStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type objectStatics = typeof objectStatics.Type;
 
 /**
  * One Object constructor name admitted by {@link objectStatics}.
@@ -605,11 +701,19 @@ export type ObjectStatic = typeof objectStatics.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const numberMethods = LiteralKit(["toFixed", "toPrecision", "toExponential", "toString", "valueOf"]).annotate(
-  $I.annote("numberMethods", {
+export const numberMethods = LiteralKit(["toFixed", "toPrecision", "toExponential", "toString", "valueOf"]).pipe(
+  $I.annoteSchema("numberMethods", {
     description: "Finite Number.prototype method names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link numberMethods}.
+ *
+ * @see {@link numberMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type numberMethods = typeof numberMethods.Type;
 
 /**
  * One Number instance method name admitted by {@link numberMethods}.
@@ -642,11 +746,19 @@ export const numberStatics = LiteralKit([
   "isSafeInteger",
   "parseInt",
   "parseFloat",
-]).annotate(
-  $I.annote("numberStatics", {
+]).pipe(
+  $I.annoteSchema("numberStatics", {
     description: "Finite Number constructor names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link numberStatics}.
+ *
+ * @see {@link numberStatics} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type numberStatics = typeof numberStatics.Type;
 
 /**
  * One Number constructor name admitted by {@link numberStatics}.
@@ -710,11 +822,19 @@ export const mathMethods = LiteralKit([
   "clz32",
   "imul",
   "sumPrecise",
-]).annotate(
-  $I.annote("mathMethods", {
+]).pipe(
+  $I.annoteSchema("mathMethods", {
     description: "Finite Math function names the interpreter may dispatch.",
   })
 );
+/**
+ * Decoded value produced by {@link mathMethods}.
+ *
+ * @see {@link mathMethods} for the runtime method-name kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type mathMethods = typeof mathMethods.Type;
 
 /**
  * One Math function name admitted by {@link mathMethods}.

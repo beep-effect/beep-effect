@@ -20,9 +20,10 @@ const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
  * **Example** (Construct a section)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SearchSection } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
- * const section = new SearchSection({
+ * const section = S.decodeSync(SearchSection)({
  *   line: 12,
  *   level: 2,
  *   title: "Composition",
@@ -157,8 +158,8 @@ export class BlogStagedSearchMetadata extends S.Class<BlogStagedSearchMetadata>(
     page_title: S.String,
     description: S.String,
     published_at: S.String,
-    authors: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults),
-    tags: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults),
+    authors: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    tags: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
     sections: SearchSections,
   },
   $I.annote("BlogStagedSearchMetadata", {
@@ -175,7 +176,7 @@ export class BlogStagedSearchMetadata extends S.Class<BlogStagedSearchMetadata>(
  * import * as S from "effect/Schema"
  * import { StagedSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
- * const record = S.decodeUnknownSync(StagedSearchMetadata)({
+ * const record = S.decodeSync(StagedSearchMetadata)({
  *   schema_version: 1,
  *   content_source: "blog",
  *   page_href: "/blog/effect-4",
@@ -217,7 +218,7 @@ export type StagedSearchMetadata = typeof StagedSearchMetadata.Type;
  * import * as S from "effect/Schema"
  * import { DocumentationSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
- * const metadata = S.decodeUnknownSync(DocumentationSearchMetadata)({
+ * const metadata = S.decodeSync(DocumentationSearchMetadata)({
  *   schema_version: 1,
  *   content_source: "documentation",
  *   docs_version: "v4",
@@ -255,7 +256,7 @@ export class DocumentationSearchMetadata extends S.Class<DocumentationSearchMeta
  * import * as S from "effect/Schema"
  * import { BlogSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
- * const metadata = S.decodeUnknownSync(BlogSearchMetadata)({
+ * const metadata = S.decodeSync(BlogSearchMetadata)({
  *   schema_version: 1,
  *   content_source: "blog",
  *   page_href: "/blog/effect-4",
@@ -291,7 +292,7 @@ export class BlogSearchMetadata extends S.Class<BlogSearchMetadata>($I`BlogSearc
  * import * as S from "effect/Schema"
  * import { SearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
- * const record = S.decodeUnknownSync(SearchMetadata)({
+ * const record = S.decodeSync(SearchMetadata)({
  *   schema_version: 1,
  *   content_source: "documentation",
  *   docs_version: "v4",

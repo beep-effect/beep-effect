@@ -1,3 +1,10 @@
+/**
+ * Internal YAML diagnostic codes, records, and fatality classification.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $ScratchpadId } from "@beep/identity";
 import { HashSet, Schema } from "effect";
 
@@ -302,6 +309,13 @@ export const RawDiagnostic = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of internal YAML diagnostic with an engine code and UTF-16 source span.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RawDiagnostic = typeof RawDiagnostic.Type;
 
 /**

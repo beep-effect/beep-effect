@@ -85,7 +85,10 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
     url: S.optionalKey(S.String),
     phase: S.Literals(["fetch", "store", "enrich", "persist"]),
     cause: S.optionalKey(S.Defect()),
-  }
+  },
+  $I.annoteError<LinkIngestionError>("LinkIngestionError", {
+    description: "Failure raised while fetching, enriching, storing, or persisting a linked document.",
+  })
 ) {
   static readonly is = S.is(LinkIngestionError);
 }
@@ -96,7 +99,6 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
 
 /**
  * Options for ingesting a URL
- *
  *
  * **Example** (Use the IngestOptions contract)
  *
@@ -130,7 +132,6 @@ export class IngestOptions extends S.Class<IngestOptions>($I`IngestOptions`)(
 
 /**
  * Result of ingesting a URL
- *
  *
  * **Example** (Use the IngestResult contract)
  *
@@ -167,7 +168,6 @@ export class IngestResult extends S.Class<IngestResult>($I`IngestResult`)(
 /**
  * Options for bulk ingestion
  *
- *
  * **Example** (Use the BulkIngestOptions contract)
  *
  * ```ts
@@ -197,7 +197,6 @@ export class BulkIngestOptions extends S.Class<BulkIngestOptions>($I`BulkIngestO
 
 /**
  * Filter for listing ingested links
- *
  *
  * **Example** (Use the IngestedLinkFilter contract)
  *

@@ -1,6 +1,8 @@
 /**
  * Assemble a SchemaStore Draft-07 document from an Effect Schema source.
  *
+ * **Details**
+ *
  * Owns `$schema` + `$id` + root + `$defs`, the `#/definitions` → `#/$defs`
  * `$ref` rewrite the lowering makes necessary, and the annotation-carrier
  * re-graft so language-server keywords survive publication.
@@ -29,6 +31,8 @@ const setOwn = (target: Record<string, unknown>, key: string, value: unknown): v
 /**
  * The Draft-07 meta-schema URL SchemaStore documents declare as `$schema`.
  *
+ * **Details**
+ *
  * Deliberately carries the trailing `#` fragment: the SchemaStore corpus
  * (and the extraction source's committed files) use the fragment form,
  * where core's `JsonSchema.META_SCHEMA_URI_DRAFT_07` omits it.
@@ -54,6 +58,8 @@ export const DRAFT_07_META_SCHEMA = "http://json-schema.org/draft-07/schema#";
  * Indicates that an Effect Schema could not be converted into a SchemaStore
  * document — core's JSON Schema generation rejected the schema, or the
  * generated document nested past the hardening cap.
+ *
+ * **Details**
  *
  * Raised by {@link StoreDocument.fromSchema}. The `cause` carries the
  * underlying failure for the operator; calling code branches on the tag.
@@ -113,6 +119,8 @@ export class SchemaConversionError extends Schema.TaggedError<SchemaConversionEr
 
 /**
  * Options for {@link StoreDocument.fromSchema}.
+ *
+ * **Details**
  *
  * Not a runtime schema: core's `Schema.ToJsonSchemaOptions` may carry the live
  * `includeAnnotationKey` predicate. This boundary is program wiring rather
@@ -201,6 +209,8 @@ const restoreDefsRefs = (node: unknown, depth: number): unknown => {
  * A SchemaStore-shaped Draft-07 JSON Schema document assembled from an
  * Effect Schema source: `$schema` (the Draft-07 meta-schema) + `$id` + the
  * root schema + the `$defs` pool.
+ *
+ * **Details**
  *
  * {@link StoreDocument.fromSchema} owns the whole pipeline: core's
  * `Schema.toJsonSchemaDocument` (Draft 2020-12), core's

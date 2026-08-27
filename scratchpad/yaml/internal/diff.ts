@@ -1,6 +1,8 @@
 /**
  * Character-level text diffing shared by the formatter and modifier.
  *
+ * **Details**
+ *
  * Turns `(original, modified)` into minimal raw edit records. The facade
  * materializes public `YamlEdit` instances from these.
  *
@@ -42,10 +44,19 @@ export const RawEdit = Schema.Struct({
 	}),
 );
 
+/**
+ * TypeScript representation of internal YAML text replacement record with a UTF-16 source span.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RawEdit = typeof RawEdit.Type;
 
 /**
  * Compute edits by diffing two strings character by character.
+ *
+ * **Details**
  *
  * Walks both strings from each end inward to find the common prefix and
  * suffix, then emits a single edit covering the changed region in the

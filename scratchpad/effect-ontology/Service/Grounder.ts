@@ -119,7 +119,6 @@ const BatchEntityVerification = S.Struct({
 /**
  * Input required to verify an entity
  *
- *
  * **Example** (Create an entity verification request)
  *
  * ```ts
@@ -154,7 +153,6 @@ export class EntityVerificationInput extends S.Class<EntityVerificationInput>($I
 
 /**
  * Entity grounding result
- *
  *
  * **Example** (Represent a supported entity)
  *
@@ -282,7 +280,6 @@ export class RelationEntityContext extends S.Class<RelationEntityContext>($I`Rel
 
 /**
  * Input required to verify a relation triple
- *
  *
  * **Example** (Create a relation verification request)
  *
@@ -493,7 +490,6 @@ Instructions:
 
 /**
  * Grounder verification result
- *
  *
  * **Example** (Represent an unevaluated relation)
  *

@@ -1,6 +1,8 @@
 /**
  * One Effect Schema plus `$id`/`path` publication wiring for SchemaStore emit.
  *
+ * **Details**
+ *
  * A repo generating SchemaStore artifacts declares one target per emitted
  * document. Versioned catalog naming requires `name` whenever `version` is
  * set; the typed overloads make that pairing unrepresentable to omit.
@@ -26,6 +28,8 @@ class InvalidSchemaTarget extends Schema.TaggedError<InvalidSchemaTarget>($I`Inv
  * the identity and destination it is serialized under. A repo generating
  * SchemaStore artifacts declares one target per emitted document (the
  * extraction source's `{schema, $id, path}` triples, generalized).
+ *
+ * **Details**
  *
  * Not a `Schema.Class`: a target carries a live Effect Schema value, which
  * is program wiring rather than serializable data.

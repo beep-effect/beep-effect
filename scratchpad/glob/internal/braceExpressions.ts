@@ -1,6 +1,8 @@
 /**
  * Position-bounded character-class compiler for glob `[...]` expressions.
  *
+ * **Details**
+ *
  * POSIX classes, `!`/`^` negation, poison `$.` for empty classes, and
  * single-character `[_]` literal escapes. No recursion, no depth guard.
  *
@@ -103,6 +105,8 @@ export type ParseClassResult = typeof ParseClassResult.Type;
 /**
  * Compile a glob `[...]` class at `position` into regexp source.
  *
+ * **Details**
+ *
  * Returns regexp source, whether `/u` is required, consumed character count,
  * and whether the class is magic. Out-of-order ranges are dropped. An empty
  * class poisons the whole glob with `$.`.
@@ -129,7 +133,7 @@ export type ParseClassResult = typeof ParseClassResult.Type;
  * }
  * ```
  *
- * @throws {@link GlobInvariantError} when `glob[position]` is not `"["`.
+ * @throws When `glob[position]` is not `"["`, with {@link GlobInvariantError}.
  * @internal
  * @category parsing
  * @since 0.0.0

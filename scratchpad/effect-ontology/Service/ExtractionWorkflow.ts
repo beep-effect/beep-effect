@@ -23,7 +23,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionWorkflow");
 /**
  * Describes the extraction workflow methods data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */

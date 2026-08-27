@@ -1,22 +1,20 @@
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
-import * as S from "effect/Schema";
-
-const $I = $ScratchpadId.create("toml/internal/diagnostics");
-
 /**
  * Engine-only TOML diagnostic vocabulary and throw carrier.
  *
  * **Details**
  *
- * Public modules materialize these records into {@link TomlDiagnostic}
- * (adding `line`/`character`); the engine never imports public modules. That
- * public/engine firewall (yaml/jsonc precedent) is what keeps `noImportCycles`
- * satisfied.
+ * Public modules materialize these records into `TomlDiagnostic` values with
+ * line and character positions; the engine never imports public modules.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("toml/internal/diagnostics");
 
 /**
  * Lexer-stage error codes thrown as {@link RawTomlError} before a public
@@ -211,11 +209,21 @@ export const TomlErrorCode = LiteralKit([
   ...TOML_PARSE_ERROR_CODES,
   ...TOML_SEMANTIC_ERROR_CODES,
   ...TOML_STRINGIFY_ERROR_CODES,
-]).annotate(
-  $I.annote("TomlErrorCode", {
+]).pipe(
+  $I.annoteSchema("TomlErrorCode", {
     description: "Engine diagnostic code across TOML lexing, parsing, semantic analysis, and stringification.",
   })
 );
+
+/**
+ * Decoded value produced by {@link TomlErrorCode}.
+ *
+ * @see {@link TomlErrorCode} for the runtime diagnostic-code kit.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TomlErrorCode = typeof TomlErrorCode.Type;
 
 /**
  * Union of every raw TOML engine diagnostic code.
@@ -229,6 +237,20 @@ export type TomlErrorCodeRaw = typeof TomlErrorCode.Type;
 
 /**
  * The engine's diagnostic record. Public modules derive line/character.
+ *
+ * **Example** (Construct an internal diagnostic)
+ *
+ * ```ts
+ * import { RawDiagnostic } from "@beep/scratchpad/toml/internal/diagnostics"
+ *
+ * const diagnostic = RawDiagnostic.make({
+ *   code: "DuplicateKey",
+ *   message: "Duplicate key",
+ *   offset: 4,
+ *   length: 3
+ * })
+ * console.log(diagnostic.code) // "DuplicateKey"
+ * ```
  *
  * @see {@link RawTomlError} for the throw carrier that wraps this record.
  * @see {@link TomlDiagnostic} for the public materialization that adds line and character.

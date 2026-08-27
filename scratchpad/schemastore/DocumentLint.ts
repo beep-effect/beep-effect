@@ -1,6 +1,8 @@
 /**
  * Structural and hygiene checks over an assembled {@link StoreDocument}.
  *
+ * **Details**
+ *
  * This is the engine-free half of validation: `$ref` resolution against
  * `$defs`, unknown-keyword detection, and SchemaStore's description-URL
  * convention. A real-engine gate stays at {@link SchemaValidator}.
@@ -234,6 +236,8 @@ const lintSchema = (node: unknown, path: string, depth: number, context: LintCon
  * Owned structural checks over an assembled {@link StoreDocument} — the
  * always-available half of the validation story (a real-engine gate like
  * ajv strict mode stays at the consumer's edge):
+ *
+ * **Details**
  *
  * - `UnresolvedRef` — every `$ref` resolves against the `$defs` pool
  *   (`#` self-refs allowed; anything else, including a surviving

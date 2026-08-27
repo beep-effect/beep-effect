@@ -3,6 +3,8 @@
  * diagnostics into the lint layer — the reason `YamlLint.run` works on
  * documents that do not parse.
  *
+ * **Details**
+ *
  * Not configurable: it cannot be demoted or disabled (`"off"` and severity
  * overrides are rejected at config-validation time), and its options schema
  * accepts no options.

@@ -179,7 +179,6 @@ const resolveExecutionOptions = (options?: ExecutionOptions): ResolvedExecutionO
 /**
  * Result of pipeline execution
  *
- *
  * **Example** (Capture a pending pipeline result)
  *
  * ```ts

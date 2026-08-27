@@ -1,6 +1,8 @@
 /**
  * Classify annotation vs contract change for SchemaStore versioning.
  *
+ * **Details**
+ *
  * A change confined to documentation keywords is transparently replaceable
  * for consumers; a change to any assertion keyword alters the validation
  * contract and is the signal to cut a new schema version. Pure — no IO.
@@ -21,6 +23,8 @@ const $I = $ScratchpadId.create("schemastore/DocumentDiff");
 
 /**
  * What differs between two schema documents:
+ *
+ * **Details**
  *
  * - `"none"` — the documents are equal in content (key ORDER is not a
  *   difference; array order is).
@@ -275,6 +279,8 @@ const compareDependencies = (a: unknown, b: unknown, depth: number): SchemaChang
  * Classifies the difference between two emitted schema documents by
  * meaning: identical, documentation-only, or a change to the validation
  * contract.
+ *
+ * **Details**
  *
  * The walk is keyword-position aware in exactly the way {@link DocumentLint}'s
  * is — a property NAMED `description` inside `properties` is data, not an

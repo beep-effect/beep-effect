@@ -469,8 +469,9 @@ export class PipelineConfig extends S.Class<PipelineConfig>($I`PipelineConfig`)(
  *
  * ```ts
  * import { HumanApprove } from "@effect-ontology/Service/Agent/types"
+ * import * as O from "effect/Option"
  *
- * const feedback = HumanApprove.make({ comment: "Looks correct." })
+ * const feedback = HumanApprove.make({ comment: O.some("Looks correct.") })
  * console.log(feedback._tag) // "HumanApprove"
  * ```
  *
@@ -517,10 +518,11 @@ export class HumanReject extends S.TaggedClass<HumanReject>($I`HumanReject`)(
  *
  * ```ts
  * import { HumanModify } from "@effect-ontology/Service/Agent/types"
+ * import * as O from "effect/Option"
  *
  * const feedback = HumanModify.make({
  *   changes: { mention: "Ada Lovelace" },
- *   comment: "Use the full name."
+ *   comment: O.some("Use the full name.")
  * })
  * console.log(feedback._tag) // "HumanModify"
  * ```
@@ -546,10 +548,11 @@ export class HumanModify extends S.TaggedClass<HumanModify>($I`HumanModify`)(
  * ```ts
  * import { AgentId } from "@effect-ontology/Model/Agent"
  * import { HumanSkip } from "@effect-ontology/Service/Agent/types"
+ * import * as O from "effect/Option"
  *
  * const feedback = HumanSkip.make({
  *   agentId: AgentId.make("corrector"),
- *   reason: "Validation already passed."
+ *   reason: O.some("Validation already passed.")
  * })
  * console.log(feedback._tag) // "HumanSkip"
  * ```
@@ -590,7 +593,6 @@ export const HumanFeedback = S.Union([HumanApprove, HumanReject, HumanModify, Hu
 
 /**
  * Runtime feedback decoded by {@link HumanFeedback}.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -742,7 +744,6 @@ export class RefinementConfig extends S.Class<RefinementConfig>($I`RefinementCon
 /**
  * RefinementStatus - Outcome of a refinement loop
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -762,6 +763,7 @@ export type RefinementStatus =
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { NonNegNum } from "@beep/schema/Number"
+ * import * as O from "effect/Option"
  * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
  *
@@ -825,6 +827,7 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
    * ```ts
    * import { NonNegativeInt } from "@beep/schema"
    * import { NonNegNum } from "@beep/schema/Number"
+ * import * as O from "effect/Option"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
@@ -849,6 +852,7 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
    * ```ts
    * import { NonNegativeInt } from "@beep/schema"
    * import { NonNegNum } from "@beep/schema/Number"
+ * import * as O from "effect/Option"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
@@ -857,7 +861,7 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
    *   iterations: NonNegativeInt.make(2),
    *   status: "max-iterations",
    *   durationMs: NonNegNum.make(800),
-   *   violationsFixed: [2, 1]
+   *   violationsFixed: O.some([NonNegativeInt.make(2), NonNegativeInt.make(1)])
    * })
    * console.log(result.avgViolationsFixed) // 1.5
    * ```
@@ -908,7 +912,6 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = never, R = never>
 
 /**
  * AgentRegistry - Type for the agent registry map
- *
  *
  * @category type-level
  * @since 0.0.0

@@ -1,6 +1,8 @@
 /**
  * SchemaStore `catalog.json` entries as a class schema.
  *
+ * **Details**
+ *
  * Decoding an existing catalog row and encoding one for submission are the
  * same artifact, including both unversioned (`url` only) and versioned
  * (`versions` map plus latest-pointing `url`) modes.

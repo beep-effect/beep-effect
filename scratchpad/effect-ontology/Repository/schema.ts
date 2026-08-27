@@ -97,8 +97,8 @@ const EmbeddingVector768Codec = S.String.pipe(
  * import * as S from "effect/Schema"
  *
  * const encoded = `[${Array.from({ length: 768 }, () => 0).join(",")}]`
- * console.log(O.isSome(S.decodeUnknownOption(EmbeddingVector768)(encoded))) // true
- * console.log(O.isNone(S.decodeUnknownOption(EmbeddingVector768)("[0,1]"))) // true
+ * console.log(O.isSome(S.decodeUnknownOption(EmbeddingVector768.schema)(encoded))) // true
+ * console.log(O.isNone(S.decodeUnknownOption(EmbeddingVector768.schema)("[0,1]"))) // true
  * ```
  *
  * @category schemas

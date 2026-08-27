@@ -1,6 +1,8 @@
 /**
  * hyphen-spacing: at most one space after the block-sequence `-` indicator.
  *
+ * **Details**
+ *
  * Spaces before the hyphen are indentation — the indentation rule's
  * business — and a comment after the hyphen belongs to comments-spacing.
  *

@@ -55,7 +55,6 @@ export class ExecutionFailure extends S.TaggedError<ExecutionFailure>($I`Executi
 /**
  * Describes the execution handle data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
