@@ -160,3 +160,6 @@ steps, not implementation waivers.
   evidence/title/research path, and coherent manifest offset/quote/value drift.
 - The mutable-retention schema exposes a correlated `S.toArbitrary` generator and round-trip
   property proof. `git diff --check` passed.
+- Two post-Round-3 fresh publications superseded the earlier intermediate receipt with final
+  identity `395e10a9282d39ead0fcc8b601e3bdb3c087916c43e61504dcb3638688fb9815`; all five persisted
+  JSON contracts were byte-identical across rebuilds with provider/network availability false.

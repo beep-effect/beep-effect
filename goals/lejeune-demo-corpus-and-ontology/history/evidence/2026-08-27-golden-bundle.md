@@ -75,7 +75,7 @@ header, credential, usage record, or real data.
 
 Two fresh durable builds completed with provider and network availability forced to `false`.
 Both produced bundle identity
-`1474d1899f44511b3a363d3a4e1b1927cf2462cb9ee8685e994ba7f747851f91`; their `bundle.json`,
+`395e10a9282d39ead0fcc8b601e3bdb3c087916c43e61504dcb3638688fb9815`; their `bundle.json`,
 `golden-replay.json`, `projection-metadata.json`, separate `review-ledger.json`, and
 `retention-metadata.json` files were byte-identical. The versioned receipt declares replay mode
 `recorded-offline` and retains the committed queries, citations, rule results, and synthetic
