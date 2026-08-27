@@ -1,0 +1,22 @@
+{
+  "candidates": [
+    {
+      "label": "project",
+      "text": "North Loop Canopy"
+    },
+    {
+      "label": "delivery_date",
+      "text": "2026-09-12"
+    },
+    {
+      "label": "finish",
+      "text": "MG B695 Class 55"
+    }
+  ],
+  "documentId": "lejeune-provider-smoke-rfq-a",
+  "model": "claude-opus-4-6",
+  "provider": "anthropic",
+  "recordedAt": "2026-08-27T12:25:18.044Z",
+  "responseSha256": "e298888dc39b2f3b267fd206e1efe53f707cc3c0811d2746e53f1a7ca3227642",
+  "status": "recorded-success"
+}

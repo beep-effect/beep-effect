@@ -161,6 +161,7 @@
     "fallow": "^3.17.0",
     "fast-xml-parser": "^5.11.0",
     "fast-xml-validator": "1.2.0",
+    "fflate": "^0.8.3",
     "framer-motion": "^13.1.1",
     "frimousse": "0.3.0",
     "gl-bench": "^1.0.42",
