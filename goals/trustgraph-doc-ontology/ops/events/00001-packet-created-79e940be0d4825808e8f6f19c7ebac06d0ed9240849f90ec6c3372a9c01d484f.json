@@ -1,0 +1,13 @@
+{
+  "actor": "convention-migration",
+  "at": "2026-08-27T02:06:43.615Z",
+  "body": {
+    "status": "reference",
+    "type": "packet-created"
+  },
+  "expectedRevision": 0,
+  "packet": "trustgraph-doc-ontology",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 1
+}

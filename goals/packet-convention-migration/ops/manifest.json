@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "packet-convention-migration",
+    "packetId": "goal-packet/v1:4e5241728af3683113e81ea4a35c101c589aa1a0b8a5921754f3f915d90b5a58",
+    "title": "Packet Convention Migration",
+    "status": "active",
+    "created": "2026-08-26",
+    "updated": "2026-08-26",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/packet-convention-migration",
+  "lifecycle": "active",
+  "mission": "Repair forked packet streams and migrate the goal fleet onto the canonical v2 manifest and honest genesis convention.",
+  "statusNote": "P0-P2 are complete in the single packet-convention-migration PR; P3 is driving that implementation head through Yeet before the same-PR P4 closeout.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/packet-system-redesign",
+    "graduated": "2026-08-26"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/packet-convention-migration/README.md",
+    "goals/packet-convention-migration/SPEC.md",
+    "goals/packet-convention-migration/DESIGN.md",
+    "goals/packet-convention-migration/PLAN.md",
+    "goals/packet-convention-migration/GOAL.md",
+    "goals/packet-convention-migration/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/packet-convention-migration/GOAL.md"
+    }
+  ],
+  "provides": ["goals/convention-migration"],
+  "requires": ["goals/packet-core"],
+  "phases": [
+    { "id": "P0", "name": "Research and rulings", "status": "complete" },
+    { "id": "P1", "name": "Implement", "status": "complete" },
+    { "id": "P2", "name": "Fleet apply and verify", "status": "complete" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "in-progress" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/packet-convention-migration/GOAL.md)\" -le 4000",
+    "jq . goals/packet-convention-migration/ops/manifest.json",
+    "bun run beep explore --check",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Translation would invent meaning or erase an unknown field.",
+    "Fork repair cannot stage and fold a lossless linear stream.",
+    "Genesis seeding would overwrite an existing stream or fabricate history.",
+    "Verification requires unnamed credentials, cost, destructive effects, or policy approval."
+  ]
+}

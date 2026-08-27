@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "provenance-shared-claim-kernel",
     "title": "Provenance & Shared Claim Kernel",

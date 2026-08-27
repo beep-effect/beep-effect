@@ -20,7 +20,8 @@ import { Console, Effect, FileSystem, Order, Path } from "effect";
 import { constUndefined, dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GoalDoctorFinding } from "../Goals/Doctor.ts";
-import { parseGoalManifestText, TEMPLATE_SLUG } from "../Goals/Inventory.ts";
+import { listGoalPackets, parseGoalManifestText, TEMPLATE_SLUG } from "../Goals/Inventory.ts";
+import { lintGoalFleet } from "../Goals/Migration/ManifestTranslation.ts";
 import { decodePacketTraceProjection, isPacketSlug, PacketRoot } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/PacketEventStore.ts";
 import {
@@ -268,6 +269,27 @@ type RootScan = {
   readonly findings: ReadonlyArray<GoalDoctorFinding>;
 };
 
+const fleetFindingKind = (
+  kind: "duplicate-slug" | "dependency-cycle" | "unreachable-packet" | "unmigrated-reference"
+): GoalDoctorFindingKind => {
+  if (kind === "duplicate-slug") return "packet-fleet-duplicate-slug";
+  if (kind === "dependency-cycle") return "packet-fleet-dependency-cycle";
+  return kind === "unreachable-packet" ? "packet-fleet-unreachable" : "packet-fleet-unmigrated-reference";
+};
+
+const fleetLintFindings = Effect.fn("Explore.fleetLintFindings")(function* () {
+  const records = yield* listGoalPackets();
+  return A.map(lintGoalFleet(records), (item) =>
+    GoalDoctorFinding.make({
+      slug: item.slug,
+      kind: fleetFindingKind(item.kind),
+      severity: "advisory",
+      key: `${item.slug} ${item.kind} ${A.join(item.related, ",")}`,
+      message: `${item.severity}: ${item.message}`,
+    })
+  );
+});
+
 const scanRootStreams = Effect.fn("Explore.scanRootStreams")(function* (root: PacketRoot) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -342,5 +364,6 @@ export const runExploreCheck = Effect.fn("Explore.runExploreCheck")(function* ()
       findings: A.appendAll(merged.findings, scan.findings),
     };
   }
+  merged = { ...merged, findings: A.appendAll(merged.findings, yield* fleetLintFindings()) };
   yield* printCheckReport(merged);
 });

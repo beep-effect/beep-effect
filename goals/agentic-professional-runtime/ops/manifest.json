@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "agentic-professional-runtime",
     "title": "Agentic Professional Runtime",
@@ -230,5 +230,7 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "mission": "Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slices:"
+  "mission": "Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slices:",
+  "lifecycle": "active",
+  "packetPath": "goals/agentic-professional-runtime"
 }

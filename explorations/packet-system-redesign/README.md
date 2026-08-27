@@ -5,16 +5,14 @@
 Stage: `decompose`
 Status: `active`
 
-Graduated 2026-08-17; **reopened at `decompose` 2026-08-26** by the packet's
-own ratified convention: the candidate-2/3 gate condition (fold contract
-stabilizing) was satisfied on main evidence, and
-[`goals/packet-control-plane-core`](../../goals/packet-control-plane-core/README.md)
-closed `completed-retained` through its own guarded writer. That firing
-releases candidates 2 and 3 for this decompose pass — the Next Open Question
-weighs them against the fleet convention-migration campaign. Candidate 4
-still gates on observed self-hosting friction, and the React viewer stays
-gated on KSA static-v1 daily-use evidence. The Session B rulings on the
-queued amendments and the fleet-campaign charter land as their own docs PR.
+Graduated 2026-08-17 with `packet-control-plane-core` as the sole promised-now
+candidate. **Reopened at `decompose` 2026-08-26** on the ratified convention:
+the candidate-2/3 gate condition was satisfied on main evidence and the core
+closed `completed-retained`. Session B then chartered
+[`goals/packet-convention-migration`](../../goals/packet-convention-migration/README.md)
+as candidate 6 and the first reopener, and ruled on H, I, and J (D17–D26).
+Candidates 2–4 remain gated re-entry candidates; the React viewer stays gated
+on KSA static-v1 daily-use evidence.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -29,13 +27,11 @@ BDUF ceremony.
 
 ## Next Open Question
 
-The candidate-2/3 gate condition ("fold contract stabilizing: first slice
-proven, advisory self-hosting running") is satisfied on main evidence, and
-closing `packet-control-plane-core` frees the Machinery lane slot. Which
-reopener executes first at `decompose`: the fleet convention-migration
-campaign (named in the goal's PLAN P5, rubric `beep explore --check`, still
-unchartered) or candidate 2 — and does that campaign live as its own goal
-packet or fold into candidate 3?
+None for this wave. D24 routes Amendment J through the existing
+`typed-agent-skill-contracts` exploration, D25 starts candidate 6 with the
+fork-repair applier alone, and D26 combines the rulings, implementation,
+migration, and closeout in one PR. The active work is the graduated
+`packet-convention-migration` goal.
 
 ## Read This First
 
@@ -50,14 +46,22 @@ packet or fold into candidate 3?
 
 ## Trail
 
+- 2026-08-26 (Session B decisions and candidate 6): seven research lanes ran
+  before the grill, with reports under `research/2026-08-26-session-b/`. The
+  grill chartered the convention migration as its own goal and the first
+  reopener; H was ratified without generated `GOAL.md`, I was rejected in
+  favor of a named-consumer-gated schema.org/RO-Crate projection, and J was
+  moved to `@beep/skill-contract`. Follow-ups route J through
+  `typed-agent-skill-contracts`, make the applier candidate 6's first slice,
+  and supersede D19's unexecuted docs-only leg with one complete PR (D17–D26).
+
 - 2026-08-26 (close + reopen): `packet-control-plane-core` closed
   `completed-retained` — rung-4 pre-close hardening merged as #848, the flip
   executed through the guarded writer as stream event 4, closeout reflection
   and friction receipts landed in the goal packet. The satisfied candidate-2/3
   gate reopened this packet at `decompose` in the same PR, per the ratified
-  convention and the same-PR flip law. The Session B grill already ran; its
-  rulings (queued amendments H/I/J, fleet-campaign charter) are recorded in a
-  separate docs PR so decisions stay reviewable apart from the closeout.
+  convention and the same-PR flip law. The Session B grill had already run;
+  D26 later superseded the planned separate docs-only leg.
 - 2026-08-25 (review follow-up, #830): MAP queued-amendments intro corrected
   to name all three amendments (H, I, J) and cite both evidence notes — the
   AgentO mapping for H/I and the ontology-tooling recon for J. Next Open

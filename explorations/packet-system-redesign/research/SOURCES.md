@@ -2,7 +2,8 @@
 
 - **Cluster / origin:** Notion parking-lot page (three research passes done in
   place, 2026-08-10) + Codex deep-research revision of the same page + six
-  Grok CLI research lanes (web/GitHub/x.com) dispatched 2026-08-10.
+  Grok CLI research lanes (web/GitHub/x.com) dispatched 2026-08-10 + six
+  Session B amendment lanes dispatched 2026-08-26.
 - **Provenance:** imports copied verbatim under `research/`; Grok raw
   streaming-json transcripts under `research/grok/raw/`, extracted reports
   under `research/grok/`.
@@ -59,6 +60,15 @@ Carried inside the two imported documents (each claim is cited inline there):
 - [`2026-08-25-ontology-tooling-recon.md`](./2026-08-25-ontology-tooling-recon.md)
   — reader + refuting-verifier lanes over the three local clones above;
   operator spot check of the verifiers' "missed" items.
+- [`2026-08-26-session-b/README.md`](./2026-08-26-session-b/README.md)
+  — index and caveats for three repository audits and three external prior-art
+  sweeps behind D20–D23. The six reports preserve their per-claim file/line or
+  fetched-link evidence and source logs: H (`C3`, `G3`), I (`C4`, `G1`), and J
+  (`C2`, `G2`). All external material is reference-only; no upstream code is
+  copied. Primary source families include CWLProv/Workflow Run RO-Crate and
+  Nextflow lineage (I), in-toto, EARL/ACT, SARIF, OpenSSF Scorecard,
+  CycloneDX, SHACL, and Terraform plan semantics (J), and LangGraph, Google
+  ADK, Semantic Kernel, DSPy, GitHub Actions, and OpenInference (H).
 - Grok lane reports (all six completed 2026-08-10, each with URLs, dated
   x.com citations, and contrarian evidence): `grok/reports/1-spec-driven-dev.md`,
   `2-agent-plan-gates.md`, `3-event-sourced-control.md`,
