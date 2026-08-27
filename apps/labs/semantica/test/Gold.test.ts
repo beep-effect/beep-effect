@@ -147,6 +147,7 @@ const makeGoldTestLayer = (
     LabConfig,
     LabConfig.of({
       corpusRoot: O.none(),
+      extractionTimeout: Duration.minutes(15),
       extractorModel: "stub-extractor-20260826",
       goldDirectory: "fixtures/gold/v1",
       goldGenerationTimeout,

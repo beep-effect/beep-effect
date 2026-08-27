@@ -3,9 +3,11 @@
   "exploration": {
     "slug": "semantica-lab",
     "title": "Semantica Port Atlas & Lab",
-    "status": "graduated",
-    "stage": "graduate",
-    "openQuestions": [],
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [
+      "What relation result contract can guarantee a verbatim TextAnchor over the @beep/doc-text canonical string on every frozen G-relation paper?"
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/semantica-canary", "goals/openai-driver"],
@@ -13,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-24",
-    "updated": "2026-08-24"
+    "updated": "2026-08-26"
   }
 }

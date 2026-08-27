@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-24",
+  "generatedOn": "2026-08-27",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -575,7 +575,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 51,
+      "line": 52,
       "owner": "@beep/law-practice-server",
       "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
     },
