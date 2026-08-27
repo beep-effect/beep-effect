@@ -49,17 +49,18 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   with PacketCore + ExecutionRecord proof migrations; wave 2 (protocol kit)
   gated; `$I` stays static; decoupled from identity-iri-fibered. Next:
   Benjamin's BRIEF review, then decompose.
-- [`packet-system-redesign`](./packet-system-redesign/README.md) — reopened
-  at `decompose` 2026-08-26:
+- [`packet-system-redesign`](./packet-system-redesign/README.md) — reopened at
+  `decompose` 2026-08-26 after
   [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  closed `completed-retained` through its own guarded writer (rung-4
-  hardening #848), which satisfied the candidate-2/3 gate and fired the
-  ratified reopen convention. Candidates 2 and 3 are therefore eligible for
-  this decompose pass — the Next Open Question weighs them against the fleet
-  convention-migration campaign; candidate 4 still gates on observed
-  self-hosting friction, and React v2 stays on KSA static-v1 daily-use
-  evidence. The Session B rulings (queued amendments, fleet-campaign charter)
-  land as their own docs PR.
+  reached its close train. The Session B grill chartered the fleet
+  convention-migration campaign as candidate 6 — its own goal packet, first
+  reopener, owning Amendment G's repair applier and the `ops/events/` opt-in
+  freeze — and ruled on the amendments queued 2026-08-25: H ratified without
+  its `GOAL.md` render, I rejected with a named-consumer-gated schema.org
+  successor requeued, J ratified and pulled forward onto `@beep/skill-contract`
+  (D17–D23). Candidates 2–4 stay gated; React v2 stays on KSA static-v1
+  daily-use evidence. Next: which packet owns the J kernel work, and candidate
+  6's first slice.
 - [`semantica-lab`](./semantica-lab/README.md) — reopened at `decompose`
   2026-08-26 after the C0 Extraction probe breaker fired. The candidate and its
   one retry failed the frozen relation-paper slate; review invalidated two
