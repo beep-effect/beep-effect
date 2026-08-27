@@ -451,6 +451,55 @@ export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
 const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialValue));
 
 /**
+ * Workspace-relative path of the seeded tutorial document.
+ *
+ * **Details**
+ *
+ * The professional-desktop sidecar materializes the pizza tutorial at this
+ * path on boot (never overwriting an existing file), so it is the one
+ * document a fresh install is guaranteed to have. The Document toolbar's
+ * path draft and the first-run auto-open bootstrap both derive from this
+ * constant.
+ *
+ * **Example** (Log the seeded tutorial path)
+ *
+ * ```ts
+ * import { ontologyWorkbenchSeedPath } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyWorkbenchSeedPath) // "tmp/ontology-workbench/pizza-tutorial.ttl"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ontologyWorkbenchSeedPath: OntologyFilePath = OntologyFilePath.fromUnknown(
+  "tmp/ontology-workbench/pizza-tutorial.ttl"
+);
+
+/**
+ * Derives the deterministic workbench session id for a document path.
+ *
+ * **Details**
+ *
+ * The Document toolbar's Open button and the first-run auto-open bootstrap
+ * must mint the same id for the same path, so reopening a document resumes
+ * one session identity instead of forking one per caller.
+ *
+ * **Example** (Derive a session id from the seed path)
+ *
+ * ```ts
+ * import { ontologySessionIdForPath, ontologyWorkbenchSeedPath } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySessionIdForPath(ontologyWorkbenchSeedPath)) // "ontology:tmp/ontology-workbench/pizza-tutorial.ttl"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ontologySessionIdForPath = (path: OntologyFilePath): SessionId =>
+  SessionId.fromUnknown(`ontology:${path}`);
+
+/**
  * Workspace-relative path entered in the ontology document toolbar.
  *
  * **Gotchas**
@@ -474,7 +523,7 @@ const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialV
  * @category atoms
  * @since 0.0.0
  */
-export const openPathInputAtom = Atom.make("tmp/ontology-workbench/pizza-tutorial.ttl");
+export const openPathInputAtom = Atom.make<string>(ontologyWorkbenchSeedPath);
 
 /**
  * Subject IRI entered in the ontology Add Triple form.
@@ -2930,6 +2979,62 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
       );
   })
 );
+
+// Keep-alive so one attempt spans the whole app session: panel remounts read
+// the flag instead of re-opening a document the user closed or replaced.
+const ontologyAutoOpenAttemptedAtom = workbenchState(false);
+
+/**
+ * First-run bootstrap that opens the seeded tutorial document once.
+ *
+ * **Details**
+ *
+ * The sidecar seeds {@link ontologyWorkbenchSeedPath} on boot, but nothing
+ * ever dispatched {@link openOntologyDocumentAtom}, so a fresh install showed
+ * "No ontology file open" panels beside a Document toolbar pre-filled with
+ * the tutorial path. The Document region mounts this atom; on the first mount
+ * of an app session with no document open it dispatches the open action for
+ * the seed path. The keep-alive attempt flag makes it one attempt per app
+ * session: a document the user opened — or later closes — is never
+ * overridden, and a failed attempt is not retried. Failure follows the open
+ * action's established path: typed error logged, document error strip set,
+ * no crash.
+ *
+ * **Gotchas**
+ *
+ * The desktop app mounts every ontology region behind its desktop-session
+ * gate, so a chat-only browser session never mounts this atom and keeps its
+ * "needs desktop session" empty state.
+ *
+ * **Example** (Log auto-open bootstrap atom)
+ *
+ * ```ts
+ * import { ontologyWorkbenchAutoOpenAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyWorkbenchAutoOpenAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyWorkbenchAutoOpenAtom = Atom.make((get): void => {
+  // `once`, not `get`: this is a one-shot — subscribing to session/path would
+  // recompute the bootstrap on every open, close, and edit.
+  if (get.once(ontologyAutoOpenAttemptedAtom)) {
+    return;
+  }
+  get.set(ontologyAutoOpenAttemptedAtom, true);
+  if (O.isSome(get.once(ontologySessionAtom)) || O.isSome(get.once(ontologyPathAtom))) {
+    return;
+  }
+  get.set(
+    openOntologyDocumentAtom,
+    OpenOntologyDocumentInput.make({
+      sessionId: ontologySessionIdForPath(ontologyWorkbenchSeedPath),
+      path: ontologyWorkbenchSeedPath,
+    })
+  );
+}).pipe(Atom.keepAlive);
 
 /**
  * Save the current ontology session through the sidecar.

@@ -31,6 +31,9 @@
       "@id": "beep:concept/email-message",
       "@type": "skos:Concept",
       "skos:broader": { "@id": "beep:concept/correspondence" },
+      "skos:closeMatch": {
+        "@id": "https://folio.openlegalstandard.org/RDQy4rbUg82ScgiiXEQ7ZBU"
+      },
       "skos:prefLabel": "Email message"
     },
     {

@@ -3,6 +3,7 @@ import {
   classifyKnowledgeRef,
   encodeKnowledgeRefsReportJson,
   extractKnowledgeHostAnchors,
+  isKnowledgeScopedPath,
   KnowledgeOperationalError,
   KnowledgeRefSurface,
   KnowledgeTrackedEntry,
@@ -149,6 +150,14 @@ const expectedRefId = Effect.fn("KnowledgeRefsTest.expectedRefId")(function* (
     ""
   );
   return `knowledge-ref/v1:${yield* independentDigest(preimage)}`;
+});
+
+describe("knowledge reference scope", () => {
+  it("excludes vendored Impeccable mirrors", () => {
+    expect(isKnowledgeScopedPath(".claude/skills/impeccable/reference/hooks.md")).toBe(false);
+    expect(isKnowledgeScopedPath(".github/skills/impeccable/reference/critique.md")).toBe(false);
+    expect(isKnowledgeScopedPath(".claude/skills/effect-first-development/SKILL.md")).toBe(true);
+  });
 });
 
 describe("knowledge refs golden fixture matrix", () => {

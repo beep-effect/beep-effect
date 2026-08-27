@@ -2,7 +2,8 @@
 
 - **Cluster / origin:** Notion parking-lot page (three research passes done in
   place, 2026-08-10) + Codex deep-research revision of the same page + six
-  Grok CLI research lanes (web/GitHub/x.com) dispatched 2026-08-10.
+  Grok CLI research lanes (web/GitHub/x.com) dispatched 2026-08-10 + six
+  Session B amendment lanes dispatched 2026-08-26.
 - **Provenance:** imports copied verbatim under `research/`; Grok raw
   streaming-json transcripts under `research/grok/raw/`, extracted reports
   under `research/grok/`.
@@ -59,12 +60,46 @@ Carried inside the two imported documents (each claim is cited inline there):
 - [`2026-08-25-ontology-tooling-recon.md`](./2026-08-25-ontology-tooling-recon.md)
   — reader + refuting-verifier lanes over the three local clones above;
   operator spot check of the verifiers' "missed" items.
+- [`2026-08-26-session-b/README.md`](./2026-08-26-session-b/README.md)
+  — index and caveats for three repository audits and three external prior-art
+  sweeps behind D20–D23. The six reports preserve their per-claim file/line or
+  fetched-link evidence and source logs: H (`C3`, `G3`), I (`C4`, `G1`), and J
+  (`C2`, `G2`). All external material is reference-only; no upstream code is
+  copied. Primary source families include CWLProv/Workflow Run RO-Crate and
+  Nextflow lineage (I), in-toto, EARL/ACT, SARIF, OpenSSF Scorecard,
+  CycloneDX, SHACL, and Terraform plan semantics (J), and LangGraph, Google
+  ADK, Semantic Kernel, DSPy, GitHub Actions, and OpenInference (H).
 - Grok lane reports (all six completed 2026-08-10, each with URLs, dated
   x.com citations, and contrarian evidence): `grok/reports/1-spec-driven-dev.md`,
   `2-agent-plan-gates.md`, `3-event-sourced-control.md`,
   `4-attestation-approvals.md`, `5-traceability.md`, `6-gate-economics.md`.
   Raw streaming-json transcripts + prompts under `grok/raw/` and
   `grok/prompts/`. Synthesis: [`../RESEARCH.md`](../RESEARCH.md).
+
+- Session B lane reports (2026-08-26, six reports under
+  [`2026-08-26-session-b/`](./2026-08-26-session-b/), index in its README;
+  every external claim cited inline with fetched links, all sources
+  reference-only, nothing vendored):
+  - `G1-amendment-I-prior-art.md` — CWLProv (Khan et al., GigaScience 2019)
+    and its authors' move to schema.org JSON-LD (Workflow Run RO-Crate,
+    PLOS ONE 2025); Nextflow's 2025 removal of its legacy provenance format
+    for a native lineage store; P-Plan (unmaintained) and AgentO
+    (w3id.org/agentic-ai/onto rev 0.2) adoption status; WorkflowHub,
+    Croissant, and nanopublication join evidence.
+  - `G2-amendment-J-prior-art.md` — W3C EARL 1.0 Schema + WAI-ACT five-way
+    outcome vocabulary; OpenSSF Scorecard per-check reasons with
+    inconclusive-excluded aggregation; CycloneDX compositions
+    (complete/incomplete/unknown); in-toto attestation Statement envelope;
+    SHACL `sh:conforms`; Terraform stale-plan apply-by-id semantics.
+  - `G3-amendment-H-prior-art.md` — CrewAI, Mastra, and Google ADK typed
+    task/agent configs with hand-authored prompts; AGENTS.md convention
+    (60k+ projects, no required fields); DSPy issue #8042 (compile gain lost
+    when the prompt was materialized as Markdown). Method caveats inside the
+    report flag secondarily-cited primaries.
+  - `C2-amendment-J.md`, `C3-amendment-H.md`, `C4-amendment-I.md` — in-repo
+    audits (gate honesty census, 14-launcher census, substrate/join audit);
+    `path:line` citations only, no new upstream sources. C2's companion recon
+    repos (ontoskills, open-ontologies, mykg) are already in the table above.
 
 ## 4. In-repo capability references
 

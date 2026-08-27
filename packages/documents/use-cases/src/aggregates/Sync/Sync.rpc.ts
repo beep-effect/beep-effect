@@ -7,6 +7,7 @@
 
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
@@ -86,6 +87,46 @@ export class MarkVaultSyncConflictReviewedPayload extends S.Class<MarkVaultSyncC
 ) {}
 
 /**
+ * Payload for reading vault sync status, optionally forcing a fresh mirror
+ * probe.
+ *
+ * **Details**
+ *
+ * `forceProbe` defaults to `false` for both construction and missing-key
+ * decoding, so pre-forceProbe peers stay wire-compatible and keep the cached
+ * probe path. An operator's explicit "retry connection" sends `true`, which
+ * makes the sidecar discard any cached probe failure and ask the provider now.
+ *
+ * **Example** (Make status payload with defaults)
+ *
+ * ```ts
+ * import { GetVaultSyncStatusPayload } from "@beep/documents-use-cases/public"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import * as S from "effect/Schema"
+ *
+ * const payload = GetVaultSyncStatusPayload.make({
+ *   workspaceId: S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1)
+ * })
+ * console.log(payload.forceProbe) // false
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export class GetVaultSyncStatusPayload extends VaultSyncWorkspacePayload.extend<GetVaultSyncStatusPayload>(
+  $I`GetVaultSyncStatusPayload`
+)(
+  {
+    forceProbe: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "When true, the status read bypasses the cached mirror probe and asks the provider now.",
+    }),
+  },
+  $I.annote("GetVaultSyncStatusPayload", {
+    description: "Payload for reading vault sync status, optionally forcing a fresh mirror probe.",
+  })
+) {}
+
+/**
  * RPC used by the desktop webview to trigger one vault sync pass.
  *
  * **Example** (Verify trigger RPC registration)
@@ -122,7 +163,7 @@ export const TriggerVaultSyncRpc = Rpc.make("TriggerVaultSync", {
  * @since 0.0.0
  */
 export const GetVaultSyncStatusRpc = Rpc.make("GetVaultSyncStatus", {
-  payload: VaultSyncWorkspacePayload,
+  payload: GetVaultSyncStatusPayload,
   success: VaultSyncStatus,
   error: VaultSyncActionError,
 });

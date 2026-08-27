@@ -31,6 +31,7 @@
     "test:storybook": "bun run scripts/run-storybook-tests.mjs",
     "test:storybook:dock-react": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/dock-react/stories",
     "test:storybook:editor": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/editor/stories",
+    "test:storybook:graph-3d": "bun run scripts/run-storybook-tests.mjs ../../packages/drivers/graph-3d/stories",
     "test:storybook:ui": "bun run scripts/run-storybook-tests.mjs ../../packages/foundation/ui-system/ui/stories"
   },
   "dependencies": {

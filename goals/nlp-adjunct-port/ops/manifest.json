@@ -49,5 +49,8 @@
     "status": "completed-retained"
   },
   "reflectionRequired": false,
-  "statusNote": "legacy status: DONE"
+  "statusNote": "legacy status: DONE",
+  "schemaVersion": "initiative-manifest/v2",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/nlp-adjunct-port"
 }

@@ -6,6 +6,8 @@
  */
 
 export * from "./GitExec.ts";
+export * from "./QualityScheduler.schemas.ts";
+export * from "./QualityScheduler.ts";
 export * from "./RepoRun.executor.ts";
 export * from "./RepoRun.models.ts";
 export * from "./RepoRun.proofs.ts";

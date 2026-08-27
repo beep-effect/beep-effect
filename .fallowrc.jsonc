@@ -97,6 +97,11 @@
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
   "ignorePatterns": [
+    // Impeccable is a vendored agent skill mirrored for Claude Code and GitHub
+    // Copilot. Its standalone detector scripts are invoked by editor hooks and
+    // are not authored workspace source.
+    ".claude/skills/impeccable/**",
+    ".github/skills/impeccable/**",
     "goals/**",
     "scratchpad/**",
     "infra/ci-runners/sdks/**",
@@ -306,14 +311,6 @@
     "maxCrap": 30,
     "maxUnitSize": 60,
     "thresholdOverrides": [
-      {
-        "files": [
-          "packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx"
-        ],
-        "functions": ["TripleValidationMessages"],
-        "maxCrap": 73,
-        "reason": "Pre-existing function unchanged by the import-extension migration; Fallow audit attributes its CRAP finding as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
-      },
       {
         "files": [
           "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"

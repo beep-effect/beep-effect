@@ -88,8 +88,17 @@ the C5 metric correction and the new C7 item below.
 
 ## P4 — Concurrency + cache proof
 
-- D1 weighted admission leases; D2 adaptive concurrency; D3 hardening + RSS telemetry.
-- A4 dead-owner takeover (needs D1 leases).
+- ~~D1 weighted admission leases~~ — landed 2026-08-27: machine-wide weighted admission
+  (`internal/repo-run/QualityScheduler.{schemas.,}ts`) wraps the retained per-origin
+  coordinator. Verify full/merged, publish proofs (publish priority + 2-minute aging), and
+  review-fix (1 token, class cap 3, no origin lock) queue with visible progress instead of
+  failing fast; operator surface is `beep quality scheduler status|reap` (reap dry-run by
+  default). The D3 subset required for lease correctness shipped with it: 5s heartbeats,
+  pid + `/proc` starttime reaping, MemAvailable hard floor, malformed-state quarantine.
+  Design record: `research/d1-admission-scheduler.md`.
+- D2 adaptive lane concurrency; D3 remainder (PSI/load watermarks, process-group
+  TERM→KILL centralization, per-lane peak-RSS into verdict artifacts).
+- A4 dead-owner takeover (needs D1 leases — now available).
 - C3 warm capability; C4 correctness inputs; C5 hit-rate dashboard + key de-fragmentation.
 - C2 PR remote reads (post decision).
 

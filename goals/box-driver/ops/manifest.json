@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "box-driver",
     "title": "Box Driver",
@@ -302,5 +302,6 @@
     "rg -n \"@beep/box|packages/drivers/box|box-node-sdk|_generated|runSdkCall|CCG|greptile|5/5\" goals/box-driver",
     "git diff --check"
   ],
-  "statusNote": "Implementation and PR closure shipped in merge commit f306e8ca5b; packet bookkeeping reconciled on 2026-07-14. Initiative status remains externally managed."
+  "statusNote": "Implementation and PR closure shipped in merge commit f306e8ca5b; packet bookkeeping reconciled on 2026-07-14. Initiative status remains externally managed.",
+  "lifecycle": "completed-retained"
 }

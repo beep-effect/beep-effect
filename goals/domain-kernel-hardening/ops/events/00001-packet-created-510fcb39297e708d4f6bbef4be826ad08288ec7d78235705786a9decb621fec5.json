@@ -1,0 +1,15 @@
+{
+  "actor": "convention-migration",
+  "at": "2026-08-27T02:06:43.615Z",
+  "body": {
+    "ordinal": 0,
+    "stage": "P0",
+    "status": "paused",
+    "type": "packet-created"
+  },
+  "expectedRevision": 0,
+  "packet": "domain-kernel-hardening",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 1
+}

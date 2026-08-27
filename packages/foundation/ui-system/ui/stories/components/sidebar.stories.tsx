@@ -24,7 +24,15 @@ import {
   SidebarTrigger,
 } from "@beep/ui/components/sidebar";
 import { A } from "@beep/utils";
-import { CalendarIcon, GearIcon, HouseIcon, MagnifyingGlassIcon, PlusIcon, TrayIcon } from "@phosphor-icons/react";
+import {
+  CalendarIcon,
+  GearIcon,
+  HouseIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  TrayIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import type { Icon } from "@phosphor-icons/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -45,6 +53,32 @@ const navItems: ReadonlyArray<NavItem> = [
 ];
 
 const skeletonRows = A.makeBy(5, (index) => index);
+
+// Shared icon-and-title menu button reused wherever a story renders navItems
+// without per-button props (tooltips stay inline in IconCollapsible).
+const NavItemButton = ({ item }: { readonly item: NavItem }) => (
+  <SidebarMenuButton isActive={item.isActive ?? false}>
+    <item.icon />
+    <span>{item.title}</span>
+  </SidebarMenuButton>
+);
+
+// Shared nav-group scaffold for the layout-variant stories; stories that
+// exercise per-item extras (tooltips, badges, actions) keep their own markup.
+const NavMenuGroup = ({ label }: { readonly label?: undefined | string }) => (
+  <SidebarGroup>
+    {label === undefined ? null : <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+    <SidebarGroupContent>
+      <SidebarMenu>
+        {A.map(navItems, (item) => (
+          <SidebarMenuItem key={item.title}>
+            <NavItemButton item={item} />
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroupContent>
+  </SidebarGroup>
+);
 
 /**
  * `Sidebar` is a full application navigation shell composed from many sub-parts. The root
@@ -122,28 +156,14 @@ export const Default: Story = {
             </SidebarMenu>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Application</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {A.map(navItems, (item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton isActive={item.isActive ?? false}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <NavMenuGroup label="Application" />
           </SidebarContent>
           <SidebarFooter>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton>
-                  <GearIcon />
-                  <span>Settings</span>
+                  <UserIcon />
+                  <span>Account</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -213,20 +233,7 @@ export const Floating: Story = {
     <SidebarProvider className="min-h-96">
       <Sidebar {...args}>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {A.map(navItems, (item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton isActive={item.isActive ?? false}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <NavMenuGroup />
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
@@ -248,20 +255,7 @@ export const Inset: Story = {
     <SidebarProvider className="min-h-96">
       <Sidebar {...args}>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {A.map(navItems, (item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton isActive={item.isActive ?? false}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <NavMenuGroup />
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
@@ -340,21 +334,7 @@ export const NonCollapsible: Story = {
           <SidebarInput placeholder="Search the menu" aria-label="Search the menu" />
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {A.map(navItems, (item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton isActive={item.isActive ?? false}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <NavMenuGroup label="Workspace" />
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>
@@ -391,10 +371,7 @@ export const MenuExtras: Story = {
                 <SidebarMenu>
                   {A.map(navItems, (item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton isActive={item.isActive ?? false}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
+                      <NavItemButton item={item} />
                       {item.badge === undefined ? null : <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
                       <SidebarMenuAction aria-label={`More for ${item.title}`} onClick={onAction}>
                         <GearIcon />

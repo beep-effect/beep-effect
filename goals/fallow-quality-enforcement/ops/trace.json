@@ -1,0 +1,32 @@
+{
+  "derived": {
+    "forks": [],
+    "issues": [],
+    "packet": "fallow-quality-enforcement",
+    "revision": 1,
+    "root": "goals",
+    "status": "completed-retained",
+    "tip": {
+      "id": "62ca4d25db254cb39adb5cc83b3f62e6b53af80a193fc6de3d8ac0d38958a0b2",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "62ca4d25db254cb39adb5cc83b3f62e6b53af80a193fc6de3d8ac0d38958a0b2",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "status": "completed-retained",
+        "type": "packet-created"
+      },
+      "id": "62ca4d25db254cb39adb5cc83b3f62e6b53af80a193fc6de3d8ac0d38958a0b2",
+      "seq": 1
+    }
+  ]
+}
