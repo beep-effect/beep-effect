@@ -23,6 +23,7 @@ import {
   renderPacketEventFile,
   renderPacketTraceFile,
   renderTranslationReport,
+  StoredPacketEvent,
   TranslationAssumption,
   TranslationIssue,
   TranslationReport,
@@ -1005,6 +1006,76 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const expectedTrace = yield* renderPacketTraceFile(projectPacketTrace(traceRaceDerived, traceRaceListing.events));
       expect(yield* fs.readFileString(traceRacePath)).toBe(expectedTrace);
       expect(O.getOrUndefined(traceRaceOutcome)?.revision).toBe(traceRaceDerived.revision);
+
+      const traceRollbackLocator = yield* makeFixture("trace-publication-rollback");
+      const traceRollbackPath = `${traceRollbackLocator.packetPath}/ops/trace.json`;
+      const traceRollbackPrevious = "previous fork trace\n";
+      const traceRollbackOriginal = yield* store.list(traceRollbackLocator);
+      yield* fs.writeFileString(traceRollbackPath, traceRollbackPrevious);
+      let traceRollbackWrites = 0;
+      const traceRollbackTimes = [
+        "2026-08-17T04:00:00.000Z",
+        "2026-08-17T05:00:00.000Z",
+        "2026-08-17T06:00:00.000Z",
+        "2026-08-17T07:00:00.000Z",
+        "2026-08-17T08:00:00.000Z",
+        "2026-08-17T09:00:00.000Z",
+        "2026-08-17T10:00:00.000Z",
+        "2026-08-17T11:00:00.000Z",
+      ];
+      const traceRollbackStore = {
+        ...store,
+        list: (locator: PacketStreamLocator) =>
+          store.list(locator).pipe(
+            Effect.flatMap((listing) => {
+              const at = traceRollbackTimes[traceRollbackWrites - 1];
+              if (locator.packetPath !== traceRollbackLocator.packetPath || at === undefined) {
+                return Effect.succeed(listing);
+              }
+              const derived = foldPacketEvents({ packet: "forked", root: "goals", events: listing.events });
+              if (derived.tip === undefined) return Effect.succeed(listing);
+              const concurrent = PacketEvent.make({
+                schemaVersion: "packet-event/v1",
+                packet: "forked",
+                root: "goals",
+                seq: derived.revision + 1,
+                parent: derived.tip.id,
+                expectedRevision: derived.revision,
+                at,
+                actor: "concurrent-writer",
+                body: { type: "status-set", status: "paused", previous: "active" },
+              });
+              return packetEventDigest(concurrent).pipe(
+                Effect.map((id) =>
+                  PacketStreamListing.make({
+                    events: A.append(
+                      listing.events,
+                      StoredPacketEvent.make({ id, fileName: packetEventFileName(concurrent, id), event: concurrent })
+                    ),
+                    issues: listing.issues,
+                  })
+                )
+              );
+            })
+          ),
+      };
+      const traceRollbackApplier = yield* makeApplier(
+        {
+          ...fs,
+          writeFileString: (target, content, options) =>
+            target === traceRollbackPath
+              ? Effect.sync(() => {
+                  traceRollbackWrites += 1;
+                }).pipe(Effect.andThen(fs.writeFileString(target, content, options)))
+              : fs.writeFileString(target, content, options),
+        },
+        traceRollbackStore
+      );
+      expect(failureMessage(yield* Effect.exit(traceRollbackApplier.apply(traceRollbackLocator)))).toContain(
+        "stream kept changing during trace publication"
+      );
+      expect((yield* store.list(traceRollbackLocator)).events).toStrictEqual(traceRollbackOriginal.events);
+      expect(yield* fs.readFileString(traceRollbackPath)).toBe(traceRollbackPrevious);
 
       const moveLocator = yield* makeFixture("move-failure");
       const moveEvents = `${moveLocator.packetPath}/ops/events`;

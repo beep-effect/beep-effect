@@ -260,12 +260,12 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     return yield* restoreIsolatedForkRepair(input);
   });
 
-  const restoreMissingForkTrace = Effect.fnUntraced(function* (tracePath: string, previousTrace: O.Option<string>) {
-    if (O.isNone(previousTrace)) return;
-    const currentTrace = yield* Effect.option(fs.readFileString(tracePath));
-    if (O.isNone(currentTrace)) {
+  const restorePreviousForkTrace = Effect.fnUntraced(function* (tracePath: string, previousTrace: O.Option<string>) {
+    if (O.isSome(previousTrace)) {
       yield* fs.writeFileString(tracePath, previousTrace.value).pipe(Effect.ignore);
+      return;
     }
+    yield* fs.remove(tracePath, { force: true }).pipe(Effect.ignore);
   });
 
   const discardEmptyForkRepairRoot = Effect.fnUntraced(function* (
@@ -324,7 +324,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         failedLocator,
         promotedListing,
       });
-      if (restoredPrevious) yield* restoreMissingForkTrace(tracePath, previousTrace);
+      if (restoredPrevious) yield* restorePreviousForkTrace(tracePath, previousTrace);
       yield* discardEmptyForkRepairRoot(tempRoot, backupDirectory, failedEventsDirectory);
     });
 
