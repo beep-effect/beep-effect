@@ -54,6 +54,29 @@ overlaps several waves here. Re-check this section when that packet reaches deco
   explicit migration seam to the proposed canonical-encoding substrate — no competing
   canonical encoding (DECISIONS 2026-08-24 §digest seam).
 
+## Amendment J re-entry (2026-08-26)
+
+[`packet-system-redesign`](../packet-system-redesign/README.md) D22 reshaped
+gate certificates onto the existing `@beep/skill-contract` kernel; D24 routes
+the next shape pass here rather than reopening the completed kernel goal or
+coupling it to `packet-convention-migration`.
+
+Binding inputs for decompose:
+
+- in-toto Statement envelope shape is allowed internally; signing and external
+  verification remain deferred;
+- outcomes are EARL/ACT `passed | failed | cantTell | untested |
+  inapplicable`, not the kernel's current two-valued `allowed | denied`;
+- reach is `complete | incomplete | unknown`, never nullable `conforms`;
+- inconclusive checks are excluded from aggregate success by the producer;
+- apply-by-id is a separate digest-bound plan with stale/unknown-id refusal;
+- the first slice is one certificate-producing QA judge settlement.
+
+The open decomposition choice is whether this becomes candidate 7,
+`skill-contract-gate-certificates`, or amends an existing later-wave candidate.
+It does not amend candidate 1 after closure, and candidate 3's current Yeet and
+bounded-recovery mission must not absorb it without an explicit MAP amendment.
+
 ## First vertical slice (inside goal 1)
 
 Define `Gate` + `EvidenceReceipt` schemas only; express **one** existing `JudgeCheck` rule

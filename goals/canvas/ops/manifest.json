@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "canvas",
     "title": "@beep/canvas",
@@ -117,5 +117,7 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "statusNote": "legacy status: active-p3-ready"
+  "statusNote": "legacy status: active-p3-ready",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/canvas"
 }
