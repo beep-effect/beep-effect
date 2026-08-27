@@ -34,11 +34,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement: the hostile-text gate and the coordinated full-source consumer
-are green. The public contracts now preserve the locked UTF-16,
-locator-to-raw, ambiguity, straddle, stale-source, and live re-verification
-behavior. The packet remains active for its broader re-anchor history and
-negative-attempt persistence contract.
+P2 Verify: implementation and the owned acceptance matrix are green. The new
+append-only history retains raw candidates, source and engine versions, typed
+negative outcomes, drift failures, and exact re-anchor receipts across
+persistence restart. The packet remains active until the exact-head Yeet proof
+and hosted merge-ready gate pass.
 
 ## Coordinated Consumer
 
@@ -58,8 +58,13 @@ offset mistake, the final 9/9 pass, and the conversion contract now binding P1.
 [`history/p1/2026-07-29-provenance-langextract-substrate.md`](./history/p1/2026-07-29-provenance-langextract-substrate.md)
 records green package audits and docgen for the provenance identity/verified
 anchor/receipt split and langextract strict raw-mapping slice. P1 remains
-active for the packet-owned re-anchor history and negative-attempt persistence
-work; the coordinated resolver/consumer is complete.
+the foundation for the completed history work; the coordinated
+resolver/consumer is complete.
+
+[`history/p2/2026-08-27-persistence-reanchor-proof.md`](./history/p2/2026-08-27-persistence-reanchor-proof.md)
+records the 18 provenance tests, 77 langextract tests, persistence restart,
+negative attempt, source-drift, re-anchor, schema-law, docgen, and Yeet repair
+proof. Full verify and hosted closeout remain.
 
 ## Notes
 

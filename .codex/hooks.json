@@ -1,15 +1,67 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|apply_patch",
         "hooks": [
-          {
+           {
             "type": "command",
             "command": "[ ! -f \".agents/skills/impeccable/scripts/hook.mjs\" ] || node \".agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 5,
             "statusMessage": "Checking UI changes",
             "commandWindows": "if exist \".agents/skills/impeccable/scripts/hook.mjs\" (node \".agents/skills/impeccable/scripts/hook.mjs\" & exit /b)"
+          },
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/law-pulse.sh'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/hook-pulse.sh'"
           }
         ]
       }
@@ -18,6 +70,10 @@
       {
         "hooks": [
           {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect10/.codex/hooks/hook-pulse.sh'"
+          },
+           {
             "type": "command",
             "command": "[ ! -f \".agents/skills/impeccable/scripts/hook.mjs\" ] || node \".agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 30,
