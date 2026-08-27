@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import { Context, Effect, FileSystem, flow, Layer, Order, Path } from "effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { decodeGoalManifest } from "../Goals.schemas.ts";
 import { parseGoalManifestText } from "../Inventory.ts";
@@ -662,6 +663,12 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePath = path.resolve(seed.tracePath);
+  if (!Str.startsWith(observed)(seed.traceText)) {
+    return yield* streamError(
+      seed.slug,
+      `genesis trace recovery conflict: nonmatching bytes preserved at ${tracePath}`
+    );
+  }
   const recoveryRoot = yield* fs
     .makeTempDirectory({ directory: path.dirname(tracePath), prefix: ".genesis-trace-recovery-" })
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine failed: ${error.message}`)));

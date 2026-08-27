@@ -31,6 +31,7 @@ import { Context, Effect, Exit, FileSystem, Layer, Path, PlatformError, Result }
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import {
   expectReportedExit,
@@ -1069,7 +1070,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   );
 
   it.effect(
-    "keeps interrupted trace writes off the canonical path and repairs legacy partial traces",
+    "repairs owned trace prefixes while preserving nonmatching foreign traces",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-partial-trace-" });
@@ -1120,7 +1121,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(Exit.isFailure(interruptedExit)).toBe(true);
       expect(yield* fs.exists(recovery.value.tracePath)).toBe(false);
 
-      yield* fs.writeFileString(recovery.value.tracePath, "partial trace\n");
+      yield* fs.writeFileString(recovery.value.tracePath, Str.takeLeft(32)(recovery.value.traceText));
       const retry = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
       expect(O.isSome(retry)).toBe(true);
       if (O.isNone(retry)) return;
@@ -1135,6 +1136,17 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
       expect(yield* fs.readFileString(retry.value.tracePath)).toBe(retry.value.traceText);
       expect(O.isNone(yield* planPacketGenesisSeed(packet, manifest, "2026-08-28T00:00:00.000Z"))).toBe(true);
+
+      const foreignTrace = '{"foreign":true}\n';
+      yield* fs.writeFileString(retry.value.tracePath, foreignTrace);
+      const foreignRecovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-29T00:00:00.000Z");
+      expect(O.isSome(foreignRecovery)).toBe(true);
+      if (O.isNone(foreignRecovery)) return;
+      const foreignExit = yield* Effect.exit(applyPacketGenesisSeed(foreignRecovery.value));
+      expect(Exit.isFailure(foreignExit) ? foreignExit.cause.toString() : "").toContain(
+        "genesis trace recovery conflict"
+      );
+      expect(yield* fs.readFileString(foreignRecovery.value.tracePath)).toBe(foreignTrace);
     })
   );
 
