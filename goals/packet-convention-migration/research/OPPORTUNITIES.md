@@ -89,3 +89,33 @@
 - **Disposition:** focused coverage added in this packet; local/hosted proof
   parity remains a Yeet workflow improvement.
 - **Owner:** Yeet proof-planning and coverage-ratchet maintainers.
+
+## 2026-08-27 — Multi-file focused coverage overflows during result merge
+
+- **What happened:** a focused Vitest invocation covering the exploration check
+  and convention-migration suites completed test execution but overflowed the
+  v8-coverage range-tree merger before it could report results.
+- **Evidence:** the two-file coverage command failed in
+  `@bcoe/v8-coverage`'s `mergeRangeTrees` with `Maximum call stack size
+  exceeded`; running each coverage target independently avoids the merge path.
+- **What would have prevented it:** make the focused coverage wrapper isolate
+  files before aggregating summaries, or detect this merger failure and print
+  the independent-invocation fallback.
+- **Disposition:** tooling ergonomics — verify both suites independently; no
+  product source repair is implied by the merger failure.
+- **Owner:** Vitest coverage-lane maintainers.
+
+## 2026-08-27 — Yeet repair rewrites unchanged upstream source
+
+- **What happened:** after rebasing onto the latest `main`, `bun run beep yeet
+  repair` applied safe terse-Effect rewrites to an unchanged Semantica source
+  file outside this PR's packet-migration scope.
+- **Evidence:** the repair left `apps/labs/semantica/src/layers/EvaluatorLive.ts`
+  dirty with six helper-reference simplifications even though the branch had no
+  patch for that file; the rewrite was restored before publication.
+- **What would have prevented it:** scope write-mode repair laws to the branch
+  delta, or park and restore rewrites that are byte-identical to the current
+  base before the repair starts.
+- **Disposition:** workflow fix — keep unrelated upstream cleanup out of this
+  PR and publish only the packet receipt.
+- **Owner:** Yeet repair-scope maintainers.
