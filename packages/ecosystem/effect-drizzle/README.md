@@ -238,7 +238,7 @@ source doc comments, never this section.
 
 ### Root entrypoint — `@beep/effect-drizzle`
 
-Runtime error raised when a model violates a construction invariant.
+Public SQL metadata carriers retained by downstream declaration emit.
 
 #### constructors
 
@@ -249,10 +249,10 @@ Kit constructor deriving dialect-bound model, entity, and table builders.
 **Signature**
 
 ```ts
-declare const make: { <const Defaults extends FieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends FieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; }
+declare const make: { <const Defaults extends FieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends FieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(dialect: D, build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): DialectKit<D, Defaults>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L25)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L32)
 
 #### errors
 
@@ -266,7 +266,7 @@ Runtime error raised when a model violates a construction invariant.
 declare const ModelInvariantError: typeof ModelInvariantError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L15)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L22)
 
 #### models
 
@@ -280,7 +280,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const Dialect: Dialect
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L62)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L63)
 
 ##### EntityFactory
 
@@ -292,7 +292,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const EntityFactory: EntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L63)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L64)
 
 ##### FieldExcept
 
@@ -304,7 +304,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 declare const FieldExcept: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => Field<{ readonly [K in Exclude<"update", Keys[number]> | Exclude<"insert", Keys[number]> | Exclude<"select", Keys[number]> | Exclude<"json", Keys[number]> | Exclude<"jsonCreate", Keys[number]> | Exclude<"jsonUpdate", Keys[number]>]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L32)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L39)
 
 ##### FieldOnly
 
@@ -316,7 +316,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 declare const FieldOnly: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => Field<{ readonly [K in Keys[number]]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L33)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L40)
 
 ##### Model
 
@@ -328,7 +328,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 declare const Model: <Self = never, const Identifier extends string = string>(identifier: Identifier & ValidateDerivedSqlName<Identifier, "Model identifier derives an invalid PostgreSQL table name">) => <const F extends FieldsInput>(fields: F & ValidateFields<F>, annotationsOrExtras?: Annotations.Annotations | Callback<F>, extras?: Callback<F>) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L35)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L42)
 
 ##### PgKit
 
@@ -340,7 +340,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgKit: PgKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L64)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L65)
 
 ##### PgKitConfig
 
@@ -352,7 +352,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgKitConfig: PgKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L65)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L66)
 
 ##### PgKitExtension
 
@@ -364,7 +364,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgKitExtension: PgKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L66)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L67)
 
 ##### PgToolkit
 
@@ -376,7 +376,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgToolkit: PgToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L67)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L68)
 
 ##### SqliteEntityFactory
 
@@ -388,7 +388,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteEntityFactory: SqliteEntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L68)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L69)
 
 ##### SqliteKit
 
@@ -400,7 +400,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteKit: SqliteKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L69)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L70)
 
 ##### SqliteKitConfig
 
@@ -412,7 +412,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteKitConfig: SqliteKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L70)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L71)
 
 ##### SqliteKitExtension
 
@@ -424,7 +424,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteKitExtension: SqliteKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L71)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L72)
 
 ##### SqliteToolkit
 
@@ -436,7 +436,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteToolkit: SqliteToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L72)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L73)
 
 ##### ValidateCollision
 
@@ -448,7 +448,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const ValidateCollision: ValidateCollision<Defaults, Own>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L73)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L74)
 
 ##### ValidateMergedFields
 
@@ -460,7 +460,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const ValidateMergedFields: ValidateMergedFields<Defaults, Own, Effective>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L74)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L75)
 
 ##### VariantField
 
@@ -472,7 +472,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 declare const VariantField: <const A extends Field.ConfigWithKeys<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(config: A & { readonly [K in Exclude<keyof A, "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">]: never; }) => Field<A>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L36)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L43)
 
 ##### extract
 
@@ -484,7 +484,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 declare const extract: { <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">(variant: V): <A extends Struct<any>>(self: A) => Extract<V, A, V extends "select" ? true : false>; <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate", A extends Struct<any>>(self: A, variant: V): Extract<V, A, V extends "select" ? true : false>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L31)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L38)
 
 ##### fieldEvolve
 
@@ -496,7 +496,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 declare const fieldEvolve: { <Self extends Field<any> | Top, const Mapping extends Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(f: Mapping): (self: Self) => Field<Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; <Self extends Field<any> | Top, const Mapping extends Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(self: Self, f: Mapping): Field<Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L34)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L41)
 
 #### repositories
 
@@ -510,7 +510,7 @@ Optimistic repository constructor and conflict error.
 declare const VersionConflictError: typeof VersionConflictError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L20)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L27)
 
 ##### makeRepository
 
@@ -519,10 +519,10 @@ Optimistic repository constructor and conflict error.
 **Signature**
 
 ```ts
-declare const makeRepository: { <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; <const M extends RepositoryModel, const Id extends IdKey<M>>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>; }
+declare const makeRepository: { <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; <const Id extends string>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): <const M extends RepositoryModel>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L20)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L27)
 
 #### type-level
 
@@ -536,7 +536,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const AnyModel: AnyModel
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L81)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L82)
 
 ##### ColumnsOf
 
@@ -548,31 +548,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const ColumnsOf: ColumnsOf<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L82)
-
-##### DefaultSqlExpr
-
-Public SQL metadata carriers retained by downstream declaration emit.
-
-**Signature**
-
-```ts
-declare const DefaultSqlExpr: DefaultSqlExpr<Carrier>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L51)
-
-##### DefaultValue
-
-Public SQL metadata carriers retained by downstream declaration emit.
-
-**Signature**
-
-```ts
-declare const DefaultValue: DefaultValue<Encoded>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L51)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L83)
 
 ##### EffectiveSchema
 
@@ -584,7 +560,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const EffectiveSchema: EffectiveSchema<I>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L83)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L84)
 
 ##### FieldInput
 
@@ -596,7 +572,7 @@ Public field-carrier types retained by downstream declaration emit.
 declare const FieldInput: Input
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L44)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L51)
 
 ##### FieldsInput
 
@@ -608,7 +584,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const FieldsInput: FieldsInput
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L84)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L85)
 
 ##### ModelClass
 
@@ -620,7 +596,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const ModelClass: ModelClass<Self, F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L85)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L86)
 
 ##### PatchedField
 
@@ -630,18 +606,6 @@ Public field-carrier types retained by downstream declaration emit.
 
 ```ts
 declare const PatchedField: Patched<I, Patch>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L44)
-
-##### References
-
-Public SQL metadata carriers retained by downstream declaration emit.
-
-**Signature**
-
-```ts
-declare const References: References<TableName, ColumnName>
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L51)
@@ -656,7 +620,7 @@ Repository result and version-column types.
 declare const Repository: Repository<M, Id>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L56)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L57)
 
 ##### Statics
 
@@ -668,7 +632,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const Statics: Statics<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L86)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L87)
 
 ##### ValidateFields
 
@@ -680,7 +644,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const ValidateFields: ValidateFields<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L87)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L88)
 
 ##### Variant
 
@@ -692,7 +656,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const Variant: "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L88)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L89)
 
 ##### VersionKey
 
@@ -704,7 +668,61 @@ Repository result and version-column types.
 declare const VersionKey: VersionKey<M>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L56)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L57)
+
+##### isUniqueKey
+
+Public SQL metadata carriers retained by downstream declaration emit.
+
+**Signature**
+
+```ts
+declare const isUniqueKey: (meta: Meta) => boolean
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L17)
+
+#### utils
+
+##### DefaultSqlExpr
+
+**Signature**
+
+```ts
+declare const DefaultSqlExpr: DefaultSqlExpr<Carrier>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
+
+##### DefaultValue
+
+**Signature**
+
+```ts
+declare const DefaultValue: DefaultValue<Encoded>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
+
+##### IsUniqueKey
+
+**Signature**
+
+```ts
+declare const IsUniqueKey: IsUniqueKey<M>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
+
+##### References
+
+**Signature**
+
+```ts
+declare const References: References<TableName, ColumnName>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
 
 ### Kit constructor — `@beep/effect-drizzle`
 
@@ -732,7 +750,8 @@ closure receiving the dialect toolkit (column combinators plus the `Table`
 extras namespace). The returned kit contains the toolkit, bare `Model`,
 defaults-injected `Entity`, `Table`, repository factory, schema assembler,
 table projector, and `extend`. Default extras execute before entity-local
-extras.
+extras. Literal dialects retain their exact kit type; a `Dialect` union input
+receives and returns the corresponding toolkit and kit unions.
 
 **Gotchas**
 
@@ -761,10 +780,10 @@ kit.pg.integer // => PostgreSQL integer combinator
 **Signature**
 
 ```ts
-declare const make: { <const Defaults extends PgFieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends SqliteFieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; }
+declare const make: { <const Defaults extends PgFieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends SqliteFieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(dialect: D, build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): DialectKit<D, Defaults>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L117)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L139)
 
 #### type-level
 
@@ -8181,7 +8200,7 @@ export interface Empty extends Meta {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L286)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L324)
 
 ##### FkAction (type alias)
 
@@ -8293,7 +8312,7 @@ type Merge<M, P> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L337)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L375)
 
 ##### Meta (interface)
 
@@ -8330,7 +8349,7 @@ Partial metadata update produced by a field combinator.
 type Patch = { readonly [K in keyof Meta]?: Meta[K] }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L329)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L367)
 
 ##### References (interface)
 
@@ -8373,6 +8392,53 @@ type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql" }>
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L221)
+
+##### isUniqueKey
+
+Reports whether metadata guarantees that one column uniquely locates a row.
+
+**Details**
+
+Primary keys, inline unique constraints, and colocated single-column unique
+indexes all provide the same locator and foreign-key-target guarantee. A
+non-unique index does not.
+
+**Example** (Recognize a colocated unique index)
+
+```ts
+import { isUniqueKey } from "@beep/effect-drizzle"
+import { String } from "effect/Schema"
+import { uniqueIndex } from "@beep/effect-drizzle/pg"
+
+isUniqueKey(String.pipe(uniqueIndex()).meta) // => true
+```
+
+**Signature**
+
+```ts
+declare const isUniqueKey: (meta: Meta) => boolean
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L302)
+
+#### type-level
+
+##### IsUniqueKey (type alias)
+
+Type-level counterpart of `isUniqueKey`.
+
+**Signature**
+
+```ts
+type IsUniqueKey<M> = M extends
+  | { readonly primaryKey: true }
+  | { readonly unique: true }
+  | { readonly indexed: { readonly unique: true } }
+  ? true
+  : false
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L311)
 
 ### Core: field carriers — `@beep/effect-drizzle`
 
@@ -8904,7 +8970,7 @@ error.expectedVersion // => 2
 declare class VersionConflictError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L62)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L63)
 
 #### factories
 
@@ -8921,7 +8987,9 @@ optimistic rather than Effect SQL's native id-only update.
 
 Repository acquisition is an Effect requiring `SqlClient`. The generated
 update performs one `UPDATE ... WHERE id = ... AND version = ... RETURNING`
-statement and increments the version inside SQL.
+statement and increments the version inside SQL. Both
+`makeRepository(model, options)` and `makeRepository(options)(model)` retain
+model-specific locator inference.
 
 **Gotchas**
 
@@ -8974,10 +9042,10 @@ await runPromise(provide(program, PgliteTestLayer))
 **Signature**
 
 ```ts
-declare const makeRepository: { <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; <const M extends RepositoryModel, const Id extends IdKey<M>>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>; }
+declare const makeRepository: { <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; <const Id extends string>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): <const M extends RepositoryModel>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L355)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L361)
 
 #### repositories
 
@@ -9042,7 +9110,7 @@ type Repository<M, Id> = Pick<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L199)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L203)
 
 #### type-level
 
@@ -9083,7 +9151,7 @@ type VersionKey<M> = {
 }[keyof M["sql"]["columns"] & string]
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L128)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L127)
 
 ### Core: SQL naming invariants — `@beep/effect-drizzle`
 

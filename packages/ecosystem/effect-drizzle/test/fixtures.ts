@@ -240,7 +240,7 @@ class UniqueTargetRef {
   static readonly entityType = "UniqueTarget";
 }
 class UniqueTarget extends Model<UniqueTarget>("UniqueTarget")({
-  id: Int.pipe(pg.integer(), pg.unique()),
+  id: Int.pipe(pg.integer(), pg.uniqueIndex()),
 }) {}
 class UniqueSource extends Model<UniqueSource>("UniqueSource")({
   targetId: Int.pipe(pg.integer(), pg.references(UniqueTargetRef)),
@@ -542,6 +542,17 @@ class NullableUniqueRepositoryModel extends Model<NullableUniqueRepositoryModel>
   email: NullOr(String).pipe(pg.text(), pg.unique()),
   rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
 }) {}
+
+class UniqueIndexRepositoryModel extends Model<UniqueIndexRepositoryModel>("UniqueIndexRepositoryModel")({
+  email: String.pipe(pg.text(), pg.uniqueIndex()),
+  rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
+}) {}
+
+export const _repositoryUniqueIndexLocator = () => ({
+  repository: makeRepository({ spanPrefix: "UniqueIndexRepositoryModel", idColumn: "email" })(
+    UniqueIndexRepositoryModel
+  ),
+});
 
 export const _repositoryNullableUniqueLocator = () => ({
   repository: makeRepository(NullableUniqueRepositoryModel, {

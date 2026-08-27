@@ -40,6 +40,7 @@ import {
 } from "../core/assembly.ts";
 import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import * as Field from "../core/Field.ts";
+import * as Meta from "../core/Meta.ts";
 import { snakeCase } from "../internal/case.ts";
 import * as SqliteColumn from "./Column.ts";
 import * as Derive from "./derive.ts";
@@ -47,7 +48,6 @@ import { toSqliteTable } from "./table.ts";
 import type { RelationsBuilder, RelationsBuilderConfig } from "drizzle-orm";
 import type { Option } from "effect/Option";
 import type { Edge, Junction, SchemaName } from "../core/assembly.ts";
-import type * as Meta from "../core/Meta.ts";
 import type { AnyModel, FieldsInput } from "./model.ts";
 import type { TableOf } from "./table.ts";
 
@@ -183,9 +183,7 @@ type ReferenceFailure<Models extends ModelRecord, M, K extends keyof FieldsOf<M>
                     TargetSpec,
                     DimensionsAt<Models[TargetTable], TargetColumn>
                   > extends true
-                  ? ColumnsOf<Models[TargetTable]>[TargetColumn] extends
-                      | { readonly primaryKey: true }
-                      | { readonly unique: true }
+                  ? Meta.IsUniqueKey<ColumnsOf<Models[TargetTable]>[TargetColumn]> extends true
                     ? never
                     : Field.SqlTypeError<"foreign-key target must be primary-key or unique">
                   : Field.SqlTypeError<"foreign-key encoded carriers are incompatible">
@@ -411,9 +409,9 @@ const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
                 reference.tableName
               )
             );
-            if (!targetMeta.primaryKey && !targetMeta.unique) {
+            if (!Meta.isUniqueKey(targetMeta)) {
               fail(
-                `Foreign key '${sourceKey}.${sourceField}' must target a primary-key or unique column, got '${targetKey}.${targetField}'.`,
+                `Foreign key '${sourceKey}.${sourceField}' must target a primary key, unique field, or single-column unique index, got '${targetKey}.${targetField}'.`,
                 sourceKey,
                 sourceField,
                 reference.tableName

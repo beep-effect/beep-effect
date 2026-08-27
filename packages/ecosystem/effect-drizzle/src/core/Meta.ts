@@ -278,6 +278,44 @@ export interface Meta<C extends ColumnSpec = ColumnSpec> {
 }
 
 /**
+ * Reports whether metadata guarantees that one column uniquely locates a row.
+ *
+ * **Details**
+ *
+ * Primary keys, inline unique constraints, and colocated single-column unique
+ * indexes all provide the same locator and foreign-key-target guarantee. A
+ * non-unique index does not.
+ *
+ * **Example** (Recognize a colocated unique index)
+ *
+ * ```ts
+ * import { isUniqueKey } from "@beep/effect-drizzle"
+ * import { String } from "effect/Schema"
+ * import { uniqueIndex } from "@beep/effect-drizzle/pg"
+ *
+ * isUniqueKey(String.pipe(uniqueIndex()).meta) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const isUniqueKey = (meta: Meta): boolean =>
+  meta.primaryKey || meta.unique || (meta.indexed !== false && meta.indexed.unique);
+
+/**
+ * Type-level counterpart of {@link isUniqueKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IsUniqueKey<M extends Meta> = M extends
+  | { readonly primaryKey: true }
+  | { readonly unique: true }
+  | { readonly indexed: { readonly unique: true } }
+  ? true
+  : false;
+
+/**
  * Exact initial metadata type inferred for a bare schema field.
  *
  * @category models

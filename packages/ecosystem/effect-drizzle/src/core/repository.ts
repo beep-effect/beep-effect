@@ -23,6 +23,7 @@ import { isUnknownRecord } from "../internal/guards.ts";
 import { flattenEncoded } from "./classification.ts";
 import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import * as Field from "./Field.ts";
+import * as Meta from "./Meta.ts";
 import { ModelInvariantError } from "./model.ts";
 import type { Effect, Success } from "effect/Effect";
 import type { SchemaError } from "effect/Schema";
@@ -85,11 +86,9 @@ type LocatorKey<M extends AnyModel> = {
           readonly version: true;
         }
       ? never
-      : M["sql"]["columns"][K] extends { readonly primaryKey: true }
+      : Meta.IsUniqueKey<M["sql"]["columns"][K]> extends true
         ? K
-        : M["sql"]["columns"][K] extends { readonly unique: true }
-          ? K
-          : never;
+        : never;
 }[keyof M["sql"]["columns"] & string];
 
 type IdKey<M extends RepositoryModel> = keyof M["Type"] &
@@ -148,6 +147,11 @@ type ColumnNameKey<M extends AnyModel> = {
 type ValidateColumnNames<M extends AnyModel> = [ColumnNameKey<M>] extends [never]
   ? unknown
   : Field.SqlTypeError<"optimistic repositories do not yet support columnName overrides">;
+
+type ValidateLocator<M extends RepositoryModel, Id extends string> =
+  Id extends IdKey<M>
+    ? unknown
+    : Field.SqlTypeError<"repository locator must be a non-null primary key, unique field, or single-column unique index">;
 
 type NativeRepository<M extends RepositoryModel, Id extends IdKey<M>> = Success<
   ReturnType<typeof makeSqlRepository<M, Id>>
@@ -268,9 +272,9 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
       fieldName: idColumn,
     });
   }
-  if (!locator.primaryKey && !locator.unique) {
+  if (!Meta.isUniqueKey(locator)) {
     throw ModelInvariantError.make({
-      message: `Repository locator '${idColumn}' must be a primary-key or unique field.`,
+      message: `Repository locator '${idColumn}' must be a primary key, unique field, or single-column unique index.`,
       fieldName: idColumn,
     });
   }
@@ -302,7 +306,9 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  *
  * Repository acquisition is an Effect requiring `SqlClient`. The generated
  * update performs one `UPDATE ... WHERE id = ... AND version = ... RETURNING`
- * statement and increments the version inside SQL.
+ * statement and increments the version inside SQL. Both
+ * `makeRepository(model, options)` and `makeRepository(options)(model)` retain
+ * model-specific locator inference.
  *
  * **Gotchas**
  *
@@ -360,10 +366,12 @@ export const makeRepository: {
       readonly idColumn: Id;
     }
   ): Effect<Repository<M, Id>, never, SqlClient>;
-  <const M extends RepositoryModel, const Id extends IdKey<M>>(options: {
+  <const Id extends string>(options: {
     readonly spanPrefix: string;
     readonly idColumn: Id;
-  }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>;
+  }): <const M extends RepositoryModel>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>
+  ) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>;
 } = dual(
   2,
   <const M extends RepositoryModel, const Id extends IdKey<M>>(

@@ -131,6 +131,9 @@ describe("@beep/agents-domain", () => {
     };
     expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "Review Skill" }))).toBe(true);
     expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "-review" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review_skill" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review.skill" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review--skill" }))).toBe(true);
   });
 
   it("decodes Agent Skills frontmatter through the derived codec", () => {
@@ -138,7 +141,6 @@ describe("@beep/agents-domain", () => {
       "allowed-tools": "Bash, Read",
       compatibility: null,
       description: "Formats commit messages.",
-      fixtureKey: "skill.commit-format",
       license: "MIT",
       metadata: null,
       name: "commit-format",
@@ -149,6 +151,7 @@ describe("@beep/agents-domain", () => {
     const encoded = Result.getOrThrow(S.encodeResult(SkillFrontmatter)(decoded));
     expect(encoded["allowed-tools"]).toBe("Bash, Read");
     expect(Object.keys(encoded)).not.toContain("allowedTools");
+    expect(Object.keys(encoded)).not.toContain("fixtureKey");
   });
 
   it("round-trips schema-derived agent modes", () =>

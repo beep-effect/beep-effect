@@ -65,6 +65,23 @@ export type {
  */
 export type Dialect = "pg" | "sqlite";
 
+type DialectFields<D extends Dialect> = D extends "pg" ? PgFieldsInput : SqliteFieldsInput;
+type DialectToolkit<D extends Dialect> = D extends "pg" ? PgToolkit : SqliteToolkit;
+type DialectConfig<D extends Dialect, Defaults extends DialectFields<D>> = D extends "pg"
+  ? Defaults extends PgFieldsInput
+    ? PgKitConfig<Defaults>
+    : never
+  : Defaults extends SqliteFieldsInput
+    ? SqliteKitConfig<Defaults>
+    : never;
+type DialectKit<D extends Dialect, Defaults extends DialectFields<D>> = D extends "pg"
+  ? Defaults extends PgFieldsInput
+    ? PgKit<Defaults>
+    : never
+  : Defaults extends SqliteFieldsInput
+    ? SqliteKit<Defaults>
+    : never;
+
 /**
  * Creates a dialect kit whose entity defaults and extras are fixed once.
  *
@@ -80,7 +97,8 @@ export type Dialect = "pg" | "sqlite";
  * extras namespace). The returned kit contains the toolkit, bare `Model`,
  * defaults-injected `Entity`, `Table`, repository factory, schema assembler,
  * table projector, and `extend`. Default extras execute before entity-local
- * extras.
+ * extras. Literal dialects retain their exact kit type; a `Dialect` union input
+ * receives and returns the corresponding toolkit and kit unions.
  *
  * **Gotchas**
  *
@@ -114,12 +132,11 @@ export function make<const Defaults extends SqliteFieldsInput>(
   dialect: "sqlite",
   build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>
 ): SqliteKit<Defaults>;
-export function make(
-  dialect: Dialect,
-  build:
-    | ((pg: PgToolkit) => PgKitConfig<PgFieldsInput>)
-    | ((sqlite: SqliteToolkit) => SqliteKitConfig<SqliteFieldsInput>)
-): unknown {
+export function make<const D extends Dialect, const Defaults extends DialectFields<D>>(
+  dialect: D,
+  build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>
+): DialectKit<D, Defaults>;
+export function make(dialect: Dialect, build: unknown): unknown {
   if (dialect === "pg") return makePgKit(build as (pg: PgToolkit) => PgKitConfig<PgFieldsInput>);
   if (dialect === "sqlite")
     return makeSqliteKit(build as (sqlite: SqliteToolkit) => SqliteKitConfig<SqliteFieldsInput>);

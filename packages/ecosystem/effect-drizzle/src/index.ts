@@ -8,6 +8,13 @@
  * @since 0.0.0
  */
 
+/**
+ * Public SQL metadata carriers retained by downstream declaration emit.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export { isUniqueKey } from "./core/Meta.ts";
 /** Runtime error raised when a model violates a construction invariant.
  * @category errors
  * @since 0.0.0
@@ -42,13 +49,7 @@ export {
  * @since 0.0.0
  */
 export type { Input as FieldInput, Patched as PatchedField } from "./core/Field.ts";
-/**
- * Public SQL metadata carriers retained by downstream declaration emit.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type { DefaultSqlExpr, DefaultValue, References } from "./core/Meta.ts";
+export type { DefaultSqlExpr, DefaultValue, IsUniqueKey, References } from "./core/Meta.ts";
 /** Repository result and version-column types.
  * @category type-level
  * @since 0.0.0

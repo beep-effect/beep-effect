@@ -192,6 +192,18 @@ export const _sqliteNonUniqueForeignKey = () =>
     sqlite_non_unique_source: SqliteNonUniqueSource,
   });
 
+const SqliteUniqueIndexTargetId = entityId(Finite, "sqlite_unique_index_target", "SqliteUniqueIndexTarget");
+class SqliteUniqueIndexTarget extends SqliteModel<SqliteUniqueIndexTarget>("SqliteUniqueIndexTarget")({
+  id: Int.pipe(sqlite.integer(), sqlite.uniqueIndex()),
+}) {}
+class SqliteUniqueIndexSource extends SqliteModel<SqliteUniqueIndexSource>("SqliteUniqueIndexSource")({
+  targetId: Int.pipe(sqlite.integer(), sqlite.references(SqliteUniqueIndexTargetId)),
+}) {}
+export const sqliteUniqueIndexForeignKeySchema = sqliteKit.schema({
+  sqlite_unique_index_target: SqliteUniqueIndexTarget,
+  sqlite_unique_index_source: SqliteUniqueIndexSource,
+});
+
 class SqliteAlphaUser extends SqliteModel<SqliteAlphaUser>("alpha/User")({ value: String }) {}
 class SqliteBetaUser extends SqliteModel<SqliteBetaUser>("beta/User")({ value: String }) {}
 export const _sqliteDuplicatePhysicalTableNames = () =>

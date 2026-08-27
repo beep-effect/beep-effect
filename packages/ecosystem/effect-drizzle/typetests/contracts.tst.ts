@@ -20,7 +20,7 @@ import {
 import { transformOrFail } from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { expect, it } from "tstyche";
-import type { DefaultSqlExpr, DefaultValue, References } from "@beep/effect-drizzle";
+import type { DefaultSqlExpr, DefaultValue, Dialect, References } from "@beep/effect-drizzle";
 import type { Custom, Numeric, Timestamp, Varchar } from "@beep/effect-drizzle/pg";
 import type { Effect, Success } from "effect/Effect";
 
@@ -37,6 +37,9 @@ const UserId = Object.assign(Int, {
   tableName: "user" as const,
   entityType: "User" as const,
 });
+
+declare const configuredDialect: Dialect;
+const configuredKit = make(configuredDialect, () => ({ defaultColumns: { label: String } }));
 
 class Organization extends Model<Organization>("Organization")({
   id: OrganizationId.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
@@ -76,6 +79,10 @@ declare const sqliteColumns: sqlite.Table.BoundColumns<{
 it("derives Drizzle select and insert contracts", () => {
   type Assertions = ExpectAll<{
     readonly assembly: Equal<typeof assembly.tables.organization, typeof assembly.tables.organization>;
+    readonly configuredKit: Equal<
+      keyof Pick<typeof configuredKit, "Entity" | "Model" | "Table">,
+      "Entity" | "Model" | "Table"
+    >;
     readonly id: Equal<(typeof userTable.$inferSelect)["id"], number>;
     readonly name: Equal<(typeof userTable.$inferSelect)["name"], string>;
     readonly status: Equal<(typeof userTable.$inferSelect)["status"], "draft" | "active">;
@@ -209,6 +216,7 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
     rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
   }) {}
   const repository = makeRepository(ServiceRecord, { spanPrefix: "ServiceRecord", idColumn: "id" });
+  const curriedRepository = makeRepository({ spanPrefix: "ServiceRecord", idColumn: "id" })(ServiceRecord);
 
   type Select = typeof migratedUserTable.$inferSelect;
   type Insert = typeof migratedUserTable.$inferInsert;
@@ -226,11 +234,13 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
   type ArraySelect = typeof arrayTable.$inferSelect;
   type ArrayInsert = typeof arrayTable.$inferInsert;
   type Repository = Success<typeof repository>;
+  type CurriedRepository = Success<typeof curriedRepository>;
   type RepositoryInsert = ReturnType<Repository["insert"]>;
   type RepositoryRequirements =
     RepositoryInsert extends Effect<unknown, unknown, infer Requirements> ? Requirements : never;
 
   type MigratedPgContracts = ExpectAll<{
+    readonly curriedRepositoryInference: Equal<CurriedRepository, Repository>;
     readonly selectId: Equal<Select["id"], number>;
     readonly selectEmail: Equal<Select["email"], string>;
     readonly selectBio: Equal<Select["bio"], string | null>;

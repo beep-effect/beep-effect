@@ -8,6 +8,7 @@ import { $AgentsDomainId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { Struct } from "effect";
 import * as S from "effect/Schema";
 import { SkillFixtureKey, SkillName } from "../Fixture.values.ts";
 
@@ -62,8 +63,8 @@ export class Skill extends ProductEntity.Entity<Skill>()(Agents.SkillId)(
  *
  * **Details**
  *
- * `jsonCreate` already excludes identity, audit, and org columns, so the
- * derived struct is the author-writable skill surface; `encodeKeys` renames
+ * `jsonCreate` already excludes identity, audit, and org columns. The derived
+ * struct also omits the persistence-only `fixtureKey`; `encodeKeys` renames
  * `allowedTools` to the specification's kebab-case `allowed-tools` on the
  * encoded side. Optional fields encode as `null` rather than absent keys.
  *
@@ -79,7 +80,6 @@ export class Skill extends ProductEntity.Entity<Skill>()(Agents.SkillId)(
  *     "allowed-tools": "Bash, Read",
  *     compatibility: null,
  *     description: "Formats commit messages.",
- *     fixtureKey: "skill:commit-format",
  *     license: null,
  *     metadata: null,
  *     name: "commit-format",
@@ -92,4 +92,6 @@ export class Skill extends ProductEntity.Entity<Skill>()(Agents.SkillId)(
  * @category schemas
  * @since 0.0.0
  */
-export const SkillFrontmatter = Skill.jsonCreate.pipe(S.encodeKeys({ allowedTools: "allowed-tools" }));
+export const SkillFrontmatter = Skill.jsonCreate
+  .mapFields(Struct.omit(["fixtureKey"]))
+  .pipe(S.encodeKeys({ allowedTools: "allowed-tools" }));
