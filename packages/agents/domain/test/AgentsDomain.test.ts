@@ -133,7 +133,7 @@ describe("@beep/agents-domain", () => {
   });
 
   it("decodes Agent Skills frontmatter through the derived codec", () => {
-    const decoded = S.decodeUnknownSync(SkillFrontmatter)({
+    const decoded = S.decodeSync(SkillFrontmatter)({
       "allowed-tools": "Bash, Read",
       compatibility: null,
       description: "Formats commit messages.",

@@ -276,12 +276,11 @@ type RawEntity = (
 ) => object;
 
 const factoryImpl =
-  (kit: Pg.PgKit<FieldsInput>, identityFor: (id: EntityId.Any) => FieldsInput) =>
+  (kit: Pg.PgKit<FieldsInput>, identityFor: (id: EntityId.Any) => FieldsInput, reservedKeys: ReadonlyArray<string>) =>
   () =>
   (id: EntityId.Any) =>
   (own: FieldsInput, annotations?: Annotations.Annotations, extras?: Pg.Table.Callback<FieldsInput>): object => {
-    const identity = identityFor(id);
-    const collision = A.findFirst(Object.keys(own), (key) => P.hasProperty(identity, key));
+    const collision = A.findFirst(reservedKeys, (key) => P.hasProperty(own, key));
     if (O.isSome(collision)) {
       throw ModelInvariantError.make({
         message: `'${collision.value}' is an identity column injected from the entity id — remove it.`,
@@ -292,7 +291,7 @@ const factoryImpl =
     // authoritative; the kit's public Entity factory is generically typed for
     // literal declaration sites and is deliberately widened here.
     const entity = kit.Entity as unknown as RawEntity;
-    return entity(id.tableName)({ ...own, ...identity }, annotations, extras);
+    return entity(id.tableName)({ ...own, ...identityFor(id) }, annotations, extras);
   };
 
 /**
@@ -314,7 +313,7 @@ const factoryImpl =
 export const entityFactory = <const Defaults extends FieldsInput>(
   kit: Pg.PgKit<Defaults>
 ): TierEntityFactory<Defaults> =>
-  factoryImpl(kit as Pg.PgKit<FieldsInput>, identityColumns) as TierEntityFactory<Defaults>;
+  factoryImpl(kit as Pg.PgKit<FieldsInput>, identityColumns, ["entityType", "id"]) as TierEntityFactory<Defaults>;
 
 /**
  * Builds the typed tier `Entity` factory for a kit with the product identity
@@ -336,4 +335,8 @@ export const entityFactory = <const Defaults extends FieldsInput>(
 export const productEntityFactory = <const Defaults extends FieldsInput>(
   kit: Pg.PgKit<Defaults>
 ): TierEntityFactory<Defaults, true> =>
-  factoryImpl(kit as Pg.PgKit<FieldsInput>, productIdentityColumns) as TierEntityFactory<Defaults, true>;
+  factoryImpl(kit as Pg.PgKit<FieldsInput>, productIdentityColumns, [
+    "entityType",
+    "id",
+    "publicId",
+  ]) as TierEntityFactory<Defaults, true>;
