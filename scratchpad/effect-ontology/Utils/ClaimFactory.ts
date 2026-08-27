@@ -247,10 +247,25 @@ export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollis
  *
  * Extended version of CreateClaimInput with generated claimId
  *
- * **Example** (Reject incomplete persisted claim data)
+ * **Example** (Construct persisted claim data)
+ *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { ClaimId } from "@effect-ontology/Schema/KnowledgeModel"
  * import { ClaimData } from "@effect-ontology/Utils/ClaimFactory"
+ * import * as S from "effect/Schema"
+ *
+ * const data = ClaimData.make({
+ *   claimId: ClaimId.make("claim-deadbeefcafe"),
+ *   subjectIri: "https://example.com/ada",
+ *   predicateIri: "https://schema.org/name",
+ *   objectValue: "Ada Lovelace",
+ *   objectType: "literal",
+ *   articleId: "document-1",
+ *   ontologyId: "people",
+ *   confidence: Confidence.make(0.91)
+ * })
+ * console.log(data.claimId) // "claim-deadbeefcafe"
  * console.log(S.is(ClaimData)({})) // false
  * ```
  *
@@ -393,7 +408,8 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
  * import { checkIriCollisions } from "@effect-ontology/Utils/ClaimFactory"
  * import { Effect } from "effect"
  *
- * console.log(Effect.isEffect(checkIriCollisions([], "https://example.com/entity/"))) // true
+ * const entities = Effect.runSync(checkIriCollisions([], "https://example.com/entity/"))
+ * console.log(entities.length) // 0
  * ```
  *
  * @param entities - Array of Entity objects

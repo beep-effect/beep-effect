@@ -44,13 +44,19 @@ const buildETag = (hash: string): string => `"${hash}"`;
 /**
  * HTTP surface for serving content-addressed images by hash.
  *
- * **Example** (Name the image GET route)
+ * **Details**
+ *
+ * Content-addressed images are served at `GET /v1/images/:hash`.
+ *
+ * **Example** (Register the image routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { ImageRouter } from "@effect-ontology/Runtime/ImageRouter"
  *
- * const documented = [ImageRouter, "GET /v1/images/:hash"] as const
- * console.log(documented[1]) // "GET /v1/images/:hash"
+ * const served = Layer.provide(ImageRouter, HttpRouter.layer)
+ * console.log(served !== ImageRouter) // true
  * ```
  *
  * @category endpoints

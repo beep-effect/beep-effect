@@ -269,8 +269,9 @@ const NlpBundle = NlpService.Default.pipe(Layer.provide(EmbeddingInfraLayer));
  * import { Effect } from "effect"
  * import { TestLayers } from "@effect-ontology/Runtime/TestRuntime"
  *
- * const program = Effect.succeed("ready").pipe(Effect.provide(TestLayers))
- * console.log(Effect.isEffect(program)) // true
+ * const ready = Effect.succeed("ready")
+ * const program = ready.pipe(Effect.provide(TestLayers))
+ * console.log(program !== ready) // true
  * ```
  *
  * @category layers

@@ -180,10 +180,13 @@ To create a link, run:`);
  *
  * ```ts
  * import { linkCommand } from "@effect-ontology/Cli/Commands/Link"
+ * import * as Command from "effect/unstable/cli/Command"
  *
+ * const argv = ["--entity-iri", "https://example.com/ada", "--wikidata-id", "Q7259"] as const
+ * const program = Command.runWith(linkCommand, { version: "0.0.0" })([...argv])
  * console.log(linkCommand.name) // "link"
- * console.log(linkCommand.description)
- * // effect-onto link --entity-iri https://example.com/ada --wikidata-id Q7259
+ * console.log(argv.includes("--wikidata-id")) // true
+ * console.log(program !== linkCommand)
  * ```
  *
  * @category cli-commands

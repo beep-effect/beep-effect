@@ -185,13 +185,15 @@ const processBackgroundJob = Effect.fn("processBackgroundJob")(function* (job: B
  * permanently invalid payload. Return 500 for processing failures so the
  * subscriber retries.
  *
- * **Example** (Name the health probe)
+ * **Example** (Register the Pub/Sub push routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { JobPushRouter } from "@effect-ontology/Runtime/JobPushHandler"
  *
- * const documented = [JobPushRouter, "GET /v1/jobs/health"] as const
- * console.log(documented[1]) // "GET /v1/jobs/health"
+ * const served = Layer.provide(JobPushRouter, HttpRouter.layer)
+ * console.log(served !== JobPushRouter) // true
  * ```
  *
  * @category endpoints

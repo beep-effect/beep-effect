@@ -27,13 +27,19 @@ import { StorageService } from "../Service/Storage.ts";
 /**
  * HTTP surface for downloading raw documents, Turtle graphs, link content, and batch reports.
  *
- * **Example** (Name a document-content route)
+ * **Details**
+ *
+ * Document bytes are served at `GET /v1/ontologies/:ontologyId/documents/:docId/content`.
+ *
+ * **Example** (Register the asset routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
  *
- * const documented = [AssetRouter, "/v1/ontologies/:ontologyId/documents/:docId/content"] as const
- * console.log(documented[1]) // "/v1/ontologies/:ontologyId/documents/:docId/content"
+ * const served = Layer.provide(AssetRouter, HttpRouter.layer)
+ * console.log(served !== AssetRouter) // true
  * ```
  *
  * @category endpoints

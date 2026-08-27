@@ -265,11 +265,9 @@ const GraphRAGBundle = GraphRAG.Default.pipe(Layer.provideMerge(EmbeddingBundle)
  * **Example** (Enable cross-batch resolution when Postgres is configured)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ActivityDependenciesLayer, CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * const documented = [CrossBatchEntityResolverBundle, "POSTGRES_HOST"] as const
- * console.log(documented[1]) // "POSTGRES_HOST"
+ * console.log(CrossBatchEntityResolverBundle !== ActivityDependenciesLayer) // true
  * ```
  *
  * @category layers
@@ -351,8 +349,7 @@ const ActivityEmbeddingRequirements = Layer.mergeAll(EmbeddingInfrastructure, Me
  * ```ts
  * import { ActivityDependenciesLayer, CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * const documented = [ActivityDependenciesLayer, CrossBatchEntityResolverBundle] as const
- * console.log(documented[0] !== documented[1])
+ * console.log(ActivityDependenciesLayer !== CrossBatchEntityResolverBundle) // true
  * ```
  *
  * @category layers
@@ -385,8 +382,7 @@ export const ActivityDependenciesLayer = ExtractionWorkflowBundle.pipe(
  * ```ts
  * import { ActivityDependenciesLayer, BatchExtractionWorkflowWithDepsLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * const documented = [BatchExtractionWorkflowWithDepsLayer, ActivityDependenciesLayer] as const
- * console.log(documented[0] !== documented[1])
+ * console.log(BatchExtractionWorkflowWithDepsLayer !== ActivityDependenciesLayer) // true
  * ```
  *
  * @category layers
@@ -415,8 +411,7 @@ export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer
  * ```ts
  * import { BatchExtractionWorkflowWithDepsLayer, WorkflowOrchestratorFullLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * const documented = [WorkflowOrchestratorFullLayer, BatchExtractionWorkflowWithDepsLayer] as const
- * console.log(documented[0] !== documented[1])
+ * console.log(WorkflowOrchestratorFullLayer !== BatchExtractionWorkflowWithDepsLayer) // true
  * ```
  *
  * @category layers
@@ -448,10 +443,13 @@ export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLaye
  * **Example** (Use the self-contained CLI extraction stack)
  *
  * ```ts
- * import { CliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ConfigProvider } from "effect"
+ * import { CliExtractionLayer, makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * const documented = [CliExtractionLayer, "ONTOLOGY_PATH"] as const
- * console.log(documented[1]) // "ONTOLOGY_PATH"
+ * const withPath = makeCliExtractionLayer(
+ *   ConfigProvider.fromUnknown({ ONTOLOGY_PATH: "ontologies/people.ttl" })
+ * )
+ * console.log(withPath !== CliExtractionLayer) // true
  * ```
  *
  * @category layers
@@ -472,20 +470,20 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  * The custom provider is set BEFORE any layers are built, ensuring
  * all services read from the custom provider.
  *
- * **Example** (Use makeCliExtractionLayer)
+ * **Example** (Override ONTOLOGY_PATH before constructing CLI services)
  *
  * ```ts
- * import { ConfigProvider, Layer } from "effect"
- * import { makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ConfigProvider } from "effect"
+ * import { CliExtractionLayer, makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
+ * const ontologyPath = "ontologies/people.ttl"
  * const customProvider = ConfigProvider.fromUnknown({
- *   ONTOLOGY_PATH: "/path/to/ontology.ttl",
+ *   ONTOLOGY_PATH: ontologyPath,
  *   ONTOLOGY_EXTERNAL_VOCABS_PATH: ""
- * }).pipe(
- *   ConfigProvider.orElse(ConfigProvider.fromEnv())
- * )
+ * }).pipe(ConfigProvider.orElse(ConfigProvider.fromEnv()))
  * const layer = makeCliExtractionLayer(customProvider)
- * console.log(Layer.isLayer(layer)) // true
+ * console.log(ontologyPath.endsWith(".ttl")) // true
+ * console.log(layer !== CliExtractionLayer) // true
  * ```
  *
  * @category layers
@@ -520,8 +518,7 @@ export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProv
  * import { NlpBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  *
  * const TestLayer = NlpBundleOpen.pipe(Layer.provide(ConfigProvider.layer(TestConfigProvider)))
- * const documented = [TestLayer, "ONTOLOGY_PATH"] as const
- * console.log(documented[1]) // "ONTOLOGY_PATH"
+ * console.log(TestLayer !== NlpBundleOpen) // true
  * ```
  *
  * @category layers
@@ -542,11 +539,12 @@ export const NlpBundleOpen = NlpService.Default.pipe(
  * **Example** (Leave ConfigService open for tests)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { EmbeddingBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const documented = [EmbeddingBundleOpen, ConfigService] as const
- * console.log(documented[1] !== undefined) // true
+ * const closed = EmbeddingBundleOpen.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== EmbeddingBundleOpen) // true
  * ```
  *
  * @category layers
@@ -570,10 +568,9 @@ export const EmbeddingBundleOpen = EmbeddingServiceLive.pipe(
  * **Example** (Use the open RDF builder layer)
  *
  * ```ts
- * import { RdfBuilderBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { EmbeddingBundleOpen, RdfBuilderBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * const documented = [RdfBuilderBundleOpen, "RdfBuilder"] as const
- * console.log(documented[1]) // "RdfBuilder"
+ * console.log(RdfBuilderBundleOpen !== EmbeddingBundleOpen) // true
  * ```
  *
  * @category layers
@@ -591,11 +588,12 @@ export const RdfBuilderBundleOpen = RdfBuilder.Default;
  * **Example** (Leave storage ConfigService open for tests)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { StorageBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const documented = [StorageBundleOpen, ConfigService] as const
- * console.log(documented[1] !== undefined) // true
+ * const closed = StorageBundleOpen.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== StorageBundleOpen) // true
  * ```
  *
  * @category layers

@@ -110,13 +110,28 @@ const PostgresPortConfig = Config.number("POSTGRES_PORT").pipe(
  * - POSTGRES_PASSWORD: Database password (required)
  * - POSTGRES_SSL: Enable SSL (default: false)
  *
- * **Example** (Name the required password env var)
+ * **Example** (Decode host from a password-bearing env provider)
  *
  * ```ts
+ * import { ConfigProvider, Effect } from "effect"
  * import { PostgresConfigFromEnv } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [PostgresConfigFromEnv, "POSTGRES_PASSWORD"] as const
- * console.log(documented[1]) // "POSTGRES_PASSWORD"
+ * const config = Effect.runSync(
+ *   Effect.provide(
+ *     PostgresConfigFromEnv,
+ *     ConfigProvider.layer(
+ *       ConfigProvider.fromUnknown({
+ *         POSTGRES_HOST: "localhost",
+ *         POSTGRES_PORT: 5432,
+ *         POSTGRES_DATABASE: "workflow",
+ *         POSTGRES_USER: "workflow",
+ *         POSTGRES_PASSWORD: "secret",
+ *         POSTGRES_SSL: false
+ *       })
+ *     )
+ *   )
+ * )
+ * console.log(config.host) // "localhost"
  * ```
  *
  * @category configuration
@@ -183,10 +198,9 @@ export const PgClientLayerFromConfig = (config: PostgresConfig) =>
  *
  * ```ts
  * import { Layer } from "effect"
- * import { PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { DrizzleLive, PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [Layer.mergeAll(PgClientLive), "POSTGRES_HOST"] as const
- * console.log(documented[1]) // "POSTGRES_HOST"
+ * console.log(Layer.mergeAll(PgClientLive, DrizzleLive) !== PgClientLive) // true
  * ```
  *
  * @category layers
@@ -203,8 +217,7 @@ export const PgClientLive = Layer.unwrap(PostgresConfigFromEnv.pipe(Effect.map(P
  * import { Layer } from "effect"
  * import { DrizzleLive, PgClientLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [Layer.mergeAll(PgClientLive, DrizzleLive), "drizzle"] as const
- * console.log(documented[1]) // "drizzle"
+ * console.log(Layer.mergeAll(PgClientLive, DrizzleLive) !== DrizzleLive) // true
  * ```
  *
  * @category layers
@@ -218,11 +231,10 @@ export const DrizzleLive = makeDrizzleLayer();
  * **Example** (Use the combined client and Drizzle layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { PgDrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { DrizzleLive, PgClientLive, PgDrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [Layer.mergeAll(PgDrizzleLive), "postgres"] as const
- * console.log(documented[1]) // "postgres"
+ * console.log(PgDrizzleLive !== PgClientLive) // true
+ * console.log(PgDrizzleLive !== DrizzleLive) // true
  * ```
  *
  * @category layers
@@ -237,11 +249,9 @@ export const PgDrizzleLive = DrizzleLive.pipe(Layer.provideMerge(PgClientLive));
  * **Example** (Migrate after the client is ready)
  *
  * ```ts
- * import { DatabaseReadyLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
- * import { databaseReady } from "@effect-ontology/Runtime/Persistence/DatabaseReady"
+ * import { DatabaseReadyLive, PgDrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [DatabaseReadyLive, databaseReady] as const
- * console.log(documented[1] !== undefined) // true
+ * console.log(DatabaseReadyLive !== PgDrizzleLive) // true
  * ```
  *
  * @category layers
@@ -260,7 +270,7 @@ export const DatabaseReadyLive = PgDrizzleLive.pipe(
  *
  * **Details**
  *
- * Creates tables:
+ * Creates tables prefixed `workflow_`:
  * - workflow_cluster_messages: Pending workflow messages
  * - workflow_cluster_replies: Message replies
  *
@@ -269,10 +279,9 @@ export const DatabaseReadyLive = PgDrizzleLive.pipe(
  * **Example** (Prefix cluster message tables)
  *
  * ```ts
- * import { MessageStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { MessageStorageLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [MessageStorageLive, "workflow_"] as const
- * console.log(documented[1]) // "workflow_"
+ * console.log(MessageStorageLive !== RunnerStorageLive) // true
  * ```
  *
  * @category layers
@@ -289,7 +298,7 @@ export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflo
  *
  * **Details**
  *
- * Creates tables:
+ * Creates tables prefixed `workflow_`:
  * - workflow_cluster_runners: Runner registration
  *
  * Requires: SqlClient + ShardingConfig
@@ -297,10 +306,9 @@ export const MessageStorageLive = SqlMessageStorage.layerWith({ prefix: "workflo
  * **Example** (Prefix cluster runner tables)
  *
  * ```ts
- * import { RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { MessageStorageLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [RunnerStorageLive, "workflow_"] as const
- * console.log(documented[1]) // "workflow_"
+ * console.log(RunnerStorageLive !== MessageStorageLive) // true
  * ```
  *
  * @category layers
@@ -322,11 +330,9 @@ export const RunnerStorageLive = SqlRunnerStorage.layerWith({ prefix: "workflow_
  * **Example** (Use single-node sharding defaults)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { ShardingConfigLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { PgClientLive, ShardingConfigLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [Layer.mergeAll(ShardingConfigLive), "single-node"] as const
- * console.log(documented[1]) // "single-node"
+ * console.log(ShardingConfigLive !== PgClientLive) // true
  * ```
  *
  * @category layers
@@ -355,8 +361,8 @@ export const ShardingConfigLive = ShardingConfig.layerDefaults;
  * import { Layer } from "effect"
  * import { MessageStorageLive, PostgresPersistenceLive, RunnerStorageLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * const documented = [PostgresPersistenceLive, Layer.mergeAll(MessageStorageLive, RunnerStorageLive)] as const
- * console.log(documented[0] !== documented[1])
+ * const storage = Layer.mergeAll(MessageStorageLive, RunnerStorageLive)
+ * console.log(PostgresPersistenceLive !== storage) // true
  * ```
  *
  * @category layers

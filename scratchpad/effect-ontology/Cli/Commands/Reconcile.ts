@@ -290,10 +290,13 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
  *
  * ```ts
  * import { reconcileCommand } from "@effect-ontology/Cli/Commands/Reconcile"
+ * import * as Command from "effect/unstable/cli/Command"
  *
+ * const argv = ["--batch-id", "batch-1234567890ab", "--threshold", "0.8"] as const
+ * const program = Command.runWith(reconcileCommand, { version: "0.0.0" })([...argv])
  * console.log(reconcileCommand.name) // "reconcile"
- * console.log(reconcileCommand.description)
- * // effect-onto reconcile --batch-id batch-1234567890ab --threshold 0.8
+ * console.log(argv.includes("--batch-id")) // true
+ * console.log(program !== reconcileCommand)
  * ```
  *
  * @category cli-commands

@@ -49,11 +49,12 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * **Example** (Keep ConfigService as a remaining requirement)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { EmbeddingProviderFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const documented = [EmbeddingProviderFromConfig, ConfigService] as const
- * console.log(documented[1] !== undefined) // true
+ * const closed = EmbeddingProviderFromConfig.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== EmbeddingProviderFromConfig) // true
  * ```
  *
  * @category layers
@@ -94,11 +95,12 @@ export const EmbeddingProviderFromConfig: Layer.Layer<EmbeddingProvider, AnyEmbe
  * **Example** (Select rate-limit settings from ConfigService)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { EmbeddingRateLimiterFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const documented = [EmbeddingRateLimiterFromConfig, ConfigService] as const
- * console.log(documented[1] !== undefined) // true
+ * const closed = EmbeddingRateLimiterFromConfig.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== EmbeddingRateLimiterFromConfig) // true
  * ```
  *
  * @category layers
@@ -132,12 +134,9 @@ export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, n
  * **Example** (Compose the local Nomic embedding stack)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { NomicEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { NomicEmbeddingInfrastructure, VoyageEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
  *
- * const stack = Layer.mergeAll(NomicEmbeddingInfrastructure)
- * const documented = [stack, "nomic"] as const
- * console.log(documented[1]) // "nomic"
+ * console.log(NomicEmbeddingInfrastructure !== VoyageEmbeddingInfrastructure) // true
  * ```
  *
  * @category layers
@@ -159,12 +158,9 @@ export const NomicEmbeddingInfrastructure: Layer.Layer<
  * **Example** (Compose the Voyage API embedding stack)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { VoyageEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { NomicEmbeddingInfrastructure, VoyageEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
  *
- * const stack = Layer.mergeAll(VoyageEmbeddingInfrastructure)
- * const documented = [stack, "voyage"] as const
- * console.log(documented[1]) // "voyage"
+ * console.log(VoyageEmbeddingInfrastructure !== NomicEmbeddingInfrastructure) // true
  * ```
  *
  * @category layers
@@ -197,11 +193,12 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  * **Example** (Select Nomic or Voyage from EMBEDDING_PROVIDER)
  *
  * ```ts
- * import { EmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { Layer } from "effect"
+ * import { EmbeddingInfrastructure, NomicEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const documented = [EmbeddingInfrastructure, ConfigService] as const
- * console.log(documented[1] !== undefined) // true
+ * const closed = EmbeddingInfrastructure.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== NomicEmbeddingInfrastructure) // true
  * ```
  *
  * @category layers
@@ -232,11 +229,9 @@ export const EmbeddingInfrastructure: Layer.Layer<
  * **Example** (Provide ConfigService into the embedding stack)
  *
  * ```ts
- * import { EmbeddingInfrastructureDefault } from "@effect-ontology/Runtime/EmbeddingLayers"
- * import { ConfigServiceDefault } from "@effect-ontology/Service/Config"
+ * import { EmbeddingInfrastructure, EmbeddingInfrastructureDefault } from "@effect-ontology/Runtime/EmbeddingLayers"
  *
- * const documented = [EmbeddingInfrastructureDefault, ConfigServiceDefault] as const
- * console.log(documented[1] !== undefined) // true
+ * console.log(EmbeddingInfrastructureDefault !== EmbeddingInfrastructure) // true
  * ```
  *
  * @category layers

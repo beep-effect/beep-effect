@@ -142,12 +142,27 @@ export class ConflictCandidate extends S.Class<ConflictCandidate>($I`ConflictCan
 /**
  * Joined correction record and the persisted claim identifiers it links.
  *
- * **Example** (Reject an incomplete correction-chain entry)
+ * **Example** (Construct a correction-chain entry)
  *
  * ```ts
  * import { CorrectionChainEntry } from "@effect-ontology/Repository/Claim"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
+ * const decoded = S.decodeUnknownOption(CorrectionChainEntry)({
+ *   correction: {
+ *     id: "11111111-1111-4111-8111-111111111111",
+ *     correctionType: "update",
+ *     sourceArticleId: null,
+ *     reason: "Superseded by a curated triple",
+ *     correctionDate: new Date("2026-08-26T00:00:00.000Z"),
+ *     createdAt: null,
+ *     processedAt: null
+ *   },
+ *   originalClaimId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+ *   newClaimId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+ * })
+ * console.log(O.map(decoded, (entry) => entry.originalClaimId))
  * console.log(S.is(CorrectionChainEntry)({})) // false
  * ```
  *

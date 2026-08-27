@@ -38,12 +38,56 @@ const ConflictRecordDefinition = S.Struct({
 /**
  * Persisted conflict with both competing claims.
  *
- * **Example** (Reject an incomplete joined record)
+ * **Example** (Decode a joined conflict pair)
  *
  * ```ts
- * import * as S from "effect/Schema"
  * import { ConflictRecord } from "@effect-ontology/Repository/Conflict"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
+ * const claimA = {
+ *   id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+ *   articleId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+ *   ontologyId: "people",
+ *   subjectIri: "https://example.com/ada",
+ *   predicateIri: "https://schema.org/jobTitle",
+ *   objectValue: "Mathematician",
+ *   objectType: "literal",
+ *   objectDatatype: null,
+ *   objectLanguage: null,
+ *   rank: "normal",
+ *   validFrom: null,
+ *   validTo: null,
+ *   assertedAt: null,
+ *   derivedAt: null,
+ *   deprecatedAt: null,
+ *   deprecatedBy: null,
+ *   confidenceScore: null,
+ *   evidenceText: null,
+ *   evidenceStartOffset: null,
+ *   evidenceEndOffset: null
+ * }
+ * const claimB = { ...claimA, id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", objectValue: "Poet" }
+ * const decoded = S.decodeUnknownOption(ConflictRecord)({
+ *   conflict: {
+ *     id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+ *     ontologyId: "people",
+ *     conflictType: "position",
+ *     claimAId: claimA.id,
+ *     claimBId: claimB.id,
+ *     status: "pending",
+ *     resolutionStrategy: null,
+ *     acceptedClaimId: null,
+ *     resolvedBy: null,
+ *     resolvedByFingerprint: null,
+ *     resolvedAt: null,
+ *     resolutionNotes: null,
+ *     detectedAt: new Date("2026-08-26T00:00:00.000Z")
+ *   },
+ *   claimA,
+ *   claimB
+ * })
+ * console.log(O.map(decoded, (record) => record.conflict.conflictType))
  * console.log(S.is(ConflictRecord)({})) // false
  * ```
  *

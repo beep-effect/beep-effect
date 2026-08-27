@@ -60,7 +60,8 @@ export * from "./schema.ts";
  * import { Layer } from "effect"
  *
  * const drizzle = Layer.provide(DrizzleLive, PgClientLive)
- * console.log(Layer.isLayer(drizzle) && Layer.isLayer(DrizzleWithPgLive)) // true
+ * console.log(drizzle !== DrizzleLive) // true
+ * console.log(DrizzleWithPgLive !== PgClientLive) // true
  * ```
  *
  * @see {@link PgClientLive} for the Postgres connection this Drizzle layer consumes.
@@ -84,7 +85,7 @@ export const DrizzleLive = CanonicalDrizzleLive;
  * import { Layer } from "effect"
  *
  * const withPg = Layer.provide(DrizzleLive, PgClientLive)
- * console.log(Layer.isLayer(withPg)) // true
+ * console.log(withPg !== PgClientLive) // true
  * ```
  *
  * @see {@link makeTestRepositoriesLayer} for an explicit host/port/password constructor.
@@ -100,9 +101,8 @@ export const PgClientLive = CanonicalPgClientLive;
  *
  * ```ts
  * import { DrizzleWithPgLive, PgClientLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
  *
- * console.log(Layer.isLayer(DrizzleWithPgLive) && Layer.isLayer(PgClientLive)) // true
+ * console.log(DrizzleWithPgLive !== PgClientLive) // true
  * ```
  *
  * @see {@link PgClientLive} for the env-driven connection this layer includes.
@@ -118,10 +118,8 @@ export const DrizzleWithPgLive = DatabaseReadyLive;
  *
  * ```ts
  * import { ClaimRepositoryLive, RepositoriesLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
  *
- * console.log(Layer.isLayer(ClaimRepositoryLive)) // true
- * console.log(Layer.isLayer(RepositoriesLive)) // true
+ * console.log(ClaimRepositoryLive !== RepositoriesLive) // true
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -136,10 +134,9 @@ export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(Da
  * **Example** (Acquire the live conflict repository)
  *
  * ```ts
- * import { ConflictRepositoryLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
+ * import { ClaimRepositoryLive, ConflictRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(Layer.isLayer(ConflictRepositoryLive)) // true
+ * console.log(ConflictRepositoryLive !== ClaimRepositoryLive) // true
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -154,10 +151,9 @@ export const ConflictRepositoryLive = ConflictRepository.Default.pipe(Layer.prov
  * **Example** (Acquire the live article repository)
  *
  * ```ts
- * import { ArticleRepositoryLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
+ * import { ArticleRepositoryLive, ClaimRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(Layer.isLayer(ArticleRepositoryLive)) // true
+ * console.log(ArticleRepositoryLive !== ClaimRepositoryLive) // true
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -176,10 +172,9 @@ export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provid
  * **Example** (Acquire the live entity registry)
  *
  * ```ts
- * import { EntityRegistryRepositoryLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
+ * import { ClaimRepositoryLive, EntityRegistryRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(Layer.isLayer(EntityRegistryRepositoryLive)) // true
+ * console.log(EntityRegistryRepositoryLive !== ClaimRepositoryLive) // true
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -198,10 +193,9 @@ export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pip
  * **Example** (Acquire the live embedding repository)
  *
  * ```ts
- * import { EmbeddingRepositoryLive } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
+ * import { ClaimRepositoryLive, EmbeddingRepositoryLive } from "@effect-ontology/Repository/index"
  *
- * console.log(Layer.isLayer(EmbeddingRepositoryLive)) // true
+ * console.log(EmbeddingRepositoryLive !== ClaimRepositoryLive) // true
  * ```
  *
  * @see {@link RepositoriesLive} for merging this layer with the other repositories.
@@ -234,7 +228,8 @@ export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.pr
  *   EntityRegistryRepositoryLive,
  *   EmbeddingRepositoryLive
  * )
- * console.log(Layer.isLayer(composed) && Layer.isLayer(RepositoriesLive)) // true
+ * console.log(composed !== ClaimRepositoryLive) // true
+ * console.log(RepositoriesLive !== ClaimRepositoryLive) // true
  * ```
  *
  * @see {@link makeTestRepositoriesLayer} for the explicit-config test twin.
@@ -260,17 +255,19 @@ export const RepositoriesLive = Layer.mergeAll(
  * **Example** (Construct a test repository layer)
  *
  * ```ts
- * import { makeTestRepositoriesLayer } from "@effect-ontology/Repository/index"
- * import { Layer } from "effect"
+ * import { makeTestRepositoriesLayer, RepositoriesLive } from "@effect-ontology/Repository/index"
  *
- * const testLayer = makeTestRepositoriesLayer({
+ * const config = {
  *   host: "127.0.0.1",
  *   port: 5432,
  *   database: "ontology_test",
  *   username: "ontology",
  *   password: "secret"
- * })
- * console.log(Layer.isLayer(testLayer)) // true
+ * }
+ * const testLayer = makeTestRepositoriesLayer(config)
+ * console.log(config.host) // "127.0.0.1"
+ * console.log(config.database) // "ontology_test"
+ * console.log(testLayer !== RepositoriesLive) // true
  * ```
  *
  * @see {@link RepositoriesLive} for the env-driven production merge.

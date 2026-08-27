@@ -20,7 +20,7 @@ const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
  * **Example** (Construct a section)
  *
  * ```ts
- * import { SearchSection } from "./SearchMetadata.ts"
+ * import { SearchSection } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const section = new SearchSection({
  *   line: 12,
@@ -60,7 +60,7 @@ const SearchSectionsFromJsonStrings = SearchSection.pipe(S.fromJsonString, S.Arr
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SearchContentSource } from "./SearchMetadata.ts"
+ * import { SearchContentSource } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * console.log(S.is(SearchContentSource)(SearchContentSource.Enum.documentation)) // true
  * console.log(S.is(SearchContentSource)("forum")) // false
@@ -90,7 +90,7 @@ export type SearchContentSource = typeof SearchContentSource.Type;
  * **Example** (Construct documentation metadata)
  *
  * ```ts
- * import { DocumentationStagedSearchMetadata } from "./SearchMetadata.ts"
+ * import { DocumentationStagedSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const metadata = new DocumentationStagedSearchMetadata({
  *   schema_version: 1,
@@ -131,7 +131,7 @@ export class DocumentationStagedSearchMetadata extends S.Class<DocumentationStag
  * **Example** (Construct blog metadata)
  *
  * ```ts
- * import { BlogStagedSearchMetadata } from "./SearchMetadata.ts"
+ * import { BlogStagedSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const metadata = new BlogStagedSearchMetadata({
  *   schema_version: 1,
@@ -173,7 +173,7 @@ export class BlogStagedSearchMetadata extends S.Class<BlogStagedSearchMetadata>(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { StagedSearchMetadata } from "./SearchMetadata.ts"
+ * import { StagedSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const record = S.decodeUnknownSync(StagedSearchMetadata)({
  *   schema_version: 1,
@@ -215,7 +215,7 @@ export type StagedSearchMetadata = typeof StagedSearchMetadata.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DocumentationSearchMetadata } from "./SearchMetadata.ts"
+ * import { DocumentationSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const metadata = S.decodeUnknownSync(DocumentationSearchMetadata)({
  *   schema_version: 1,
@@ -253,7 +253,7 @@ export class DocumentationSearchMetadata extends S.Class<DocumentationSearchMeta
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { BlogSearchMetadata } from "./SearchMetadata.ts"
+ * import { BlogSearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const metadata = S.decodeUnknownSync(BlogSearchMetadata)({
  *   schema_version: 1,
@@ -289,7 +289,7 @@ export class BlogSearchMetadata extends S.Class<BlogSearchMetadata>($I`BlogSearc
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SearchMetadata } from "./SearchMetadata.ts"
+ * import { SearchMetadata } from "../../../beep-docs/domain/SearchMetadata.ts"
  *
  * const record = S.decodeUnknownSync(SearchMetadata)({
  *   schema_version: 1,

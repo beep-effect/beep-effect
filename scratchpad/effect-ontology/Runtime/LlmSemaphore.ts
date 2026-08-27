@@ -63,14 +63,19 @@ export class SemaphoreTimeoutError extends S.TaggedError<SemaphoreTimeoutError>(
  * **Example** (Wrap a dummy LLM call with a permit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Effect, Layer } from "effect"
  * import { LlmSemaphoreService } from "@effect-ontology/Runtime/LlmSemaphore"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const wrapped = Effect.gen(function* () {
- *   const semaphore = yield* LlmSemaphoreService
- *   return yield* semaphore.withPermit(Effect.succeed("ok"))
- * }).pipe(Effect.provide(LlmSemaphoreService.Default))
- * console.log(Effect.isEffect(wrapped)) // true
+ * const result = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const semaphore = yield* LlmSemaphoreService
+ *     return yield* semaphore.withPermit(Effect.succeed("ok"))
+ *   }).pipe(
+ *     Effect.provide(LlmSemaphoreService.Default.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG))))
+ *   )
+ * )
+ * console.log(result) // "ok"
  * ```
  *
  * @category services

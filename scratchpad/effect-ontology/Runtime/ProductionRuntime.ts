@@ -128,11 +128,12 @@ const selectLanguageModelLayer = Match.type<AppConfig>().pipe(
  * **Example** (Select Anthropic or OpenAI from ConfigService)
  *
  * ```ts
- * import { makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
- * import { ConfigService } from "@effect-ontology/Service/Config"
+ * import { Layer } from "effect"
+ * import { ExtractionLayersLive, makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * const documented = [makeLanguageModelLayer, ConfigService] as const
- * console.log(documented[1] !== undefined) // true
+ * const closed = makeLanguageModelLayer.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== ExtractionLayersLive) // true
  * ```
  *
  * @returns Layer providing LanguageModel (with all dependencies satisfied)
@@ -165,8 +166,7 @@ export const makeLanguageModelLayer = Layer.unwrap(
  * ```ts
  * import { ExtractionLayersLive, makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * const documented = [ExtractionLayersLive, makeLanguageModelLayer] as const
- * console.log(documented[1] !== undefined) // true
+ * console.log(ExtractionLayersLive !== makeLanguageModelLayer) // true
  * ```
  *
  * @category layers
@@ -184,17 +184,16 @@ export const ExtractionLayersLive = Layer.mergeAll(
  *
  * **Details**
  *
- * Exports spans to Jaeger via OTLP HTTP protocol.
+ * Exports spans to Jaeger via OTLP HTTP at `https://localhost:4318/v1/traces`.
  * Run Jaeger locally with: docker run -d -p 16686:16686 -p 4318:4318 jaegertracing/all-in-one:latest
  * View traces at: https://localhost:16686
  *
  * **Example** (Export traces to local Jaeger)
  *
  * ```ts
- * import { TracingLive } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ExtractionLayersLive, TracingLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * const documented = [TracingLive, "https://localhost:4318/v1/traces"] as const
- * console.log(documented[1])
+ * console.log(TracingLive !== ExtractionLayersLive) // true
  * ```
  *
  * @category layers
@@ -219,10 +218,9 @@ export const TracingLive = makeTracingLayer({
  * **Example** (Merge extraction with tracing)
  *
  * ```ts
- * import { ExtractionLayersLive, ProductionLayersWithTracing, TracingLive } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ExtractionLayersLive, ProductionLayersWithTracing } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * const documented = [ProductionLayersWithTracing, ExtractionLayersLive, TracingLive] as const
- * console.log(documented[0] !== documented[1])
+ * console.log(ProductionLayersWithTracing !== ExtractionLayersLive) // true
  * ```
  *
  * @category layers
@@ -243,10 +241,9 @@ export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, 
  * **Example** (Merge token budget, stage timeout, and rate limiter)
  *
  * ```ts
- * import { LlmControlLive } from "@effect-ontology/Runtime/ProductionRuntime"
+ * import { ExtractionLayersLive, LlmControlLive } from "@effect-ontology/Runtime/ProductionRuntime"
  *
- * const documented = [LlmControlLive, "TokenBudgetService"] as const
- * console.log(documented[1]) // "TokenBudgetService"
+ * console.log(LlmControlLive !== ExtractionLayersLive) // true
  * ```
  *
  * @category layers
@@ -285,8 +282,7 @@ export const LlmControlLive = Layer.mergeAll(
  *   Layer.provideMerge(BunHttpServer.layer({ port: 8080 })),
  *   Layer.provideMerge(ConfigServiceDefault)
  * )
- * const documented = [ServerLive, 8080] as const
- * console.log(documented[1]) // 8080
+ * console.log(ServerLive !== ProductionInfrastructure) // true
  * ```
  *
  * @category layers

@@ -84,16 +84,6 @@ export const BroadcastEvent = S.Struct({
 /**
  * Decoded ontology event envelope produced by {@link BroadcastEvent}.
  *
- * **Example** (Read an event envelope)
- *
- * ```ts
- * import type { BroadcastEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
- *
- * const readOntology = (event: BroadcastEvent): string => event.ontologyId
- *
- * console.log(readOntology)
- * ```
- *
  * @see {@link BroadcastEvent} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
@@ -103,13 +93,15 @@ export type BroadcastEvent = typeof BroadcastEvent.Type;
 /**
  * Ping message to keep connection alive
  *
- * **Example** (Validate ping message)
+ * **Example** (Construct a ping keep-alive)
  *
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema/Int"
  * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
- * import * as S from "effect/Schema"
  *
- * console.log(S.is(PingMessage)({}))
+ * const message = PingMessage.make({ timestamp: NonNegativeInt.make(0) })
+ * console.log(message.type) // "ping"
+ * console.log(message.timestamp) // 0
  * ```
  *
  * @category schemas
@@ -146,13 +138,19 @@ export type PingMessage = typeof PingMessage.Type;
 /**
  * Connected message sent on connection
  *
- * **Example** (Validate connected message)
+ * **Example** (Construct a connected greeting)
  *
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema/Int"
  * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
- * import * as S from "effect/Schema"
  *
- * console.log(S.is(ConnectedMessage)({}))
+ * const message = ConnectedMessage.make({
+ *   ontologyId: "football",
+ *   serverId: "server-1",
+ *   timestamp: NonNegativeInt.make(0)
+ * })
+ * console.log(message.type) // "connected"
+ * console.log(message.serverId) // "server-1"
  * ```
  *
  * @category schemas
@@ -540,10 +538,9 @@ export const EventBroadcastHubMemory = Layer.effect(EventBroadcastHub, makeEvent
  * **Example** (Select the cloud Pub/Sub hub)
  *
  * ```ts
- * import { EventBroadcastHubPubSub } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ * import { EventBroadcastHubMemory, EventBroadcastHubPubSub } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const documented = [EventBroadcastHubPubSub, "PUBSUB_PROJECT_ID"] as const
- * console.log(documented[1]) // "PUBSUB_PROJECT_ID"
+ * console.log(EventBroadcastHubPubSub !== EventBroadcastHubMemory) // true
  * ```
  *
  * @category layers
@@ -554,13 +551,16 @@ export const EventBroadcastHubPubSub = Layer.effect(EventBroadcastHub, makeEvent
 /**
  * Default layer - auto-selects based on PUBSUB_PROJECT_ID being set
  *
+ * **Details**
+ *
+ * Selects Pub/Sub when `PUBSUB_PROJECT_ID` is set; otherwise uses the in-memory hub.
+ *
  * **Example** (Auto-select memory versus Pub/Sub)
  *
  * ```ts
- * import { EventBroadcastHubLive } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ * import { EventBroadcastHubLive, EventBroadcastHubMemory } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const documented = [EventBroadcastHubLive, "PUBSUB_PROJECT_ID"] as const
- * console.log(documented[1]) // "PUBSUB_PROJECT_ID"
+ * console.log(EventBroadcastHubLive !== EventBroadcastHubMemory) // true
  * ```
  *
  * @category layers
@@ -591,13 +591,15 @@ export const EventBroadcastHubLive = Layer.unwrap(
  * Provides WebSocket endpoint for real-time event streaming:
  * - GET /v1/ontologies/:ontologyId/events/stream - WebSocket upgrade
  *
- * **Example** (Name the WebSocket stream route)
+ * **Example** (Register the event stream on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { EventBroadcastRouter } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const documented = [EventBroadcastRouter, "GET /v1/ontologies/:ontologyId/events/stream"] as const
- * console.log(documented[1]) // "GET /v1/ontologies/:ontologyId/events/stream"
+ * const served = Layer.provide(EventBroadcastRouter, HttpRouter.layer)
+ * console.log(served !== EventBroadcastRouter) // true
  * ```
  *
  * @category endpoints
@@ -736,29 +738,32 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
  * **Example** (Yield the broadcast effect for a fixture entry)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { DateTime } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EventEntry } from "@effect-ontology/Service/EventBus"
  * import { broadcastDomainEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const entry = S.decodeUnknownOption(EventEntry)({
- *   id: "evt-1",
- *   primaryKey: "batch-deadbeefcafe",
- *   createdAt: "2026-08-26T00:00:00.000Z",
- *   event: "ExtractionCompleted",
- *   payload: {
- *     batchId: "batch-deadbeefcafe",
- *     ontologyId: "foaf",
- *     entityCount: 2,
- *     relationCount: 1,
- *     tripleCount: 8,
- *     status: "success",
- *     timestamp: "2026-08-26T00:00:00.000Z"
- *   }
- * })
- * const program = O.map(entry, broadcastDomainEvent)
- * console.log(O.map(program, Effect.isEffect))
+ * const entry = O.getOrThrow(
+ *   S.decodeUnknownOption(EventEntry)({
+ *     id: "evt-1",
+ *     primaryKey: "batch-deadbeefcafe",
+ *     createdAt: DateTime.makeUnsafe("2026-08-26T00:00:00.000Z"),
+ *     event: "ExtractionCompleted",
+ *     payload: {
+ *       batchId: "batch-deadbeefcafe",
+ *       ontologyId: "foaf",
+ *       entityCount: 2,
+ *       relationCount: 1,
+ *       tripleCount: 8,
+ *       status: "success",
+ *       timestamp: "2026-08-26T00:00:00.000Z"
+ *     }
+ *   })
+ * )
+ * const program = broadcastDomainEvent(entry)
+ * console.log(entry.payload.ontologyId) // "foaf"
+ * console.log(program !== entry)
  * ```
  *
  * @category handlers

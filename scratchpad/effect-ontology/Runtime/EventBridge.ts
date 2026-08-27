@@ -59,14 +59,22 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBridge");
  * **Example** (Yield the start handle)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Effect, Layer } from "effect"
  * import { EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
  *
- * const start = Effect.gen(function* () {
- *   const bridge = yield* EventBridgeService
- *   return yield* bridge.start
+ * const TestBridge = Layer.mock(EventBridgeService, {
+ *   start: Effect.succeed({
+ *     await: Effect.void,
+ *     stop: Effect.void
+ *   })
  * })
- * console.log(Effect.isEffect(start)) // true
+ * const handle = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const bridge = yield* EventBridgeService
+ *     return yield* bridge.start
+ *   }).pipe(Effect.provide(TestBridge))
+ * )
+ * console.log("stop" in handle) // true
  * ```
  *
  * @category services
@@ -177,10 +185,9 @@ const makeEventBridge = Effect.gen(function* () {
  * **Example** (Provide the bridge beside hub and bus tags)
  *
  * ```ts
- * import { EventBridgeLive, EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
+ * import { EventBridgeAutoStart, EventBridgeLive } from "@effect-ontology/Runtime/EventBridge"
  *
- * const documented = [EventBridgeLive, EventBridgeService] as const
- * console.log(documented[1] !== undefined) // true
+ * console.log(EventBridgeLive !== EventBridgeAutoStart) // true
  * ```
  *
  * @category layers
@@ -199,10 +206,9 @@ export const EventBridgeLive = Layer.effect(EventBridgeService, makeEventBridge)
  * **Example** (Start the bridge when the layer is acquired)
  *
  * ```ts
- * import { EventBridgeAutoStart, EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
+ * import { EventBridgeAutoStart, EventBridgeLive } from "@effect-ontology/Runtime/EventBridge"
  *
- * const documented = [EventBridgeAutoStart, EventBridgeService] as const
- * console.log(documented[1] !== undefined) // true
+ * console.log(EventBridgeAutoStart !== EventBridgeLive) // true
  * ```
  *
  * @category layers

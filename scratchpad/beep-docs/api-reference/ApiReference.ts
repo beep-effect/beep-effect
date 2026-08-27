@@ -48,7 +48,7 @@ const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.wi
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DeclarationKind } from "./ApiReference.ts"
+ * import { DeclarationKind } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * console.log(S.is(DeclarationKind)(DeclarationKind.Enum.function)) // true
  * console.log(S.is(DeclarationKind)("method")) // false
@@ -79,7 +79,7 @@ export type DeclarationKind = typeof DeclarationKind.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TypeKind } from "./ApiReference.ts"
+ * import { TypeKind } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * console.log(S.is(TypeKind)("interface"), S.is(TypeKind)("function"))
  * ```
@@ -109,7 +109,7 @@ export type TypeKind = typeof TypeKind.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { UnknownReflectionKind } from "./ApiReference.ts"
+ * import { UnknownReflectionKind } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * console.log(S.decodeUnknownSync(UnknownReflectionKind)("kind-128"))
  * ```
@@ -139,7 +139,7 @@ export type UnknownReflectionKind = typeof UnknownReflectionKind.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DeclarationKindName } from "./ApiReference.ts"
+ * import { DeclarationKindName } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const isKindName = S.is(DeclarationKindName)
  * console.log(isKindName("class"), isKindName("kind-4"), isKindName("enum"))
@@ -190,7 +190,7 @@ const typeKindName = (kind: ReflectionKind): O.Option<TypeKind> =>
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DeclarationAnchor } from "./ApiReference.ts"
+ * import { DeclarationAnchor } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * console.log(S.decodeUnknownSync(DeclarationAnchor)("map-function"))
  * ```
@@ -244,7 +244,7 @@ const categorySlug = (category: string): Slug => Slug.make(`category-${normalize
  * **Example** (Construct an example)
  *
  * ```ts
- * import { ApiCodeExample } from "./ApiReference.ts"
+ * import { ApiCodeExample } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const example = ApiCodeExample.make({
  *   language: "typescript",
@@ -279,7 +279,7 @@ export class ApiCodeExample extends S.Class<ApiCodeExample>($I`ApiCodeExample`)(
  * **Example** (Construct a declaration)
  *
  * ```ts
- * import { ApiDeclaration } from "./ApiReference.ts"
+ * import { ApiDeclaration } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const declaration = ApiDeclaration.make({
  *   anchor: "map",
@@ -321,7 +321,7 @@ export class ApiDeclaration extends S.Class<ApiDeclaration>($I`ApiDeclaration`)(
  * **Example** (Construct a group)
  *
  * ```ts
- * import { ApiDeclarationGroup } from "./ApiReference.ts"
+ * import { ApiDeclarationGroup } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const group = ApiDeclarationGroup.make({ declarations: [], name: "Mapping", slug: "category-mapping" })
  * console.log(group.slug)
@@ -347,7 +347,7 @@ export class ApiDeclarationGroup extends S.Class<ApiDeclarationGroup>($I`ApiDecl
  * **Example** (Construct an empty module view)
  *
  * ```ts
- * import { ApiModule } from "./ApiReference.ts"
+ * import { ApiModule } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * console.log(ApiModule.make({ declarationCount: 0, groups: [] }).declarationCount)
  * ```
@@ -376,7 +376,7 @@ export class ApiModule extends S.Class<ApiModule>($I`ApiModule`)(
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { ModuleReference } from "./ApiReference.ts"
+ * import { ModuleReference } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const reference = ModuleReference.make({ modulePath: "Option", declaration: O.some("map") })
  * console.log(reference.modulePath)
@@ -518,7 +518,7 @@ const isTypeDocProjectReflection = S.is(TypeDocProjectReflection);
  * import * as S from "effect/Schema"
  * import { ReflectionKind } from "typedoc"
  * import { TypeDocProjectReflection } from "../domain/ApiReference.ts"
- * import { moduleView } from "./ApiReference.ts"
+ * import { moduleView } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const reflection = S.decodeUnknownSync(TypeDocProjectReflection)({
  *   schemaVersion: "2.0",
@@ -1066,7 +1066,7 @@ const formatKnownType = (depth: number): ((value: JSONOutput.SomeType) => string
  * import * as S from "effect/Schema"
  * import { ReflectionKind } from "typedoc"
  * import { TypeDocProjectReflection } from "../domain/ApiReference.ts"
- * import { codeExamples } from "./ApiReference.ts"
+ * import { codeExamples } from "../../../beep-docs/api-reference/ApiReference.ts"
  *
  * const reflection = S.decodeUnknownSync(TypeDocProjectReflection)({
  *   schemaVersion: "2.0",

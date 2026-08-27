@@ -99,8 +99,9 @@ export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(
  * import { computeQuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
  * const store = rdfStoreFromDataset(makeDataset([]))
- * const delta = computeQuadDelta(store, store)
- * console.log(Effect.isEffect(delta)) // true
+ * const delta = Effect.runSync(computeQuadDelta(store, store))
+ * console.log(delta.deltaCount) // 0
+ * console.log(delta.newQuads.length) // 0
  * ```
  *
  * @category utilities

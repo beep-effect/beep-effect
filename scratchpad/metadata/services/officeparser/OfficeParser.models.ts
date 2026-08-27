@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("metadata/services/officeparser/OfficeParser.mod
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { OfficeErrorType } from "./OfficeParser.models.ts"
+ * import { OfficeErrorType } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * console.log(S.is(OfficeErrorType)("REQUIRED_PART_MISSING")) // true
  * console.log(S.is(OfficeErrorType)("NOT_A_CODE")) // false
@@ -107,7 +107,7 @@ export type OfficeErrorType = typeof OfficeErrorType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { OfficeWarningType } from "./OfficeParser.models.ts"
+ * import { OfficeWarningType } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * console.log(S.is(OfficeWarningType)("OCR_FAILED")) // true
  * console.log(S.is(OfficeWarningType)("NOT_A_CODE")) // false
@@ -632,7 +632,7 @@ export interface OfficeIssue {
  * **Example** (Inspect a structured parser error)
  *
  * ```ts
- * import { OfficeError, OfficeIssue } from "./OfficeParser.models.ts"
+ * import { OfficeError, OfficeIssue } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const issue: OfficeIssue = {
  *   type: "error",
@@ -1990,7 +1990,7 @@ export type TextAlignment = "left" | "center" | "right" | "justify";
  * **Example** (Format a heading run)
  *
  * ```ts
- * import { TextFormatting } from "./OfficeParser.models.ts"
+ * import { TextFormatting } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const formatting: TextFormatting = {
  *   bold: true,
@@ -2080,7 +2080,7 @@ export interface TextFormatting {
  * **Example** (Locate a slide note)
  *
  * ```ts
- * import { SlideMetadata } from "./OfficeParser.models.ts"
+ * import { SlideMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const slide: SlideMetadata = {
  *   slideNumber: 1,
@@ -2182,7 +2182,7 @@ export interface ParagraphMetadata {
  * **Example** (Describe a nested ordered item)
  *
  * ```ts
- * import { ListMetadata } from "./OfficeParser.models.ts"
+ * import { ListMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const item: ListMetadata = {
  *   listType: "ordered",
@@ -2249,7 +2249,7 @@ export interface ListMetadata {
  * **Example** (Locate a merged header cell)
  *
  * ```ts
- * import { CellMetadata } from "./OfficeParser.models.ts"
+ * import { CellMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const cell: CellMetadata = {
  *   row: 0,
@@ -2302,7 +2302,7 @@ export interface CellMetadata {
  * **Example** (Center a table on the page)
  *
  * ```ts
- * import { TableMetadata } from "./OfficeParser.models.ts"
+ * import { TableMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const table: TableMetadata = {
  *   align: "center",
@@ -2330,7 +2330,7 @@ export interface TableMetadata {
  * **Example** (Point a chart node at its attachment)
  *
  * ```ts
- * import { ChartMetadata } from "./OfficeParser.models.ts"
+ * import { ChartMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const chart: ChartMetadata = { attachmentName: "chart1.xml" }
  *
@@ -2356,7 +2356,7 @@ export interface ChartMetadata {
  * **Example** (Describe a centered logo)
  *
  * ```ts
- * import { ImageMetadata } from "./OfficeParser.models.ts"
+ * import { ImageMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const image: ImageMetadata = {
  *   attachmentName: "image1.png",
@@ -2450,7 +2450,7 @@ export interface AdmonitionMetadata {
  * **Example** (Tag a node with its PDF page)
  *
  * ```ts
- * import { PageMetadata } from "./OfficeParser.models.ts"
+ * import { PageMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const page: PageMetadata = { pageNumber: 1 }
  *
@@ -2473,7 +2473,7 @@ export interface PageMetadata {
  * **Example** (Link a text run)
  *
  * ```ts
- * import { TextMetadata } from "./OfficeParser.models.ts"
+ * import { TextMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const run: TextMetadata = {
  *   link: "https://example.com",
@@ -2533,7 +2533,7 @@ export interface TextMetadata {
  * **Example** (Identify a footnote)
  *
  * ```ts
- * import { NoteMetadata } from "./OfficeParser.models.ts"
+ * import { NoteMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const note: NoteMetadata = {
  *   noteType: "footnote",
@@ -2681,7 +2681,7 @@ export type ContentMetadata =
  * **Example** (Represent shared paragraph fields)
  *
  * ```ts
- * import { BaseContentNode } from "./OfficeParser.models.ts"
+ * import { BaseContentNode } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const paragraph: BaseContentNode = {
  *   text: "Hello world",
@@ -2697,7 +2697,7 @@ export type ContentMetadata =
  * **Example** (Represent shared heading fields)
  *
  * ```ts
- * import { BaseContentNode } from "./OfficeParser.models.ts"
+ * import { BaseContentNode } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const heading: BaseContentNode = {
  *   text: "Chapter 1",
@@ -2783,7 +2783,7 @@ export interface BaseContentNode {
  * **Example** (Build a paragraph node)
  *
  * ```ts
- * import { OfficeContentNode } from "./OfficeParser.models.ts"
+ * import { OfficeContentNode } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const paragraph: OfficeContentNode = {
  *   type: "paragraph",
@@ -2800,7 +2800,7 @@ export interface BaseContentNode {
  * **Example** (Build a heading node)
  *
  * ```ts
- * import { OfficeContentNode } from "./OfficeParser.models.ts"
+ * import { OfficeContentNode } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const heading: OfficeContentNode = {
  *   type: "heading",
@@ -2920,7 +2920,7 @@ export interface ChartData {
  * **Example** (Describe an extracted image)
  *
  * ```ts
- * import { OfficeAttachment } from "./OfficeParser.models.ts"
+ * import { OfficeAttachment } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const attachment: OfficeAttachment = {
  *   type: "image",
@@ -3068,7 +3068,7 @@ export interface OfficeAuxiliaryContent {
  * **Example** (Inspect a parsed document tree)
  *
  * ```ts
- * import { OfficeParserAST } from "./OfficeParser.models.ts"
+ * import { OfficeParserAST } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
  *
  * const ast: Pick<OfficeParserAST, "type" | "metadata" | "content" | "attachments" | "warnings"> = {
  *   type: "docx",

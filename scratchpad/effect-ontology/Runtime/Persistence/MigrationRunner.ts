@@ -30,12 +30,11 @@ export const migrationsFolder: string = fileURLToPath(new URL("./migrations", im
  * **Example** (Apply migrations from a generated folder)
  *
  * ```ts
- * import { Effect } from "effect"
- * import { migrateFromFolder, migrationsFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ * import { migrateFromFolder, migrateOnBoot, migrationsFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
  *
  * const migrate = migrateFromFolder(migrationsFolder)
- * console.log(Effect.isEffect(migrate)) // true
- * console.log(migrationsFolder.endsWith("/migrations"))
+ * console.log(migrationsFolder.endsWith("/migrations")) // true
+ * console.log(migrate !== migrateOnBoot) // true
  * ```
  *
  * @category constructors
@@ -59,11 +58,11 @@ export const migrateFromFolder = Effect.fn("MigrationRunner.migrateFromFolder")(
  * **Example** (Use migrateOnBoot as databaseReady's second step)
  *
  * ```ts
- * import { Effect } from "effect"
- * import { migrateOnBoot, migrateFromFolder, migrationsFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ * import { migrateFromFolder, migrateOnBoot, migrationsFolder } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
  *
- * const documented = [migrateOnBoot, migrateFromFolder(migrationsFolder)] as const
- * console.log(Effect.isEffect(documented[0])) // true
+ * const fromFolder = migrateFromFolder(migrationsFolder)
+ * console.log(migrationsFolder.endsWith("/migrations")) // true
+ * console.log(migrateOnBoot !== fromFolder) // true
  * ```
  *
  * @category constructors

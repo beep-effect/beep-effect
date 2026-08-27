@@ -161,15 +161,15 @@ const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(functio
 /**
  * Constructs the 6-phase streaming extraction program (chunk, retrieve, type, scope, relate, merge).
  *
- * **Example** (Name the constructor effect)
+ * **Example** (Construct the 6-phase workflow layer)
  *
  * ```ts
- * import { Effect } from "effect"
- * import { makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
+ * import { Layer } from "effect"
+ * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
+ * import { ExtractionWorkflowLive, makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
  *
- * const documented = [makeExtractionWorkflow, "extract"] as const
- * console.log(Effect.isEffect(documented[0])) // true
- * console.log(documented[1]) // "extract"
+ * const layer = Layer.effect(ExtractionWorkflow, makeExtractionWorkflow)
+ * console.log(layer !== ExtractionWorkflowLive) // true
  * ```
  *
  * @category constructors
@@ -813,11 +813,14 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
  * **Example** (Provide the live 6-phase workflow)
  *
  * ```ts
- * import { ExtractionWorkflowLive } from "@effect-ontology/Workflow/StreamingExtraction"
+ * import { Layer } from "effect"
+ * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
  * import { StorageServiceLive } from "@effect-ontology/Service/Storage"
+ * import { ExtractionWorkflowLive, makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
  *
- * const documented = [ExtractionWorkflowLive, StorageServiceLive] as const
- * console.log(documented[1] !== undefined) // true
+ * const constructed = Layer.effect(ExtractionWorkflow, makeExtractionWorkflow)
+ * console.log(ExtractionWorkflowLive !== constructed) // true
+ * console.log(ExtractionWorkflowLive !== StorageServiceLive) // true
  * ```
  *
  * @see {@link ExtractionWorkflow} for the service contract defined in Service/ExtractionWorkflow.

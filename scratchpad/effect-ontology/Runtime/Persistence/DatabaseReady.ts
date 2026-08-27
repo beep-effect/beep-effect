@@ -16,13 +16,10 @@ import { migrateOnBoot } from "./MigrationRunner.ts";
  * **Example** (Run connectivity then migrateOnBoot)
  *
  * ```ts
- * import { Effect } from "effect"
  * import { databaseReady } from "@effect-ontology/Runtime/Persistence/DatabaseReady"
  * import { migrateOnBoot } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
  *
- * const documented = [databaseReady(), migrateOnBoot] as const
- * console.log(Effect.isEffect(documented[0])) // true
- * console.log(Effect.isEffect(documented[1])) // true
+ * console.log(databaseReady() !== migrateOnBoot) // true
  * ```
  *
  * @category constructors

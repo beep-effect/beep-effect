@@ -144,13 +144,19 @@ const handleAuthError = Effect.fn("handleAuthError")(function* (error: Authentic
 /**
  * HTTP surface for issuing WebSocket tickets and reporting ticket-auth health.
  *
- * **Example** (Name the ticket issuance route)
+ * **Details**
+ *
+ * Tickets are issued at `POST /v1/auth/ticket`.
+ *
+ * **Example** (Register the auth routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { AuthRouter } from "@effect-ontology/Runtime/AuthRouter"
  *
- * const documented = [AuthRouter, "POST /v1/auth/ticket"] as const
- * console.log(documented[1]) // "POST /v1/auth/ticket"
+ * const served = Layer.provide(AuthRouter, HttpRouter.layer)
+ * console.log(served !== AuthRouter) // true
  * ```
  *
  * @category endpoints

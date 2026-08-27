@@ -151,12 +151,26 @@ const PromptMessages = PromptMessage.pipe(S.Array);
 /**
  * Retrieval hit for a stored few-shot example, including similarity and usage.
  *
- * **Example** (Reject an incomplete scored example)
+ * **Example** (Decode a scored retrieval hit)
  *
  * ```ts
  * import { ScoredExample } from "@effect-ontology/Repository/Examples"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
+ * const scored = S.decodeUnknownOption(ScoredExample)({
+ *   id: "example-id-1",
+ *   ontologyId: "people",
+ *   exampleType: "entity_extraction",
+ *   inputText: "Ada Lovelace was a mathematician",
+ *   expectedOutput: { name: "Ada Lovelace" },
+ *   promptMessages: null,
+ *   explanation: null,
+ *   isNegative: false,
+ *   similarity: 0.91,
+ *   usageCount: 3
+ * })
+ * console.log(O.map(scored, (row) => row.ontologyId))
  * console.log(S.is(ScoredExample)({})) // false
  * ```
  *

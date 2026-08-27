@@ -176,18 +176,6 @@ const generateJobId = Random.nextIntBetween(0, 0x7fffffff).pipe(Effect.map((valu
  * Endpoints:
  * - POST /v1/inference/run - Run RDFS reasoning on a graph
  * - GET /v1/inference/:id - Get inference job result
- *
- * **Example** (Name the inference run route)
- *
- * ```ts
- * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
- *
- * const documented = [InferenceRouter, "POST /v1/inference/run"] as const
- * console.log(documented[1]) // "POST /v1/inference/run"
- * ```
- *
- * @category endpoints
- * @since 0.0.0
  */
 const InferenceRouterDefinition = HttpRouter.addAll([
   HttpRouter.route(
@@ -388,13 +376,19 @@ const InferenceRouterDefinition = HttpRouter.addAll([
 /**
  * Inference router with runtime-local bounded job storage.
  *
- * **Example** (Export the inference HTTP surface)
+ * **Details**
+ *
+ * Job status is served at `GET /v1/inference/:id`; runs are accepted at `POST /v1/inference/run`.
+ *
+ * **Example** (Register the inference routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
  *
- * const documented = [InferenceRouter, "GET /v1/inference/:id"] as const
- * console.log(documented[1]) // "GET /v1/inference/:id"
+ * const served = Layer.provide(InferenceRouter, HttpRouter.layer)
+ * console.log(served !== InferenceRouter) // true
  * ```
  *
  * @category endpoints

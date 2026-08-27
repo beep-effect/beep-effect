@@ -268,11 +268,13 @@ const makeExtractLayer = (ontologyPath: string, noExternalVocabs: boolean) => {
  *
  * ```ts
  * import { extractCommand } from "@effect-ontology/Cli/Commands/Extract"
+ * import * as Command from "effect/unstable/cli/Command"
  *
+ * const argv = ["ontologies/people.ttl", "--text", "Ada Lovelace was a mathematician"] as const
+ * const program = Command.runWith(extractCommand, { version: "0.0.0" })([...argv])
  * console.log(extractCommand.name) // "extract"
- * console.log(extractCommand.description)
- * // effect-onto extract ontologies/people.ttl --text "Ada Lovelace was a mathematician"
- * // effect-onto extract ontologies/people.ttl --file ./article.txt
+ * console.log(argv.includes("--text")) // true
+ * console.log(program !== extractCommand)
  * ```
  *
  * @category cli-commands

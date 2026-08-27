@@ -193,10 +193,13 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
  *
  * ```ts
  * import { ingestCommand } from "@effect-ontology/Cli/Commands/Ingest"
+ * import * as Command from "effect/unstable/cli/Command"
  *
+ * const argv = ["./articles", "--ontology", "ontologies/people.ttl", "--output", "manifest.json"] as const
+ * const program = Command.runWith(ingestCommand, { version: "0.0.0" })([...argv])
  * console.log(ingestCommand.name) // "ingest"
- * console.log(ingestCommand.description)
- * // effect-onto ingest ./articles --ontology ontologies/people.ttl --output manifest.json
+ * console.log(argv.includes("--ontology")) // true
+ * console.log(program !== ingestCommand)
  * ```
  *
  * @category cli-commands

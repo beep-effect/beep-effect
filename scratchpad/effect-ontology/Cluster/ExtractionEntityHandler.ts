@@ -153,15 +153,12 @@ const toExtractionParams = (
  * and `GetExtractionStatus` handlers. {@link ExtractionEntityHandlerLayer} runs
  * this constructor with `Effect.orDie`.
  *
- * **Example** (Name the handler methods)
+ * **Example** (Construct the handler as a Cluster entity layer)
  *
  * ```ts
- * import { Effect } from "effect"
- * import { makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
+ * import { ExtractionEntityHandlerLayer, makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
  *
- * const methods = ["ExtractFromText", "GetCachedResult", "CancelExtraction", "GetExtractionStatus"] as const
- * console.log(Effect.isEffect(makeExtractionEntityHandler)) // true
- * console.log(methods[0]) // "ExtractFromText"
+ * console.log(makeExtractionEntityHandler !== ExtractionEntityHandlerLayer) // true
  * ```
  *
  * @category constructors
@@ -519,8 +516,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
  *   ExtractionEntityHandlerLayer,
  *   ClusterSqliteLive({ filename: "output/cluster.db", runnerStorage: "memory" })
  * )
- * const documented = [wired, "ExtractFromText"] as const
- * console.log(documented[1]) // "ExtractFromText"
+ * console.log(wired !== ExtractionEntityHandlerLayer) // true
  * ```
  *
  * @category layers

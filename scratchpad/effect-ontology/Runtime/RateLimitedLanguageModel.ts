@@ -167,11 +167,7 @@ const makeAiProtection = Effect.fn("RateLimitedAiClient.makeProtection")(functio
  * ```ts
  * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
- * const provider = "anthropic" as const
- * const adapter = provider === "anthropic" ? RateLimitedAnthropicClientLayer : RateLimitedOpenAiClientLayer
- * console.log(provider) // "anthropic"
- * const documented = [adapter, "createMessage"] as const
- * console.log(documented[1]) // "createMessage"
+ * console.log(RateLimitedAnthropicClientLayer !== RateLimitedOpenAiClientLayer) // true
  * ```
  *
  * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.
@@ -210,11 +206,7 @@ export const RateLimitedAnthropicClientLayer = Layer.effect(
  * ```ts
  * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
- * const provider = "openai" as const
- * const adapter = provider === "openai" ? RateLimitedOpenAiClientLayer : RateLimitedAnthropicClientLayer
- * console.log(provider) // "openai"
- * const documented = [adapter, "createResponse"] as const
- * console.log(documented[1]) // "createResponse"
+ * console.log(RateLimitedOpenAiClientLayer !== RateLimitedAnthropicClientLayer) // true
  * ```
  *
  * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.

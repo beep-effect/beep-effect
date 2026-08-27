@@ -131,17 +131,22 @@ export class HealthResult extends S.Class<HealthResult>($I`HealthResult`)(
 /**
  * Liveness, readiness, and deep-dependency probes for Kubernetes-style health checks.
  *
- * **Example** (Provide the default probe layer)
+ * **Example** (Run a liveness probe)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import { Effect, Layer } from "effect"
  * import { HealthCheckService } from "@effect-ontology/Runtime/HealthCheck"
  *
- * const liveness = Effect.gen(function* () {
- *   const health = yield* HealthCheckService
- *   return yield* health.liveness()
- * }).pipe(Effect.provide(HealthCheckService.Default))
- * console.log(Effect.isEffect(liveness)) // true
+ * const TestHealth = Layer.mock(HealthCheckService, {
+ *   liveness: () => Effect.succeed({ status: "ok", timestamp: "2026-08-26T00:00:00.000Z" })
+ * })
+ * const result = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const health = yield* HealthCheckService
+ *     return yield* health.liveness()
+ *   }).pipe(Effect.provide(TestHealth))
+ * )
+ * console.log(result.status) // "ok"
  * ```
  *
  * @category services

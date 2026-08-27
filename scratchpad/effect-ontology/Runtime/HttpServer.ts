@@ -356,13 +356,19 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
 /**
  * HTTP surface for entity timelines and conflict transitions.
  *
- * **Example** (Name the entity timeline route)
+ * **Details**
+ *
+ * Entity timelines are served at `GET /v1/timeline/entities/:iri`.
+ *
+ * **Example** (Register the timeline routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { TimelineRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [TimelineRouter, "GET /v1/timeline/entities/:iri"] as const
- * console.log(documented[1]) // "GET /v1/timeline/entities/:iri"
+ * const served = Layer.provide(TimelineRouter, HttpRouter.layer)
+ * console.log(served !== TimelineRouter) // true
  * ```
  *
  * @category endpoints
@@ -649,13 +655,19 @@ export const TimelineRouter = HttpRouter.addAll([
 /**
  * HTTP surface for claim, article, and entity search.
  *
- * **Example** (Name the claim search route)
+ * **Details**
+ *
+ * Claim search is served at `POST /v1/search/claims`.
+ *
+ * **Example** (Register the search routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { SearchRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [SearchRouter, "POST /v1/search/claims"] as const
- * console.log(documented[1]) // "POST /v1/search/claims"
+ * const served = Layer.provide(SearchRouter, HttpRouter.layer)
+ * console.log(served !== SearchRouter) // true
  * ```
  *
  * @category endpoints
@@ -1041,13 +1053,19 @@ const extractionRouteHandler = Effect.gen(function* () {
 /**
  * HTTP surface for starting batch extraction and polling batch status.
  *
- * **Example** (Name the batch extraction route)
+ * **Details**
+ *
+ * Batch extraction is accepted at `POST /v1/extract/batch`.
+ *
+ * **Example** (Register the extraction routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { ExtractionRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [ExtractionRouter, "POST /v1/extract/batch"] as const
- * console.log(documented[1]) // "POST /v1/extract/batch"
+ * const served = Layer.provide(ExtractionRouter, HttpRouter.layer)
+ * console.log(served !== ExtractionRouter) // true
  * ```
  *
  * @category endpoints
@@ -1086,13 +1104,19 @@ export const ExtractionRouter = HttpRouter.addAll([
 /**
  * HTTP surface for liveness, readiness, and deep health probes.
  *
- * **Example** (Name the liveness probe)
+ * **Details**
+ *
+ * Liveness is served at `GET /health/live`.
+ *
+ * **Example** (Register the health probes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { HealthRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [HealthRouter, "GET /health/live"] as const
- * console.log(documented[1]) // "GET /health/live"
+ * const served = Layer.provide(HealthRouter, HttpRouter.layer)
+ * console.log(served !== HealthRouter) // true
  * ```
  *
  * @category endpoints
@@ -1134,13 +1158,19 @@ export const HealthRouter = HttpRouter.addAll([
 /**
  * HTTP surface for looking up a registered ontology by id.
  *
- * **Example** (Name the ontology registry route)
+ * **Details**
+ *
+ * Registry entries are served at `GET /v1/ontologies/:id`.
+ *
+ * **Example** (Register the ontology routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { OntologyRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [OntologyRouter, "GET /v1/ontologies/:id"] as const
- * console.log(documented[1]) // "GET /v1/ontologies/:id"
+ * const served = Layer.provide(OntologyRouter, HttpRouter.layer)
+ * console.log(served !== OntologyRouter) // true
  * ```
  *
  * @category endpoints
@@ -1187,8 +1217,7 @@ export const OntologyRouter = HttpRouter.addAll([
  * ```ts
  * import { ApiRouter, HealthRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [ApiRouter, HealthRouter, "GET /health/live"] as const
- * console.log(documented[2]) // "GET /health/live"
+ * console.log(ApiRouter !== HealthRouter) // true
  * ```
  *
  * @category endpoints
@@ -1214,10 +1243,9 @@ export const ApiRouter = Layer.mergeAll(
  * **Example** (Serve the repository-free API)
  *
  * ```ts
- * import { ApiRouterWithoutRepositories, HealthRouter } from "@effect-ontology/Runtime/HttpServer"
+ * import { ApiRouter, ApiRouterWithoutRepositories } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [ApiRouterWithoutRepositories, HealthRouter, "GET /health/live"] as const
- * console.log(documented[2]) // "GET /health/live"
+ * console.log(ApiRouterWithoutRepositories !== ApiRouter) // true
  * ```
  *
  * @category endpoints
@@ -1294,10 +1322,9 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
  * **Example** (Launch the full HTTP server layer)
  *
  * ```ts
- * import { HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
+ * import { ApiRouter, HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [HttpServerLive, "GET /health/live"] as const
- * console.log(documented[1]) // "GET /health/live"
+ * console.log(HttpServerLive !== ApiRouter) // true
  * ```
  *
  * @category layers
@@ -1311,10 +1338,9 @@ export const HttpServerLive = makeHttpServerLive(ApiRouter);
  * **Example** (Launch the repository-free HTTP server)
  *
  * ```ts
- * import { HttpServerWithoutRepositoriesLive } from "@effect-ontology/Runtime/HttpServer"
+ * import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "@effect-ontology/Runtime/HttpServer"
  *
- * const documented = [HttpServerWithoutRepositoriesLive, "GET /health/live"] as const
- * console.log(documented[1]) // "GET /health/live"
+ * console.log(HttpServerWithoutRepositoriesLive !== HttpServerLive) // true
  * ```
  *
  * @category layers
