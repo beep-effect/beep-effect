@@ -9,7 +9,7 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Stage `graduate` (MAP v1.0 ratified, M1–M6): PR A = `@beep/nlp` Handoff mentions fix (own branch); PR B = docs-only ceremony (goals `semantica-canary` + `openai-driver` scaffolded, exploration flipped `graduated`, ROADMAP funnel clause); PR C = lab mint (`semantica-canary` P1 step 1, after B). BRIEF v1.1, shared-schema v1.4, contract v1.4 (R1–R3) are the contracts in force | MAP v0.1 "draft MAP → graduate → scaffold" |
+| Next work | Stage `decompose`: C0 fired the Extraction breaker across the frozen relation-paper slate, and review invalidated the earlier ambiguous first-occurrence anchors; define a new exact-evidence relation candidate before resuming the paused `semantica-canary` packet. Do not scaffold a queued MAP row from the failed gate. | Stage `graduate` and its PR A/B/C sequence |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
@@ -18,7 +18,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Input | park-pending-canary; per-stage slate is probe order; PDF first probe = `@beep/doc-text` (the exact string the product pipeline digests); breaker retry = direct `unpdf` text items with `disableNormalization: true` inside the lab (same MIT dep) if G-structure needs page/font structure; MuPDF parked (AGPL subprocess, new binary) (M1) | the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
-| Extraction | park-pending-canary; hybrid and pattern-only run the same gold probe; one family verdict, written at C0, where G-relation now scores (S7) | the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
+| Extraction | **park** (S1, 2026-08-26): the hosted candidate and its one exact-evidence prompt retry did not produce a review-safe relation-paper slice; unique alignment exposed ambiguous endpoint anchors in two earlier apparent passes, and pattern-only declares relations unsupported | `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
@@ -515,3 +515,30 @@ each a loophole in the ratified acceptance wording rather than a new decision.
   a small `G-projection` gold set (known kNN neighbour pair, non-empty SPARQL result sets over
   F1 + one W1 paper) must match before rebuild identity is checked; empty or mismatched
   projections fail C1.
+
+## 2026-08-26 (C0 probe breaker) — Extraction parks; re-enter at decompose
+
+Source:
+[`goals/semantica-canary/history/p2-c0-probe-breaker.md`](../../goals/semantica-canary/history/p2-c0-probe-breaker.md).
+
+- The first hosted hybrid candidate appeared to pass live/offline identity and
+  non-zero relation coverage on the first two frozen G-relation papers, then
+  failed `06c93f91ef3d` because its 16 semantic relation candidates contained
+  no verbatim canonical relation span. Review later invalidated those apparent
+  passes: repeated entity surfaces had been assigned their first occurrence,
+  and none of the first paper's 6 exact relation texts had two uniquely
+  grounded endpoint claims.
+- The single retry required a verbatim contiguous evidence span plus exact
+  endpoint surfaces. It returned 7 closer relation candidates, but still no
+  exact canonical relation span; PDF line boundaries, punctuation, or wording
+  remained normalized. The same typed report gate failed.
+- The final unique-alignment code replayed that retry candidate on
+  `057e356e94f8` live and offline. Its 9 relation candidates contained zero
+  exact canonical spans, and both runs failed the same typed report gate. No
+  review-safe C0 vertical slice passed.
+- **Answer:** Extraction is `park`. Pattern-only cannot rescue the tripwire
+  because it declares relation extraction unsupported. Input does not receive
+  a verdict because C0 did not pass. The exploration returns to `decompose` to
+  define a relation value/evidence contract or a bounded chunk-scoped
+  candidate without weakening `TextAnchor` verification. C1, C2, and R2 did
+  not run.

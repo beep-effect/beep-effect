@@ -1,14 +1,15 @@
 import { Confidence } from "@beep/epistemic-domain";
-import { LangExtractRequest } from "@beep/langextract/Extraction";
+import { GroundedExtraction, LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 import {
   allowRemoteExtractionPolicyLayer,
   buildPrompt,
+  LangExtractGenerationTimeout,
   LangExtractService,
   layer as LangExtractServiceLive,
 } from "@beep/langextract/Service";
 import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@beep/langextract/Target";
-import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan";
 import { DocumentId as NlpDocumentId } from "@beep/nlp/Core";
+import { UnitInterval } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { TextAnchor } from "@beep/provenance";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
@@ -18,6 +19,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { LabConfig } from "@/runtime/Config";
 import { contentDigest, sha256CanonicalSync } from "@/schema/Digest";
 import {
   ClaimBody,
@@ -36,7 +38,7 @@ import { ProviderCacheKey } from "@/schema/ProviderCache";
 import { Canonicalizer } from "@/services/Canonicalizer";
 import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
-import type { GroundedExtraction, LangExtractError } from "@beep/langextract/Extraction";
+import type { LangExtractError } from "@beep/langextract/Extraction";
 import type { EntityNode } from "@beep/nlp/Graph/Schema";
 import type { Sha256Hex } from "@beep/schema";
 import type {
@@ -80,7 +82,9 @@ const HOSTED_TARGETS: A.NonEmptyReadonlyArray<ExtractionTarget> = [
     kind: "relation",
     name: "relation",
     attributes: ["predicate", "subject", "object"],
-    description: O.some("A grounded relation whose endpoints are exact entity surface strings."),
+    description: O.some(
+      "A relation explicitly stated in the source. Copy one verbatim contiguous source span as the extraction text; never paraphrase or synthesize it. Copy subject and object as exact entity surface strings from that span, and emit matching entity extractions for both endpoints."
+    ),
   }),
 ];
 
@@ -258,6 +262,7 @@ const requestFor = (canonical: CanonicalText): LangExtractRequest =>
   LangExtractRequest.make({
     documentId: NlpDocumentId.make(canonical.identity.sourceRef),
     examples: HOSTED_EXAMPLES,
+    options: LangExtractOptions.make({ fuzzyThreshold: O.some(UnitInterval.make(1)) }),
     targets: HOSTED_TARGETS,
     text: canonical.text,
   });
@@ -309,8 +314,8 @@ const nonRelationBody = (extraction: GroundedExtraction, anchor: TextAnchor): Cl
 const entityAnchorOf = (claim: EvidenceClaimValue): O.Option<TextAnchor> =>
   ClaimBody.match(claim.body, {
     Entity: (body) => O.some(TextAnchor.make(body)),
-    Relation: () => O.none<TextAnchor>(),
-    Structure: () => O.none<TextAnchor>(),
+    Relation: O.none<TextAnchor>,
+    Structure: O.none<TextAnchor>,
   });
 
 const exactEntity = (claims: ReadonlyArray<EvidenceClaimValue>, quote: string): O.Option<EvidenceClaimValue> =>
@@ -348,6 +353,34 @@ const resolveEndpoint = (
     O.flatMap((surface) => exactEntity(claims, surface).pipe(O.orElse(() => nearestNfcEntity(claims, surface, before))))
   );
 
+type AlignedGroundedExtraction = Exclude<GroundedExtraction, { readonly alignmentStatus: "unaligned" }>;
+type LocatedExtraction = readonly [extraction: GroundedExtraction, anchor: TextAnchor];
+
+const alignedExtraction = (extraction: AlignedGroundedExtraction): Result.Result<LocatedExtraction, void> =>
+  Result.succeed([
+    extraction,
+    TextAnchor.make({
+      endChar: extraction.span.end,
+      quote: extraction.matchedText,
+      startChar: extraction.span.start,
+    }),
+  ]);
+
+const locateExtraction = (extraction: GroundedExtraction): Result.Result<LocatedExtraction, void> =>
+  GroundedExtraction.match(extraction, {
+    match_exact: alignedExtraction,
+    match_fuzzy: alignedExtraction,
+    match_lesser: alignedExtraction,
+    unaligned: () => Result.failVoid,
+  });
+
+const unalignedExtraction = (chunks: A.NonEmptyReadonlyArray<Chunk>): DegradedClaim =>
+  DegradedClaim.make({
+    chunk: A.headNonEmpty(chunks).id,
+    detail: "LangExtract did not align this candidate to the canonical text.",
+    kind: "fabricated-span",
+  });
+
 const makeHostedExtractor = Effect.gen(function* () {
   const canonicalizer = yield* Canonicalizer;
   const langExtract = yield* LangExtractService;
@@ -367,20 +400,11 @@ const makeHostedExtractor = Effect.gen(function* () {
         );
       }
 
-      const located = yield* locateGroundedExtractions(extracted.success.extractions, canonical.text).pipe(
-        Effect.result
-      );
-      if (Result.isFailure(located)) {
-        return degradedOutcome(
-          document,
-          "hosted",
-          "fabricated-span",
-          "A hosted extraction could not be located in the exact canonical text."
-        );
-      }
-
       const cacheKey = O.some(yield* hostedCacheKey(request, model).pipe(Effect.orDie));
-      const pairs = A.zip(extracted.success.extractions, located.success);
+      const pairs = A.filterMap(extracted.success.extractions, locateExtraction);
+      const unaligned = A.map(A.filter(extracted.success.extractions, GroundedExtraction.guards.unaligned), () =>
+        unalignedExtraction(chunks)
+      );
       const basePairs = A.filter(pairs, ([extraction]) => !Str.Equivalence(extraction.label, "relation"));
       const relationPairs = A.filter(pairs, ([extraction]) => Str.Equivalence(extraction.label, "relation"));
       const baseClaims = yield* Effect.forEach(
@@ -442,7 +466,7 @@ const makeHostedExtractor = Effect.gen(function* () {
         "hosted-langextract",
         model,
         A.appendAll(baseClaims, A.getSuccesses(relations)),
-        A.getFailures(relations)
+        A.appendAll(unaligned, A.getFailures(relations))
       );
     }),
   });
@@ -560,8 +584,15 @@ export const HostedExtractorLive = Layer.effect(HostedExtractor, makeHostedExtra
  * @category layers
  * @since 0.0.0
  */
+const extractionTimeoutLayer = Layer.effect(
+  LangExtractGenerationTimeout,
+  LabConfig.pipe(Effect.map((config) => config.extractionTimeout))
+);
+
 export const HostedLangExtractLive = HostedExtractorLive.pipe(
-  Layer.provide(LangExtractServiceLive.pipe(Layer.provide(allowRemoteExtractionPolicyLayer)))
+  Layer.provide(
+    LangExtractServiceLive.pipe(Layer.provide(Layer.merge(allowRemoteExtractionPolicyLayer, extractionTimeoutLayer)))
+  )
 );
 
 /**

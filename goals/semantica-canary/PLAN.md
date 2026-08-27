@@ -2,14 +2,13 @@
 
 ## Status
 
-Status: `active`
+Status: `paused`
 
-P1 Scaffold is in progress: step 1 (the lab mint, PR C) landed on its own PR
-with the one local `cargo check` recorded under
-[`history/p1-cargo-check.md`](./history/p1-cargo-check.md); step 2 (F1, the
-W1 manifest) landed on `feat/semantica-p1-fixtures`
-([`history/p1-w1-manifest.md`](./history/p1-w1-manifest.md)); `gold/v1` rides its
-own gold-proposer PR before the first C0 slice (D-C0-9). P2-P5 pending.
+P1 is complete. P2 is paused after the C0 Extraction probe and its single
+retry failed the frozen relation-paper slate. Review also invalidated two
+apparent passes that had relied on ambiguous first-occurrence entity anchors.
+Extraction is `park`, the exploration has returned to `decompose`, and P3-P5
+do not proceed from this packet state.
 
 ## Phases
 
@@ -19,8 +18,8 @@ completion gate binds per phase, not only at close. Phase ids match
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P1 Scaffold | in-progress | Mint the lab on its own PR, then commit F1 fixtures and the W1 manifest. | Lab passes its Labs lane; one local `cargo check` recorded; headless entry and runtime layer exist; F1 + W1 manifest committed. |
-| P2 C0 | pending | The spine, first vertical slice first, then all three G-relation papers. | C0 pass criteria in `SPEC.md`; Extractor and Input verdicts written to the exploration's `DECISIONS.md`. |
+| P1 Scaffold | complete | Mint the lab on its own PR, then commit F1 fixtures and the W1 manifest. | Lab passes its Labs lane; one local `cargo check` recorded; headless entry and runtime layer exist; F1 + W1 manifest committed. |
+| P2 C0 | paused | The spine, first vertical slice first, then all three G-relation papers. | Breaker fired: the candidate and retry failed the relation slate; no review-safe vertical slice passed. |
 | P3 C1 | pending | Derived projections: dimension-keyed vector table and RDF rebuild-from-ledger. | C1 pass criteria; Storage and Embeddings verdicts written. Needs the sibling `openai-driver` packet merged first. |
 | P4 C2 | pending | Reasoning, crash injection, and the Tier-L bars at bundle level. | C2 pass criteria; Reasoning verdict written; all Tier-L bars green. |
 | P5 Close | pending | Verdicts to DECISIONS then atlas; reflection; packet state flip in the same PR. | Closeout reflection validates; final park/drop values synced to the atlas; packet `completed-retained`. |

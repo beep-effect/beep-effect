@@ -99,6 +99,7 @@ describe("C0 F1 live-to-replay slice", () => {
               LabConfig,
               LabConfig.of({
                 corpusRoot: O.none(),
+                extractionTimeout: Duration.minutes(15),
                 extractorModel: "stub-extractor-20260826",
                 goldDirectory,
                 goldGenerationTimeout: Duration.minutes(45),
@@ -182,7 +183,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 .pipe(Effect.flatMap(S.decodeEffect(EvalTelemetryJson)));
 
               expect(live.reportDigest).toBe(replay.reportDigest);
-              expect(live.reportDigest).toBe("256364712a13eb51253dac7199a9d9ad5473d56f0a1f4b9aa7ac8e96961849a9");
+              expect(live.reportDigest).toBe("8c6a73fe8d37f45328ee438b5a59365bc5884180b944c8f9e2f2034827cd762c");
               expect(writtenLive.reportDigest).toBe(writtenReplay.reportDigest);
               expect(writtenLive.reportDigest).toBe(live.reportDigest);
               expect(live.unexpectedDegraded).toBe(0);

@@ -60,6 +60,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   self-hosting friction, and React v2 stays on KSA static-v1 daily-use
   evidence. The Session B rulings (queued amendments, fleet-campaign charter)
   land as their own docs PR.
+- [`semantica-lab`](./semantica-lab/README.md) — reopened at `decompose`
+  2026-08-26 after the C0 Extraction probe breaker fired. The candidate and its
+  one retry failed the frozen relation-paper slate; review invalidated two
+  earlier apparent passes that relied on ambiguous first-occurrence endpoint
+  anchors. [`semantica-canary`](../goals/semantica-canary/README.md) is paused,
+  Extraction is parked, and the next pass decides whether a different evidence
+  contract can justify re-entry. Input remains pending its own canary.
 - [`full-document-editor`](./full-document-editor/README.md) — graduated
   2026-08-24 with its two promised-now packets:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md)
@@ -251,19 +258,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   rehearsal). Both deliver into the proposed `lejeune-bolt-workbench` lab (under
   `apps/labs/`). The M365 pilot and TrustGraph donor remain gated re-entries; a fired gate
   reopens the exploration at `decompose`. Build starts on Benjamin's signal.
-- [`semantica-lab`](./semantica-lab/README.md) — graduated 2026-08-24 into
-  [`goals/semantica-canary`](../goals/semantica-canary/README.md) (the staged
-  Semantica-port canary C0→C1→C2 in the future apps/labs/semantica Tauri lab,
-  headless-first, probe-denominated stop rule) and
-  [`goals/openai-driver`](../goals/openai-driver/README.md) (thin `@beep/openai`
-  driver over `@effect/ai-openai`, C1's embeddings Layer). BRIEF v1.1, MAP v1.0
-  (M1–M6: doc-text-first PDF, `CanonicalText` composed from
-  `ResolvedSourceText` + `TextAnchor`, Handoff span fix as PR A, own driver
-  packet, atlas per O3, three-PR delivery, ROADMAP lab-canary clause). Queued
-  re-entries: `semantica-storage-inversion` and `semantica-reasoning-spike`
-  (behind C2), `semantica-atlas-sync` (semantica 0.6.7+ or atlas-edit need),
-  OSS gates `reasoning-package` and `evals-harness`. A fired gate reopens the
-  packet at `decompose`. Notion page `@beep/semantica` mirrors facts.
 - [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — graduated
   2026-08-24 with
   [`goals/oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)

@@ -231,6 +231,43 @@ describe("C0 hosted extractor", () => {
     );
   });
 
+  it("uses an upstream-disambiguated grounded span when surface text repeats", () => {
+    const text = "Ada wrote notes. Ada praised Engine.";
+    const secondAda = text.lastIndexOf("Ada");
+    const engine = text.indexOf("Engine");
+    const extractions = [
+      grounded("person", "Ada", secondAda),
+      grounded("method", "Engine", engine),
+      grounded(
+        "relation",
+        "Ada praised Engine.",
+        secondAda,
+        O.some({ object: "Engine", predicate: "praised", subject: "Ada" })
+      ),
+    ];
+
+    return Effect.runPromise(
+      provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
+
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation")).toHaveLength(1);
+            expect(
+              A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
+                O.map((claim) => claim.body.startChar)
+              )
+            ).toEqual(O.some(secondAda));
+            expect(outcome.batch.degraded).toEqual([]);
+          }
+        })
+      )
+    );
+  });
+
   it("retains an unresolved relation as a degraded claim", () => {
     const text = "Ada praised Engine.";
     const extractions = [

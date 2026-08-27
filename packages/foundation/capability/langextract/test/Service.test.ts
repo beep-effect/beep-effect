@@ -4,6 +4,7 @@ import {
   allowRemoteExtractionPolicyLayer,
   buildPrompt,
   ensureRemoteExtractionAllowed,
+  LangExtractGenerationTimeout,
   layer as LangExtractLayer,
   LangExtractService,
 } from "@beep/langextract/Service";
@@ -165,6 +166,42 @@ describe("LangExtractService", () => {
         expect(error).toBeInstanceOf(LangExtractError);
         expect(error.reason).toBe("model-generation-timeout");
         expect(O.getOrUndefined(error.details)?.cause).toBe("language-model-generate-text-timeout");
+      })
+    );
+  });
+
+  layer(
+    LangExtractLayer.pipe(
+      Layer.provide(
+        Layer.mergeAll(
+          allowRemoteExtractionPolicyLayer,
+          makeLanguageModelLayerFromEffect(Effect.never),
+          Layer.succeed(LangExtractGenerationTimeout, Duration.minutes(10))
+        )
+      )
+    )
+  )("with a stalled fake language model and a provided generation timeout", (it) => {
+    it.effect(
+      "outlives the default deadline and times out at the provided one",
+      Effect.fnUntraced(function* () {
+        const request = LangExtractRequest.make({
+          documentId: DocumentId.make("doc-1"),
+          targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
+          text: "Alice founded Acme.",
+        });
+
+        const service = yield* LangExtractService;
+        const fiber = yield* service.extract(request).pipe(Effect.flip, Effect.forkChild);
+
+        yield* TestClock.adjust(Duration.seconds(30));
+        expect(fiber.pollUnsafe()).toBeUndefined();
+
+        yield* TestClock.adjust(Duration.minutes(10));
+
+        const error = yield* Fiber.join(fiber);
+
+        expect(error).toBeInstanceOf(LangExtractError);
+        expect(error.reason).toBe("model-generation-timeout");
       })
     );
   });
