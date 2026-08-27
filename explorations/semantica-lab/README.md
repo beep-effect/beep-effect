@@ -19,11 +19,13 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-What relation result contract can guarantee a verbatim `TextAnchor` over the
-`@beep/doc-text` canonical string on every frozen G-relation paper? Re-entry
-must compare an independently anchored evidence quote and bounded,
-chunk-scoped extraction without weakening exact span verification. The paused
-`semantica-canary` packet resumes only after that candidate is decomposed.
+Does the evidence-quote candidate's zero-spend preview ground at least one
+relation on at least one frozen paper? The candidate is defined (DECISIONS
+E1-E7, 2026-08-27): a fold alignment tier in the shared aligner, a lab-local
+subject/object/evidence-quote relation contract, endpoints anchored inside
+the evidence span, and a target written toward gold's relation classes. The
+preview and the operator gold spot-check both gate the live probe; the paused
+`semantica-canary` packet resumes only after both clear.
 
 ## Read This First
 
@@ -47,6 +49,17 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-27 (evidence-quote candidate defined): a zero-spend forensic pass
+  replayed the three breaker cache entries against regenerated canonical text
+  and hydrated the frozen gold relation labels. Findings: 10 of 16 retry
+  relation candidates differ from a true span only by whitespace or
+  end-of-line hyphenation; gold relations already carry evidence quotes with
+  both endpoints inside them; gold predicates are document-metadata classes
+  while the parked candidate hunted content relations. A grill-with-docs
+  session locked E1-E7 in DECISIONS: fold alignment tier in
+  `@beep/langextract`, lab-local relation evidence contract, endpoint
+  anchoring inside the evidence span, gold-class target, preview and
+  spot-check gates before the probe, fresh S1 budget for the new slate row.
 - 2026-08-26 (C0 Extraction probe breaker): the candidate and its one allowed
   prompt-tightening retry failed the frozen relation-paper slate. Review
   invalidated two earlier apparent live/replay passes because repeated endpoint
