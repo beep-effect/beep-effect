@@ -334,8 +334,9 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
           .pipe(
             Effect.mapError((error) => streamError(locator.packet, `repaired trace write failed: ${error.message}`))
           );
-        yield* fs.remove(backupDirectory, { recursive: true, force: true }).pipe(Effect.ignore);
-        yield* fs.remove(tempRoot, { recursive: true, force: true }).pipe(Effect.ignore);
+        // A concurrent writer can still hold an open handle into the renamed
+        // original stream. Retain that recovery backup because its ownership
+        // cannot be revalidated and deleted atomically.
         return O.some(PacketForkRepairOutcome.make({ plan: repair, revision: committedDerived.revision }));
       }),
       cleanup

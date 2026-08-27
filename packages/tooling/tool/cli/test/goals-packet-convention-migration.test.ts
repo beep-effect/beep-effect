@@ -933,6 +933,26 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
       expect(yield* fs.readFileString(finalRaceEvent)).toBe("concurrent event\n");
 
+      const lateBackupLocator = yield* makeFixture("late-backup-race");
+      const lateBackupEvents = `${lateBackupLocator.packetPath}/ops/events`;
+      const lateBackupTrace = `${lateBackupLocator.packetPath}/ops/trace.json`;
+      let lateBackupEvent = "";
+      const lateBackupApplier = yield* makeApplier({
+        ...fs,
+        rename: (source, target) => {
+          if (source === lateBackupEvents) lateBackupEvent = `${target}/concurrent.json`;
+          return fs.rename(source, target);
+        },
+        writeFileString: (target, content, options) =>
+          target === lateBackupTrace
+            ? fs
+                .writeFileString(lateBackupEvent, "late concurrent event\n")
+                .pipe(Effect.andThen(fs.writeFileString(target, content, options)))
+            : fs.writeFileString(target, content, options),
+      });
+      expect(O.isSome(yield* lateBackupApplier.apply(lateBackupLocator))).toBe(true);
+      expect(yield* fs.readFileString(lateBackupEvent)).toBe("late concurrent event\n");
+
       const moveLocator = yield* makeFixture("move-failure");
       const moveEvents = `${moveLocator.packetPath}/ops/events`;
       const moveApplier = yield* makeApplier({
