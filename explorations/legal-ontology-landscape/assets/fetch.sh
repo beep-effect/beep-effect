@@ -19,7 +19,20 @@ while IFS= read -r row; do
     ttl) ext=ttl ;; rdfxml|owl) ext=$( [ "$fmt" = owl ] && echo owl || echo rdf ) ;;
     jsonld) ext=jsonld ;; skos) ext=rdf ;; *) ext=dat ;;
   esac
-  out="vendor/${id}.${ext}"
+  manifested_path=$(jq -r '.path // empty' <<<"$row")
+  if [ -n "$manifested_path" ]; then
+    case "$manifested_path" in
+      /*|*\\*|.|..|./*|../*|*/./*|*/../*|*/.|*/..)
+        echo "INVALID PATH $id path=$manifested_path" >&2
+        fail=1
+        continue
+        ;;
+    esac
+    out="vendor/$manifested_path"
+  else
+    out="vendor/${id}.${ext}"
+  fi
+  mkdir -p "$(dirname "$out")"
   if [ "$verify_only" != "--verify-only" ]; then
     echo "fetch  $id <- $url"
     curl -fsSL --retry 3 -o "$out" "$url"
