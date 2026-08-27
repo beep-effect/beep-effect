@@ -161,7 +161,7 @@ describe("FileTypeChecker schemas", () => {
     }
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(FileTypeInfo)({
+        S.decodeResult(FileTypeInfo)({
           extension: "blend",
           mimeType: "application/x-blender",
           description: "Blender asset",
@@ -185,9 +185,9 @@ describe("FileTypeChecker schemas", () => {
       skippedBytes: [1, 2],
       compatibleExtensions: ["flv", "mp4"],
     });
-    expect(Result.isFailure(S.decodeUnknownResult(FileSignature)({ sequence: [1], skippedBytes: [2, 1] }))).toBe(true);
+    expect(Result.isFailure(S.decodeResult(FileSignature)({ sequence: [1], skippedBytes: [2, 1] }))).toBe(true);
     expect(
-      Result.isFailure(S.decodeUnknownResult(FileSignature)({ sequence: [1], compatibleExtensions: ["mp4", "flv"] }))
+      Result.isFailure(S.decodeResult(FileSignature)({ sequence: [1], compatibleExtensions: ["mp4", "flv"] }))
     ).toBe(true);
   });
 
