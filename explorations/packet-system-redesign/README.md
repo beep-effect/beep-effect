@@ -10,9 +10,12 @@ promised-now candidate. **Reopened at `decompose` 2026-08-26** on the ratified
 convention: the candidate-2/3 gate condition was satisfied on main evidence and
 `packet-control-plane-core` reached its close train, so the Session B grill
 chartered the fleet convention-migration campaign as candidate 6 and ruled on
-the three amendment candidates queued 2026-08-25 (D17–D23). Candidates 2–4
-remain gated re-entry candidates; the React viewer stays gated on KSA static-v1
-daily-use evidence.
+the three amendment candidates queued 2026-08-25 (D17–D23). The candidate-2/3
+stabilization gate fired with that close — they are eligible, but D17 sequences
+candidate 6 first and the Amendment G stream freeze caps their fleet-facing
+scope until its applier ships; candidate 4 still gates on observed self-hosting
+friction, and the React viewer stays gated on KSA static-v1 daily-use
+evidence.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -61,7 +64,8 @@ shape is proven against real half-migrated manifests before the fleet sees it?
   convention-migration campaign as **candidate 6**, its own goal packet and the
   first decompose reopener, because Amendment G makes the repair applier its
   rung 0 and freezes fleet `ops/events/` opt-in until that ships (census: 1 of
-  226 packets carries a stream). Of the three queued amendments, **H** is
+  225 manifest-bearing packets carries a stream; 226 packet directories, with
+  `explorations/_gold-intake` carrying no manifest). Of the three queued amendments, **H** is
   ratified reshaped — the typed `PacketWorkPlan` lands, the `GOAL.md` render
   does not, and model/effort stay out of the plan; **I** is **rejected**, its
   PROV-O/P-Plan/AgentO spine refuted by the projects that shipped it, with a

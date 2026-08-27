@@ -366,8 +366,9 @@ campaign, or candidate 2 (`packet-design-approval-gate`)?
 
 **Rationale.** Amendment G makes the single-packet repair applier the
 campaign's rung 0 and freezes fleet `ops/events/` opt-in until it ships. The
-2026-08-26 census confirms the freeze is total: 1 of 226 packets carries a
-stream, and it is the D9 pilot. Candidate 2's approval-reference events and
+2026-08-26 census confirms the freeze is total: 1 of 225 manifest-bearing
+packets carries a stream (226 packet directories; `explorations/_gold-intake`
+carries no manifest), and it is the D9 pilot. Candidate 2's approval-reference events and
 candidate 3's fleet adoption both presuppose packets having streams, so
 neither is enforceable anywhere but the pilot while the freeze holds. The
 campaign also passes the two ROADMAP accelerator tests that gate the freed
