@@ -50,6 +50,7 @@
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node-shared": "catalog:",
     "@zip.js/zip.js": "catalog:",
+    "ajv": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "exifreader": "catalog:",
