@@ -119,9 +119,12 @@ const writeFakeLease = Effect.fnUntraced(function* (
   return filePath;
 });
 
+// Transient .tmp- staging files are atomically renamed away; only settled
+// state files count.
 const listDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+  const names = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+  return A.filter(names, (name) => !Str.includes(".tmp-")(name));
 });
 
 describe("quality-scheduler", () => {
