@@ -349,6 +349,12 @@ describe("LeJeune deterministic fixture bundle", () => {
       const [firstManifestField, ...remainingManifestFields] = fixtureManifestJson.extractedFields;
       const [firstBundleRule, secondBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule] =
         bundle.rules;
+      const [firstBundleCertificate, secondBundleCertificate] = bundle.certificates;
+      const [firstBundleFinish, secondBundleFinish] = bundle.finishes;
+      const [firstBundleFixture, secondBundleFixture] = bundle.fixtures;
+      const [firstBundleOffer, secondBundleOffer] = bundle.offers;
+      const [firstBundleStandard, ...remainingBundleStandards] = bundle.standards;
+      const [firstBundleTool, secondBundleTool] = bundle.tools;
       const recordingPayload = yield* S.encodeEffect(ProviderRecording)(recording);
 
       const fixtureSourceCardinality: unknown = { ...fixture, sources: A.take(fixture.sources, 1) };
@@ -504,6 +510,40 @@ describe("LeJeune deterministic fixture bundle", () => {
         ...bundle,
         rules: [secondBundleRule, firstBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule],
       };
+      const bundleStandardSemanticDrift: unknown = {
+        ...bundle,
+        standards: [{ ...firstBundleStandard, revision: "Corrupted standard revision" }, ...remainingBundleStandards],
+      };
+      const bundleFinishSemanticDrift: unknown = {
+        ...bundle,
+        finishes: [
+          { ...firstBundleFinish, coatingSpecification: "Corrupted coating specification" },
+          secondBundleFinish,
+        ],
+      };
+      const bundleToolSemanticDrift: unknown = {
+        ...bundle,
+        tools: [{ ...firstBundleTool, operation: "Corrupted installation operation" }, secondBundleTool],
+      };
+      const bundleOfferSemanticDrift: unknown = {
+        ...bundle,
+        offers: [{ ...firstBundleOffer, unitPriceCents: 1_900 }, secondBundleOffer],
+      };
+      const bundleCertificateSemanticDrift: unknown = {
+        ...bundle,
+        certificates: [{ ...firstBundleCertificate, lotId: "corrupted-synthetic-lot" }, secondBundleCertificate],
+      };
+      const bundleQuoteProjectionDrift: unknown = {
+        ...bundle,
+        fixtures: [
+          { ...firstBundleFixture, quoteLine: { ...firstBundleFixture.quoteLine, quantity: 181 } },
+          secondBundleFixture,
+        ],
+      };
+      const bundleSyntheticProjectionDrift: unknown = {
+        ...bundle,
+        offers: [{ ...firstBundleOffer, observedAt: "2026-08-27T11:31:00.000Z" }, secondBundleOffer],
+      };
       const projectionClassVocabulary: unknown = {
         ...bundle.projection,
         ontologyClasses: ["BogusClass", ...A.drop(bundle.projection.ontologyClasses, 1)],
@@ -567,6 +607,19 @@ describe("LeJeune deterministic fixture bundle", () => {
         ],
         ["bundle-rule-disposition-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleDispositionDrift)],
         ["bundle-rule-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleOrderDrift)],
+        ["bundle-standard-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleStandardSemanticDrift)],
+        ["bundle-finish-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFinishSemanticDrift)],
+        ["bundle-tool-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleToolSemanticDrift)],
+        ["bundle-offer-semantic-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleOfferSemanticDrift)],
+        [
+          "bundle-certificate-semantic-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleCertificateSemanticDrift),
+        ],
+        ["bundle-quote-projection-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleQuoteProjectionDrift)],
+        [
+          "bundle-synthetic-projection-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleSyntheticProjectionDrift),
+        ],
         ["projection-class-vocabulary", S.decodeUnknownEffect(ProjectionSnapshot)(projectionClassVocabulary)],
         ["projection-rule-order", S.decodeUnknownEffect(ProjectionSnapshot)(projectionRuleOrderDrift)],
         ["provider-document-drift", S.decodeUnknownEffect(ProviderRecording)(providerDocumentDrift)],

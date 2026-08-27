@@ -163,3 +163,28 @@ steps, not implementation waivers.
 - Two post-Round-3 fresh publications superseded the earlier intermediate receipt with final
   identity `395e10a9282d39ead0fcc8b601e3bdb3c087916c43e61504dcb3638688fb9815`; all five persisted
   JSON contracts were byte-identical across rebuilds with provider/network availability false.
+
+## Round 4 inventory
+
+The closure panel restarted against exact commit `a6866bec24337ce6e784d08a902025aea62897dd`.
+Quality and Architecture reported zero required findings. Schema/domain reported one required
+finding, accepted without waiver:
+
+| Inventory | Source finding | Status |
+| --- | --- | --- |
+| `BUNDLE-004` canonical reference and projection closure | `LEJ-SCHEMA-R4-001` | fixed; rereview pending |
+
+The mutation proof showed that a same-ID standard revision and a fixture quantity inconsistent
+with the frozen quote projection could still decode. The fix must close canonical reference rows
+and derive quote/synthetic projection rows back from the persisted bundle before the panel restarts.
+
+### Round 4 fixer proof
+
+- Immutable decode now compares standards, finishes, tools, offers, and certificates to the pure
+  canonical reference data derived from the two persisted fixtures.
+- Quote and synthetic projection rows are independently derived from fixtures/offers/certificates
+  and compared to the persisted snapshot.
+- Table-driven negatives cover all five reference families plus quote and synthetic projection
+  drift. The lab audit stayed green at three files/22 tests.
+- Schema-first, Knip, Fallow dead-code, Fallow audit attribution, and `git diff --check` passed
+  with zero introduced findings.

@@ -32,6 +32,7 @@ import {
   SupplierOffer,
   Tool,
 } from "./Ontology";
+import { buildReferenceData } from "./ReferenceData";
 
 const $I = $LejeuneBoltWorkbenchId.create("domain/Bundle");
 
@@ -685,6 +686,15 @@ const ruleProjectionRow = (ruleCase: RuleCaseContract): string =>
 
 const CanonicalRuleProjectionRows = A.sort(A.map(CanonicalRuleCases, ruleProjectionRow), Str.Order);
 
+const quoteLineProjectionRow = (fixture: NormalizedFixture): string =>
+  `${fixture.quoteLine.id}|${fixture.quoteLine.quantity}`;
+
+const supplierOfferProjectionRow = (offer: SupplierOffer): string =>
+  `${offer.id}|SupplierOffer|${offer.recordLabel}|${offer.observedAt}`;
+
+const lotCertificateProjectionRow = (certificate: LotCertificate): string =>
+  `${certificate.id}|LotCertificate|${certificate.recordLabel}|${certificate.issuedAt}`;
+
 const hasEntityId = (values: ReadonlyArray<{ readonly id: string }>, id: string): boolean =>
   A.some(values, (value) => Str.Equivalence(value.id, id));
 
@@ -735,6 +745,43 @@ const bundleEntityIdentitiesAreUnique = (bundle: ImmutableDemoBundleFields): boo
   return A.every(
     [bundle.certificates, bundle.finishes, variants, components, bundle.offers, bundle.standards, bundle.tools],
     hasUniqueEntityIds
+  );
+};
+
+const valuesMatch = <A2>(
+  equivalence: (self: A2, that: A2) => boolean,
+  actual: ReadonlyArray<A2>,
+  expected: ReadonlyArray<A2>
+): boolean =>
+  N.Equivalence(A.length(actual), A.length(expected)) &&
+  A.every(A.zip(actual, expected), ([actualValue, expectedValue]) => equivalence(actualValue, expectedValue));
+
+const bundleReferenceDataMatches = (bundle: ImmutableDemoBundleFields): boolean => {
+  const expected = buildReferenceData(bundle.fixtures);
+  return A.every(
+    [
+      valuesMatch(S.toEquivalence(LotCertificate), bundle.certificates, expected.certificates),
+      valuesMatch(S.toEquivalence(Finish), bundle.finishes, expected.finishes),
+      valuesMatch(S.toEquivalence(SupplierOffer), bundle.offers, expected.offers),
+      valuesMatch(S.toEquivalence(Standard), bundle.standards, expected.standards),
+      valuesMatch(S.toEquivalence(Tool), bundle.tools, expected.tools),
+    ],
+    identity
+  );
+};
+
+const bundleProjectionRowsMatch = (bundle: ImmutableDemoBundleFields): boolean => {
+  const quoteLines = A.sort(A.map(bundle.fixtures, quoteLineProjectionRow), Str.Order);
+  const syntheticRecords = A.sort(
+    [...A.map(bundle.certificates, lotCertificateProjectionRow), ...A.map(bundle.offers, supplierOfferProjectionRow)],
+    Str.Order
+  );
+  return A.every(
+    [
+      valuesMatch(Str.Equivalence, bundle.projection.quoteLines, quoteLines),
+      valuesMatch(Str.Equivalence, bundle.projection.syntheticRecords, syntheticRecords),
+    ],
+    identity
   );
 };
 
@@ -814,7 +861,9 @@ const bundleReferencesAreClosed = (bundle: ImmutableDemoBundleFields): boolean =
     [
       bundleOntologyReferencesExist(bundle),
       bundleEntityIdentitiesAreUnique(bundle),
+      bundleReferenceDataMatches(bundle),
       bundleFixtureIdentitiesAreClosed(bundle),
+      bundleProjectionRowsMatch(bundle),
       bundleRuleContractIsClosed(bundle),
     ],
     identity
