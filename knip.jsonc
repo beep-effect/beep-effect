@@ -129,6 +129,13 @@
   "ignoreDependencies": [
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls",
+    // Impeccable's static HTML detector dynamically imports these packages from
+    // vendored skill directories excluded above. They must remain installed even
+    // though Knip intentionally does not traverse their consumers.
+    "css-select",
+    "css-tree",
+    "domutils",
+    "htmlparser2",
     // brace-expansion, fast-uri, hono, nanoid: root `dependencies` entries that exist solely to
     // back the security-pin `overrides` (see package.json overrides); nothing imports them at root.
     "brace-expansion",
