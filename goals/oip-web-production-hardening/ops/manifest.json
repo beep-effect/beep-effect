@@ -113,5 +113,8 @@
     "updated": "2026-07-14"
   },
   "statusNote": "Completed as shipped: implementation and audit are complete; remaining provider operations and the production cutover approval gate are retained in history/outputs/launch-runbook.md.",
-  "followUpRunbook": "history/outputs/launch-runbook.md"
+  "followUpRunbook": "history/outputs/launch-runbook.md",
+  "schemaVersion": "initiative-manifest/v2",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/oip-web-production-hardening"
 }

@@ -113,6 +113,10 @@ export const GoalDoctorFindingKind = LiteralKit([
   "packet-status-drift",
   "packet-trace-stale",
   "packet-trace-missing",
+  "packet-fleet-duplicate-slug",
+  "packet-fleet-dependency-cycle",
+  "packet-fleet-unreachable",
+  "packet-fleet-unmigrated-reference",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
     description:
