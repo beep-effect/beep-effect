@@ -232,6 +232,16 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     }
   });
 
+  const verifyMovedForkStream = Effect.fnUntraced(function* (
+    locator: PacketStreamLocator,
+    original: PacketStreamListing
+  ) {
+    const moved = yield* store.list(locator);
+    if (!sameListing(original.events, moved.events) || A.isReadonlyArrayNonEmpty(moved.issues)) {
+      return yield* streamError(locator.packet, "stream changed during final promotion; current bytes preserved");
+    }
+  });
+
   const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
     const original = yield* store.list(locator);
     if (A.isReadonlyArrayNonEmpty(original.issues)) {
@@ -249,7 +259,8 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     const stagedPacketPath = path.join(tempRoot, "staged-packet");
     const stagedEvents = path.join(stagedPacketPath, ...PACKET_EVENTS_SEGMENTS);
     const eventsDirectory = path.join(locator.packetPath, ...PACKET_EVENTS_SEGMENTS);
-    const backupDirectory = path.join(tempRoot, "previous-events");
+    const backupDirectory = path.join(tempRoot, ...PACKET_EVENTS_SEGMENTS);
+    const backupLocator = PacketStreamLocator.make({ ...locator, packetPath: tempRoot });
     const failedPacketPath = path.join(tempRoot, "failed-packet");
     const failedEventsDirectory = path.join(failedPacketPath, ...PACKET_EVENTS_SEGMENTS);
     const failedLocator = PacketStreamLocator.make({ ...locator, packetPath: failedPacketPath });
@@ -291,10 +302,16 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
           return yield* streamError(locator.packet, "stream changed during repair staging; re-run preview");
         }
         yield* fs
+          .makeDirectory(path.dirname(backupDirectory), { recursive: true })
+          .pipe(
+            Effect.mapError((error) => streamError(locator.packet, `repair backup staging failed: ${error.message}`))
+          );
+        yield* fs
           .rename(eventsDirectory, backupDirectory)
           .pipe(
             Effect.mapError((error) => streamError(locator.packet, `existing stream move failed: ${error.message}`))
           );
+        yield* verifyMovedForkStream(backupLocator, original);
         yield* fs
           .rename(stagedEvents, eventsDirectory)
           .pipe(

@@ -918,6 +918,21 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "stream changed during repair staging"
       );
 
+      const finalRaceLocator = yield* makeFixture("final-stream-race");
+      const finalRaceEvents = `${finalRaceLocator.packetPath}/ops/events`;
+      const finalRaceEvent = `${finalRaceEvents}/concurrent.json`;
+      const finalRaceApplier = yield* makeApplier({
+        ...fs,
+        rename: (source, target) =>
+          source === finalRaceEvents
+            ? fs.writeFileString(finalRaceEvent, "concurrent event\n").pipe(Effect.andThen(fs.rename(source, target)))
+            : fs.rename(source, target),
+      });
+      expect(failureMessage(yield* Effect.exit(finalRaceApplier.apply(finalRaceLocator)))).toContain(
+        "stream changed during final promotion"
+      );
+      expect(yield* fs.readFileString(finalRaceEvent)).toBe("concurrent event\n");
+
       const moveLocator = yield* makeFixture("move-failure");
       const moveEvents = `${moveLocator.packetPath}/ops/events`;
       const moveApplier = yield* makeApplier({
