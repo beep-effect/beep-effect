@@ -4,18 +4,18 @@ Mutable execution plan. `SPEC.md` is normative; this file sequences the work.
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
-All four phases are pending:
+Current phase state:
 
-- **P0 Preservation gate:** build the bar-v2 archive tooling this week, seed
-  the ledgers, run the archive operation, and independently verify it.
-- **P1 Mail vertical slice:** prove one metadata-selected non-stub PST
-  occurrence end to end and cover exception lanes with synthetic fixtures.
-- **P2 Transformation wave:** restore the full mail estate, reconcile all
-  three recycle volumes, and convert distinct legacy-Word digests.
+- **P0 Preservation gate:** tooling and synthetic interruption proofs are
+  implemented; the archive operation awaits approved numeric ceilings.
+- **P1 Mail vertical slice:** the source-path engine, attachment repair, and
+  synthetic exception lanes are implemented; the live slice follows P0.
+- **P2 Transformation wave:** recycle, legacy-Word, and acceptance tooling has
+  synthetic coverage; the single live wave follows the passing slice.
 - **P3 Close:** reconcile every ledger, write the reflection, drive the final
   PR to mergeable through Yeet, and flip packet state in that same PR.
 
@@ -99,7 +99,9 @@ disk/time ceilings, and no more than one full transformation run occurs.
 
 ## Current blockers
 
-None. P0 starts with the missing schema and tooling work.
+Live P0-P2 mutation is blocked until the operator approves the numeric
+capacity, retained-output, elapsed-time, and fidelity ceilings. Repository
+tooling and synthetic proof work may continue while that approval is pending.
 
 ## Execution notes
 

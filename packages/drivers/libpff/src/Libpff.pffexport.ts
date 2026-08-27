@@ -414,6 +414,23 @@ const classifyExportedItems = (
 
 const drainStream = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<void, E> => Stream.runDrain(stream);
 
+const captureBoundedProcessText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
+  stream.pipe(
+    Stream.decodeText(),
+    Stream.runFold(
+      () => "",
+      (captured, chunk) => Str.takeLeft(4_096)(`${captured}${chunk}`)
+    )
+  );
+
+const classifyProcessFailure = (stderr: string): O.Option<"codepage" | "corrupt" | "password"> => {
+  const normalized = Str.toLowerCase(stderr);
+  if (Str.includes("password")(normalized) || Str.includes("encrypted")(normalized)) return O.some("password");
+  if (Str.includes("codepage")(normalized) || Str.includes("code page")(normalized)) return O.some("codepage");
+  if (Str.includes("corrupt")(normalized) || Str.includes("invalid")(normalized)) return O.some("corrupt");
+  return O.none();
+};
+
 const byRelativePath = Order.mapInput(Str.Order, (file: WalkedFile) => file.relativePath);
 const byReferencePath = Order.mapInput(Str.Order, (reference: ArtifactReference) => reference.relativePath);
 
@@ -440,7 +457,9 @@ const claimReleaseFailedWarning =
  * `descriptor.version`; a failed probe leaves the version unset rather than
  * failing construction. The returned engine's `exportArchive` method still
  * requires `effect/Crypto` so child artifact ids can be derived through the
- * shared SHA-backed artifact id schema.
+ * shared SHA-backed artifact id schema. File-backed source artifacts are
+ * passed to `pffexport` by path; in-memory artifacts use a private temporary
+ * snapshot.
  *
  * **Example** (Usage)
  * ```ts
@@ -560,21 +579,24 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     // Only a failed spawn means the engine is missing; a process that spawned
     // and then died from a signal (libpff segfaults on corrupt PSTs) is a
     // process failure, not a missing engine.
-    const exitCode = yield* Effect.scoped(
+    const [exitCode, stderr] = yield* Effect.scoped(
       Effect.gen(function* () {
         const handle = yield* spawner
           .spawn(command)
           .pipe(Effect.mapError(() => makeLibpffError("engine-unavailable", { cause: "pffexport spawn failed" })));
-        const [, , code] = yield* Effect.all(
-          [drainStream(handle.stdout), drainStream(handle.stderr), handle.exitCode],
+        const [, capturedStderr, code] = yield* Effect.all(
+          [drainStream(handle.stdout), captureBoundedProcessText(handle.stderr), handle.exitCode],
           { concurrency: "unbounded" }
         ).pipe(Effect.mapError(() => makeLibpffError("process", { cause: "pffexport terminated abnormally" })));
-        return code;
+        return [code, capturedStderr] as const;
       })
     );
 
     if (exitCode !== 0) {
-      return yield* makeLibpffError("process", { exitCode: NonNegativeInt.make(Math.max(0, exitCode)) });
+      return yield* makeLibpffError("process", {
+        exitCode: NonNegativeInt.make(Math.max(0, exitCode)),
+        ...O.getSomesStruct({ processClassification: classifyProcessFailure(stderr) }),
+      });
     }
   });
 
@@ -980,12 +1002,17 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       }
 
       const bytes = operation.source.bytes;
+      if (bytes === undefined && operation.source.locator.kind === "file") {
+        return yield* Effect.scoped(exportArchiveImpl(operation, operation.source.locator.value)).pipe(
+          Effect.mapError((error) => libpffOperationError(operation, error))
+        );
+      }
       if (bytes === undefined) {
         return yield* FileProcessingOperationError.fromReason("archive-export-failed", {
           artifactId: operation.source.id,
           engine: LibpffFileProcessingEngineDescriptor.name,
           format: operation.format,
-          message: "pffexport requires caller-supplied source bytes.",
+          message: "pffexport requires source bytes or a file locator.",
           operationId: operation.operationId,
         });
       }

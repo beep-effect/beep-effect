@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -19,6 +20,11 @@ import {
   CorpusOrganizeOptions,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
+  RestorationLegacyWordOptions,
+  RestorationMailOptions,
+  RestorationPreserveOptions,
+  RestorationRecycleOptions,
+  RestorationVerifyOptions,
 } from "./Corpus.schemas.ts";
 import {
   archiveMoveCorpus,
@@ -27,8 +33,14 @@ import {
   enrichCorpus,
   extractCorpus,
   organizeCorpus,
+  preserveRestorationArchive,
   printCorpusIndex,
+  reconcileRestorationAcceptance,
+  restoreLegacyWord,
+  restoreMail,
+  restoreRecycle,
   salvageCorpus,
+  verifyRestorationArchive,
   verifySalvage,
 } from "./Corpus.service.ts";
 
@@ -123,6 +135,107 @@ const archiveMoveProvenanceFlag = Flag.file("provenance", { mustExist: true }).p
   Flag.withDescription("Run provenance.jsonl used to prove every source file before moving; repeat if needed"),
   Flag.atLeast(1)
 );
+
+const restorationSourceRootFlag = Flag.directory("source-root", { mustExist: true }).pipe(
+  Flag.withDescription("Current source tree to preserve without transformation")
+);
+const restorationRootArchiveFlag = Flag.file("root-archive", { mustExist: true }).pipe(
+  Flag.withDescription("Separately addressable verbatim root archive object")
+);
+const restorationCollectorManifestFlag = Flag.file("collector-manifest", { mustExist: true }).pipe(
+  Flag.withDescription("Inherited collector JSONL ledger reconciled row by row before preservation")
+);
+const restorationAbsentTreeFlag = Flag.string("absent-recycle-tree").pipe(
+  Flag.withDescription("Recorded absent recycle-tree path that must remain absent during opening reconciliation")
+);
+const restorationCapacityCeilingFlag = Flag.integer("capacity-ceiling-bytes").pipe(
+  Flag.withDescription("Operator-approved maximum preserved payload bytes; required and checked before payload writes")
+);
+const restorationMinimumFreeFlag = Flag.integer("minimum-free-after-bytes").pipe(
+  Flag.withDescription("Operator-approved free-space floor retained after the full required payload")
+);
+const restorationCollectorRowsFlag = Flag.integer("expected-collector-rows").pipe(
+  Flag.withDefault(28_508),
+  Flag.withDescription("Frozen inherited collector row denominator")
+);
+const restorationMissingRecycleFlag = Flag.integer("expected-missing-recycle-payloads").pipe(
+  Flag.withDefault(13),
+  Flag.withDescription("Ratified missing recycle-payload opening balance")
+);
+const restorationMutatedDestinationFlag = Flag.integer("expected-mutated-destinations").pipe(
+  Flag.withDefault(1_021),
+  Flag.withDescription("Ratified post-staging destination-mutation denominator")
+);
+const restorationRootArchiveBytesFlag = Flag.integer("expected-root-archive-bytes").pipe(
+  Flag.withDefault(147_731_138_560),
+  Flag.withDescription("Frozen byte denominator for the separately preserved root archive")
+);
+const restorationSourceDirectoriesFlag = Flag.integer("expected-source-directories").pipe(
+  Flag.withDefault(755),
+  Flag.withDescription("Frozen current-source directory denominator")
+);
+const restorationSourceFilesFlag = Flag.integer("expected-source-files").pipe(
+  Flag.withDefault(12_156),
+  Flag.withDescription("Frozen current-source file denominator")
+);
+const restorationSourceTreeBytesFlag = Flag.integer("expected-source-tree-bytes").pipe(
+  Flag.withDefault(207_772_579_526),
+  Flag.withDescription("Frozen current-source file-byte denominator")
+);
+const restorationChunkSizeFlag = Flag.integer("chunk-size-bytes").pipe(
+  Flag.withDefault(8 * 1024 * 1024),
+  Flag.withDescription("Bounded streaming copy and hashing chunk size")
+);
+const restorationRunLabelFlag = Flag.string("run-label").pipe(
+  Flag.withDefault("t7-salvage-2026-08-10"),
+  Flag.withDescription("Immutable destination label under corpus raw storage")
+);
+const restorationCrashPointFlag = Flag.choiceWithValue("crash-point", [
+  ["none", "none" as const],
+  ["after-payload-sync", "after-payload-sync" as const],
+  ["after-rename", "after-rename" as const],
+  ["before-pass", "before-pass" as const],
+]).pipe(Flag.withDefault("none"), Flag.withDescription("Synthetic interruption boundary for recovery proofs"));
+const restorationMailScopeFlag = Flag.choiceWithValue("scope", [
+  ["slice", "slice" as const],
+  ["full", "full" as const],
+]).pipe(Flag.withDefault("slice"), Flag.withDescription("One metadata-selected PST or the complete mail estate"));
+const restorationExpectedStoresFlag = Flag.integer("expected-stores").pipe(
+  Flag.withDescription("Frozen terminal mail-store denominator for the selected scope")
+);
+const restorationMaxAmplificationFlag = Flag.float("max-amplification-ratio").pipe(
+  Flag.withDescription("Approved maximum output-bytes to input-bytes ratio for each PST attempt")
+);
+const restorationMaxElapsedFlag = Flag.integer("max-elapsed-millis").pipe(
+  Flag.withDescription("Approved maximum elapsed milliseconds for each PST attempt")
+);
+const restorationMaxTotalOutputFlag = Flag.integer("max-total-output-bytes").pipe(
+  Flag.withDescription("Approved cumulative retained-output byte ceiling for the selected restoration family")
+);
+const restorationMaxTotalElapsedFlag = Flag.integer("max-total-elapsed-millis").pipe(
+  Flag.withDescription("Approved cumulative elapsed-time ceiling for the selected restoration family")
+);
+const restorationExpectedRecycleSurfacesFlag = Flag.integer("expected-surfaces").pipe(
+  Flag.withDefault(3),
+  Flag.withDescription("Frozen recycle-surface denominator")
+);
+const restorationConverterFlag = Flag.string("converter").pipe(
+  Flag.withDescription("Absolute pinned LibreOffice converter path")
+);
+const restorationExpectedConverterVersionFlag = Flag.string("expected-converter-version").pipe(
+  Flag.withDescription("Exact approved output of the pinned converter --version probe")
+);
+const restorationExpectedLegacyWordOccurrencesFlag = Flag.integer("expected-occurrences").pipe(
+  Flag.withDefault(564),
+  Flag.withDescription("Frozen legacy .doc occurrence denominator before distinct-digest grouping")
+);
+const restorationMaxVisualRmseFlag = Flag.float("max-visual-rmse").pipe(
+  Flag.withDescription("Approved maximum normalized rendered-page RMSE")
+);
+const restorationBwrapFlag = Flag.string("bwrap").pipe(Flag.withDefault("bwrap"));
+const restorationCompareFlag = Flag.string("compare").pipe(Flag.withDefault("compare"));
+const restorationPdfinfoFlag = Flag.string("pdfinfo").pipe(Flag.withDefault("pdfinfo"));
+const restorationPdftoppmFlag = Flag.string("pdftoppm").pipe(Flag.withDefault("pdftoppm"));
 
 const parseSalvageSourceSpec = Effect.fn("CorpusCommand.parseSalvageSourceSpec")(function* (
   value: string
@@ -292,6 +405,245 @@ const corpusSalvageCommand = Command.make(
   Command.provide(CorpusCommandServiceLive)
 );
 
+const corpusRestorationPreserveCommand = Command.make(
+  "restore-preserve",
+  {
+    absentRecycleTree: restorationAbsentTreeFlag,
+    capacityCeilingBytes: restorationCapacityCeilingFlag,
+    chunkSizeBytes: restorationChunkSizeFlag,
+    collectorManifest: restorationCollectorManifestFlag,
+    corpusRoot: corpusRootFlag,
+    crashPoint: restorationCrashPointFlag,
+    expectedCollectorRows: restorationCollectorRowsFlag,
+    expectedMissingRecyclePayloads: restorationMissingRecycleFlag,
+    expectedMutatedDestinations: restorationMutatedDestinationFlag,
+    expectedRootArchiveBytes: restorationRootArchiveBytesFlag,
+    expectedSourceDirectories: restorationSourceDirectoriesFlag,
+    expectedSourceFiles: restorationSourceFilesFlag,
+    expectedSourceTreeBytes: restorationSourceTreeBytesFlag,
+    minimumFreeAfterBytes: restorationMinimumFreeFlag,
+    rootArchive: restorationRootArchiveFlag,
+    runLabel: restorationRunLabelFlag,
+    sourceRoot: restorationSourceRootFlag,
+  },
+  Effect.fn(function* ({
+    absentRecycleTree,
+    capacityCeilingBytes,
+    chunkSizeBytes,
+    collectorManifest,
+    corpusRoot,
+    crashPoint,
+    expectedCollectorRows,
+    expectedMissingRecyclePayloads,
+    expectedMutatedDestinations,
+    expectedRootArchiveBytes,
+    expectedSourceDirectories,
+    expectedSourceFiles,
+    expectedSourceTreeBytes,
+    minimumFreeAfterBytes,
+    rootArchive,
+    runLabel,
+    sourceRoot,
+  }) {
+    yield* preserveRestorationArchive(
+      RestorationPreserveOptions.make({
+        absentRecycleTreePath: absentRecycleTree,
+        capacityCeilingBytes: NonNegativeInt.make(capacityCeilingBytes),
+        chunkSizeBytes: NonNegativeInt.make(chunkSizeBytes),
+        corpusRoot,
+        crashPoint,
+        expectedCollectorRowCount: NonNegativeInt.make(expectedCollectorRows),
+        expectedMissingRecyclePayloadCount: NonNegativeInt.make(expectedMissingRecyclePayloads),
+        expectedMutatedDestinationCount: NonNegativeInt.make(expectedMutatedDestinations),
+        expectedRootArchiveBytes: NonNegativeInt.make(expectedRootArchiveBytes),
+        expectedSourceDirectoryCount: NonNegativeInt.make(expectedSourceDirectories),
+        expectedSourceFileCount: NonNegativeInt.make(expectedSourceFiles),
+        expectedSourceTreeBytes: NonNegativeInt.make(expectedSourceTreeBytes),
+        minimumFreeAfterBytes: NonNegativeInt.make(minimumFreeAfterBytes),
+        rootArchivePath: rootArchive,
+        runLabel,
+        sourceManifestPath: collectorManifest,
+        sourceRoot,
+      })
+    ).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Preserve the ratified corpus state through the bounded bar-v2 archive boundary"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationVerifyCommand = Command.make(
+  "restore-verify",
+  {
+    corpusRoot: corpusRootFlag,
+    runLabel: restorationRunLabelFlag,
+  },
+  Effect.fn(function* ({ corpusRoot, runLabel }) {
+    yield* verifyRestorationArchive(RestorationVerifyOptions.make({ corpusRoot, runLabel })).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Fresh-process verification of every terminal restoration archive object"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationAcceptanceCommand = Command.make(
+  "restore-accept",
+  {
+    corpusRoot: corpusRootFlag,
+    runLabel: restorationRunLabelFlag,
+  },
+  Effect.fn(function* ({ corpusRoot, runLabel }) {
+    yield* reconcileRestorationAcceptance(RestorationVerifyOptions.make({ corpusRoot, runLabel })).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Reconcile four separate aggregate-only restoration acceptance records"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationMailCommand = Command.make(
+  "restore-mail",
+  {
+    corpusRoot: corpusRootFlag,
+    expectedStores: restorationExpectedStoresFlag,
+    java: javaFlag,
+    maxAmplificationRatio: restorationMaxAmplificationFlag,
+    maxElapsedMillis: restorationMaxElapsedFlag,
+    maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
+    maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    pffexport: pffexportFlag,
+    runLabel: restorationRunLabelFlag,
+    scope: restorationMailScopeFlag,
+    tikaJar: tikaJarFlag,
+  },
+  Effect.fn(function* ({
+    corpusRoot,
+    expectedStores,
+    java,
+    maxAmplificationRatio,
+    maxElapsedMillis,
+    maxTotalElapsedMillis,
+    maxTotalOutputBytes,
+    pffexport,
+    runLabel,
+    scope,
+    tikaJar,
+  }) {
+    yield* restoreMail(
+      RestorationMailOptions.make({
+        corpusRoot,
+        expectedStoreCount: NonNegativeInt.make(expectedStores),
+        javaPath: O.getOrElse(java, () => "java"),
+        maxAmplificationRatio,
+        maxElapsedMillis: NonNegativeInt.make(maxElapsedMillis),
+        maxTotalElapsedMillis: NonNegativeInt.make(maxTotalElapsedMillis),
+        maxTotalOutputBytes: NonNegativeInt.make(maxTotalOutputBytes),
+        pffexportPath: O.getOrElse(pffexport, () => "pffexport"),
+        runLabel,
+        scope,
+        tikaJarPath: tikaJar,
+      })
+    ).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Restore one metadata-selected PST or the complete mail estate at concurrency one"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationRecycleCommand = Command.make(
+  "restore-recycle",
+  {
+    corpusRoot: corpusRootFlag,
+    expectedMissingContent: restorationMissingRecycleFlag,
+    expectedSurfaces: restorationExpectedRecycleSurfacesFlag,
+    maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
+    maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    runLabel: restorationRunLabelFlag,
+  },
+  Effect.fn(function* ({
+    corpusRoot,
+    expectedMissingContent,
+    expectedSurfaces,
+    maxTotalElapsedMillis,
+    maxTotalOutputBytes,
+    runLabel,
+  }) {
+    yield* restoreRecycle(
+      RestorationRecycleOptions.make({
+        corpusRoot,
+        expectedMissingContentCount: NonNegativeInt.make(expectedMissingContent),
+        expectedSurfaceCount: NonNegativeInt.make(expectedSurfaces),
+        maxTotalElapsedMillis: NonNegativeInt.make(maxTotalElapsedMillis),
+        maxTotalOutputBytes: NonNegativeInt.make(maxTotalOutputBytes),
+        runLabel,
+      })
+    ).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Restore all recycle surfaces through a four-class occurrence join"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusRestorationLegacyWordCommand = Command.make(
+  "restore-legacy-word",
+  {
+    bwrap: restorationBwrapFlag,
+    compare: restorationCompareFlag,
+    converter: restorationConverterFlag,
+    corpusRoot: corpusRootFlag,
+    expectedConverterVersion: restorationExpectedConverterVersionFlag,
+    expectedOccurrences: restorationExpectedLegacyWordOccurrencesFlag,
+    java: javaFlag,
+    maxElapsedMillis: restorationMaxElapsedFlag,
+    maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
+    maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    maxVisualRmse: restorationMaxVisualRmseFlag,
+    pdfinfo: restorationPdfinfoFlag,
+    pdftoppm: restorationPdftoppmFlag,
+    runLabel: restorationRunLabelFlag,
+    tikaJar: tikaJarFlag,
+  },
+  Effect.fn(function* ({
+    bwrap,
+    compare,
+    converter,
+    corpusRoot,
+    expectedConverterVersion,
+    expectedOccurrences,
+    java,
+    maxElapsedMillis,
+    maxTotalElapsedMillis,
+    maxTotalOutputBytes,
+    maxVisualRmse,
+    pdfinfo,
+    pdftoppm,
+    runLabel,
+    tikaJar,
+  }) {
+    yield* restoreLegacyWord(
+      RestorationLegacyWordOptions.make({
+        bwrapPath: bwrap,
+        comparePath: compare,
+        converterPath: converter,
+        corpusRoot,
+        expectedConverterVersion,
+        expectedOccurrenceCount: NonNegativeInt.make(expectedOccurrences),
+        javaPath: O.getOrElse(java, () => "java"),
+        maxElapsedMillis: NonNegativeInt.make(maxElapsedMillis),
+        maxTotalElapsedMillis: NonNegativeInt.make(maxTotalElapsedMillis),
+        maxTotalOutputBytes: NonNegativeInt.make(maxTotalOutputBytes),
+        maxVisualRmse,
+        pdfinfoPath: pdfinfo,
+        pdftoppmPath: pdftoppm,
+        runLabel,
+        tikaJarPath: tikaJar,
+      })
+    ).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Convert every distinct legacy .doc digest inside a pinned fidelity sandbox"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
 /** @since 0.0.0 */
 const corpusArchiveMoveCommand = Command.make(
   "archive-move",
@@ -337,6 +689,12 @@ export const corpusCommand = Command.make("corpus", {}, () => printCorpusIndex).
     corpusEnrichCommand,
     corpusExtractCommand,
     corpusOrganizeCommand,
+    corpusRestorationPreserveCommand,
+    corpusRestorationAcceptanceCommand,
+    corpusRestorationLegacyWordCommand,
+    corpusRestorationMailCommand,
+    corpusRestorationRecycleCommand,
+    corpusRestorationVerifyCommand,
     corpusSalvageCommand,
   ])
 );
