@@ -5,12 +5,13 @@
     "title": "Exploration & Goal Packet System Redesign",
     "status": "active",
     "stage": "decompose",
-    "openQuestions": [
-      "Which reopener executes first at decompose once packet-control-plane-core closes: the unchartered fleet convention-migration campaign (goal PLAN P5, rubric `beep explore --check`) or candidate 2 \u2014 and does that campaign live as its own goal packet or fold into candidate 3?"
-    ],
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/packet-control-plane-core"],
+      "goals": [
+        "goals/packet-control-plane-core",
+        "goals/packet-convention-migration"
+      ],
       "docs": [],
       "supersededBy": null
     },

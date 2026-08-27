@@ -355,3 +355,259 @@ advances to `decompose` and `MAP.md` becomes the next operator review gate.
 **Rationale:** D1–D16 and the BRIEF are ratified, but candidate goal boundaries,
 sequencing, capability citations, and the first vertical slice still require
 an explicit decomposition artifact before any goal may be scaffolded.
+
+## 2026-08-26 — D17: Fleet convention-migration campaign is the first decompose reopener
+
+**Question.** Which reopener executes first at `decompose` once
+`packet-control-plane-core` closes: the unchartered fleet convention-migration
+campaign, or candidate 2 (`packet-design-approval-gate`)?
+
+**Answer.** The fleet convention-migration campaign.
+
+**Rationale.** Amendment G makes the single-packet repair applier the
+campaign's rung 0 and freezes fleet `ops/events/` opt-in until it ships. The
+2026-08-26 census confirms the freeze is total: 1 of 225 manifest-bearing
+packets carries a stream (226 packet directories; `explorations/_gold-intake`
+carries no manifest), and it is the D9 pilot. Candidate 2's approval-reference
+events and
+candidate 3's fleet adoption both presuppose packets having streams, so
+neither is enforceable anywhere but the pilot while the freeze holds. The
+campaign also passes the two ROADMAP accelerator tests that gate the freed
+Lane 3 slot: named consumer (every packet, and the derived pulse that makes
+roadmap re-eval mechanical) and payback before horizon. *Rejected:* candidate
+2 first (ships a graduation gate enforceable on exactly one packet); both in
+parallel (candidate 2's acceptance would depend on the campaign's migration
+landing mid-flight, and every consumer it names is frozen).
+
+## 2026-08-26 — D18: The campaign is candidate 6, not a fold into candidate 3
+
+**Question.** Does the fleet convention-migration campaign live as its own goal
+packet, or fold into candidate 3 (`packet-projection-migration`)?
+
+**Answer.** Its own goal packet, recorded as candidate 6 in this MAP's
+candidate table and D5 design-gate inventory.
+
+**Rationale.** Amendment G assigns rung 0 to the campaign and states that
+candidate 3 owns the fleet-scale repair flow "never the applier itself";
+folding the campaign in would hand candidate 3 the applier a ratified
+amendment excludes. Candidate 3 also names the campaign as its D9 self-hosting
+pilot input, and a packet cannot be its own dependency. The two migrations are
+different work: the campaign migrates manifest shape onto a canonical
+convention, candidate 3 migrates control state onto the fold. Until now the
+campaign was chartered nowhere — it existed as a paragraph in the goal's PLAN
+P5 and as this packet's recorded Next Open Question, in no candidate row.
+*Rejected:* fold into candidate 3 (contradicts Amendment G, collapses two
+migrations into one packet); trailing rungs of an existing packet
+(`packet-control-plane-core` is closing and every other candidate is
+uncreated).
+
+## 2026-08-26 — D19: Session B lands as three PRs
+
+**Question.** How do the rung-4 code, the goal close, the exploration's
+reopen-to-decompose flip, and the Session B rulings split across PRs?
+
+**Answer.** Three: rung-4 hardening as code only; then the `/reflect` closeout,
+the `completed-retained` flip through the guarded writer, and the exploration's
+reopen flip together; then the decompose rulings as a docs-only PR.
+
+**Rationale.** The 2026-07-30 rule keeps grill decisions in their own docs-only
+PR, reviewed at a different cadence from implementation. PLAN P5 says the fired
+gates reopen the parent exploration, and `AGENTS.md` requires packet-state flips
+to land in the same PR as the work that causes them, so the goal's close flip
+and the exploration's reopen flip belong together. The completion gate greps
+merged commit subjects for the packet slug, so the close PR subject must name
+`packet-control-plane-core`. *Rejected:* rulings before close (reopens the
+exploration while the goal that fires the gate is still open, which reads
+backwards in the Trail); one combined docs PR (bundles a grill outcome with an
+implementation closeout).
+
+## 2026-08-26 — D20: Amendment H ratified as reshaped — typed work plan, no rendered launcher
+
+**Question.** Does Amendment H land as proposed — a typed `PacketWorkPlan` plus
+`GOAL.md` as a read-only projection rendered under a four-part prompt contract?
+
+**Answer.** The typed `PacketWorkPlan` is ratified into candidate 3. The
+`GOAL.md` render is rejected. Model and effort stay out of the per-packet plan.
+
+**Rationale.** The amendment's load-bearing claim was that the launcher is
+"authored by hand yet fully determined by the others." It is not. Measuring 14
+launchers found no irreplaceable prose but 57.1% of launcher characters
+depending on fields the manifest does not carry — scope, prerequisites, ordered
+instructions, invariants, acceptance, evidence context. Rendering would require
+inventing all of them first. Independently, the closest shipped analogs all
+made the opposite choice: CrewAI types agent, llm, and tools per task and still
+hand-authors `description` and `expected_output`; Mastra puts the model in
+config and the prompt in `instructions.md`; Google ADK JSON-Schema-validates
+its YAML and leaves `instruction:` as prose. AGENTS.md, at 60k+ projects, has
+no required fields at all. DSPy issue #8042 records a compile gain disappearing
+once the prompt was materialized as Markdown, which is exactly the render
+architecture. The typed plan keeps the real leverage — a doctor that can say a
+phase claims browser QA while its allowed tools carry no browser skill — without
+coupling launcher quality to a template. Model and effort are properties of a
+run, not of a plan; they belong on events and receipts, or in a fleet routing
+table the plan may override. The contract stays private to the Goals command
+tree with a Goals-local renderer for the sidecar; migration is advisory
+render-and-diff with human approval, and terminal legacy launchers freeze rather
+than being rewritten. *Rejected:* ratify as written (unearned coupling until a
+packet-level eval shows a rendered launcher launches agents as well under the
+same character cap); render with an authored island (a second escape-hatch
+mechanism to maintain, and the census shows the render is not close to
+determined anyway); reject entirely (leaves per-phase lane composition as oral
+tradition with nothing mechanically checkable).
+
+## 2026-08-26 — D21: Amendment I rejected as written; the vocabulary spine is the defect
+
+**Question.** Does Amendment I land as proposed — a JSON-LD projection off the
+packet fold with IRIs anchored on PROV-O and P-Plan and mapped to AgentO?
+
+**Answer.** Rejected as written. The surviving idea is requeued, narrower and
+gated: a read-only schema.org/RO-Crate-shaped projection carrying packet slug,
+git SHA, content hashes, and report identifiers, which opens no packet until a
+named consumer exists.
+
+**Rationale.** This is not an unproven idea, it is a refuted one. CWLProv was
+Amendment I — a derived, content-addressed Research Object of a run with PROV-O
+and JSON-LD, native files remaining authoritative. It reached one engine, and
+its own authors replaced the interchange with schema.org JSON-LD because PROV
+did not carry the join. Nextflow deleted its first-party legacy provenance
+format in 2025 and pointed users at a native JSON lineage store. P-Plan is
+unmaintained. AgentO is still `owl:versionInfo 0.2` with an empty evaluation
+page and no adopters. The joins that did pay — WorkflowHub to papers, Croissant
+to dataset search, nanopublications to claims — used one JSON-LD-ish document
+plus boring identifiers, not a plan TBox. Separately, the amendment as worded
+would carry addressing on `SemanticSchemaMetadata`, whose `canonicalIri` and
+`preferredPrefix` fields are annotated `deprecated: true` in favor of
+composer-derived `iri`/`curie` — the layering ratified in identity-as-IRI on
+2026-07-02, on the finding that zero of ~110 production writer attachments used
+them. Nor does an acceptance-grade cross-graph join exist to demonstrate: the closest packet-to-research-report edge lives only in raw
+manifest JSON the canonical `GoalManifest` does not model, and
+packet-to-evidence-span waits on candidate 4's uncreated `EvidenceReceipt`.
+*Rejected:* split into a proof exploration keeping the PROV-O/P-Plan framing
+(spends a lane proving a vocabulary the field has abandoned); ratify into
+candidates 3 and 4 (contradicts identity doctrine and has no consumer).
+
+## 2026-08-26 — D22: Amendment J ratified as reshaped and pulled forward onto the skill-contract kernel
+
+**Question.** Does Amendment J wait for candidates 2 and 4, and does it mint a
+`GateCertificate` shaped after the open-ontologies `Certificate`?
+
+**Answer.** Pulled forward now, and reshaped. The home is the existing
+`@beep/skill-contract` kernel, as its next version, not a packet-local type.
+The verdict vocabulary is EARL/ACT's five outcomes — passed, failed, cantTell,
+untested, inapplicable — not the proposed three. Reach is an explicit aggregate
+enum, not a nullable `conforms`. Inconclusive checks are excluded from the
+aggregate in the producer. Apply-by-id splits into its own plan artifact. The
+first slice is one certificate-producing QA judge settlement.
+
+**Rationale.** The kernel is already most of the way there and the gap is
+precisely nameable: `EvidenceReceipt.ts` opens "Unsigned, in-toto
+Statement-aligned evidence receipt schemas" and carries digest-bound
+`EvidenceSubject` values, while `GateOutcome` is `LiteralKit(["allowed",
+"denied"])` — two-valued. So digests and envelope alignment exist; the honest
+outcome vocabulary and reach do not. A packet-local `GateVerdict` would be a
+second vocabulary for a thing the repo already models.
+
+Parking J behind two uncreated packets defers an honest-verdict
+shape past gates that lie today: dependency review, knowledge probes, QA
+evidence, and Yeet closeout all have paths that report green while a check was
+skipped or degraded. On shape: every
+component of the proposal already exists in a named standard with production
+consumers — the in-toto Statement envelope, EARL/ACT's five-way outcome ranking
+where untested outranks passed, OpenSSF Scorecard's per-check reason with
+inconclusive excluded from the aggregate arithmetic, CycloneDX's
+complete/incomplete/unknown compositions, and Terraform's stale-plan error
+semantics. Only the concatenation is new, which is what a predicate is for.
+`conforms` is a boolean in SHACL; reusing the name for a nullable would be a
+trap. Three-valued producers are documented being collapsed to binary by their
+consumers within a quarter, which is why the producer-side exclusion rule is
+part of the ratification rather than a later nicety. *Rejected:* pull forward as
+originally shaped (three-way vocabulary and `conforms: null`, homed in
+packet-core); keep queued for candidates 2 and 4 (defers the shape while the
+gates keep lying).
+
+## 2026-08-26 — D23: The in-toto deferral is scoped to signing and verification
+
+**Question.** D2 and this MAP's re-entry gates defer Sigstore/in-toto until an
+external verifier exists that fails closed. Does adopting the in-toto Statement
+shape as D22's internal certificate envelope breach that?
+
+**Answer.** No, and the question is already settled in shipped code. The
+deferral is scoped to signing and external verification, which is what its
+rationale argues. Adopting the Statement shape — `_type`, `predicateType`,
+`subject[].digest` — is permitted now. No signature, no Rekor entry, no key
+management, no attestation published for outside consumption.
+
+**Rationale.** `@beep/skill-contract` already ships receipts whose own module
+header reads "Unsigned, in-toto Statement-aligned", merged under the
+skill-contract-kernel packet. The repo therefore made this exact distinction
+once already and shipped it; this entry records it rather than inventing it,
+so the next session does not read the deferral as a blanket ban and rebuild
+what exists. D2's blockers were all properties of signing: public Rekor
+identity and timing leak, GitHub's "Unverified" UX, and verifier bugs inside the
+trusted computing base. None of them attaches to a JSON envelope used internally.
+Taking the shape now means DSSE, Sigstore, and GitHub attestations fall out
+without a rewrite if an external verifier ever appears. This narrows D2's
+"never generate attestations without a fail-closed verifier" to its intent —
+never *publish* an attestation nothing verifies — and records the narrowing
+rather than leaving the next session to relitigate it. *Rejected:* honor the
+deferral strictly (cleanest reading, but imports a later migration for no
+present benefit); amend the re-entry gate by rewrite (more ceremony than the
+distinction needs, and this entry is the durable record either way).
+
+## 2026-08-26 — D24: Amendment J returns to the typed-agent-skill-contracts exploration
+
+**Question.** Who owns the Amendment J kernel upgrade: a new goal, a reopened
+skill-contract exploration wave, or candidate 6?
+
+**Answer.** Route J through the existing
+`explorations/typed-agent-skill-contracts` packet. That exploration owns the
+shape and decomposition of the next `@beep/skill-contract` kernel version; it
+may graduate a new goal once its current candidates and gates are reconciled.
+The completed `skill-contract-kernel` goal stays closed, and candidate 6 does
+not absorb the kernel work.
+
+**Rationale.** D22 deliberately moved J out of this MAP because the repository
+already has one skill-contract vocabulary. Reopening the matching exploration
+preserves that ownership without mutating a completed goal or coupling an
+honest-verdict contract to an unrelated fleet migration. Candidate 6 may
+consume the present kernel, but it must not define J on the migration's critical
+path. *Rejected:* candidate 6 (scope and dependency inversion); reopen the
+completed goal directly (skips reshaping and decomposition); mint a goal here
+(duplicates the existing exploration's authority).
+
+## 2026-08-26 — D25: Candidate 6 begins with the fork-repair applier alone
+
+**Question.** Does candidate 6's first vertical slice include only the
+fork-repair applier, or the applier plus the first manifest-migration wave?
+
+**Answer.** The first slice is the single-packet `repair-fork
+--preview|--apply` applier alone, proved end to end against the committed fork
+fixture. Manifest probing, translation, fleet lint, and genesis seeding follow
+as the next slice in the same goal.
+
+**Rationale.** Amendment G makes the missing applier the sole blocker on fleet
+stream opt-in. Proving one bounded, recoverable mutation path before a
+65-manifest campaign isolates the highest-risk invariant and gives the later
+seeder a repaired event-store substrate. *Rejected:* applier plus first wave
+(mixes repair correctness with translation policy and makes failure attribution
+ambiguous); translator first (leaves the explicit opt-in freeze in force).
+
+## 2026-08-26 — D26: One PR carries the ruling, campaign, migration, and closeout
+
+**Question.** Does D19's remaining docs-only Session B leg stay separate from
+candidate 6, or may the operator combine the complete follow-up into one PR?
+
+**Answer.** The operator explicitly superseded D19's unexecuted final leg for
+this follow-up. One PR carries D17–D26, candidate 6's graduated goal packet,
+the repair-applier proof, the convention tooling, the applied fleet migration,
+and the packet closeout. The prior two D19 legs remain historical facts: the
+rung-4 implementation landed in #848 and the core close/reopen landed in #850.
+
+**Rationale.** The combined scope is now a single causally ordered campaign:
+the rulings authorize the applier, the applier lifts the freeze, and the
+translator immediately exercises the released convention. Reviewability is
+preserved with explicit phases, deterministic reports, and a closeout head
+that is reverified after the implementation head reaches merge-ready. *Rejected:*
+preserve the docs-only split after the operator requested one PR (contradicts
+the current delivery instruction); silently ignore D19 (erases why the changed
+delivery shape is valid).

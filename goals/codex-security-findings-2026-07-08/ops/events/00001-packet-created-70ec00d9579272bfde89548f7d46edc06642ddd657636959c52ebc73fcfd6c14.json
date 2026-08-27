@@ -1,0 +1,15 @@
+{
+  "actor": "convention-migration",
+  "at": "2026-08-27T02:06:43.615Z",
+  "body": {
+    "ordinal": 9,
+    "stage": "P9",
+    "status": "completed-retained",
+    "type": "packet-created"
+  },
+  "expectedRevision": 0,
+  "packet": "codex-security-findings-2026-07-08",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 1
+}

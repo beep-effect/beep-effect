@@ -1,4 +1,4 @@
-import { goalsCommand } from "@beep/repo-cli/test/Goals";
+import { goalsCommand, PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
 import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -12,7 +12,11 @@ const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const absoluteExplorationPath = "/etc/passwd";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  TestConsole.layer
+);
 
 describe("goals doctor provenance path security", () => {
   it(
