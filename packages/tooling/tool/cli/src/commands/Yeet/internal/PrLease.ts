@@ -64,10 +64,16 @@ const YeetPrLeaseJson = JsonStringCodec(YeetPrLease);
 
 class PrLeaseTransitionContendedError extends S.TaggedError<PrLeaseTransitionContendedError>(
   $I`PrLeaseTransitionContendedError`
-)("PrLeaseTransitionContendedError", {
-  expectedGeneration: S.String,
-  message: S.String,
-}) {}
+)(
+  "PrLeaseTransitionContendedError",
+  {
+    expectedGeneration: S.String,
+    message: S.String,
+  },
+  $I.annoteError<PrLeaseTransitionContendedError>("PrLeaseTransitionContendedError", {
+    description: "A PR lease transition lost its expected generation during a compare-and-swap update.",
+  })
+) {}
 
 const leaseStatus = (lease: YeetPrLease): typeof YeetPrLeaseStatus.Type => lease.status ?? "active";
 

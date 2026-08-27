@@ -378,7 +378,8 @@ campaign, or candidate 2 (`packet-design-approval-gate`)?
 campaign's rung 0 and freezes fleet `ops/events/` opt-in until it ships. The
 2026-08-26 census confirms the freeze is total: 1 of 225 manifest-bearing
 packets carries a stream (226 packet directories; `explorations/_gold-intake`
-carries no manifest), and it is the D9 pilot. Candidate 2's approval-reference events and
+carries no manifest), and it is the D9 pilot. Candidate 2's approval-reference
+events and
 candidate 3's fleet adoption both presuppose packets having streams, so
 neither is enforceable anywhere but the pilot while the freeze holds. The
 campaign also passes the two ROADMAP accelerator tests that gate the freed
@@ -562,3 +563,61 @@ rather than leaving the next session to relitigate it. *Rejected:* honor the
 deferral strictly (cleanest reading, but imports a later migration for no
 present benefit); amend the re-entry gate by rewrite (more ceremony than the
 distinction needs, and this entry is the durable record either way).
+
+## 2026-08-26 — D24: Amendment J returns to the typed-agent-skill-contracts exploration
+
+**Question.** Who owns the Amendment J kernel upgrade: a new goal, a reopened
+skill-contract exploration wave, or candidate 6?
+
+**Answer.** Route J through the existing
+`explorations/typed-agent-skill-contracts` packet. That exploration owns the
+shape and decomposition of the next `@beep/skill-contract` kernel version; it
+may graduate a new goal once its current candidates and gates are reconciled.
+The completed `skill-contract-kernel` goal stays closed, and candidate 6 does
+not absorb the kernel work.
+
+**Rationale.** D22 deliberately moved J out of this MAP because the repository
+already has one skill-contract vocabulary. Reopening the matching exploration
+preserves that ownership without mutating a completed goal or coupling an
+honest-verdict contract to an unrelated fleet migration. Candidate 6 may
+consume the present kernel, but it must not define J on the migration's critical
+path. *Rejected:* candidate 6 (scope and dependency inversion); reopen the
+completed goal directly (skips reshaping and decomposition); mint a goal here
+(duplicates the existing exploration's authority).
+
+## 2026-08-26 — D25: Candidate 6 begins with the fork-repair applier alone
+
+**Question.** Does candidate 6's first vertical slice include only the
+fork-repair applier, or the applier plus the first manifest-migration wave?
+
+**Answer.** The first slice is the single-packet `repair-fork
+--preview|--apply` applier alone, proved end to end against the committed fork
+fixture. Manifest probing, translation, fleet lint, and genesis seeding follow
+as the next slice in the same goal.
+
+**Rationale.** Amendment G makes the missing applier the sole blocker on fleet
+stream opt-in. Proving one bounded, recoverable mutation path before a
+65-manifest campaign isolates the highest-risk invariant and gives the later
+seeder a repaired event-store substrate. *Rejected:* applier plus first wave
+(mixes repair correctness with translation policy and makes failure attribution
+ambiguous); translator first (leaves the explicit opt-in freeze in force).
+
+## 2026-08-26 — D26: One PR carries the ruling, campaign, migration, and closeout
+
+**Question.** Does D19's remaining docs-only Session B leg stay separate from
+candidate 6, or may the operator combine the complete follow-up into one PR?
+
+**Answer.** The operator explicitly superseded D19's unexecuted final leg for
+this follow-up. One PR carries D17–D26, candidate 6's graduated goal packet,
+the repair-applier proof, the convention tooling, the applied fleet migration,
+and the packet closeout. The prior two D19 legs remain historical facts: the
+rung-4 implementation landed in #848 and the core close/reopen landed in #850.
+
+**Rationale.** The combined scope is now a single causally ordered campaign:
+the rulings authorize the applier, the applier lifts the freeze, and the
+translator immediately exercises the released convention. Reviewability is
+preserved with explicit phases, deterministic reports, and a closeout head
+that is reverified after the implementation head reaches merge-ready. *Rejected:*
+preserve the docs-only split after the operator requested one PR (contradicts
+the current delivery instruction); silently ignore D19 (erases why the changed
+delivery shape is valid).

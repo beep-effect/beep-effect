@@ -11,6 +11,7 @@ import {
   goalsCommand,
   isJsonRecord,
   MaterializationPlan,
+  PacketEventStoreLive,
   PacketSnapshot,
   PORTFOLIO_INDEX_PATH,
   parseGoalManifestText,
@@ -20,7 +21,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, Exit, FileSystem, pipe } from "effect";
+import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -81,6 +82,8 @@ const expectGolden = Effect.fn("expectGolden")(function* (name: string, plan: Ma
 
 const run = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(NodeServices.layer)));
+
+const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 describe("goals bootstrap --plan golden fixtures", () => {
   it("round-trips arbitrary goal slugs through the schema codec", () => {
@@ -455,7 +458,7 @@ describe("goals bootstrap command gate", () => {
             );
             expect(Exit.isSuccess(happy)).toBe(true);
           })
-        ).pipe(provideScopedLayer(NodeServices.layer))
+        ).pipe(provideScopedLayer(commandTestLayer))
       ),
     30_000
   );
@@ -492,7 +495,7 @@ describe("goals adopt command gate", () => {
             const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
             expectReportedExit(notFound);
           })
-        ).pipe(provideScopedLayer(NodeServices.layer))
+        ).pipe(provideScopedLayer(commandTestLayer))
       ),
     30_000
   );

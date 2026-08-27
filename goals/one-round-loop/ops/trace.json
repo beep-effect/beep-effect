@@ -1,0 +1,37 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 4,
+    "furthestStage": "P4",
+    "issues": [],
+    "packet": "one-round-loop",
+    "resumeStage": "P4",
+    "revision": 1,
+    "root": "goals",
+    "status": "completed-retained",
+    "tip": {
+      "id": "52a10ea1199731c1460be13eb64de25d25709ee76140f241a220935760304b3e",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "52a10ea1199731c1460be13eb64de25d25709ee76140f241a220935760304b3e",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "ordinal": 4,
+        "stage": "P4",
+        "status": "completed-retained",
+        "type": "packet-created"
+      },
+      "id": "52a10ea1199731c1460be13eb64de25d25709ee76140f241a220935760304b3e",
+      "seq": 1
+    }
+  ]
+}

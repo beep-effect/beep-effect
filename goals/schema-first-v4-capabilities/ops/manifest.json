@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "schema-first-v4-capabilities",
     "title": "Schema-First V4 Capabilities",
