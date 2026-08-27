@@ -173,6 +173,65 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
   const foldListing = (locator: PacketStreamLocator, listing: PacketStreamListing): PacketDerivedState =>
     foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
 
+  const restoreIsolatedForkRepair = Effect.fnUntraced(function* (input: {
+    readonly backupDirectory: string;
+    readonly eventsDirectory: string;
+    readonly failedEventsDirectory: string;
+    readonly failedLocator: PacketStreamLocator;
+    readonly promotedListing: O.Option<PacketStreamListing>;
+  }) {
+    const isolated = yield* Effect.option(fs.rename(input.eventsDirectory, input.failedEventsDirectory));
+    if (O.isNone(isolated)) return false;
+    const isolatedListing = yield* Effect.option(store.list(input.failedLocator));
+    const stillOwned =
+      O.isSome(input.promotedListing) &&
+      O.isSome(isolatedListing) &&
+      A.isReadonlyArrayEmpty(isolatedListing.value.issues) &&
+      sameListing(input.promotedListing.value.events, isolatedListing.value.events);
+    if (!stillOwned) {
+      yield* fs.rename(input.failedEventsDirectory, input.eventsDirectory).pipe(Effect.ignore);
+      return false;
+    }
+    return O.isSome(yield* Effect.option(fs.rename(input.backupDirectory, input.eventsDirectory)));
+  });
+
+  const restorePreviousForkStream = Effect.fnUntraced(function* (input: {
+    readonly backupDirectory: string;
+    readonly eventsDirectory: string;
+    readonly failedEventsDirectory: string;
+    readonly failedLocator: PacketStreamLocator;
+    readonly promotedListing: O.Option<PacketStreamListing>;
+  }) {
+    const backupPresent = yield* fs.exists(input.backupDirectory).pipe(Effect.orElseSucceed(() => false));
+    if (!backupPresent) return false;
+    const currentPresent = yield* fs.exists(input.eventsDirectory).pipe(Effect.orElseSucceed(() => false));
+    if (!currentPresent) {
+      return O.isSome(yield* Effect.option(fs.rename(input.backupDirectory, input.eventsDirectory)));
+    }
+    yield* fs.makeDirectory(path.dirname(input.failedEventsDirectory), { recursive: true }).pipe(Effect.ignore);
+    return yield* restoreIsolatedForkRepair(input);
+  });
+
+  const restoreMissingForkTrace = Effect.fnUntraced(function* (tracePath: string, previousTrace: O.Option<string>) {
+    if (O.isNone(previousTrace)) return;
+    const currentTrace = yield* Effect.option(fs.readFileString(tracePath));
+    if (O.isNone(currentTrace)) {
+      yield* fs.writeFileString(tracePath, previousTrace.value).pipe(Effect.ignore);
+    }
+  });
+
+  const discardEmptyForkRepairRoot = Effect.fnUntraced(function* (
+    tempRoot: string,
+    backupDirectory: string,
+    failedEventsDirectory: string
+  ) {
+    const backupRemaining = yield* fs.exists(backupDirectory).pipe(Effect.orElseSucceed(() => true));
+    const failedRemaining = yield* fs.exists(failedEventsDirectory).pipe(Effect.orElseSucceed(() => true));
+    if (!backupRemaining && !failedRemaining) {
+      yield* fs.remove(tempRoot, { recursive: true, force: true }).pipe(Effect.ignore);
+    }
+  });
+
   const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
     const original = yield* store.list(locator);
     if (A.isReadonlyArrayNonEmpty(original.issues)) {
@@ -199,41 +258,15 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     let promotedListing = O.none<PacketStreamListing>();
 
     const cleanup = Effect.fnUntraced(function* () {
-      const backupPresent = yield* fs.exists(backupDirectory).pipe(Effect.orElseSucceed(() => false));
-      const currentPresent = yield* fs.exists(eventsDirectory).pipe(Effect.orElseSucceed(() => false));
-      let restoredPrevious = false;
-      if (backupPresent) {
-        if (!currentPresent) {
-          restoredPrevious = O.isSome(yield* Effect.option(fs.rename(backupDirectory, eventsDirectory)));
-        } else {
-          yield* fs.makeDirectory(path.dirname(failedEventsDirectory), { recursive: true }).pipe(Effect.ignore);
-          const isolated = yield* Effect.option(fs.rename(eventsDirectory, failedEventsDirectory));
-          if (O.isSome(isolated)) {
-            const isolatedListing = yield* Effect.option(store.list(failedLocator));
-            const stillOwned =
-              O.isSome(promotedListing) &&
-              O.isSome(isolatedListing) &&
-              A.isReadonlyArrayEmpty(isolatedListing.value.issues) &&
-              sameListing(promotedListing.value.events, isolatedListing.value.events);
-            if (stillOwned) {
-              restoredPrevious = O.isSome(yield* Effect.option(fs.rename(backupDirectory, eventsDirectory)));
-            } else {
-              yield* fs.rename(failedEventsDirectory, eventsDirectory).pipe(Effect.ignore);
-            }
-          }
-        }
-      }
-      if (restoredPrevious && O.isSome(previousTrace)) {
-        const currentTrace = yield* Effect.option(fs.readFileString(tracePath));
-        if (O.isNone(currentTrace)) {
-          yield* fs.writeFileString(tracePath, previousTrace.value).pipe(Effect.ignore);
-        }
-      }
-      const backupRemaining = yield* fs.exists(backupDirectory).pipe(Effect.orElseSucceed(() => true));
-      const failedRemaining = yield* fs.exists(failedEventsDirectory).pipe(Effect.orElseSucceed(() => true));
-      if (!backupRemaining && !failedRemaining) {
-        yield* fs.remove(tempRoot, { recursive: true, force: true }).pipe(Effect.ignore);
-      }
+      const restoredPrevious = yield* restorePreviousForkStream({
+        backupDirectory,
+        eventsDirectory,
+        failedEventsDirectory,
+        failedLocator,
+        promotedListing,
+      });
+      if (restoredPrevious) yield* restoreMissingForkTrace(tracePath, previousTrace);
+      yield* discardEmptyForkRepairRoot(tempRoot, backupDirectory, failedEventsDirectory);
     });
 
     return yield* Effect.onError(
