@@ -1343,10 +1343,73 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(Exit.isFailure(interruptedExit)).toBe(true);
       expect(yield* fs.exists(recovery.value.tracePath)).toBe(false);
 
-      yield* fs.writeFileString(recovery.value.tracePath, Str.takeLeft(32)(recovery.value.traceText));
+      const partialTrace = Str.takeLeft(32)(recovery.value.traceText);
+      yield* fs.writeFileString(recovery.value.tracePath, partialTrace);
       const retry = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
       expect(O.isSome(retry)).toBe(true);
       if (O.isNone(retry)) return;
+
+      const stagingFailure = yield* Effect.exit(
+        applyPacketGenesisSeed(retry.value).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            makeTempDirectory: (options) =>
+              options?.prefix === ".genesis-trace-recovery-"
+                ? Effect.fail(injectedFileSystemError("makeTempDirectory", retry.value.tracePath))
+                : fs.makeTempDirectory(options),
+          })
+        )
+      );
+      expect(Exit.isFailure(stagingFailure) ? stagingFailure.cause.toString() : "").toContain(
+        "genesis trace quarantine failed"
+      );
+
+      let quarantinedTracePath = "";
+      const quarantineReadFailure = yield* Effect.exit(
+        applyPacketGenesisSeed(retry.value).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            rename: (source, target) => {
+              if (source === retry.value.tracePath) quarantinedTracePath = target;
+              return fs.rename(source, target);
+            },
+            readFileString: (target, encoding) =>
+              target === quarantinedTracePath
+                ? Effect.fail(injectedFileSystemError("readFileString", target))
+                : fs.readFileString(target, encoding),
+          })
+        )
+      );
+      expect(Exit.isFailure(quarantineReadFailure) ? quarantineReadFailure.cause.toString() : "").toContain(
+        "genesis trace quarantine read failed"
+      );
+      yield* fs.rename(quarantinedTracePath, retry.value.tracePath);
+
+      let preservedTracePath = "";
+      let preservedTraceReads = 0;
+      const preservedReadFailure = yield* Effect.exit(
+        applyPacketGenesisSeed(retry.value).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            rename: (source, target) => {
+              if (source === retry.value.tracePath) preservedTracePath = target;
+              return fs.rename(source, target);
+            },
+            readFileString: (target, encoding) => {
+              if (target !== preservedTracePath) return fs.readFileString(target, encoding);
+              preservedTraceReads += 1;
+              return preservedTraceReads === 2
+                ? Effect.fail(injectedFileSystemError("readFileString", target))
+                : fs.readFileString(target, encoding);
+            },
+          })
+        )
+      );
+      expect(Exit.isFailure(preservedReadFailure) ? preservedReadFailure.cause.toString() : "").toContain(
+        "genesis trace quarantine read failed"
+      );
+      yield* fs.writeFileString(retry.value.tracePath, partialTrace);
+
       yield* applyPacketGenesisSeed(retry.value).pipe(
         Effect.provideService(FileSystem.FileSystem, {
           ...fs,
