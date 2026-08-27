@@ -27,7 +27,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
+import { Context, Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -741,18 +741,19 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const store = yield* PacketEventStore;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-fork-failures-" });
       const makeApplier = (fileSystem: FileSystem.FileSystem) =>
-        PacketForkRepairApplier.pipe(
-          Effect.provide(
-            Layer.fresh(PacketForkRepairApplierLive).pipe(
-              Layer.provide(
-                Layer.mergeAll(
-                  Layer.succeed(PacketEventStore, store),
-                  Layer.succeed(FileSystem.FileSystem, fileSystem),
-                  Layer.succeed(Path.Path, path)
-                )
+        Layer.build(
+          Layer.fresh(PacketForkRepairApplierLive).pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(PacketEventStore, store),
+                Layer.succeed(FileSystem.FileSystem, fileSystem),
+                Layer.succeed(Path.Path, path)
               )
             )
           )
+        ).pipe(
+          Effect.map((context) => Context.get(context, PacketForkRepairApplier)),
+          Effect.scoped
         );
 
       const stagingPacketPath = `${root}/staging/forked`;
@@ -799,18 +800,19 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         copyFile: (_source, target) => Effect.fail(injectedFileSystemError("copyFile", target)),
         exists: (target) => Effect.fail(injectedFileSystemError("exists", target)),
       };
-      const applier = yield* PacketForkRepairApplier.pipe(
-        Effect.provide(
-          Layer.fresh(PacketForkRepairApplierLive).pipe(
-            Layer.provide(
-              Layer.mergeAll(
-                Layer.succeed(PacketEventStore, store),
-                Layer.succeed(FileSystem.FileSystem, failingFileSystem),
-                Layer.succeed(Path.Path, path)
-              )
+      const applier = yield* Layer.build(
+        Layer.fresh(PacketForkRepairApplierLive).pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(PacketEventStore, store),
+              Layer.succeed(FileSystem.FileSystem, failingFileSystem),
+              Layer.succeed(Path.Path, path)
             )
           )
         )
+      ).pipe(
+        Effect.map((context) => Context.get(context, PacketForkRepairApplier)),
+        Effect.scoped
       );
       const exit = yield* Effect.exit(applier.apply(locator));
       expect(Exit.isFailure(exit)).toBe(true);
@@ -832,18 +834,19 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         return PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath });
       });
       const makeApplier = (fileSystem: FileSystem.FileSystem, eventStore: typeof store = store) =>
-        PacketForkRepairApplier.pipe(
-          Effect.provide(
-            Layer.fresh(PacketForkRepairApplierLive).pipe(
-              Layer.provide(
-                Layer.mergeAll(
-                  Layer.succeed(PacketEventStore, eventStore),
-                  Layer.succeed(FileSystem.FileSystem, fileSystem),
-                  Layer.succeed(Path.Path, path)
-                )
+        Layer.build(
+          Layer.fresh(PacketForkRepairApplierLive).pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(PacketEventStore, eventStore),
+                Layer.succeed(FileSystem.FileSystem, fileSystem),
+                Layer.succeed(Path.Path, path)
               )
             )
           )
+        ).pipe(
+          Effect.map((context) => Context.get(context, PacketForkRepairApplier)),
+          Effect.scoped
         );
       const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
         Exit.isFailure(exit) ? exit.cause.toString() : "";
@@ -861,7 +864,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const writeLocator = yield* makeFixture("draft-write");
       const writeApplier = yield* makeApplier({
         ...fs,
-        writeFileString: (target, content, options) => Effect.fail(injectedFileSystemError("writeFileString", target)),
+        writeFileString: (target) => Effect.fail(injectedFileSystemError("writeFileString", target)),
       });
       expect(failureMessage(yield* Effect.exit(writeApplier.apply(writeLocator)))).toContain(
         "rebased event write failed"
