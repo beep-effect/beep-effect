@@ -10,7 +10,7 @@ bar (see `packages/shared/AGENTS.md`).
 | --- | --- | --- |
 | entry module | `Aggregates`, `Entities`, `ProductEntity`, `EntityId`, `EntityRef`, `Principal`, `SourceKind`, `Identity`, `Values` | package root |
 | `src/entities/` | `Organization` | shared identity-bearing concepts |
-| `src/entity/` | `ProductEntity`, `EntityId`, `EntityRef`, `Principal`, `primitives`, `SourceKind` | shared product-entity kit and primitive schemas |
+| `src/entity/` | `BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`, `EntityKit`, `EntityId`, `EntityRef`, `Principal`, `primitives`, `SourceKind` | shared entity tier family and primitive schemas |
 | `src/identity/` | `Shared` | shared entity-id modules and identity vocabulary |
 | `src/values/` | `LocalDate` | shared value-object barrel |
 
@@ -30,7 +30,11 @@ bar (see `packages/shared/AGENTS.md`).
 - Domain stays pure and driver-neutral.
 - Domain may depend only on allowed shared-kernel language and foundation
   primitive/modeling packages.
-- Persisted entity models call `ProductEntity.make(EntityId)` and declare SQL
-  metadata through effect-drizzle fields. Identity definitions stay in
-  `src/identity/`; concrete tables are projected with `toPgTable` in tables
-  packages.
+- Persisted entity models extend a tier factory —
+  `class X extends ProductEntity.Entity<X>()(XId)({ ...own fields })` — and
+  declare SQL metadata through effect-drizzle fields; identity, audit, org
+  defaults and their indexes arrive from the tier. Pick the smallest tier
+  (`BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`) or compose
+  capabilities with `kit.extend(EntityKit.withAudit)`. Identity definitions
+  stay in `src/identity/`; concrete tables are projected with `toPgTable` in
+  tables packages.

@@ -9,6 +9,7 @@
 
 import { findFirst, some as someArray } from "effect/Array";
 import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
+import { dual } from "effect/Function";
 import { getOrElse, isSome, map } from "effect/Option";
 import { isTagged } from "effect/Predicate";
 import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
@@ -22,6 +23,7 @@ import { isUnknownRecord } from "../internal/guards.ts";
 import { flattenEncoded } from "./classification.ts";
 import { declaredFieldsEquivalence } from "./declaredFieldsEquivalence.ts";
 import * as Field from "./Field.ts";
+import * as Meta from "./Meta.ts";
 import { ModelInvariantError } from "./model.ts";
 import type { Effect, Success } from "effect/Effect";
 import type { SchemaError } from "effect/Schema";
@@ -84,11 +86,9 @@ type LocatorKey<M extends AnyModel> = {
           readonly version: true;
         }
       ? never
-      : M["sql"]["columns"][K] extends { readonly primaryKey: true }
+      : Meta.IsUniqueKey<M["sql"]["columns"][K]> extends true
         ? K
-        : M["sql"]["columns"][K] extends { readonly unique: true }
-          ? K
-          : never;
+        : never;
 }[keyof M["sql"]["columns"] & string];
 
 type IdKey<M extends RepositoryModel> = keyof M["Type"] &
@@ -147,6 +147,11 @@ type ColumnNameKey<M extends AnyModel> = {
 type ValidateColumnNames<M extends AnyModel> = [ColumnNameKey<M>] extends [never]
   ? unknown
   : Field.SqlTypeError<"optimistic repositories do not yet support columnName overrides">;
+
+type ValidateLocator<M extends RepositoryModel, Id extends string> =
+  Id extends IdKey<M>
+    ? unknown
+    : Field.SqlTypeError<"repository locator must be a non-null primary key, unique field, or single-column unique index">;
 
 type NativeRepository<M extends RepositoryModel, Id extends IdKey<M>> = Success<
   ReturnType<typeof makeSqlRepository<M, Id>>
@@ -267,9 +272,9 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
       fieldName: idColumn,
     });
   }
-  if (!locator.primaryKey && !locator.unique) {
+  if (!Meta.isUniqueKey(locator)) {
     throw ModelInvariantError.make({
-      message: `Repository locator '${idColumn}' must be a primary-key or unique field.`,
+      message: `Repository locator '${idColumn}' must be a primary key, unique field, or single-column unique index.`,
       fieldName: idColumn,
     });
   }
@@ -301,7 +306,9 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  *
  * Repository acquisition is an Effect requiring `SqlClient`. The generated
  * update performs one `UPDATE ... WHERE id = ... AND version = ... RETURNING`
- * statement and increments the version inside SQL.
+ * statement and increments the version inside SQL. Both
+ * `makeRepository(model, options)` and `makeRepository(options)(model)` retain
+ * model-specific locator inference.
  *
  * **Gotchas**
  *
@@ -351,69 +358,88 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  * @category factories
  * @since 0.0.0
  */
-export const makeRepository = <const M extends RepositoryModel, const Id extends IdKey<M>>(
-  model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
-  options: {
+export const makeRepository: {
+  <const M extends RepositoryModel, const Id extends IdKey<M>>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
+    options: {
+      readonly spanPrefix: string;
+      readonly idColumn: Id;
+    }
+  ): Effect<Repository<M, Id>, never, SqlClient>;
+  <const Id extends string>(options: {
     readonly spanPrefix: string;
     readonly idColumn: Id;
-  }
-): Effect<Repository<M, Id>, never, SqlClient> => {
-  const idColumn: string = options.idColumn;
-  validateRepositoryModel(model, idColumn);
-  return gen(function* () {
-    const sql = yield* SqlClient;
-    const base = yield* makeSqlRepository<M, Id>(model, {
-      tableName: model.sql.tableName,
-      spanPrefix: options.spanPrefix,
-      idColumn: options.idColumn,
-    });
-    const versionColumn = findVersionColumn(model);
-    const updateSchema = findOne<M["update"], M, SqlError, never>({
-      Request: model.update,
-      Result: model,
-      execute: (request) => {
-        const record = requireRecord(request, model.sql.tableName);
-        const id = requireValue(record, idColumn, model.sql.tableName);
-        const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
-        const authorFields = filter(record, (_value, key) => key !== idColumn && key !== versionColumn);
-        const versionSet = sql`${sql(versionColumn)} = ${expectedVersion} + 1`;
-        const set = isEmptyReadonlyRecord(authorFields) ? versionSet : sql`${sql.update(authorFields)}, ${versionSet}`;
-        return sql`
+  }): <const M extends RepositoryModel>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>
+  ) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>;
+} = dual(
+  2,
+  <const M extends RepositoryModel, const Id extends IdKey<M>>(
+    model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
+    options: {
+      readonly spanPrefix: string;
+      readonly idColumn: Id;
+    }
+  ): Effect<Repository<M, Id>, never, SqlClient> => {
+    const idColumn: string = options.idColumn;
+    validateRepositoryModel(model, idColumn);
+    return gen(function* () {
+      const sql = yield* SqlClient;
+      const base = yield* makeSqlRepository<M, Id>(model, {
+        tableName: model.sql.tableName,
+        spanPrefix: options.spanPrefix,
+        idColumn: options.idColumn,
+      });
+      const versionColumn = findVersionColumn(model);
+      const updateSchema = findOne<M["update"], M, SqlError, never>({
+        Request: model.update,
+        Result: model,
+        execute: (request) => {
+          const record = requireRecord(request, model.sql.tableName);
+          const id = requireValue(record, idColumn, model.sql.tableName);
+          const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
+          const authorFields = filter(record, (_value, key) => key !== idColumn && key !== versionColumn);
+          const versionSet = sql`${sql(versionColumn)} = ${expectedVersion} + 1`;
+          const set = isEmptyReadonlyRecord(authorFields)
+            ? versionSet
+            : sql`${sql.update(authorFields)}, ${versionSet}`;
+          return sql`
           update ${sql(model.sql.tableName)}
           set ${set}
           where ${sql(idColumn)} = ${id}
             and ${sql(versionColumn)} = ${expectedVersion}
           returning *
         `;
-      },
-    });
-    const update = (request: M["update"]["Type"]) => {
-      const record = requireRecord(request, model.sql.tableName);
-      const id = requireValue(record, idColumn, model.sql.tableName);
-      const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
-      return updateSchema(request).pipe(
-        catchTag("NoSuchElementError", () =>
-          failEffect(
-            VersionConflictError.make({
-              table: model.sql.tableName,
-              id,
-              expectedVersion,
-            })
+        },
+      });
+      const update = (request: M["update"]["Type"]) => {
+        const record = requireRecord(request, model.sql.tableName);
+        const id = requireValue(record, idColumn, model.sql.tableName);
+        const expectedVersion = requireVersion(record, versionColumn, model.sql.tableName);
+        return updateSchema(request).pipe(
+          catchTag("NoSuchElementError", () =>
+            failEffect(
+              VersionConflictError.make({
+                table: model.sql.tableName,
+                id,
+                expectedVersion,
+              })
+            )
+          ),
+          withSpan(
+            `${options.spanPrefix}.updateOptimistic`,
+            { attributes: { id, expectedVersion } },
+            { captureStackTrace: false }
           )
-        ),
-        withSpan(
-          `${options.spanPrefix}.updateOptimistic`,
-          { attributes: { id, expectedVersion } },
-          { captureStackTrace: false }
-        )
-      );
-    };
-    return {
-      insert: base.insert,
-      insertVoid: base.insertVoid,
-      findById: base.findById,
-      delete: base.delete,
-      update,
-    };
-  });
-};
+        );
+      };
+      return {
+        insert: base.insert,
+        insertVoid: base.insertVoid,
+        findById: base.findById,
+        delete: base.delete,
+        update,
+      };
+    });
+  }
+);

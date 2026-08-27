@@ -10,6 +10,7 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsDomainId.create("entities/Fixture.values");
 const fixtureKeyPattern = /^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+$/u;
+const skillNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
 const FixtureKey = S.NonEmptyString.check(
   S.isPattern(fixtureKeyPattern, {
@@ -141,7 +142,7 @@ export const AgentName = S.NonEmptyString.pipe(
 export type AgentName = typeof AgentName.Type;
 
 /**
- * Non-empty display name for a fixture-backed skill.
+ * Agent Skills-compatible name for a fixture-backed skill.
  *
  * **Example** (Decode skill display name)
  *
@@ -149,7 +150,7 @@ export type AgentName = typeof AgentName.Type;
  * import { SkillName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
  *
- * const name = S.decodeUnknownSync(SkillName)("Review")
+ * const name = S.decodeUnknownSync(SkillName)("review-skill")
  * console.log(name)
  * ```
  *
@@ -157,8 +158,18 @@ export type AgentName = typeof AgentName.Type;
  * @since 0.0.0
  */
 export const SkillName = S.NonEmptyString.pipe(
+  S.check(
+    S.makeFilterGroup([
+      S.isMaxLength(64, {
+        message: "Skill name must be at most 64 characters long",
+      }),
+      S.isPattern(skillNamePattern, {
+        message: "Skill names may contain lowercase letters, digits, and single hyphens between segments",
+      }),
+    ])
+  ),
   $I.annoteSchema("SkillName", {
-    description: "Non-empty display name for a fixture-backed skill.",
+    description: "Agent Skills-compatible lowercase name for a fixture-backed skill.",
   })
 );
 
@@ -171,7 +182,7 @@ export const SkillName = S.NonEmptyString.pipe(
  * import { SkillName } from "@beep/agents-domain/entities"
  * import * as S from "effect/Schema"
  *
- * const name: SkillName = S.decodeUnknownSync(SkillName)("Review")
+ * const name: SkillName = S.decodeUnknownSync(SkillName)("review-skill")
  * console.log(name)
  * ```
  *

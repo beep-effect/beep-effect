@@ -11,7 +11,7 @@ import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fie
 import { PatentAssetStatus } from "./PatentAsset.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model");
-const PatentAssetEntity = ProductEntity.make(LawPractice.PatentAssetId);
+const pg = ProductEntity.pg;
 
 /**
  * Patent asset entity managed inside a prosecution matter.
@@ -46,24 +46,22 @@ const PatentAssetEntity = ProductEntity.make(LawPractice.PatentAssetId);
  * @category entities
  * @since 0.0.0
  */
-export class PatentAsset extends PatentAssetEntity.Entity<PatentAsset>(PatentAssetEntity.tableName)(
+export class PatentAsset extends ProductEntity.Entity<PatentAsset>()(LawPractice.PatentAssetId)(
   {
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the patent asset.",
-    }).pipe(PatentAssetEntity.pg.text(), PatentAssetEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     matterFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the matter this patent asset belongs to.",
-    }).pipe(PatentAssetEntity.pg.text(), PatentAssetEntity.pg.columnName("matter_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("matter_fixture_key")),
     status: PatentAssetStatus.annotateKey({
       description: "Patent asset lifecycle status.",
-    }).pipe(PatentAssetEntity.pg.text()),
+    }).pipe(pg.text()),
     title: LawPracticeText.annotateKey({
       description: "Human-readable patent asset title.",
-    }).pipe(PatentAssetEntity.pg.text()),
-    ...PatentAssetEntity.identityFields,
+    }).pipe(pg.text()),
   },
   $I.annote("PatentAsset", {
     description: "Patent asset entity managed inside a prosecution matter.",
-  }),
-  PatentAssetEntity.entityExtras
+  })
 ) {}

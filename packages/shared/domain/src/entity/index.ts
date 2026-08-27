@@ -6,6 +6,36 @@
  */
 
 /**
+ * Audit entity tier namespace.
+ *
+ * **Example** (Access the audit tier factory)
+ *
+ * ```ts
+ * import { AuditEntity } from "@beep/shared-domain/entity"
+ *
+ * console.log(typeof AuditEntity.Entity)
+ * ```
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as AuditEntity from "./AuditEntity.ts";
+/**
+ * Base entity tier namespace.
+ *
+ * **Example** (Access the base tier factory)
+ *
+ * ```ts
+ * import { BaseEntity } from "@beep/shared-domain/entity"
+ *
+ * console.log(typeof BaseEntity.Entity)
+ * ```
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as BaseEntity from "./BaseEntity.ts";
+/**
  * Entity identifier constructor namespace.
  *
  * **Example** (Access EntityIdValue export)
@@ -20,6 +50,21 @@
  * @since 0.0.0
  */
 export * as EntityId from "./EntityId.ts";
+/**
+ * Entity tier machinery and capability mixins.
+ *
+ * **Example** (Access the audit mixin)
+ *
+ * ```ts
+ * import { EntityKit } from "@beep/shared-domain/entity"
+ *
+ * console.log(typeof EntityKit.withAudit)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * as EntityKit from "./EntityKit.ts";
 /**
  * Polymorphic entity reference namespace.
  *
@@ -36,6 +81,21 @@ export * as EntityId from "./EntityId.ts";
  */
 export * as EntityRef from "./EntityRef.ts";
 /**
+ * Org entity tier namespace.
+ *
+ * **Example** (Access the org tier factory)
+ *
+ * ```ts
+ * import { OrgEntity } from "@beep/shared-domain/entity"
+ *
+ * console.log(typeof OrgEntity.Entity)
+ * ```
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as OrgEntity from "./OrgEntity.ts";
+/**
  * Canonical actor principal namespace.
  *
  * **Example** (Access Principal export)
@@ -51,7 +111,7 @@ export * as EntityRef from "./EntityRef.ts";
  */
 export * as Principal from "./Principal.ts";
 /**
- * Effect-drizzle product entity kit.
+ * Product entity tier namespace.
  *
  * @category factories
  * @since 0.0.0

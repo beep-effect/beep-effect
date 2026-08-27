@@ -54,6 +54,7 @@ import {
   sqliteFiniteNumeric,
   sqliteFiniteReal,
   sqliteKit,
+  sqliteUniqueIndexForeignKeySchema,
   sqliteUniquePhysicalResolutionSchema,
   sqliteUserTable,
 } from "./sqlite-fixtures.ts";
@@ -140,6 +141,11 @@ describe("SQLite projection", () => {
     expect(membership.indexes[0]?.config.where).toBeDefined();
   });
 
+  it("accepts a colocated unique index as a foreign-key target", () => {
+    const target = getTableConfig(sqliteUniqueIndexForeignKeySchema.tables.sqlite_unique_index_target);
+    expect(target.indexes[0]?.config.unique).toBe(true);
+  });
+
   it("renders sqlite.defaultNow() as an ISO-text strftime expression", () => {
     class SqliteDefaultNow extends sqliteKit.Model<SqliteDefaultNow>("SqliteDefaultNow")({
       createdAt: String.annotate({ identifier: "SqliteDefaultNowText" }).pipe(
@@ -184,7 +190,7 @@ describe("SQLite derivation and family invariants", () => {
     expect(_nullableSqliteVersionModelMirror).toThrow("nullable schema");
     expect(_sqliteNulEnum).toThrow("NUL (U+0000)");
     expect(sqliteDedupedEnum.meta.column.values).toEqual(["draft", "active"]);
-    expect(_sqliteNonUniqueForeignKey).toThrow("primary-key or unique column");
+    expect(_sqliteNonUniqueForeignKey).toThrow("primary key, unique field, or single-column unique index");
     expect(_sqliteNonUniqueForeignKey).toThrow(SqliteSchemaAssemblyError);
     expect(_sqliteDuplicatePhysicalTableNames).toThrow("Physical table name 'user'");
     expect(_sqliteDuplicatePhysicalTableNames).toThrow(SqliteSchemaAssemblyError);

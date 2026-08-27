@@ -6,6 +6,7 @@ import {
   AssistantBlock as RootAssistantBlock,
   AssistantContent as RootAssistantContent,
   Skill,
+  SkillFrontmatter,
   TableBlock,
   YouTubeBlock,
 } from "@beep/agents-domain";
@@ -94,8 +95,13 @@ describe("@beep/agents-domain", () => {
   it("decodes and constructs a Skill row", () => {
     const encoded = {
       ...productEntityFixtureInput("AgentsSkill", 5),
+      allowedTools: null,
+      compatibility: null,
+      description: "Reviews changed code before publication.",
       fixtureKey: "skill.review",
-      name: "Review Skill",
+      license: null,
+      metadata: null,
+      name: "review-skill",
     };
     const decoded = S.decodeUnknownSync(Skill)(encoded);
     const constructed = Skill.make(decoded);
@@ -109,7 +115,43 @@ describe("@beep/agents-domain", () => {
     expect(Object.keys(Skill.insert.fields)).not.toContain("rowVersion");
     expect(Object.keys(Skill.update.fields)).toContain("id");
     expect(Object.keys(Skill.update.fields)).toContain("rowVersion");
+    expect(Skill.sql.columns.compatibility.column.length).toBe(500);
     expect(Result.getOrThrow(S.encodeResult(Skill)(decoded))).toStrictEqual(encoded);
+  });
+
+  it("rejects Skill names outside the frontmatter contract", () => {
+    const base = {
+      ...productEntityFixtureInput("AgentsSkill", 6),
+      allowedTools: null,
+      compatibility: null,
+      description: "Reviews changed code before publication.",
+      fixtureKey: "skill.review",
+      license: null,
+      metadata: null,
+    };
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "Review Skill" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "-review" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review_skill" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review.skill" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Skill)({ ...base, name: "review--skill" }))).toBe(true);
+  });
+
+  it("decodes Agent Skills frontmatter through the derived codec", () => {
+    const decoded = S.decodeSync(SkillFrontmatter)({
+      "allowed-tools": "Bash, Read",
+      compatibility: null,
+      description: "Formats commit messages.",
+      license: "MIT",
+      metadata: null,
+      name: "commit-format",
+    });
+
+    expect(O.getOrThrow(decoded.allowedTools)).toBe("Bash, Read");
+    expect(O.getOrThrow(decoded.license)).toBe("MIT");
+    const encoded = Result.getOrThrow(S.encodeResult(SkillFrontmatter)(decoded));
+    expect(encoded["allowed-tools"]).toBe("Bash, Read");
+    expect(Object.keys(encoded)).not.toContain("allowedTools");
+    expect(Object.keys(encoded)).not.toContain("fixtureKey");
   });
 
   it("round-trips schema-derived agent modes", () =>

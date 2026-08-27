@@ -10,7 +10,7 @@ import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/Evidence/Evidence.model");
-const EvidenceEntity = ProductEntity.make(Epistemic.EvidenceId);
+const pg = ProductEntity.pg;
 
 /**
  * Source span evidence reference. Carries the ported v3 {@link EvidenceSpan}
@@ -52,21 +52,19 @@ const EvidenceEntity = ProductEntity.make(Epistemic.EvidenceId);
  * @category entities
  * @since 0.0.0
  */
-export class Evidence extends EvidenceEntity.Entity<Evidence>(EvidenceEntity.tableName)(
+export class Evidence extends ProductEntity.Entity<Evidence>()(Epistemic.EvidenceId)(
   {
     artifactFixtureKey: EpistemicFixtureKey.annotateKey({
       description: "Stable fixture key for the source artifact.",
-    }).pipe(EvidenceEntity.pg.text(), EvidenceEntity.pg.columnName("artifact_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("artifact_fixture_key")),
     spanFixtureKey: EpistemicFixtureKey.annotateKey({
       description: "Stable fixture key for the evidence span.",
-    }).pipe(EvidenceEntity.pg.text(), EvidenceEntity.pg.columnName("span_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("span_fixture_key")),
     span: EvidenceSpan.annotateKey({
       description: "Char-offset evidence span persisted with the evidence row.",
-    }).pipe(EvidenceEntity.pg.jsonb()),
-    ...EvidenceEntity.identityFields,
+    }).pipe(pg.jsonb()),
   },
   $I.annote("Evidence", {
     description: "Source span evidence reference.",
-  }),
-  EvidenceEntity.entityExtras
+  })
 ) {}

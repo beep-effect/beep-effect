@@ -14,7 +14,7 @@ import { PriorityBasis } from "../../values/PriorityBasis/index.ts";
 import { LegalVerdictAssignment } from "./LegalOppositionCandidate.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalOppositionCandidate/LegalOppositionCandidate.model");
-const LegalOppositionCandidateEntity = ProductEntity.make(LawPractice.LegalOppositionCandidateId);
+const pg = ProductEntity.pg;
 
 /**
  * One appended law-side record that two stored relations were screened as
@@ -65,25 +65,23 @@ const LegalOppositionCandidateEntity = ProductEntity.make(LawPractice.LegalOppos
  * @category entities
  * @since 0.0.0
  */
-export class LegalOppositionCandidate extends LegalOppositionCandidateEntity.Entity<LegalOppositionCandidate>(
-  LegalOppositionCandidateEntity.tableName
+export class LegalOppositionCandidate extends ProductEntity.Entity<LegalOppositionCandidate>()(
+  LawPractice.LegalOppositionCandidateId
 )(
   {
     candidate: LegalOppositionCandidateInput.annotateKey({
       description: "Screening result as the policy emitted it, with its unordered pair of stored relations.",
-    }).pipe(LegalOppositionCandidateEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     priorityBasis: S.OptionFromNullOr(PriorityBasis)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Basis a party offered for its position prevailing; absent until one is recorded." })
-      .pipe(LegalOppositionCandidateEntity.pg.jsonb(), LegalOppositionCandidateEntity.pg.columnName("priority_basis")),
+      .pipe(pg.jsonb(), pg.columnName("priority_basis")),
     verdictFamily: S.OptionFromNullOr(LegalVerdictAssignment)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Attorney-assigned family with its assigner; absent until an attorney assigns one." })
-      .pipe(LegalOppositionCandidateEntity.pg.jsonb(), LegalOppositionCandidateEntity.pg.columnName("verdict_family")),
-    ...LegalOppositionCandidateEntity.identityFields,
+      .pipe(pg.jsonb(), pg.columnName("verdict_family")),
   },
   $I.annote("LegalOppositionCandidate", {
     description: "One appended record that two stored relations were screened as prima facie opposed.",
-  }),
-  LegalOppositionCandidateEntity.entityExtras
+  })
 ) {}
