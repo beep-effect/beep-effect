@@ -161,9 +161,6 @@ export type AgentName = typeof AgentName.Type;
 export const SkillName = S.NonEmptyString.pipe(
   S.check(
     S.makeFilterGroup([
-      S.isNonEmpty({
-        message: "Skill description must be non-empty",
-      }),
       S.isMaxLength(64, {
         message: "Skill name must be at most 64 characters long",
       }),

@@ -19,9 +19,10 @@ const pg = ProductEntity.pg;
  *
  * **Details**
  *
- * `name` derives its `varchar(64)` bound from the `SkillName` value schema
- * (derive mode); `description` and `compatibility` get their bounds injected
- * by `varchar(n)` so the domain validates exactly what the column enforces.
+ * `name` derives its `varchar(64)` bound from the `SkillName` value schema.
+ * `description` gets its bound from `varchar(1024)`. Because `compatibility`
+ * is nullable, its inner string schema declares the 500-character bound and
+ * bare `varchar()` derives that bound through the nullable encoding.
  *
  * **Example** (Log Skill table name)
  *

@@ -115,6 +115,7 @@ describe("@beep/agents-domain", () => {
     expect(Object.keys(Skill.insert.fields)).not.toContain("rowVersion");
     expect(Object.keys(Skill.update.fields)).toContain("id");
     expect(Object.keys(Skill.update.fields)).toContain("rowVersion");
+    expect(Skill.sql.columns.compatibility.column.length).toBe(500);
     expect(Result.getOrThrow(S.encodeResult(Skill)(decoded))).toStrictEqual(encoded);
   });
 
