@@ -883,6 +883,21 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "repair staging failed"
       );
 
+      const backupDirectoryLocator = yield* makeFixture("backup-directory");
+      let createdDirectories = 0;
+      const backupDirectoryApplier = yield* makeApplier({
+        ...fs,
+        makeDirectory: (target, options) => {
+          createdDirectories += 1;
+          return createdDirectories === 2
+            ? Effect.fail(injectedFileSystemError("makeDirectory", target))
+            : fs.makeDirectory(target, options);
+        },
+      });
+      expect(failureMessage(yield* Effect.exit(backupDirectoryApplier.apply(backupDirectoryLocator)))).toContain(
+        "repair backup staging failed"
+      );
+
       const stagedIntegrityLocator = yield* makeFixture("staged-integrity");
       const stagedIntegrityApplier = yield* makeApplier({
         ...fs,
