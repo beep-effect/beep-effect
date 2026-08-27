@@ -208,7 +208,7 @@ export const caughtErrorValue = (thrown: unknown): unknown =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Error constructor name and arguments are co-primary inputs for a newly allocated guest error.
 export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject =>
   createErrorValue(name, P.isUndefined(args[0]) ? "" : coerceToString(args[0]));
 
@@ -260,7 +260,7 @@ export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyAr
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Aggregate members, message, options, and interpreter context are co-primary construction inputs.
 export const constructAggregateErrorValue = <R>(
   runner: SyncIteratorRunner<R>,
   args: ReadonlyArray<unknown>,

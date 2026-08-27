@@ -16,6 +16,7 @@ import {
   Chunk,
   Effect,
   Encoding,
+  flow,
   HashMap,
   HashSet,
   Redacted,
@@ -77,15 +78,13 @@ const encodePathPunctuation = (value: string): string =>
       )
   );
 
-const mediaTypeBase = (mediaType: string): string =>
-  pipe(
-    mediaType,
-    Str.split(";"),
-    A.head,
-    O.getOrElse(thunkEmptyStr),
-    Str.trim,
-    Str.toLowerCase
-  );
+const mediaTypeBase: (mediaType: string) => string = flow(
+  Str.split(";"),
+  A.head,
+  O.getOrElse(thunkEmptyStr),
+  Str.trim,
+  Str.toLowerCase
+);
 
 const isJsonMediaType = (mediaType: string): boolean => {
   const normalized = mediaTypeBase(mediaType);
@@ -437,25 +436,24 @@ const applyBody = (
   input: Readonly<Record<string, unknown>>,
   request: HttpClientRequest.HttpClientRequest
 ): Effect.Effect<HttpClientRequest.HttpClientRequest, ToolError> =>
-  O.match(plan.body, {
-    onNone: () => Effect.succeed(request),
-    onSome: (body) =>
+  pipe(
+    plan.body,
+    O.map((body) =>
       BodyMode.$match(body.mode, {
         value: () =>
           pipe(
             plan.fields,
             A.findFirst((field) => InputLocation.is.body(field.location)),
             O.flatMap((field) => own(input, field.inputName)),
-            O.match({
-              onNone: () => Effect.succeed(request),
-              onSome: (value) =>
+            O.map((value) =>
                 setJsonBody(
                   plan,
                   request,
                   value,
                   body.mediaType
-                ),
-            })
+                )
+            ),
+            O.getOrElse(() => Effect.succeed(request))
           ),
         object: () => {
           const entries = pipe(
@@ -481,8 +479,10 @@ const applyBody = (
                 body.mediaType
               );
         },
-      }),
-  });
+      })
+    ),
+    O.getOrElse(() => Effect.succeed(request))
+  );
 
 const buildRequest = (
   plan: Plan,
@@ -960,7 +960,7 @@ const errorBodySummary = (value: unknown): string => {
  * @category clients
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- HTTP client, operation plan, input, and invocation options are co-primary application-boundary inputs.
 export const invoke = (
   plan: Plan,
   input: unknown

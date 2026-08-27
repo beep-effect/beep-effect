@@ -10,7 +10,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Result, Schema } from "effect";
+import { HashMap, Result, Schema } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
 import { builtinOptionsSchemas, builtinRules } from "./internal/rules/catalog.ts";
@@ -67,7 +70,7 @@ export type YamlLintRuleSetting = typeof YamlLintRuleSetting.Type;
 
 /** Rule-aware validation of the config `rules` map (undefined = valid). */
 const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting }): string | undefined => {
-	for (const [id, entry] of Object.entries(rules)) {
+	for (const [id, entry] of R.toEntries(rules)) {
 		if (id === "parse-validity") {
 			// Always-on rule #1: it cannot be demoted, disabled or configured.
 			// Failing loud beats silently ignoring an entry that looks like it
@@ -75,13 +78,13 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 			if (entry === "off" || entry === "warning") {
 				return `Rule "parse-validity" is always-on and cannot be set to "${entry}"`;
 			}
-			if (typeof entry === "object") {
+			if (P.isObject(entry)) {
 				return `Rule "parse-validity" accepts no options`;
 			}
 			continue;
 		}
-		if (typeof entry === "object") {
-			const optionsSchema = builtinOptionsSchemas.get(id);
+		if (P.isObject(entry)) {
+			const optionsSchema = O.getOrUndefined(HashMap.get(builtinOptionsSchemas, id));
 			// Custom rule ids carry opaque options the custom rule validates
 			// itself; built-in options are validated against the rule's own
 			// exported schema so a typo'd option fails here, typed, instead of
@@ -90,7 +93,7 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 				// onExcessProperty: "error" — a typo'd option KEY fails loudly with
 				// an UnexpectedKey issue naming the key, instead of decoding to {}
 				// (v4 Structs strip unknown keys by default).
-				const decoded = Schema.decodeUnknownResult(optionsSchema as Schema.Codec<unknown, unknown>, {
+				const decoded = Schema.decodeResult(optionsSchema as Schema.Codec<unknown, unknown>, {
 					onExcessProperty: "error",
 				})(entry);
 				if (Result.isFailure(decoded)) {
@@ -275,12 +278,12 @@ export class StyleVoteTally extends Schema.Class<StyleVoteTally>("StyleVoteTally
 	{
 		rule: Schema.String,
 		dimension: Schema.String,
-		value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
-		count: Schema.Number,
-		offset: Schema.Number,
-		length: Schema.Number,
-		line: Schema.Number,
-		character: Schema.Number,
+		value: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]),
+		count: Schema.Finite,
+		offset: Schema.Finite,
+		length: Schema.Finite,
+		line: Schema.Finite,
+		character: Schema.Finite,
 	},
 	$I.annote("StyleVoteTally", {
 		description: "An accumulated tally of one style vote spelling with first-seen position.",
@@ -316,7 +319,7 @@ export class StyleFloorTally extends Schema.Class<StyleFloorTally>("StyleFloorTa
 	{
 		rule: Schema.String,
 		dimension: Schema.String,
-		value: Schema.Number,
+		value: Schema.Finite,
 	},
 	$I.annote("StyleFloorTally", {
 		description: "The largest measured style floor observed for a (rule, dimension) pair.",
@@ -375,8 +378,11 @@ const byTallyOrder = (
  * const singles = YamlLint.observe("name: 'Ada'\n", YamlLint.builtins)
  * const doubles = YamlLint.observe('name: "Bob"\n', YamlLint.builtins)
  * const combined = StyleEvidence.combine(singles, doubles)
+ * const quotes = combined.votes.filter((vote) => vote.dimension === "quoteType")
  *
- * console.log(combined.votes.some((vote) => vote.dimension === "quoteType")) // true
+ * console.log(quotes.length) // 2
+ * console.log(quotes.some((vote) => vote.value === "single")) // true
+ * console.log(quotes.some((vote) => vote.value === "double")) // true
  * ```
  *
  * @see {@link YamlLint.observe} for collecting evidence from source text.
@@ -402,23 +408,40 @@ export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")(
 	 * Merge two bodies of evidence (associative; {@link StyleEvidence.empty}
 	 * is the identity). Vote counts add, the left operand's first-seen
 	 * position wins per spelling, floors take the maximum.
+	 *
+	 * **Example** (Add matching vote counts)
+	 *
+	 * ```ts
+	 * import { StyleEvidence, StyleVote } from "@beep/scratchpad/yaml"
+	 *
+	 * const vote = StyleVote.make({
+	 *   dimension: "quoteType", value: "single", offset: 0, length: 3, line: 0, character: 0,
+	 * })
+	 * const one = StyleEvidence.fromObservations("quoted-strings", [vote])
+	 * const combined = StyleEvidence.combine(one, one)
+	 * console.log(combined.votes[0]?.count) // 2
+	 * ```
 	 */
 	static combine(a: StyleEvidence, b: StyleEvidence): StyleEvidence {
-		const votes = new Map<string, StyleVoteTally>();
+		let votes = HashMap.empty<string, StyleVoteTally>();
 		for (const tally of [...a.votes, ...b.votes]) {
-			const key = `${tally.rule} ${tally.dimension} ${valueKey(tally.value)}`;
-			const seen = votes.get(key);
-			votes.set(key, seen === undefined ? tally : StyleVoteTally.make({ ...seen, count: seen.count + tally.count }));
+			const key = `${tally.rule}\x00${tally.dimension}\x00${valueKey(tally.value)}`;
+			const seen = O.getOrUndefined(HashMap.get(votes, key));
+			votes = HashMap.set(
+				votes,
+				key,
+				seen === undefined ? tally : StyleVoteTally.make({ ...seen, count: seen.count + tally.count }),
+			);
 		}
-		const floors = new Map<string, StyleFloorTally>();
+		let floors = HashMap.empty<string, StyleFloorTally>();
 		for (const floor of [...a.floors, ...b.floors]) {
-			const key = `${floor.rule} ${floor.dimension}`;
-			const seen = floors.get(key);
-			floors.set(key, seen === undefined || floor.value > seen.value ? floor : seen);
+			const key = `${floor.rule}\x00${floor.dimension}`;
+			const seen = O.getOrUndefined(HashMap.get(floors, key));
+			floors = HashMap.set(floors, key, seen === undefined || floor.value > seen.value ? floor : seen);
 		}
 		return StyleEvidence.make({
-			votes: [...votes.values()].sort((x, y) => byTallyOrder(x, y, valueKey(x.value), valueKey(y.value))),
-			floors: [...floors.values()].sort((x, y) => byTallyOrder(x, y, "", "")),
+			votes: [...HashMap.values(votes)].sort((x, y) => byTallyOrder(x, y, valueKey(x.value), valueKey(y.value))),
+			floors: [...HashMap.values(floors)].sort((x, y) => byTallyOrder(x, y, "", "")),
 		});
 	}
 
@@ -429,6 +452,19 @@ export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")(
 	 * `combine(fromObservations(r, a), fromObservations(r, b))`). `observe`
 	 * uses it per rule; it is public so custom tooling can construct evidence
 	 * without a {@link LintContext}.
+	 *
+	 * **Example** (Tally one style vote)
+	 *
+	 * ```ts
+	 * import { StyleEvidence, StyleVote } from "@beep/scratchpad/yaml"
+	 *
+	 * const evidence = StyleEvidence.fromObservations("quoted-strings", [
+	 *   StyleVote.make({
+	 *     dimension: "quoteType", value: "double", offset: 0, length: 3, line: 0, character: 0,
+	 *   }),
+	 * ])
+	 * console.log(evidence.votes[0]?.value) // "double"
+	 * ```
 	 */
 	static fromObservations(rule: string, observations: Iterable<StyleObservation>): StyleEvidence {
 		let acc = StyleEvidence.empty;
@@ -488,10 +524,22 @@ export class StyleEvidence extends Schema.Class<StyleEvidence>("StyleEvidence")(
  *       line: 0,
  *       character: 0,
  *     }),
+ *     StyleVoteTally.make({
+ *       rule: "quoted-strings",
+ *       dimension: "quoteType",
+ *       value: "single",
+ *       count: 1,
+ *       offset: 8,
+ *       length: 3,
+ *       line: 1,
+ *       character: 3,
+ *     }),
  *   ],
  * })
  *
- * console.log(conflict.dimension) // "quoteType"
+ * console.log(conflict.candidates.length) // 2
+ * console.log(conflict.candidates.some((c) => c.value === "double")) // true
+ * console.log(conflict.candidates.some((c) => c.value === "single")) // true
  * ```
  *
  * @see {@link YamlStyleConflictError} for the strict-inference error that carries these conflicts.
@@ -546,6 +594,22 @@ export class YamlStyleConflictError extends Schema.TaggedError<YamlStyleConflict
 		description: "Strict style inference failed because observed evidence disagreed on at least one dimension.",
 	}),
 ) {
+	/**
+	 * Render every conflicting rule, dimension, candidate count, and first
+	 * source position as a human-readable summary.
+	 *
+	 * **Example** (Read a strict-inference conflict summary)
+	 *
+	 * ```ts
+	 * import { Result } from "effect"
+	 * import { YamlLint } from "@beep/scratchpad/yaml"
+	 *
+	 * const result = YamlLint.inferStrict("a: 'x'\nb: \"y\"\n", YamlLint.builtins)
+	 * if (Result.isFailure(result)) {
+	 *   console.log(result.failure.message.includes("quoted-strings.quoteType")) // true
+	 * }
+	 * ```
+	 */
 	override get message(): string {
 		return this.conflicts
 			.map(
@@ -559,14 +623,15 @@ export class YamlStyleConflictError extends Schema.TaggedError<YamlStyleConflict
 }
 
 /** Group canonical vote tallies by rule, then dimension (order-preserving). */
-const groupVotes = (evidence: StyleEvidence): Map<string, Map<string, Array<StyleVoteTally>>> => {
-	const byRule = new Map<string, Map<string, Array<StyleVoteTally>>>();
+const groupVotes = (
+	evidence: StyleEvidence,
+): HashMap.HashMap<string, HashMap.HashMap<string, Array<StyleVoteTally>>> => {
+	let byRule = HashMap.empty<string, HashMap.HashMap<string, Array<StyleVoteTally>>>();
 	for (const tally of evidence.votes) {
-		const dims = byRule.get(tally.rule) ?? new Map<string, Array<StyleVoteTally>>();
-		const tallies = dims.get(tally.dimension) ?? [];
-		tallies.push(tally);
-		dims.set(tally.dimension, tallies);
-		byRule.set(tally.rule, dims);
+		let dims = O.getOrElse(HashMap.get(byRule, tally.rule), () => HashMap.empty<string, Array<StyleVoteTally>>());
+		const tallies = O.getOrElse(HashMap.get(dims, tally.dimension), () => []);
+		dims = HashMap.set(dims, tally.dimension, [...tallies, tally]);
+		byRule = HashMap.set(byRule, tally.rule, dims);
 	}
 	return byRule;
 };
@@ -579,15 +644,14 @@ const groupVotes = (evidence: StyleEvidence): Map<string, Map<string, Array<Styl
  */
 const overlayConfig = (
 	base: YamlLintConfig,
-	picks: Map<string, Map<string, string | number | boolean>>,
+	picks: HashMap.HashMap<string, HashMap.HashMap<string, string | number | boolean>>,
 ): YamlLintConfig => {
 	const rules: Record<string, YamlLintRuleSetting> = { ...base.rules };
 	for (const [ruleId, dims] of picks) {
 		const entry = rules[ruleId];
 		if (entry === "off") continue;
-		const merged: Record<string, unknown> = {};
-		if (typeof entry === "object") Object.assign(merged, entry);
-		else if (entry === "warning") merged.severity = "warning";
+		const merged: Record<string, unknown> =
+			entry === "warning" ? { severity: "warning" } : P.isObject(entry) ? { ...entry } : {};
 		for (const [dimension, value] of dims) merged[dimension] = value;
 		rules[ruleId] = merged as YamlLintRuleSetting;
 	}
@@ -609,7 +673,7 @@ const resolveStrictEvidence = (
 	base: YamlLintConfig,
 ): Result.Result<YamlLintConfig, YamlStyleConflictError> => {
 	const conflicts: Array<StyleConflict> = [];
-	const picks = new Map<string, Map<string, string | number | boolean>>();
+	let picks = HashMap.empty<string, HashMap.HashMap<string, string | number | boolean>>();
 	for (const [ruleId, dims] of groupVotes(evidence)) {
 		for (const [dimension, tallies] of dims) {
 			if (tallies.length > 1) {
@@ -623,17 +687,18 @@ const resolveStrictEvidence = (
 				continue;
 			}
 			const only = tallies[0] as StyleVoteTally;
-			const dimPicks = picks.get(ruleId) ?? new Map<string, string | number | boolean>();
-			dimPicks.set(dimension, only.value);
-			picks.set(ruleId, dimPicks);
+			const dimPicks = O.getOrElse(HashMap.get(picks, ruleId), () =>
+				HashMap.empty<string, string | number | boolean>(),
+			);
+			picks = HashMap.set(picks, ruleId, HashMap.set(dimPicks, dimension, only.value));
 		}
 	}
-	if (conflicts.length > 0) return Result.fail(new YamlStyleConflictError({ conflicts }));
+	if (conflicts.length > 0) return Result.fail(YamlStyleConflictError.make({ conflicts }));
 	return Result.succeed(overlayConfig(base, picks));
 };
 
 const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): YamlLintConfig => {
-	const picks = new Map<string, Map<string, string | number | boolean>>();
+	let picks = HashMap.empty<string, HashMap.HashMap<string, string | number | boolean>>();
 	for (const [ruleId, dims] of groupVotes(evidence)) {
 		for (const [dimension, tallies] of dims) {
 			// Dominant = plurality: highest count wins; a tie breaks to the first
@@ -642,9 +707,10 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
 			for (const tally of tallies) {
 				if (tally.count > dominant.count) dominant = tally;
 			}
-			const dimPicks = picks.get(ruleId) ?? new Map<string, string | number | boolean>();
-			dimPicks.set(dimension, dominant.value);
-			picks.set(ruleId, dimPicks);
+			const dimPicks = O.getOrElse(HashMap.get(picks, ruleId), () =>
+				HashMap.empty<string, string | number | boolean>(),
+			);
+			picks = HashMap.set(picks, ruleId, HashMap.set(dimPicks, dimension, dominant.value));
 		}
 	}
 	return overlayConfig(base, picks);
@@ -655,22 +721,37 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
  * diagnostics that config still produces on the observed text ("here is your
  * config, and the places that do not match it").
  *
+ * **Example** (Guard a lenient inference report)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YamlLintConfig, YamlLintInference } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(YamlLintInference)({ config: YamlLintConfig.default, residual: [] })) // true
+ * ```
+ *
  * @see {@link YamlLint.inferLenient} for the convenience that returns this report.
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface YamlLintInference {
-	readonly config: YamlLintConfig;
-	readonly residual: ReadonlyArray<YamlLintDiagnostic>;
-}
+export const YamlLintInference = Schema.Struct({
+	config: YamlLintConfig,
+	residual: Schema.Array(YamlLintDiagnostic),
+}).pipe(
+	$I.annoteSchema("YamlLintInference", {
+		description: "Lenient YAML style-inference report containing the inferred config and residual diagnostics.",
+	}),
+);
+
+export type YamlLintInference = typeof YamlLintInference.Type;
 
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /** Resolve the effective severity of a configured entry. */
 const resolveSeverity = (entry: YamlLintRuleSetting): YamlLintSeverity => {
 	if (entry === "error" || entry === "warning") return entry;
-	if (typeof entry === "object" && (entry.severity === "error" || entry.severity === "warning")) {
+	if (P.isObject(entry) && (entry.severity === "error" || entry.severity === "warning")) {
 		return entry.severity;
 	}
 	return "error";
@@ -694,10 +775,10 @@ const runRules = (
 		const entry = alwaysOn ? "error" : config.rules[rule.id];
 		if (entry === undefined || entry === "off") continue;
 		const severity = resolveSeverity(entry);
-		const options = typeof entry === "object" ? entry : undefined;
+		const options = P.isObject(entry) ? entry : undefined;
 		for (const diagnostic of rule.check(ctx, options)) {
 			out.push(
-				alwaysOn || diagnostic.severity === severity ? diagnostic : new YamlLintDiagnostic({ ...diagnostic, severity }),
+				alwaysOn || diagnostic.severity === severity ? diagnostic : YamlLintDiagnostic.make({ ...diagnostic, severity }),
 			);
 		}
 	}
@@ -771,6 +852,17 @@ export class YamlLint {
 	 * literal, else `"error"`) overrides what the rule emitted, again except
 	 * for `parse-validity`, whose bridged engine diagnostics keep the
 	 * engine's own grading.
+	 *
+	 * **Example** (Report a duplicate mapping key)
+	 *
+	 * ```ts
+	 * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+	 *
+	 * const findings = YamlLint.run("a: 1\na: 2\n", YamlLint.builtins, YamlLintConfig.default)
+	 *
+	 * console.log(findings.length) // 1
+	 * console.log(findings[0]?.rule) // "key-duplicates"
+	 * ```
 	 */
 	static run(text: string, rules: ReadonlyArray<YamlRule>, config: YamlLintConfig): ReadonlyArray<YamlLintDiagnostic> {
 		return runRules(buildContext(text), rules, config);
@@ -788,6 +880,17 @@ export class YamlLint {
 	 * fixes overlap — or start at the same offset — the earlier one in
 	 * {@link YamlLint.run} order (position, then rule id) wins and the later
 	 * is dropped (its diagnostic remains reported by {@link YamlLint.run}).
+	 *
+	 * **Example** (Apply a truthy-value fix)
+	 *
+	 * ```ts
+	 * import * as Result from "effect/Result"
+	 * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/yaml"
+	 *
+	 * const fixed = YamlLint.fix("value: yes\n", YamlLint.builtins, YamlLintConfig.default)
+	 *
+	 * if (Result.isSuccess(fixed)) console.log(fixed.success) // 'value: "yes"\n'
+	 * ```
 	 */
 	static fix(
 		text: string,
@@ -801,7 +904,7 @@ export class YamlLint {
 		const ctx = buildContext(text);
 		const fatal = ctx.document.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
-			return Result.fail(new YamlParseError({ diagnostics: fatal, input: text }));
+			return Result.fail(YamlParseError.make({ diagnostics: fatal, input: text }));
 		}
 		const fixes: Array<YamlEdit> = [];
 		let lastEnd = -1;
@@ -826,6 +929,16 @@ export class YamlLint {
 	 * strings in, evidence out; observing N files is N `observe` calls merged
 	 * with {@link StyleEvidence.combine}, and the N-file loop stays the
 	 * caller's (no IO enters the package).
+	 *
+	 * **Example** (Observe a single-quote preference)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/yaml"
+	 *
+	 * const evidence = YamlLint.observe("name: 'Alice'\n", YamlLint.builtins)
+	 *
+	 * console.log(evidence.votes.some((vote) => vote.value === "single")) // true
+	 * ```
 	 */
 	static observe(text: string, rules: ReadonlyArray<YamlRule>): StyleEvidence {
 		return observeContext(buildContext(text), rules);
@@ -841,6 +954,18 @@ export class YamlLint {
 	 * `comments-spacing`, so that dimension falls back to `base` rather than
 	 * failing. A rule `base` sets to `"off"` stays off — an explicit disable
 	 * outranks inference.
+	 *
+	 * **Example** (Resolve unanimous evidence)
+	 *
+	 * ```ts
+	 * import * as Result from "effect/Result"
+	 * import { YamlLint } from "@beep/scratchpad/yaml"
+	 *
+	 * const evidence = YamlLint.observe("name: 'Alice'\n", YamlLint.builtins)
+	 * const resolved = YamlLint.resolveStrict(evidence)
+	 *
+	 * console.log(Result.isSuccess(resolved)) // true
+	 * ```
 	 */
 	static resolveStrict(
 		evidence: StyleEvidence,
@@ -856,6 +981,17 @@ export class YamlLint {
 	 * value order. Total — lenient resolution cannot fail; the places that do
 	 * not match the inferred config surface as the residual report (run the
 	 * lint with the inferred config, or use {@link YamlLint.inferLenient}).
+	 *
+	 * **Example** (Resolve the dominant quote style)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/yaml"
+	 *
+	 * const evidence = YamlLint.observe("name: 'Alice'\n", YamlLint.builtins)
+	 * const config = YamlLint.resolveLenient(evidence)
+	 *
+	 * console.log(config.rules["quoted-strings"]) // { quoteType: "single" }
+	 * ```
 	 */
 	static resolveLenient(evidence: StyleEvidence, base: YamlLintConfig = YamlLintConfig.default): YamlLintConfig {
 		return resolveLenientEvidence(evidence, base);
@@ -865,6 +1001,17 @@ export class YamlLint {
 	 * Single-text strict inference: `observe` then {@link YamlLint.resolveStrict}
 	 * in one step. Multi-file callers observe each file and merge with
 	 * {@link StyleEvidence.combine} before resolving.
+	 *
+	 * **Example** (Infer a strict config from one document)
+	 *
+	 * ```ts
+	 * import * as Result from "effect/Result"
+	 * import { YamlLint } from "@beep/scratchpad/yaml"
+	 *
+	 * const inferred = YamlLint.inferStrict("name: 'Alice'\n", YamlLint.builtins)
+	 *
+	 * console.log(Result.isSuccess(inferred)) // true
+	 * ```
 	 */
 	static inferStrict(
 		text: string,
@@ -882,6 +1029,16 @@ export class YamlLint {
 	 * the observation and the residual run. Multi-file callers compose the
 	 * primitives instead: observe each file, {@link StyleEvidence.combine},
 	 * {@link YamlLint.resolveLenient}, then {@link YamlLint.run} per file.
+	 *
+	 * **Example** (Return the inferred config and residual findings)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/yaml"
+	 *
+	 * const inferred = YamlLint.inferLenient("a: 'x'\nb: \"y\"\n", YamlLint.builtins)
+	 *
+	 * console.log(inferred.residual.length) // 1
+	 * ```
 	 */
 	static inferLenient(
 		text: string,

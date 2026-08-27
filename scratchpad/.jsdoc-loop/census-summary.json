@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-08-27T03:16:05.808Z",
+  "generatedAt": "2026-08-27T06:18:22.553Z",
   "fileCount": 476,
   "moduleCount": 468,
-  "exportCount": 4033,
-  "owningExportCount": 3659,
+  "exportCount": 4113,
+  "owningExportCount": 3739,
   "reExportCount": 374,
-  "openModuleCount": 0,
-  "openOwningExportCount": 0,
+  "openModuleCount": 2,
+  "openOwningExportCount": 6,
   "byKind": {
-    "value": 2516,
-    "type": 1143,
+    "value": 2572,
+    "type": 1167,
     "re-export": 374
   },
   "packs": [
@@ -23,7 +23,7 @@
     {
       "id": "claudecode-hook",
       "moduleCount": 8,
-      "owningExportCount": 56,
+      "owningExportCount": 109,
       "openModuleCount": 0,
       "openOwningExportCount": 0
     },
@@ -86,9 +86,9 @@
     {
       "id": "toml",
       "moduleCount": 15,
-      "owningExportCount": 92,
-      "openModuleCount": 0,
-      "openOwningExportCount": 0
+      "owningExportCount": 93,
+      "openModuleCount": 2,
+      "openOwningExportCount": 3
     },
     {
       "id": "jsonc",
@@ -107,9 +107,9 @@
     {
       "id": "glob",
       "moduleCount": 13,
-      "owningExportCount": 20,
+      "owningExportCount": 40,
       "openModuleCount": 0,
-      "openOwningExportCount": 0
+      "openOwningExportCount": 3
     },
     {
       "id": "schemastore",
@@ -142,7 +142,7 @@
     {
       "id": "codemode",
       "moduleCount": 34,
-      "owningExportCount": 353,
+      "owningExportCount": 359,
       "openModuleCount": 0,
       "openOwningExportCount": 0
     },

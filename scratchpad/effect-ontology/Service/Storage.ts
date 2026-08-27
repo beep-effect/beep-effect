@@ -141,7 +141,7 @@ const isLocalStorageKey = S.is(LocalStorageKey);
  * console.log(object.generation) // "1"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ObjectWithGeneration extends S.Class<ObjectWithGeneration>($I`ObjectWithGeneration`)(

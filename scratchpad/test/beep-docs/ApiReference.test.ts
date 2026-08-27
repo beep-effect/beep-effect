@@ -10,7 +10,12 @@ import {
   PackageSlugFromPackageName,
   TypeDocProjectReflection,
 } from "../../beep-docs/domain/ApiReference.ts";
-import { SearchMetadata, StagedSearchMetadata } from "../../beep-docs/domain/SearchMetadata.ts";
+import {
+  BlogStagedSearchMetadata,
+  DocumentationSearchMetadata,
+  SearchMetadata,
+  StagedSearchMetadata,
+} from "../../beep-docs/domain/SearchMetadata.ts";
 
 const decodeReflection = S.decodeUnknownSync(TypeDocProjectReflection);
 
@@ -186,7 +191,10 @@ describe("ApiReference.moduleView", () => {
     );
     assert.equal(O.getOrThrow(parse.signature), "declare function parse(input: string): number");
     assert.equal(A.length(parse.examples), 1);
-    assert.deepEqual(A.map(parse.examples, (example) => O.getOrUndefined(example.title)), ["Parse ten"]);
+    assert.deepEqual(
+      A.map(parse.examples, (example) => O.getOrUndefined(example.title)),
+      ["Parse ten"]
+    );
   });
 
   it("dedupes anchors by kind and orders value declarations before type declarations", () => {
@@ -216,7 +224,10 @@ describe("ApiReference.moduleView", () => {
 describe("CodeSnippet", () => {
   it("normalizes info strings", () => {
     assert.deepEqual(O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption("")), "typescript");
-    assert.deepEqual(O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption(" mjs ")), "javascript-esm");
+    assert.deepEqual(
+      O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption(" mjs ")),
+      "javascript-esm"
+    );
     assert.deepEqual(O.getOrUndefined(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption("bash")), "bash");
     assert.isTrue(O.isNone(CodeSnippet.CodeSnippetLanguageFromInfoString.decodeOption("cobol")));
   });
@@ -249,7 +260,7 @@ describe("domain codecs", () => {
   });
 
   it("discriminates search metadata by content source", () => {
-    const staged = S.decodeSync(StagedSearchMetadata)({
+    const staged = BlogStagedSearchMetadata.make({
       schema_version: 1,
       content_source: "blog",
       page_href: "/blog/effect-4",
@@ -258,10 +269,10 @@ describe("domain codecs", () => {
       published_at: "2026-01-01",
       authors: [],
       tags: [],
-      sections: [{ line: 1, level: 1, title: "Intro", anchor: "intro", parent_anchor: "", excerpt: "" }],
+      sections: [],
     });
     assert.isTrue(StagedSearchMetadata.guards.blog(staged));
-    const stored = S.decodeSync(SearchMetadata)({
+    const stored = S.decodeSync(DocumentationSearchMetadata)({
       schema_version: 1,
       content_source: "documentation",
       docs_version: "v4",
@@ -331,7 +342,12 @@ const configModule = decodeReflection({
                 name: "ReadonlyArray",
                 target: -1,
                 typeArguments: [
-                  { type: "reference", name: "Option", target: -1, typeArguments: [{ type: "intrinsic", name: "string" }] },
+                  {
+                    type: "reference",
+                    name: "Option",
+                    target: -1,
+                    typeArguments: [{ type: "intrinsic", name: "string" }],
+                  },
                 ],
               },
             },

@@ -226,6 +226,7 @@ export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollis
    * Whether the report contains at least one collision.
    *
    * **Example** (Inspect an empty report)
+   *
    * ```ts
    * import { NonNegativeInt } from "@beep/schema"
    * import { IriCollisionReport } from "@effect-ontology/Utils/ClaimFactory"

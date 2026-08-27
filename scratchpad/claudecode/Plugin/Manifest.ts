@@ -145,7 +145,7 @@ export type HooksSpec = typeof HooksSpec.Type;
  * })
  *
  * console.log(byPath) // "./.mcp.json"
- * console.log(inline.docs) // { command: "npx" }
+ * console.log(inline) // { docs: { command: "npx" } }
  * ```
  *
  * @category schemas

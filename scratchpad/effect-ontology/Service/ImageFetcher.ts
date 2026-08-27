@@ -106,7 +106,7 @@ const isRetryableImageError = (error: ImageError): boolean =>
  * console.log(options.retry) // true
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class ImageFetchOptions extends S.Class<ImageFetchOptions>($I`ImageFetchOptions`)(

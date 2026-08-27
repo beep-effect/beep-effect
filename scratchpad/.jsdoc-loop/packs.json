@@ -54,8 +54,8 @@
       "claudecode/Hook/Transcript.ts"
     ],
     "moduleCount": 8,
-    "exportCount": 66,
-    "owningExportCount": 56,
+    "exportCount": 119,
+    "owningExportCount": 109,
     "openModuleCount": 0,
     "openOwningExportCount": 0,
     "openModules": []
@@ -470,11 +470,46 @@
       "toml/internal/stringifyValue.ts"
     ],
     "moduleCount": 15,
-    "exportCount": 103,
-    "owningExportCount": 92,
-    "openModuleCount": 0,
-    "openOwningExportCount": 0,
-    "openModules": []
+    "exportCount": 104,
+    "owningExportCount": 93,
+    "openModuleCount": 2,
+    "openOwningExportCount": 3,
+    "openModules": [
+      {
+        "file": "toml/internal/diagnostics.ts",
+        "findings": [
+          {
+            "rule": "missing-module-summary",
+            "detail": "Module lacks a useful fileoverview lead."
+          },
+          {
+            "rule": "missing-packageDocumentation",
+            "detail": "Exporting module lacks @packageDocumentation."
+          },
+          {
+            "rule": "missing-module-since",
+            "detail": "Exporting module lacks @since 0.0.0."
+          }
+        ]
+      },
+      {
+        "file": "toml/internal/limits.ts",
+        "findings": [
+          {
+            "rule": "missing-module-summary",
+            "detail": "Module lacks a useful fileoverview lead."
+          },
+          {
+            "rule": "missing-packageDocumentation",
+            "detail": "Exporting module lacks @packageDocumentation."
+          },
+          {
+            "rule": "missing-module-since",
+            "detail": "Exporting module lacks @since 0.0.0."
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "jsonc",
@@ -540,10 +575,10 @@
       "glob/internal/unescape.ts"
     ],
     "moduleCount": 13,
-    "exportCount": 26,
-    "owningExportCount": 20,
+    "exportCount": 46,
+    "owningExportCount": 40,
     "openModuleCount": 0,
-    "openOwningExportCount": 0,
+    "openOwningExportCount": 3,
     "openModules": []
   },
   {
@@ -665,8 +700,8 @@
       "codemode/stdlib/index.ts"
     ],
     "moduleCount": 34,
-    "exportCount": 394,
-    "owningExportCount": 353,
+    "exportCount": 400,
+    "owningExportCount": 359,
     "openModuleCount": 0,
     "openOwningExportCount": 0,
     "openModules": []

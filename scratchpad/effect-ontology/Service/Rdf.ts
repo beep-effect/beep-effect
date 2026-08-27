@@ -10,24 +10,21 @@
  * @since 0.0.0
  */
 
-import type {Confidence} from "@beep/epistemic-domain/values/EvidenceSpan";
-import {$ScratchpadId} from "@beep/identity";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import {
   N3ParseTurtleRequest,
   N3SerializeTurtleRequest,
   N3TurtleCodec,
   N3TurtleCodecLive
 } from "@beep/n3";
-import type {
-  BlankNode as BlankNodeType,
+import type { BlankNode as BlankNodeType, Quad } from "@beep/rdf";
+import {
   GraphTerm,
+  IRI,
   NamedNode,
   ObjectTerm,
-  Quad,
-  Subject
-} from "@beep/rdf";
-import {
-  IRI,
+  Subject,
   makeBlankNode,
   makeLiteral,
   makeNamedNode as makeCanonicalNamedNode,
@@ -64,6 +61,7 @@ import {dual} from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
 import {
@@ -424,7 +422,7 @@ export const rdfStoreApplyRules: {
 );
 
 /**
- * QuadPattern - Query pattern for store queries
+ * Query pattern for mutable RDF workflow stores.
  *
  * **Details**
  *
@@ -434,21 +432,42 @@ export const rdfStoreApplyRules: {
  * **Example** (Match any name triple)
  *
  * ```ts
- * import type { QuadPattern } from "@effect-ontology/Service/Rdf"
+ * import { QuadPattern } from "@effect-ontology/Service/Rdf"
+ * import * as S from "effect/Schema"
  *
- * const pattern: QuadPattern = { predicate: "https://schema.org/name" }
+ * const pattern = S.decodeUnknownSync(QuadPattern)({ predicate: "https://schema.org/name" })
  * console.log(pattern.predicate)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const QuadPattern = S.Struct({
+  subject: S.optionalKey(S.Union([IRI, Subject, S.Null])).annotateKey({
+    description: "Optional subject constraint; null and omission are wildcards.",
+  }),
+  predicate: S.optionalKey(S.Union([IRI, NamedNode, S.Null])).annotateKey({
+    description: "Optional predicate constraint; null and omission are wildcards.",
+  }),
+  object: S.optionalKey(S.Union([IRI, ObjectTerm, S.Null])).annotateKey({
+    description: "Optional object constraint; null and omission are wildcards.",
+  }),
+  graph: S.optionalKey(S.Union([IRI, GraphTerm, S.Null])).annotateKey({
+    description: "Optional graph constraint; null and omission are wildcards.",
+  }),
+}).pipe(
+  $I.annoteSchema("QuadPattern", {
+    description: "Optional RDF term constraints used to query the mutable workflow store.",
+  })
+);
+
+/**
+ * Runtime query pattern decoded by {@link QuadPattern}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface QuadPattern {
-  readonly subject?: IRI | Subject | null;
-  readonly predicate?: IRI | NamedNode | null;
-  readonly object?: IRI | ObjectTerm | null;
-  readonly graph?: IRI | GraphTerm | null;
-}
+export type QuadPattern = typeof QuadPattern.Type;
 
 /**
  * Internal: Convert N3 Term to the canonical RDF object-term union
@@ -583,33 +602,39 @@ const domainTermToN3Term = (
  * **Example** (Target a named graph)
  *
  * ```ts
- * import type { AddTriplesOptions } from "@effect-ontology/Service/Rdf"
+ * import { AddTriplesOptions } from "@effect-ontology/Service/Rdf"
+ * import * as S from "effect/Schema"
  *
- * const options: AddTriplesOptions = {
+ * const options = S.decodeUnknownSync(AddTriplesOptions)({
  *   graphUri: "https://example.org/graphs/extraction",
  *   targetNamespace: "https://example.org/core/"
- * }
+ * })
  * console.log(options.targetNamespace)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AddTriplesOptions = S.Struct({
+  graphUri: S.optionalKey(S.String).annotateKey({
+    description: "Named graph URI receiving the triples; omission selects the default graph.",
+  }),
+  targetNamespace: S.optionalKey(S.String).annotateKey({
+    description: "Namespace override used when minting entity and relation IRIs.",
+  }),
+}).pipe(
+  $I.annoteSchema("AddTriplesOptions", {
+    description: "Optional graph and namespace routing for RDF entity and relation insertion.",
+  })
+);
+
+/**
+ * Runtime insertion options decoded by {@link AddTriplesOptions}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface AddTriplesOptions {
-  /** Optional named graph URI - triples go to default graph if not specified */
-  readonly graphUri?: string;
-  /**
-   * Target namespace for entity/relation IRIs
-   *
-   * When provided, overrides config.rdf.baseNamespace for IRI minting.
-   * Use this to ensure extracted entities land in the batch's target namespace
-   * rather than the deployment's default namespace.
-   *
-   * Example: "https://sports.org/football/" will produce IRIs like
-   * "https://sports.org/football/entity123" instead of config default.
-   */
-  readonly targetNamespace?: string;
-}
+export type AddTriplesOptions = typeof AddTriplesOptions.Type;
 
 /**
  * Extraction metadata for provenance tracking
@@ -622,35 +647,78 @@ export interface AddTriplesOptions {
  * **Example** (Record extraction provenance)
  *
  * ```ts
- * import type { ExtractionMetadata } from "@effect-ontology/Service/Rdf"
+ * import { ExtractionMetadata } from "@effect-ontology/Service/Rdf"
+ * import * as S from "effect/Schema"
  *
- * const metadata: ExtractionMetadata = {
+ * const metadata = S.decodeUnknownSync(ExtractionMetadata)({
  *   graphUri: "https://example.org/graphs/prov",
  *   timestamp: "2026-01-01T00:00:00.000Z",
  *   sourceUri: "gs://beep-input/ada.txt",
  *   model: "claude-haiku-4-5",
  *   ontologyVersion: "core@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
- * }
+ * })
  * console.log(metadata.model)
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ExtractionMetadata = S.Struct({
+  graphUri: S.String.annotateKey({ description: "Graph URI receiving the provenance triples." }),
+  activityUri: S.optionalKey(S.String).annotateKey({
+    description: "Optional PROV activity URI representing the extraction run.",
+  }),
+  timestamp: S.String.annotateKey({ description: "ISO 8601 timestamp recorded for the extraction." }),
+  sourceUri: S.String.annotateKey({ description: "URI of the source document." }),
+  model: S.String.annotateKey({ description: "Language model identifier used for extraction." }),
+  ontologyVersion: S.String.annotateKey({ description: "Ontology version identifier used by the extraction." }),
+}).pipe(
+  $I.annoteSchema("ExtractionMetadata", {
+    description: "Provenance coordinates recorded for one ontology extraction run.",
+  })
+);
+
+/**
+ * Runtime provenance metadata decoded by {@link ExtractionMetadata}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ExtractionMetadata {
-  /** Graph URI where metadata triples will be added (typically the provenance graph) */
-  readonly graphUri: string;
-  /** Activity URI representing the extraction run */
-  readonly activityUri?: string;
-  /** ISO 8601 timestamp when extraction was performed */
-  readonly timestamp: string;
-  /** Source document URI */
-  readonly sourceUri: string;
-  /** LLM model used for extraction */
-  readonly model: string;
-  /** Ontology version identifier (e.g., "football/ontology@abc123") */
-  readonly ontologyVersion: string;
-}
+export type ExtractionMetadata = typeof ExtractionMetadata.Type;
+
+const ConfidenceTriple = S.Struct({
+  subject: S.String,
+  predicate: S.String,
+  object: S.Union([S.String, S.Finite, S.Boolean]),
+}).pipe(
+  $I.annoteSchema("ConfidenceTriple", {
+    description: "Unencoded RDF triple components accepted by confidence reification.",
+  })
+);
+type ConfidenceTriple = typeof ConfidenceTriple.Type;
+
+const MentionInput = S.Struct({
+  text: S.String,
+  startChar: S.Finite,
+  endChar: S.Finite,
+  confidence: S.optionalKey(Confidence),
+}).pipe(
+  $I.annoteSchema("MentionInput", {
+    description: "Source-aligned text mention used to generate provenance triples.",
+  })
+);
+type MentionInput = typeof MentionInput.Type;
+
+const MentionOptions = S.Struct({
+  mentionUri: S.optionalKey(S.String),
+  sourceUri: S.optionalKey(S.String),
+  graphUri: S.optionalKey(S.String),
+}).pipe(
+  $I.annoteSchema("MentionOptions", {
+    description: "Optional mention, source, and graph URIs used by mention generation.",
+  })
+);
+type MentionOptions = typeof MentionOptions.Type;
 
 /**
  * Describes the rdf builder shape data exposed by this module.
@@ -709,7 +777,7 @@ export interface RdfBuilderShape {
    */
   readonly addTripleWithConfidence: (
     store: RdfStore,
-    triple: { subject: string; predicate: string; object: string | number | boolean },
+    triple: ConfidenceTriple,
     confidence: Confidence,
     graphUri?: string
   ) => Effect.Effect<void, RdfError, never>;
@@ -721,8 +789,8 @@ export interface RdfBuilderShape {
   readonly generateMentionTriples: (
     store: RdfStore,
     entityUri: string,
-    mention: { text: string; startChar: number; endChar: number; confidence?: Confidence },
-    options?: { mentionUri?: string; sourceUri?: string; graphUri?: string }
+    mention: MentionInput,
+    options?: MentionOptions
   ) => Effect.Effect<string, RdfError, never>;
   readonly toTurtle: (store: RdfStore) => Effect.Effect<string, SerializationFailed, never>;
   /**

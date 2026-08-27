@@ -11,40 +11,40 @@
  * @since 0.0.0
  */
 
-import {$ScratchpadId} from "@beep/identity";
-import {PostgresDrizzle} from "@beep/postgres";
-import {DrizzleError} from "@beep/drizzle";
-import {and, eq, inArray, lt} from "drizzle-orm";
+import { DrizzleError } from "@beep/drizzle";
+import { $ScratchpadId } from "@beep/identity";
+import { PostgresDrizzle } from "@beep/postgres";
+import * as A from "@beep/utils/Array";
+import { and, eq, inArray, lt } from "drizzle-orm";
 import {
-  Cache,
-  Context,
-  Crypto,
-  Duration,
-  Effect,
-  Encoding,
-  Layer
+    Cache,
+    Clock,
+    Context,
+    Crypto,
+    DateTime,
+    Duration,
+    Effect,
+    Encoding,
+    Inspectable,
+    Layer
 } from "effect";
-import * as Clock from "effect/Clock";
-import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as A from "@beep/utils/Array";
-import * as Inspectable from "effect/Inspectable";
-import type {EnrichedContent} from "../Domain/Model/EnrichedContent.ts";
-import type {LinkStatus} from "../Domain/Schema/LinkIngestion.ts";
+import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
+import type { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
 import type {
-  IngestedLinkInsertRow,
-  IngestedLinkRow
+    IngestedLinkInsertRow,
+    IngestedLinkRow
 } from "../Repository/schema.ts";
-import {IngestedLinks, ingestedLinks} from "../Repository/schema.ts";
-import {normalizeDrizzleError} from "../Utils/Sql.ts";
-import {ContentEnrichmentAgent} from "./ContentEnrichmentAgent.ts";
-import {ImageExtractor} from "./ImageExtractor.ts";
-import {ImageFetcher} from "./ImageFetcher.ts";
-import {ImageStore} from "./ImageStore.ts";
-import {JinaReaderClient} from "./JinaReaderClient.ts";
-import {StorageService} from "./Storage.ts";
+import { IngestedLinks, ingestedLinks } from "../Repository/schema.ts";
+import { normalizeDrizzleError } from "../Utils/Sql.ts";
+import { ContentEnrichmentAgent } from "./ContentEnrichmentAgent.ts";
+import { ImageExtractor } from "./ImageExtractor.ts";
+import { ImageFetcher } from "./ImageFetcher.ts";
+import { ImageStore } from "./ImageStore.ts";
+import { JinaReaderClient } from "./JinaReaderClient.ts";
+import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 

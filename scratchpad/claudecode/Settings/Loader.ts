@@ -12,18 +12,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
+import * as O from "@beep/utils/Option";
+import { Config, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
-import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { SettingsDecodeError, SettingsParseError, SettingsReadError } from "../Errors.ts";
 import { SettingsFile, SettingsRaw } from "./Schema.ts";
 
@@ -278,14 +273,10 @@ export const localSettingsPath = (cwd: string): Effect.Effect<string, never, Pat
   });
 
 const managedRoots = (options: LoadOptions): ReadonlyArray<string> =>
-  O.match(options.managedSettingsRoots, {
-    onNone: () =>
-      O.match(options.managedSettingsRoot, {
-        onNone: () => defaultManagedSettingsRoots,
-        onSome: (root) => [root],
-      }),
-    onSome: (roots) => roots,
-  });
+  options.managedSettingsRoots.pipe(
+    O.orElse(() => O.map(options.managedSettingsRoot, A.make)),
+    O.getOrElse(() => defaultManagedSettingsRoots)
+  );
 
 const managedSettingsSourcePaths = (
   options: LoadOptions
@@ -386,7 +377,7 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * @category configuration
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The required cwd plus optional load options make a one-argument direct call indistinguishable from a curried overload.
 export const load = (
   cwd: string,
   options?: LoadOptions.Encoded

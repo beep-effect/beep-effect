@@ -1,7 +1,7 @@
 import { A, N, O, Str } from "@beep/utils";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Effect, Result as Rs } from "effect";
+import { Effect, pipe, Result as Rs } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import {
@@ -78,6 +78,11 @@ describe("CodeMode schema laws", () => {
     const sparse = new Array(100_001);
 
     expect(() => copyOut(sparse, CopyOutMode.Enum.json)).toThrow(/100000-item boundary limit/u);
+  });
+
+  it("supports direct and pipeable copy-out calls", () => {
+    expect(copyOut(undefined, CopyOutMode.Enum.nullify)).toBeNull();
+    expect(pipe(undefined, copyOut(CopyOutMode.Enum.nullify))).toBeNull();
   });
 
   it("derives warning-free arbitraries for every checked string domain", () => {

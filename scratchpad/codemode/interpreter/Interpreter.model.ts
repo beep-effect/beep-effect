@@ -13,6 +13,7 @@ import {
 } from "@beep/schema";
 import {A, N, O, P} from "@beep/utils";
 import {Effect, MutableHashMap, Result} from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type {SafeObject} from "@beep/schema/SafeObject";
 import {ToolError} from "../Codemode.tool-error.ts";
@@ -1997,7 +1998,7 @@ export type InterpreterFailure = typeof InterpreterFailure.Type;
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The optional AST context makes a one-argument evaluation call indistinguishable from a curried overload.
 export const tryInterpreter = <Value>(
   evaluate: () => Value,
   node?: AstNode
@@ -2032,7 +2033,7 @@ export const tryInterpreter = <Value>(
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Syntax kind and offending AST node are co-primary inputs for a newly allocated diagnostic.
 export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRuntimeError =>
   InterpreterRuntimeError.new(
     `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
@@ -2080,13 +2081,15 @@ export const isRecord = P.isObject;
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const asNode = (value: unknown, context: string): AstNode => {
+export const asNode: {
+  (context: string): (value: unknown) => AstNode;
+  (value: unknown, context: string): AstNode;
+} = dual(2, (value: unknown, context: string): AstNode => {
   if (!AstNode.is(value)) {
     throw InterpreterRuntimeError.new(`Invalid AST node while reading ${context}.`);
   }
   return value;
-};
+});
 
 /**
  * Reads `node[key]` as an array, throwing if the property is missing or not an array.
@@ -2105,14 +2108,16 @@ export const asNode = (value: unknown, context: string): AstNode => {
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const getArray = (node: AstNode, key: string): Array<unknown> => {
+export const getArray: {
+  (key: string): (node: AstNode) => Array<unknown>;
+  (node: AstNode, key: string): Array<unknown>;
+} = dual(2, (node: AstNode, key: string): Array<unknown> => {
   const value = node[key];
   if (!A.isArray(value)) {
     throw InterpreterRuntimeError.new(`Expected '${key}' to be an array.`, node);
   }
   return value;
-};
+});
 
 /**
  * Reads `node[key]` as a string, throwing if the property is not a string.
@@ -2131,14 +2136,16 @@ export const getArray = (node: AstNode, key: string): Array<unknown> => {
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const getString = (node: AstNode, key: string): string => {
+export const getString: {
+  (key: string): (node: AstNode) => string;
+  (node: AstNode, key: string): string;
+} = dual(2, (node: AstNode, key: string): string => {
   const value = node[key];
   if (!P.isString(value)) {
     throw InterpreterRuntimeError.new(`Expected '${key}' to be a string.`, node);
   }
   return value;
-};
+});
 
 /**
  * Reads `node[key]` as a boolean, throwing if the property is not a boolean.
@@ -2157,14 +2164,16 @@ export const getString = (node: AstNode, key: string): string => {
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const getBoolean = (node: AstNode, key: string): boolean => {
+export const getBoolean: {
+  (key: string): (node: AstNode) => boolean;
+  (node: AstNode, key: string): boolean;
+} = dual(2, (node: AstNode, key: string): boolean => {
   const value = node[key];
   if (!P.isBoolean(value)) {
     throw InterpreterRuntimeError.new(`Expected '${key}' to be a boolean.`, node);
   }
   return value;
-};
+});
 
 /**
  * Reads `node[key]` as an {@link AstNode}, returning `undefined` when the property is nullish.
@@ -2183,11 +2192,13 @@ export const getBoolean = (node: AstNode, key: string): boolean => {
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const getOptionalNode = (node: AstNode, key: string): AstNode | undefined => {
+export const getOptionalNode: {
+  (key: string): (node: AstNode) => AstNode | undefined;
+  (node: AstNode, key: string): AstNode | undefined;
+} = dual(2, (node: AstNode, key: string): AstNode | undefined => {
   const value = node[key];
   return P.isNullish(value) ? undefined : asNode(value, key);
-};
+});
 
 /**
  * Reads `node[key]` as a required {@link AstNode}.
@@ -2211,8 +2222,10 @@ export const getOptionalNode = (node: AstNode, key: string): AstNode | undefined
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const getNode = (node: AstNode, key: string): AstNode => asNode(node[key], key);
+export const getNode: {
+  (key: string): (node: AstNode) => AstNode;
+  (node: AstNode, key: string): AstNode;
+} = dual(2, (node: AstNode, key: string): AstNode => asNode(node[key], key));
 
 /**
  * Converts a node's Acorn `loc` into one-based user coordinates.

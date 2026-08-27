@@ -45,7 +45,7 @@ interface RateLimiterState {
  * console.log(limits.maxConcurrent) // 4
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class EmbeddingRateLimiterConfig extends S.Class<EmbeddingRateLimiterConfig>($I`EmbeddingRateLimiterConfig`)(

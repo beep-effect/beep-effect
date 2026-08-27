@@ -11,6 +11,7 @@
  */
 
 import type { Schema } from "effect";
+import { HashMap } from "effect";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { colonSpacing, colonSpacingOptions } from "./colon-spacing.ts";
 import { commentsSpacing, commentsSpacingOptions } from "./comments-spacing.ts";
@@ -102,6 +103,6 @@ export const builtinRules: ReadonlyArray<YamlRule> = catalog.map(([rule]) => rul
  * @category constants
  * @since 0.0.0
  */
-export const builtinOptionsSchemas: ReadonlyMap<string, Schema.Top> = new Map(
+export const builtinOptionsSchemas: HashMap.HashMap<string, Schema.Top> = HashMap.fromIterable(
 	catalog.map(([rule, options]) => [rule.id, options] as const),
 );

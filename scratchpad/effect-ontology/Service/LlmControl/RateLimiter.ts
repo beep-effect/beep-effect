@@ -14,23 +14,52 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Context, Duration, Effect, Layer, Number as N, Ref, Semaphore } from "effect";
+import * as S from "effect/Schema";
 import { CircuitOpenError, RateLimitError } from "../../Domain/Error/Circuit.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/RateLimiter");
+
+const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveInt", {
+    description: "Positive integer used for rate and circuit-breaker limits.",
+  })
+);
 
 // =============================================================================
 // Types
 // =============================================================================
 
 /**
- * Circuit breaker states
+ * Circuit-breaker states.
  *
+ * **Example** (Guard a closed circuit)
  *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CircuitState } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ *
+ * console.log(S.is(CircuitState)("closed")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CircuitState = LiteralKit(["closed", "open", "half_open"]).pipe(
+  $I.annoteSchema("CircuitState", {
+    description: "Closed, open, and half-open circuit-breaker states.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link CircuitState}.
+ *
+ * @see {@link CircuitState} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type CircuitState = "closed" | "open" | "half_open";
+export type CircuitState = typeof CircuitState.Type;
 
 /**
  * Rate limiter state
@@ -39,36 +68,35 @@ export type CircuitState = "closed" | "open" | "half_open";
  * **Example** (Use the RateLimiterState contract)
  *
  * ```ts
- * import type { RateLimiterState } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ * import { RateLimiterState } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * const state: RateLimiterState = {
+ * const state = RateLimiterState.make({
  *   requestsThisMinute: 0,
  *   tokensThisMinute: 0,
  *   lastReset: 0,
  *   circuitState: "closed",
  *   failureCount: 0,
  *   successCount: 0
- * }
+ * })
  * console.log(state.circuitState) // "closed"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface RateLimiterState {
-  /** Requests made in current minute window */
-  readonly requestsThisMinute: number;
-  /** Tokens used in current minute window */
-  readonly tokensThisMinute: number;
-  /** Timestamp of last counter reset */
-  readonly lastReset: number;
-  /** Circuit breaker state */
-  readonly circuitState: CircuitState;
-  /** Consecutive failures count */
-  readonly failureCount: number;
-  /** Consecutive successes count (for half_open recovery) */
-  readonly successCount: number;
-}
+export class RateLimiterState extends S.Class<RateLimiterState>($I`RateLimiterState`)(
+  {
+    requestsThisMinute: S.Natural.annotateKey({ description: "Requests made in the current minute window." }),
+    tokensThisMinute: S.Natural.annotateKey({ description: "Tokens used in the current minute window." }),
+    lastReset: S.Natural.annotateKey({ description: "Epoch-millisecond timestamp of the last counter reset." }),
+    circuitState: CircuitState.annotateKey({ description: "Current circuit-breaker state." }),
+    failureCount: S.Natural.annotateKey({ description: "Consecutive failure count." }),
+    successCount: S.Natural.annotateKey({ description: "Consecutive half-open success count." }),
+  },
+  $I.annote("RateLimiterState", {
+    description: "Rate-window counters and circuit-breaker recovery state.",
+  })
+) {}
 
 /**
  * Rate limiter configuration
@@ -78,48 +106,49 @@ export interface RateLimiterState {
  *
  * ```ts
  * import { Duration } from "effect"
- * import type { RateLimiterConfig } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ * import { RateLimiterConfig } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- * const config: RateLimiterConfig = {
+ * const config = RateLimiterConfig.make({
  *   requestsPerMinute: 50,
  *   tokensPerMinute: 80_000,
  *   maxConcurrent: 4,
  *   failureThreshold: 5,
  *   recoveryTimeout: Duration.seconds(30),
  *   successThreshold: 2
- * }
+ * })
  * console.log(config.requestsPerMinute) // 50
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface RateLimiterConfig {
-  /** Maximum requests per minute */
-  readonly requestsPerMinute: number;
-  /** Maximum tokens per minute */
-  readonly tokensPerMinute: number;
-  /** Maximum concurrent requests */
-  readonly maxConcurrent: number;
-  /** Failures before circuit opens */
-  readonly failureThreshold: number;
-  /** Delay before an open circuit may enter half-open state. */
-  readonly recoveryTimeout: Duration.Duration;
-  /** Successes in half_open before closing */
-  readonly successThreshold: number;
-}
+export class RateLimiterConfig extends S.Class<RateLimiterConfig>($I`RateLimiterConfig`)(
+  {
+    requestsPerMinute: PositiveInt.annotateKey({ description: "Maximum requests per minute." }),
+    tokensPerMinute: PositiveInt.annotateKey({ description: "Maximum tokens per minute." }),
+    maxConcurrent: PositiveInt.annotateKey({ description: "Maximum concurrent requests." }),
+    failureThreshold: PositiveInt.annotateKey({ description: "Failures observed before the circuit opens." }),
+    recoveryTimeout: S.Duration.annotateKey({ description: "Delay before an open circuit may become half-open." }),
+    successThreshold: PositiveInt.annotateKey({
+      description: "Half-open successes required before the circuit closes.",
+    }),
+  },
+  $I.annote("RateLimiterConfig", {
+    description: "Request, token, concurrency, and circuit-breaker limits.",
+  })
+) {}
 
 /**
  * Default configuration
  */
-const DEFAULT_CONFIG: RateLimiterConfig = {
+const DEFAULT_CONFIG = RateLimiterConfig.make({
   requestsPerMinute: 50,
   tokensPerMinute: 100_000,
   maxConcurrent: 5,
   failureThreshold: 5,
   recoveryTimeout: Duration.minutes(2),
   successThreshold: 2,
-};
+});
 
 // =============================================================================
 // Service
@@ -207,24 +236,26 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
   const rateWindowMillis = Duration.toMillis(rateWindow);
   const recoveryTimeoutMillis = Duration.toMillis(config.recoveryTimeout);
   const initialTime = yield* Clock.currentTimeMillis;
-  const state = yield* Ref.make<RateLimiterState>({
-    requestsThisMinute: 0,
-    tokensThisMinute: 0,
-    lastReset: Number(initialTime),
-    circuitState: "closed",
-    failureCount: 0,
-    successCount: 0,
-  });
+  const state = yield* Ref.make(
+    RateLimiterState.make({
+      requestsThisMinute: 0,
+      tokensThisMinute: 0,
+      lastReset: Number(initialTime),
+      circuitState: "closed",
+      failureCount: 0,
+      successCount: 0,
+    })
+  );
   const semaphore = yield* Semaphore.make(config.maxConcurrent);
   const maybeResetCounters = (now: number) =>
     Ref.update(state, (s) =>
       now - s.lastReset > rateWindowMillis
-        ? {
+        ? RateLimiterState.make({
             ...s,
             requestsThisMinute: 0,
             tokensThisMinute: 0,
             lastReset: now,
-          }
+          })
         : s
     );
   return {
@@ -242,10 +273,11 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
         }
         yield* Ref.update(
           state,
-          (s): RateLimiterState => ({
+          (s) =>
+            RateLimiterState.make({
             ...s,
             circuitState: "half_open",
-          })
+            })
         );
       }
       yield* maybeResetCounters(now);
@@ -267,11 +299,13 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
         return yield* error;
       }
       yield* semaphore.take(1);
-      yield* Ref.update(state, (s) => ({
-        ...s,
-        requestsThisMinute: s.requestsThisMinute + 1,
-        tokensThisMinute: s.tokensThisMinute + estimatedTokens,
-      }));
+      yield* Ref.update(state, (s) =>
+        RateLimiterState.make({
+          ...s,
+          requestsThisMinute: s.requestsThisMinute + 1,
+          tokensThisMinute: s.tokensThisMinute + estimatedTokens,
+        })
+      );
     }),
     release: Effect.fn("CentralRateLimiter.release")(function* (_actualTokens: number, success: boolean) {
       yield* semaphore.release(1);
@@ -279,23 +313,23 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
       yield* Ref.update(state, (s) => {
         if (success) {
           const newSuccessCount = s.successCount + 1;
-          return {
+          return RateLimiterState.make({
             ...s,
             successCount: newSuccessCount,
             failureCount: 0,
             circuitState:
               s.circuitState === "half_open" && newSuccessCount >= config.successThreshold ? "closed" : s.circuitState,
-          };
+          });
         } else {
           const newFailureCount = s.failureCount + 1;
           const shouldOpen = newFailureCount >= config.failureThreshold;
-          return {
+          return RateLimiterState.make({
             ...s,
             failureCount: newFailureCount,
             successCount: 0,
             circuitState: shouldOpen ? "open" : s.circuitState,
             lastReset: shouldOpen ? now : s.lastReset,
-          };
+          });
         }
       });
     }),
@@ -307,12 +341,14 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
       return Duration.millis(N.max(0, rateWindowMillis - elapsed));
     }),
     setCircuitState: (circuitState: CircuitState) =>
-      Ref.update(state, (s) => ({
-        ...s,
-        circuitState,
-        failureCount: circuitState === "closed" ? 0 : s.failureCount,
-        successCount: circuitState === "closed" ? 0 : s.successCount,
-      })),
+      Ref.update(state, (s) =>
+        RateLimiterState.make({
+          ...s,
+          circuitState,
+          failureCount: circuitState === "closed" ? 0 : s.failureCount,
+          successCount: circuitState === "closed" ? 0 : s.successCount,
+        })
+      ),
   };
 });
 
@@ -361,4 +397,4 @@ export const CentralRateLimiterServiceLive = Layer.effect(CentralRateLimiterServ
 export const CentralRateLimiterServiceTest = (
   overrides: Partial<RateLimiterConfig> = {}
 ): Layer.Layer<CentralRateLimiterService> =>
-  Layer.effect(CentralRateLimiterService, make({ ...DEFAULT_CONFIG, ...overrides }));
+  Layer.effect(CentralRateLimiterService, make(RateLimiterConfig.make({ ...DEFAULT_CONFIG, ...overrides })));

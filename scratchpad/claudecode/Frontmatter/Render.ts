@@ -6,15 +6,14 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { stringify as stringifyYaml } from "yaml";
-
 import { CommandFrontmatter } from "./Command.ts";
 import { OutputStyleFrontmatter } from "./OutputStyle.ts";
 import { SkillFrontmatter } from "./Skill.ts";

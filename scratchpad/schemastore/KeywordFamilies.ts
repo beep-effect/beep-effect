@@ -25,13 +25,15 @@
  */
 
 // The vscode-json-languageservice extension set (exact names).
-const VSCODE_KEYWORDS = new Set([
-	"allowTrailingCommas",
-	"defaultSnippets",
-	"enumDescriptions",
-	"markdownDescription",
-	"markdownEnumDescriptions",
-]);
+import { HashSet } from "effect";
+
+const VSCODE_KEYWORDS = HashSet.make(
+  "allowTrailingCommas",
+  "defaultSnippets",
+  "enumDescriptions",
+  "markdownDescription",
+  "markdownEnumDescriptions"
+);
 
 /**
  * The declared non-standard keyword families as one predicate: the
@@ -65,19 +67,34 @@ const VSCODE_KEYWORDS = new Set([
  * @since 0.0.0
  */
 export class KeywordFamilies {
-	private constructor() {}
+  private constructor() {}
 
-	/**
-	 * Whether `key` belongs to a declared non-standard keyword family.
-	 * Draft-07's own keywords are a separate vocabulary — this predicate
-	 * answers only for the language-server extension families.
-	 */
-	static isDeclared(key: string): boolean {
-		return (
-			VSCODE_KEYWORDS.has(key) ||
-			key.startsWith("x-taplo") ||
-			key.startsWith("x-tombi-") ||
-			key.startsWith("x-intellij-")
-		);
-	}
+  /**
+   * Whether `key` belongs to a declared non-standard keyword family.
+   * Draft-07's own keywords are a separate vocabulary — this predicate
+   * answers only for the language-server extension families.
+   *
+   * **Example** (Admit declared families, reject custom keys)
+   *
+   * ```ts
+   * import { KeywordFamilies } from "@beep/scratchpad/schemastore"
+   *
+   * console.log(KeywordFamilies.isDeclared("x-taplo"))
+   * // => true
+   * console.log(KeywordFamilies.isDeclared("markdownDescription"))
+   * // => true
+   * console.log(KeywordFamilies.isDeclared("x-custom"))
+   * // => false
+   * ```
+   *
+   * @since 0.0.0
+   */
+  static isDeclared(key: string): boolean {
+    return (
+      HashSet.has(VSCODE_KEYWORDS, key) ||
+      key.startsWith("x-taplo") ||
+      key.startsWith("x-tombi-") ||
+      key.startsWith("x-intellij-")
+    );
+  }
 }

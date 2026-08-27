@@ -21,6 +21,7 @@ import {
   DateTime,
   Effect,
   Exit,
+  flow,
   HashMap,
   HashSet,
   Order,
@@ -28,6 +29,7 @@ import {
   Result,
   Stream,
 } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as Tool from "effect/unstable/ai/Tool";
@@ -766,7 +768,7 @@ const isoFromEpochMillis = (millis: number): string | null =>
  * @category encoding
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The required boundary label plus defaulted adapter-preservation flag leave no unambiguous curried arity.
 export const copyIn = (value: unknown, label: string, preserveCodeModeValues = false): unknown =>
   copyBounded(value, label, 0, HashSet.empty(), preserveCodeModeValues);
 
@@ -796,7 +798,7 @@ const copyBounded = (
       // Guest arrays may carry enumerable named properties. Reflect mutation
       // remains isolated to this ECMAScript checkpoint adapter.
       for (const [key, item] of Struct.entries(value)) {
-        if (Object.hasOwn(copied, key)) continue;
+        if (P.hasProperty(copied, key)) continue;
         if (isBlockedMember(key)) {
           throw ToolRuntimeError.new("InvalidDataValue", `${label} contains blocked property '${key}'.`);
         }
@@ -914,8 +916,10 @@ const copyBounded = (
  * @category serialization
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
+export const copyOut: {
+  (mode: CopyOutMode): (value: unknown) => unknown;
+  (value: unknown, mode: CopyOutMode): unknown;
+} = dual(2, (value: unknown, mode: CopyOutMode): unknown => {
   if (P.isUndefined(value) && CopyOutMode.is.nullify(mode)) return null;
   if (P.isNumber(value) && !Number.isFinite(value)) return null;
   if (A.isArray(value)) {
@@ -938,7 +942,7 @@ export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
     );
   }
   return value;
-};
+});
 
 type ToolNode = {
   readonly tool: O.Option<Tool.Any>;
@@ -1088,14 +1092,12 @@ const visibleTools = (root: ToolNode) =>
     }))
   );
 
-const tokenize = (query: string): ReadonlyArray<string> =>
-  pipe(
-    query,
-    Str.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
-    Str.toLowerCase,
-    Str.split(/[^a-z0-9]+/),
-    A.filter((term) => Str.isNonEmpty(term) && term !== "*")
-  );
+const tokenize: (query: string) => ReadonlyArray<string> = flow(
+  Str.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
+  Str.toLowerCase,
+  Str.split(/[^a-z0-9]+/),
+  A.filter((term) => Str.isNonEmpty(term) && term !== "*")
+);
 
 const termForms = (term: string): ReadonlyArray<string> => [
   term,
@@ -1382,7 +1384,7 @@ export type ToolRuntime<R = never> = {
  * @category factories
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Toolkit, handlers, limits, index, and hooks are co-primary factory inputs rather than a data-first transformation.
 export const make = <R>(
   toolkit: Toolkit.Any,
   handlers: AnyWithHandler,

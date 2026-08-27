@@ -100,7 +100,7 @@ export const commentsSpacing: YamlRule = {
 			// Space after `#`: a bare `#` is fine, `#text` is not.
 			if (requireAfter && token.text.length > 1 && !/[ \t]/.test(token.text[1] as string)) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "comments-spacing",
 						severity: "error",
 						message: 'Missing space after "#"',
@@ -118,7 +118,7 @@ export const commentsSpacing: YamlRule = {
 			const { spaces, hasContentBefore } = spacingBefore(ctx, token);
 			if (hasContentBefore && spaces < minBefore) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "comments-spacing",
 						severity: "error",
 						message: `Too few spaces before comment (${spaces} < ${minBefore})`,

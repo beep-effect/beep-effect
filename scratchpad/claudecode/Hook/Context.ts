@@ -10,11 +10,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
+import { Context, Effect, Layer } from "effect";
 import type * as O from "effect/Option";
-
 import type { HookEnvelope } from "./Envelope.ts";
 
 // ---------------------------------------------------------------------------

@@ -87,7 +87,7 @@ export const hyphenSpacing: YamlRule = {
 			if (next === undefined || next === "\n" || next === "\r" || next === "#") continue;
 			if (after > maxAfter) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "hyphen-spacing",
 						severity: "error",
 						message: `Too many spaces after "-" (${after} > ${maxAfter})`,

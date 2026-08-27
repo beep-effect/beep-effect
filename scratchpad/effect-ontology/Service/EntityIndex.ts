@@ -70,13 +70,28 @@ export class PersistentEntityIndexConfigError extends S.TaggedError<PersistentEn
 /**
  * Entity plus its cosine-similarity score from k-NN search.
  *
- * @category type-level
+ * **Example** (Pair an entity with its similarity)
+ *
+ * ```ts
+ * import { ScoredEntity } from "@effect-ontology/Service/EntityIndex"
+ *
+ * declare const entity: ScoredEntity["entity"]
+ * const scored = ScoredEntity.make({ entity, score: 0.92 })
+ * console.log(scored.score) // 0.92
+ * ```
+ *
+ * @category models
  * @since 0.0.0
  */
-export interface ScoredEntity {
-  readonly entity: Entity;
-  readonly score: number;
-}
+export class ScoredEntity extends S.Class<ScoredEntity>($I`ScoredEntity`)(
+  {
+    entity: Entity,
+    score: S.Finite,
+  },
+  $I.annote("ScoredEntity", {
+    description: "Indexed entity paired with its finite cosine-similarity score.",
+  })
+) {}
 
 /**
  * Options for similarity search
@@ -85,24 +100,27 @@ export interface ScoredEntity {
  * **Example** (Filter by type and score)
  *
  * ```ts
- * import type { FindSimilarOptions } from "@effect-ontology/Service/EntityIndex"
+ * import { FindSimilarOptions } from "@effect-ontology/Service/EntityIndex"
  *
- * const options: FindSimilarOptions = {
+ * const options = FindSimilarOptions.make({
  *   filterTypes: ["https://schema.org/Person"],
  *   minScore: 0.8
- * }
+ * })
  * console.log(options.minScore) // 0.8
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface FindSimilarOptions {
-  /** Filter to only entities with any of these types */
-  readonly filterTypes?: ReadonlyArray<string>;
-  /** Minimum similarity score threshold (0-1) */
-  readonly minScore?: number;
-}
+export class FindSimilarOptions extends S.Class<FindSimilarOptions>($I`FindSimilarOptions`)(
+  {
+    filterTypes: S.Array(S.NonEmptyString).pipe(S.optionalKey),
+    minScore: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(S.optionalKey),
+  },
+  $I.annote("FindSimilarOptions", {
+    description: "Optional entity-type filter and minimum similarity threshold for index searches.",
+  })
+) {}
 
 /**
  * Internal index state
@@ -266,7 +284,7 @@ const makeEntityIndexMethods = (
       const entityEmbedding = HashMap.get(state.embeddings, entityId);
       if (O.isSome(entity) && O.isSome(entityEmbedding)) {
         const score = cosineSimilarity(queryEmbedding, entityEmbedding.value);
-        if (score >= minScore) scored.push({ entity: entity.value, score });
+        if (score >= minScore) scored.push(ScoredEntity.make({ entity: entity.value, score }));
       }
     }
     return A.take(

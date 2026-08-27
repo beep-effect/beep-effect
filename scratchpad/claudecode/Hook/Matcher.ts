@@ -94,7 +94,7 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- `matchValue(pattern)` is the data-last form; this named direct compatibility helper intentionally preserves `(pattern, value)`.
 export const testValue = (pattern: string | RegExp, name: string): boolean => matchValue(pattern)(name);
 
 /**
@@ -211,5 +211,5 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- `matchTool(pattern)` is the data-last form; this alias intentionally preserves the direct compatibility call.
 export const testTool = testValue;

@@ -8,7 +8,8 @@ import { Unknown } from "@beep/schema/Unknown";
 import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
 import { A, O, P, R, Str, thunkFalse, pipe } from "@beep/utils";
-import { HashSet, JsonPointer, Result } from "effect";
+import { flow, HashSet, JsonPointer, Result } from "effect";
+import { dual } from "effect/Function";
 import type { JsonSchema } from "effect/JsonSchema";
 import * as S from "effect/Schema";
 import * as Tool from "effect/unstable/ai/Tool";
@@ -255,9 +256,7 @@ const jsdoc = (
     O.map(Str.split("\n")),
     O.getOrElse(A.empty),
     A.appendAll(tags),
-    A.map((line) =>
-      pipe(line, Str.replaceAll("*/", "* /"), Str.trimEnd)
-    ),
+    A.map(flow(Str.replaceAll("*/", "* /"), Str.trimEnd)),
     A.dropWhile(isBlank),
     A.reverse,
     A.dropWhile(isBlank),
@@ -521,7 +520,7 @@ const renderSchema = (
  * JSON Schema conversion or decode failure becomes the string `"unknown"`.
  * `decoded=true` uses `S.toType(schema)` (decoded-side JSON Schema); the
  * default encoded-side path uses the schema as-is. Descriptions that contain
- * `*/` are rewritten so generated comments cannot terminate a block.
+ * `*\/` sequences are rewritten so generated comments cannot terminate a block.
  *
  * **Example** (Render a string schema)
  *
@@ -539,15 +538,17 @@ const renderSchema = (
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const toTypeScript = (
+export const toTypeScript: {
+  (decoded?: boolean, pretty?: boolean): (schema: S.Top) => string;
+  (schema: S.Top, decoded?: boolean, pretty?: boolean): string;
+} = dual((args) => S.isSchema(args[0]), (
   schema: S.Top,
   decoded = false,
   pretty = false
 ): string =>
   pipe(
     Result.try({
-      try: () => S.toJsonSchemaDocument(decoded ? S.toType(schema) : schema),
+      try: () => S.toJsonSchemaDocument(decoded === true ? S.toType(schema) : schema),
       catch: (cause) => cause,
     }),
     Result.flatMap(S.decodeUnknownResult(JSONSchema.Document)),
@@ -559,7 +560,7 @@ export const toTypeScript = (
           pretty,
         }),
     })
-  );
+  ));
 
 /**
  * Renders a raw JSON Schema document after schema-first decoding.
@@ -582,8 +583,10 @@ export const toTypeScript = (
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const jsonSchemaToTypeScript = (
+export const jsonSchemaToTypeScript: {
+  (pretty?: boolean): (schema: JsonSchema) => string;
+  (schema: JsonSchema, pretty?: boolean): string;
+} = dual((args) => P.isObject(args[0]), (
   schema: JsonSchema,
   pretty = false
 ): string =>
@@ -597,7 +600,7 @@ export const jsonSchemaToTypeScript = (
           pretty,
         }),
     })
-  );
+  ));
 
 /**
  * One discoverable input property decoded from a tool input JSON Schema.
@@ -732,9 +735,11 @@ export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const inputTypeScript = (tool: Tool.Any, pretty = false): string =>
-  jsonSchemaToTypeScript(Tool.getJsonSchema(tool), pretty);
+export const inputTypeScript: {
+  (pretty?: boolean): (tool: Tool.Any) => string;
+  (tool: Tool.Any, pretty?: boolean): string;
+} = dual((args) => P.isObject(args[0]), (tool: Tool.Any, pretty = false): string =>
+  jsonSchemaToTypeScript(Tool.getJsonSchema(tool), pretty));
 
 /**
  * Renders one tool's success and returned-failure schemas as TypeScript.
@@ -766,10 +771,12 @@ export const inputTypeScript = (tool: Tool.Any, pretty = false): string =>
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const outputTypeScript = (tool: Tool.Any, pretty = false): string => {
+export const outputTypeScript: {
+  (pretty?: boolean): (tool: Tool.Any) => string;
+  (tool: Tool.Any, pretty?: boolean): string;
+} = dual((args) => P.isObject(args[0]), (tool: Tool.Any, pretty = false): string => {
   const success = toTypeScript(tool.successSchema, true, pretty);
   if (tool.failureMode !== "return") return success;
   const failure = toTypeScript(tool.failureSchema, true, pretty);
   return failure === "never" ? success : `${success} | ${failure}`;
-};
+});

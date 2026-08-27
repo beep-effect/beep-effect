@@ -115,7 +115,7 @@ export type Embedding = typeof Embedding.Type;
  * console.log(EmbeddingRequest.make({ text: "Ada", taskType: "search_query" }).taskType)
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class EmbeddingRequest extends S.Class<EmbeddingRequest>($I`EmbeddingRequest`)(
@@ -141,7 +141,7 @@ export class EmbeddingRequest extends S.Class<EmbeddingRequest>($I`EmbeddingRequ
  * console.log(metadata.dimension) // 768
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ProviderMetadata extends S.Class<ProviderMetadata>($I`ProviderMetadata`)(

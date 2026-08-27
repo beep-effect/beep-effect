@@ -1,20 +1,32 @@
-/**
- * YAML 1.2 lexer — tokenizes raw YAML text into YamlToken records.
- *
- * This is the only mutable module in the pipeline: the scanner uses
- * imperative character-by-character scanning with position tracking.
- * `createScanner` is the state machine; `lexAll` drives it to completion.
- * Lexical errors are `"error"` tokens, not throws.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-
+import { MutableHashMap } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import type { YamlToken, YamlTokenKind } from "./token.ts";
 
 // ---------------------------------------------------------------------------
 // Scanner (mutable, imperative)
 // ---------------------------------------------------------------------------
+
+const LEXER_SIMPLE_ESCAPE_VALUES: Readonly<Record<string, string>> = {
+	"\\": "\\",
+	'"': '"',
+	"/": "/",
+	b: "\b",
+	f: "\f",
+	n: "\n",
+	r: "\r",
+	"\t": "\t",
+	t: "\t",
+	"0": "\0",
+	a: "\x07",
+	e: "\x1B",
+	v: "\x0B",
+	" ": " ",
+	N: "\u0085",
+	_: "\u00a0",
+	L: "\u2028",
+	P: "\u2029",
+};
 
 /**
  * A stateful YAML scanner that produces tokens one at a time.
@@ -28,6 +40,12 @@ import type { YamlToken, YamlTokenKind } from "./token.ts";
  * {@link YamlScanner.setPosition} resets indent/flow/pending-token state.
  * Pass an offset previously returned by {@link YamlScanner.getTokenOffset},
  * not an arbitrary mid-token position such as `indexOf(":")` inside a scalar.
+ *
+ * **Details**
+ *
+ * This deliberately remains an interface: it is a stateful pull protocol
+ * with command and query methods, not a data record suitable for Schema
+ * decoding. The tokens it produces are schema-owned by `internal/token.ts`.
  *
  * @see {@link createScanner} for the factory that constructs this scanner.
  * @internal
@@ -102,7 +120,7 @@ export function createScanner(text: string): YamlScanner {
 	/** Flow nesting depth (positive means we are inside flow context). */
 	let flowDepth = 0;
 	/** Whether we've emitted block-map-start / block-seq-start for the current indent. */
-	const blockStarted: Map<number, "map" | "seq"> = new Map();
+	const blockStarted = MutableHashMap.empty<number, "map" | "seq">();
 	/** Set when the block scalar scanner produces an empty value (contentIndent === 0). */
 	let afterEmptyBlockScalar = false;
 	/** Set when the previous token was a quoted scalar (single or double quoted). */
@@ -149,9 +167,9 @@ export function createScanner(text: string): YamlScanner {
 			// When dedenting, clear blockStarted entries for indentation levels
 			// deeper than the current line. This allows the same indent level
 			// to start a new block scope after returning from deeper nesting.
-			for (const key of blockStarted.keys()) {
+			for (const key of MutableHashMap.keys(blockStarted)) {
 				if (key > lineIndent) {
-					blockStarted.delete(key);
+					MutableHashMap.remove(blockStarted, key);
 				}
 			}
 		}
@@ -218,13 +236,13 @@ export function createScanner(text: string): YamlScanner {
 
 	function ensureBlockMap(indent: number, offset: number, tokLine: number, _tokCol: number): void {
 		if (flowDepth > 0) return;
-		const started = blockStarted.get(indent);
+		const started = O.getOrUndefined(MutableHashMap.get(blockStarted, indent));
 		if (started === "map") return;
 		if (started === "seq") {
 			// switch from seq to map not supported in same indent; ignore
 			return;
 		}
-		blockStarted.set(indent, "map");
+		MutableHashMap.set(blockStarted, indent, "map");
 		// Use `indent` (the line indent) as the column for the zero-width
 		// block-map-start marker so the parser can correctly determine which
 		// block scope this mapping belongs to.
@@ -233,9 +251,9 @@ export function createScanner(text: string): YamlScanner {
 
 	function ensureBlockSeq(indent: number, offset: number, tokLine: number, _tokCol: number): void {
 		if (flowDepth > 0) return;
-		const started = blockStarted.get(indent);
+		const started = O.getOrUndefined(MutableHashMap.get(blockStarted, indent));
 		if (started === "seq") return;
-		blockStarted.set(indent, "seq");
+		MutableHashMap.set(blockStarted, indent, "seq");
 		// Use `indent` as the column for consistency with ensureBlockMap.
 		pending.push(makeToken("block-seq-start", "", offset, tokLine, indent));
 	}
@@ -291,7 +309,7 @@ export function createScanner(text: string): YamlScanner {
 				// If no block structures are active, the tab cannot be serving as
 				// block indentation — treat as separation whitespace (e.g. plain
 				// scalar continuation, YAML 1.2 §6.2).
-				if (blockStarted.size === 0) {
+				if (MutableHashMap.size(blockStarted) === 0) {
 					while (pos < text.length && isWhitespace(peek())) {
 						advance();
 					}
@@ -345,7 +363,7 @@ export function createScanner(text: string): YamlScanner {
 					// Check if the number of spaces before the tab aligns with
 					// an existing block scope — if so, the tab is trying to be
 					// indentation at that level.
-					if (blockStarted.has(tabIdx)) {
+					if (MutableHashMap.has(blockStarted, tabIdx)) {
 						return makeToken("error", ws, start, sLine, sCol);
 					}
 				}
@@ -379,7 +397,7 @@ export function createScanner(text: string): YamlScanner {
 		advance(3);
 		const kind = marker === "---" ? "document-start" : "document-end";
 		// Reset block tracking so the next document gets fresh block-start tokens.
-		blockStarted.clear();
+		MutableHashMap.clear(blockStarted);
 		return makeToken(kind, marker, start, sLine, sCol);
 	}
 
@@ -480,77 +498,10 @@ export function createScanner(text: string): YamlScanner {
 			if (ch === "\\") {
 				advance(); // skip backslash
 				const esc = peek();
-				switch (esc) {
-					case "\\":
-						value += "\\";
-						advance();
-						break;
-					case '"':
-						value += '"';
-						advance();
-						break;
-					case "/":
-						value += "/";
-						advance();
-						break;
-					case "b":
-						value += "\b";
-						advance();
-						break;
-					case "f":
-						value += "\f";
-						advance();
-						break;
-					case "n":
-						value += "\n";
-						advance();
-						break;
-					case "r":
-						value += "\r";
-						advance();
-						break;
-					case "\t":
-					case "t":
-						value += "\t";
-						advance();
-						break;
-					case "0":
-						value += "\0";
-						advance();
-						break;
-					case "a":
-						value += "\x07";
-						advance();
-						break;
-					case "e":
-						value += "\x1B";
-						advance();
-						break;
-					case "v":
-						value += "\x0B";
-						advance();
-						break;
-					case " ":
-						value += " ";
-						advance();
-						break;
-					case "N":
-						value += "\u0085";
-						advance();
-						break;
-					case "_":
-						value += "\u00A0";
-						advance();
-						break;
-					case "L":
-						value += "\u2028";
-						advance();
-						break;
-					case "P":
-						value += "\u2029";
-						advance();
-						break;
-					case "x": {
+				if (P.hasProperty(LEXER_SIMPLE_ESCAPE_VALUES, esc)) {
+					value += LEXER_SIMPLE_ESCAPE_VALUES[esc] ?? esc;
+					advance();
+				} else if (esc === "x") {
 						advance(); // skip 'x'
 						const hex = text.slice(pos, pos + 2);
 						if (hex.length === 2 && /^[\da-fA-F]{2}$/.test(hex)) {
@@ -560,9 +511,7 @@ export function createScanner(text: string): YamlScanner {
 							// Invalid escape — emit error token
 							return makeToken("error", text.slice(start, pos), start, sLine, sCol);
 						}
-						break;
-					}
-					case "u": {
+				} else if (esc === "u") {
 						advance(); // skip 'u'
 						const hex = text.slice(pos, pos + 4);
 						if (hex.length === 4 && /^[\da-fA-F]{4}$/.test(hex)) {
@@ -571,9 +520,7 @@ export function createScanner(text: string): YamlScanner {
 						} else {
 							return makeToken("error", text.slice(start, pos), start, sLine, sCol);
 						}
-						break;
-					}
-					case "U": {
+				} else if (esc === "U") {
 						advance(); // skip 'U'
 						const hex = text.slice(pos, pos + 8);
 						// A well-formed 8-hex-digit escape can still denote a code point
@@ -587,28 +534,22 @@ export function createScanner(text: string): YamlScanner {
 						} else {
 							return makeToken("error", text.slice(start, pos), start, sLine, sCol);
 						}
-						break;
-					}
-					case "\n": {
+				} else if (esc === "\n") {
 						// line continuation
 						advance();
 						// skip leading whitespace on next line
 						while (pos < text.length && isWhitespace(peek())) {
 							advance();
 						}
-						break;
-					}
-					case "\r": {
+				} else if (esc === "\r") {
 						advance();
 						if (peek() === "\n") advance();
 						while (pos < text.length && isWhitespace(peek())) {
 							advance();
 						}
-						break;
-					}
-					default:
-						// Invalid escape sequence — emit error token
-						return makeToken("error", text.slice(start, pos), start, sLine, sCol);
+				} else {
+					// Invalid escape sequence — emit error token
+					return makeToken("error", text.slice(start, pos), start, sLine, sCol);
 				}
 			} else if (ch === "\n" || (ch === "\r" && peek(1) === "\n")) {
 				value += " ";
@@ -753,7 +694,7 @@ export function createScanner(text: string): YamlScanner {
 				// on a preceding line). The parent context indent is the highest
 				// active block indent level from blockStarted.
 				let maxBlockIndent = 0;
-				for (const key of blockStarted.keys()) {
+				for (const key of MutableHashMap.keys(blockStarted)) {
 					if (key > maxBlockIndent) maxBlockIndent = key;
 				}
 				parentIndent = maxBlockIndent;
@@ -800,7 +741,7 @@ export function createScanner(text: string): YamlScanner {
 			}
 		}
 
-		if (!foundContent || (contentIndent === 0 && blockStarted.size > 0)) {
+		if (!foundContent || (contentIndent === 0 && MutableHashMap.size(blockStarted) > 0)) {
 			// No content lines found, or zero-indent content inside a block structure
 			// (zero-indent content is only valid at document level, not inside mappings/sequences)
 			if (chomp === "keep") {
@@ -1188,11 +1129,11 @@ export function createScanner(text: string): YamlScanner {
 		// Document markers (only at column 0)
 		if (col === 0 && ch === "-" && peek(1) === "-" && peek(2) === "-") {
 			const marker = scanDocumentStartOrEnd();
-			if (marker) return marker;
+			if (marker !== null) return marker;
 		}
 		if (col === 0 && ch === "." && peek(1) === "." && peek(2) === ".") {
 			const marker = scanDocumentStartOrEnd();
-			if (marker) return marker;
+			if (marker !== null) return marker;
 		}
 
 		// Directive (only at column 0 outside flow context)
@@ -1521,7 +1462,7 @@ export function createScanner(text: string): YamlScanner {
 			lineIndent = 0;
 			lineIndentLocked = false;
 			flowDepth = 0;
-			blockStarted.clear();
+			MutableHashMap.clear(blockStarted);
 			pending.length = 0;
 			afterEmptyBlockScalar = false;
 			afterQuotedScalar = false;

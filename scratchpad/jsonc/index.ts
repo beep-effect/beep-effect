@@ -29,24 +29,23 @@
 
 export type { JsoncBoundCodec } from "./Jsonc.ts";
 export {
-	Jsonc,
-	JsoncParseError,
-	JsoncParseErrorCode,
-	JsoncParseErrorDetail,
-	JsoncParseOptions,
-	JsoncStringifyError,
-	JsoncStringifyErrorCode,
-	JsoncStringifyOptions,
+  Jsonc,
+  JsoncParseError,
+  JsoncParseErrorCode,
+  JsoncParseErrorDetail,
+  JsoncParseOptions,
+  JsoncStringifyError,
+  JsoncStringifyErrorCode,
+  JsoncStringifyOptions,
 } from "./Jsonc.ts";
-export type { JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
-export { JsoncEdit, JsoncFormattingOptions, JsoncRange } from "./JsoncEdit.ts";
+export { JsoncEdit, JsoncFormattingOptions, JsoncFormattingOptionsLike, JsoncRange } from "./JsoncEdit.ts";
 export {
-	JsoncCanonicalizeError,
-	JsoncCanonicalizeErrorCode,
-	JsoncFingerprint,
-	JsoncTextHashOptions,
+  JsoncCanonicalizeError,
+  JsoncCanonicalizeErrorCode,
+  JsoncFingerprint,
+  JsoncTextHashOptions,
 } from "./JsoncFingerprint.ts";
 export { JsoncFormatter } from "./JsoncFormatter.ts";
-export { JsoncModificationError, JsoncModifier, type JsoncModifyOptions } from "./JsoncModifier.ts";
-export { JsoncNode, JsoncNodeType, type JsoncPath, type JsoncSegment } from "./JsoncNode.ts";
+export { JsoncModificationError, JsoncModifier, JsoncModifyOptions } from "./JsoncModifier.ts";
+export { JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment } from "./JsoncNode.ts";
 export { JsoncVisitor, JsoncVisitorEvent } from "./JsoncVisitor.ts";

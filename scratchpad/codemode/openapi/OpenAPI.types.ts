@@ -13,6 +13,7 @@ import {
 } from "@beep/schema";
 import { O, P, R, pipe } from "@beep/utils";
 import {
+  flow,
   HashMap,
   Layer,
   Redacted,
@@ -862,12 +863,8 @@ export class AuthConfig extends S.Class<AuthConfig>($I`AuthConfig`)(
 
 const StringMap = S.Record(S.String, S.String).pipe(
   S.decodeTo(S.HashMap(S.String, S.String), {
-    decode: SchemaGetter.transform(
-      (record) => pipe(record, R.toEntries, HashMap.fromIterable)
-    ),
-    encode: SchemaGetter.transform(
-      (map) => pipe(map, HashMap.toEntries, R.fromEntries)
-    ),
+    decode: SchemaGetter.transform(flow(R.toEntries, HashMap.fromIterable)),
+    encode: SchemaGetter.transform(flow(HashMap.toEntries, R.fromEntries)),
   }),
   $I.annoteSchema("StringMap", {
     description: "A record boundary transformed into an Effect HashMap.",

@@ -46,7 +46,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
  * console.log(options.includeImages) // true
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class FetchOptions extends S.Class<FetchOptions>($I`FetchOptions`)(
@@ -100,7 +100,7 @@ export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
  * console.log(response.content.title) // "Ada Lovelace"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class JinaResponse extends S.Class<JinaResponse>($I`JinaResponse`)(

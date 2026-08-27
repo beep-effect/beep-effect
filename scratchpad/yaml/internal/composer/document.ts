@@ -10,56 +10,60 @@
  * @since 0.0.0
  */
 
-import type {YamlNode} from "../../YamlNode.ts";
+import { O as OU } from "@beep/utils";
+import * as P from "@beep/utils/Predicate";
+import { MutableHashMap } from "effect";
+import { dual } from "effect/Function";
+import type { YamlNode } from "../../YamlNode.ts";
 import {
-  YamlAlias,
-  YamlMap,
-  YamlPair,
-  YamlScalar,
-  YamlSeq
+    YamlAlias,
+    YamlMap,
+    YamlPair,
+    YamlScalar,
+    YamlSeq
 } from "../../YamlNode.ts";
-import type {CstNode} from "../cst.ts";
-import {parseCSTAll} from "../cst-parser.ts";
-import type {RawDiagnostic} from "../diagnostics.ts";
-import type {ParseOptionsInput} from "../options.ts";
-import type {RawDirective, RawYamlDocument} from "../raw-document.ts";
+import { parseCSTAll } from "../cst-parser.ts";
+import type { CstNode } from "../cst.ts";
+import type { RawDiagnostic } from "../diagnostics.ts";
+import type { ParseOptionsInput } from "../options.ts";
+import type { RawDirective, RawYamlDocument } from "../raw-document.ts";
 import {
-  checkAnchorOnAlias,
-  getAnchorName,
-  makeAlias,
-  registerAnchor
+    checkAnchorOnAlias,
+    getAnchorName,
+    makeAlias,
+    registerAnchor
 } from "./anchors.ts";
 import {
-  composeBlockMap,
-  composeBlockSeq,
-  composeFlatBlockMap
+    composeBlockMap,
+    composeBlockSeq,
+    composeFlatBlockMap
 } from "./block.ts";
 import {
-  hasBlankLineAbove,
-  hasBlankLineBelow,
-  rawCommentText,
-  withCommentFields
+    hasBlankLineAbove,
+    hasBlankLineBelow,
+    rawCommentText,
+    withCommentFields
 } from "./comments.ts";
-import {composeFlowMap, composeFlowSeq} from "./flow.ts";
+import { composeFlowMap, composeFlowSeq } from "./flow.ts";
 import {
-  collectMultilinePlainScalar,
-  findNextContentChild,
-  getScalarStyle,
-  hasBlockMapAfterInList,
-  hasValueSepAfter,
-  indexOfChild,
-  makeScalar,
-  resolveScalar,
+    collectMultilinePlainScalar,
+    findNextContentChild,
+    getScalarStyle,
+    hasBlockMapAfterInList,
+    hasValueSepAfter,
+    indexOfChild,
+    makeScalar,
+    resolveScalar,
 } from "./scalars.ts";
-import type {ComposerState, FlowComposers, NodeMeta} from "./state.ts";
+import type { ComposerState, FlowComposers, NodeMeta } from "./state.ts";
 import {
-  clearMeta,
-  commentProps,
-  createState,
-  hasMeta,
-  sameLine
+    clearMeta,
+    commentProps,
+    createState,
+    hasMeta,
+    sameLine
 } from "./state.ts";
-import {parseDirective, validateTagHandlesInDocument} from "./tags.ts";
+import { parseDirective, validateTagHandlesInDocument } from "./tags.ts";
 
 /** The flow-composer dispatch wired into every state this module creates. */
 const FLOW: FlowComposers = { composeFlowMap, composeFlowSeq };
@@ -82,7 +86,7 @@ function validateAnchorTagNotFollowedBySeqDashOnSameLine(
 ): void {
 	for (let j = idx + 1; j < children.length; j++) {
 		const c = children[j];
-		if (!c) continue;
+		if (c === undefined) continue;
 		if (c.type === "newline") return; // ok — anchor on its own line
 		if (c.type === "whitespace") {
 			// Structural indicators ("-", ":", "?", "---", "...") are typed as
@@ -121,7 +125,7 @@ function checkDocumentMarkerSameLine(
 ): void {
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
-		if (!child) continue;
+		if (child === undefined) continue;
 		// Document markers appear as "whitespace"-typed CST nodes with source "---" or "..."
 		if (child.type !== "whitespace") continue;
 		const src = child.source;
@@ -132,7 +136,7 @@ function checkDocumentMarkerSameLine(
 		let found = false;
 		for (let j = i + 1; j < children.length; j++) {
 			const next = children[j];
-			if (!next) continue;
+			if (next === undefined) continue;
 			if (next.type === "newline") break;
 			if (next.type === "whitespace" && next.source.trim() === "") continue;
 			if (next.type === "comment") break; // comments are allowed after ...
@@ -150,9 +154,9 @@ function checkDocumentMarkerSameLine(
 		}
 
 		// For "..." at end of document, check first content of next document
-		if (!found && nextDocChildren) {
+		if (!found && nextDocChildren !== undefined) {
 			for (const next of nextDocChildren) {
-				if (!next) continue;
+				if (next === undefined) continue;
 				if (next.type === "newline") break;
 				if (next.type === "whitespace" && next.source.trim() === "") continue;
 				if (sameLine(state.text, child.offset, next.offset)) {
@@ -183,7 +187,7 @@ function checkTrailingContentAfterDocValue(
 ): void {
 	for (let j = startIdx; j < children.length; j++) {
 		const next = children[j];
-		if (!next) continue;
+		if (next === undefined) continue;
 		if (next.type === "newline" || next.type === "comment") continue;
 		if (next.type === "whitespace") {
 			// Document markers (---, ...) are OK
@@ -250,12 +254,15 @@ function checkTrailingContentAfterDocValue(
  * @category parsing
  * @since 0.0.0
  */
-export function composeDocument(
+export const composeDocument: {
+	(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
+	(state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): (cst: CstNode) => RawYamlDocument;
+} = dual((args) => P.hasProperty(args[0], "type"), (
 	cst: CstNode,
 	state: ComposerState,
 	hasSubsequentDocuments = false,
 	nextDocCst?: CstNode,
-): RawYamlDocument {
+): RawYamlDocument => {
 	// Hardening: unescaped C0 control characters (other than tab/LF/CR) are
 	// not c-printable (YAML 1.2 §5.1) and are invalid anywhere in the stream.
 	// Escaped forms in double-quoted scalars never appear raw in the source,
@@ -321,7 +328,7 @@ export function composeDocument(
 
 	while (i < children.length) {
 		const child = children[i];
-		if (!child) {
+		if (child === undefined) {
 			i++;
 			continue;
 		}
@@ -329,14 +336,14 @@ export function composeDocument(
 		// Directives
 		if (child.type === "directive") {
 			const directive = parseDirective(child.source);
-			if (directive) {
+			if (directive !== null) {
 				directives.push(directive);
 				// Populate tag map from %TAG directives
 				if (directive.name === "TAG" && directive.parameters.length >= 2) {
 					const handle = directive.parameters[0];
 					const prefix = directive.parameters[1];
-					if (handle && prefix) {
-						state.tagMap.set(handle, prefix);
+					if (handle !== undefined && handle !== "" && prefix !== undefined && prefix !== "") {
+						MutableHashMap.set(state.tagMap, handle, prefix);
 					}
 				}
 			}
@@ -442,13 +449,13 @@ export function composeDocument(
 		if (child.type === "flow-scalar" || child.type === "block-scalar") {
 			// Check if next meaningful child is a block-map (this scalar is a key)
 			const nextContent = findNextContentChild(children, i + 1);
-			if (nextContent && nextContent.type === "block-map") {
+			if (nextContent !== null && nextContent.type === "block-map") {
 				// A mapping cannot start on the `---` line. The `---` directive end
 				// is followed by a single value (or anchor+value), but a mapping
 				// pattern (key:) on the same line as `---` is malformed (9KBC, CXX2).
 				if (hasDocStart) {
 					const docStartChild = children.find((c) => c.type === "whitespace" && c.source === "---");
-					if (docStartChild && sameLine(state.text, docStartChild.offset, child.offset)) {
+					if (docStartChild !== undefined && sameLine(state.text, docStartChild.offset, child.offset)) {
 						state.errors.push({
 							code: "UnexpectedToken",
 							message: "Mapping cannot start on document-start (---) line",
@@ -514,21 +521,20 @@ export function composeDocument(
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
 				if (meta.anchor !== undefined) combined.anchor = meta.anchor;
-				const resolved = resolveScalar(value, "plain", combined.tag, state);
+				const resolved = resolveScalar(value, { style: "plain", state, ...OU.getSomesStruct({ tag: OU.fromUndefinedOr(combined.tag) }) });
 				// Span the full source range when multi-line plain folding merged
 				// multiple children — `endOffset` is the end of the last consumed
 				// fragment, including directives and other non-scalar
 				// continuations the lexer mis-tokenised on a folded line.
 				const scalarLength = partsCount > 1 ? endOffset - child.offset : child.length;
-				contents = new YamlScalar({
+				contents = YamlScalar.make({
 					value: resolved,
 					style: "plain",
 					offset: child.offset,
 					length: scalarLength,
-					...(combined.tag !== undefined ? { tag: combined.tag } : {}),
-					...(combined.anchor !== undefined ? { anchor: combined.anchor } : {}),
+					...OU.getSomesStruct({ tag: OU.fromUndefinedOr(combined.tag), anchor: OU.fromUndefinedOr(combined.anchor) })
 				});
-				if (combined.anchor) registerAnchor(contents, combined.anchor, state, child.offset);
+				if (combined.anchor !== undefined && combined.anchor !== "") registerAnchor(contents, combined.anchor, state, child.offset);
 				clearMeta(meta);
 				clearMeta(outerMeta);
 				sawNewlineSinceMeta = false;
@@ -536,7 +542,7 @@ export function composeDocument(
 				// content forms a mapping, that mapping is trailing garbage (2CMS).
 				if (partsCount > 1) {
 					const nextContent2 = findNextContentChild(children, nextIdx);
-					if (nextContent2) {
+					if (nextContent2 !== null) {
 						const isTrailing =
 							(nextContent2.type === "flow-scalar" &&
 								hasValueSepAfter(children, indexOfChild(children, nextContent2) + 1)) ||
@@ -612,7 +618,7 @@ export function composeDocument(
 
 		if (child.type === "flow-map") {
 			const nextAfterFlowMap0 = findNextContentChild(children, i + 1);
-			const flowIsKey = !!nextAfterFlowMap0 && nextAfterFlowMap0.type === "block-map";
+			const flowIsKey = nextAfterFlowMap0 !== null && nextAfterFlowMap0.type === "block-map";
 			let flowMeta: NodeMeta | undefined;
 			let mapMeta: NodeMeta | undefined;
 			if (flowIsKey && hasMeta(outerMeta)) {
@@ -629,7 +635,7 @@ export function composeDocument(
 			clearMeta(outerMeta);
 			sawNewlineSinceMeta = false;
 			i++;
-			if (flowIsKey && nextAfterFlowMap0) {
+			if (flowIsKey && nextAfterFlowMap0 !== null) {
         contents = composeBlockMap(nextAfterFlowMap0, state, flowMap, mapMeta);
 				while (i < children.length && children[i] !== nextAfterFlowMap0) i++;
 				i++;
@@ -642,7 +648,7 @@ export function composeDocument(
 
 		if (child.type === "flow-seq") {
 			const nextAfterFlowSeq0 = findNextContentChild(children, i + 1);
-			const flowIsKey = !!nextAfterFlowSeq0 && nextAfterFlowSeq0.type === "block-map";
+			const flowIsKey = nextAfterFlowSeq0 !== null && nextAfterFlowSeq0.type === "block-map";
 			let flowMeta: NodeMeta | undefined;
 			let mapMeta: NodeMeta | undefined;
 			if (flowIsKey && hasMeta(outerMeta)) {
@@ -661,7 +667,7 @@ export function composeDocument(
 			i++;
 			// Check if flow collection is a mapping key (followed by block-map with ":")
 			const nextAfterFlowSeq = findNextContentChild(children, i);
-			if (nextAfterFlowSeq && nextAfterFlowSeq.type === "block-map") {
+			if (nextAfterFlowSeq !== null && nextAfterFlowSeq.type === "block-map") {
 				// Flow seq is a key — compose the block-map with this as the first key
         contents = composeBlockMap(nextAfterFlowSeq, state, flowSeq, mapMeta);
 				// Skip past the block-map node
@@ -700,7 +706,7 @@ export function composeDocument(
 	let hasDocStartTab = false;
 	for (let ci = 0; ci < children.length; ci++) {
 		const c = children[ci];
-		if (c && c.type === "whitespace" && c.source === "---") {
+		if (c !== undefined && c.type === "whitespace" && c.source === "---") {
 			const after = state.text[c.offset + c.length];
 			if (after === "\t") hasDocStartTab = true;
 			break;
@@ -735,7 +741,7 @@ export function composeDocument(
 	if (documentCommentAfter === undefined && contents !== null && contents.comment !== undefined) {
 		// BLOCK style only: a flow collection's terminal comment sits INSIDE its
 		// brackets, so it has nowhere to escape to and stays on the collection.
-		if ((contents instanceof YamlMap || contents instanceof YamlSeq) && contents.style !== "flow") {
+		if ((YamlMap.is(contents) || YamlSeq.is(contents)) && contents.style !== "flow") {
 			documentCommentAfter = contents.comment;
 			contents = stripOwnComment(contents);
 		}
@@ -780,10 +786,9 @@ export function composeDocument(
 		hasDocumentStart: hasDocStart,
 		hasDocumentEnd: hasDocEnd,
 		hasDocumentStartTab: hasDocStartTab,
-		...(headerForDocument !== undefined ? { commentBefore: headerForDocument } : {}),
-		...(documentCommentAfter !== undefined ? { comment: documentCommentAfter } : {}),
+		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(headerForDocument), comment: OU.fromUndefinedOr(documentCommentAfter) })
 	};
-}
+});
 
 // ---------------------------------------------------------------------------
 // Directive validation
@@ -918,9 +923,9 @@ function validateDirectives(
 				});
 			}
 			// Recursively check for directives inside content nodes (e.g. block-map)
-			if (hasContent && child.children) {
+			if (hasContent && child.children !== undefined) {
 				const nested = findNestedDirective(child);
-				if (nested) {
+				if (nested !== null) {
 					state.errors.push({
 						code: "InvalidDirective",
 						message: "Directive after content requires a document-end marker (...) first",
@@ -936,10 +941,10 @@ function validateDirectives(
 /** Recursively find the first directive node within a CST subtree. */
 function findNestedDirective(node: CstNode): CstNode | null {
 	if (node.type === "directive") return node;
-	if (node.children) {
+	if (node.children !== undefined) {
 		for (const child of node.children) {
 			const found = findNestedDirective(child);
-			if (found) return found;
+			if (found !== null) return found;
 		}
 	}
 	return null;
@@ -959,14 +964,19 @@ function findNestedDirective(node: CstNode): CstNode | null {
  * named handle without a local `%TAG` get `UnresolvedTag`. Directives
  * between documents also require a preceding `...`.
  *
- * **Example** (Handle from document 1 is unresolved in document 2)
+ * **Example** (Require `...` before an inter-document directive)
  *
  * ```ts
  * import { Result } from "effect"
  * import { Yaml } from "@beep/scratchpad/yaml"
  *
- * const leaked = Yaml.parseAllResult("%TAG !e! tag:example.com,2000:app/\n---\n!e!foo: 1\n")
- * console.log(Result.isFailure(leaked)) // true
+ * const result = Yaml.parseAllResult(
+ *   "a: 1\n---\n%TAG !e! tag:example.com,2000:app/\n---\n!e!foo: 1\n",
+ * )
+ * if (Result.isFailure(result)) {
+ *   console.log(result.failure.diagnostics[0]?.message)
+ *   // "Directive between documents requires a document-end marker (...) after the previous document"
+ * }
  * ```
  *
  * @see {@link validateTagHandlesInDocument} for the per-document handle check.
@@ -974,10 +984,13 @@ function findNestedDirective(node: CstNode): CstNode | null {
  * @category parsing
  * @since 0.0.0
  */
-export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void {
+export const validateCrossDocumentDirectives: {
+	(cstNodes: readonly CstNode[], state: ComposerState): void;
+	(state: ComposerState): (cstNodes: readonly CstNode[]) => void;
+} = dual(2, (cstNodes: readonly CstNode[], state: ComposerState): void => {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
 		const cst = cstNodes[docIdx];
-		if (!cst) continue;
+		if (cst === undefined) continue;
 		const children = cst.children ?? [];
 
 		// QLJ7: directives are local to a single document. Subsequent
@@ -993,12 +1006,12 @@ export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], st
 
 		// Check if the previous document ended with "..."
 		const prevCst = cstNodes[docIdx - 1];
-		if (!prevCst) continue;
+		if (prevCst === undefined) continue;
 		const prevChildren = prevCst.children ?? [];
 		let prevEndedWithDocEnd = false;
 		for (let i = prevChildren.length - 1; i >= 0; i--) {
 			const c = prevChildren[i];
-			if (!c) continue;
+			if (c === undefined) continue;
 			// Document-end markers are stored as whitespace type with source "..."
 			if (c.source === "...") {
 				prevEndedWithDocEnd = true;
@@ -1023,7 +1036,7 @@ export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], st
 			}
 		}
 	}
-}
+});
 
 // ---------------------------------------------------------------------------
 // sourceMultiline decoration
@@ -1048,51 +1061,46 @@ function isSourceMultiline(text: string, offset: number, length: number): boolea
 }
 
 function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode | null {
-	if (node === null || node instanceof YamlAlias) return node;
-	if (node instanceof YamlScalar) {
+	if (node === null || YamlAlias.is(node)) return node;
+	if (YamlScalar.is(node)) {
 		if (!isSourceMultiline(text, node.offset, node.length)) return node;
-		return new YamlScalar({
+		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) }),
 			...commentProps(node),
-			...(node.chomp !== undefined ? { chomp: node.chomp } : {}),
-			...(node.blockIndent !== undefined ? { blockIndent: node.blockIndent } : {}),
-			...(node.raw !== undefined ? { raw: node.raw } : {}),
+			...OU.getSomesStruct({ chomp: OU.fromUndefinedOr(node.chomp), blockIndent: OU.fromUndefinedOr(node.blockIndent), raw: OU.fromUndefinedOr(node.raw) }),
 			sourceMultiline: true,
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
+	if (YamlMap.is(node)) {
 		const newItems = node.items.map(
 			(pair) =>
-				new YamlPair({
+				YamlPair.make({
 					key: decorateSourceMultiline(pair.key, text) ?? pair.key,
 					value: pair.value === null ? null : decorateSourceMultiline(pair.value, text),
 				}),
 		);
 		const multiline = isSourceMultiline(text, node.offset, node.length);
-		return new YamlMap({
+		return YamlMap.make({
 			items: newItems,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) }),
 			...commentProps(node),
 			...(multiline ? { sourceMultiline: true } : {}),
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlSeq) {
+	if (YamlSeq.is(node)) {
 		const newItems = node.items.map((item) => decorateSourceMultiline(item, text) ?? item);
 		const multiline = isSourceMultiline(text, node.offset, node.length);
-		return new YamlSeq({
+		return YamlSeq.make({
 			items: newItems,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) }),
 			...commentProps(node),
 			...(multiline ? { sourceMultiline: true } : {}),
 			offset: node.offset,
@@ -1110,8 +1118,7 @@ function decorateDocumentSourceMultiline(doc: RawYamlDocument, text: string): Ra
 		errors: doc.errors,
 		warnings: doc.warnings,
 		directives: doc.directives,
-		...(doc.commentBefore !== undefined ? { commentBefore: doc.commentBefore } : {}),
-		...(doc.comment !== undefined ? { comment: doc.comment } : {}),
+		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(doc.commentBefore), comment: OU.fromUndefinedOr(doc.comment) }),
 		hasDocumentStart: doc.hasDocumentStart,
 		hasDocumentEnd: doc.hasDocumentEnd,
 		hasDocumentStartTab: doc.hasDocumentStartTab,
@@ -1175,9 +1182,11 @@ export const EMPTY_DOCUMENT: RawYamlDocument = {
  * @category parsing
  * @since 0.0.0
  */
-export function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
-	return composeFirstDocumentCounted(text, options).document;
-}
+export const composeFirstDocument: {
+	(text: string, options?: ParseOptionsInput): RawYamlDocument;
+	(options?: ParseOptionsInput): (text: string) => RawYamlDocument;
+} = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): RawYamlDocument =>
+	composeFirstDocumentCounted(text, options).document);
 
 /**
  * {@link composeFirstDocument} plus the CST-level document count of the whole
@@ -1211,10 +1220,12 @@ export function composeFirstDocument(text: string, options?: ParseOptionsInput):
  * @category parsing
  * @since 0.0.0
  */
-export function composeFirstDocumentCounted(
-	text: string,
-	options?: ParseOptionsInput,
-): { readonly document: RawYamlDocument; readonly documentCount: number } {
+type CountedDocument = { readonly document: RawYamlDocument; readonly documentCount: number };
+
+export const composeFirstDocumentCounted: {
+	(text: string, options?: ParseOptionsInput): CountedDocument;
+	(options?: ParseOptionsInput): (text: string) => CountedDocument;
+} = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): CountedDocument => {
 	const cstNodes = parseCSTAll(text);
 	const state = createState(text, FLOW, options);
 
@@ -1222,13 +1233,13 @@ export function composeFirstDocumentCounted(
 	validateCrossDocumentDirectives(cstNodes, state);
 
 	const doc = cstNodes[0];
-	if (!doc) {
+	if (doc === undefined) {
 		return { document: EMPTY_DOCUMENT, documentCount: 0 };
 	}
 
 	const result = composeDocument(doc, state, cstNodes.length > 1, cstNodes[1]);
 	return { document: decorateDocumentSourceMultiline(result, text), documentCount: cstNodes.length };
-}
+});
 
 /**
  * Compose every document of `text` with full error recovery — v3
@@ -1257,10 +1268,15 @@ export function composeFirstDocumentCounted(
  * @category parsing
  * @since 0.0.0
  */
-export function composeAllDocuments(
-	text: string,
-	options?: ParseOptionsInput,
-): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } {
+type ComposedDocuments = {
+	readonly documents: ReadonlyArray<RawYamlDocument>;
+	readonly streamErrors: ReadonlyArray<RawDiagnostic>;
+};
+
+export const composeAllDocuments: {
+	(text: string, options?: ParseOptionsInput): ComposedDocuments;
+	(options?: ParseOptionsInput): (text: string) => ComposedDocuments;
+} = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): ComposedDocuments => {
 	const cstNodes = parseCSTAll(text);
 	const documents: RawYamlDocument[] = [];
 
@@ -1270,14 +1286,14 @@ export function composeAllDocuments(
 
 	for (let i = 0; i < cstNodes.length; i++) {
 		const cst = cstNodes[i];
-		if (!cst) continue;
+		if (cst === undefined) continue;
 		const state = createState(text, FLOW, options);
 		const doc = composeDocument(cst, state, i < cstNodes.length - 1, cstNodes[i + 1]);
 		documents.push(decorateDocumentSourceMultiline(doc, text));
 	}
 
 	return { documents, streamErrors: crossDocState.errors };
-}
+});
 
 /**
  * Attach a marker-less document header to the FIRST entry of the content — the
@@ -1287,35 +1303,25 @@ export function composeAllDocuments(
  * like any other.
  */
 function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode {
-	if (contents instanceof YamlMap && contents.items.length > 0) {
+	if (YamlMap.is(contents) && contents.items.length > 0) {
 		const first = contents.items[0] as YamlPair;
 		const items = [...contents.items];
-		items[0] = new YamlPair({ key: withCommentFields(first.key, { commentBefore: header }), value: first.value });
-		return new YamlMap({
+		items[0] = YamlPair.make({ key: withCommentFields(first.key, { commentBefore: header }), value: first.value });
+		return YamlMap.make({
 			items,
 			style: contents.style,
-			...(contents.tag !== undefined ? { tag: contents.tag } : {}),
-			...(contents.anchor !== undefined ? { anchor: contents.anchor } : {}),
-			...(contents.commentBefore !== undefined ? { commentBefore: contents.commentBefore } : {}),
-			...(contents.comment !== undefined ? { comment: contents.comment } : {}),
-			...(contents.spaceBefore !== undefined ? { spaceBefore: contents.spaceBefore } : {}),
-			...(contents.sourceMultiline !== undefined ? { sourceMultiline: contents.sourceMultiline } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(contents.tag), anchor: OU.fromUndefinedOr(contents.anchor), commentBefore: OU.fromUndefinedOr(contents.commentBefore), comment: OU.fromUndefinedOr(contents.comment), spaceBefore: OU.fromUndefinedOr(contents.spaceBefore), sourceMultiline: OU.fromUndefinedOr(contents.sourceMultiline) }),
 			offset: contents.offset,
 			length: contents.length,
 		});
 	}
-	if (contents instanceof YamlSeq && contents.items.length > 0) {
+	if (YamlSeq.is(contents) && contents.items.length > 0) {
 		const items = [...contents.items];
 		items[0] = withCommentFields(items[0] as YamlNode, { commentBefore: header });
-		return new YamlSeq({
+		return YamlSeq.make({
 			items,
 			style: contents.style,
-			...(contents.tag !== undefined ? { tag: contents.tag } : {}),
-			...(contents.anchor !== undefined ? { anchor: contents.anchor } : {}),
-			...(contents.commentBefore !== undefined ? { commentBefore: contents.commentBefore } : {}),
-			...(contents.comment !== undefined ? { comment: contents.comment } : {}),
-			...(contents.spaceBefore !== undefined ? { spaceBefore: contents.spaceBefore } : {}),
-			...(contents.sourceMultiline !== undefined ? { sourceMultiline: contents.sourceMultiline } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(contents.tag), anchor: OU.fromUndefinedOr(contents.anchor), commentBefore: OU.fromUndefinedOr(contents.commentBefore), comment: OU.fromUndefinedOr(contents.comment), spaceBefore: OU.fromUndefinedOr(contents.spaceBefore), sourceMultiline: OU.fromUndefinedOr(contents.sourceMultiline) }),
 			offset: contents.offset,
 			length: contents.length,
 		});
@@ -1327,15 +1333,11 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 function stripOwnComment(node: YamlMap | YamlSeq): YamlNode {
 	const shared = {
 		style: node.style,
-		...(node.tag !== undefined ? { tag: node.tag } : {}),
-		...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-		...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
-		...(node.spaceBefore !== undefined ? { spaceBefore: node.spaceBefore } : {}),
-		...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+		...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor), commentBefore: OU.fromUndefinedOr(node.commentBefore), spaceBefore: OU.fromUndefinedOr(node.spaceBefore), sourceMultiline: OU.fromUndefinedOr(node.sourceMultiline) }),
 		offset: node.offset,
 		length: node.length,
 	};
-	return node instanceof YamlMap
-		? new YamlMap({ items: node.items, ...shared })
-		: new YamlSeq({ items: node.items, ...shared });
+	return YamlMap.is(node)
+		? YamlMap.make({ items: node.items, ...shared })
+		: YamlSeq.make({ items: node.items, ...shared });
 }

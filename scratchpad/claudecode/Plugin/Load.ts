@@ -12,17 +12,13 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import { Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { PluginLoadError } from "../Errors.ts";
 import { parseCommandFile, parseOutputStyleFile, parseSkillFile, parseSubagentFile } from "../Frontmatter.ts";
 import { loadJson as loadMcpJson, McpJsonFile } from "../Mcp.ts";
@@ -31,7 +27,7 @@ import {
   define,
   type PluginAgentEntry,
   type PluginCommandEntry,
-  type PluginDefinition,
+  PluginDefinition,
   type PluginOutputStyleEntry,
   type PluginSkillEntry,
 } from "./Define.ts";
@@ -47,40 +43,67 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Load");
 /**
  * Paths discovered during a plugin directory scan.
  *
- * @category models
- * @since 0.0.0
- */
-export interface PluginScan {
-  readonly rootDir: string;
-  readonly manifestPath: O.Option<string>;
-  readonly sourceManifest: O.Option<PluginManifest>;
-  readonly commandPaths: ReadonlyArray<string>;
-  readonly agentPaths: ReadonlyArray<string>;
-  readonly skillPaths: ReadonlyArray<string>;
-  readonly outputStylePaths: ReadonlyArray<string>;
-  readonly hooksPaths: ReadonlyArray<string>;
-  readonly inlineHooksConfig: O.Option<HooksSection>;
-  readonly mcpPaths: ReadonlyArray<string>;
-  readonly inlineMcpConfig: O.Option<McpJsonFile>;
-  readonly lspPaths: ReadonlyArray<string>;
-  readonly themePaths: ReadonlyArray<string>;
-  readonly monitorPaths: ReadonlyArray<string>;
-  readonly binPaths: ReadonlyArray<string>;
-  readonly settingsPath: O.Option<string>;
-  readonly inferredManifest: PluginManifest;
-}
-
-/**
- * A fully loaded plugin directory.
+ * **Example** (Name a scan result)
+ *
+ * ```ts
+ * import type { Plugin } from "effect-claudecode"
+ *
+ * type Scan = Plugin.PluginScan
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface LoadedPlugin extends PluginDefinition {
-  readonly rootDir: string;
-  readonly sourceManifest: O.Option<PluginManifest>;
-  readonly inferredManifest: PluginManifest;
-}
+export class PluginScan extends S.Class<PluginScan>($I`PluginScan`)(
+  {
+    rootDir: S.String,
+    manifestPath: S.Option(S.String),
+    sourceManifest: S.Option(PluginManifest),
+    commandPaths: S.Array(S.String),
+    agentPaths: S.Array(S.String),
+    skillPaths: S.Array(S.String),
+    outputStylePaths: S.Array(S.String),
+    hooksPaths: S.Array(S.String),
+    inlineHooksConfig: S.Option(HooksSection),
+    mcpPaths: S.Array(S.String),
+    inlineMcpConfig: S.Option(McpJsonFile),
+    lspPaths: S.Array(S.String),
+    themePaths: S.Array(S.String),
+    monitorPaths: S.Array(S.String),
+    binPaths: S.Array(S.String),
+    settingsPath: S.Option(S.String),
+    inferredManifest: PluginManifest,
+  },
+  $I.annote("PluginScan", {
+    description: "Normalized paths and optional inline configuration discovered during a plugin directory scan.",
+  })
+) {}
+
+/**
+ * A fully loaded plugin directory.
+ *
+ * **Example** (Name a loaded plugin)
+ *
+ * ```ts
+ * import type { Plugin } from "effect-claudecode"
+ *
+ * type Loaded = Plugin.LoadedPlugin
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LoadedPlugin extends S.Class<LoadedPlugin>($I`LoadedPlugin`)(
+  {
+    ...PluginDefinition.fields,
+    rootDir: S.String,
+    sourceManifest: S.Option(PluginManifest),
+    inferredManifest: PluginManifest,
+  },
+  $I.annote("LoadedPlugin", {
+    description: "Validated plugin definition paired with its source root and manifest provenance.",
+  })
+) {}
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -694,7 +717,7 @@ export const scan = Effect.fn("Plugin.scan")(function* (
     onSome: (manifest) => manifest.name,
   });
 
-  return {
+  return PluginScan.make({
     rootDir,
     manifestPath: O.isSome(sourceManifest) ? O.some(manifestPath) : O.none(),
     sourceManifest,
@@ -733,7 +756,7 @@ export const scan = Effect.fn("Plugin.scan")(function* (
       hasThemes: A.isReadonlyArrayNonEmpty(themePaths),
       hasMonitors: A.isReadonlyArrayNonEmpty(monitorPaths),
     }),
-  };
+  });
 });
 
 /**
@@ -802,12 +825,12 @@ export const load = Effect.fn("Plugin.load")(function* (
     })
   );
 
-  return {
+  return LoadedPlugin.make({
     ...definition,
     rootDir,
     sourceManifest: scanned.sourceManifest,
     inferredManifest: scanned.inferredManifest,
-  };
+  });
 });
 
 /**

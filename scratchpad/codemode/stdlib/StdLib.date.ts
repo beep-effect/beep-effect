@@ -9,7 +9,7 @@ import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interprete
 import { CodeModeDate } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
 import { LiteralKit } from "@beep/schema"
-import { O } from "@beep/utils"
+import { O, pipe } from "@beep/utils"
 import { DateTime } from "effect"
 import * as S from "effect/Schema"
 import {
@@ -55,10 +55,14 @@ type DirectDateStatic = Exclude<DateStatic, "now">;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number =>
   DirectDateStatic.$match(name, {
-    parse: () => Date.parse(coerceToString(args[0])),
+    parse: () =>
+      pipe(
+        DateTime.make(coerceToString(args[0])),
+        O.match({ onNone: () => Number.NaN, onSome: DateTime.toEpochMillis })
+      ),
     UTC: () => Reflect.apply(Date.UTC, Date, args.map(coerceToNumber)),
   });
 
@@ -116,7 +120,7 @@ export const dateSetterArgumentCount = (name: DateMethod): O.Option<1 | 2 | 3 | 
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeDateMethod = (
   value: CodeModeDate,
   name: DateMethod,

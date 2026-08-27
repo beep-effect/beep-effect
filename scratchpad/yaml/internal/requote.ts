@@ -13,28 +13,49 @@
  * @since 0.0.0
  */
 
-import type { ScalarStyle } from "../YamlNode.ts";
+import { $ScratchpadId } from "@beep/identity";
+import { Schema } from "effect";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
+import { ScalarStyle } from "../YamlNode.ts";
 import { isControlChar } from "./fold.ts";
 import { renderDoubleQuoted, renderSingleQuoted } from "./stringifier.ts";
+
+const $I = $ScratchpadId.create("yaml/internal/requote");
 
 /**
  * The structural slice of a scalar node the re-quoting decision reads —
  * satisfied by a public `YamlScalar` without this module depending on the
  * class itself.
  *
+ * **Example** (Guard the scalar slice)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RequoteScalarInput } from "@beep/scratchpad/yaml/internal/requote"
+ *
+ * console.log(S.is(RequoteScalarInput)({ value: "x", style: "plain", offset: 0, length: 1 })) // true
+ * ```
+ *
  * @see {@link requoteScalarText} for the function that consumes this slice.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export interface RequoteScalarInput {
-	readonly value: unknown;
-	readonly style: ScalarStyle;
-	readonly tag?: string | undefined;
-	readonly anchor?: string | undefined;
-	readonly offset: number;
-	readonly length: number;
-}
+export const RequoteScalarInput = Schema.Struct({
+	value: Schema.Unknown,
+	style: ScalarStyle,
+	tag: Schema.optional(Schema.String),
+	anchor: Schema.optional(Schema.String),
+	offset: Schema.Finite,
+	length: Schema.Finite,
+}).pipe(
+	$I.annoteSchema("RequoteScalarInput", {
+		description: "Structural YAML scalar slice needed to decide whether a source quote can be changed safely.",
+	}),
+);
+
+export type RequoteScalarInput = typeof RequoteScalarInput.Type;
 
 /**
  * Re-quoting dialect: `"conservative"` is lint-fix semantics, `"escaping"`
@@ -108,14 +129,12 @@ function isSingleQuotable(value: string): boolean {
  * @category formatting
  * @since 0.0.0
  */
-export function requoteScalarText(
-	text: string,
-	scalar: RequoteScalarInput,
-	quote: '"' | "'",
-	mode: RequoteMode,
-): string | undefined {
+export const requoteScalarText: {
+	(scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): (text: string) => string | undefined;
+	(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined;
+} = dual(4, (text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined => {
 	if (scalar.tag !== undefined || scalar.anchor !== undefined) return undefined;
-	if (typeof scalar.value !== "string") return undefined;
+	if (!P.isString(scalar.value)) return undefined;
 	const raw = text.slice(scalar.offset, scalar.offset + scalar.length);
 	// A multi-line source scalar folds line breaks into its value; re-quoting
 	// it from the value would collapse the layout, so it is skipped whole.
@@ -144,4 +163,4 @@ export function requoteScalarText(
 	if (scalar.style !== "double-quoted") return undefined;
 	if (!isSingleQuotable(scalar.value)) return undefined;
 	return renderSingleQuoted(scalar.value);
-}
+});

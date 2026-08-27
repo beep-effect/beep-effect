@@ -60,7 +60,7 @@ export const eofNewline: YamlRule = {
 		const lastLine = ctx.lines[ctx.lines.length - 1];
 		if (lastLine === undefined) return [];
 		return [
-			new YamlLintDiagnostic({
+			YamlLintDiagnostic.make({
 				rule: "eof-newline",
 				severity: "error",
 				message: "No newline at end of file",

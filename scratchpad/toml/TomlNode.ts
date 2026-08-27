@@ -6,7 +6,7 @@
  *
  * Concatenating every expression's source slice in order reproduces the input
  * byte-for-byte. Value nodes recurse only through arrays and inline tables,
- * handled with the `Schema.suspend` idiom. This is a leaf module: it imports
+ * handled with the `S.suspend` idiom. This is a leaf module: it imports
  * only `effect` and `./TomlDateTime.ts`.
  *
  * **Gotchas**
@@ -19,9 +19,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
+import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity";
-import { Schema } from "effect";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "./TomlDateTime.ts";
 
 const $I = $ScratchpadId.create("toml/TomlNode");
@@ -44,10 +43,10 @@ const $I = $ScratchpadId.create("toml/TomlNode");
  * @category schemas
  * @since 0.0.0
  */
-export const TomlKeyKind = Schema.Literals(["bare", "basic", "literal"]).pipe(
-	$I.annoteSchema("TomlKeyKind", {
-		description: "The three simple-key spellings: bare, basic-quoted, and literal-quoted.",
-	}),
+export const TomlKeyKind = S.Literals(["bare", "basic", "literal"]).pipe(
+  $I.annoteSchema("TomlKeyKind", {
+    description: "The three simple-key spellings: bare, basic-quoted, and literal-quoted.",
+  })
 );
 
 /**
@@ -79,18 +78,20 @@ export type TomlKeyKind = typeof TomlKeyKind.Type;
  * @category models
  * @since 0.0.0
  */
-export class TomlKey extends Schema.TaggedClass<TomlKey>($I`TomlKey`)(
-	"TomlKey",
-	{
-		value: Schema.String,
-		kind: TomlKeyKind,
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlKey", {
-		description: "One simple key within a possibly dotted TOML key path, with source span and spelling.",
-	}),
-) {}
+export class TomlKey extends S.TaggedClass<TomlKey>($I`TomlKey`)(
+  "TomlKey",
+  {
+    value: S.String,
+    kind: TomlKeyKind,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlKey", {
+    description: "One simple key within a possibly dotted TOML key path, with source span and spelling.",
+  })
+) {
+  static readonly is = S.is(TomlKey);
+}
 
 /**
  * The four TOML string forms.
@@ -109,10 +110,10 @@ export class TomlKey extends Schema.TaggedClass<TomlKey>($I`TomlKey`)(
  * @category schemas
  * @since 0.0.0
  */
-export const TomlStringStyle = Schema.Literals(["basic", "literal", "multiline-basic", "multiline-literal"]).pipe(
-	$I.annoteSchema("TomlStringStyle", {
-		description: "The four TOML string forms: basic, literal, and their multiline variants.",
-	}),
+export const TomlStringStyle = S.Literals(["basic", "literal", "multiline-basic", "multiline-literal"]).pipe(
+  $I.annoteSchema("TomlStringStyle", {
+    description: "The four TOML string forms: basic, literal, and their multiline variants.",
+  })
 );
 
 /**
@@ -141,18 +142,20 @@ export type TomlStringStyle = typeof TomlStringStyle.Type;
  * @category models
  * @since 0.0.0
  */
-export class TomlString extends Schema.TaggedClass<TomlString>($I`TomlString`)(
-	"TomlString",
-	{
-		value: Schema.String,
-		style: TomlStringStyle,
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlString", {
-		description: "A TOML string value node storing decoded text, source style, and span.",
-	}),
-) {}
+export class TomlString extends S.TaggedClass<TomlString>($I`TomlString`)(
+  "TomlString",
+  {
+    value: S.String,
+    style: TomlStringStyle,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlString", {
+    description: "A TOML string value node storing decoded text, source style, and span.",
+  })
+) {
+  static readonly is = S.is(TomlString);
+}
 
 /**
  * An integer value node. Decodes to `number` when the magnitude fits in
@@ -176,17 +179,19 @@ export class TomlString extends Schema.TaggedClass<TomlString>($I`TomlString`)(
  * @category models
  * @since 0.0.0
  */
-export class TomlInteger extends Schema.TaggedClass<TomlInteger>($I`TomlInteger`)(
-	"TomlInteger",
-	{
-		value: Schema.Union([Schema.Number, Schema.BigInt]),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlInteger", {
-		description: "A TOML integer value node: number within 2^53-1, otherwise bigint.",
-	}),
-) {}
+export class TomlInteger extends S.TaggedClass<TomlInteger>($I`TomlInteger`)(
+  "TomlInteger",
+  {
+    value: S.Union([S.Finite, S.BigInt]),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlInteger", {
+    description: "A TOML integer value node: number within 2^53-1, otherwise bigint.",
+  })
+) {
+  static readonly is = S.is(TomlInteger);
+}
 
 /**
  * A float value node, including the special spellings (`inf`, `nan`).
@@ -204,17 +209,19 @@ export class TomlInteger extends Schema.TaggedClass<TomlInteger>($I`TomlInteger`
  * @category models
  * @since 0.0.0
  */
-export class TomlFloat extends Schema.TaggedClass<TomlFloat>($I`TomlFloat`)(
-	"TomlFloat",
-	{
-		value: Schema.Number,
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlFloat", {
-		description: "A TOML float value node, including inf and nan spellings.",
-	}),
-) {}
+export class TomlFloat extends S.TaggedClass<TomlFloat>($I`TomlFloat`)(
+  "TomlFloat",
+  {
+    value: S.Finite,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlFloat", {
+    description: "A TOML float value node, including inf and nan spellings.",
+  })
+) {
+  static readonly is = S.is(TomlFloat);
+}
 
 /**
  * A boolean value node.
@@ -232,17 +239,19 @@ export class TomlFloat extends Schema.TaggedClass<TomlFloat>($I`TomlFloat`)(
  * @category models
  * @since 0.0.0
  */
-export class TomlBoolean extends Schema.TaggedClass<TomlBoolean>($I`TomlBoolean`)(
-	"TomlBoolean",
-	{
-		value: Schema.Boolean,
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlBoolean", {
-		description: "A TOML boolean value node.",
-	}),
-) {}
+export class TomlBoolean extends S.TaggedClass<TomlBoolean>($I`TomlBoolean`)(
+  "TomlBoolean",
+  {
+    value: S.Boolean,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlBoolean", {
+    description: "A TOML boolean value node.",
+  })
+) {
+  static readonly is = S.is(TomlBoolean);
+}
 
 /**
  * A date-time value node wrapping one of the four TOML date-time classes.
@@ -268,17 +277,19 @@ export class TomlBoolean extends Schema.TaggedClass<TomlBoolean>($I`TomlBoolean`
  * @category models
  * @since 0.0.0
  */
-export class TomlDateTimeLiteral extends Schema.TaggedClass<TomlDateTimeLiteral>($I`TomlDateTimeLiteral`)(
-	"TomlDateTimeLiteral",
-	{
-		value: Schema.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlDateTimeLiteral", {
-		description: "A TOML date-time value node wrapping one of the four date-time classes.",
-	}),
-) {}
+export class TomlDateTimeLiteral extends S.TaggedClass<TomlDateTimeLiteral>($I`TomlDateTimeLiteral`)(
+  "TomlDateTimeLiteral",
+  {
+    value: S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlDateTimeLiteral", {
+    description: "A TOML date-time value node wrapping one of the four date-time classes.",
+  })
+) {
+  static readonly is = S.is(TomlDateTimeLiteral);
+}
 
 /**
  * An array value node. Heterogeneous per TOML; may span multiple lines
@@ -297,17 +308,19 @@ export class TomlDateTimeLiteral extends Schema.TaggedClass<TomlDateTimeLiteral>
  * @category models
  * @since 0.0.0
  */
-export class TomlArray extends Schema.TaggedClass<TomlArray>($I`TomlArray`)(
-	"TomlArray",
-	{
-		items: Schema.Array(Schema.suspend((): Schema.Codec<TomlValueNode> => TomlValueNode)),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlArray", {
-		description: "A TOML array value node whose span covers brackets, inner newlines, and inner comments.",
-	}),
-) {}
+export class TomlArray extends S.TaggedClass<TomlArray>($I`TomlArray`)(
+  "TomlArray",
+  {
+    items: S.Array(S.suspend((): S.Codec<TomlValueNode> => TomlValueNode)),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlArray", {
+    description: "A TOML array value node whose span covers brackets, inner newlines, and inner comments.",
+  })
+) {
+  static readonly is = S.is(TomlArray);
+}
 
 /**
  * One `key = value` entry inside an inline table. `keyPath` has more than one
@@ -333,18 +346,20 @@ export class TomlArray extends Schema.TaggedClass<TomlArray>($I`TomlArray`)(
  * @category models
  * @since 0.0.0
  */
-export class TomlInlineEntry extends Schema.TaggedClass<TomlInlineEntry>($I`TomlInlineEntry`)(
-	"TomlInlineEntry",
-	{
-		keyPath: Schema.Array(TomlKey),
-		value: Schema.suspend((): Schema.Codec<TomlValueNode> => TomlValueNode),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlInlineEntry", {
-		description: "One key = value entry inside an inline table, including dotted key paths.",
-	}),
-) {}
+export class TomlInlineEntry extends S.TaggedClass<TomlInlineEntry>($I`TomlInlineEntry`)(
+  "TomlInlineEntry",
+  {
+    keyPath: S.Array(TomlKey),
+    value: S.suspend((): S.Codec<TomlValueNode> => TomlValueNode),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlInlineEntry", {
+    description: "One key = value entry inside an inline table, including dotted key paths.",
+  })
+) {
+  static readonly is = S.is(TomlInlineEntry);
+}
 
 /**
  * An inline table value node (`{ k = v, ... }`). May span multiple lines
@@ -368,21 +383,23 @@ export class TomlInlineEntry extends Schema.TaggedClass<TomlInlineEntry>($I`Toml
  * @category models
  * @since 0.0.0
  */
-export class TomlInlineTable extends Schema.TaggedClass<TomlInlineTable>($I`TomlInlineTable`)(
-	"TomlInlineTable",
-	{
-		entries: Schema.Array(TomlInlineEntry),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlInlineTable", {
-		description: "A TOML inline table value node; may span multiple lines since TOML 1.1.",
-	}),
-) {}
+export class TomlInlineTable extends S.TaggedClass<TomlInlineTable>($I`TomlInlineTable`)(
+  "TomlInlineTable",
+  {
+    entries: S.Array(TomlInlineEntry),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlInlineTable", {
+    description: "A TOML inline table value node; may span multiple lines since TOML 1.1.",
+  })
+) {
+  static readonly is = S.is(TomlInlineTable);
+}
 
 /**
  * A discriminated-union schema covering all seven TOML value node types.
- * Defined lazily via `Schema.suspend` to break the recursive reference chain
+ * Defined lazily via `S.suspend` to break the recursive reference chain
  * `TomlValueNode → TomlArray/TomlInlineTable → TomlValueNode`.
  *
  * **Example** (Guard a value node)
@@ -400,14 +417,14 @@ export class TomlInlineTable extends Schema.TaggedClass<TomlInlineTable>($I`Toml
  * @category schemas
  * @since 0.0.0
  */
-export const TomlValueNode: Schema.Codec<
-	TomlString | TomlInteger | TomlFloat | TomlBoolean | TomlDateTimeLiteral | TomlArray | TomlInlineTable
-> = Schema.suspend(() =>
-	Schema.Union([TomlString, TomlInteger, TomlFloat, TomlBoolean, TomlDateTimeLiteral, TomlArray, TomlInlineTable]),
+export const TomlValueNode: S.Codec<
+  TomlString | TomlInteger | TomlFloat | TomlBoolean | TomlDateTimeLiteral | TomlArray | TomlInlineTable
+> = S.suspend(() =>
+  S.Union([TomlString, TomlInteger, TomlFloat, TomlBoolean, TomlDateTimeLiteral, TomlArray, TomlInlineTable])
 ).pipe(
-	$I.annoteSchema("TomlValueNode", {
-		description: "Discriminated union of the seven TOML value node types, defined lazily via Schema.suspend.",
-	}),
+  $I.annoteSchema("TomlValueNode", {
+    description: "Discriminated union of the seven TOML value node types, defined lazily via S.suspend.",
+  })
 );
 
 /**
@@ -418,13 +435,13 @@ export const TomlValueNode: Schema.Codec<
  * @since 0.0.0
  */
 export type TomlValueNode =
-	| TomlString
-	| TomlInteger
-	| TomlFloat
-	| TomlBoolean
-	| TomlDateTimeLiteral
-	| TomlArray
-	| TomlInlineTable;
+  | TomlString
+  | TomlInteger
+  | TomlFloat
+  | TomlBoolean
+  | TomlDateTimeLiteral
+  | TomlArray
+  | TomlInlineTable;
 
 /**
  * A `key = value` expression. The span starts at the first character of the
@@ -457,19 +474,21 @@ export type TomlValueNode =
  * @category models
  * @since 0.0.0
  */
-export class TomlKeyValue extends Schema.TaggedClass<TomlKeyValue>($I`TomlKeyValue`)(
-	"TomlKeyValue",
-	{
-		keyPath: Schema.Array(TomlKey),
-		value: Schema.suspend((): Schema.Codec<TomlValueNode> => TomlValueNode),
-		comment: Schema.optionalKey(Schema.String),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlKeyValue", {
-		description: "A key = value expression whose span includes leading whitespace and the terminating newline.",
-	}),
-) {}
+export class TomlKeyValue extends S.TaggedClass<TomlKeyValue>($I`TomlKeyValue`)(
+  "TomlKeyValue",
+  {
+    keyPath: S.Array(TomlKey),
+    value: S.suspend((): S.Codec<TomlValueNode> => TomlValueNode),
+    comment: S.optionalKey(S.String),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlKeyValue", {
+    description: "A key = value expression whose span includes leading whitespace and the terminating newline.",
+  })
+) {
+  static readonly is = S.is(TomlKeyValue);
+}
 
 /**
  * A `[table]` header expression. Span contract as in {@link TomlKeyValue}.
@@ -491,18 +510,20 @@ export class TomlKeyValue extends Schema.TaggedClass<TomlKeyValue>($I`TomlKeyVal
  * @category models
  * @since 0.0.0
  */
-export class TomlTableHeader extends Schema.TaggedClass<TomlTableHeader>($I`TomlTableHeader`)(
-	"TomlTableHeader",
-	{
-		keyPath: Schema.Array(TomlKey),
-		comment: Schema.optionalKey(Schema.String),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlTableHeader", {
-		description: "A [table] header expression with the same span contract as TomlKeyValue.",
-	}),
-) {}
+export class TomlTableHeader extends S.TaggedClass<TomlTableHeader>($I`TomlTableHeader`)(
+  "TomlTableHeader",
+  {
+    keyPath: S.Array(TomlKey),
+    comment: S.optionalKey(S.String),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlTableHeader", {
+    description: "A [table] header expression with the same span contract as TomlKeyValue.",
+  })
+) {
+  static readonly is = S.is(TomlTableHeader);
+}
 
 /**
  * A `[[array-of-tables]]` header expression. Span contract as in
@@ -524,18 +545,20 @@ export class TomlTableHeader extends Schema.TaggedClass<TomlTableHeader>($I`Toml
  * @category models
  * @since 0.0.0
  */
-export class TomlArrayTableHeader extends Schema.TaggedClass<TomlArrayTableHeader>($I`TomlArrayTableHeader`)(
-	"TomlArrayTableHeader",
-	{
-		keyPath: Schema.Array(TomlKey),
-		comment: Schema.optionalKey(Schema.String),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlArrayTableHeader", {
-		description: "A [[array-of-tables]] header expression with the same span contract as TomlKeyValue.",
-	}),
-) {}
+export class TomlArrayTableHeader extends S.TaggedClass<TomlArrayTableHeader>($I`TomlArrayTableHeader`)(
+  "TomlArrayTableHeader",
+  {
+    keyPath: S.Array(TomlKey),
+    comment: S.optionalKey(S.String),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlArrayTableHeader", {
+    description: "A [[array-of-tables]] header expression with the same span contract as TomlKeyValue.",
+  })
+) {
+  static readonly is = S.is(TomlArrayTableHeader);
+}
 
 /**
  * A run of consecutive blank and comment-only lines, coalesced into one
@@ -554,17 +577,19 @@ export class TomlArrayTableHeader extends Schema.TaggedClass<TomlArrayTableHeade
  * @category models
  * @since 0.0.0
  */
-export class TomlTrivia extends Schema.TaggedClass<TomlTrivia>($I`TomlTrivia`)(
-	"TomlTrivia",
-	{
-		text: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlTrivia", {
-		description: "A coalesced run of blank and comment-only lines whose text is the raw source slice.",
-	}),
-) {}
+export class TomlTrivia extends S.TaggedClass<TomlTrivia>($I`TomlTrivia`)(
+  "TomlTrivia",
+  {
+    text: S.String,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("TomlTrivia", {
+    description: "A coalesced run of blank and comment-only lines whose text is the raw source slice.",
+  })
+) {
+  static readonly is = S.is(TomlTrivia);
+}
 
 /**
  * The union schema of the four expression types making up a document's
@@ -584,10 +609,10 @@ export class TomlTrivia extends Schema.TaggedClass<TomlTrivia>($I`TomlTrivia`)(
  * @category schemas
  * @since 0.0.0
  */
-export const TomlExpression = Schema.Union([TomlKeyValue, TomlTableHeader, TomlArrayTableHeader, TomlTrivia]).pipe(
-	$I.annoteSchema("TomlExpression", {
-		description: "Union of the four expression types making up a document's linear CST.",
-	}),
+export const TomlExpression = S.Union([TomlKeyValue, TomlTableHeader, TomlArrayTableHeader, TomlTrivia]).pipe(
+  $I.annoteSchema("TomlExpression", {
+    description: "Union of the four expression types making up a document's linear CST.",
+  })
 );
 
 /**

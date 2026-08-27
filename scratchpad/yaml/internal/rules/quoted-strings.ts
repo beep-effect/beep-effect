@@ -10,7 +10,9 @@
  * @since 0.0.0
  */
 
+import { O as OU } from "@beep/utils";
 import { Schema } from "effect";
+import * as P from "effect/Predicate";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -103,12 +105,12 @@ export const quotedStrings: YamlRule = {
 		const out: Array<YamlLintDiagnostic> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key") return;
-			if (typeof scalar.value !== "string") return;
+			if (!P.isString(scalar.value)) return;
 			if (scalar.style === wrongStyle) {
 				const fix = safeQuoteFix(ctx, scalar, quote);
 				const pos = positionAt(ctx.lines, scalar.offset);
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "quoted-strings",
 						severity: "error",
 						message: `String should use ${quoteType} quotes`,
@@ -116,7 +118,7 @@ export const quotedStrings: YamlRule = {
 						length: scalar.length,
 						line: pos.line,
 						character: pos.character,
-						...(fix !== undefined ? { fix } : {}),
+						...OU.getSomesStruct({ fix: OU.fromUndefinedOr(fix) }),
 					}),
 				);
 				return;
@@ -125,7 +127,7 @@ export const quotedStrings: YamlRule = {
 				const fix = safeQuoteFix(ctx, scalar, quote);
 				const pos = positionAt(ctx.lines, scalar.offset);
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "quoted-strings",
 						severity: "error",
 						message: `String should be quoted (${quoteType})`,
@@ -133,7 +135,7 @@ export const quotedStrings: YamlRule = {
 						length: scalar.length,
 						line: pos.line,
 						character: pos.character,
-						...(fix !== undefined ? { fix } : {}),
+						...OU.getSomesStruct({ fix: OU.fromUndefinedOr(fix) }),
 					}),
 				);
 			}
@@ -147,7 +149,7 @@ export const quotedStrings: YamlRule = {
 		const out: Array<StyleVote> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key") return;
-			if (typeof scalar.value !== "string") return;
+			if (!P.isString(scalar.value)) return;
 			if (scalar.style !== "single-quoted" && scalar.style !== "double-quoted") return;
 			const pos = positionAt(ctx.lines, scalar.offset);
 			out.push(

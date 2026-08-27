@@ -27,14 +27,14 @@ import type { SyntaxKind } from "./scanner.ts";
  * @since 0.0.0
  */
 export interface SkipCursor {
-	/** Return the current token without advancing. */
-	readonly getToken: () => SyntaxKind;
-	/** Advance the cursor past the current token. */
-	readonly advance: () => void;
-	/** Start offset of the current token. */
-	readonly tokenStart: () => number;
-	/** Tight end offset of the current token (start + length, before trivia). */
-	readonly tokenEnd: () => number;
+  /** Return the current token without advancing. */
+  readonly getToken: () => SyntaxKind;
+  /** Advance the cursor past the current token. */
+  readonly advance: () => void;
+  /** Start offset of the current token. */
+  readonly tokenStart: () => number;
+  /** Tight end offset of the current token (start + length, before trivia). */
+  readonly tokenEnd: () => number;
 }
 
 /**
@@ -54,8 +54,8 @@ export interface SkipCursor {
  * **Example** (Empty-range closer stays put)
  *
  * ```ts
- * import { createScanner } from "../../jsonc/internal/scanner.ts";
- * import { skipBalancedValue } from "../../jsonc/internal/skip.ts";
+ * import { createScanner } from "../../../jsonc/internal/scanner.ts";
+ * import { skipBalancedValue } from "../../../jsonc/internal/skip.ts";
  *
  * const scanner = createScanner("}");
  * scanner.scan();
@@ -79,21 +79,21 @@ export interface SkipCursor {
  * @since 0.0.0
  */
 export const skipBalancedValue = (cursor: SkipCursor): number => {
-	const start = cursor.getToken();
-	if (start === "CloseBrace" || start === "CloseBracket" || start === "EOF") {
-		return cursor.tokenStart();
-	}
-	let level = 0;
-	let end = cursor.tokenEnd();
-	do {
-		const t = cursor.getToken();
-		if (t === "OpenBrace" || t === "OpenBracket") {
-			level++;
-		} else if (t === "CloseBrace" || t === "CloseBracket") {
-			level--;
-		}
-		end = cursor.tokenEnd();
-		cursor.advance();
-	} while (level > 0 && cursor.getToken() !== "EOF");
-	return end;
+  const start = cursor.getToken();
+  if (start === "CloseBrace" || start === "CloseBracket" || start === "EOF") {
+    return cursor.tokenStart();
+  }
+  let level = 0;
+  let end = cursor.tokenEnd();
+  do {
+    const t = cursor.getToken();
+    if (t === "OpenBrace" || t === "OpenBracket") {
+      level++;
+    } else if (t === "CloseBrace" || t === "CloseBracket") {
+      level--;
+    }
+    end = cursor.tokenEnd();
+    cursor.advance();
+  } while (level > 0 && cursor.getToken() !== "EOF");
+  return end;
 };

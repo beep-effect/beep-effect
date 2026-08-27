@@ -179,6 +179,7 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  makeEmptySafeObject,
   isCodeModeValue,
 } from "../Codemode.values.ts";
 
@@ -1805,11 +1806,11 @@ export class Interpreter<R> {
     if (ToolReference.is(value)) {
       return [...this.toolKeys(value.path)];
     }
-    if (Array.isArray(value)) {
-      return Object.keys(value);
+    if (A.isArray(value)) {
+      return R.keys(value as unknown as Readonly<Record<string, unknown>>);
     }
     if (P.isNotNull(value) && P.isObjectKeyword(value) && !isRuntimeReference(value)) {
-      return Object.keys(value);
+      return R.keys(value);
     }
     return undefined;
   }
@@ -2225,8 +2226,10 @@ export class Interpreter<R> {
           const property = asNode(propertyValue, "properties");
 
           if (property.type === "RestElement") {
-            const rest = SafeObjectSchema.make(Object.create(null));
-            for (const [key, item] of Object.entries(value)) {
+            const rest = makeEmptySafeObject();
+            for (const [key, item] of R.toEntries(
+              value as unknown as Readonly<Record<string, unknown>>
+            )) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
             copyIteratorSymbols(value, rest, O.some(consumed));
@@ -2314,8 +2317,10 @@ export class Interpreter<R> {
         for (const propertyValue of getArray(pattern, "properties")) {
           const property = asNode(propertyValue, "properties");
           if (property.type === "RestElement") {
-            const rest = SafeObjectSchema.make(Object.create(null));
-            for (const [key, item] of Object.entries(source)) {
+            const rest = makeEmptySafeObject();
+            for (const [key, item] of R.toEntries(
+              source as unknown as Readonly<Record<string, unknown>>
+            )) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
             copyIteratorSymbols(source, rest, O.some(consumed));
@@ -2464,10 +2469,10 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private destructuringPropertyValue(source: SafeObject | Array<unknown>, key: PropertyKey): unknown {
-    if (!Array.isArray(source)) return Reflect.get(source, key);
+    if (!A.isArray(source)) return Reflect.get(source, key);
     if (key === "length") return source.length;
     if (P.isNumber(key)) return source[key];
-    if (Object.hasOwn(source, key)) return Reflect.get(source, key);
+    if (R.has(source as unknown as Readonly<Record<string | symbol, unknown>>, key)) return Reflect.get(source, key);
     if (P.isString(key) && S.is(arrayMethods)(key)) {
       return IntrinsicReference.new(
         IntrinsicMethod.cases.Array.make({ receiver: source, name: key })
@@ -2728,7 +2733,15 @@ export class Interpreter<R> {
       if (CodeModeDate.is(arg)) return Effect.succeed(CodeModeDate.new(arg.time));
       return Effect.map(this.toDatePrimitive(arg, node), (value) =>
         P.isString(value)
-          ? CodeModeDate.new(Date.parse(value))
+          ? CodeModeDate.new(
+              pipe(
+                DateTime.make(value),
+                O.match({
+                  onNone: () => Number.NaN,
+                  onSome: DateTime.toEpochMillis,
+                })
+              )
+            )
           : CodeModeDate.new(
             pipe(
               DateTime.make(coerceToNumber(value)),
@@ -2789,19 +2802,19 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private toDatePrimitive(value: unknown, node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
-    if (P.isNull(value) || (!P.isObjectKeyword(value) && typeof value !== "function")) return Effect.succeed(value);
+    if (P.isNull(value) || (!P.isObjectKeyword(value) && !P.isFunction(value))) return Effect.succeed(value);
     const self = this;
     return Effect.gen(function* () {
       const valueOf = Reflect.get(value, "valueOf");
-      if (Object.hasOwn(value, "valueOf") && typeofValue(valueOf) === "function") {
+      if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOf) === "function") {
         const result = yield* self.runner.invokeCallable(valueOf, [], node);
-        if (result === null || (typeof result !== "object" && typeof result !== "function")) return result;
+        if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) return result;
       }
-      if (!Object.hasOwn(value, "toString")) return coerceToString(value);
+      if (!R.has(value as Readonly<Record<string, unknown>>, "toString")) return coerceToString(value);
       const toString = Reflect.get(value, "toString");
       if (typeofValue(toString) === "function") {
         const result = yield* self.runner.invokeCallable(toString, [], node);
-        if (result === null || (typeof result !== "object" && typeof result !== "function")) return result;
+        if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) return result;
       }
       throw InterpreterRuntimeError.new("Cannot convert object to primitive value.", node).as("TypeError");
     });
@@ -2833,9 +2846,9 @@ export class Interpreter<R> {
     const pattern =
       CodeModeRegExp.is(first) ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
     const flagsArg = args[1];
-    if (flagsArg !== undefined && typeof flagsArg !== "string") {
+    if (P.isNotUndefined(flagsArg) && !P.isString(flagsArg)) {
       throw InterpreterRuntimeError.new(
-        `RegExp flags must be a string of flag characters (e.g. "g", "gi"), not ${flagsArg === null ? "null" : typeof flagsArg}.`,
+        `RegExp flags must be a string of flag characters (e.g. "g", "gi"), not ${P.isNull(flagsArg) ? "null" : typeofValue(flagsArg)}.`,
         node,
       ).as("SyntaxError");
     }
@@ -3009,8 +3022,8 @@ export class Interpreter<R> {
     if (CodeModeURLSearchParams.is(init)) {
       return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init.params)));
     }
-    if (typeof init === "string") return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init)));
-    if (P.isNull(init) || typeof init === "number" || typeof init === "boolean") {
+    if (P.isString(init)) return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init)));
+    if (P.isNull(init) || P.isNumber(init) || P.isBoolean(init)) {
       return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(coerceToString(init))));
     }
     const self = this;
@@ -3042,7 +3055,7 @@ export class Interpreter<R> {
       }
       if (isCodeModeValue(init)) return CodeModeURLSearchParams.new(new URLSearchParams());
       const data = boundedData(init, "new URLSearchParams input");
-      if (P.isNull(data) || typeof data !== "object") {
+      if (!P.isObjectKeyword(data)) {
         throw InterpreterRuntimeError.new(
           "new URLSearchParams(...) expects a query string, data object, iterable pairs, or URLSearchParams.",
           node,
@@ -3050,7 +3063,7 @@ export class Interpreter<R> {
       }
       return CodeModeURLSearchParams.new(
         new URLSearchParams(
-          Object.fromEntries(Object.entries(data).map(([key, value]) => [key, coerceToString(value)])),
+          R.fromEntries(A.map(R.toEntries(data), ([key, value]) => [key, coerceToString(value)])),
         ),
       );
     });
@@ -3175,9 +3188,9 @@ export class Interpreter<R> {
       if (CodeModeDate.is(operand)) {
         return operator === "+" || operator === "==" || operator === "!=" ? coerceToString(operand) : operand.time;
       }
-      return operand !== null && typeof operand === "object" ? coerceToString(operand) : operand;
+      return P.isObjectKeyword(operand) ? coerceToString(operand) : operand;
     };
-    const bothObjects = lhs !== null && typeof lhs === "object" && rhs !== null && typeof rhs === "object";
+    const bothObjects = P.isObjectKeyword(lhs) && P.isObjectKeyword(rhs);
     const l = coerceOperand(lhs);
     const r = coerceOperand(rhs);
     const numericLeft = (): number => coerceToNumber(l);
@@ -3214,12 +3227,12 @@ export class Interpreter<R> {
       ">>": () => numericLeft() >> numericRight(),
       ">>>": () => numericLeft() >>> numericRight(),
       "in": () => {
-        if (rhs === null || typeof rhs !== "object") {
+        if (!P.isObjectKeyword(rhs)) {
           throw InterpreterRuntimeError.new("The 'in' operator requires a data object on the right-hand side.", node);
         }
         // Never expose properties inherited from host prototypes.
         const key = P.isSymbol(l) ? l : coerceToString(l);
-        return Object.hasOwn(rhs, key);
+        return R.has(rhs as Readonly<Record<string | symbol, unknown>>, key);
       },
     });
   }
@@ -4164,7 +4177,9 @@ export class Interpreter<R> {
       Effect.suspend(() => {
         const request = this.dequeueGeneratorRequest(state);
         return P.isUndefined(request)
-          ? Effect.die(new Error("CodeMode generator queue resumed without a pending request."))
+          ? Effect.die(
+              InterpreterRuntimeError.new("CodeMode generator queue resumed without a pending request.")
+            )
           : Effect.succeed(request);
       }),
     );
@@ -4306,7 +4321,7 @@ export class Interpreter<R> {
     const self = this;
     return Effect.gen(function* () {
       if (
-        Array.isArray(value) ||
+        A.isArray(value) ||
         P.isString(value) ||
         CodeModeMap.is(value) ||
         CodeModeSet.is(value) ||
@@ -4416,7 +4431,7 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private evaluateObjectExpression(node: AstNode): Effect.Effect<Record<string, unknown>, InterpreterFailure, R> {
-    const objectValue: Record<string, unknown> = Object.create(null);
+    const objectValue: Record<string, unknown> = makeEmptySafeObject();
     const properties = getArray(node, "properties");
     const self = this;
     return Effect.gen(function* () {
@@ -4426,10 +4441,10 @@ export class Interpreter<R> {
         if (property.type === "SpreadElement") {
           const spread = yield* self.evaluateExpression(getNode(property, "argument"));
           if (spread === null || spread === undefined || isCodeModeValue(spread)) continue;
-          if (typeof spread !== "object" || Array.isArray(spread) || isRuntimeReference(spread)) {
+          if (!P.isObjectKeyword(spread) || A.isArray(spread) || isRuntimeReference(spread)) {
             throw InterpreterRuntimeError.new("Object spread requires a data object.", property, "InvalidDataValue");
           }
-          for (const [key, value] of Object.entries(spread)) {
+          for (const [key, value] of R.toEntries(spread)) {
             if (isBlockedMember(key)) throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, property);
             objectValue[key] = value;
           }
@@ -4758,7 +4773,7 @@ export class Interpreter<R> {
         });
       }
 
-      if (typeof objectValue === "string") {
+      if (P.isString(objectValue)) {
         if (key === "length") return ComputedValue.new(objectValue.length);
         const index = P.isSymbol(key) ? undefined : parseArrayIndex(key);
         if (P.isNotUndefined(index)) return ComputedValue.new(objectValue[index]);
@@ -4909,7 +4924,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, propertyNode);
       }
 
-      if (Array.isArray(objectValue)) {
+      if (A.isArray(objectValue)) {
         if (operation === "delete") {
           return MemberReference.new(objectValue, key);
         }
@@ -5086,7 +5101,7 @@ export class Interpreter<R> {
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be assigned.", node);
       }
-      if (Array.isArray(reference.target)) {
+      if (A.isArray(reference.target)) {
         if (reference.key === "length") throw InterpreterRuntimeError.new("Array length cannot be assigned.", node);
         if (P.isString(reference.key) && S.is(arrayMethods)(reference.key)) {
           throw InterpreterRuntimeError.new("Array methods cannot be assigned.", node);
@@ -5154,7 +5169,7 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private assignToReference(reference: MemberReference, key: PropertyKey, next: unknown, node: AstNode): void {
-    if (Array.isArray(reference.target)) {
+    if (A.isArray(reference.target)) {
       const target = reference.target;
       if (!P.isNumber(key) || P.isUndefined(parseArrayIndex(key))) {
         throw InterpreterRuntimeError.new(

@@ -71,7 +71,7 @@ export const lineLength: YamlRule = {
 		for (const line of ctx.lines) {
 			if (line.text.length > max) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "line-length",
 						severity: "error",
 						message: `Line is longer than ${max} characters (${line.text.length})`,

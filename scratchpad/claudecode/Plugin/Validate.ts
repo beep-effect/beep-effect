@@ -6,24 +6,21 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect, Order } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import type * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import type { PluginLoadError } from "../Errors.ts";
 import { McpJsonFile } from "../Mcp.ts";
 import { HooksSection } from "../Settings/HooksSection.ts";
 import type { PluginAgentEntry, PluginCommandEntry, PluginDefinition, PluginOutputStyleEntry } from "./Define.ts";
-
 import { isMarkdownFilePath, isSkillFilePath, pathSpecs } from "./Layout.ts";
-import type { LoadedPlugin, PluginScan } from "./Load.ts";
-import { load, scan } from "./Load.ts";
+import { LoadedPlugin, load, PluginScan, scan } from "./Load.ts";
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Validate");
 
@@ -217,13 +214,27 @@ export declare namespace PluginLintReport {
 /**
  * Structured on-disk diagnostic report for a plugin root.
  *
+ * **Example** (Name a doctor report)
+ *
+ * ```ts
+ * import type { Plugin } from "effect-claudecode"
+ *
+ * type Report = Plugin.PluginDoctorReport
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface PluginDoctorReport extends PluginLintReport {
-  readonly scanned: PluginScan;
-  readonly loaded: LoadedPlugin;
-}
+export class PluginDoctorReport extends S.Class<PluginDoctorReport>($I`PluginDoctorReport`)(
+  {
+    ...PluginLintReport.fields,
+    scanned: PluginScan,
+    loaded: LoadedPlugin,
+  },
+  $I.annote("PluginDoctorReport", {
+    description: "Validated plugin scan and loaded definition paired with the complete lint partition.",
+  })
+) {}
 
 type FlatEntry = PluginCommandEntry | PluginAgentEntry | PluginOutputStyleEntry;
 
@@ -291,9 +302,7 @@ const inlineHooksFromManifest = (definition: PluginDefinition | LoadedPlugin): O
 
 const inlineMcpFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<McpJsonFile> =>
   O.flatMap(definition.manifest.mcpServers, (mcpServers) =>
-    typeof mcpServers === "string" || A.isArray(mcpServers)
-      ? O.none()
-      : S.decodeUnknownOption(McpJsonFile)({ mcpServers })
+    P.isString(mcpServers) || A.isArray(mcpServers) ? O.none() : S.decodeUnknownOption(McpJsonFile)({ mcpServers })
   );
 
 const validateFlatEntries = (options: {
@@ -645,9 +654,9 @@ export const doctor = Effect.fn("Plugin.doctor")(function* (
   const scanned = yield* scan(rootDir);
   const loaded = yield* load(rootDir);
   const report = lint(loaded);
-  return {
+  return PluginDoctorReport.make({
     scanned,
     loaded,
     ...report,
-  };
+  });
 });

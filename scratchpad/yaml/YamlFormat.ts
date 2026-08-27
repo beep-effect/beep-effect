@@ -12,6 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Effect, Schema } from "effect";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { EMPTY_DOCUMENT, composeAllDocuments, composeFirstDocumentCounted } from "./internal/composer/document.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
@@ -21,8 +23,8 @@ import { requoteScalarText } from "./internal/requote.ts";
 import { stringifyDocument, stripNodeComments } from "./internal/stringifier.ts";
 import { YamlStringifyOptions } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
-import type { YamlPath, YamlSegment } from "./YamlEdit.ts";
-import { YamlEdit, YamlRange } from "./YamlEdit.ts";
+import type { YamlSegment } from "./YamlEdit.ts";
+import { YamlEdit, YamlPath, YamlRange } from "./YamlEdit.ts";
 import type { YamlNode } from "./YamlNode.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
 
@@ -137,13 +139,36 @@ export class YamlFormattingOptions extends Schema.Class<YamlFormattingOptions>("
 export class YamlModificationError extends Schema.TaggedError<YamlModificationError>()(
 	"YamlModificationError",
 	{
-		path: Schema.Array(Schema.Union([Schema.String, Schema.Number])),
+		path: YamlPath,
 		diagnostics: Schema.Array(YamlDiagnostic),
 	},
 	$I.annote("YamlModificationError", {
 		description: "Typed failure when YamlFormat.modify cannot parse, navigate, or legally rewrite a document.",
 	}),
 ) {
+	/**
+	 * Render the requested path and every structured diagnostic as one
+	 * human-readable failure summary.
+	 *
+	 * **Example** (Read a modification failure summary)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic, YamlModificationError } from "@beep/scratchpad/yaml"
+	 *
+	 * const error = YamlModificationError.make({
+	 *   path: ["missing"],
+	 *   diagnostics: [YamlDiagnostic.make({
+	 *     code: "PathNotFound",
+	 *     message: "Missing key",
+	 *     offset: 0,
+	 *     length: 0,
+	 *     line: 0,
+	 *     character: 0,
+	 *   })],
+	 * })
+	 * console.log(error.message) // "Modification failed at path [missing]: Missing key"
+	 * ```
+	 */
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `Modification failed at path [${this.path.join(", ")}]: ${summary}`;
@@ -156,18 +181,26 @@ export class YamlModificationError extends Schema.TaggedError<YamlModificationEr
  * Thrown by the pure AST-navigation helpers on a structural mismatch.
  * `modify` catches this and materializes {@link YamlModificationError}.
  */
-class ModifyFailure extends Error {
-	readonly code: "EmptyDocument" | "PathNotFound" | "InvalidIndex" | "NotNavigable";
-	readonly offset: number;
-	readonly length: number;
-	constructor(code: ModifyFailure["code"], message: string, offset: number, length: number) {
-		super(message);
-		this.name = "ModifyFailure";
-		this.code = code;
-		this.offset = offset;
-		this.length = length;
-	}
-}
+const ModifyFailureCode = Schema.Literals(["EmptyDocument", "PathNotFound", "InvalidIndex", "NotNavigable"]).pipe(
+	$I.annoteSchema("ModifyFailureCode", {
+		description: "Structural navigation failures raised by the YAML path modifier.",
+	}),
+);
+
+class ModifyFailure extends Schema.TaggedError<ModifyFailure>($I`ModifyFailure`)(
+	"ModifyFailure",
+	{
+		code: ModifyFailureCode,
+		message: Schema.String,
+		offset: Schema.Finite,
+		length: Schema.Finite,
+	},
+	$I.annote("ModifyFailure", {
+		description: "Internal YAML modification failure before public diagnostic materialization.",
+	}),
+) {}
+
+const isModifyFailure = Schema.is(ModifyFailure);
 
 // ── Internal: options bridging ──────────────────────────────────────────────
 
@@ -199,7 +232,7 @@ function resolveRange(
 /** Copy only the defined entries of `fields` — never emits an explicit `undefined` into a v4 `optionalKey` field. */
 function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T> {
 	const out: Partial<T> = {};
-	for (const key of Object.keys(fields) as Array<keyof T>) {
+	for (const key of R.keys(fields) as Array<keyof T>) {
 		if (fields[key] !== undefined) out[key] = fields[key];
 	}
 	return out;
@@ -218,7 +251,7 @@ function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T>
  * the surrounding diff keeps the edit surgical per scalar span.
  */
 function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
-	if (node instanceof YamlScalar) {
+	if (YamlScalar.is(node)) {
 		if (requoteScalarText(text, node, quote, "escaping") === undefined) return node;
 		return YamlScalar.make({
 			value: node.value,
@@ -234,7 +267,7 @@ function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
+	if (YamlMap.is(node)) {
 		return rebuildMap(
 			node,
 			node.items.map((pair) =>
@@ -245,7 +278,7 @@ function requoteNode(node: YamlNode, text: string, quote: '"' | "'"): YamlNode {
 			),
 		);
 	}
-	if (node instanceof YamlSeq) {
+	if (YamlSeq.is(node)) {
 		return rebuildSeq(
 			node,
 			node.items.map((item) => requoteNode(item, text, quote)),
@@ -369,7 +402,12 @@ function modifyDocument(doc: RawYamlDocument, path: YamlPath, value: unknown): Y
 		return value === undefined ? null : jsValueToNode(value);
 	}
 	if (doc.contents === null) {
-		throw new ModifyFailure("EmptyDocument", "Cannot navigate path in empty document", 0, 0);
+		throw ModifyFailure.make({
+			code: "EmptyDocument",
+			message: "Cannot navigate path in empty document",
+			offset: 0,
+			length: 0,
+		});
 	}
 	return modifyNode(doc.contents, path, 0, value);
 }
@@ -378,8 +416,8 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 	const segment = path[depth] as YamlSegment;
 	const isLast = depth === path.length - 1;
 
-	if (node instanceof YamlMap) {
-		const pairIndex = node.items.findIndex((pair) => pair.key instanceof YamlScalar && pair.key.value === segment);
+	if (YamlMap.is(node)) {
+		const pairIndex = node.items.findIndex((pair) => YamlScalar.is(pair.key) && pair.key.value === segment);
 
 		if (isLast) {
 			if (value === undefined) {
@@ -408,16 +446,21 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 
 		// Navigate deeper.
 		if (pairIndex < 0) {
-			throw new ModifyFailure(
-				"PathNotFound",
-				`Key "${String(segment)}" not found in mapping`,
-				node.offset,
-				node.length,
-			);
+			throw ModifyFailure.make({
+				code: "PathNotFound",
+				message: `Key "${String(segment)}" not found in mapping`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 		const pair = node.items[pairIndex] as YamlPair;
 		if (pair.value === null) {
-			throw new ModifyFailure("PathNotFound", `Value at key "${String(segment)}" is null`, node.offset, node.length);
+			throw ModifyFailure.make({
+				code: "PathNotFound",
+				message: `Value at key "${String(segment)}" is null`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 		const newValue = modifyNode(pair.value, path, depth + 1, value);
 		const newItems = [...node.items];
@@ -425,10 +468,15 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		return rebuildMap(node, newItems);
 	}
 
-	if (node instanceof YamlSeq) {
-		const idx = typeof segment === "number" ? segment : Number(segment);
+	if (YamlSeq.is(node)) {
+		const idx = P.isNumber(segment) ? segment : Number(segment);
 		if (Number.isNaN(idx) || idx < 0) {
-			throw new ModifyFailure("InvalidIndex", `Invalid sequence index: ${String(segment)}`, node.offset, node.length);
+			throw ModifyFailure.make({
+				code: "InvalidIndex",
+				message: `Invalid sequence index: ${String(segment)}`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 
 		if (isLast) {
@@ -444,7 +492,12 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		}
 
 		if (idx >= node.items.length) {
-			throw new ModifyFailure("InvalidIndex", `Index ${idx} out of bounds`, node.offset, node.length);
+			throw ModifyFailure.make({
+				code: "InvalidIndex",
+				message: `Index ${idx} out of bounds`,
+				offset: node.offset,
+				length: node.length,
+			});
 		}
 		const child = node.items[idx] as YamlNode;
 		const newChild = modifyNode(child, path, depth + 1, value);
@@ -453,12 +506,12 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 		return rebuildSeq(node, newItems);
 	}
 
-	throw new ModifyFailure(
-		"NotNavigable",
-		`Cannot navigate through ${node._tag} at segment "${String(segment)}"`,
-		node.offset,
-		node.length,
-	);
+	throw ModifyFailure.make({
+		code: "NotNavigable",
+		message: `Cannot navigate through ${node._tag} at segment "${String(segment)}"`,
+		offset: node.offset,
+		length: node.length,
+	});
 }
 
 function rebuildMap(node: YamlMap, items: ReadonlyArray<YamlPair>): YamlMap {
@@ -598,6 +651,16 @@ export class YamlFormat {
 	 * quotes, since that is a literal string key they wrote deliberately. Note
 	 * that {@link Yaml.stringify} is deliberately the other way round for a
 	 * `"<<"` key on a plain JavaScript object.
+	 *
+	 * **Example** (Compute and apply formatting edits)
+	 *
+	 * ```ts
+	 * import { YamlEdit, YamlFormat } from "@beep/scratchpad/yaml"
+	 *
+	 * const source = "a:    1\n"
+	 * const edits = YamlFormat.format(source)
+	 * console.log(YamlEdit.applyAll(source, edits)) // "a: 1\n"
+	 * ```
 	 */
 	static format(text: string, range?: YamlRangeLike, options?: YamlFormattingOptions): ReadonlyArray<YamlEdit> {
 		const formatted = formatDocument(text, options);
@@ -625,6 +688,14 @@ export class YamlFormat {
 	 * document — single or in a stream — carrying `%YAML`/`%TAG` directives)
 	 * is returned byte-identical — never a truncated first document, never a
 	 * document re-emitted without the directive its tags depend on.
+	 *
+	 * **Example** (Format in one step)
+	 *
+	 * ```ts
+	 * import { YamlFormat } from "@beep/scratchpad/yaml"
+	 *
+	 * console.log(YamlFormat.formatToString("a:    1\n")) // "a: 1\n"
+	 * ```
 	 */
 	static formatToString(text: string, range?: YamlRangeLike, options?: YamlFormattingOptions): string {
 		return YamlEdit.applyAll(text, YamlFormat.format(text, range, options));
@@ -670,7 +741,7 @@ export class YamlFormat {
 	) {
 		const { document: doc, documentCount } = composeFirstDocumentCounted(text, {});
 		if (documentCount > 1) {
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: [
 					YamlDiagnostic.fromRaw(
@@ -687,13 +758,13 @@ export class YamlFormat {
 		}
 		const fatal = doc.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 			});
 		}
 		if (doc.directives.length > 0) {
-			return yield* new YamlModificationError({
+			return yield* YamlModificationError.make({
 				path,
 				diagnostics: [
 					YamlDiagnostic.fromRaw(
@@ -710,21 +781,26 @@ export class YamlFormat {
 			});
 		}
 
-		let newContents: YamlNode | null;
-		try {
-			newContents = modifyDocument(doc, path, value);
-		} catch (err) {
-			if (!(err instanceof ModifyFailure)) throw err;
-			return yield* new YamlModificationError({
-				path,
-				diagnostics: [
-					YamlDiagnostic.fromRaw(
-						{ code: err.code, message: err.message, offset: err.offset, length: err.length },
-						text,
-					),
-				],
-			});
-		}
+		const newContents = yield* Effect.sync(() => modifyDocument(doc, path, value)).pipe(
+			Effect.catchDefect((defect) =>
+				isModifyFailure(defect)
+					? YamlModificationError.make({
+							path,
+							diagnostics: [
+								YamlDiagnostic.fromRaw(
+									{
+										code: defect.code,
+										message: defect.message,
+										offset: defect.offset,
+										length: defect.length,
+									},
+									text,
+								),
+							],
+						})
+					: Effect.die(defect),
+			),
+		);
 
 		const outputDoc: RawYamlDocument = { ...doc, contents: newContents };
 		const formatted = stringifyDocument(outputDoc, toStringifyInput(options));

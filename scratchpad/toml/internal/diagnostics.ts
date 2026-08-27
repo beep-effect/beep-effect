@@ -1,3 +1,9 @@
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("toml/internal/diagnostics");
+
 /**
  * Engine-only TOML diagnostic vocabulary and throw carrier.
  *
@@ -31,14 +37,14 @@
  * @since 0.0.0
  */
 export const TOML_LEX_ERROR_CODES = [
-	"InvalidUtf8",
-	"UnterminatedString",
-	"InvalidEscape",
-	"InvalidUnicodeEscape",
-	"ControlCharacterInString",
-	"ControlCharacterInComment",
-	"InvalidCharacter",
-	"BareCarriageReturn",
+  "InvalidUtf8",
+  "UnterminatedString",
+  "InvalidEscape",
+  "InvalidUnicodeEscape",
+  "ControlCharacterInString",
+  "ControlCharacterInComment",
+  "InvalidCharacter",
+  "BareCarriageReturn",
 ] as const;
 
 /**
@@ -60,18 +66,18 @@ export const TOML_LEX_ERROR_CODES = [
  * @since 0.0.0
  */
 export const TOML_PARSE_ERROR_CODES = [
-	"ExpectedKey",
-	"ExpectedEquals",
-	"ExpectedValue",
-	"ExpectedNewline",
-	"ExpectedTableHeaderClose",
-	"UnterminatedArray",
-	"UnterminatedInlineTable",
-	"InvalidValue",
-	"InvalidNumber",
-	"IntegerOutOfRange",
-	"InvalidDateTime",
-	"NestingDepthExceeded",
+  "ExpectedKey",
+  "ExpectedEquals",
+  "ExpectedValue",
+  "ExpectedNewline",
+  "ExpectedTableHeaderClose",
+  "UnterminatedArray",
+  "UnterminatedInlineTable",
+  "InvalidValue",
+  "InvalidNumber",
+  "IntegerOutOfRange",
+  "InvalidDateTime",
+  "NestingDepthExceeded",
 ] as const;
 
 /**
@@ -92,11 +98,11 @@ export const TOML_PARSE_ERROR_CODES = [
  * @since 0.0.0
  */
 export const TOML_SEMANTIC_ERROR_CODES = [
-	"DuplicateKey",
-	"TableRedefined",
-	"ArrayOfTablesConflict",
-	"DottedKeyConflict",
-	"InlineTableExtended",
+  "DuplicateKey",
+  "TableRedefined",
+  "ArrayOfTablesConflict",
+  "DottedKeyConflict",
+  "InlineTableExtended",
 ] as const;
 
 /**
@@ -126,13 +132,13 @@ export const TOML_SEMANTIC_ERROR_CODES = [
  * @since 0.0.0
  */
 export const TOML_STRINGIFY_ERROR_CODES = [
-	"CircularReference",
-	"UnsupportedValue",
-	// IntegerOutOfRange and NestingDepthExceeded are intentionally shared with
-	// TOML_PARSE_ERROR_CODES: the same concept (an out-of-range integer, a
-	// nesting guard trip) applies on both the parse and stringify sides.
-	"IntegerOutOfRange",
-	"NestingDepthExceeded",
+  "CircularReference",
+  "UnsupportedValue",
+  // IntegerOutOfRange and NestingDepthExceeded are intentionally shared with
+  // TOML_PARSE_ERROR_CODES: the same concept (an out-of-range integer, a
+  // nesting guard trip) applies on both the parse and stringify sides.
+  "IntegerOutOfRange",
+  "NestingDepthExceeded",
 ] as const;
 
 /**
@@ -184,11 +190,42 @@ export type TomlStringifyErrorCodeRaw = (typeof TOML_STRINGIFY_ERROR_CODES)[numb
  * @category type-level
  * @since 0.0.0
  */
-export type TomlErrorCodeRaw =
-	| TomlLexErrorCodeRaw
-	| TomlParseErrorCodeRaw
-	| TomlSemanticErrorCodeRaw
-	| TomlStringifyErrorCodeRaw;
+/**
+ * Runtime schema for every TOML engine diagnostic code.
+ *
+ * **Example** (Recognize an engine diagnostic code)
+ *
+ * ```ts
+ * import { TomlErrorCode } from "../../../toml/internal/diagnostics.ts"
+ *
+ * console.log(TomlErrorCode.is("DuplicateKey")) // true
+ * console.log(TomlErrorCode.is("Unknown")) // false
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TomlErrorCode = LiteralKit([
+  ...TOML_LEX_ERROR_CODES,
+  ...TOML_PARSE_ERROR_CODES,
+  ...TOML_SEMANTIC_ERROR_CODES,
+  ...TOML_STRINGIFY_ERROR_CODES,
+]).annotate(
+  $I.annote("TomlErrorCode", {
+    description: "Engine diagnostic code across TOML lexing, parsing, semantic analysis, and stringification.",
+  })
+);
+
+/**
+ * Union of every raw TOML engine diagnostic code.
+ *
+ * @see {@link TomlErrorCode} for the runtime literal schema.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TomlErrorCodeRaw = typeof TomlErrorCode.Type;
 
 /**
  * The engine's diagnostic record. Public modules derive line/character.
@@ -199,12 +236,17 @@ export type TomlErrorCodeRaw =
  * @category type-level
  * @since 0.0.0
  */
-export interface RawDiagnostic {
-	readonly code: TomlErrorCodeRaw;
-	readonly message: string;
-	readonly offset: number;
-	readonly length: number;
-}
+export class RawDiagnostic extends S.Class<RawDiagnostic>($I`RawDiagnostic`)(
+  {
+    code: TomlErrorCode,
+    message: S.String,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("RawDiagnostic", {
+    description: "Engine diagnostic with its TOML error code, message, and source span.",
+  })
+) {}
 
 /**
  * The engine's only throw carrier besides {@link GuardExceeded}.
@@ -221,7 +263,7 @@ export interface RawDiagnostic {
  * ```ts
  * import { RawTomlError } from "../../../toml/internal/diagnostics.ts"
  *
- * const error = new RawTomlError({
+ * const error = RawTomlError.make({
  *   code: "ExpectedEquals",
  *   message: "expected =",
  *   offset: 4,
@@ -237,13 +279,21 @@ export interface RawDiagnostic {
  * @category errors
  * @since 0.0.0
  */
-export class RawTomlError extends Error {
-	readonly _tag = "RawTomlError";
-	readonly diagnostic: RawDiagnostic;
-	constructor(diagnostic: RawDiagnostic) {
-		super(diagnostic.message);
-		this.diagnostic = diagnostic;
-	}
+export class RawTomlError extends S.TaggedError<RawTomlError>($I`RawTomlError`)(
+  "RawTomlError",
+  {
+    code: TomlErrorCode,
+    message: S.String,
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("RawTomlError", {
+    description: "Typed engine throw carrier for one TOML diagnostic.",
+  })
+) {
+  get diagnostic(): RawDiagnostic {
+    return RawDiagnostic.make({ code: this.code, message: this.message, offset: this.offset, length: this.length });
+  }
 }
 
 /**
@@ -255,7 +305,7 @@ export class RawTomlError extends Error {
  * ```ts
  * import { isRawTomlError, RawTomlError } from "../../../toml/internal/diagnostics.ts"
  *
- * const error: unknown = new RawTomlError({
+ * const error: unknown = RawTomlError.make({
  *   code: "ExpectedValue",
  *   message: "expected a value",
  *   offset: 7,
@@ -270,4 +320,4 @@ export class RawTomlError extends Error {
  * @category guards
  * @since 0.0.0
  */
-export const isRawTomlError = (u: unknown): u is RawTomlError => u instanceof RawTomlError;
+export const isRawTomlError = S.is(RawTomlError);

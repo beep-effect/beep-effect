@@ -22,50 +22,50 @@ const $I = $ScratchpadId.create("toml/TomlDateTime");
 
 /** Zero-pad `value` to `width` digits (never truncates a wider value). */
 function pad(value: number, width: number): string {
-	return String(value).padStart(width, "0");
+  return String(value).padStart(width, "0");
 }
 
 /** Whether `year` is a Gregorian leap year (div-4, except centuries unless div-400). */
 function isLeapYear(year: number): boolean {
-	return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
 const MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 /** The number of days in `month` (1-12) of `year`, accounting for leap years. */
 function daysInMonth(year: number, month: number): number {
-	if (month === 2 && isLeapYear(year)) {
-		return 29;
-	}
-	return MONTH_LENGTHS[month - 1] ?? 31;
+  if (month === 2 && isLeapYear(year)) {
+    return 29;
+  }
+  return MONTH_LENGTHS[month - 1] ?? 31;
 }
 
 /** Class-level filter shared by every class carrying a `{ year, month, day }` triple. */
 const isRealCalendarDate = Schema.makeFilter(
-	({ year, month, day }: { readonly year: number; readonly month: number; readonly day: number }) => {
-		const max = daysInMonth(year, month);
-		return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
-	},
-	{ title: "a real calendar date" },
+  ({ year, month, day }: { readonly year: number; readonly month: number; readonly day: number }) => {
+    const max = daysInMonth(year, month);
+    return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
+  },
+  { title: "a real calendar date" }
 );
 
 const dateFields = {
-	year: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9999 })),
-	month: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 12 })),
-	day: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 31 })),
+  year: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 9999 })),
+  month: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 12 })),
+  day: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 31 })),
 };
 
 const timeFields = {
-	hour: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
-	minute: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
-	// 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
-	second: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 60 })),
-	nanosecond: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 999_999_999 })),
+  hour: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
+  minute: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
+  // 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
+  second: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 60 })),
+  nanosecond: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 999_999_999 })),
 };
 
 /** `YYYY-MM-DD`. */
 function formatDate(date: { readonly year: number; readonly month: number; readonly day: number }): string {
-	return `${pad(date.year, 4)}-${pad(date.month, 2)}-${pad(date.day, 2)}`;
+  return `${pad(date.year, 4)}-${pad(date.month, 2)}-${pad(date.day, 2)}`;
 }
 
 /**
@@ -73,29 +73,29 @@ function formatDate(date: { readonly year: number; readonly month: number; reado
  * `nanosecond > 0`, trimmed to the shortest exact representation.
  */
 function formatTime(time: {
-	readonly hour: number;
-	readonly minute: number;
-	readonly second: number;
-	readonly nanosecond: number;
+  readonly hour: number;
+  readonly minute: number;
+  readonly second: number;
+  readonly nanosecond: number;
 }): string {
-	const base = `${pad(time.hour, 2)}:${pad(time.minute, 2)}:${pad(time.second, 2)}`;
-	if (time.nanosecond === 0) {
-		return base;
-	}
-	const fraction = pad(time.nanosecond, 9).replace(/0+$/, "");
-	return `${base}.${fraction}`;
+  const base = `${pad(time.hour, 2)}:${pad(time.minute, 2)}:${pad(time.second, 2)}`;
+  if (time.nanosecond === 0) {
+    return base;
+  }
+  const fraction = pad(time.nanosecond, 9).replace(/0+$/, "");
+  return `${base}.${fraction}`;
 }
 
 /** `Z` for a zero offset, else `+hh:mm` / `-hh:mm`. */
 function formatOffset(offsetMinutes: number): string {
-	if (offsetMinutes === 0) {
-		return "Z";
-	}
-	const sign = offsetMinutes < 0 ? "-" : "+";
-	const magnitude = Math.abs(offsetMinutes);
-	const hh = Math.trunc(magnitude / 60);
-	const mm = magnitude % 60;
-	return `${sign}${pad(hh, 2)}:${pad(mm, 2)}`;
+  if (offsetMinutes === 0) {
+    return "Z";
+  }
+  const sign = offsetMinutes < 0 ? "-" : "+";
+  const magnitude = Math.abs(offsetMinutes);
+  const hh = Math.trunc(magnitude / 60);
+  const mm = magnitude % 60;
+  return `${sign}${pad(hh, 2)}:${pad(mm, 2)}`;
 }
 
 /**
@@ -117,15 +117,15 @@ function formatOffset(offsetMinutes: number): string {
  * @since 0.0.0
  */
 export class TomlLocalDate extends Schema.Class<TomlLocalDate>($I`TomlLocalDate`)(
-	Schema.Struct(dateFields).check(isRealCalendarDate),
-	$I.annote("TomlLocalDate", {
-		description: "A TOML local date with Gregorian calendar validity and no time-of-day or offset.",
-	}),
+  Schema.Struct(dateFields).check(isRealCalendarDate),
+  $I.annote("TomlLocalDate", {
+    description: "A TOML local date with Gregorian calendar validity and no time-of-day or offset.",
+  })
 ) {
-	/** @internal */
-	override toString(): string {
-		return formatDate(this);
-	}
+  /** @internal */
+  override toString(): string {
+    return formatDate(this);
+  }
 }
 
 /**
@@ -157,15 +157,15 @@ export class TomlLocalDate extends Schema.Class<TomlLocalDate>($I`TomlLocalDate`
  * @since 0.0.0
  */
 export class TomlLocalTime extends Schema.Class<TomlLocalTime>($I`TomlLocalTime`)(
-	timeFields,
-	$I.annote("TomlLocalTime", {
-		description: "A TOML local time with optional nanoseconds and RFC 3339 leap-second tolerance.",
-	}),
+  timeFields,
+  $I.annote("TomlLocalTime", {
+    description: "A TOML local time with optional nanoseconds and RFC 3339 leap-second tolerance.",
+  })
 ) {
-	/** @internal */
-	override toString(): string {
-		return formatTime(this);
-	}
+  /** @internal */
+  override toString(): string {
+    return formatTime(this);
+  }
 }
 
 /**
@@ -201,15 +201,15 @@ export class TomlLocalTime extends Schema.Class<TomlLocalTime>($I`TomlLocalTime`
  * @since 0.0.0
  */
 export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>($I`TomlLocalDateTime`)(
-	Schema.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
-	$I.annote("TomlLocalDateTime", {
-		description: "A TOML local date-time combining a calendar date and a local time with no offset.",
-	}),
+  Schema.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
+  $I.annote("TomlLocalDateTime", {
+    description: "A TOML local date-time combining a calendar date and a local time with no offset.",
+  })
 ) {
-	/** @internal */
-	override toString(): string {
-		return `${formatDate(this)}T${formatTime(this)}`;
-	}
+  /** @internal */
+  override toString(): string {
+    return `${formatDate(this)}T${formatTime(this)}`;
+  }
 }
 
 /**
@@ -259,17 +259,17 @@ export class TomlLocalDateTime extends Schema.Class<TomlLocalDateTime>($I`TomlLo
  * @since 0.0.0
  */
 export class TomlOffsetDateTime extends Schema.Class<TomlOffsetDateTime>($I`TomlOffsetDateTime`)(
-	Schema.Struct({
-		...dateFields,
-		...timeFields,
-		offsetMinutes: Schema.Int.check(Schema.isBetween({ minimum: -1439, maximum: 1439 })),
-	}).check(isRealCalendarDate),
-	$I.annote("TomlOffsetDateTime", {
-		description: "A TOML offset date-time storing calendar fields plus a combined UTC offset in minutes.",
-	}),
+  Schema.Struct({
+    ...dateFields,
+    ...timeFields,
+    offsetMinutes: Schema.Int.check(Schema.isBetween({ minimum: -1439, maximum: 1439 })),
+  }).check(isRealCalendarDate),
+  $I.annote("TomlOffsetDateTime", {
+    description: "A TOML offset date-time storing calendar fields plus a combined UTC offset in minutes.",
+  })
 ) {
-	/** @internal */
-	override toString(): string {
-		return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;
-	}
+  /** @internal */
+  override toString(): string {
+    return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;
+  }
 }

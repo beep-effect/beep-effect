@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { Schema } from "effect";
+import { HashSet, Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -43,11 +43,11 @@ export const documentEndOptions = Schema.Struct({
 	present: Schema.optionalKey(Schema.Boolean),
 });
 
-const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark"]);
+const TRIVIA = HashSet.make("newline", "whitespace", "comment", "byte-order-mark");
 
 /** The last non-trivia token: it decides whether the stream ends with `...`. */
 const tailToken = (ctx: LintContext): YamlToken | undefined =>
-	[...ctx.tokens].reverse().find((t) => !TRIVIA.has(t.kind));
+	[...ctx.tokens].reverse().find((t) => !HashSet.has(TRIVIA, t.kind));
 
 /**
  * The end-of-stream position, shared by the missing-marker diagnostic and
@@ -102,7 +102,7 @@ export const documentEnd: YamlRule = {
 		const ended = tail?.kind === "document-end";
 		if (present && !ended && ctx.text.trim() !== "") {
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-end",
 					severity: "error",
 					message: 'Missing "..." document end marker',
@@ -124,7 +124,7 @@ export const documentEnd: YamlRule = {
 			// (two characters under CRLF, one under LF).
 			const terminator = ctx.text.startsWith("\r\n", tail.offset + tail.length) ? 2 : 1;
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-end",
 					severity: "error",
 					message: 'Forbidden "..." document end marker',

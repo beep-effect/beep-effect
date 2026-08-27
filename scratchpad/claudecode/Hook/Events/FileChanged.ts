@@ -9,9 +9,8 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { flow } from "effect";
+import { Effect, flow } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

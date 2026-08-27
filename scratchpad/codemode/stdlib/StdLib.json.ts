@@ -27,6 +27,7 @@ import * as S from "effect/Schema";
 import {
   CodeModeDate,
   CodeModeURL,
+  makeEmptySafeObject,
   isCodeModeValue,
 } from "../Codemode.values.ts";
 
@@ -74,7 +75,7 @@ import {
  * @category serialization
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeJsonMethod = <R>(
   runner: CallbackRunner<R>,
   ref: JsonMethodReference | JsonMethodName,
@@ -116,7 +117,7 @@ const parse = <R>(
     if (typeofValue(args[1]) !== "function") return copied;
 
     const apply = applyCollectionCallback(runner, args[1], "JSON.parse", node);
-    const root = SafeObject.make(Object.create(null));
+    const root = makeEmptySafeObject();
     Reflect.set(root, "", copied);
     const visit = (
       holder: SafeObject | Array<unknown>,
@@ -124,7 +125,7 @@ const parse = <R>(
     ): Effect.Effect<unknown, InterpreterFailure, R> =>
       Effect.gen(function* () {
         const value = Reflect.get(holder, key);
-        if (Array.isArray(value)) {
+        if (A.isArray(value)) {
           const length = value.length;
           for (let index = 0; index < length; index += 1) {
             const revived = yield* visit(value, String(index));
@@ -156,7 +157,7 @@ const stringify = <R>(
     const checked = yield* copyFromBoundary(args[0], "JSON.stringify value", callable);
     const input = callable ? args[0] : checked;
 
-    if (Array.isArray(replacer)) {
+    if (A.isArray(replacer)) {
       const properties = pipe(
         replacer,
         A.filter((item): item is string | number => P.or(P.isString, P.isNumber)(item)),
@@ -171,7 +172,7 @@ const stringify = <R>(
     }
 
     const apply = applyCollectionCallback(runner, replacer, "JSON.stringify", node);
-    const root = SafeObject.make(Object.create(null));
+    const root = makeEmptySafeObject();
     Reflect.set(root, "", input);
     const stack = MutableHashSet.empty<object>();
     const visit = (
@@ -184,7 +185,7 @@ const stringify = <R>(
         yield* copyFromBoundary(value, "JSON.stringify replacer result", true);
         if (P.isNumber(value)) return Number.isFinite(value) ? value : null;
         if (P.isNull(value) || P.isString(value) || P.isBoolean(value)) return value;
-        if (Array.isArray(value)) {
+        if (A.isArray(value)) {
           if (MutableHashSet.has(stack, value)) {
             return yield* InterpreterRuntimeError.new(
               "Converting circular structure to JSON.",
@@ -207,7 +208,7 @@ const stringify = <R>(
           ).as("TypeError");
         }
         MutableHashSet.add(stack, value);
-        const result = SafeObject.make(Object.create(null));
+        const result = makeEmptySafeObject();
         for (const name of R.keys(value)) {
           const item = yield* visit(value, name);
           if (P.isNotUndefined(item)) Reflect.set(result, name, item);

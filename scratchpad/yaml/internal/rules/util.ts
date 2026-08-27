@@ -10,10 +10,13 @@
  */
 
 import { Schema } from "effect";
+import { dual } from "effect/Function";
 import type { LintLine } from "../../YamlLintRule.ts";
 import type { YamlNode, YamlScalar } from "../../YamlNode.ts";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
 import type { YamlToken } from "../../YamlToken.ts";
+
+type LintPosition = { readonly line: number; readonly character: number };
 
 /**
  * A non-negative integer — the shape every numeric rule option takes.
@@ -38,7 +41,7 @@ import type { YamlToken } from "../../YamlToken.ts";
  * @category schemas
  * @since 0.0.0
  */
-export const nonNegativeIntegerOption = Schema.Number.check(
+export const nonNegativeIntegerOption = Schema.Finite.check(
 	Schema.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer")),
 );
 
@@ -72,7 +75,7 @@ export const nonNegativeIntegerOption = Schema.Number.check(
  * @category schemas
  * @since 0.0.0
  */
-export const positiveIntegerOption = Schema.Number.check(
+export const positiveIntegerOption = Schema.Finite.check(
 	Schema.makeFilter((n) =>
 		Number.isInteger(n) && n >= 1 ? undefined : "Expected an integer greater than or equal to 1",
 	),
@@ -106,27 +109,26 @@ export type ScalarRole = "key" | "value" | "item" | "root";
  * @category utilities
  * @since 0.0.0
  */
-export function walkScalars(
-	node: YamlNode | null,
-	role: ScalarRole,
-	visit: (scalar: YamlScalar, role: ScalarRole) => void,
-): void {
+export const walkScalars: {
+	(role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): (node: YamlNode | null) => void;
+	(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void;
+} = dual(3, (node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void => {
 	if (node === null) return;
-	if (node instanceof Scalar) {
+	if (Scalar.is(node)) {
 		visit(node, role);
 		return;
 	}
-	if (node instanceof YamlMap) {
+	if (YamlMap.is(node)) {
 		for (const pair of node.items) {
 			walkScalars(pair.key, "key", visit);
 			walkScalars(pair.value, "value", visit);
 		}
 		return;
 	}
-	if (node instanceof YamlSeq) {
+	if (YamlSeq.is(node)) {
 		for (const item of node.items) walkScalars(item, "item", visit);
 	}
-}
+});
 
 /**
  * True when the first content of a line is the continuation of a scalar
@@ -155,14 +157,13 @@ export function walkScalars(
  * @category predicates
  * @since 0.0.0
  */
-export function isScalarContinuationLine(
-	tokens: ReadonlyArray<YamlToken>,
-	lineOffset: number,
-	probeOffset: number,
-): boolean {
+export const isScalarContinuationLine: {
+	(lineOffset: number, probeOffset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
+	(tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number): boolean;
+} = dual(3, (tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number): boolean => {
 	const token = coveringToken(tokens, probeOffset);
 	return token !== undefined && token.kind === "scalar" && token.offset < lineOffset;
-}
+});
 
 /**
  * The token whose span covers `offset`, when one does.
@@ -181,7 +182,10 @@ export function isScalarContinuationLine(
  * @category getters
  * @since 0.0.0
  */
-export function coveringToken(tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined {
+export const coveringToken: {
+	(offset: number): (tokens: ReadonlyArray<YamlToken>) => YamlToken | undefined;
+	(tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined;
+} = dual(2, (tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined => {
 	let lo = 0;
 	let hi = tokens.length - 1;
 	while (lo <= hi) {
@@ -196,7 +200,7 @@ export function coveringToken(tokens: ReadonlyArray<YamlToken>, offset: number):
 		}
 	}
 	return undefined;
-}
+});
 
 /**
  * True when `offset` falls inside a scalar token's span. Layout rules use
@@ -226,9 +230,10 @@ export function coveringToken(tokens: ReadonlyArray<YamlToken>, offset: number):
  * @category predicates
  * @since 0.0.0
  */
-export function insideScalarSpan(tokens: ReadonlyArray<YamlToken>, offset: number): boolean {
-	return coveringToken(tokens, offset)?.kind === "scalar";
-}
+export const insideScalarSpan: {
+	(offset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
+	(tokens: ReadonlyArray<YamlToken>, offset: number): boolean;
+} = dual(2, (tokens: ReadonlyArray<YamlToken>, offset: number): boolean => coveringToken(tokens, offset)?.kind === "scalar");
 
 /**
  * The line containing `offset` and the character index within it — a binary
@@ -251,10 +256,10 @@ export function insideScalarSpan(tokens: ReadonlyArray<YamlToken>, offset: numbe
  * @category getters
  * @since 0.0.0
  */
-export function positionAt(
-	lines: ReadonlyArray<LintLine>,
-	offset: number,
-): { readonly line: number; readonly character: number } {
+export const positionAt: {
+	(lines: ReadonlyArray<LintLine>, offset: number): LintPosition;
+	(offset: number): (lines: ReadonlyArray<LintLine>) => LintPosition;
+} = dual(2, (lines: ReadonlyArray<LintLine>, offset: number): LintPosition => {
 	let lo = 0;
 	let hi = lines.length - 1;
 	let found: LintLine | undefined;
@@ -269,4 +274,4 @@ export function positionAt(
 		}
 	}
 	return found === undefined ? { line: 0, character: 0 } : { line: found.number, character: offset - found.offset };
-}
+});

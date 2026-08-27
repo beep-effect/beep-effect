@@ -81,7 +81,7 @@ import { Interpreter } from "./Interpreter.runtime.ts"
  * @category workflows
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Required execution options plus limits and an optional prepared index leave no unambiguous curried arity.
 export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
   options: ExecuteOptions<ToolkitType>,
   limits: ExecutionLimits,

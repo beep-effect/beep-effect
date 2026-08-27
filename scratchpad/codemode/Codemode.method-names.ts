@@ -381,7 +381,7 @@ export type DateSetterName = typeof DateSetterName.Type;
  * @category constants
  * @since 0.0.0
  */
-export const DateSetterArity = Object.freeze({
+export const DateSetterArity = {
   setTime: 1,
   setMilliseconds: 1,
   setUTCMilliseconds: 1,
@@ -397,7 +397,7 @@ export const DateSetterArity = Object.freeze({
   setUTCFullYear: 3,
   setHours: 4,
   setUTCHours: 4,
-} satisfies Record<DateSetterName, 1 | 2 | 3 | 4>);
+} as const satisfies Record<DateSetterName, 1 | 2 | 3 | 4>;
 
 /**
  * Finite Date instance method names, including getters and mutating setters.

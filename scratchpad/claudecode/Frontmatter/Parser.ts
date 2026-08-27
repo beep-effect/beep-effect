@@ -7,13 +7,11 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { YamlTextToUnknown } from "@beep/schema";
 import { thunk0 } from "@beep/utils";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
+import { Effect, FileSystem } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { FrontmatterDecodeError, FrontmatterParseError, FrontmatterReadError } from "../Errors.ts";
 import { CommandFrontmatter } from "./Command.ts";
 import { OutputStyleFrontmatter } from "./OutputStyle.ts";

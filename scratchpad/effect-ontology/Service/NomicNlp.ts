@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { pipeline } from "@xenova/transformers";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -57,17 +58,43 @@ export class NomicNlpError extends S.TaggedError<NomicNlpError>($I`NomicNlpError
 }
 
 /**
- * Task types for Nomic embeddings
- * - search_query: Use when embedding a query to find relevant documents
- * - search_document: Use when embedding documents to be searched
- * - clustering: Use for clustering tasks
- * - classification: Use for classification tasks
+ * Task modes accepted by the Nomic embedding runtime.
  *
+ * **Details**
+ *
+ * `search_query` and `search_document` form the asymmetric retrieval pair;
+ * `clustering` and `classification` select the corresponding Nomic heads.
+ *
+ * **Example** (Validate a retrieval task)
+ *
+ * ```ts
+ * import { NomicTaskType } from "@effect-ontology/Service/NomicNlp"
+ *
+ * console.log(NomicTaskType.is("search_query")) // true
+ * console.log(NomicTaskType.is("rerank")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NomicTaskType = LiteralKit([
+  "search_query",
+  "search_document",
+  "clustering",
+  "classification",
+]).pipe(
+  $I.annoteSchema("NomicTaskType", {
+    description: "Finite Nomic embedding task modes supported by the local runtime.",
+  })
+);
+
+/**
+ * Runtime task mode decoded by {@link NomicTaskType}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export type NomicTaskType = "search_query" | "search_document" | "clustering" | "classification";
+export type NomicTaskType = typeof NomicTaskType.Type;
 
 /**
  * Nomic NLP Service Interface
@@ -148,22 +175,35 @@ export class NomicNlpService extends Context.Service<NomicNlpService, NomicNlpSe
  * **Example** (Describe a quantized local model)
  *
  * ```ts
- * import type { NomicNlpConfigValue } from "@effect-ontology/Service/NomicNlp"
+ * import { NomicNlpConfigValue } from "@effect-ontology/Service/NomicNlp"
+ * import * as S from "effect/Schema"
  *
- * const config: NomicNlpConfigValue = {
+ * const config = S.decodeUnknownSync(NomicNlpConfigValue)({
  *   modelId: "Xenova/nomic-embed-text-v1",
  *   quantized: true
- * }
+ * })
  * console.log(config.quantized) // true
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NomicNlpConfigValue = S.Struct({
+  modelId: S.String.annotateKey({ description: "Transformers.js model identifier loaded by the Nomic runtime." }),
+  quantized: S.Boolean.annotateKey({ description: "Whether Transformers.js loads quantized model weights." }),
+}).pipe(
+  $I.annoteSchema("NomicNlpConfigValue", {
+    description: "Nomic model identifier and quantization setting supplied to the local embedding runtime.",
+  })
+);
+
+/**
+ * Runtime configuration decoded by {@link NomicNlpConfigValue}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface NomicNlpConfigValue {
-  readonly modelId: string;
-  readonly quantized: boolean;
-}
+export type NomicNlpConfigValue = typeof NomicNlpConfigValue.Type;
 
 /**
  * Context tag for the Nomic model identifier and quantization setting.

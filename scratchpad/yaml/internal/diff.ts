@@ -8,8 +8,23 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { Schema } from "effect";
+import { dual } from "effect/Function";
+
+const $I = $ScratchpadId.create("yaml/internal/diff");
+
 /**
  * A raw text-edit record: replace `[offset, offset + length)` with `content`.
+ *
+ * **Example** (Guard a raw edit)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RawEdit } from "@beep/scratchpad/yaml/internal/diff"
+ *
+ * console.log(S.is(RawEdit)({ offset: 0, length: 1, content: "x" })) // true
+ * ```
  *
  * @see {@link computeEdits} for the prefix/suffix diff that produces these records.
  * @see {@link YamlEdit} for the public edit the facade materializes.
@@ -17,11 +32,17 @@
  * @category type-level
  * @since 0.0.0
  */
-export interface RawEdit {
-	readonly offset: number;
-	readonly length: number;
-	readonly content: string;
-}
+export const RawEdit = Schema.Struct({
+	offset: Schema.Finite,
+	length: Schema.Finite,
+	content: Schema.String,
+}).pipe(
+	$I.annoteSchema("RawEdit", {
+		description: "Internal YAML text replacement record with a UTF-16 source span.",
+	}),
+);
+
+export type RawEdit = typeof RawEdit.Type;
 
 /**
  * Compute edits by diffing two strings character by character.
@@ -59,7 +80,10 @@ export interface RawEdit {
  * @category utilities
  * @since 0.0.0
  */
-export function computeEdits(original: string, modified: string): ReadonlyArray<RawEdit> {
+export const computeEdits: {
+	(modified: string): (original: string) => ReadonlyArray<RawEdit>;
+	(original: string, modified: string): ReadonlyArray<RawEdit>;
+} = dual(2, (original: string, modified: string): ReadonlyArray<RawEdit> => {
 	if (original === modified) return [];
 
 	// Find common prefix
@@ -124,4 +148,4 @@ export function computeEdits(original: string, modified: string): ReadonlyArray<
 			content: modified.substring(modStart, modEnd),
 		},
 	];
-}
+});

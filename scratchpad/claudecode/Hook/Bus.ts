@@ -9,12 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as PubSub from "effect/PubSub";
-import * as Stream from "effect/Stream";
-
+import { Context, Effect, Layer, PubSub, Stream } from "effect";
 import type * as Events from "./Events/index.ts";
 
 // ---------------------------------------------------------------------------

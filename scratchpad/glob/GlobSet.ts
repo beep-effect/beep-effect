@@ -13,7 +13,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Formatter, MutableHashSet, Result, Schema } from "effect";
+import * as P from "effect/Predicate";
 import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { Minimatch, braceExpand } from "./internal/minimatch.ts";
@@ -35,7 +36,7 @@ const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string
 		try {
 			new Minimatch(target, {});
 		} catch (e) {
-			if (isGuardExceeded(e)) return `pattern ${JSON.stringify(pattern.slice(0, 64))}: ${e.message}`;
+			if (isGuardExceeded(e)) return `pattern ${Formatter.format(pattern.slice(0, 64))}: ${e.message}`;
 			throw e;
 		}
 	}
@@ -113,8 +114,47 @@ export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 			"A compiled include/exclude glob set whose leading bang is an exclusion filter, not whole-pattern negation.",
 	}),
 ) {
+	/**
+	 * Cached split of `patterns` into literal includes, wildcard includes, and
+	 * exclusions, filled on first {@link GlobSet.literals} / {@link GlobSet.matches}
+	 * access.
+	 *
+	 * **Example** (Read classified brace alternatives)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["{tools/cli,packages/*}", "!packages/docs"])
+	 * if (Result.isSuccess(compiled)) {
+	 *   console.log(compiled.success.literals) // ["tools/cli"]
+	 *   console.log(compiled.success.wildcards.map((pattern) => pattern.source)) // ["packages/*"]
+	 *   console.log(compiled.success.excludes.map((pattern) => pattern.source)) // ["packages/docs"]
+	 * }
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	#classified: Classified | undefined;
-	#literalSet: ReadonlySet<string> | undefined;
+
+	/**
+	 * Exact-match set of unescaped literal include paths, used as the
+	 * {@link GlobSet.matches} fast path.
+	 *
+	 * **Example** (Exact-match a literal include)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["tools/cli", "packages/*"])
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("tools/cli")) // true
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("tools/other")) // false
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	#literalSet: MutableHashSet.MutableHashSet<string> | undefined;
 
 	// Lazy: the schema check guarantees every member is defaults-compilable, so
 	// classification cannot fail for constructed instances. Classification is
@@ -127,10 +167,31 @@ export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 	// match its member pattern accepts. Comments match nothing and contribute
 	// nothing; anything else an exact-string key cannot represent (negation, a
 	// row the engine did not reduce to plain strings) is engine-matched instead.
+	/**
+	 * Classify every member into literals, wildcards, and exclusions, caching
+	 * the result on this instance. Brace alternatives classify independently;
+	 * literal keys are the engine's unescaped single row.
+	 *
+	 * **Example** (Classify braces, an escaped literal, and a comment)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["{tools/cli,packages/*}", "foo\\*bar", "# comment"])
+	 * if (Result.isSuccess(compiled)) {
+	 *   console.log(compiled.success.literals) // ["tools/cli", "foo*bar"]
+	 *   console.log(compiled.success.wildcards.map((pattern) => pattern.source)) // ["packages/*"]
+	 *   console.log(compiled.success.excludes.length) // 0
+	 * }
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	#classify(): Classified {
 		if (this.#classified !== undefined) return this.#classified;
 		const literals: Array<string> = [];
-		const seenLiterals = new Set<string>();
+		const seenLiterals = MutableHashSet.empty<string>();
 		const wildcards: Array<GlobPattern> = [];
 		const excludes: Array<GlobPattern> = [];
 		for (const pattern of this.patterns) {
@@ -147,13 +208,13 @@ export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 				}
 				if (engine.comment) continue;
 				const row = engine.set.length === 1 ? engine.set[0] : undefined;
-				if (engine.negate || row === undefined || !row.every((part) => typeof part === "string")) {
+				if (engine.negate || row === undefined || !row.every(P.isString)) {
 					wildcards.push(GlobPattern.make({ source: alternative }));
 					continue;
 				}
 				const key = row.join("/");
-				if (!seenLiterals.has(key)) {
-					seenLiterals.add(key);
+				if (!MutableHashSet.has(seenLiterals, key)) {
+					MutableHashSet.add(seenLiterals, key);
 					literals.push(key);
 				}
 			}
@@ -163,9 +224,25 @@ export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 		return this.#classified;
 	}
 
-	#literals(): ReadonlySet<string> {
+	/**
+	 * Return the cached exact-match literal set, classifying on first use.
+	 *
+	 * **Example** (Match an escaped literal include)
+	 *
+	 * ```ts
+	 * import { GlobSet } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobSet.compileResult(["foo\\*bar"])
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("foo*bar")) // true
+	 * console.log(Result.isSuccess(compiled) && compiled.success.literals) // ["foo*bar"]
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	#literals(): MutableHashSet.MutableHashSet<string> {
 		if (this.#literalSet === undefined) this.#classify();
-		return this.#literalSet as ReadonlySet<string>;
+		return this.#literalSet as MutableHashSet.MutableHashSet<string>;
 	}
 
 	/**
@@ -203,12 +280,12 @@ export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 				new Minimatch(target, {});
 			} catch (e) {
 				if (isGuardExceeded(e)) {
-					return Result.fail(new GlobPatternError({ pattern, reason: e.reason, limit: e.limit, actual: e.actual }));
+					return Result.fail(GlobPatternError.make({ pattern, reason: e.reason, limit: e.limit, actual: e.actual }));
 				}
 				throw e;
 			}
 		}
-		return Result.succeed(new GlobSet({ patterns }));
+		return Result.succeed(GlobSet.make({ patterns }));
 	}
 
 	/**
@@ -260,7 +337,7 @@ export class GlobSet extends Schema.Class<GlobSet>($I`GlobSet`)(
 	 */
 	matches(candidate: string): boolean {
 		const { wildcards, excludes } = this.#classify();
-		const included = this.#literals().has(candidate) || wildcards.some((w) => w.matches(candidate));
+		const included = MutableHashSet.has(this.#literals(), candidate) || wildcards.some((w) => w.matches(candidate));
 		if (!included) return false;
 		return !excludes.some((e) => e.matches(candidate));
 	}

@@ -77,6 +77,11 @@ export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
  * survive into the derived envelope union, so `append` narrows on the tag and a
  * projection over a slice is exhaustively checkable.
  *
+ * Not a standalone runtime schema: `data` is itself a live payload codec and
+ * the remaining fields carry registry-indexed type evidence. The
+ * {@link JsonlEvent} factory is the runtime constructor for this program-wiring
+ * value.
+ *
  * **Gotchas**
  *
  * `data` is required rather than defaulted. A payload-less event says so
@@ -91,25 +96,25 @@ export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
  * @since 0.0.0
  */
 export interface JsonlEvent<
-	out Tag extends string,
-	in out Data extends DataSchema = Schema.Codec<void, void, never, never>,
-	out Terminal extends boolean = false,
-	out Reopen extends boolean = false,
+  out Tag extends string,
+  in out Data extends DataSchema = Schema.Codec<void, void, never, never>,
+  out Terminal extends boolean = false,
+  out Reopen extends boolean = false,
 > {
-	readonly [JsonlEventTypeId]: JsonlEventTypeId;
-	/** The string tag: the envelope discriminant and the primary filter key. */
-	readonly tag: Tag;
-	/** The schema the envelope's `data` is validated against. */
-	readonly data: Data;
-	/**
-	 * Whether this event makes the journal quiescent.
-	 *
-	 * After a terminal event is the tail, appending fails with
-	 * `TerminalViolation` unless the appended event is marked `reopen`.
-	 */
-	readonly terminal: Terminal;
-	/** Whether this event may follow a terminal one, reopening the journal. */
-	readonly reopen: Reopen;
+  readonly [JsonlEventTypeId]: JsonlEventTypeId;
+  /** The string tag: the envelope discriminant and the primary filter key. */
+  readonly tag: Tag;
+  /** The schema the envelope's `data` is validated against. */
+  readonly data: Data;
+  /**
+   * Whether this event makes the journal quiescent.
+   *
+   * After a terminal event is the tail, appending fails with
+   * `TerminalViolation` unless the appended event is marked `reopen`.
+   */
+  readonly terminal: Terminal;
+  /** Whether this event may follow a terminal one, reopening the journal. */
+  readonly reopen: Reopen;
 }
 
 /**
@@ -135,80 +140,80 @@ export interface JsonlEvent<
  * @since 0.0.0
  */
 export declare namespace JsonlEvent {
-	/**
-	 * A type-erased event definition.
-	 *
-	 * Note `data` is bounded by {@link DataSchema} rather than widened to
-	 * `Schema.Top`: erasing to `Top` would lose the no-services guarantee that
-	 * the sync codecs depend on.
-	 *
-	 * @public
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export interface Any {
-		readonly [JsonlEventTypeId]: JsonlEventTypeId;
-		readonly tag: string;
-		readonly data: DataSchema;
-		readonly terminal: boolean;
-		readonly reopen: boolean;
-	}
+  /**
+   * A type-erased event definition.
+   *
+   * Note `data` is bounded by {@link DataSchema} rather than widened to
+   * `Schema.Top`: erasing to `Top` would lose the no-services guarantee that
+   * the sync codecs depend on.
+   *
+   * @public
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Any {
+    readonly [JsonlEventTypeId]: JsonlEventTypeId;
+    readonly tag: string;
+    readonly data: DataSchema;
+    readonly terminal: boolean;
+    readonly reopen: boolean;
+  }
 
-	/**
-	 * A registry: the set of events one journal may carry.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type Registry = ReadonlyArray<Any>;
+  /**
+   * A registry: the set of events one journal may carry.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Registry = ReadonlyArray<Any>;
 
-	/**
-	 * The union of every event definition in a registry.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type Events<R extends Registry> = R[number];
+  /**
+   * The union of every event definition in a registry.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Events<R extends Registry> = R[number];
 
-	/**
-	 * The union of every tag in a registry — the envelope discriminant.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type Tag<R extends Registry> = Events<R>["tag"];
+  /**
+   * The union of every tag in a registry — the envelope discriminant.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Tag<R extends Registry> = Events<R>["tag"];
 
-	/**
-	 * The event definition in a registry carrying a given tag.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type WithTag<R extends Registry, T extends string> = Extract<Events<R>, { readonly tag: T }>;
+  /**
+   * The event definition in a registry carrying a given tag.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type WithTag<R extends Registry, T extends string> = Extract<Events<R>, { readonly tag: T }>;
 
-	/**
-	 * The decoded payload type registered for a given tag.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type Data<R extends Registry, T extends string> = WithTag<R, T>["data"]["Type"];
+  /**
+   * The decoded payload type registered for a given tag.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Data<R extends Registry, T extends string> = WithTag<R, T>["data"]["Type"];
 
-	/**
-	 * The tags marked `terminal` in a registry.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type TerminalTags<R extends Registry> = Extract<Events<R>, { readonly terminal: true }>["tag"];
+  /**
+   * The tags marked `terminal` in a registry.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type TerminalTags<R extends Registry> = Extract<Events<R>, { readonly terminal: true }>["tag"];
 
-	/**
-	 * The tags marked `reopen` in a registry.
-	 *
-	 * @category type-level
-	 * @since 0.0.0
-	 */
-	export type ReopenTags<R extends Registry> = Extract<Events<R>, { readonly reopen: true }>["tag"];
+  /**
+   * The tags marked `reopen` in a registry.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type ReopenTags<R extends Registry> = Extract<Events<R>, { readonly reopen: true }>["tag"];
 }
 
 /**
@@ -256,23 +261,23 @@ export declare namespace JsonlEvent {
  * @since 0.0.0
  */
 export const JsonlEvent = {
-	make: <
-		const Tag extends string,
-		Data extends DataSchema,
-		const Terminal extends boolean = false,
-		const Reopen extends boolean = false,
-	>(
-		tag: Tag,
-		options: {
-			readonly data: Data;
-			readonly terminal?: Terminal | undefined;
-			readonly reopen?: Reopen | undefined;
-		},
-	): JsonlEvent<Tag, Data, Terminal, Reopen> => ({
-		[JsonlEventTypeId]: JsonlEventTypeId,
-		tag,
-		data: options.data,
-		terminal: (options.terminal ?? false) as Terminal,
-		reopen: (options.reopen ?? false) as Reopen,
-	}),
+  make: <
+    const Tag extends string,
+    Data extends DataSchema,
+    const Terminal extends boolean = false,
+    const Reopen extends boolean = false,
+  >(
+    tag: Tag,
+    options: {
+      readonly data: Data;
+      readonly terminal?: Terminal | undefined;
+      readonly reopen?: Reopen | undefined;
+    }
+  ): JsonlEvent<Tag, Data, Terminal, Reopen> => ({
+    [JsonlEventTypeId]: JsonlEventTypeId,
+    tag,
+    data: options.data,
+    terminal: (options.terminal ?? false) as Terminal,
+    reopen: (options.reopen ?? false) as Reopen,
+  }),
 } as const;

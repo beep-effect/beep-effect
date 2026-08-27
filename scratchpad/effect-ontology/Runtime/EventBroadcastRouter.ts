@@ -746,23 +746,21 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
  *
  * const entry = O.getOrThrow(
  *   S.decodeUnknownOption(EventEntry)({
- *     id: "evt-1",
- *     primaryKey: "batch-deadbeefcafe",
- *     createdAt: DateTime.makeUnsafe("2026-08-26T00:00:00.000Z"),
- *     event: "ExtractionCompleted",
+ *     id: "evt-claim-corrected-1",
+ *     primaryKey: "football:correction:claim-abc123def456",
+ *     createdAt: DateTime.makeUnsafe("2026-07-25T12:00:00.000Z"),
+ *     event: "ClaimCorrected",
  *     payload: {
- *       batchId: "batch-deadbeefcafe",
- *       ontologyId: "foaf",
- *       entityCount: 2,
- *       relationCount: 1,
- *       tripleCount: 8,
- *       status: "success",
- *       timestamp: "2026-08-26T00:00:00.000Z"
+ *       ontologyId: "football",
+ *       originalClaimId: "claim-abc123def456",
+ *       newClaimId: "claim-def456abc123",
+ *       correctionId: "corr-1",
+ *       timestamp: "2026-07-25T12:00:00.000Z"
  *     }
  *   })
  * )
  * const program = broadcastDomainEvent(entry)
- * console.log(entry.payload.ontologyId) // "foaf"
+ * console.log(entry.payload.ontologyId) // "football"
  * console.log(program !== entry)
  * ```
  *

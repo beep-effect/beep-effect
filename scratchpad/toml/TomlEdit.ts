@@ -21,26 +21,75 @@ import { Schema } from "effect";
 
 const $I = $ScratchpadId.create("toml/TomlEdit");
 
+class OverlappingTomlEdits extends Schema.TaggedError<OverlappingTomlEdits>($I`OverlappingTomlEdits`)(
+  "OverlappingTomlEdits",
+  { lowerOffset: Schema.Finite, upperOffset: Schema.Finite }
+) {}
+
 /**
  * A single path segment: a `string` for table keys or a `number` for array
  * and array-of-tables indices.
  *
+ * **Example** (Guard an array-index segment)
+ *
+ * ```ts
+ * import { TomlSegment } from "@beep/scratchpad/toml"
+ * import { Schema } from "effect"
+ *
+ * console.log(Schema.is(TomlSegment)(0)) // true
+ * ```
+ *
  * @see {@link TomlPath} for the ordered sequence of segments used by {@link TomlFormat.modify}.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TomlSegment = Schema.Union([Schema.String, Schema.Finite]).pipe(
+  $I.annoteSchema("TomlSegment", {
+    description: "One table-key or array-index segment in a TOML path.",
+  })
+);
+
+/**
+ * Decoded TOML path segment.
+ *
+ * @see {@link TomlSegment} for the runtime schema.
  * @category type-level
  * @since 0.0.0
  */
-export type TomlSegment = string | number;
+export type TomlSegment = typeof TomlSegment.Type;
 
 /**
  * An ordered sequence of {@link TomlSegment} values describing a location
  * within a TOML document's semantic tree.
  *
+ * **Example** (Construct a TOML path)
+ *
+ * ```ts
+ * import { TomlPath } from "@beep/scratchpad/toml"
+ *
+ * const path = TomlPath.make(["servers", 0, "port"])
+ * console.log(path.length) // 3
+ * ```
+ *
  * @see {@link TomlSegment} for the per-step key-or-index type.
  * @see {@link TomlFormat.modify} for the entry point that resolves a path against a document.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TomlPath = Schema.Array(TomlSegment).pipe(
+  $I.annoteSchema("TomlPath", {
+    description: "An ordered sequence of table-key and array-index segments locating a TOML value.",
+  })
+);
+
+/**
+ * Decoded TOML path.
+ *
+ * @see {@link TomlPath} for the runtime schema.
  * @category type-level
  * @since 0.0.0
  */
-export type TomlPath = ReadonlyArray<TomlSegment>;
+export type TomlPath = typeof TomlPath.Type;
 
 /**
  * A range within a TOML document, expressed as a zero-based character
@@ -68,13 +117,13 @@ export type TomlPath = ReadonlyArray<TomlSegment>;
  * @since 0.0.0
  */
 export class TomlRange extends Schema.Class<TomlRange>($I`TomlRange`)(
-	{
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("TomlRange", {
-		description: "A UTF-16 offset/length window used to restrict TOML formatting to intersecting expressions.",
-	}),
+  {
+    offset: Schema.Finite,
+    length: Schema.Finite,
+  },
+  $I.annote("TomlRange", {
+    description: "A UTF-16 offset/length window used to restrict TOML formatting to intersecting expressions.",
+  })
 ) {}
 
 /**
@@ -112,56 +161,54 @@ export class TomlRange extends Schema.Class<TomlRange>($I`TomlRange`)(
  * @since 0.0.0
  */
 export class TomlEdit extends Schema.Class<TomlEdit>($I`TomlEdit`)(
-	{
-		offset: Schema.Number,
-		length: Schema.Number,
-		content: Schema.String,
-	},
-	$I.annote("TomlEdit", {
-		description: "A non-mutating text splice replacing [offset, offset + length) with content.",
-	}),
+  {
+    offset: Schema.Finite,
+    length: Schema.Finite,
+    content: Schema.String,
+  },
+  $I.annote("TomlEdit", {
+    description: "A non-mutating text splice replacing [offset, offset + length) with content.",
+  })
 ) {
-	/**
-	 * Apply `edits` to `text`, producing a new string. Edits are applied in
-	 * reverse-offset order so earlier offsets stay valid; the input `edits`
-	 * array is not mutated. Overlapping edits are a programmer error and throw
-	 * as a defect — `TomlFormat` never produces them.
-	 *
-	 * **Example** (Insert then replace without mutating the edit list)
-	 *
-	 * ```ts
-	 * import { TomlEdit } from "@beep/scratchpad/toml"
-	 *
-	 * const edits = [
-	 *   TomlEdit.make({ offset: 0, length: 0, content: "# hi\n" }),
-	 *   TomlEdit.make({ offset: 8, length: 5, content: "Bob" }),
-	 * ]
-	 * const edited = TomlEdit.applyAll('name = "Alice"\n', edits)
-	 * console.log(edited) // '# hi\nname = "Bob"\n'
-	 * console.log(edits.length) // 2
-	 * ```
-	 *
-	 * @param text - Source text to splice; never mutated.
-	 * @param edits - Splices applied last-offset-first; the array is copied before sorting.
-	 * @returns The spliced string.
-	 * @throws An `Error` when two edits overlap — a programmer defect, not a typed modification failure.
-	 * @see {@link TomlFormat.format} for the producer that never emits overlapping edits.
-	 */
-	static applyAll(text: string, edits: ReadonlyArray<TomlEdit>): string {
-		const sorted = [...edits].sort((a, b) => b.offset - a.offset);
-		for (let i = 0; i + 1 < sorted.length; i++) {
-			const upper = sorted[i];
-			const lower = sorted[i + 1];
-			if (lower.offset + lower.length > upper.offset) {
-				throw new Error(
-					`TomlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
-				);
-			}
-		}
-		let result = text;
-		for (const edit of sorted) {
-			result = result.slice(0, edit.offset) + edit.content + result.slice(edit.offset + edit.length);
-		}
-		return result;
-	}
+  /**
+   * Apply `edits` to `text`, producing a new string. Edits are applied in
+   * reverse-offset order so earlier offsets stay valid; the input `edits`
+   * array is not mutated. Overlapping edits are a programmer error and throw
+   * as a defect — `TomlFormat` never produces them.
+   *
+   * **Example** (Insert then replace without mutating the edit list)
+   *
+   * ```ts
+   * import { TomlEdit } from "@beep/scratchpad/toml"
+   *
+   * const edits = [
+   *   TomlEdit.make({ offset: 0, length: 0, content: "# hi\n" }),
+   *   TomlEdit.make({ offset: 8, length: 5, content: "Bob" }),
+   * ]
+   * const edited = TomlEdit.applyAll('name = "Alice"\n', edits)
+   * console.log(edited) // '# hi\nname = "Bob"\n'
+   * console.log(edits.length) // 2
+   * ```
+   *
+   * @param text - Source text to splice; never mutated.
+   * @param edits - Splices applied last-offset-first; the array is copied before sorting.
+   * @returns The spliced string.
+   * @throws {@link OverlappingTomlEdits} as a programmer defect when two edits overlap.
+   * @see {@link TomlFormat.format} for the producer that never emits overlapping edits.
+   */
+  static applyAll(text: string, edits: ReadonlyArray<TomlEdit>): string {
+    const sorted = [...edits].sort((a, b) => b.offset - a.offset);
+    for (let i = 0; i + 1 < sorted.length; i++) {
+      const upper = sorted[i];
+      const lower = sorted[i + 1];
+      if (lower.offset + lower.length > upper.offset) {
+        throw OverlappingTomlEdits.make({ lowerOffset: lower.offset, upperOffset: upper.offset });
+      }
+    }
+    let result = text;
+    for (const edit of sorted) {
+      result = result.slice(0, edit.offset) + edit.content + result.slice(edit.offset + edit.length);
+    }
+    return result;
+  }
 }

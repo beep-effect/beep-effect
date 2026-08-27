@@ -15,6 +15,10 @@ import { SemVer } from "../semver/index.ts";
 
 const $I = $ScratchpadId.create("schemastore/SchemaVersioning");
 
+class SchemaVersioningInvariantError extends Schema.TaggedError<SchemaVersioningInvariantError>(
+  $I`SchemaVersioningInvariantError`
+)("SchemaVersioningInvariantError", { operation: Schema.NonEmptyString, detail: Schema.NonEmptyString }) {}
+
 // Version labels are STRICT SemVer: all three components always present,
 // optional prerelease, with `@effected/semver` doing the enforcing rather
 // than a regex maintained alongside it.
@@ -33,15 +37,15 @@ const $I = $ScratchpadId.create("schemastore/SchemaVersioning");
 // labels differing only in build would compare equal and both claim to be
 // the latest version.
 const isVersionLabel = (input: string): boolean => {
-	// `SemVer.parseResult` TRIMS its input, so `" 1.2.3 "` parses — and the
-	// label round-trips verbatim into file names, schema URLs and catalog
-	// keys, which would emit `agripparc- 1.2.3 .json`. The anchored regex
-	// this replaced rejected padding for free; `isValid` restores that.
-	if (!SemVer.isValid(input)) {
-		return false;
-	}
-	const parsed = SemVer.parseResult(input);
-	return Result.isSuccess(parsed) && parsed.success.build.length === 0;
+  // `SemVer.parseResult` TRIMS its input, so `" 1.2.3 "` parses — and the
+  // label round-trips verbatim into file names, schema URLs and catalog
+  // keys, which would emit `agripparc- 1.2.3 .json`. The anchored regex
+  // this replaced rejected padding for free; `isValid` restores that.
+  if (!SemVer.isValid(input)) {
+    return false;
+  }
+  const parsed = SemVer.parseResult(input);
+  return Result.isSuccess(parsed) && parsed.success.build.length === 0;
 };
 
 /**
@@ -70,21 +74,36 @@ const isVersionLabel = (input: string): boolean => {
  * @since 0.0.0
  */
 export class InvalidSchemaVersionError extends Schema.TaggedError<InvalidSchemaVersionError>(
-	$I`InvalidSchemaVersionError`,
+  $I`InvalidSchemaVersionError`
 )(
-	"InvalidSchemaVersionError",
-	{
-		/** The raw input string that failed to parse. */
-		input: Schema.String,
-	},
-	$I.annote("InvalidSchemaVersionError", {
-		description:
-			"Raised when a string is not a full major.minor.patch SchemaStore version label (two-part labels and build metadata are rejected).",
-	}),
+  "InvalidSchemaVersionError",
+  {
+    /** The raw input string that failed to parse. */
+    input: Schema.String,
+  },
+  $I.annote("InvalidSchemaVersionError", {
+    description:
+      "Raised when a string is not a full major.minor.patch SchemaStore version label (two-part labels and build metadata are rejected).",
+  })
 ) {
-	override get message(): string {
-		return `Invalid schema version label: "${this.input}"`;
-	}
+  /**
+   * Operator-facing sentence naming the rejected label.
+   *
+   * **Example** (Read the rejected input from the message)
+   *
+   * ```ts
+   * import { InvalidSchemaVersionError } from "@beep/scratchpad/schemastore"
+   *
+   * const error = InvalidSchemaVersionError.make({ input: "1.2" })
+   * console.log(error.message)
+   * // => 'Invalid schema version label: "1.2"'
+   * ```
+   *
+   * @since 0.0.0
+   */
+  override get message(): string {
+    return `Invalid schema version label: "${this.input}"`;
+  }
 }
 
 /**
@@ -128,12 +147,12 @@ export class InvalidSchemaVersionError extends Schema.TaggedError<InvalidSchemaV
  * @since 0.0.0
  */
 export const SchemaVersion = Schema.String.check(
-	Schema.makeFilter((value) => (isVersionLabel(value) ? undefined : "must be a full major.minor.patch SemVer label")),
+  Schema.makeFilter((value) => (isVersionLabel(value) ? undefined : "must be a full major.minor.patch SemVer label"))
 ).pipe(
-	Schema.brand("SchemaVersion"),
-	$I.annoteSchema("SchemaVersion", {
-		description: "Full major.minor.patch SchemaStore version label without build metadata.",
-	}),
+  Schema.brand("SchemaVersion"),
+  $I.annoteSchema("SchemaVersion", {
+    description: "Full major.minor.patch SchemaStore version label without build metadata.",
+  })
 );
 
 /**
@@ -149,51 +168,79 @@ export type SchemaVersion = typeof SchemaVersion.Type;
 // A validated label IS a SemVer string, so ordering is a plain parse — the
 // zero-padding the old two-part grammar needed is gone with it.
 const orderingKey = (label: SchemaVersion): SemVer => {
-	const result = SemVer.parseResult(label);
-	if (Result.isFailure(result)) {
-		// Unreachable for a validated label: the brand's filter IS this parse.
-		throw new Error(`SchemaVersion ordering invariant violated for label "${label}"`);
-	}
-	return result.success;
+  const result = SemVer.parseResult(label);
+  if (Result.isFailure(result)) {
+    // Unreachable for a validated label: the brand's filter IS this parse.
+    throw SchemaVersioningInvariantError.make({
+      operation: "orderingKey",
+      detail: `SchemaVersion ordering invariant violated for label "${label}"`,
+    });
+  }
+  return result.success;
 };
 
 const assertSimpleName = (name: string): void => {
-	if (name.length === 0 || /[/\\\s]/.test(name)) {
-		throw new Error(`Schema name must be a non-empty simple file base name, got "${name}"`);
-	}
+  if (name.length === 0 || /[/\\\s]/.test(name)) {
+    throw SchemaVersioningInvariantError.make({
+      operation: "assertSimpleName",
+      detail: `Schema name must be a non-empty simple file base name, got "${name}"`,
+    });
+  }
 };
 
 // A manual trailing-slash trim rather than `/\/+$/`: the regex form
 // backtracks polynomially on adversarial all-slash inputs (CodeQL
 // js/polynomial-redos), and baseUrl is library input.
 const joinUrl = (baseUrl: string, file: string): string => {
-	let end = baseUrl.length;
-	while (end > 0 && baseUrl.charCodeAt(end - 1) === 47) {
-		end -= 1;
-	}
-	return `${baseUrl.slice(0, end)}/${file}`;
+  let end = baseUrl.length;
+  while (end > 0 && baseUrl.charCodeAt(end - 1) === 47) {
+    end -= 1;
+  }
+  return `${baseUrl.slice(0, end)}/${file}`;
 };
 
 /**
  * The `url`/`versions` half of a catalog entry, as assembled by
  * {@link SchemaVersioning.catalogUrls}.
  *
+ * **Example** (Construct unversioned catalog URLs)
+ *
+ * ```ts
+ * import { CatalogUrls } from "@beep/scratchpad/schemastore"
+ *
+ * const urls = CatalogUrls.make({ url: "https://example.com/config.json" })
+ * console.log(urls.url) // "https://example.com/config.json"
+ * ```
+ *
  * @see {@link SchemaVersioning.catalogUrls} for the function that assembles this shape.
  * @see {@link CatalogEntry.assemble} for the catalog entry that consumes it.
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CatalogUrls = Schema.Struct({
+  /** The catalog `url` — the unversioned file, or the latest versioned file. */
+  url: Schema.String,
+  /**
+   * The versioned catalog's `versions` map (label → url), inserted — and,
+   * since a three-component label can never be integer-like, enumerated
+   * and serialized — in ascending version order.
+   */
+  versions: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+}).pipe(
+  $I.annoteSchema("CatalogUrls", {
+    description: "The current catalog URL and optional version-label-to-URL index.",
+  })
+);
+
+/**
+ * Decoded catalog URL assembly result.
+ *
+ * @see {@link CatalogUrls} for the runtime schema.
  * @category type-level
  * @since 0.0.0
  */
-export interface CatalogUrls {
-	/** The catalog `url` — the unversioned file, or the latest versioned file. */
-	readonly url: string;
-	/**
-	 * The versioned catalog's `versions` map (label → url), inserted — and,
-	 * since a three-component label can never be integer-like, enumerated
-	 * and serialized — in ascending version order.
-	 */
-	readonly versions?: Readonly<Record<string, string>>;
-}
+export type CatalogUrls = typeof CatalogUrls.Type;
 
 /**
  * Both SchemaStore catalog modes as pure derivations: unversioned (a plain
@@ -248,111 +295,200 @@ export interface CatalogUrls {
  * @since 0.0.0
  */
 export class SchemaVersioning {
-	private constructor() {}
+  private constructor() {}
 
-	/**
-	 * Parses a version label. Pure and synchronous — the primitive form;
-	 * {@link SchemaVersioning.parse} is the same check behind a span.
-	 */
-	static parseResult(input: string): Result.Result<SchemaVersion, InvalidSchemaVersionError> {
-		return isVersionLabel(input)
-			? Result.succeed(input as SchemaVersion)
-			: Result.fail(InvalidSchemaVersionError.make({ input }));
-	}
+  /**
+   * Parses a version label. Pure and synchronous — the primitive form;
+   * {@link SchemaVersioning.parse} is the same check behind a span.
+   *
+   * **Example** (Accept 1.2.3, reject a two-part label)
+   *
+   * ```ts
+   * import { SchemaVersioning } from "@beep/scratchpad/schemastore"
+   * import { Result } from "effect"
+   *
+   * console.log(Result.isSuccess(SchemaVersioning.parseResult("1.2.3")))
+   * // => true
+   * console.log(Result.isSuccess(SchemaVersioning.parseResult("1.2")))
+   * // => false
+   * ```
+   *
+   * @since 0.0.0
+   */
+  static parseResult(input: string): Result.Result<SchemaVersion, InvalidSchemaVersionError> {
+    return isVersionLabel(input)
+      ? Result.succeed(input as SchemaVersion)
+      : Result.fail(InvalidSchemaVersionError.make({ input }));
+  }
 
-	/**
-	 * Effect form of {@link SchemaVersioning.parseResult}, adding only the
-	 * `SchemaVersioning.parse` span. Defined in terms of the `Result`
-	 * primitive — synchronous callers can use that variant directly.
-	 */
-	static readonly parse = Effect.fn("SchemaVersioning.parse")(
-		(input: string): Effect.Effect<SchemaVersion, InvalidSchemaVersionError> =>
-			Effect.fromResult(SchemaVersioning.parseResult(input)),
-	);
+  /**
+   * Effect form of {@link SchemaVersioning.parseResult}, adding only the
+   * `SchemaVersioning.parse` span. Defined in terms of the `Result`
+   * primitive — synchronous callers can use that variant directly.
+   */
+  static readonly parse = Effect.fn("SchemaVersioning.parse")(
+    (input: string): Effect.Effect<SchemaVersion, InvalidSchemaVersionError> =>
+      Effect.fromResult(SchemaVersioning.parseResult(input))
+  );
 
-	/**
-	 * `Order` instance over version labels: plain SemVer precedence.
-	 * `1.10.0` sorts above `1.9.0` (numeric, not lexical) and `2.0.0-beta`
-	 * below `2.0.0` (prerelease precedence).
-	 */
-	static readonly Order: Order.Order<SchemaVersion> = Order.make((a, b) =>
-		SemVer.Order(orderingKey(a), orderingKey(b)),
-	);
+  /**
+   * `Order` instance over version labels: plain SemVer precedence.
+   * `1.10.0` sorts above `1.9.0` (numeric, not lexical) and `2.0.0-beta`
+   * below `2.0.0` (prerelease precedence).
+   */
+  static readonly Order: Order.Order<SchemaVersion> = Order.make((a, b) =>
+    SemVer.Order(orderingKey(a), orderingKey(b))
+  );
 
-	/**
-	 * The highest version label by {@link SchemaVersioning.Order}, or
-	 * `Option.none()` for an empty collection.
-	 */
-	static latest(versions: ReadonlyArray<SchemaVersion>): Option.Option<SchemaVersion> {
-		return versions.length === 0
-			? Option.none()
-			: Option.some(versions.reduce((max, v) => (SchemaVersioning.Order(v, max) > 0 ? v : max)));
-	}
+  /**
+   * The highest version label by {@link SchemaVersioning.Order}, or
+   * `Option.none()` for an empty collection.
+   *
+   * **Example** (Pick 1.10.0 over 1.9.0)
+   *
+   * ```ts
+   * import { SchemaVersioning } from "@beep/scratchpad/schemastore"
+   * import { Result } from "effect"
+   * import * as O from "effect/Option"
+   *
+   * const versions = ["1.9.0", "1.10.0", "1.2.3"].flatMap((label) => {
+   *   const parsed = SchemaVersioning.parseResult(label)
+   *   return Result.isSuccess(parsed) ? [parsed.success] : []
+   * })
+   *
+   * console.log(O.isNone(SchemaVersioning.latest([])))
+   * // => true
+   * console.log(O.getOrThrow(SchemaVersioning.latest(versions)))
+   * // => "1.10.0"
+   * ```
+   *
+   * @since 0.0.0
+   */
+  static latest(versions: ReadonlyArray<SchemaVersion>): Option.Option<SchemaVersion> {
+    return versions.length === 0
+      ? Option.none()
+      : Option.some(versions.reduce((max, v) => (SchemaVersioning.Order(v, max) > 0 ? v : max)));
+  }
 
-	/**
-	 * Derives the schema file name for a catalog name: `name.json`
-	 * unversioned, `name-<version>.json` versioned.
-	 *
-	 * The name must be a simple file base name (no separators, no
-	 * whitespace); anything else is a wiring mistake and throws.
-	 *
-	 * @throws Throws `Error` when `name` is empty, contains `/` or `\\`, or
-	 * contains whitespace.
-	 */
-	static fileName(name: string, version?: SchemaVersion): string {
-		assertSimpleName(name);
-		return version === undefined ? `${name}.json` : `${name}-${version}.json`;
-	}
+  /**
+   * Derives the schema file name for a catalog name: `name.json`
+   * unversioned, `name-<version>.json` versioned.
+   *
+   * The name must be a simple file base name (no separators, no
+   * whitespace); anything else is a wiring mistake and throws.
+   *
+   * **Example** (Unversioned and versioned file names)
+   *
+   * ```ts
+   * import { SchemaVersioning } from "@beep/scratchpad/schemastore"
+   * import { Result } from "effect"
+   *
+   * console.log(SchemaVersioning.fileName("config"))
+   * // => "config.json"
+   *
+   * const parsed = SchemaVersioning.parseResult("1.2.3")
+   * if (Result.isSuccess(parsed)) {
+   *   console.log(SchemaVersioning.fileName("config", parsed.success))
+   *   // => "config-1.2.3.json"
+   * }
+   * ```
+   *
+   * @throws Throws `Error` when `name` is empty, contains `/` or `\\`, or
+   * contains whitespace.
+   * @since 0.0.0
+   */
+  static fileName(name: string, version?: SchemaVersion): string {
+    assertSimpleName(name);
+    return version === undefined ? `${name}.json` : `${name}-${version}.json`;
+  }
 
-	/**
-	 * The canonical URL a schema file is hosted at: `baseUrl` joined with
-	 * {@link SchemaVersioning.fileName}.
-	 */
-	static schemaUrl(baseUrl: string, name: string, version?: SchemaVersion): string {
-		return joinUrl(baseUrl, SchemaVersioning.fileName(name, version));
-	}
+  /**
+   * The canonical URL a schema file is hosted at: `baseUrl` joined with
+   * {@link SchemaVersioning.fileName}.
+   *
+   * **Example** (Join a trailing-slash base URL)
+   *
+   * ```ts
+   * import { SchemaVersioning } from "@beep/scratchpad/schemastore"
+   *
+   * console.log(SchemaVersioning.schemaUrl("https://example.com/schemas/", "config"))
+   * // => "https://example.com/schemas/config.json"
+   * ```
+   *
+   * @since 0.0.0
+   */
+  static schemaUrl(baseUrl: string, name: string, version?: SchemaVersion): string {
+    return joinUrl(baseUrl, SchemaVersioning.fileName(name, version));
+  }
 
-	/**
-	 * Assembles the `url`/`versions` half of a catalog entry.
-	 *
-	 * Omitting `versions` selects the unversioned mode (`url` only,
-	 * pointing at the plain `name.json`). Providing them selects the
-	 * versioned mode: the `versions` map carries every label, and `url`
-	 * points at the latest version's file. An **empty** `versions` array is
-	 * a contradiction (versioned mode with no versions) and throws — pass
-	 * `undefined` for the unversioned mode.
-	 *
-	 * Labels are inserted in ascending {@link SchemaVersioning.Order} and
-	 * stay that way on serialization. Requiring three components is what
-	 * buys this: JavaScript enumerates array-index-like keys first, so the
-	 * old grammar's bare-major label (`"2"`) jumped ahead of every dotted
-	 * one regardless of insertion order. No SemVer label is integer-like,
-	 * so that hazard is gone. Deriving ordering from the labels themselves
-	 * (as {@link SchemaVersioning.latest} does) is still the robust read.
-	 *
-	 * @throws Throws `Error` when `versions` is present but empty — pass
-	 * `undefined` for unversioned mode.
-	 */
-	static catalogUrls(options: {
-		readonly baseUrl: string;
-		readonly name: string;
-		readonly versions?: ReadonlyArray<SchemaVersion>;
-	}): CatalogUrls {
-		const { baseUrl, name, versions } = options;
-		if (versions === undefined) {
-			return { url: SchemaVersioning.schemaUrl(baseUrl, name) };
-		}
-		if (versions.length === 0) {
-			throw new Error(
-				`catalogUrls received an empty versions array for "${name}": pass undefined for the unversioned mode`,
-			);
-		}
-		const ascending = [...versions].sort(SchemaVersioning.Order);
-		const map: Record<string, string> = {};
-		for (const version of ascending) {
-			map[version] = SchemaVersioning.schemaUrl(baseUrl, name, version);
-		}
-		const newest = ascending[ascending.length - 1] as SchemaVersion;
-		return { url: SchemaVersioning.schemaUrl(baseUrl, name, newest), versions: map };
-	}
+  /**
+   * Assembles the `url`/`versions` half of a catalog entry.
+   *
+   * Omitting `versions` selects the unversioned mode (`url` only,
+   * pointing at the plain `name.json`). Providing them selects the
+   * versioned mode: the `versions` map carries every label, and `url`
+   * points at the latest version's file. An **empty** `versions` array is
+   * a contradiction (versioned mode with no versions) and throws — pass
+   * `undefined` for the unversioned mode.
+   *
+   * Labels are inserted in ascending {@link SchemaVersioning.Order} and
+   * stay that way on serialization. Requiring three components is what
+   * buys this: JavaScript enumerates array-index-like keys first, so the
+   * old grammar's bare-major label (`"2"`) jumped ahead of every dotted
+   * one regardless of insertion order. No SemVer label is integer-like,
+   * so that hazard is gone. Deriving ordering from the labels themselves
+   * (as {@link SchemaVersioning.latest} does) is still the robust read.
+   *
+   * **Example** (Unversioned url vs latest versioned url)
+   *
+   * ```ts
+   * import { SchemaVersioning } from "@beep/scratchpad/schemastore"
+   * import { Result } from "effect"
+   *
+   * const unversioned = SchemaVersioning.catalogUrls({
+   *   baseUrl: "https://example.com/schemas",
+   *   name: "config",
+   * })
+   * console.log(unversioned.url)
+   * // => "https://example.com/schemas/config.json"
+   *
+   * const parsed = SchemaVersioning.parseResult("1.2.3")
+   * if (Result.isSuccess(parsed)) {
+   *   const versioned = SchemaVersioning.catalogUrls({
+   *     baseUrl: "https://example.com/schemas",
+   *     name: "config",
+   *     versions: [parsed.success],
+   *   })
+   *   console.log(versioned.url)
+   *   // => "https://example.com/schemas/config-1.2.3.json"
+   * }
+   * ```
+   *
+   * @throws {@link SchemaVersioningInvariantError} when `versions` is present but empty — pass
+   * `undefined` for unversioned mode.
+   * @since 0.0.0
+   */
+  static catalogUrls(options: {
+    readonly baseUrl: string;
+    readonly name: string;
+    readonly versions?: ReadonlyArray<SchemaVersion>;
+  }): CatalogUrls {
+    const { baseUrl, name, versions } = options;
+    if (versions === undefined) {
+      return { url: SchemaVersioning.schemaUrl(baseUrl, name) };
+    }
+    if (versions.length === 0) {
+      throw SchemaVersioningInvariantError.make({
+        operation: "catalogUrls",
+        detail: `catalogUrls received an empty versions array for "${name}": pass undefined for the unversioned mode`,
+      });
+    }
+    const ascending = [...versions].sort(SchemaVersioning.Order);
+    const map: Record<string, string> = {};
+    for (const version of ascending) {
+      map[version] = SchemaVersioning.schemaUrl(baseUrl, name, version);
+    }
+    const newest = ascending[ascending.length - 1] as SchemaVersion;
+    return { url: SchemaVersioning.schemaUrl(baseUrl, name, newest), versions: map };
+  }
 }

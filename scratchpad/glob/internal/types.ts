@@ -12,26 +12,80 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("glob/internal/types");
+
+const PlatformBase = LiteralKit([
+	"posix",
+	"aix",
+	"android",
+	"darwin",
+	"freebsd",
+	"haiku",
+	"linux",
+	"openbsd",
+	"sunos",
+	"win32",
+	"cygwin",
+	"netbsd",
+]);
+
 /**
- * The platforms the engine distinguishes; only `"win32"` changes behavior.
+ * Platforms the engine distinguishes; only `"win32"` changes behavior.
  *
+ * **Example** (Recognize an engine platform)
+ *
+ * ```ts
+ * import { Platform } from "../../glob/internal/types.ts"
+ *
+ * console.log(Platform.is.posix("posix")) // true
+ * console.log(Platform.is.posix("plan9")) // false
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Platform = PlatformBase.pipe(
+	$I.annoteSchema("Platform", {
+		description: "Operating-system dialect recognized by the deterministic glob engine.",
+	}),
+	SchemaUtils.withLiteralKitStatics(PlatformBase),
+);
+
+/**
+ * Decoded platform produced by {@link Platform}.
+ *
+ * **Example** (Declare an engine platform)
+ *
+ * ```ts
+ * import type { Platform } from "../../glob/internal/types.ts"
+ *
+ * const platform = "posix" satisfies Platform
+ * console.log(platform) // "posix"
+ * ```
+ *
+ * @see {@link Platform} for the runtime schema and literal helpers.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export type Platform =
-	| "posix"
-	| "aix"
-	| "android"
-	| "darwin"
-	| "freebsd"
-	| "haiku"
-	| "linux"
-	| "openbsd"
-	| "sunos"
-	| "win32"
-	| "cygwin"
-	| "netbsd";
+export type Platform = typeof Platform.Type;
+
+const OptimizationLevel = S.Int.check(S.isBetween({ minimum: 0, maximum: 2 })).pipe(
+	$I.annoteSchema("OptimizationLevel", {
+		description: "Pre-parse glob optimization level from zero through two.",
+	}),
+);
+
+const PositiveSafeInteger = S.Int.check(S.isGreaterThan(0)).pipe(
+	$I.annoteSchema("PositiveSafeInteger", {
+		description: "Positive safe integer used by defensive glob engine caps.",
+	}),
+);
 
 /**
  * The engine option bag — upstream MinimatchOptions minus the dropped fields.
@@ -45,75 +99,102 @@ export type Platform =
  * `maxGlobstarRecursion` over-cap is a silent `false` at match time.
  * `nonegate` / `flipNegate` do not change GlobSet's leading-bang exclusion.
  *
+ * **Example** (Describe a deterministic engine configuration)
+ *
+ * ```ts
+ * import { EngineOptions } from "../../glob/internal/types.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const options = S.decodeUnknownSync(EngineOptions)({ platform: "posix", dot: true })
+ * console.log(options.platform) // "posix"
+ * ```
+ *
  * @internal
  * @category configuration
  * @since 0.0.0
  */
-export interface EngineOptions {
-	/** do not expand `{x,y}` style braces */
-	readonly nobrace?: boolean;
-	/** do not treat patterns starting with `#` as a comment */
-	readonly nocomment?: boolean;
-	/** do not treat patterns starting with `!` as a negation */
-	readonly nonegate?: boolean;
-	/** treat `**` the same as `*` */
-	readonly noglobstar?: boolean;
-	/** do not expand extglobs like `+(a|b)` */
-	readonly noext?: boolean;
-	/** treat `\\` as a path separator, not an escape character */
-	readonly windowsPathsNoEscape?: boolean;
-	/**
-	 * Compare a partial path to a pattern. As long as the parts of the path that
-	 * are present are not contradicted by the pattern, it will be treated as a
-	 * match.
-	 */
-	readonly partial?: boolean;
-	/** allow matches that start with `.` even if the pattern does not */
-	readonly dot?: boolean;
-	/** ignore case */
-	readonly nocase?: boolean;
-	/** ignore case only in wildcard patterns */
-	readonly nocaseMagicOnly?: boolean;
-	/** consider braces to be "magic" for the purpose of hasMagic */
-	readonly magicalBraces?: boolean;
-	/**
-	 * If set, then patterns without slashes will be matched against the basename
-	 * of the path if it contains slashes.
-	 */
-	readonly matchBase?: boolean;
-	/** invert the results of negated matches */
-	readonly flipNegate?: boolean;
-	/** do not collapse multiple `/` into a single `/` */
-	readonly preserveMultipleSlashes?: boolean;
-	/** the level of pre-parse pattern optimization (0, 1 or 2) */
-	readonly optimizationLevel?: number;
-	/** operating system platform; defaults to "posix", never read ambiently */
-	readonly platform?: Platform;
-	/**
-	 * When a pattern starts with a UNC path or drive letter, and in
-	 * `nocase:true` mode, do not convert the root portions of the pattern into a
-	 * case-insensitive regular expression, and instead leave them as strings.
-	 */
-	readonly windowsNoMagicRoot?: boolean;
-	/** max number of `{...}` patterns to expand (default and ceiling 100_000) */
-	readonly braceExpandMax?: number;
-	/** max number of non-adjacent `**` patterns to recursively walk down */
-	readonly maxGlobstarRecursion?: number;
-	/** max depth to traverse for nested extglobs like `*(a|b|c)` */
-	readonly maxExtglobRecursion?: number;
-}
+export const EngineOptions = S.Struct({
+	nobrace: S.optionalKey(S.Boolean),
+	nocomment: S.optionalKey(S.Boolean),
+	nonegate: S.optionalKey(S.Boolean),
+	noglobstar: S.optionalKey(S.Boolean),
+	noext: S.optionalKey(S.Boolean),
+	windowsPathsNoEscape: S.optionalKey(S.Boolean),
+	partial: S.optionalKey(S.Boolean),
+	dot: S.optionalKey(S.Boolean),
+	nocase: S.optionalKey(S.Boolean),
+	nocaseMagicOnly: S.optionalKey(S.Boolean),
+	magicalBraces: S.optionalKey(S.Boolean),
+	matchBase: S.optionalKey(S.Boolean),
+	flipNegate: S.optionalKey(S.Boolean),
+	preserveMultipleSlashes: S.optionalKey(S.Boolean),
+	optimizationLevel: S.optionalKey(OptimizationLevel),
+	platform: S.optionalKey(Platform),
+	windowsNoMagicRoot: S.optionalKey(S.Boolean),
+	braceExpandMax: S.optionalKey(PositiveSafeInteger),
+	maxGlobstarRecursion: S.optionalKey(PositiveSafeInteger),
+	maxExtglobRecursion: S.optionalKey(PositiveSafeInteger),
+}).pipe(
+	$I.annoteSchema("EngineOptions", {
+		description: "Deterministic, ambient-state-free option bag consumed by the internal glob engine.",
+	}),
+);
 
 /**
- * A compiled part regexp carrying its source and original glob text.
+ * Decoded engine option bag produced by {@link EngineOptions}.
  *
+ * **Example** (Declare engine options)
+ *
+ * ```ts
+ * import type { EngineOptions } from "../../glob/internal/types.ts"
+ *
+ * const options = { platform: "posix", dot: true } satisfies EngineOptions
+ * console.log(options.dot) // true
+ * ```
+ *
+ * @see {@link EngineOptions} for the runtime schema and validation contract.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export type MMRegExp = RegExp & {
-	_src?: string;
-	_glob?: string;
-};
+export type EngineOptions = typeof EngineOptions.Type;
+
+/**
+ * A compiled part regexp carrying its source and original glob text.
+ *
+ * **Example** (Construct a compiled segment)
+ *
+ * ```ts
+ * import { MMRegExp } from "../../glob/internal/types.ts"
+ *
+ * const segment = new MMRegExp("[^/]*?\\.ts", "", "*.ts")
+ * console.log(segment.test("index.ts")) // true
+ * console.log(segment._glob) // "*.ts"
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class MMRegExp extends RegExp {
+	/** Unanchored regular-expression source used when composing the whole matcher. */
+	readonly _src: string;
+	/** Original glob segment from which this regular expression was compiled. */
+	readonly _glob: string;
+
+	/**
+	 * Construct an anchored compiled-segment expression.
+	 *
+	 * @param source - Unanchored regular-expression source.
+	 * @param flags - Native regular-expression flags.
+	 * @param glob - Original glob segment.
+	 */
+	constructor(source: string, flags: string, glob: string) {
+		super(`^${source}$`, flags);
+		this._src = source;
+		this._glob = glob;
+	}
+}
 
 /**
  * The globstar marker in a compiled pattern set.
@@ -124,7 +205,7 @@ export type MMRegExp = RegExp & {
  * import { Minimatch } from "../../glob/internal/minimatch.ts"
  * import { GLOBSTAR } from "../../glob/internal/types.ts"
  *
- * const recursive = new Minimatch("**/*.ts", {})
+ * const recursive = new Minimatch("**\/*.ts", {})
  * console.log(recursive.set.some((parts) => parts.includes(GLOBSTAR))) // true
  * const oneLevel = new Minimatch("src/*.ts", {})
  * console.log(oneLevel.set.some((parts) => parts.includes(GLOBSTAR))) // false
@@ -140,6 +221,15 @@ export const GLOBSTAR: unique symbol = Symbol("globstar **");
  * One compiled path segment: a literal string, a part regexp, or the
  * {@link GLOBSTAR} marker.
  *
+ * **Example** (Declare a compiled segment)
+ *
+ * ```ts
+ * import { GLOBSTAR, type ParseReturnFiltered } from "../../glob/internal/types.ts"
+ *
+ * const segment = GLOBSTAR satisfies ParseReturnFiltered
+ * console.log(segment === GLOBSTAR) // true
+ * ```
+ *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -149,6 +239,15 @@ export type ParseReturnFiltered = string | MMRegExp | typeof GLOBSTAR;
 /**
  * Segment parse result: {@link ParseReturnFiltered} or `false` when the
  * segment is not a matchable part.
+ *
+ * **Example** (Declare a failed parse)
+ *
+ * ```ts
+ * import type { ParseReturn } from "../../glob/internal/types.ts"
+ *
+ * const result = false satisfies ParseReturn
+ * console.log(result) // false
+ * ```
  *
  * @internal
  * @category type-level

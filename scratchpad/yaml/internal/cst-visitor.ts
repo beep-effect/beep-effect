@@ -14,14 +14,24 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { Schema } from "effect";
 import type { CstNode } from "./cst.ts";
 import { parseCSTAll } from "./cst-parser.ts";
+
+const $I = $ScratchpadId.create("yaml/internal/cst-visitor");
 
 // ---------------------------------------------------------------------------
 // Internal path type
 // ---------------------------------------------------------------------------
 
-type Path = ReadonlyArray<string | number>;
+const CstPath = Schema.Array(Schema.Union([Schema.String, Schema.Finite])).pipe(
+	$I.annoteSchema("CstPath", {
+		description: "Path of mapping keys and sequence indices attached to an internal CST visitor event.",
+	}),
+);
+
+type Path = typeof CstPath.Type;
 
 // ---------------------------------------------------------------------------
 // Event records
@@ -34,11 +44,12 @@ type Path = ReadonlyArray<string | number>;
  * @category type-level
  * @since 0.0.0
  */
-export interface CstDocumentStartEvent {
-	readonly _tag: "CstDocumentStartEvent";
-	readonly path: Path;
-	readonly depth: number;
-}
+const CstDocumentStartEventModel = Schema.TaggedStruct("CstDocumentStartEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+}).pipe($I.annoteSchema("CstDocumentStartEvent", { description: "CST visitor document-entry event." }));
+
+export type CstDocumentStartEvent = typeof CstDocumentStartEventModel.Type;
 
 /**
  * Emitted when the CST visitor exits a document node.
@@ -47,11 +58,12 @@ export interface CstDocumentStartEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstDocumentEndEvent {
-	readonly _tag: "CstDocumentEndEvent";
-	readonly path: Path;
-	readonly depth: number;
-}
+const CstDocumentEndEventModel = Schema.TaggedStruct("CstDocumentEndEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+}).pipe($I.annoteSchema("CstDocumentEndEvent", { description: "CST visitor document-exit event." }));
+
+export type CstDocumentEndEvent = typeof CstDocumentEndEventModel.Type;
 
 /**
  * Emitted when the CST visitor enters a block-map or flow-map node.
@@ -60,12 +72,13 @@ export interface CstDocumentEndEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstMapStartEvent {
-	readonly _tag: "CstMapStartEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstMapStartEventModel = Schema.TaggedStruct("CstMapStartEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstMapStartEvent", { description: "CST visitor mapping-entry event." }));
+
+export type CstMapStartEvent = typeof CstMapStartEventModel.Type;
 
 /**
  * Emitted when the CST visitor exits a block-map or flow-map node.
@@ -74,11 +87,12 @@ export interface CstMapStartEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstMapEndEvent {
-	readonly _tag: "CstMapEndEvent";
-	readonly path: Path;
-	readonly depth: number;
-}
+const CstMapEndEventModel = Schema.TaggedStruct("CstMapEndEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+}).pipe($I.annoteSchema("CstMapEndEvent", { description: "CST visitor mapping-exit event." }));
+
+export type CstMapEndEvent = typeof CstMapEndEventModel.Type;
 
 /**
  * Emitted when the CST visitor enters a block-seq or flow-seq node.
@@ -87,12 +101,13 @@ export interface CstMapEndEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstSeqStartEvent {
-	readonly _tag: "CstSeqStartEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstSeqStartEventModel = Schema.TaggedStruct("CstSeqStartEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstSeqStartEvent", { description: "CST visitor sequence-entry event." }));
+
+export type CstSeqStartEvent = typeof CstSeqStartEventModel.Type;
 
 /**
  * Emitted when the CST visitor exits a block-seq or flow-seq node.
@@ -101,11 +116,12 @@ export interface CstSeqStartEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstSeqEndEvent {
-	readonly _tag: "CstSeqEndEvent";
-	readonly path: Path;
-	readonly depth: number;
-}
+const CstSeqEndEventModel = Schema.TaggedStruct("CstSeqEndEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+}).pipe($I.annoteSchema("CstSeqEndEvent", { description: "CST visitor sequence-exit event." }));
+
+export type CstSeqEndEvent = typeof CstSeqEndEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters a scalar that is a map key.
@@ -121,12 +137,13 @@ export interface CstSeqEndEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstKeyEvent {
-	readonly _tag: "CstKeyEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstKeyEventModel = Schema.TaggedStruct("CstKeyEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstKeyEvent", { description: "CST visitor mapping-key event." }));
+
+export type CstKeyEvent = typeof CstKeyEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters a scalar that is a map value.
@@ -135,12 +152,13 @@ export interface CstKeyEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstValueEvent {
-	readonly _tag: "CstValueEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstValueEventModel = Schema.TaggedStruct("CstValueEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstValueEvent", { description: "CST visitor mapping-value event." }));
+
+export type CstValueEvent = typeof CstValueEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters a standalone scalar (not a map key
@@ -150,12 +168,13 @@ export interface CstValueEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstScalarEvent {
-	readonly _tag: "CstScalarEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstScalarEventModel = Schema.TaggedStruct("CstScalarEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstScalarEvent", { description: "CST visitor standalone-scalar event." }));
+
+export type CstScalarEvent = typeof CstScalarEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters an alias reference node (including the leading `*`).
@@ -164,12 +183,13 @@ export interface CstScalarEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstAliasEvent {
-	readonly _tag: "CstAliasEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstAliasEventModel = Schema.TaggedStruct("CstAliasEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstAliasEvent", { description: "CST visitor alias-reference event." }));
+
+export type CstAliasEvent = typeof CstAliasEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters a comment node (including the leading `#`).
@@ -178,12 +198,13 @@ export interface CstAliasEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstCommentEvent {
-	readonly _tag: "CstCommentEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstCommentEventModel = Schema.TaggedStruct("CstCommentEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstCommentEvent", { description: "CST visitor source-comment event." }));
+
+export type CstCommentEvent = typeof CstCommentEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters a directive node (e.g., `%YAML 1.2`).
@@ -192,12 +213,13 @@ export interface CstCommentEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstDirectiveEvent {
-	readonly _tag: "CstDirectiveEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstDirectiveEventModel = Schema.TaggedStruct("CstDirectiveEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstDirectiveEvent", { description: "CST visitor YAML-directive event." }));
+
+export type CstDirectiveEvent = typeof CstDirectiveEventModel.Type;
 
 /**
  * Emitted when the CST visitor encounters an error node in the CST.
@@ -206,35 +228,52 @@ export interface CstDirectiveEvent {
  * @category type-level
  * @since 0.0.0
  */
-export interface CstErrorEvent {
-	readonly _tag: "CstErrorEvent";
-	readonly path: Path;
-	readonly depth: number;
-	readonly source: string;
-}
+const CstErrorEventModel = Schema.TaggedStruct("CstErrorEvent", {
+	path: CstPath,
+	depth: Schema.Finite,
+	source: Schema.String,
+}).pipe($I.annoteSchema("CstErrorEvent", { description: "CST visitor parse-error event." }));
+
+export type CstErrorEvent = typeof CstErrorEventModel.Type;
 
 /**
  * A discriminated union of all thirteen SAX-style YAML CST visitor events.
+ *
+ * **Example** (Guard a visitor event)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CstVisitorEvent } from "@beep/scratchpad/yaml/internal/cst-visitor"
+ *
+ * console.log(S.is(CstVisitorEvent)({ _tag: "CstDocumentStartEvent", path: [], depth: 0 })) // true
+ * ```
  *
  * @see {@link cstEvents} for the generator that yields these events.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export type CstVisitorEvent =
-	| CstDocumentStartEvent
-	| CstDocumentEndEvent
-	| CstMapStartEvent
-	| CstMapEndEvent
-	| CstSeqStartEvent
-	| CstSeqEndEvent
-	| CstKeyEvent
-	| CstValueEvent
-	| CstScalarEvent
-	| CstAliasEvent
-	| CstCommentEvent
-	| CstDirectiveEvent
-	| CstErrorEvent;
+export const CstVisitorEvent = Schema.Union([
+	CstDocumentStartEventModel,
+	CstDocumentEndEventModel,
+	CstMapStartEventModel,
+	CstMapEndEventModel,
+	CstSeqStartEventModel,
+	CstSeqEndEventModel,
+	CstKeyEventModel,
+	CstValueEventModel,
+	CstScalarEventModel,
+	CstAliasEventModel,
+	CstCommentEventModel,
+	CstDirectiveEventModel,
+	CstErrorEventModel,
+]).pipe(
+	$I.annoteSchema("CstVisitorEvent", {
+		description: "Discriminated union of SAX-style events emitted while walking YAML concrete syntax.",
+	}),
+);
+
+export type CstVisitorEvent = typeof CstVisitorEvent.Type;
 
 // ---------------------------------------------------------------------------
 // Node classification helpers

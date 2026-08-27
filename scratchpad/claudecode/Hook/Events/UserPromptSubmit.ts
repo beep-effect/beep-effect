@@ -187,7 +187,7 @@ export const allow = (): Output => Output.make();
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; its optional flags only configure the new value.
 export const block = (reason: string, options?: { readonly suppressOriginalPrompt?: boolean }): Output =>
   Output.make({
     decision: O.some("block"),
@@ -243,7 +243,7 @@ export const addContext = (additionalContext: string): Output =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; the optional context only configures the new value.
 export const renameSession = (sessionTitle: string, additionalContext?: string): Output =>
   Output.make({
     hookSpecificOutput: O.some(

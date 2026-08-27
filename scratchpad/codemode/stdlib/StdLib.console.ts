@@ -12,6 +12,7 @@ import {
   isRuntimeReference,
 } from "../interpreter/Interpreter.references.ts";
 import {MutableHashSet, pipe} from "effect";
+import { dual } from "effect/Function";
 import {A, O, P, R} from "@beep/utils";
 import {copyIn, copyOut} from "../Codemode.tool-runtime.ts";
 import {
@@ -58,13 +59,15 @@ const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {
+export const formatConsoleMessage: {
+  (args: Array<unknown>): (name: ConsoleMethod) => string;
+  (name: ConsoleMethod, args: Array<unknown>): string;
+} = dual(2, (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);
   if (ConsoleMethod.is.table(name)) return formatConsoleTable(args[0], args[1]);
   const prefix = ConsoleMethod.is.warn(name) ? "[warn] " : ConsoleMethod.is.error(name) ? "[error] " : name === "debug" ? "[debug] " : "";
   return `${prefix}${pipe(args, A.map(formatConsoleArgument), A.join(" "))}`;
-};
+});
 
 const formatConsoleArgument = (value: unknown): string => {
   if (P.isUndefined(value)) return "undefined";
@@ -133,7 +136,7 @@ const formatConsoleTable = (value: unknown, columnsArgument: unknown): string =>
   const rows = consoleTableRows(data, columns);
   const keys = O.getOrElse(
     columns,
-    () => pipe(rows, A.flatMap((row) => Object.keys(row.values)), A.dedupe),
+    () => pipe(rows, A.flatMap((row) => R.keys(row.values)), A.dedupe),
   );
   const header = pipe(["(index)", ...keys], A.join("\t"));
   return pipe(
@@ -187,7 +190,7 @@ const consoleTableValues = (
 ): Record<string, unknown> => {
   if (P.isNotNull(value) && P.isObjectKeyword(value) && !A.isArray(value) && !isCodeModeValue(value)) {
     return O.match(columns, {
-      onNone: () => R.fromEntries(Object.entries(value)),
+      onNone: () => R.fromEntries(R.toEntries(value)),
       onSome: (names) => R.fromEntries(A.map(names, (column) => [column, Reflect.get(value, column)])),
     });
   }

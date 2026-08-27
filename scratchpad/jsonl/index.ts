@@ -35,24 +35,22 @@
 export type { EnvelopeOf, EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
 export { Envelope, EnvelopeFrame } from "./Envelope.ts";
 export type {
-	AppendOptions,
-	JournalClass,
-	JournalConfig,
-	JournalReadError,
-	JournalShape,
-	JournalWriteError,
+  JournalClass,
+  JournalReadError,
+  JournalShape,
+  JournalWriteError,
 } from "./Journal.ts";
-export { Journal } from "./Journal.ts";
+export { AppendOptions, Journal, JournalConfig } from "./Journal.ts";
 export type { JsonlError } from "./JsonlError.ts";
 export {
-	InvalidData,
-	JournalClosed,
-	JournalNotFound,
-	JournalResync,
-	MalformedLine,
-	TerminalViolation,
-	UnknownEvent,
-	UnserializableData,
+  InvalidData,
+  JournalClosed,
+  JournalNotFound,
+  JournalResync,
+  MalformedLine,
+  TerminalViolation,
+  UnknownEvent,
+  UnserializableData,
 } from "./JsonlError.ts";
 export type { DataSchema } from "./JsonlEvent.ts";
 export { JsonlEvent, JsonlEventTypeId } from "./JsonlEvent.ts";

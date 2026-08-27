@@ -11,13 +11,15 @@ import {
   NonEmptyTrimmedStr,
   SchemaUtils,
 } from "@beep/schema";
-import { A, O, P, R, Str, Struct, pipe } from "@beep/utils";
+import { A, O, P, R, Str, Struct, pipe, thunkEmptyStr } from "@beep/utils";
 import {
+  flow,
   HashMap,
   HashSet,
   Order,
   Result,
 } from "effect";
+import { dual } from "effect/Function";
 import {
   fromSchemaOpenApi3_0,
   fromSchemaOpenApi3_1,
@@ -215,11 +217,13 @@ export const nonEmptyString = NonEmptyString.decodeOption;
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const own = <Value>(
+export const own: {
+  <Value>(key: string): (record: Readonly<Record<string, Value>>) => O.Option<Value>;
+  <Value>(record: Readonly<Record<string, Value>>, key: string): O.Option<Value>;
+} = dual(2, <Value>(
   record: Readonly<Record<string, Value>>,
   key: string
-): O.Option<Value> => R.get(record, key);
+): O.Option<Value> => R.get(record, key));
 
 const ownArray = (
   record: Readonly<Record<string, unknown>>,
@@ -259,14 +263,7 @@ const resolvePointer = (root: unknown, ref: string): O.Option<unknown> =>
     ref,
     Str.slice(2),
     Str.split("/"),
-    A.map(
-      (segment) =>
-        pipe(
-          segment,
-          Str.replaceAll("~1", "/"),
-          Str.replaceAll("~0", "~")
-        )
-    ),
+    A.map(flow(Str.replaceAll("~1", "/"), Str.replaceAll("~0", "~"))),
     A.reduce(O.some(root), (item, segment) =>
       pipe(
         item,
@@ -306,8 +303,10 @@ const resolvePointer = (root: unknown, ref: string): O.Option<unknown> =>
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const resolve = (document: Document, value: unknown): unknown => {
+export const resolve: {
+  (value: unknown): (document: Document) => unknown;
+  (document: Document, value: unknown): unknown;
+} = dual(2, (document: Document, value: unknown): unknown => {
   const next = (
     current: unknown,
     seen: HashSet.HashSet<string>
@@ -330,7 +329,7 @@ export const resolve = (document: Document, value: unknown): unknown => {
     );
   };
   return next(value, HashSet.empty());
-};
+});
 
 class SchemaResource extends S.Class<SchemaResource>($I`SchemaResource`)(
   { value: S.Unknown, root: S.Unknown },
@@ -655,8 +654,15 @@ const projectSchema = (
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const componentDefinitions = (
+export const componentDefinitions: {
+  (direction: SchemaDirection): (
+    document: Document
+  ) => Result.Result<Readonly<Record<string, JsonSchema>>, string>;
+  (
+    document: Document,
+    direction: SchemaDirection
+  ): Result.Result<Readonly<Record<string, JsonSchema>>, string>;
+} = dual(2, (
   document: Document,
   direction: SchemaDirection
 ): Result.Result<Readonly<Record<string, JsonSchema>>, string> => {
@@ -680,7 +686,7 @@ export const componentDefinitions = (
     Result.all,
     Result.map(Struct.fromEntries)
   );
-};
+});
 
 const withDefinitions = (
   schema: JsonSchema,
@@ -697,15 +703,13 @@ const withDefinitions = (
   });
 };
 
-const mediaTypeBase = (mediaType: string): string =>
-  pipe(
-    mediaType,
-    Str.split(";"),
-    A.head,
-    O.getOrElse(() => ""),
-    Str.trim,
-    Str.toLowerCase
-  );
+const mediaTypeBase: (mediaType: string) => string = flow(
+  Str.split(";"),
+  A.head,
+  O.getOrElse(thunkEmptyStr),
+  Str.trim,
+  Str.toLowerCase
+);
 
 const isJsonMediaType = (mediaType: string): boolean => {
   const normalized = mediaTypeBase(mediaType);
@@ -755,24 +759,22 @@ class JsonContent extends S.Class<JsonContent>($I`JsonContent`)(
     });
 }
 
-const jsonContent = (
+const jsonContent: (
   content: Readonly<Record<string, unknown>>
-): O.Option<JsonContent> =>
-  pipe(
-    content,
-    R.toEntries,
-    A.findFirst(([mediaType]) => isJsonMediaType(mediaType)),
-    O.flatMap(([mediaType, value]) =>
-      isRecord(value)
-        ? O.some(
-            JsonContent.new(
-              mediaType,
-              pipe(own(value, "schema"), O.getOrUndefined)
-            )
+) => O.Option<JsonContent> = flow(
+  R.toEntries,
+  A.findFirst(([mediaType]) => isJsonMediaType(mediaType)),
+  O.flatMap(([mediaType, value]) =>
+    isRecord(value)
+      ? O.some(
+          JsonContent.new(
+            mediaType,
+            O.getOrUndefined(own(value, "schema"))
           )
-        : O.none()
-    )
-  );
+        )
+      : O.none()
+  )
+);
 
 const isFlattenableObjectBody = (
   schema: unknown,
@@ -908,9 +910,8 @@ const operationParameters = (
 
   return pipe(
     declared,
-    Result.flatMap((parameters) =>
-      pipe(
-        parameters,
+    Result.flatMap(
+      flow(
         HashMap.values,
         A.fromIterable,
         A.map((item) => {
@@ -1222,8 +1223,17 @@ const nextInputName = (
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const operationInput = (
+export const operationInput: {
+  (
+    pathItem: Readonly<Record<string, unknown>>,
+    operation: Readonly<Record<string, unknown>>
+  ): (document: Document) => Result.Result<OperationInput, string>;
+  (
+    document: Document,
+    pathItem: Readonly<Record<string, unknown>>,
+    operation: Readonly<Record<string, unknown>>
+  ): Result.Result<OperationInput, string>;
+} = dual(3, (
   document: Document,
   pathItem: Readonly<Record<string, unknown>>,
   operation: Readonly<Record<string, unknown>>
@@ -1283,7 +1293,7 @@ export const operationInput = (
       );
       return OperationInput.new(named.output, requestBody.body);
     })
-  );
+  ));
 
 /**
  * Emits the object JSON Schema accepted by one generated tool, keyed by
@@ -1315,8 +1325,15 @@ export const operationInput = (
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const inputSchema = (
+export const inputSchema: {
+  (definitions: Readonly<Record<string, JsonSchema>>): (
+    fields: ReadonlyArray<InputField>
+  ) => JsonSchema;
+  (
+    fields: ReadonlyArray<InputField>,
+    definitions: Readonly<Record<string, JsonSchema>>
+  ): JsonSchema;
+} = dual(2, (
   fields: ReadonlyArray<InputField>,
   definitions: Readonly<Record<string, JsonSchema>>
 ): JsonSchema => {
@@ -1335,7 +1352,7 @@ export const inputSchema = (
     ...(A.isReadonlyArrayEmpty(required) ? {} : { required }),
   });
   return withDefinitions(schema, definitions);
-};
+});
 
 const successfulResponses = (
   document: Document,
@@ -1412,8 +1429,17 @@ const successfulResponses = (
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const operationOutput = (
+export const operationOutput: {
+  (
+    operation: Readonly<Record<string, unknown>>,
+    definitions: Readonly<Record<string, JsonSchema>>
+  ): (document: Document) => Result.Result<O.Option<JsonSchema>, string>;
+  (
+    document: Document,
+    operation: Readonly<Record<string, unknown>>,
+    definitions: Readonly<Record<string, JsonSchema>>
+  ): Result.Result<O.Option<JsonSchema>, string>;
+} = dual(3, (
   document: Document,
   operation: Readonly<Record<string, unknown>>,
   definitions: Readonly<Record<string, JsonSchema>>
@@ -1433,9 +1459,8 @@ export const operationOutput = (
         pipe(
           own(response, "content"),
           O.filter(isRecord),
-          O.exists((content) =>
-            pipe(
-              content,
+          O.exists(
+            flow(
               R.keys,
               A.some(
                 (mediaType) => mediaTypeBase(mediaType) === "text/event-stream"
@@ -1449,9 +1474,8 @@ export const operationOutput = (
         pipe(
           own(response, "content"),
           O.filter(isRecord),
-          O.exists((content) =>
-            pipe(
-              content,
+          O.exists(
+            flow(
               R.toEntries,
               A.some(([mediaType, value]) =>
                 isBinaryMediaType(document, mediaType, value)
@@ -1524,7 +1548,7 @@ export const operationOutput = (
       );
     })
   );
-};
+});
 
 const sanitizeOperationSegment = (raw: string): string => {
   const normalized = pipe(
@@ -1559,9 +1583,7 @@ const fallbackOperationId = (method: string, path: string): string =>
             ? A.make("by", pipe(part, Str.slice(1, -1)))
             : A.of(part)
         ),
-        A.flatMap((part) =>
-          pipe(part, Str.split(/[^A-Za-z0-9]+/u), A.filter(Str.isNonEmpty))
-        )
+        A.flatMap(flow(Str.split(/[^A-Za-z0-9]+/u), A.filter(Str.isNonEmpty)))
       ),
       method
     ),
@@ -1604,7 +1626,7 @@ const isOperationPathAvailable = (
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Method, path, operation metadata, and collision sets are co-primary identifier-construction inputs.
 export const operationPath = (
   method: string,
   path: string,
@@ -1636,7 +1658,7 @@ export const operationPath = (
       if (index === conflict.value) {
         const next = pipe(
           A.get(segments, index + 1),
-          O.getOrElse(() => "")
+          O.getOrElse(thunkEmptyStr)
         );
         return A.of(
           `${segment}${pipe(next, Str.slice(0, 1), Str.toUpperCase)}${pipe(
@@ -1856,8 +1878,17 @@ export const securityRequirements = (
  * @category parsing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const operationSecurityRequirements = (
+export const operationSecurityRequirements: {
+  (
+    defaults: Result.Result<ReadonlyArray<SecurityRequirement>, string>,
+    schemes: HashMap.HashMap<string, SecurityScheme>
+  ): (value: unknown) => Result.Result<ReadonlyArray<SecurityRequirement>, string>;
+  (
+    value: unknown,
+    defaults: Result.Result<ReadonlyArray<SecurityRequirement>, string>,
+    schemes: HashMap.HashMap<string, SecurityScheme>
+  ): Result.Result<ReadonlyArray<SecurityRequirement>, string>;
+} = dual(3, (
   value: unknown,
   defaults: Result.Result<ReadonlyArray<SecurityRequirement>, string>,
   schemes: HashMap.HashMap<string, SecurityScheme>
@@ -1915,7 +1946,7 @@ export const operationSecurityRequirements = (
           : `cookie authentication '${cookieScheme.value}' is not supported`
       );
     })
-  );
+  ));
 
 /**
  * Resolves supported component security schemes to a HashMap, including

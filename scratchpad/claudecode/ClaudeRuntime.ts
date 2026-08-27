@@ -13,16 +13,12 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import * as NodePath from "@effect/platform-node-shared/NodePath";
+import { Layer, Logger, ManagedRuntime, Match, References } from "effect";
 import type * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
-import * as Logger from "effect/Logger";
-import * as ManagedRuntime from "effect/ManagedRuntime";
-import * as Match from "effect/Match";
 import type * as Path from "effect/Path";
-import * as References from "effect/References";
-
 import * as ClaudeProject from "./ClaudeProject.ts";
 
 const $I = $ScratchpadId.create("claudecode/ClaudeRuntime");
@@ -250,31 +246,28 @@ const mergeExtraLayer = <R = never, E = never, EP = never>(options: {
 
 const projectRuntimeLayer = <R = never, E = never, EP = never>(
   options: ProjectRuntimeOptions<R, E, EP>
-): Layer.Layer<BaseServices | ClaudeProject.Service | R, E | EP, never> =>
-  (() => {
-    const platformLayer = options.platformLayer ?? baseLayer;
-    const projectOptions: ClaudeProject.ClaudeProjectOptions = {
-      cwd: options.cwd,
-      ...(options.pluginRoot === undefined ? {} : { pluginRoot: options.pluginRoot }),
-      ...(options.mcpPath === undefined ? {} : { mcpPath: options.mcpPath }),
-    };
-    const runtimeOptions: RuntimeOptions<ClaudeProject.Service | R, E | EP, EP> = {
-      platformLayer,
-      layer: mergeExtraLayer({
-        projectLayer: ClaudeProject.layer(projectOptions).pipe(Layer.provide(platformLayer)),
-        ...(options.layer === undefined ? {} : { extraLayer: options.layer }),
-      }),
-      ...(options.logger === undefined ? {} : { logger: options.logger }),
-      ...(options.mergeWithExistingLoggers === undefined
-        ? {}
-        : {
-            mergeWithExistingLoggers: options.mergeWithExistingLoggers,
-          }),
-    };
-    return layer({
-      ...runtimeOptions,
-    });
-  })();
+): Layer.Layer<BaseServices | ClaudeProject.Service | R, E | EP, never> => {
+  const platformLayer = options.platformLayer ?? baseLayer;
+  const projectOptions: ClaudeProject.ClaudeProjectOptions = {
+    cwd: options.cwd,
+    ...O.getSomesStruct({
+      pluginRoot: O.fromUndefinedOr(options.pluginRoot),
+      mcpPath: O.fromUndefinedOr(options.mcpPath),
+    }),
+  };
+  const runtimeOptions: RuntimeOptions<ClaudeProject.Service | R, E | EP, EP> = {
+    platformLayer,
+    layer: mergeExtraLayer({
+      projectLayer: ClaudeProject.layer(projectOptions).pipe(Layer.provide(platformLayer)),
+      ...O.getSomesStruct({ extraLayer: O.fromUndefinedOr(options.layer) }),
+    }),
+    ...O.getSomesStruct({
+      logger: O.fromUndefinedOr(options.logger),
+      mergeWithExistingLoggers: O.fromUndefinedOr(options.mergeWithExistingLoggers),
+    }),
+  };
+  return layer(runtimeOptions);
+};
 
 // ---------------------------------------------------------------------------
 // Managed runtime constructors

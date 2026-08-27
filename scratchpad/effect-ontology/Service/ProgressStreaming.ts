@@ -108,7 +108,7 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  * console.log(state.totalChunks) // 4
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ProgressBuilderState extends S.Class<ProgressBuilderState>($I`ProgressBuilderState`)(
@@ -906,7 +906,7 @@ export const setPhaseProgress = dual2(
  * console.log(state.eventQueue.length) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class BackpressureState extends S.Class<BackpressureState>($I`BackpressureState`)(

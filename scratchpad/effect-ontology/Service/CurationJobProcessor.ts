@@ -60,7 +60,7 @@ export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError
  * console.log(JobProcessingStats.make({ jobsProcessed: 2, errors: 0, durationMs: 5 }).jobsProcessed) // 2
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class JobProcessingStats extends S.Class<JobProcessingStats>($I`JobProcessingStats`)(

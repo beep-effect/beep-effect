@@ -11,12 +11,37 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Effect, Result, Schema, SchemaTransformation } from "effect";
-import { EXPANSION_MAX, isGuardExceeded } from "./internal/limits.ts";
-import type { EngineOptions } from "./internal/types.ts";
+import { Effect, Formatter, Result, Schema, SchemaTransformation } from "effect";
+import * as P from "effect/Predicate";
+import { EXPANSION_MAX, GuardReason, isGuardExceeded } from "./internal/limits.ts";
 import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape } from "./internal/minimatch.ts";
+import { type EngineOptions, Platform } from "./internal/types.ts";
 
 const $I = $ScratchpadId.create("glob/GlobPattern");
+
+const GuardMagnitude = Schema.Natural.pipe(
+	$I.annoteSchema("GuardMagnitude", {
+		description: "Non-negative safe integer reported by a defensive glob guard.",
+	}),
+);
+
+const OptimizationLevel = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 2 })).pipe(
+	$I.annoteSchema("OptimizationLevel", {
+		description: "Pre-parse glob optimization level from zero through two.",
+	}),
+);
+
+const BraceExpansionMax = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: EXPANSION_MAX })).pipe(
+	$I.annoteSchema("BraceExpansionMax", {
+		description: "Positive brace-expansion cap bounded by the stock engine budget.",
+	}),
+);
+
+const PositiveRecursionCap = Schema.Int.check(Schema.isGreaterThan(0)).pipe(
+	$I.annoteSchema("PositiveRecursionCap", {
+		description: "Positive safe integer bounding a recursive glob-engine operation.",
+	}),
+);
 
 /**
  * Typed failure raised when a glob pattern trips a compile-time guard:
@@ -57,11 +82,9 @@ export class GlobPatternError extends Schema.TaggedError<GlobPatternError>($I`Gl
 	"GlobPatternError",
 	{
 		pattern: Schema.String,
-		// Schema.Literals, not Schema.Literal: the v3 variadic Literal silently
-		// ignores every argument after the first in beta.94.
-		reason: Schema.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]),
-		limit: Schema.Number,
-		actual: Schema.Number,
+		reason: GuardReason,
+		limit: GuardMagnitude,
+		actual: GuardMagnitude,
 	},
 	$I.annote("GlobPatternError", {
 		description:
@@ -85,7 +108,7 @@ export class GlobPatternError extends Schema.TaggedError<GlobPatternError>($I`Gl
 	 */
 	override get message(): string {
 		const shown = this.pattern.length > 64 ? `${this.pattern.slice(0, 64)}…` : this.pattern;
-		return `glob pattern ${JSON.stringify(shown)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
+		return `glob pattern ${Formatter.format(shown)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
 	}
 }
 
@@ -116,7 +139,7 @@ export class GlobPatternError extends Schema.TaggedError<GlobPatternError>($I`Gl
  *
  * const options = GlobPatternOptions.make({ platform: "posix", noglobstar: true })
  * console.log(options.platform) // "posix"
- * const compiled = GlobPattern.compileResult("**/*.ts", options)
+ * const compiled = GlobPattern.compileResult("**\/*.ts", options)
  * console.log(Result.isSuccess(compiled) && compiled.success.matches("src/lib/index.ts")) // false
  * console.log(Result.isSuccess(compiled) && compiled.success.matches("src/index.ts")) // true
  * ```
@@ -158,34 +181,15 @@ export class GlobPatternOptions extends Schema.Class<GlobPatternOptions>($I`Glob
 	/** Leave UNC/drive-letter roots as strings in `nocase` mode instead of case-insensitive regexps. */
 	windowsNoMagicRoot: Schema.optionalKey(Schema.Boolean),
 	/** Pre-parse pattern optimization level (0, 1, or 2). */
-	optimizationLevel: Schema.optionalKey(
-		Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 0, maximum: 2 })),
-	),
+	optimizationLevel: Schema.optionalKey(OptimizationLevel),
 	/** Operating system platform; defaults to `"posix"` and is never read from the ambient process. */
-	platform: Schema.optionalKey(
-		Schema.Literals([
-			"posix",
-			"aix",
-			"android",
-			"darwin",
-			"freebsd",
-			"haiku",
-			"linux",
-			"openbsd",
-			"sunos",
-			"win32",
-			"cygwin",
-			"netbsd",
-		]),
-	),
+	platform: Schema.optionalKey(Platform),
 	/** Brace-expansion output budget. Caps tighten toward the stock 100,000 maximum; they never raise it. */
-	braceExpandMax: Schema.optionalKey(
-		Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: EXPANSION_MAX })),
-	),
+	braceExpandMax: Schema.optionalKey(BraceExpansionMax),
 	/** Bound on non-adjacent globstar backtracking. Over-cap matching returns `false` and never throws. */
-	maxGlobstarRecursion: Schema.optionalKey(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+	maxGlobstarRecursion: Schema.optionalKey(PositiveRecursionCap),
 	/** Nested-extglob parse depth. Over-nesting degrades to a literal instead of throwing. */
-	maxExtglobRecursion: Schema.optionalKey(Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0))),
+	maxExtglobRecursion: Schema.optionalKey(PositiveRecursionCap),
 	},
 	$I.annote("GlobPatternOptions", {
 		description:
@@ -193,31 +197,9 @@ export class GlobPatternOptions extends Schema.Class<GlobPatternOptions>($I`Glob
 	}),
 ) {}
 
-// Conditional-spread bridge: a present-but-undefined optionalKey never happens
-// through the schema, but the engine bag must not carry explicit undefined
-// either (exactOptionalPropertyTypes).
-const toEngineOptions = (o?: GlobPatternOptions): EngineOptions => ({
-	...(o?.nobrace !== undefined && { nobrace: o.nobrace }),
-	...(o?.nocomment !== undefined && { nocomment: o.nocomment }),
-	...(o?.nonegate !== undefined && { nonegate: o.nonegate }),
-	...(o?.noglobstar !== undefined && { noglobstar: o.noglobstar }),
-	...(o?.noext !== undefined && { noext: o.noext }),
-	...(o?.dot !== undefined && { dot: o.dot }),
-	...(o?.nocase !== undefined && { nocase: o.nocase }),
-	...(o?.nocaseMagicOnly !== undefined && { nocaseMagicOnly: o.nocaseMagicOnly }),
-	...(o?.magicalBraces !== undefined && { magicalBraces: o.magicalBraces }),
-	...(o?.matchBase !== undefined && { matchBase: o.matchBase }),
-	...(o?.flipNegate !== undefined && { flipNegate: o.flipNegate }),
-	...(o?.partial !== undefined && { partial: o.partial }),
-	...(o?.preserveMultipleSlashes !== undefined && { preserveMultipleSlashes: o.preserveMultipleSlashes }),
-	...(o?.windowsPathsNoEscape !== undefined && { windowsPathsNoEscape: o.windowsPathsNoEscape }),
-	...(o?.windowsNoMagicRoot !== undefined && { windowsNoMagicRoot: o.windowsNoMagicRoot }),
-	...(o?.optimizationLevel !== undefined && { optimizationLevel: o.optimizationLevel }),
-	...(o?.platform !== undefined && { platform: o.platform }),
-	...(o?.braceExpandMax !== undefined && { braceExpandMax: o.braceExpandMax }),
-	...(o?.maxGlobstarRecursion !== undefined && { maxGlobstarRecursion: o.maxGlobstarRecursion }),
-	...(o?.maxExtglobRecursion !== undefined && { maxExtglobRecursion: o.maxExtglobRecursion }),
-});
+// The public options class is structurally the engine bag; no guard/decode
+// bridge is needed after schema construction.
+const toEngineOptions = (options?: GlobPatternOptions): EngineOptions => options ?? {};
 
 // The schema check: compilability under DEFAULT options. Returning the guard
 // message string makes it the thrown validation message (a bare false would
@@ -260,7 +242,7 @@ const compilesUnderDefaults = (source: string): true | string => {
  * import { GlobPattern } from "@beep/scratchpad/glob"
  * import { Result } from "effect"
  *
- * const compiled = GlobPattern.compileResult("**/*.ts")
+ * const compiled = GlobPattern.compileResult("**\/*.ts")
  * console.log(Result.isSuccess(compiled) && compiled.success.matches("src/index.ts")) // true
  *
  * const negated = GlobPattern.compileResult("!*.ts")
@@ -283,12 +265,50 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 			"A compiled glob pattern whose encoded source always compiles under default options.",
 	}),
 ) {
+	/**
+	 * Lazily initialized minimatch engine for this schema value.
+	 *
+	 * **Example** (Initialize through matching)
+	 *
+	 * ```ts
+	 * import { GlobPattern } from "@beep/scratchpad/glob"
+	 *
+	 * const pattern = GlobPattern.make({ source: "*.ts" })
+	 * console.log(pattern.matches("index.ts")) // true
+	 * ```
+	 */
 	#engine: Minimatch | undefined;
+
+	/**
+	 * Engine options captured by {@link GlobPattern.compileResult}; empty for
+	 * values constructed or decoded directly through the schema.
+	 *
+	 * **Example** (Use default options after schema construction)
+	 *
+	 * ```ts
+	 * import { GlobPattern } from "@beep/scratchpad/glob"
+	 *
+	 * const pattern = GlobPattern.make({ source: "*.TS" })
+	 * console.log(pattern.matches("index.ts")) // false
+	 * ```
+	 */
 	#engineOptions: EngineOptions = {};
 
-	// Lazy for make/decode-built instances. The schema check guarantees this
-	// cannot throw for them (defaults are the stored options); a throw here is
-	// an invariant violation and correctly dies as a defect.
+	/**
+	 * Return the cached engine, compiling once on first use for schema-built
+	 * values. The class invariant guarantees default compilation succeeds.
+	 *
+	 * **Example** (Reuse a compiled engine through repeated matches)
+	 *
+	 * ```ts
+	 * import { GlobPattern } from "@beep/scratchpad/glob"
+	 * import { Result } from "effect"
+	 *
+	 * const compiled = GlobPattern.compileResult("*.ts")
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("a.ts")) // true
+	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("b.ts")) // true
+	 * ```
+	 */
 	#engineOf(): Minimatch {
 		if (this.#engine === undefined) {
 			this.#engine = new Minimatch(this.source, this.#engineOptions);
@@ -331,7 +351,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import { Result } from "effect"
 	 *
-	 * const ok = GlobPattern.compileResult("**/*.ts")
+	 * const ok = GlobPattern.compileResult("**\/*.ts")
 	 * console.log(Result.isSuccess(ok) && ok.success.matches("src/index.ts")) // true
 	 *
 	 * const bomb = GlobPattern.compileResult("{0..100000}")
@@ -344,14 +364,14 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 			// Defaults first (the value invariant), then the effective engine.
 			new Minimatch(source, {});
 			const engine = new Minimatch(source, engineOptions);
-			const pattern = new GlobPattern({ source });
+			const pattern = GlobPattern.make({ source });
 			pattern.#engine = engine;
 			pattern.#engineOptions = engineOptions;
 			return Result.succeed(pattern);
 		} catch (e) {
 			if (isGuardExceeded(e)) {
 				return Result.fail(
-					new GlobPatternError({ pattern: source, reason: e.reason, limit: e.limit, actual: e.actual }),
+					GlobPatternError.make({ pattern: source, reason: e.reason, limit: e.limit, actual: e.actual }),
 				);
 			}
 			throw e;
@@ -375,7 +395,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import { Effect } from "effect"
 	 *
-	 * const pattern = Effect.runSync(GlobPattern.compile("**/*.ts"))
+	 * const pattern = Effect.runSync(GlobPattern.compile("**\/*.ts"))
 	 * console.log(pattern.matches("src/index.ts")) // true
 	 * ```
 	 */
@@ -401,7 +421,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import { Result } from "effect"
 	 *
-	 * const compiled = GlobPattern.compileResult("**/*.ts")
+	 * const compiled = GlobPattern.compileResult("**\/*.ts")
 	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("src/index.ts")) // true
 	 * console.log(Result.isSuccess(compiled) && compiled.success.matches("src/index.js")) // false
 	 * ```
@@ -419,7 +439,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import { Result } from "effect"
 	 *
-	 * const wildcard = GlobPattern.compileResult("**/*.ts")
+	 * const wildcard = GlobPattern.compileResult("**\/*.ts")
 	 * const literal = GlobPattern.compileResult("packages/cli")
 	 * console.log(Result.isSuccess(wildcard) && wildcard.success.hasMagic) // true
 	 * console.log(Result.isSuccess(literal) && literal.success.hasMagic) // false
@@ -479,7 +499,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import { Result } from "effect"
 	 *
-	 * const compiled = GlobPattern.compileResult("packages/**/*.ts")
+	 * const compiled = GlobPattern.compileResult("packages/**\/*.ts")
 	 * console.log(Result.isSuccess(compiled) && compiled.success.enumerationPrefix) // "packages/"
 	 * ```
 	 */
@@ -490,7 +510,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 		for (const row of set) {
 			const literals: Array<string> = [];
 			for (const part of row) {
-				if (typeof part !== "string") break;
+				if (!P.isString(part)) break;
 				literals.push(part);
 			}
 			if (common === undefined) {
@@ -524,7 +544,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import { Result } from "effect"
 	 *
-	 * const nested = GlobPattern.compileResult("packages/**/*.ts")
+	 * const nested = GlobPattern.compileResult("packages/**\/*.ts")
 	 * const oneLevel = GlobPattern.compileResult("packages/*.ts")
 	 * console.log(Result.isSuccess(nested) && nested.success.crossesSegments) // true
 	 * console.log(Result.isSuccess(oneLevel) && oneLevel.success.crossesSegments) // false
@@ -533,7 +553,7 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	get crossesSegments(): boolean {
 		return this.#engineOf().set.some((row) => {
 			if (row.includes(GLOBSTAR)) return true;
-			const firstMagic = row.findIndex((part) => typeof part !== "string");
+			const firstMagic = row.findIndex((part) => !P.isString(part));
 			return firstMagic !== -1 && firstMagic < row.length - 1;
 		});
 	}
@@ -602,9 +622,9 @@ export class GlobPattern extends Schema.Class<GlobPattern>($I`GlobPattern`)(
 	 * import { GlobPattern } from "@beep/scratchpad/glob"
 	 * import * as S from "effect/Schema"
 	 *
-	 * const pattern = S.decodeUnknownSync(GlobPattern.FromString)("**/*.ts")
+	 * const pattern = S.decodeUnknownSync(GlobPattern.FromString)("**\/*.ts")
 	 * console.log(pattern.matches("src/index.ts")) // true
-	 * console.log(S.encodeSync(GlobPattern.FromString)(pattern)) // "**/*.ts"
+	 * console.log(S.encodeSync(GlobPattern.FromString)(pattern)) // "**\/*.ts"
 	 * ```
 	 */
 	static readonly FromString: Schema.Codec<GlobPattern, string> = Schema.String.pipe(

@@ -121,10 +121,10 @@ export class YamlToken extends Schema.Class<YamlToken>("YamlToken")(
 	{
 		kind: YamlTokenKind,
 		text: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
-		line: Schema.Number,
-		character: Schema.Number,
+		offset: Schema.Finite,
+		length: Schema.Finite,
+		line: Schema.Finite,
+		character: Schema.Finite,
 	},
 	$I.annote("YamlToken", {
 		description: "A positioned YAML lexical token whose text is the raw source slice.",
@@ -160,7 +160,7 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
 		// Hot path: tokenizing a large document materializes thousands of
 		// instances, so construction uses `new` (the engine's recorded
 		// hot-path exception) rather than the validating `make`.
-		return new YamlToken({
+		return YamlToken.make({
 			kind: token.kind,
 			text: text.slice(token.offset, token.offset + token.length),
 			offset: token.offset,
@@ -255,6 +255,16 @@ export class YamlTokens {
 	 * errors arrive as `"error"`-kind tokens in the stream, never as a stream
 	 * failure. The primitive's reserved failure channel would surface as a
 	 * defect here; it never fires today.
+	 *
+	 * **Example** (Collect scalar tokens from the stream)
+	 *
+	 * ```ts
+	 * import { Effect, Stream } from "effect"
+	 * import { YamlTokens } from "@beep/scratchpad/yaml"
+	 *
+	 * const tokens = Effect.runSync(Stream.runCollect(YamlTokens.stream("a: 1\n")))
+	 * console.log(tokens.some((token) => token.kind === "scalar")) // true
+	 * ```
 	 */
 	static stream(text: string): Stream.Stream<YamlToken> {
 		return Stream.suspend(() =>

@@ -10,11 +10,17 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { O as OU } from "@beep/utils";
+import { MutableHashMap, Schema } from "effect";
+import { dual } from "effect/Function";
 import type { YamlMap, YamlNode, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import type { RawDiagnostic } from "../diagnostics.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { EscapedComment } from "./comments.ts";
+
+const $I = $ScratchpadId.create("yaml/internal/composer/state");
 
 // ---------------------------------------------------------------------------
 // Line/column computation
@@ -27,6 +33,8 @@ import type { EscapedComment } from "./comments.ts";
 let lineStartsText: string | undefined;
 let lineStartsCache: ReadonlyArray<number> = [];
 
+type LineColumn = { readonly line: number; readonly column: number };
+
 /**
  * Line-start offsets for `text`, memoized by string reference.
  *
@@ -37,7 +45,7 @@ let lineStartsCache: ReadonlyArray<number> = [];
  * strings would clobber the index. This is not a pure `text → starts`
  * helper.
  *
- * **Example** (Two lookups on the same string reuse the index)
+ * **Example** (Derive the same source position twice)
  *
  * ```ts
  * import { YamlDiagnostic } from "@beep/scratchpad/yaml"
@@ -59,14 +67,14 @@ let lineStartsCache: ReadonlyArray<number> = [];
  * @since 0.0.0
  */
 export function getLineStarts(text: string): ReadonlyArray<number> {
-	if (lineStartsText === text) return lineStartsCache;
-	const starts = [0];
-	for (let i = 0; i < text.length; i++) {
-		if (text[i] === "\n") starts.push(i + 1);
-	}
-	lineStartsText = text;
-	lineStartsCache = starts;
-	return starts;
+  if (lineStartsText === text) return lineStartsCache;
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "\n") starts.push(i + 1);
+  }
+  lineStartsText = text;
+  lineStartsCache = starts;
+  return starts;
 }
 
 /**
@@ -95,22 +103,25 @@ export function getLineStarts(text: string): ReadonlyArray<number> {
  * @category utilities
  * @since 0.0.0
  */
-export function lineCol(text: string, offset: number): { line: number; column: number } {
-	const starts = getLineStarts(text);
-	const pos = Math.min(Math.max(offset, 0), text.length);
-	// Binary search for the greatest line start <= pos.
-	let lo = 0;
-	let hi = starts.length - 1;
-	while (lo < hi) {
-		const mid = (lo + hi + 1) >> 1;
-		if ((starts[mid] as number) <= pos) {
-			lo = mid;
-		} else {
-			hi = mid - 1;
-		}
-	}
-	return { line: lo, column: pos - (starts[lo] as number) };
-}
+export const lineCol: {
+  (text: string, offset: number): LineColumn;
+  (offset: number): (text: string) => LineColumn;
+} = dual(2, (text: string, offset: number): LineColumn => {
+  const starts = getLineStarts(text);
+  const pos = Math.min(Math.max(offset, 0), text.length);
+  // Binary search for the greatest line start <= pos.
+  let lo = 0;
+  let hi = starts.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if ((starts[mid] as number) <= pos) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return {line: lo, column: pos - (starts[lo] as number)};
+});
 
 /**
  * Returns true if offsetA and offsetB are on the same source line (no newline between them).
@@ -128,14 +139,17 @@ export function lineCol(text: string, offset: number): { line: number; column: n
  * @category predicates
  * @since 0.0.0
  */
-export function sameLine(text: string, offsetA: number, offsetB: number): boolean {
-	const lo = Math.min(offsetA, offsetB);
-	const hi = Math.max(offsetA, offsetB);
-	for (let i = lo; i < hi && i < text.length; i++) {
-		if (text[i] === "\n") return false;
-	}
-	return true;
-}
+export const sameLine: {
+  (offsetA: number, offsetB: number): (text: string) => boolean;
+  (text: string, offsetA: number, offsetB: number): boolean;
+} = dual(3, (text: string, offsetA: number, offsetB: number): boolean => {
+  const lo = Math.min(offsetA, offsetB);
+  const hi = Math.max(offsetA, offsetB);
+  for (let i = lo; i < hi && i < text.length; i++) {
+    if (text[i] === "\n") return false;
+  }
+  return true;
+});
 
 /**
  * Returns true if there is non-whitespace content before `offset` on the same line.
@@ -153,14 +167,17 @@ export function sameLine(text: string, offsetA: number, offsetB: number): boolea
  * @category predicates
  * @since 0.0.0
  */
-export function hasNonWhitespaceBeforeOnLine(text: string, offset: number): boolean {
-	for (let i = offset - 1; i >= 0; i--) {
-		const ch = text[i];
-		if (ch === "\n" || ch === "\r") return false;
-		if (ch !== " " && ch !== "\t") return true;
-	}
-	return false; // start of string
-}
+export const hasNonWhitespaceBeforeOnLine: {
+  (text: string, offset: number): boolean,
+  (offset: number): (text: string) => boolean
+} = dual(2, (text: string, offset: number): boolean => {
+  for (let i = offset - 1; i >= 0; i--) {
+    const ch = text[i];
+    if (ch === "\n" || ch === "\r") return false;
+    if (ch !== " " && ch !== "\t") return true;
+  }
+  return false; // start of string
+});
 
 /**
  * Returns the column of the first non-whitespace character on the line
@@ -181,13 +198,16 @@ export function hasNonWhitespaceBeforeOnLine(text: string, offset: number): bool
  * @category getters
  * @since 0.0.0
  */
-export function lineIndentColumn(text: string, offset: number): number {
-	let lineStart = offset;
-	while (lineStart > 0 && text[lineStart - 1] !== "\n") lineStart--;
-	let i = lineStart;
-	while (i < text.length && (text[i] === " " || text[i] === "\t")) i++;
-	return i - lineStart;
-}
+export const lineIndentColumn: {
+  (text: string, offset: number): number,
+  (offset: number): (text: string) => number
+} = dual(2, (text: string, offset: number): number => {
+  let lineStart = offset;
+  while (lineStart > 0 && text[lineStart - 1] !== "\n") lineStart--;
+  let i = lineStart;
+  while (i < text.length && (text[i] === " " || text[i] === "\t")) i++;
+  return i - lineStart;
+});
 
 // ---------------------------------------------------------------------------
 // Metadata for anchors/tags/comments attached to nodes
@@ -196,16 +216,31 @@ export function lineIndentColumn(text: string, offset: number): number {
 /**
  * Pending anchor/tag/comment metadata applied to the next composed node.
  *
+ * **Example** (Guard pending node metadata)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NodeMeta } from "@beep/scratchpad/yaml/internal/composer/state"
+ *
+ * console.log(S.is(NodeMeta)({ anchor: "item", tag: "!!str" })) // true
+ * ```
+ *
  * @see {@link hasMeta} for the emptiness predicate.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export interface NodeMeta {
-	anchor?: string;
-	tag?: string;
-	comment?: string;
-}
+export const NodeMeta = Schema.Struct({
+  anchor: Schema.mutableKey(Schema.optionalKey(Schema.String)),
+  tag: Schema.mutableKey(Schema.optionalKey(Schema.String)),
+  comment: Schema.mutableKey(Schema.optionalKey(Schema.String)),
+}).pipe(
+  $I.annoteSchema("NodeMeta", {
+    description: "Mutable pending anchor, tag and comment metadata applied to the next composed YAML node.",
+  }),
+);
+
+export type NodeMeta = typeof NodeMeta.Type;
 
 /**
  * True when any of anchor, tag, or comment is present.
@@ -224,7 +259,7 @@ export interface NodeMeta {
  * @since 0.0.0
  */
 export function hasMeta(m: NodeMeta): boolean {
-	return m.anchor !== undefined || m.tag !== undefined || m.comment !== undefined;
+  return m.anchor !== undefined || m.tag !== undefined || m.comment !== undefined;
 }
 
 /**
@@ -245,9 +280,9 @@ export function hasMeta(m: NodeMeta): boolean {
  * @since 0.0.0
  */
 export function clearMeta(m: NodeMeta): void {
-	delete m.anchor;
-	delete m.tag;
-	delete m.comment;
+  delete m.anchor;
+  delete m.tag;
+  delete m.comment;
 }
 
 /**
@@ -268,16 +303,18 @@ export function clearMeta(m: NodeMeta): void {
  * @category utilities
  * @since 0.0.0
  */
-export function commentProps(n: { commentBefore?: string; comment?: string; spaceBefore?: boolean }): {
-	commentBefore?: string;
-	comment?: string;
-	spaceBefore?: boolean;
+export function commentProps(n: {
+  commentBefore?: string;
+  comment?: string;
+  spaceBefore?: boolean
+}): {
+  commentBefore?: string;
+  comment?: string;
+  spaceBefore?: boolean;
 } {
-	return {
-		...(n.commentBefore !== undefined ? { commentBefore: n.commentBefore } : {}),
-		...(n.comment !== undefined ? { comment: n.comment } : {}),
-		...(n.spaceBefore !== undefined ? { spaceBefore: n.spaceBefore } : {}),
-	};
+  return {
+    ...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(n.commentBefore), comment: OU.fromUndefinedOr(n.comment), spaceBefore: OU.fromUndefinedOr(n.spaceBefore) })
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -297,19 +334,32 @@ export function commentProps(n: { commentBefore?: string; comment?: string; spac
  * Dispatch is injected. Do not import `flow.ts` from `block.ts`. Examples
  * construct state with the `FLOW` dispatch object, not a block→flow import.
  *
+ * **Details**
+ *
+ * This deliberately remains an interface: it is an injected dispatch port
+ * whose fields are mutually-recursive composer functions, not pure data.
+ *
  * @see {@link createState} for where this dispatch is stored.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
 export interface FlowComposers {
-	readonly composeFlowMap: (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number) => YamlMap;
-	readonly composeFlowSeq: (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number) => YamlSeq;
+  readonly composeFlowMap: (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number) => YamlMap;
+  readonly composeFlowSeq: (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number) => YamlSeq;
 }
 
 /**
  * Mutable per-document composer state: source text, anchors, diagnostics,
  * tag handles, flow dispatch, nesting depth, and escaped comments.
+ *
+ * **Details**
+ *
+ * This deliberately remains an interface: it is ephemeral mutable runtime
+ * state containing `MutableHashMap`s, mutable counters and the executable
+ * `FlowComposers` port. Its pure record members (`RawDiagnostic`,
+ * `EscapedComment`, `NodeMeta`, and parse options) are schema-owned at their
+ * own boundaries; the state container itself is not a decodable payload.
  *
  * @see {@link createState} for the constructor that applies option defaults.
  * @internal
@@ -317,29 +367,29 @@ export interface FlowComposers {
  * @since 0.0.0
  */
 export interface ComposerState {
-	readonly text: string;
-	readonly anchors: Map<string, YamlNode>;
-	aliasCount: number;
-	readonly errors: RawDiagnostic[];
-	readonly warnings: RawDiagnostic[];
-	readonly options: {
-		readonly strict: boolean;
-		readonly maxAliasCount: number;
-		readonly uniqueKeys: boolean;
-	};
-	/** Tag handle to prefix map from %TAG directives (e.g. "!!" maps to "tag:yaml.org,2002:") */
-	tagMap: Map<string, string>;
-	/** Flow-composer dispatch — see {@link FlowComposers}. */
-	readonly flow: FlowComposers;
-	/** Current collection-nesting depth — see {@link enterNesting}. */
-	depth: number;
-	/**
-	 * Comments that outlived a nested collection at a column shallower than
-	 * its content — the enclosing composer drains these into its own item
-	 * stream right after the nested node lands (see comments.ts
-	 * EscapedComment). Cleared at every document boundary.
-	 */
-	readonly escapedComments: Array<EscapedComment>;
+  readonly text: string;
+  readonly anchors: MutableHashMap.MutableHashMap<string, YamlNode>;
+  aliasCount: number;
+  readonly errors: RawDiagnostic[];
+  readonly warnings: RawDiagnostic[];
+  readonly options: {
+    readonly strict: boolean;
+    readonly maxAliasCount: number;
+    readonly uniqueKeys: boolean;
+  };
+  /** Tag handle to prefix map from %TAG directives (e.g. "!!" maps to "tag:yaml.org,2002:") */
+  tagMap: MutableHashMap.MutableHashMap<string, string>;
+  /** Flow-composer dispatch — see {@link FlowComposers}. */
+  readonly flow: FlowComposers;
+  /** Current collection-nesting depth — see {@link enterNesting}. */
+  depth: number;
+  /**
+   * Comments that outlived a nested collection at a column shallower than
+   * its content — the enclosing composer drains these into its own item
+   * stream right after the nested node lands (see comments.ts
+   * EscapedComment). Cleared at every document boundary.
+   */
+  readonly escapedComments: Array<EscapedComment>;
 }
 
 /**
@@ -361,7 +411,9 @@ export interface ComposerState {
  * import { Result } from "effect"
  * import { Yaml, YamlParseOptions } from "@beep/scratchpad/yaml"
  *
- * const limited = Yaml.parseResult("a: &id 1\nb: *id\n", YamlParseOptions.make({ maxAliasCount: 0 }))
+ * const src = "a: &id 1\nb: *id\n"
+ * console.log(Result.isSuccess(Yaml.parseResult(src))) // true
+ * const limited = Yaml.parseResult(src, YamlParseOptions.make({ maxAliasCount: 0 }))
  * console.log(Result.isFailure(limited)) // true
  * ```
  *
@@ -371,24 +423,25 @@ export interface ComposerState {
  * @category constructors
  * @since 0.0.0
  */
-export function createState(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState {
-	return {
-		text,
-		anchors: new Map(),
-		aliasCount: 0,
-		errors: [],
-		warnings: [],
-		options: {
-			strict: options?.strict ?? true,
-			maxAliasCount: options?.maxAliasCount ?? 100,
-			uniqueKeys: options?.uniqueKeys ?? true,
-		},
-		tagMap: new Map(),
-		flow,
-		depth: 0,
-		escapedComments: [],
-	};
-}
+export const createState: {
+  (text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState,
+  (flow: FlowComposers, options?: ParseOptionsInput): (text: string) => ComposerState
+} = dual(3, (text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState => ({
+  text,
+  anchors: MutableHashMap.empty(),
+  aliasCount: 0,
+  errors: [],
+  warnings: [],
+  options: {
+    strict: options?.strict ?? true,
+    maxAliasCount: options?.maxAliasCount ?? 100,
+    uniqueKeys: options?.uniqueKeys ?? true,
+  },
+  tagMap: MutableHashMap.empty(),
+  flow,
+  depth: 0,
+  escapedComments: [],
+}));
 
 /**
  * Maximum collection-nesting depth the composer will recurse into. The
@@ -411,8 +464,14 @@ export function createState(text: string, flow: FlowComposers, options?: ParseOp
  * import { Result } from "effect"
  * import { Yaml, YamlDiagnostic } from "@beep/scratchpad/yaml"
  *
+ * let nested: unknown = 0
+ * for (let i = 0; i < 257; i++) nested = [nested]
+ * const failed = Yaml.stringifyResult(nested)
+ * console.log(Result.isFailure(failed)) // true
+ * if (Result.isFailure(failed)) {
+ *   console.log(failed.failure.diagnostics[0]?.code) // "NestingDepthExceeded"
+ * }
  * console.log(YamlDiagnostic.isFatal("NestingDepthExceeded")) // true
- * console.log(Result.isSuccess(Yaml.parseResult("a: 1\n"))) // true
  * ```
  *
  * @see {@link enterNesting} for the composer-side budget check.
@@ -448,21 +507,24 @@ export const MAX_NESTING_DEPTH = 256;
  * @category utilities
  * @since 0.0.0
  */
-export function enterNesting(state: ComposerState, cst: CstNode): boolean {
-	if (state.depth >= MAX_NESTING_DEPTH) {
-		if (!state.errors.some((e) => e.code === "NestingDepthExceeded")) {
-			state.errors.push({
-				code: "NestingDepthExceeded",
-				message: `Nesting depth exceeded maximum of ${MAX_NESTING_DEPTH}`,
-				offset: cst.offset,
-				length: 1,
-			});
-		}
-		return false;
-	}
-	state.depth++;
-	return true;
-}
+export const enterNesting: {
+  (state: ComposerState, cst: CstNode): boolean,
+  (cst: CstNode): (state: ComposerState) => boolean
+} = dual(2, (state: ComposerState, cst: CstNode): boolean => {
+  if (state.depth >= MAX_NESTING_DEPTH) {
+    if (!state.errors.some((e) => e.code === "NestingDepthExceeded")) {
+      state.errors.push({
+        code: "NestingDepthExceeded",
+        message: `Nesting depth exceeded maximum of ${MAX_NESTING_DEPTH}`,
+        offset: cst.offset,
+        length: 1,
+      });
+    }
+    return false;
+  }
+  state.depth++;
+  return true;
+});
 
 /**
  * Leave one collection-nesting level.
@@ -482,5 +544,5 @@ export function enterNesting(state: ComposerState, cst: CstNode): boolean {
  * @since 0.0.0
  */
 export function exitNesting(state: ComposerState): void {
-	state.depth--;
+  state.depth--;
 }

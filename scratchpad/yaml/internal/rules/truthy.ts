@@ -11,7 +11,9 @@
  * @since 0.0.0
  */
 
-import { Schema } from "effect";
+import { O as OU } from "@beep/utils";
+import { HashSet, Schema } from "effect";
+import * as P from "effect/Predicate";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -48,7 +50,7 @@ interface TruthyOptions {
 }
 
 /** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
-const TRUTHY = new Set([
+const TRUTHY = HashSet.fromIterable([
 	"yes",
 	"Yes",
 	"YES",
@@ -69,7 +71,7 @@ const TRUTHY = new Set([
 	"FALSE",
 ]);
 
-const TRUE_SET = new Set(["yes", "on", "true"]);
+const TRUE_SET = HashSet.make("yes", "on", "true");
 
 /**
  * YAML 1.1 truthy spellings outside the allowed list.
@@ -101,27 +103,27 @@ export const truthy: YamlRule = {
 	id: "truthy",
 	check: (ctx: LintContext, options) => {
 		const opts = (options ?? {}) as TruthyOptions;
-		const allowed = new Set(opts.allowed ?? ["true", "false"]);
+		const allowed = HashSet.fromIterable(opts.allowed ?? ["true", "false"]);
 		const checkKeys = opts.checkKeys ?? true;
 		const out: Array<YamlLintDiagnostic> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key" && !checkKeys) return;
 			if (scalar.style !== "plain" || scalar.tag !== undefined) return;
 			const raw = ctx.text.slice(scalar.offset, scalar.offset + scalar.length);
-			if (!TRUTHY.has(raw) || allowed.has(raw)) return;
+			if (!HashSet.has(TRUTHY, raw) || HashSet.has(allowed, raw)) return;
 			const pos = positionAt(ctx.lines, scalar.offset);
-			const isBool = typeof scalar.value === "boolean";
-			const truth = TRUE_SET.has(raw.toLowerCase());
+			const isBool = P.isBoolean(scalar.value);
+			const truth = HashSet.has(TRUE_SET, raw.toLowerCase());
 			const respell = truth ? "true" : "false";
 			// A real boolean respells when the canonical spelling is allowed; a
 			// string lookalike gets quoted. Both preserve the parsed value.
 			const fix = isBool
-				? allowed.has(respell)
+				? HashSet.has(allowed, respell)
 					? YamlEdit.make({ offset: scalar.offset, length: scalar.length, content: respell })
 					: undefined
 				: YamlEdit.make({ offset: scalar.offset, length: scalar.length, content: `"${raw}"` });
 			out.push(
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "truthy",
 					severity: "error",
 					message: `Truthy value "${raw}" is not in the allowed spellings`,
@@ -129,7 +131,7 @@ export const truthy: YamlRule = {
 					length: scalar.length,
 					line: pos.line,
 					character: pos.character,
-					...(fix !== undefined ? { fix } : {}),
+					...OU.getSomesStruct({ fix: OU.fromUndefinedOr(fix) }),
 				}),
 			);
 		});

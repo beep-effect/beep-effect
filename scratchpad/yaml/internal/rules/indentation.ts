@@ -17,17 +17,18 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {Schema} from "effect";
-import type {LintContext, LintLine, YamlRule} from "../../YamlLintRule.ts";
+import { Schema } from "effect";
+import * as P from "effect/Predicate";
+import type { LintContext, LintLine, YamlRule } from "../../YamlLintRule.ts";
 import {
-  StyleVote,
-  YamlLintDiagnostic,
-  YamlLintSeverity
+    StyleVote,
+    YamlLintDiagnostic,
+    YamlLintSeverity
 } from "../../YamlLintRule.ts";
 import {
-  coveringToken,
-  isScalarContinuationLine,
-  nonNegativeIntegerOption
+    coveringToken,
+    isScalarContinuationLine,
+    nonNegativeIntegerOption
 } from "./util.ts";
 
 /**
@@ -171,7 +172,7 @@ export const indentation: YamlRule = {
     const content = contentLines(ctx);
 
     // Check 1: every new level indents by one consistent unit.
-    let unit = typeof spacesOpt === "number" ? spacesOpt : undefined;
+    let unit = P.isNumber(spacesOpt) ? spacesOpt : undefined;
     const stack: Array<number> = [0];
     for (const {line, indent} of content) {
       const top = stack[stack.length - 1] as number;
@@ -181,7 +182,7 @@ export const indentation: YamlRule = {
           unit = delta;
         } else if (delta !== unit) {
           out.push(
-            new YamlLintDiagnostic({
+            YamlLintDiagnostic.make({
               rule: "indentation",
               severity: "error",
               message: `Indent of ${delta} spaces, expected ${unit}`,
@@ -202,7 +203,7 @@ export const indentation: YamlRule = {
 
     // Check 2: sequences under a mapping key follow one policy. Detected
     // on consecutive content-line pairs `key:` → `- item`.
-    let seqIndented = typeof seqOpt === "boolean" ? seqOpt : undefined;
+    let seqIndented = P.isBoolean(seqOpt) ? seqOpt : undefined;
     for (let i = 1; i < content.length; i++) {
       const prev = content[i - 1] as ContentLine;
       const curr = content[i] as ContentLine;
@@ -212,7 +213,7 @@ export const indentation: YamlRule = {
         seqIndented = indented;
       } else if (indented !== seqIndented) {
         out.push(
-          new YamlLintDiagnostic({
+          YamlLintDiagnostic.make({
             rule: "indentation",
             severity: "error",
             message: seqIndented

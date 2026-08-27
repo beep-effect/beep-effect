@@ -11,9 +11,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
-import type { YamlDocument } from "./YamlDocument.ts";
+import { YamlDocument } from "./YamlDocument.ts";
 import { YamlEdit } from "./YamlEdit.ts";
-import type { YamlToken } from "./YamlToken.ts";
+import { YamlToken } from "./YamlToken.ts";
 
 const $I = $ScratchpadId.create("yaml/YamlLintRule");
 
@@ -97,10 +97,10 @@ export class YamlLintDiagnostic extends Schema.Class<YamlLintDiagnostic>("YamlLi
 		rule: Schema.String,
 		severity: YamlLintSeverity,
 		message: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
-		line: Schema.Number,
-		character: Schema.Number,
+		offset: Schema.Finite,
+		length: Schema.Finite,
+		line: Schema.Finite,
+		character: Schema.Finite,
 		fix: Schema.optionalKey(YamlEdit),
 	},
 	$I.annote("YamlLintDiagnostic", {
@@ -113,16 +113,31 @@ export class YamlLintDiagnostic extends Schema.Class<YamlLintDiagnostic>("YamlLi
  * terminator — the `\n`, and for CRLF input the `\r\n` pair), the offset of
  * its first character, and its zero-based line number.
  *
+ * **Example** (Guard a lint source line)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LintLine } from "@beep/scratchpad/yaml"
+ *
+ * console.log(S.is(LintLine)({ text: "a: 1", offset: 0, number: 0 })) // true
+ * ```
+ *
  * @see {@link LintContext} for the rule context that materializes these lines.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface LintLine {
-	readonly text: string;
-	readonly offset: number;
-	readonly number: number;
-}
+export const LintLine = Schema.Struct({
+	text: Schema.String,
+	offset: Schema.Finite,
+	number: Schema.Finite,
+}).pipe(
+	$I.annoteSchema("LintLine", {
+		description: "One YAML lint source line with its text, starting offset and zero-based line number.",
+	}),
+);
+
+export type LintLine = typeof LintLine.Type;
 
 /**
  * The context handed to every rule. The engine tokenizes ONCE and every rule
@@ -144,18 +159,39 @@ export interface LintLine {
  * document of the stream only (matching {@link Yaml.parse}). It is always
  * present, including for unparseable input.
  *
+ * **Example** (Decode a minimal lint context)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LintContext, YamlDocument } from "@beep/scratchpad/yaml"
+ *
+ * const context = S.decodeUnknownSync(LintContext)({
+ *   text: "",
+ *   lines: [{ text: "", offset: 0, number: 0 }],
+ *   tokens: [],
+ *   document: YamlDocument.make({ contents: null, errors: [], warnings: [], directives: [], hasDocumentStart: false, hasDocumentEnd: false, hasDocumentStartTab: false }),
+ * })
+ * console.log(context.text) // ""
+ * ```
+ *
  * @see {@link YamlLint.run} for the facade that builds this context once per run.
  * @see {@link YamlDocument} for the recovered first document stored on `document`.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface LintContext {
-	readonly text: string;
-	readonly lines: ReadonlyArray<LintLine>;
-	readonly tokens: ReadonlyArray<YamlToken>;
-	readonly document: YamlDocument;
-}
+export const LintContext = Schema.Struct({
+	text: Schema.String,
+	lines: Schema.Array(LintLine),
+	tokens: Schema.Array(YamlToken),
+	document: YamlDocument,
+}).pipe(
+	$I.annoteSchema("LintContext", {
+		description: "Shared eager source, line, token and recovered-document context handed to every YAML lint rule.",
+	}),
+);
+
+export type LintContext = typeof LintContext.Type;
 
 /**
  * One categorical style observation (#345): a single occurrence of a style
@@ -208,11 +244,11 @@ export class StyleVote extends Schema.TaggedClass<StyleVote>()(
 	"StyleVote",
 	{
 		dimension: Schema.String,
-		value: Schema.Union([Schema.String, Schema.Number, Schema.Boolean]),
-		offset: Schema.Number,
-		length: Schema.Number,
-		line: Schema.Number,
-		character: Schema.Number,
+		value: Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]),
+		offset: Schema.Finite,
+		length: Schema.Finite,
+		line: Schema.Finite,
+		character: Schema.Finite,
 	},
 	$I.annote("StyleVote", {
 		description: "One categorical style observation voting a value for an inference dimension.",
@@ -255,7 +291,7 @@ export class StyleFloor extends Schema.TaggedClass<StyleFloor>()(
 	"StyleFloor",
 	{
 		dimension: Schema.String,
-		value: Schema.Number,
+		value: Schema.Finite,
 	},
 	$I.annote("StyleFloor", {
 		description: "A measured style floor the source proves is at least this value.",
@@ -323,6 +359,12 @@ export type StyleObservation = StyleVote | StyleFloor;
  * const findings = YamlLint.run("TODO: later\n", [rule], YamlLintConfig.make({ rules: { "no-todo": "warning" } }))
  * console.log(findings[0]?.rule) // "no-todo"
  * ```
+ *
+ * **Details**
+ *
+ * This deliberately remains an interface: a rule is an executable strategy
+ * whose `check` and optional `infer` callbacks consume a shared context. It
+ * is a service/protocol contract, not serializable pure data.
  *
  * @see {@link YamlLint.run} for executing a rule list under a config.
  * @see {@link YamlLintDiagnostic} for the finding shape `check` yields.

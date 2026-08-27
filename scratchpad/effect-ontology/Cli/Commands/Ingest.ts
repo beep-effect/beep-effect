@@ -10,24 +10,26 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
+import { Console, DateTime, Effect, FileSystem, Path, PlatformError, Random } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
+import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 import {
-  BatchId,
-  ContentHash,
-  DocumentId,
-  GcsBucket,
-  GcsUri,
-  Namespace,
-  OntologyName,
-  OntologyVersion,
+    BatchId,
+    ContentHash,
+    DocumentId,
+    GcsBucket,
+    GcsUri,
+    Namespace,
+    OntologyName,
+    OntologyVersion,
 } from "../../Domain/Identity.ts";
 import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
@@ -35,9 +37,6 @@ import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { sha256SyncFull } from "../../Utils/Hash.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
-import * as PlatformError from "effect/PlatformError";
-import * as Schema from "effect/Schema";
-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 
 // =============================================================================
 // Command Options
@@ -89,7 +88,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   output: O.Option<string>,
   batchId: O.Option<string>,
   prefix: O.Option<string>
-): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | Schema.SchemaError, ConfigService | FileSystem.FileSystem | Path.Path | StorageService> {
+): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError, ConfigService | FileSystem.FileSystem | Path.Path | StorageService> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const storage = yield* StorageService;

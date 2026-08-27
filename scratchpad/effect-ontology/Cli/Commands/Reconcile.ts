@@ -14,20 +14,19 @@ import { Subject } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
-import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, PlatformError } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
+import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
-import * as S from "effect/Schema";
-import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
-import * as PlatformError from "effect/PlatformError";
-import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
 
 // =============================================================================
 // Command Options

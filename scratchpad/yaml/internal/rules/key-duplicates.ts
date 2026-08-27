@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 
-import { Schema } from "effect";
+import { MutableHashSet, Schema } from "effect";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlNode } from "../../YamlNode.ts";
@@ -42,15 +42,15 @@ export const keyDuplicatesOptions = Schema.Struct({
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;
-	if (node instanceof YamlMap) {
-		const seen = new Set<string>();
+	if (YamlMap.is(node)) {
+		const seen = MutableHashSet.empty<string>();
 		for (const pair of node.items) {
-			if (pair.key instanceof YamlScalar) {
+			if (YamlScalar.is(pair.key)) {
 				const id = keyIdentity(pair.key, text);
-				if (seen.has(id)) {
+				if (MutableHashSet.has(seen, id)) {
 					const pos = positionAt(ctx.lines, pair.key.offset);
 					out.push(
-						new YamlLintDiagnostic({
+						YamlLintDiagnostic.make({
 							rule: "key-duplicates",
 							severity: "error",
 							message: `Duplicate key: ${String(pair.key.value)}`,
@@ -61,14 +61,14 @@ const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic
 						}),
 					);
 				}
-				seen.add(id);
+				MutableHashSet.add(seen, id);
 			}
 			walk(pair.key, text, out, ctx);
 			walk(pair.value, text, out, ctx);
 		}
 		return;
 	}
-	if (node instanceof YamlSeq) {
+	if (YamlSeq.is(node)) {
 		for (const item of node.items) walk(item, text, out, ctx);
 	}
 };

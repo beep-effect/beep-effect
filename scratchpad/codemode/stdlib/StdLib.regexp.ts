@@ -10,10 +10,10 @@ import { Unknown } from "@beep/schema/Unknown";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
 import { SafeObject } from "@beep/schema"
 import { isBlockedMember } from "../Codemode.tool-runtime.ts"
-import { CodeModeRegExp } from "../Codemode.values.ts"
+import { CodeModeRegExp, makeEmptySafeObject } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
 import { LiteralKit } from "@beep/schema"
-import { P , R,} from "@beep/utils";
+import { A, P , R, pipe} from "@beep/utils";
 import {
   type RegExpMethod,
   type RegExpStatic,
@@ -149,7 +149,7 @@ export const escapeRegexHint =
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
   // Native parity: an undefined pattern behaves as an empty pattern.
   if (P.isUndefined(arg)) return new RegExp("", extraFlags)
@@ -195,10 +195,10 @@ export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFl
  * @since 0.0.0
  */
 export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
-  const result: MatchValue = Array.from(match, (group) => group)
+  const result: MatchValue = pipe(match, A.fromIterable, A.map((group) => group))
   if (P.isNotUndefined(match.index)) result.index = match.index
   if (P.isNotUndefined(match.groups)) {
-    const groups = SafeObject.make(Object.create(null))
+    const groups = makeEmptySafeObject()
     for (const [key, group] of R.toEntries(match.groups)) {
       if (!isBlockedMember(key)) Reflect.set(groups, key, group)
     }
@@ -230,7 +230,7 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
   if (!P.isString(args[0])) {
     throw InterpreterRuntimeError.new("RegExp.escape expects a string.", node).as("TypeError")
@@ -264,7 +264,7 @@ export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, no
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeRegExpMethod = (
   value: CodeModeRegExp,
   name: RegExpMethod,
@@ -299,9 +299,13 @@ const toLength = (value: unknown): number => {
 }
 
 const indicesToValue = (indices: RegExpIndicesArray): IndicesValue => {
-  const result: IndicesValue = Array.from(indices, (range) => (range === undefined ? undefined : [...range]))
+  const result: IndicesValue = pipe(
+    indices,
+    A.fromIterable,
+    A.map((range) => (P.isUndefined(range) ? undefined : [...range]))
+  )
   if (P.isNotUndefined(indices.groups)) {
-    const groups = SafeObject.make(Object.create(null))
+    const groups = makeEmptySafeObject()
     for (const [key, range] of R.toEntries(indices.groups)) {
       if (!isBlockedMember(key)) {
         Reflect.set(groups, key, P.isUndefined(range) ? undefined : [...range])

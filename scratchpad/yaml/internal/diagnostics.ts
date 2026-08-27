@@ -1,16 +1,7 @@
-/**
- * Internal diagnostic vocabulary: staged error-code sets, the raw record
- * the engine emits, and the single fatal-code predicate.
- *
- * The engine never constructs public error/diagnostic classes — it emits
- * raw `{ code, message, offset, length }` records and the public facade
- * materializes `YamlDiagnostic` (computing `line`/`character` from
- * `offset`). The import arrow points facade → engine, never back
- * (`noImportCycles` is error-level).
- *
- * @packageDocumentation
- * @since 0.0.0
- */
+import { $ScratchpadId } from "@beep/identity";
+import { HashSet, Schema } from "effect";
+
+const $I = $ScratchpadId.create("yaml/internal/diagnostics");
 
 /**
  * Error codes the lexer may emit.
@@ -49,11 +40,12 @@ export const YAML_LEX_ERROR_CODES = [
  *
  * ```ts
  * import { Result } from "effect"
- * import { Yaml, YamlDiagnostic } from "@beep/scratchpad/yaml"
+ * import { Yaml } from "@beep/scratchpad/yaml"
  *
- * const result = Yaml.parseResult("a:\n\t- 1\n")
- * console.log(Result.isFailure(result)) // true
- * console.log(YamlDiagnostic.isFatal("TabIndentation")) // true
+ * const result = Yaml.parseResult("? key\n:\tvalue\n")
+ * if (Result.isFailure(result)) {
+ *   console.log(result.failure.diagnostics[0]?.code) // "TabIndentation"
+ * }
  * ```
  *
  * @see {@link YamlParseStageErrorCode} for the closed union of these literals.
@@ -262,6 +254,18 @@ export type YamlErrorCode =
 	| YamlStringifyStageErrorCode
 	| YamlModifyStageErrorCode;
 
+const RawYamlErrorCode = Schema.Literals([
+	...YAML_LEX_ERROR_CODES,
+	...YAML_PARSE_ERROR_CODES,
+	...YAML_COMPOSE_ERROR_CODES,
+	...YAML_STRINGIFY_ERROR_CODES,
+	...YAML_MODIFY_ERROR_CODES,
+]).pipe(
+	$I.annoteSchema("RawYamlErrorCode", {
+		description: "Internal union of every YAML engine diagnostic code.",
+	}),
+);
+
 /**
  * A raw diagnostic record emitted by the engine. Position is offset-based
  * only; the facade computes `line`/`character` when materializing the public
@@ -273,17 +277,32 @@ export type YamlErrorCode =
  * would reverse the facade → engine import arrow. Examples and engine code
  * build `{ code, message, offset, length }` records only.
  *
+ * **Example** (Guard a raw diagnostic)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RawDiagnostic } from "@beep/scratchpad/yaml/internal/diagnostics"
+ *
+ * console.log(S.is(RawDiagnostic)({ code: "UnexpectedToken", message: "bad token", offset: 0, length: 1 })) // true
+ * ```
+ *
  * @see {@link YamlDiagnostic} for the public class that adds `line`/`character`.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export interface RawDiagnostic {
-	readonly code: YamlErrorCode;
-	readonly message: string;
-	readonly offset: number;
-	readonly length: number;
-}
+export const RawDiagnostic = Schema.Struct({
+	code: RawYamlErrorCode,
+	message: Schema.String,
+	offset: Schema.Finite,
+	length: Schema.Finite,
+}).pipe(
+	$I.annoteSchema("RawDiagnostic", {
+		description: "Internal YAML diagnostic with an engine code and UTF-16 source span.",
+	}),
+);
+
+export type RawDiagnostic = typeof RawDiagnostic.Type;
 
 /**
  * The single source of truth for which diagnostic codes are fatal to a
@@ -316,7 +335,7 @@ export interface RawDiagnostic {
  * @category constants
  * @since 0.0.0
  */
-export const FATAL_CODES: ReadonlySet<YamlErrorCode> = new Set([
+export const FATAL_CODES: HashSet.HashSet<YamlErrorCode> = HashSet.fromIterable([
 	"UndefinedAlias",
 	"DuplicateAnchor",
 	"AliasCountExceeded",
@@ -358,5 +377,5 @@ export const FATAL_CODES: ReadonlySet<YamlErrorCode> = new Set([
  * @since 0.0.0
  */
 export function isFatalCode(code: YamlErrorCode): boolean {
-	return FATAL_CODES.has(code);
+	return HashSet.has(FATAL_CODES, code);
 }

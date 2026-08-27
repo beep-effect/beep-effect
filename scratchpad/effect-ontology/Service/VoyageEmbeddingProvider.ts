@@ -321,7 +321,7 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
  * console.log(config.model)
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`VoyageProviderConfig`)(

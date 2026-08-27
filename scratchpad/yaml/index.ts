@@ -35,11 +35,11 @@ export {
 	YamlStringifyErrorCode,
 } from "./YamlDiagnostic.ts";
 export { YamlDirective, YamlDocument } from "./YamlDocument.ts";
-export type { YamlPath, YamlSegment } from "./YamlEdit.ts";
+export { YamlPath, YamlSegment } from "./YamlEdit.ts";
 export { YamlEdit, YamlRange } from "./YamlEdit.ts";
 export type { YamlRangeLike } from "./YamlFormat.ts";
 export { YamlFormat, YamlFormattingOptions, YamlModificationError } from "./YamlFormat.ts";
-export type { YamlLintInference } from "./YamlLint.ts";
+export { YamlLintInference } from "./YamlLint.ts";
 export {
 	StyleConflict,
 	StyleEvidence,
@@ -50,7 +50,7 @@ export {
 	YamlLintRuleSetting,
 	YamlStyleConflictError,
 } from "./YamlLint.ts";
-export type { LintContext, LintLine, StyleObservation, YamlRule } from "./YamlLintRule.ts";
+export { LintContext, LintLine, type StyleObservation, type YamlRule } from "./YamlLintRule.ts";
 export { StyleFloor, StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "./YamlLintRule.ts";
 export type { YamlAliasEncoded, YamlMapEncoded, YamlScalarEncoded, YamlSeqEncoded } from "./YamlNode.ts";
 export {

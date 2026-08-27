@@ -34,22 +34,37 @@ const $I = $ScratchpadId.create("toml/TomlDocument");
  * rethrows.
  */
 const materializeError = (text: string, defect: unknown): TomlParseError => {
-	if (isRawTomlError(defect)) {
-		return new TomlParseError({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
-	}
-	if (isGuardExceeded(defect)) {
-		return new TomlParseError({
-			diagnostics: [
-				TomlDiagnostic.fromRaw(text, {
-					code: "NestingDepthExceeded",
-					message: defect.message,
-					offset: defect.offset,
-					length: 0,
-				}),
-			],
-		});
-	}
-	throw defect;
+  if (isRawTomlError(defect)) {
+    return TomlParseError.make({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
+  }
+  if (isGuardExceeded(defect)) {
+    return TomlParseError.make({
+      diagnostics: [
+        TomlDiagnostic.fromRaw(text, {
+          code: "NestingDepthExceeded",
+          message: defect.message,
+          offset: defect.offset,
+          length: 0,
+        }),
+      ],
+    });
+  }
+  throw defect;
+};
+
+const analyzeDiagnostics = (
+  text: string,
+  expressions: ReadonlyArray<TomlExpression>
+): ReadonlyArray<TomlDiagnostic> => {
+  try {
+    analyze(expressions);
+    return [];
+  } catch (defect) {
+    if (isRawTomlError(defect)) {
+      return [TomlDiagnostic.fromRaw(text, defect.diagnostic)];
+    }
+    throw defect;
+  }
 };
 
 /**
@@ -94,130 +109,122 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  * @since 0.0.0
  */
 export class TomlDocument extends Schema.Class<TomlDocument>($I`TomlDocument`)(
-	{
-		source: Schema.String,
-		expressions: Schema.Array(TomlExpression),
-		diagnostics: Schema.Array(TomlDiagnostic),
-	},
-	$I.annote("TomlDocument", {
-		description: "A lossless TOML document pairing source text with a span-tiling CST and semantic diagnostics.",
-	}),
+  {
+    source: Schema.String,
+    expressions: Schema.Array(TomlExpression),
+    diagnostics: Schema.Array(TomlDiagnostic),
+  },
+  $I.annote("TomlDocument", {
+    description: "A lossless TOML document pairing source text with a span-tiling CST and semantic diagnostics.",
+  })
 ) {
-	/**
-	 * Parse TOML text into a lossless document. Fails with
-	 * {@link TomlParseError} only on lex/parse errors — including a
-	 * nesting-depth bomb, which surfaces as a `NestingDepthExceeded`
-	 * diagnostic, never an unhandled defect. Semantic violations do not fail:
-	 * they land in `diagnostics` as data (first violation wins, so there is at
-	 * most one today; the array shape is the contract).
-	 *
-	 * @see {@link Toml.parse} for fail-fast value decode that rejects semantic errors immediately.
-	 */
-	static readonly parse = Effect.fn("TomlDocument.parse")(function* (text: string) {
-		const expressions = yield* Effect.try({
-			try: () => parseExpressions(text),
-			catch: (defect) => materializeError(text, defect),
-		});
-		const diagnostics: Array<TomlDiagnostic> = [];
-		try {
-			analyze(expressions);
-		} catch (defect) {
-			if (!isRawTomlError(defect)) {
-				throw defect;
-			}
-			diagnostics.push(TomlDiagnostic.fromRaw(text, defect.diagnostic));
-		}
-		return TomlDocument.make({ source: text, expressions, diagnostics });
-	});
+  /**
+   * Parse TOML text into a lossless document. Fails with
+   * {@link TomlParseError} only on lex/parse errors — including a
+   * nesting-depth bomb, which surfaces as a `NestingDepthExceeded`
+   * diagnostic, never an unhandled defect. Semantic violations do not fail:
+   * they land in `diagnostics` as data (first violation wins, so there is at
+   * most one today; the array shape is the contract).
+   *
+   * @see {@link Toml.parse} for fail-fast value decode that rejects semantic errors immediately.
+   */
+  static readonly parse = Effect.fn("TomlDocument.parse")(function* (text: string) {
+    const expressions = yield* Effect.try({
+      try: () => parseExpressions(text),
+      catch: (defect) => materializeError(text, defect),
+    });
+    const diagnostics = analyzeDiagnostics(text, expressions);
+    return TomlDocument.make({ source: text, expressions, diagnostics });
+  });
 
-	/**
-	 * A `Schema<TomlDocument, string>` decoding TOML text into a full document
-	 * (source, expressions, diagnostics) and encoding a document back to its
-	 * byte-exact text.
-	 *
-	 * Schema-producing: each call returns a fresh schema whose derivation
-	 * caches are not shared across calls; bind the result to a `const` on hot
-	 * paths.
-	 *
-	 * **Example** (Decode a document schema)
-	 *
-	 * ```ts
-	 * import { Effect } from "effect"
-	 * import * as S from "effect/Schema"
-	 * import { TomlDocument } from "@beep/scratchpad/toml"
-	 *
-	 * const schema = TomlDocument.schema()
-	 * const doc = Effect.runSync(S.decodeUnknownEffect(schema)('name = "Alice"\n'))
-	 * console.log(doc.stringify()) // 'name = "Alice"\n'
-	 * ```
-	 */
-	static schema(): Schema.Codec<TomlDocument, string> {
-		return Schema.String.pipe(
-			Schema.decodeTo(
-				Schema.instanceOf(TomlDocument),
-				SchemaTransformation.transformOrFail({
-					decode: (input: string) =>
-						TomlDocument.parse(input).pipe(
-							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
-						),
-					encode: (doc: TomlDocument) => Effect.succeed(doc.stringify()),
-				}),
-			),
-		);
-	}
+  /**
+   * A `Schema<TomlDocument, string>` decoding TOML text into a full document
+   * (source, expressions, diagnostics) and encoding a document back to its
+   * byte-exact text.
+   *
+   * Schema-producing: each call returns a fresh schema whose derivation
+   * caches are not shared across calls; bind the result to a `const` on hot
+   * paths.
+   *
+   * **Example** (Decode a document schema)
+   *
+   * ```ts
+   * import { Effect } from "effect"
+   * import * as S from "effect/Schema"
+   * import { TomlDocument } from "@beep/scratchpad/toml"
+   *
+   * const schema = TomlDocument.schema()
+   * const doc = Effect.runSync(S.decodeUnknownEffect(schema)('name = "Alice"\n'))
+   * console.log(doc.stringify()) // 'name = "Alice"\n'
+   * ```
+   */
+  static schema(): Schema.Codec<TomlDocument, string> {
+    return Schema.String.pipe(
+      Schema.decodeTo(
+        Schema.instanceOf(TomlDocument),
+        SchemaTransformation.transformOrFail({
+          decode: (input: string) =>
+            TomlDocument.parse(input).pipe(
+              Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input))
+            ),
+          encode: (doc: TomlDocument) => Effect.succeed(doc.stringify()),
+        })
+      )
+    );
+  }
 
-	/**
-	 * Materialize the document's plain JavaScript value. Fails with
-	 * {@link TomlParseError} carrying the stored `diagnostics` when the parse
-	 * recorded semantic violations; otherwise builds the value from the
-	 * expression list (already validated, so the defensive materialization
-	 * wrapper is belt-and-suspenders).
-	 *
-	 * **Example** (Refuse a duplicate-key document)
-	 *
-	 * ```ts
-	 * import { Effect, Result } from "effect"
-	 * import { TomlDocument } from "@beep/scratchpad/toml"
-	 *
-	 * const doc = Effect.runSync(TomlDocument.parse("a = 1\na = 2\n"))
-	 * const outcome = Effect.runSync(Effect.result(doc.toValue()))
-	 * console.log(Result.isFailure(outcome) && outcome.failure._tag) // "TomlParseError"
-	 * ```
-	 *
-	 * @see {@link Toml.parse} for fail-fast value decode that never yields a diagnostic-bearing document.
-	 */
-	toValue(): Effect.Effect<unknown, TomlParseError> {
-		if (this.diagnostics.length > 0) {
-			return Effect.fail(new TomlParseError({ diagnostics: this.diagnostics }));
-		}
-		return Effect.try({
-			try: () => buildValue(this.expressions),
-			catch: (defect) => materializeError(this.source, defect),
-		});
-	}
+  /**
+   * Materialize the document's plain JavaScript value. Fails with
+   * {@link TomlParseError} carrying the stored `diagnostics` when the parse
+   * recorded semantic violations; otherwise builds the value from the
+   * expression list (already validated, so the defensive materialization
+   * wrapper is belt-and-suspenders).
+   *
+   * **Example** (Refuse a duplicate-key document)
+   *
+   * ```ts
+   * import { Effect, Result } from "effect"
+   * import { TomlDocument } from "@beep/scratchpad/toml"
+   *
+   * const doc = Effect.runSync(TomlDocument.parse("a = 1\na = 2\n"))
+   * const outcome = Effect.runSync(Effect.result(doc.toValue()))
+   * console.log(Result.isFailure(outcome) && outcome.failure._tag) // "TomlParseError"
+   * ```
+   *
+   * @see {@link Toml.parse} for fail-fast value decode that never yields a diagnostic-bearing document.
+   */
+  toValue(): Effect.Effect<unknown, TomlParseError> {
+    if (this.diagnostics.length > 0) {
+      return Effect.fail(TomlParseError.make({ diagnostics: this.diagnostics }));
+    }
+    return Effect.try({
+      try: () => buildValue(this.expressions),
+      catch: (defect) => materializeError(this.source, defect),
+    });
+  }
 
-	/**
-	 * Reconstruct the document text by concatenating each expression's source
-	 * span in order. The expression spans tile the source exactly, so the
-	 * result equals `source` byte-for-byte — the round-trip contract this
-	 * class exists to prove. Pure and total.
-	 *
-	 * **Example** (Prove span tiling)
-	 *
-	 * ```ts
-	 * import { Effect } from "effect"
-	 * import { TomlDocument } from "@beep/scratchpad/toml"
-	 *
-	 * const source = 'name = "Alice"\n'
-	 * const doc = Effect.runSync(TomlDocument.parse(source))
-	 * console.log(doc.stringify() === source) // true
-	 * ```
-	 */
-	stringify(): string {
-		let out = "";
-		for (const expression of this.expressions) {
-			out += this.source.slice(expression.offset, expression.offset + expression.length);
-		}
-		return out;
-	}
+  /**
+   * Reconstruct the document text by concatenating each expression's source
+   * span in order. The expression spans tile the source exactly, so the
+   * result equals `source` byte-for-byte — the round-trip contract this
+   * class exists to prove. Pure and total.
+   *
+   * **Example** (Prove span tiling)
+   *
+   * ```ts
+   * import { Effect } from "effect"
+   * import { TomlDocument } from "@beep/scratchpad/toml"
+   *
+   * const source = 'name = "Alice"\n'
+   * const doc = Effect.runSync(TomlDocument.parse(source))
+   * console.log(doc.stringify() === source) // true
+   * ```
+   */
+  stringify(): string {
+    let out = "";
+    for (const expression of this.expressions) {
+      out += this.source.slice(expression.offset, expression.offset + expression.length);
+    }
+    return out;
+  }
 }

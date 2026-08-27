@@ -11,15 +11,11 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as O from "@beep/utils/Option";
+import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
-import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-
 import { McpConfigError } from "../Errors.ts";
 import { HttpMcpServer, McpOAuth, McpServerConfig, StdioMcpServer } from "./Schema.ts";
 
@@ -199,34 +195,55 @@ const ClaudeJsonFileJson = S.fromJsonString(ClaudeJsonFile).pipe(
 /**
  * Overrides used while resolving all MCP configuration scopes.
  *
- * @category configuration
- * @since 0.0.0
- */
-export interface EffectiveMcpLoadOptions {
-  /** Override the `~/.claude.json` path, mainly for tests. */
-  readonly claudeJsonPath?: string;
-  /** Override the project `.mcp.json` path. */
-  readonly projectMcpPath?: string;
-  /** Plugin-provided MCP configs, lowest precedence in normal loading. */
-  readonly pluginMcpConfigs?: ReadonlyArray<McpJsonFile>;
-  /** Override the managed MCP directory, mainly for tests. */
-  readonly managedMcpRoot?: string;
-  /** Override all candidate managed MCP directories. */
-  readonly managedMcpRoots?: ReadonlyArray<string>;
-}
-
-/**
- * Overrides used while discovering enterprise-managed MCP configuration.
+ * **Example** (Override the project MCP path)
+ *
+ * ```ts
+ * import { Mcp } from "effect-claudecode"
+ *
+ * const options = Mcp.EffectiveMcpLoadOptions.make({ projectMcpPath: "/repo/.mcp.json" })
+ * console.log(options.projectMcpPath) // /repo/.mcp.json
+ * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface ManagedMcpLoadOptions {
-  /** Override the managed MCP directory, mainly for tests. */
-  readonly managedMcpRoot?: string;
-  /** Override all candidate managed MCP directories. */
-  readonly managedMcpRoots?: ReadonlyArray<string>;
-}
+export class EffectiveMcpLoadOptions extends S.Class<EffectiveMcpLoadOptions>($I`EffectiveMcpLoadOptions`)(
+  {
+    claudeJsonPath: S.String.pipe(S.optionalKey),
+    projectMcpPath: S.String.pipe(S.optionalKey),
+    pluginMcpConfigs: S.Array(McpJsonFile).pipe(S.optionalKey),
+    managedMcpRoot: S.String.pipe(S.optionalKey),
+    managedMcpRoots: S.Array(S.String).pipe(S.optionalKey),
+  },
+  $I.annote("EffectiveMcpLoadOptions", {
+    description: "Optional path and plugin overrides used while resolving every MCP configuration scope.",
+  })
+) {}
+
+/**
+ * Overrides used while discovering enterprise-managed MCP configuration.
+ *
+ * **Example** (Override managed roots)
+ *
+ * ```ts
+ * import { Mcp } from "effect-claudecode"
+ *
+ * const options = Mcp.ManagedMcpLoadOptions.make({ managedMcpRoots: ["/managed"] })
+ * console.log(options.managedMcpRoots?.[0]) // /managed
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class ManagedMcpLoadOptions extends S.Class<ManagedMcpLoadOptions>($I`ManagedMcpLoadOptions`)(
+  {
+    managedMcpRoot: S.String.pipe(S.optionalKey),
+    managedMcpRoots: S.Array(S.String).pipe(S.optionalKey),
+  },
+  $I.annote("ManagedMcpLoadOptions", {
+    description: "Optional directory overrides for enterprise-managed MCP configuration discovery.",
+  })
+) {}
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -303,18 +320,16 @@ export const projectMcpJsonPath = (cwd: string): Effect.Effect<string, never, Pa
 
 /** @internal */
 const managedRoots = (options: O.Option<ManagedMcpLoadOptions>): ReadonlyArray<string> =>
-  O.match(options, {
-    onNone: () => defaultManagedMcpRoots,
-    onSome: (value) =>
-      O.match(O.fromNullishOr(value.managedMcpRoots), {
-        onNone: () =>
-          O.match(O.fromNullishOr(value.managedMcpRoot), {
-            onNone: () => defaultManagedMcpRoots,
-            onSome: (root) => [root],
-          }),
-        onSome: (roots) => roots,
-      }),
-  });
+  options.pipe(
+    O.flatMap((value) => O.fromNullishOr(value.managedMcpRoots)),
+    O.orElse(() =>
+      options.pipe(
+        O.flatMap((value) => O.fromNullishOr(value.managedMcpRoot)),
+        O.map(A.make)
+      )
+    ),
+    O.getOrElse(() => defaultManagedMcpRoots)
+  );
 
 /**
  * Resolve candidate system `managed-mcp.json` paths.
@@ -393,11 +408,11 @@ const loadOptionalJson = <A>(
   });
 
 /** @internal */
-const serverEndpointKey = (server: McpServerConfig): O.Option<string> => {
+const serverEndpointKey = (server: McpServerConfig): string => {
   if (S.is(StdioMcpServer)(server)) {
-    return O.some(`command:${server.command}\u0000${A.join(O.getOrElse(server.args, A.empty<string>), "\u0000")}`);
+    return `command:${server.command}\u0000${A.join(O.getOrElse(server.args, A.empty<string>), "\u0000")}`;
   }
-  return O.some(`url:${server.url}`);
+  return `url:${server.url}`;
 };
 
 /** @internal */
@@ -405,16 +420,7 @@ const removeEndpointDuplicates = (
   servers: Readonly<Record<string, McpServerConfig>>,
   server: McpServerConfig
 ): Record<string, McpServerConfig> =>
-  O.match(serverEndpointKey(server), {
-    onNone: () => ({ ...servers }),
-    onSome: (endpoint) =>
-      R.filter(servers, (candidate) =>
-        O.match(serverEndpointKey(candidate), {
-          onNone: () => true,
-          onSome: (candidateEndpoint) => candidateEndpoint !== endpoint,
-        })
-      ),
-  });
+  R.filter(servers, (candidate) => serverEndpointKey(candidate) !== serverEndpointKey(server));
 
 /** @internal */
 const mergeServerRecords = (
@@ -714,10 +720,12 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
   const path = yield* Path.Path;
   const resolvedCwd = path.resolve(cwd);
   const managed = yield* loadOptions.pipe(
-    O.map((value) => ({
-      ...(value.managedMcpRoot !== undefined ? { managedMcpRoot: value.managedMcpRoot } : {}),
-      ...(value.managedMcpRoots !== undefined ? { managedMcpRoots: value.managedMcpRoots } : {}),
-    })),
+    O.map((value) =>
+      O.getSomesStruct({
+        managedMcpRoot: O.fromUndefinedOr(value.managedMcpRoot),
+        managedMcpRoots: O.fromUndefinedOr(value.managedMcpRoots),
+      })
+    ),
     O.getOrUndefined,
     loadManagedMcp
   );
@@ -757,21 +765,15 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
     onSome: (file) => mcpFileFromServers(file.mcpServers, claudePath),
   });
   const projectMcp = yield* loadOptionalJson(projectPath, loadJson);
-  const localMcp = yield* O.match(claudeJson, {
-    onNone: () => Effect.succeed(O.none<McpJsonFile>()),
-    onSome: (file) =>
-      O.match(projectClaudeJsonEntry(file, cwd, resolvedCwd), {
-        onNone: () => Effect.succeed(O.none<McpJsonFile>()),
-        onSome: (project) => mcpFileFromServers(project.mcpServers, `${claudePath}:projects.${resolvedCwd}`),
-      }),
-  });
+  const localMcp = yield* O.match(
+    claudeJson.pipe(O.flatMap((file) => projectClaudeJsonEntry(file, cwd, resolvedCwd))),
+    {
+      onNone: () => Effect.succeed(O.none<McpJsonFile>()),
+      onSome: (project) => mcpFileFromServers(project.mcpServers, `${claudePath}:projects.${resolvedCwd}`),
+    }
+  );
 
-  return mergeMcpJsonFiles([
-    ...sanitizedPluginConfigs,
-    ...(O.isSome(userMcp) ? [userMcp.value] : []),
-    ...(O.isSome(projectMcp) ? [projectMcp.value] : []),
-    ...(O.isSome(localMcp) ? [localMcp.value] : []),
-  ]);
+  return mergeMcpJsonFiles([...sanitizedPluginConfigs, ...A.getSomes([userMcp, projectMcp, localMcp])]);
 });
 
 /**
@@ -826,7 +828,7 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * @category decoding
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The required cwd plus optional scope overrides make a one-argument direct call indistinguishable from a curried overload.
 export const loadEffective = (
   cwd: string,
   options?: EffectiveMcpLoadOptions

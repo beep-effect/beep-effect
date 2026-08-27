@@ -76,7 +76,7 @@ export const trailingSpaces: YamlRule = {
 			// Trailing whitespace inside scalar content is the value's business.
 			if (insideScalarSpan(ctx.tokens, runOffset)) continue;
 			out.push(
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "trailing-spaces",
 					severity: "error",
 					message: "Trailing whitespace",

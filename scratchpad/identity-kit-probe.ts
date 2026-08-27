@@ -32,6 +32,8 @@ import * as EffectDrizzle from "@beep/effect-drizzle";
 import * as Pg from "@beep/effect-drizzle/pg";
 import { $ScratchpadId } from "@beep/identity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
+import { Effect } from "effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Model as M, VariantSchema } from "effect/unstable/schema";
 
@@ -51,14 +53,8 @@ type IdentityColumns<Id extends EntityId.Any> = {
 
 // --- runtime closure: widened types are irrelevant at runtime ----------------
 const identityColumns = (id: EntityId.Any) => ({
-  id: EffectDrizzle.VariantField({ select: id, update: id, json: id }).pipe(
-    Pg.primaryKey(),
-    Pg.serial()
-  ),
-  entityType: M.GeneratedByApp(S.Literal(id.entityType)).pipe(
-    Pg.text(),
-    Pg.columnName("entity_type")
-  ),
+  id: EffectDrizzle.VariantField({ select: id, update: id, json: id }).pipe(Pg.primaryKey(), Pg.serial()),
+  entityType: M.GeneratedByApp(S.Literal(id.entityType)).pipe(Pg.text(), Pg.columnName("entity_type")),
 });
 
 type Merged<Id extends EntityId.Any, Own extends EffectDrizzle.FieldsInput> = IdentityColumns<Id> & Own;
@@ -88,9 +84,7 @@ type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
 type Expect<T extends true> = T;
 type ExpectFalse<T extends false> = T;
 
-export type BrandKept = Expect<
-  IsEqual<InstanceType<typeof Probe>["id"], EntityId.EntityIdValueFor<"ScratchProbeId">>
->;
+export type BrandKept = Expect<IsEqual<InstanceType<typeof Probe>["id"], EntityId.EntityIdValueFor<"ScratchProbeId">>>;
 export type LiteralKept = Expect<IsEqual<InstanceType<typeof Probe>["entityType"], "ScratchProbe">>;
 export type BrandRejectsNumber = ExpectFalse<[number] extends [InstanceType<typeof Probe>["id"]] ? true : false>;
 export type JsonLiteralKept = Expect<IsEqual<(typeof Probe)["json"]["Type"]["entityType"], "ScratchProbe">>;
@@ -101,14 +95,14 @@ const decoded = S.decodeSync(Probe)({
   entityType: "ScratchProbe",
   label: "brand survives",
 });
-console.log("decoded id:", decoded.id, "entityType:", decoded.entityType);
-console.log("tableName static:", Probe.sql.tableName);
-console.log("insert fields:", Object.keys(Probe.insert.fields));
+Effect.runSync(Effect.log("decoded id:", decoded.id, "entityType:", decoded.entityType));
+Effect.runSync(Effect.log("tableName static:", Probe.sql.tableName));
+Effect.runSync(Effect.log("insert fields:", R.keys(Probe.insert.fields)));
 
 // wrong entityType literal must fail at runtime:
 try {
   S.decodeUnknownSync(Probe)({ id: 8, entityType: "WrongType", label: "x" });
-  console.log("ERROR: wrong entityType decoded");
+  Effect.runSync(Effect.log("ERROR: wrong entityType decoded"));
 } catch {
-  console.log("wrong entityType rejected (literal enforced)");
+  Effect.runSync(Effect.log("wrong entityType rejected (literal enforced)"));
 }

@@ -18,17 +18,18 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema/Int";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import {
   ShaclValidationError,
   ShaclValidationRequest,
   ShaclValidationResult,
   ShaclValidationService,
+  ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
 import { ShapesLoadError, ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
@@ -70,6 +71,16 @@ const serializeN3Store = (store: N3.Store): string => {
   return source;
 };
 
+const ShapesCacheStats = S.Struct({
+  size: S.Finite,
+  keys: S.Array(S.String),
+}).pipe(
+  $I.annoteSchema("ShapesCacheStats", {
+    description: "Current entry count and stable keys of the in-memory SHACL shapes cache.",
+  })
+);
+type ShapesCacheStats = typeof ShapesCacheStats.Type;
+
 /**
  * Describes the shacl workflow service methods data exposed by this module.
  *
@@ -101,7 +112,7 @@ export interface ShaclWorkflowServiceMethods {
    *
    * @since 0.0.0
    */
-  readonly getShapesCacheStats: Effect.Effect<{ size: number; keys: ReadonlyArray<string> }>;
+  readonly getShapesCacheStats: Effect.Effect<ShapesCacheStats>;
 
   /**
    * Validate with policy-based control over severity handling
@@ -124,27 +135,46 @@ export interface ShaclWorkflowServiceMethods {
 }
 
 /**
- * Configuration for ShaclWorkflowService.Test layer
+ * Configuration accepted by the deterministic SHACL test layer.
  *
  *
- * **Example** (Use the ShaclWorkflowServiceTestConfig contract)
+ * **Example** (Validate a non-conforming test setup)
  *
  * ```ts
- * import type { ShaclWorkflowServiceTestConfig } from "@effect-ontology/Service/Shacl"
+ * import { ShaclWorkflowServiceTestConfig } from "@effect-ontology/Service/Shacl"
+ * import * as S from "effect/Schema"
  *
- * const config: ShaclWorkflowServiceTestConfig = { conforms: false, violations: [] }
+ * const config = S.decodeUnknownSync(ShaclWorkflowServiceTestConfig)({ conforms: false, violations: [] })
  * console.log(config.conforms) // false
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ShaclWorkflowServiceTestConfig = S.Struct({
+  conforms: S.optionalKey(S.Boolean).annotateKey({
+    description: "Whether validation reports conformance; omission defaults to true in the test layer.",
+  }),
+  violations: ShaclValidationViolation.pipe(
+    S.Array,
+    S.optionalKey,
+    S.annotateKey({
+      description: "Mock validation violations returned by the test layer; omission defaults to an empty array.",
+    })
+  ),
+}).pipe(
+  $I.annoteSchema("ShaclWorkflowServiceTestConfig", {
+    description: "Optional conformance result and violations supplied to the deterministic SHACL test layer.",
+  })
+);
+
+/**
+ * Runtime test configuration decoded by {@link ShaclWorkflowServiceTestConfig}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ShaclWorkflowServiceTestConfig {
-  /** Whether validation should report conformance (default: true) */
-  readonly conforms?: boolean;
-  /** Mock violations to return (default: []) */
-  readonly violations?: ReadonlyArray<ShaclValidationViolation>;
-}
+export type ShaclWorkflowServiceTestConfig = typeof ShaclWorkflowServiceTestConfig.Type;
 
 /**
  * Default test configuration - always conforms with no violations

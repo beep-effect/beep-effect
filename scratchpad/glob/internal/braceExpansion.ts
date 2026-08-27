@@ -3,7 +3,7 @@
  *
  * Over-deep nesting throws `NestingDepthExceeded`. Budget exhaustion throws
  * `ExpansionBudgetExceeded` instead of silently truncating. Invalid `max` is
- * a `TypeError` defect via `assertCap`.
+ * a schema-backed invariant defect via `assertCap`.
  *
  * Ported from brace-expansion@5.0.7.
  *
@@ -43,44 +43,79 @@
 //    upstream silently truncates the expansion list at max — silent truncation
 //    silently changes match semantics; the typed signal is the honest surface.
 //    The max cap itself is validated by assertCap: a NaN or non-integer max is
-//    programmer error and dies as a TypeError defect.
+//    programmer error and dies as a schema-backed invariant defect.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { dual, flow, pipe } from "effect/Function";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { balanced } from "./balancedMatch.ts";
 import { EXPANSION_MAX, GuardExceeded, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
 
-const escSlash = `\0SLASH${Math.random()}\0`;
-const escOpen = `\0OPEN${Math.random()}\0`;
-const escClose = `\0CLOSE${Math.random()}\0`;
-const escComma = `\0COMMA${Math.random()}\0`;
-const escPeriod = `\0PERIOD${Math.random()}\0`;
-const escSlashPattern = new RegExp(escSlash, "g");
-const escOpenPattern = new RegExp(escOpen, "g");
-const escClosePattern = new RegExp(escClose, "g");
-const escCommaPattern = new RegExp(escComma, "g");
-const escPeriodPattern = new RegExp(escPeriod, "g");
+const $I = $ScratchpadId.create("glob/internal/braceExpansion");
+
+class BraceEscapeTokens extends S.Class<BraceEscapeTokens>($I`BraceEscapeTokens`)(
+	{
+		slash: S.NonEmptyString,
+		open: S.NonEmptyString,
+		close: S.NonEmptyString,
+		comma: S.NonEmptyString,
+		period: S.NonEmptyString,
+	},
+	$I.annote("BraceEscapeTokens", {
+		description: "Collision-free deterministic sentinels used during one brace expansion.",
+	}),
+) {
+	static forInput(input: string): BraceEscapeTokens {
+		let nonce = 0;
+		let prefix = `\0GLOB_ESCAPE_${nonce}_`;
+		// Collision freedom depends on the whole input, so advance the deterministic
+		// prefix until it is absent before constructing the token set.
+		while (Str.includes(prefix)(input)) {
+			nonce += 1;
+			prefix = `\0GLOB_ESCAPE_${nonce}_`;
+		}
+		return BraceEscapeTokens.make({
+			slash: `${prefix}SLASH\0`,
+			open: `${prefix}OPEN\0`,
+			close: `${prefix}CLOSE\0`,
+			comma: `${prefix}COMMA\0`,
+			period: `${prefix}PERIOD\0`,
+		});
+	}
+}
+
 const slashPattern = /\\\\/g;
 const openPattern = /\\{/g;
 const closePattern = /\\}/g;
 const commaPattern = /\\,/g;
 const periodPattern = /\\\./g;
 
-const numeric = (str: string): number => (Number.isNaN(Number(str)) ? str.charCodeAt(0) : Number.parseInt(str, 10));
+const decodeFinite = S.decodeUnknownOption(S.FiniteFromString);
+const numeric = (str: string): number =>
+	O.getOrElse(decodeFinite(str), () => O.getOrElse(Str.charCodeAt(str, 0), () => 0));
 
-const escapeBraces = (str: string): string =>
-	str
-		.replace(slashPattern, escSlash)
-		.replace(openPattern, escOpen)
-		.replace(closePattern, escClose)
-		.replace(commaPattern, escComma)
-		.replace(periodPattern, escPeriod);
+const escapeBraces = (str: string, tokens: BraceEscapeTokens): string =>
+	pipe(
+		str,
+		Str.replace(slashPattern, tokens.slash),
+		Str.replace(openPattern, tokens.open),
+		Str.replace(closePattern, tokens.close),
+		Str.replace(commaPattern, tokens.comma),
+		Str.replace(periodPattern, tokens.period),
+	);
 
-const unescapeBraces = (str: string): string =>
-	str
-		.replace(escSlashPattern, "\\")
-		.replace(escOpenPattern, "{")
-		.replace(escClosePattern, "}")
-		.replace(escCommaPattern, ",")
-		.replace(escPeriodPattern, ".");
+const unescapeBraces = (tokens: BraceEscapeTokens) =>
+	flow(
+		Str.replaceAll(tokens.slash, "\\"),
+		Str.replaceAll(tokens.open, "{"),
+		Str.replaceAll(tokens.close, "}"),
+		Str.replaceAll(tokens.comma, ","),
+		Str.replaceAll(tokens.period, "."),
+	);
 
 /**
  * Basically just str.split(","), but handling cases where we have nested
@@ -89,25 +124,25 @@ const unescapeBraces = (str: string): string =>
  */
 const parseCommaParts = (str: string, depth: number): Array<string> => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
+		throw GuardExceeded.make({ reason: "NestingDepthExceeded", limit: MAX_NESTING_DEPTH, actual: depth });
 	}
-	if (!str) {
+	if (str.length === 0) {
 		return [""];
 	}
 
 	const parts: Array<string> = [];
-	const m = balanced("{", "}", str);
+	const m = balanced(str, "{", "}");
 
-	if (!m) {
-		return str.split(",");
+	if (m === false) {
+		return Str.split(str, ",");
 	}
 
 	const { pre, body, post } = m;
-	const p = pre.split(",");
+	const p = Str.split(pre, ",");
 
 	p[p.length - 1] += `{${body}}`;
 	const postParts = parseCommaParts(post, depth + 1);
-	if (post.length) {
+	if (post.length > 0) {
 		p[p.length - 1] += postParts.shift() ?? "";
 		p.push(...postParts);
 	}
@@ -117,32 +152,88 @@ const parseCommaParts = (str: string, depth: number): Array<string> => {
 	return parts;
 };
 
+// Internal refinement reused by the exported options schema.
+const PositiveExpansionMax = S.Int.check(S.isGreaterThan(0)).pipe(
+	$I.annoteSchema("PositiveExpansionMax", {
+		description: "Positive safe integer bounding brace-expansion output cardinality.",
+	}),
+);
+
 /**
- * Options for {@link expand}. `max` is a positive integer; a NaN or
- * non-integer value is a wiring defect via `assertCap`.
+ * Runtime schema for {@link expand} options. `max` is a positive integer that
+ * can tighten, but never raise, the default expansion budget.
  *
+ * **Example** (Decode an expansion budget)
+ *
+ * ```ts
+ * import { BraceExpansionOptions } from "../../glob/internal/braceExpansion.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const options = S.decodeUnknownSync(BraceExpansionOptions)({ max: 32 })
+ * console.log(options.max) // 32
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BraceExpansionOptions = S.Struct({
+	max: S.optionalKey(PositiveExpansionMax),
+}).pipe(
+	$I.annoteSchema("BraceExpansionOptions", {
+		description: "Optional tighten-only output budget for brace expansion.",
+	}),
+);
+
+/**
+ * Decoded option bag produced by {@link BraceExpansionOptions}.
+ *
+ * **Example** (Declare an expansion budget)
+ *
+ * ```ts
+ * import type { BraceExpansionOptions } from "../../glob/internal/braceExpansion.ts"
+ *
+ * const options = { max: 32 } satisfies BraceExpansionOptions
+ * console.log(options.max) // 32
+ * ```
+ *
+ * @see {@link BraceExpansionOptions} for runtime validation.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export interface BraceExpansionOptions {
-	readonly max?: number;
-}
+export type BraceExpansionOptions = typeof BraceExpansionOptions.Type;
+
+const expandImpl = (str: string, options: BraceExpansionOptions = {}): Array<string> => {
+	if (str.length === 0) {
+		return [];
+	}
+
+	const max = assertCap(options.max ?? EXPANSION_MAX, "braceExpandMax");
+
+	// I don't know why Bash 4.3 does this, but it does.
+	// Anything starting with {} will have the first two bytes preserved
+	// but *only* at the top level, so {},a}b will not expand to anything,
+	// but a{},b}c will be expanded to [a}c,abc].
+	// One could argue that this is a bug in Bash, but since the goal of
+	// this module is to match Bash's rules, we escape a leading {}
+	let input = str;
+	if (Str.slice(0, 2)(input) === "{}") {
+		input = `\\{\\}${Str.slice(2)(input)}`;
+	}
+
+	const tokens = BraceEscapeTokens.forInput(input);
+	return A.map(expand_(escapeBraces(input, tokens), max, true, 0, tokens), unescapeBraces(tokens));
+};
 
 /**
  * Expand a brace pattern into its alternatives, Bash 4.3 style.
  *
- * Guard behavior: over-deep nesting and budget exhaustion throw
- * {@link GuardExceeded}; an invalid `max` dies as a `TypeError` defect.
- *
  * **Gotchas**
  *
- * Compile-time only. Budget exhaustion throws `ExpansionBudgetExceeded`
- * instead of truncating the list (silent truncation would change match
- * semantics). Nesting past {@link MAX_NESTING_DEPTH} throws
- * `NestingDepthExceeded`. This is not the globstar false-negative cap.
- * A leading `{}` is escaped only at the top level, matching Bash 4.3:
- * `{},a}b` does not expand, while `a{},b}c` expands to `[a}c,abc]`.
+ * Budget exhaustion and nesting past {@link MAX_NESTING_DEPTH} throw
+ * {@link GuardExceeded}; invalid caps are internal invariant defects. A
+ * leading `{}` is escaped only at the top level, matching Bash 4.3.
  *
  * **Example** (Expand alternatives and trip the budget)
  *
@@ -151,9 +242,7 @@ export interface BraceExpansionOptions {
  * import { GuardExceeded } from "../../glob/internal/limits.ts"
  *
  * console.log(expand("a{b,c}d")) // ["abd", "acd"]
- * console.log(expand("{},a}b")) // ["{},a}b"]
- * console.log(expand("a{},b}c")) // ["a}c", "abc"]
- *
+ * console.log(expand({})("a{b,c}d")) // ["abd", "acd"]
  * try {
  *   expand("{0..2}", { max: 2 })
  * } catch (error) {
@@ -165,26 +254,12 @@ export interface BraceExpansionOptions {
  * @category parsing
  * @since 0.0.0
  */
-export const expand = (str: string, options: BraceExpansionOptions = {}): Array<string> => {
-	if (!str) {
-		return [];
-	}
-
-	const max = assertCap("braceExpandMax", options.max ?? EXPANSION_MAX);
-
-	// I don't know why Bash 4.3 does this, but it does.
-	// Anything starting with {} will have the first two bytes preserved
-	// but *only* at the top level, so {},a}b will not expand to anything,
-	// but a{},b}c will be expanded to [a}c,abc].
-	// One could argue that this is a bug in Bash, but since the goal of
-	// this module is to match Bash's rules, we escape a leading {}
-	let input = str;
-	if (input.slice(0, 2) === "{}") {
-		input = `\\{\\}${input.slice(2)}`;
-	}
-
-	return expand_(escapeBraces(input), max, true, 0).map(unescapeBraces);
-};
+export const expand: {
+	(): (str: string) => Array<string>;
+	(str: string): Array<string>;
+	(options: BraceExpansionOptions): (str: string) => Array<string>;
+	(str: string, options: BraceExpansionOptions): Array<string>;
+} = dual((args) => P.isString(args[0]), expandImpl);
 
 const embrace = (str: string): string => `{${str}}`;
 
@@ -195,9 +270,15 @@ const lte = (i: number, y: number): boolean => i <= y;
 const gte = (i: number, y: number): boolean => i >= y;
 
 // oxlint-disable-next-line func-style
-function expand_(str: string, max: number, isTopInput: boolean, depth: number): Array<string> {
+function expand_(
+	str: string,
+	max: number,
+	isTopInput: boolean,
+	depth: number,
+	tokens: BraceEscapeTokens,
+): Array<string> {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
+		throw GuardExceeded.make({ reason: "NestingDepthExceeded", limit: MAX_NESTING_DEPTH, actual: depth });
 	}
 
 	const expansions: Array<string> = [];
@@ -208,16 +289,16 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 	// the same `max` and `isTop = true`. Loop instead of recursing so a long run
 	// of non-expanding `{}` groups can't exhaust the call stack.
 	for (;;) {
-		const m = balanced("{", "}", current);
-		if (!m) return [current];
+		const m = balanced(current, "{", "}");
+		if (m === false) return [current];
 
 		// no need to expand pre, since it is guaranteed to be free of brace-sets
 		const pre = m.pre;
 
 		if (/\$$/.test(m.pre)) {
-			const post: Array<string> = m.post.length ? expand_(m.post, max, false, depth + 1) : [""];
+			const post: Array<string> = m.post.length > 0 ? expand_(m.post, max, false, depth + 1, tokens) : [""];
 			if (post.length > max) {
-				throw new GuardExceeded("ExpansionBudgetExceeded", max, post.length);
+				throw GuardExceeded.make({ reason: "ExpansionBudgetExceeded", limit: max, actual: post.length });
 			}
 			for (const p of post) {
 				expansions.push(`${pre}{${m.body}}${p}`);
@@ -231,8 +312,8 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 		const isOptions = m.body.indexOf(",") >= 0;
 		if (!isSequence && !isOptions) {
 			// {a},b}
-			if (m.post.match(/,(?!,).*\}/)) {
-				current = `${m.pre}{${m.body}${escClose}${m.post}`;
+			if (/,(?!,).*\}/.test(m.post)) {
+				current = `${m.pre}{${m.body}${tokens.close}${m.post}`;
 				isTop = true;
 				continue;
 			}
@@ -243,7 +324,7 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 		// it before the early returns above expanded post a second time on every
 		// non-expanding `{}`, which is what made inputs like `a{},{},{}...` blow up
 		// exponentially.
-		const post: Array<string> = m.post.length ? expand_(m.post, max, false, depth + 1) : [""];
+		const post: Array<string> = m.post.length > 0 ? expand_(m.post, max, false, depth + 1, tokens) : [""];
 
 		let n: Array<string>;
 		if (isSequence) {
@@ -253,9 +334,9 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 			const first = n[0];
 			if (n.length === 1 && first !== undefined) {
 				// x{{a,b}}y ==> x{a}y x{b}y
-				n = expand_(first, max, false, depth + 1).map(embrace);
+				n = A.map(expand_(first, max, false, depth + 1, tokens), embrace);
 				if (n.length === 1) {
-					return post.map((p) => `${m.pre}${n[0]}${p}`);
+					return A.map(post, (p) => `${m.pre}${n[0]}${p}`);
 				}
 			}
 		}
@@ -278,14 +359,14 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 				incr *= -1;
 				test = gte;
 			}
-			const pad = n.some(isPadded);
+			const pad = A.some(n, isPadded);
 
 			// Budget check up front: the member count is exactly computable, so an
 			// over-budget sequence trips before any work is done (upstream
 			// truncated the loop at max instead).
 			const total = Math.floor(Math.abs(y - x) / Math.abs(incr)) + 1;
 			if (total > max) {
-				throw new GuardExceeded("ExpansionBudgetExceeded", max, total);
+				throw GuardExceeded.make({ reason: "ExpansionBudgetExceeded", limit: max, actual: total });
 			}
 
 			N = [];
@@ -302,8 +383,8 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 					if (pad) {
 						const need = width - c.length;
 						if (need > 0) {
-							const z = "0".repeat(need);
-							c = i < 0 ? `-${z}${c.slice(1)}` : `${z}${c}`;
+						const z = Str.repeat(need)("0");
+						c = i < 0 ? `-${z}${Str.slice(1)(c)}` : `${z}${c}`;
 						}
 					}
 				}
@@ -313,23 +394,23 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 			N = [];
 
 			for (const part of n) {
-				N.push(...expand_(part, max, false, depth + 1));
+				N.push(...expand_(part, max, false, depth + 1, tokens));
 			}
 		}
 
 		for (let j = 0; j < N.length; j++) {
 			for (let k = 0; k < post.length; k++) {
 				const expansion = pre + N[j] + post[k];
-				if (!isTop || isSequence || expansion) {
+			if (!isTop || isSequence || expansion.length > 0) {
 					if (expansions.length >= max) {
 						// Budget exhausted with work remaining: the actual reported is the
 						// count reached plus what remains in this group — a lower bound on
 						// the full expansion size.
-						throw new GuardExceeded(
-							"ExpansionBudgetExceeded",
-							max,
-							expansions.length + (N.length - j) * post.length - k,
-						);
+					throw GuardExceeded.make({
+						reason: "ExpansionBudgetExceeded",
+						limit: max,
+						actual: expansions.length + (N.length - j) * post.length - k,
+					});
 					}
 					expansions.push(expansion);
 				}

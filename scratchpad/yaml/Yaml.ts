@@ -14,7 +14,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import { Effect, MutableHashMap, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { composeAllDocuments, composeFirstDocument } from "./internal/composer/document.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
@@ -24,12 +27,12 @@ import { StringifyDepthExceeded, StringifyFailure, stringifyValue } from "./inte
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlNode } from "./YamlNode.ts";
 import {
-	AliasExpansionBudgetExceeded,
-	CollectionStyle,
-	QuoteCompat,
-	QuoteStyle,
-	ScalarStyle,
-	nodeToJsValue,
+    AliasExpansionBudgetExceeded,
+    CollectionStyle,
+    QuoteCompat,
+    QuoteStyle,
+    ScalarStyle,
+    nodeToJsValue,
 } from "./YamlNode.ts";
 
 const $I = $ScratchpadId.create("yaml/Yaml");
@@ -67,7 +70,7 @@ const $I = $ScratchpadId.create("yaml/Yaml");
 export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseOptions")(
 	{
 		strict: Schema.optionalKey(Schema.Boolean),
-		maxAliasCount: Schema.optionalKey(Schema.Number),
+		maxAliasCount: Schema.optionalKey(Schema.Finite),
 		uniqueKeys: Schema.optionalKey(Schema.Boolean),
 	},
 	$I.annote("YamlParseOptions", {
@@ -141,7 +144,7 @@ export class YamlParseOptions extends Schema.Class<YamlParseOptions>("YamlParseO
  * @since 0.0.0
  */
 export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("YamlStringifyOptions")({
-	indent: Schema.optionalKey(Schema.Number),
+	indent: Schema.optionalKey(Schema.Finite),
 	/**
 	 * Column at which to fold long scalars. Default `0` (and any value `<= 0`)
 	 * never wraps; a positive value folds plain, double-quoted and block-folded
@@ -156,7 +159,7 @@ export class YamlStringifyOptions extends Schema.Class<YamlStringifyOptions>("Ya
 	 * helpers built on it — threads the field into its render context but
 	 * never reads it, so it is inert there.
 	 */
-	lineWidth: Schema.optionalKey(Schema.Number),
+	lineWidth: Schema.optionalKey(Schema.Finite),
 	defaultScalarStyle: Schema.optionalKey(ScalarStyle),
 	defaultCollectionStyle: Schema.optionalKey(CollectionStyle),
 	sortKeys: Schema.optionalKey(Schema.Boolean),
@@ -254,6 +257,25 @@ export class YamlParseError extends Schema.TaggedError<YamlParseError>()(
 		description: "Aggregate YAML parse failure carrying fatal diagnostics and DuplicateKey promotions from one input.",
 	}),
 ) {
+	/**
+	 * One-line summary of every aggregated diagnostic: count, then `code at
+	 * line:character` joined with `"; "`.
+	 *
+	 * **Example** (Read a duplicate-key parse message)
+	 *
+	 * ```ts
+	 * import { Result } from "effect"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const failed = Yaml.parseResult("a: 1\na: 2\n")
+	 * if (Result.isFailure(failed)) {
+	 *   console.log(failed.failure.message.includes("YAML parse failed")) // true
+	 *   console.log(failed.failure.message.includes("DuplicateKey")) // true
+	 * }
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const count = this.diagnostics.length;
 		const summary = this.diagnostics.map((d) => `${d.code} at ${d.line}:${d.character}`).join("; ");
@@ -300,6 +322,25 @@ export class YamlStringifyError extends Schema.TaggedError<YamlStringifyError>()
 		description: "YAML stringify failure carrying structured diagnostics for circular references and nesting-depth blow-ups.",
 	}),
 ) {
+	/**
+	 * One-line summary of the diagnostic messages joined with `"; "`.
+	 *
+	 * **Example** (Read a circular-reference stringify message)
+	 *
+	 * ```ts
+	 * import { Result } from "effect"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const cyclic: { self?: unknown } = {}
+	 * cyclic.self = cyclic
+	 * const failed = Yaml.stringifyResult(cyclic)
+	 * if (Result.isFailure(failed)) {
+	 *   console.log(failed.failure.message.includes("YAML stringify failed")) // true
+	 * }
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `YAML stringify failed: ${summary}`;
@@ -342,12 +383,15 @@ const toDiagnostics = (text: string, records: ReadonlyArray<RawDiagnostic>): Rea
  * diagnostic carries zero offsets.
  */
 const aliasCountExceededError = (message: string, text: string): YamlParseError =>
-	new YamlParseError({
+	YamlParseError.make({
 		diagnostics: [
 			YamlDiagnostic.make({ code: "AliasCountExceeded", message, offset: 0, length: 0, line: 0, character: 0 }),
 		],
 		input: text,
 	});
+
+const isStringifyFailure = Schema.is(StringifyFailure);
+const isStringifyDepthExceeded = Schema.is(StringifyDepthExceeded);
 
 /**
  * Map an internal stringifier throw to its typed {@link YamlStringifyError},
@@ -356,8 +400,8 @@ const aliasCountExceededError = (message: string, text: string): YamlParseError 
  * hardening guards (circular reference, nesting-depth cap) identically.
  */
 const stringifyDefectToError = (defect: unknown, value: unknown): YamlStringifyError | undefined => {
-	if (defect instanceof StringifyFailure) {
-		return new YamlStringifyError({
+	if (isStringifyFailure(defect)) {
+		return YamlStringifyError.make({
 			diagnostics: [
 				YamlDiagnostic.make({
 					code: "CircularReference",
@@ -373,8 +417,8 @@ const stringifyDefectToError = (defect: unknown, value: unknown): YamlStringifyE
 	}
 	// Deeply-nested acyclic value overflowed the stringifier's recursion budget —
 	// surface it as a fatal stringify error, not a stack-overflow defect.
-	if (defect instanceof StringifyDepthExceeded) {
-		return new YamlStringifyError({
+	if (isStringifyDepthExceeded(defect)) {
+		return YamlStringifyError.make({
 			diagnostics: [
 				YamlDiagnostic.make({
 					code: "NestingDepthExceeded",
@@ -402,15 +446,15 @@ const parseResultImpl = (text: string, options?: YamlParseOptions): Result.Resul
 	const doc = composeFirstDocument(text, toParseInput(options));
 	const failures = failureRecords(doc, options?.uniqueKeys ?? true);
 	if (failures.length > 0) {
-		return Result.fail(new YamlParseError({ diagnostics: toDiagnostics(text, failures), input: text }));
+		return Result.fail(YamlParseError.make({ diagnostics: toDiagnostics(text, failures), input: text }));
 	}
 	// An empty map lets nodeToJsValue register anchors incrementally, so aliases
 	// resolve to the most recent anchor at the point of use.
-	const anchors = new Map<string, YamlNode>();
+	const anchors = MutableHashMap.empty<string, YamlNode>();
 	try {
 		return Result.succeed(nodeToJsValue(doc.contents, anchors, options?.maxAliasCount ?? 100));
 	} catch (defect) {
-		if (defect instanceof AliasExpansionBudgetExceeded) {
+		if (AliasExpansionBudgetExceeded.is(defect)) {
 			return Result.fail(aliasCountExceededError(defect.message, text));
 		}
 		throw defect;
@@ -439,7 +483,7 @@ const parseAllResultImpl = (
 		...documents.flatMap((d) => failureRecords(d, uniqueKeys)),
 	];
 	if (failures.length > 0) {
-		return Result.fail(new YamlParseError({ diagnostics: toDiagnostics(text, failures), input: text }));
+		return Result.fail(YamlParseError.make({ diagnostics: toDiagnostics(text, failures), input: text }));
 	}
 	const maxAliasCount = options?.maxAliasCount ?? 100;
 	const values: Array<unknown> = [];
@@ -449,11 +493,11 @@ const parseAllResultImpl = (
 		// like parseResultImpl — a pre-built map would resolve aliases that
 		// extraction never re-registers (e.g. an anchor on a complex mapping
 		// key), diverging from the single-document result.
-		const anchors = new Map<string, YamlNode>();
+		const anchors = MutableHashMap.empty<string, YamlNode>();
 		try {
 			values.push(nodeToJsValue(d.contents, anchors, maxAliasCount));
 		} catch (defect) {
-			if (defect instanceof AliasExpansionBudgetExceeded) {
+			if (AliasExpansionBudgetExceeded.is(defect)) {
 				return Result.fail(aliasCountExceededError(defect.message, text));
 			}
 			throw defect;
@@ -510,6 +554,12 @@ const stringifyOrFail = (value: unknown, options?: YamlStringifyOptions): Effect
  * {@link Yaml.bind}: the composed `schema` (what {@link Yaml.schema} returns)
  * plus `decode` and `encode` functions derived from it once, so callers need
  * no generic `Schema` machinery at the use site.
+ *
+ * **Details**
+ *
+ * This deliberately remains an interface: it is a generic executable codec
+ * bundle (a runtime schema plus two Effect-returning functions), not a pure
+ * data model or boundary payload that can itself be decoded by Schema.
  *
  * @see {@link Yaml.bind} for the factory that produces this codec.
  * @public
@@ -751,6 +801,18 @@ export class Yaml {
 	 * `replaceCh` (e.g. `" "`), each comment character is replaced instead,
 	 * keeping all offsets stable. Quote-aware: `#` inside quoted scalars is
 	 * content, not a comment. Pure and total.
+	 *
+	 * **Example** (Delete comments vs preserve offsets)
+	 *
+	 * ```ts
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const text = "name: Alice # comment\n"
+	 * console.log(JSON.stringify(Yaml.stripComments(text))) // "name: Alice \\n"
+	 * console.log(Yaml.stripComments(text, " ").length === text.length) // true
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static stripComments(text: string, replaceCh?: string): string {
 		let result = "";
@@ -817,6 +879,17 @@ export class Yaml {
 	 * significant. Malformed input is never equal to anything — parse errors
 	 * (or duplicate keys) on either side yield `false` rather than comparing
 	 * recovery-parser artifacts. Pure and total.
+	 *
+	 * **Example** (Ignore comments, reject duplicate keys)
+	 *
+	 * ```ts
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * console.log(Yaml.equals("a: 1\n", "a: 1 # c\n")) // true
+	 * console.log(Yaml.equals("a: 1\na: 2\n", "a: 1\n")) // false
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static equals(a: string, b: string): boolean {
 		const va = parseForEquality(a);
@@ -829,6 +902,17 @@ export class Yaml {
 	 * Compare a YAML string against an existing JavaScript value with the
 	 * same semantics as {@link Yaml.equals}: malformed `text` yields `false`.
 	 * Pure and total.
+	 *
+	 * **Example** (Compare YAML text to a value)
+	 *
+	 * ```ts
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * console.log(Yaml.equalsValue("name: Alice\n", { name: "Alice" })) // true
+	 * console.log(Yaml.equalsValue("a: 1\na: 2\n", { a: 1 })) // false
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static equalsValue(text: string, value: unknown): boolean {
 		const v = parseForEquality(text);
@@ -844,6 +928,21 @@ export class Yaml {
 	 * Schema-producing: each call returns a fresh schema whose derivation
 	 * caches are not shared across calls. Bind the result to a `const` on hot
 	 * paths; for the default-options case use {@link Yaml.YamlFromString}.
+	 *
+	 * **Example** (Decode YAML through the unknown codec)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const YamlUnknown = Yaml.fromString()
+	 * const value = Effect.runSync(S.decodeUnknownEffect(YamlUnknown)("name: Alice\n"))
+	 *
+	 * console.log(value) // { name: "Alice" }
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static fromString(options?: YamlParseOptions): Schema.Codec<unknown, string> {
 		return Schema.String.pipe(
@@ -877,6 +976,21 @@ export class Yaml {
 	 *
 	 * Schema-producing: bind the result to a `const` on hot paths (see
 	 * {@link Yaml.fromString}).
+	 *
+	 * **Example** (Decode a two-document stream)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const YamlDocuments = Yaml.allFromString()
+	 * const values = Effect.runSync(S.decodeUnknownEffect(YamlDocuments)("a: 1\n---\nb: 2\n"))
+	 *
+	 * console.log(values) // [{ a: 1 }, { b: 2 }]
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static allFromString(options?: YamlParseOptions): Schema.Codec<ReadonlyArray<unknown>, string> {
 		return Schema.String.pipe(
@@ -887,8 +1001,7 @@ export class Yaml {
 						Yaml.parseAll(input, options).pipe(
 							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
 						),
-					encode: (values: ReadonlyArray<unknown>) =>
-						Effect.gen(function* () {
+					encode: Effect.fn("Yaml.allFromString.encode")(function* (values: ReadonlyArray<unknown>) {
 							if (values.length === 0) return "";
 							const parts: Array<string> = [];
 							for (let index = 0; index < values.length; index++) {
@@ -912,6 +1025,22 @@ export class Yaml {
 	 *
 	 * Schema-producing: bind the result to a `const` on hot paths (see
 	 * {@link Yaml.fromString}).
+	 *
+	 * **Example** (Decode YAML into a struct)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { Yaml } from "@beep/scratchpad/yaml"
+	 *
+	 * const Config = S.Struct({ port: S.Number })
+	 * const ConfigFromYaml = Yaml.schema(Config)
+	 * const config = Effect.runSync(S.decodeUnknownEffect(ConfigFromYaml)("port: 3000"))
+	 *
+	 * console.log(config.port) // 3000
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static schema<T, E, RD = never, RE = never>(
 		target: Schema.Codec<T, E, RD, RE>,
@@ -981,14 +1110,14 @@ function parseForEquality(text: string): { readonly malformed: boolean; readonly
 	if (doc.errors.length > 0 || doc.warnings.some((w) => w.code === "DuplicateKey")) {
 		return { malformed: true, value: undefined };
 	}
-	const anchors = new Map<string, YamlNode>();
+	const anchors = MutableHashMap.empty<string, YamlNode>();
 	try {
 		return { malformed: false, value: nodeToJsValue(doc.contents, anchors, 100) };
 	} catch (err) {
 		// A "billion laughs" alias bomb parses clean but blows up on expansion;
 		// treat it as malformed (never equal to anything) rather than letting the
 		// budget guard escape as a defect.
-		if (err instanceof AliasExpansionBudgetExceeded) {
+		if (AliasExpansionBudgetExceeded.is(err)) {
 			return { malformed: true, value: undefined };
 		}
 		throw err;
@@ -1001,29 +1130,29 @@ function parseForEquality(text: string): { readonly malformed: boolean; readonly
  */
 function deepEqualValues(a: unknown, b: unknown): boolean {
 	if (a === b) return true;
-	if (typeof a === "number" && typeof b === "number" && Number.isNaN(a) && Number.isNaN(b)) {
+	if (P.isNumber(a) && P.isNumber(b) && Number.isNaN(a) && Number.isNaN(b)) {
 		return true;
 	}
 	if (a === null || b === null) return false;
 	if (typeof a !== typeof b) return false;
 
-	if (Array.isArray(a)) {
-		if (!Array.isArray(b) || a.length !== b.length) return false;
+	if (A.isArray(a)) {
+		if (!A.isArray(b) || a.length !== b.length) return false;
 		for (let i = 0; i < a.length; i++) {
 			if (!deepEqualValues(a[i], b[i])) return false;
 		}
 		return true;
 	}
-	if (Array.isArray(b)) return false;
+	if (A.isArray(b)) return false;
 
-	if (typeof a === "object" && typeof b === "object") {
+	if (P.isObject(a) && P.isObject(b)) {
 		const aObj = a as Record<string, unknown>;
 		const bObj = b as Record<string, unknown>;
-		const aKeys = Object.keys(aObj);
-		const bKeys = Object.keys(bObj);
+		const aKeys = R.keys(aObj);
+		const bKeys = R.keys(bObj);
 		if (aKeys.length !== bKeys.length) return false;
 		for (const key of aKeys) {
-			if (!Object.hasOwn(bObj, key) || !deepEqualValues(aObj[key], bObj[key])) return false;
+			if (!P.hasProperty(bObj, key) || !deepEqualValues(aObj[key], bObj[key])) return false;
 		}
 		return true;
 	}

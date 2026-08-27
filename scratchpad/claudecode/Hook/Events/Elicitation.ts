@@ -9,10 +9,9 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";

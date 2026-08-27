@@ -21,8 +21,13 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import type { FileSystem, PlatformError } from "effect";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("jsonl/internal/tail");
 
 /** UTF-8 BOM, as bytes. `U+FEFF` encodes to these three. */
 const BOM = [0xef, 0xbb, 0xbf] as const;
@@ -60,31 +65,55 @@ export const DEFAULT_WINDOW = 8192;
  * get the offset in the journal.
  *
  * @see {@link readTail} for the operation that produces this window.
+ *
+ * **Example** (Construct a decoded tail window)
+ *
+ * ```ts
+ * import { TailWindow } from "../../../jsonl/internal/tail.ts"
+ *
+ * const window = TailWindow.make({ text: "{}\n", start: 0, atFileStart: true, size: 3 })
+ * console.log(window.atFileStart) // true
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export interface TailWindow {
-	/** The decoded text of the window, starting at a line boundary. */
-	readonly text: string;
-	/**
-	 * The **logical** byte offset the text starts at — that is, post-BOM.
-	 *
-	 * Offsets this package hands out are relative to the post-BOM start of the
-	 * file, so the first line of a BOM'd journal begins at 0 exactly as it does
-	 * in one without. Add this to a `LineSlice.offset` computed over `text` to
-	 * get the offset in the journal.
-	 */
-	readonly start: number;
-	/** Whether the window reaches the start of the file — nothing left to widen into. */
-	readonly atFileStart: boolean;
-	/** The journal's logical size in bytes, post-BOM. */
-	readonly size: number;
-}
+export const TailWindow = Schema.Struct({
+  /** The decoded text of the window, starting at a line boundary. */
+  text: Schema.String,
+  /**
+   * The **logical** byte offset the text starts at — that is, post-BOM.
+   *
+   * Offsets this package hands out are relative to the post-BOM start of the
+   * file, so the first line of a BOM'd journal begins at 0 exactly as it does
+   * in one without. Add this to a `LineSlice.offset` computed over `text` to
+   * get the offset in the journal.
+   */
+  start: Schema.Finite,
+  /** Whether the window reaches the start of the file — nothing left to widen into. */
+  atFileStart: Schema.Boolean,
+  /** The journal's logical size in bytes, post-BOM. */
+  size: Schema.Finite,
+}).pipe(
+  $I.annoteSchema("TailWindow", {
+    description: "A decoded JSONL tail window and its post-BOM byte boundaries.",
+  })
+);
+
+/**
+ * Decoded JSONL tail window.
+ *
+ * @see {@link TailWindow} for the runtime schema.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TailWindow = typeof TailWindow.Type;
 
 /** Does the buffer begin with a UTF-8 BOM? */
 const hasBom = (bytes: Uint8Array): boolean =>
-	bytes.length >= 3 && bytes[0] === BOM[0] && bytes[1] === BOM[1] && bytes[2] === BOM[2];
+  bytes.length >= 3 && bytes[0] === BOM[0] && bytes[1] === BOM[1] && bytes[2] === BOM[2];
 
 /**
  * Probe the first three bytes of a file for a BOM.
@@ -124,16 +153,19 @@ const hasBom = (bytes: Uint8Array): boolean =>
  * @category resource-management
  * @since 0.0.0
  */
-export const probeBomBytes = (
-	fs: FileSystem.FileSystem,
-	path: string,
-): Effect.Effect<number, PlatformError.PlatformError, never> =>
-	Effect.gen(function* () {
-		const file = yield* fs.open(path, { flag: "r" });
-		const head = yield* file.readAlloc(BOM.length);
-		const bytes = Option.getOrElse(head, () => new Uint8Array(0));
-		return hasBom(bytes) ? BOM.length : 0;
-	}).pipe(Effect.scoped);
+export const probeBomBytes: {
+  (fs: FileSystem.FileSystem, path: string): Effect.Effect<number, PlatformError.PlatformError>;
+  (path: string): (fs: FileSystem.FileSystem) => Effect.Effect<number, PlatformError.PlatformError>;
+} = dual(
+  2,
+  (fs: FileSystem.FileSystem, path: string): Effect.Effect<number, PlatformError.PlatformError> =>
+    Effect.gen(function* () {
+      const file = yield* fs.open(path, { flag: "r" });
+      const head = yield* file.readAlloc(BOM.length);
+      const bytes = Option.getOrElse(head, () => new Uint8Array(0));
+      return hasBom(bytes) ? BOM.length : 0;
+    }).pipe(Effect.scoped)
+);
 
 /**
  * Read the last `window` bytes of a journal, decoded from a line boundary.
@@ -187,43 +219,58 @@ export const probeBomBytes = (
  * @category resource-management
  * @since 0.0.0
  */
-export const readTail = (
-	fs: FileSystem.FileSystem,
-	path: string,
-	window: number,
-	bomBytes: number,
-): Effect.Effect<TailWindow, PlatformError.PlatformError, never> =>
-	Effect.gen(function* () {
-		const info = yield* fs.stat(path);
-		const physicalSize = Number(info.size);
-		// Every offset below is LOGICAL — post-BOM — on every path, whether or not
-		// this particular window happens to reach the start of the file.
-		const logicalSize = physicalSize - bomBytes;
-		const from = Math.max(bomBytes, physicalSize - window);
-		const file = yield* fs.open(path, { flag: "r" });
-		yield* file.seek(from, "start");
-		const read = yield* file.readAlloc(physicalSize - from);
-		const bytes = Option.getOrElse(read, () => new Uint8Array(0));
+export const readTail: {
+  (
+    fs: FileSystem.FileSystem,
+    path: string,
+    window: number,
+    bomBytes: number
+  ): Effect.Effect<TailWindow, PlatformError.PlatformError>;
+  (
+    path: string,
+    window: number,
+    bomBytes: number
+  ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError>;
+} = dual(
+  4,
+  (
+    fs: FileSystem.FileSystem,
+    path: string,
+    window: number,
+    bomBytes: number
+  ): Effect.Effect<TailWindow, PlatformError.PlatformError, never> =>
+    Effect.gen(function* () {
+      const info = yield* fs.stat(path);
+      const physicalSize = Number(info.size);
+      // Every offset below is LOGICAL — post-BOM — on every path, whether or not
+      // this particular window happens to reach the start of the file.
+      const logicalSize = physicalSize - bomBytes;
+      const from = Math.max(bomBytes, physicalSize - window);
+      const file = yield* fs.open(path, { flag: "r" });
+      yield* file.seek(from, "start");
+      const read = yield* file.readAlloc(physicalSize - from);
+      const bytes = Option.getOrElse(read, () => new Uint8Array(0));
 
-		// "At file start" means at the start of the CONTENT, i.e. past the BOM.
-		const windowAtFileStart = from === bomBytes;
-		let cursor = 0;
-		if (!windowAtFileStart) {
-			// Discard the partial first line. If there is no newline in the window
-			// at all, the whole window is one partial line and there is nothing
-			// usable here — the caller widens.
-			const newline = bytes.indexOf(LF);
-			cursor = newline === -1 ? bytes.length : newline + 1;
-		}
+      // "At file start" means at the start of the CONTENT, i.e. past the BOM.
+      const windowAtFileStart = from === bomBytes;
+      let cursor = 0;
+      if (!windowAtFileStart) {
+        // Discard the partial first line. If there is no newline in the window
+        // at all, the whole window is one partial line and there is nothing
+        // usable here — the caller widens.
+        const newline = bytes.indexOf(LF);
+        cursor = newline === -1 ? bytes.length : newline + 1;
+      }
 
-		const text = new TextDecoder().decode(bytes.subarray(cursor));
-		return {
-			text,
-			start: from + cursor - bomBytes,
-			atFileStart: windowAtFileStart,
-			size: logicalSize,
-		};
-	}).pipe(Effect.scoped);
+      const text = new TextDecoder().decode(bytes.subarray(cursor));
+      return {
+        text,
+        start: from + cursor - bomBytes,
+        atFileStart: windowAtFileStart,
+        size: logicalSize,
+      };
+    }).pipe(Effect.scoped)
+);
 
 /**
  * Read widening windows until `decode` finds something, or the whole file has
@@ -261,28 +308,45 @@ export const readTail = (
  * @category resource-management
  * @since 0.0.0
  */
-export const readTailUntil = <A>(
-	fs: FileSystem.FileSystem,
-	path: string,
-	bomBytes: number,
-	decode: (window: TailWindow) => Option.Option<A>,
-	initialWindow = DEFAULT_WINDOW,
-): Effect.Effect<Option.Option<A>, PlatformError.PlatformError, never> =>
-	Effect.gen(function* () {
-		let window = initialWindow;
-		for (;;) {
-			const tail = yield* readTail(fs, path, window, bomBytes);
-			const found = decode(tail);
-			if (Option.isSome(found)) {
-				return found;
-			}
-			if (tail.atFileStart) {
-				// The window already covered the whole file; widening cannot help.
-				return Option.none<A>();
-			}
-			window *= 4;
-		}
-	});
+export const readTailUntil: {
+  <A>(
+    fs: FileSystem.FileSystem,
+    path: string,
+    bomBytes: number,
+    decode: (window: TailWindow) => Option.Option<A>,
+    initialWindow?: number
+  ): Effect.Effect<Option.Option<A>, PlatformError.PlatformError>;
+  <A>(
+    path: string,
+    bomBytes: number,
+    decode: (window: TailWindow) => Option.Option<A>,
+    initialWindow?: number
+  ): (fs: FileSystem.FileSystem) => Effect.Effect<Option.Option<A>, PlatformError.PlatformError>;
+} = dual(
+  (args) => P.hasProperty(args[0], "open"),
+  <A>(
+    fs: FileSystem.FileSystem,
+    path: string,
+    bomBytes: number,
+    decode: (window: TailWindow) => Option.Option<A>,
+    initialWindow = DEFAULT_WINDOW
+  ): Effect.Effect<Option.Option<A>, PlatformError.PlatformError, never> =>
+    Effect.gen(function* () {
+      let window = initialWindow;
+      for (;;) {
+        const tail = yield* readTail(fs, path, window, bomBytes);
+        const found = decode(tail);
+        if (Option.isSome(found)) {
+          return found;
+        }
+        if (tail.atFileStart) {
+          // The window already covered the whole file; widening cannot help.
+          return Option.none<A>();
+        }
+        window *= 4;
+      }
+    })
+);
 
 /**
  * Read a byte range and decode it as text, safely across chunk boundaries.
@@ -322,33 +386,48 @@ export const readTailUntil = <A>(
  * @category resource-management
  * @since 0.0.0
  */
-export const readRangeText = (
-	fs: FileSystem.FileSystem,
-	path: string,
-	from: number,
-	length: number,
-): Effect.Effect<string, PlatformError.PlatformError, never> =>
-	Effect.gen(function* () {
-		if (length <= 0) {
-			return "";
-		}
-		const file = yield* fs.open(path, { flag: "r" });
-		yield* file.seek(from, "start");
-		const decoder = new TextDecoder();
-		let text = "";
-		let remaining = length;
-		while (remaining > 0) {
-			const chunk = yield* file.readAlloc(Math.min(remaining, CHUNK));
-			if (Option.isNone(chunk) || chunk.value.length === 0) {
-				break;
-			}
-			// `stream: true` carries an incomplete trailing sequence into the next
-			// call instead of emitting U+FFFD for it.
-			text += decoder.decode(chunk.value, { stream: true });
-			remaining -= chunk.value.length;
-		}
-		return text + decoder.decode();
-	}).pipe(Effect.scoped);
+export const readRangeText: {
+  (
+    fs: FileSystem.FileSystem,
+    path: string,
+    from: number,
+    length: number
+  ): Effect.Effect<string, PlatformError.PlatformError>;
+  (
+    path: string,
+    from: number,
+    length: number
+  ): (fs: FileSystem.FileSystem) => Effect.Effect<string, PlatformError.PlatformError>;
+} = dual(
+  4,
+  (
+    fs: FileSystem.FileSystem,
+    path: string,
+    from: number,
+    length: number
+  ): Effect.Effect<string, PlatformError.PlatformError, never> =>
+    Effect.gen(function* () {
+      if (length <= 0) {
+        return "";
+      }
+      const file = yield* fs.open(path, { flag: "r" });
+      yield* file.seek(from, "start");
+      const decoder = new TextDecoder();
+      let text = "";
+      let remaining = length;
+      while (remaining > 0) {
+        const chunk = yield* file.readAlloc(Math.min(remaining, CHUNK));
+        if (Option.isNone(chunk) || chunk.value.length === 0) {
+          break;
+        }
+        // `stream: true` carries an incomplete trailing sequence into the next
+        // call instead of emitting U+FFFD for it.
+        text += decoder.decode(chunk.value, { stream: true });
+        remaining -= chunk.value.length;
+      }
+      return text + decoder.decode();
+    }).pipe(Effect.scoped)
+);
 
 /** Read granularity for incremental tail reads. */
 const CHUNK = 64 * 1024;

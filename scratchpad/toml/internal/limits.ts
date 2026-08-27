@@ -1,3 +1,10 @@
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("toml/internal/limits");
+
 /**
  * Zero-dependency nesting-depth guards shared by every TOML engine file.
  *
@@ -38,7 +45,21 @@ export const MAX_NESTING_DEPTH = 256;
  * @category type-level
  * @since 0.0.0
  */
-export type GuardReason = "NestingDepthExceeded";
+const GuardReason = LiteralKit(["NestingDepthExceeded"]).annotate(
+  $I.annote("GuardReason", {
+    description: "Reason a defensive TOML engine guard rejected an operation.",
+  })
+);
+
+/**
+ * Reason carried by an internal defensive guard failure.
+ *
+ * @see {@link GuardReason} for the runtime literal schema.
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GuardReason = typeof GuardReason.Type;
 
 /**
  * Raw guard-trip signal. The engine throws it; ONLY the public modules catch
@@ -56,7 +77,12 @@ export type GuardReason = "NestingDepthExceeded";
  * ```ts
  * import { GuardExceeded, MAX_NESTING_DEPTH } from "../../../toml/internal/limits.ts"
  *
- * const error = new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, 257, 0)
+ * const error = GuardExceeded.make({
+ *   reason: "NestingDepthExceeded",
+ *   limit: MAX_NESTING_DEPTH,
+ *   actual: 257,
+ *   offset: 0,
+ * })
  * console.log(error._tag) // "GuardExceeded"
  * console.log(error.limit) // 256
  * ```
@@ -67,24 +93,20 @@ export type GuardReason = "NestingDepthExceeded";
  * @category errors
  * @since 0.0.0
  */
-export class GuardExceeded extends Error {
-  readonly _tag = "GuardExceeded";
-  readonly reason: GuardReason;
-  readonly limit: number;
-  readonly actual: number;
-  readonly offset: number;
-
-  constructor(
+export class GuardExceeded extends S.TaggedError<GuardExceeded>($I`GuardExceeded`)(
+  "GuardExceeded",
+  {
     reason: GuardReason,
-    limit: number,
-    actual: number,
-    offset: number,
-  ) {
-    super(`${reason}: limit ${limit}, actual ${actual}`);
-    this.reason = reason;
-    this.limit = limit;
-    this.actual = actual;
-    this.offset = offset;
+    limit: S.Finite,
+    actual: S.Finite,
+    offset: S.Finite,
+  },
+  $I.annote("GuardExceeded", {
+    description: "Typed engine signal for a defensive TOML nesting-depth failure.",
+  })
+) {
+  override get message(): string {
+    return `${this.reason}: limit ${this.limit}, actual ${this.actual}`;
   }
 }
 
@@ -97,7 +119,7 @@ export class GuardExceeded extends Error {
  * ```ts
  * import { GuardExceeded, isGuardExceeded } from "../../../toml/internal/limits.ts"
  *
- * const error: unknown = new GuardExceeded("NestingDepthExceeded", 256, 257, 0)
+ * const error: unknown = GuardExceeded.make({ reason: "NestingDepthExceeded", limit: 256, actual: 257, offset: 0 })
  * console.log(isGuardExceeded(error)) // true
  * console.log(isGuardExceeded(new Error("nope"))) // false
  * ```
@@ -107,7 +129,27 @@ export class GuardExceeded extends Error {
  * @category guards
  * @since 0.0.0
  */
-export const isGuardExceeded = (u: unknown): u is GuardExceeded => u instanceof GuardExceeded;
+export const isGuardExceeded = S.is(GuardExceeded);
+
+class TomlInvariantError extends S.TaggedError<TomlInvariantError>($I`TomlInvariantError`)(
+  "TomlInvariantError",
+  { operation: S.NonEmptyString, detail: S.NonEmptyString },
+  $I.annote("TomlInvariantError", {
+    description: "Programmer defect raised when internal TOML engine wiring violates an invariant.",
+  })
+) {
+  override get message(): string {
+    return `${this.operation}: ${this.detail}`;
+  }
+}
+
+const PositiveSafeInteger = S.Finite.check(S.isInt(), S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveSafeInteger", {
+    description: "Positive safe integer accepted by internal TOML engine caps.",
+  })
+);
+
+const isPositiveSafeInteger = S.is(PositiveSafeInteger);
 
 /**
  * Internal caps are programmer-supplied. A NaN or non-integer reaching a guard
@@ -139,9 +181,15 @@ export const isGuardExceeded = (u: unknown): u is GuardExceeded => u instanceof 
  * @category assertions
  * @since 0.0.0
  */
-export const assertCap = (name: string, value: number): number => {
-  if (!Number.isSafeInteger(value) || value < 1) {
-    throw new TypeError(`@effected/toml internal cap ${name} must be a positive integer, received ${value}`);
+export const assertCap: {
+  (name: string, value: number): number;
+  (value: number): (name: string) => number;
+} = dual(2, (name: string, value: number): number => {
+  if (!isPositiveSafeInteger(value)) {
+    throw TomlInvariantError.make({
+      operation: "assertCap",
+      detail: `@effected/toml internal cap ${name} must be a positive integer, received ${value}`,
+    });
   }
   return value;
-};
+});

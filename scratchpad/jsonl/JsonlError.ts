@@ -62,20 +62,20 @@ const SchemaErrorFromSelf = Schema.declare(Schema.isSchemaError);
  * @since 0.0.0
  */
 export class MalformedLine extends Schema.TaggedError<MalformedLine>($I`MalformedLine`)(
-	"MalformedLine",
-	{
-		/** The offending line, with its byte offsets into the source. */
-		line: LineSlice,
-	},
-	$I.annote("MalformedLine", {
-		description: "A journal line that is not valid JSON, torn at the tail or a terminated hole.",
-	}),
+  "MalformedLine",
+  {
+    /** The offending line, with its byte offsets into the source. */
+    line: LineSlice,
+  },
+  $I.annote("MalformedLine", {
+    description: "A journal line that is not valid JSON, torn at the tail or a terminated hole.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		const kind = this.line.terminated ? "malformed line" : "unterminated final line";
-		return `JSONL ${kind} at byte offset ${this.line.offset}`;
-	}
+  /** @internal */
+  override get message(): string {
+    const kind = this.line.terminated ? "malformed line" : "unterminated final line";
+    return `JSONL ${kind} at byte offset ${this.line.offset}`;
+  }
 }
 
 /**
@@ -107,23 +107,23 @@ export class MalformedLine extends Schema.TaggedError<MalformedLine>($I`Malforme
  * @since 0.0.0
  */
 export class UnknownEvent extends Schema.TaggedError<UnknownEvent>($I`UnknownEvent`)(
-	"UnknownEvent",
-	{
-		/** The offending line, with its byte offsets into the source. */
-		line: LineSlice,
-		/** The unrecognized tag as it appeared on the envelope. */
-		event: Schema.String,
-		/** The tags this journal's registry does define. */
-		known: Schema.Array(Schema.String),
-	},
-	$I.annote("UnknownEvent", {
-		description: "A line whose event tag is not in the journal registry.",
-	}),
+  "UnknownEvent",
+  {
+    /** The offending line, with its byte offsets into the source. */
+    line: LineSlice,
+    /** The unrecognized tag as it appeared on the envelope. */
+    event: Schema.String,
+    /** The tags this journal's registry does define. */
+    known: Schema.Array(Schema.String),
+  },
+  $I.annote("UnknownEvent", {
+    description: "A line whose event tag is not in the journal registry.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		return `unknown JSONL event ${JSON.stringify(this.event)} at byte offset ${this.line.offset}`;
-	}
+  /** @internal */
+  override get message(): string {
+    return `unknown JSONL event ${JSON.stringify(this.event)} at byte offset ${this.line.offset}`;
+  }
 }
 
 /**
@@ -173,27 +173,27 @@ export class UnknownEvent extends Schema.TaggedError<UnknownEvent>($I`UnknownEve
  * @since 0.0.0
  */
 export class InvalidData extends Schema.TaggedError<InvalidData>($I`InvalidData`)(
-	"InvalidData",
-	{
-		/** The offending line, with its byte offsets into the source. */
-		line: LineSlice,
-		/**
-		 * The event tag whose payload schema rejected the data, or `none` when it
-		 * was the envelope frame itself that failed.
-		 */
-		event: Schema.Option(Schema.String),
-		/** The schema failure, carried structurally — `issue` is the full tree. */
-		error: SchemaErrorFromSelf,
-	},
-	$I.annote("InvalidData", {
-		description: "A line whose envelope frame or registered payload failed schema validation.",
-	}),
+  "InvalidData",
+  {
+    /** The offending line, with its byte offsets into the source. */
+    line: LineSlice,
+    /**
+     * The event tag whose payload schema rejected the data, or `none` when it
+     * was the envelope frame itself that failed.
+     */
+    event: Schema.Option(Schema.String),
+    /** The schema failure, carried structurally — `issue` is the full tree. */
+    error: SchemaErrorFromSelf,
+  },
+  $I.annote("InvalidData", {
+    description: "A line whose envelope frame or registered payload failed schema validation.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		const where = Option.isSome(this.event) ? `payload for event ${JSON.stringify(this.event.value)}` : "envelope";
-		return `invalid JSONL ${where} at byte offset ${this.line.offset}: ${this.error.message}`;
-	}
+  /** @internal */
+  override get message(): string {
+    const where = Option.isSome(this.event) ? `payload for event ${JSON.stringify(this.event.value)}` : "envelope";
+    return `invalid JSONL ${where} at byte offset ${this.line.offset}: ${this.error.message}`;
+  }
 }
 
 /**
@@ -225,21 +225,21 @@ export class InvalidData extends Schema.TaggedError<InvalidData>($I`InvalidData`
  * @since 0.0.0
  */
 export class TerminalViolation extends Schema.TaggedError<TerminalViolation>($I`TerminalViolation`)(
-	"TerminalViolation",
-	{
-		/** The tag of the event whose append was refused. */
-		event: Schema.String,
-		/** The terminal event currently at the tail of the journal. */
-		terminal: Schema.String,
-	},
-	$I.annote("TerminalViolation", {
-		description: "An append refused because the journal tail is terminal and the event is not reopen.",
-	}),
+  "TerminalViolation",
+  {
+    /** The tag of the event whose append was refused. */
+    event: Schema.String,
+    /** The terminal event currently at the tail of the journal. */
+    terminal: Schema.String,
+  },
+  $I.annote("TerminalViolation", {
+    description: "An append refused because the journal tail is terminal and the event is not reopen.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		return `cannot append ${JSON.stringify(this.event)}: the journal is terminal at ${JSON.stringify(this.terminal)}`;
-	}
+  /** @internal */
+  override get message(): string {
+    return `cannot append ${JSON.stringify(this.event)}: the journal is terminal at ${JSON.stringify(this.terminal)}`;
+  }
 }
 
 /**
@@ -267,19 +267,19 @@ export class TerminalViolation extends Schema.TaggedError<TerminalViolation>($I`
  * @since 0.0.0
  */
 export class JournalNotFound extends Schema.TaggedError<JournalNotFound>($I`JournalNotFound`)(
-	"JournalNotFound",
-	{
-		/** The path that does not exist. */
-		path: Schema.String,
-	},
-	$I.annote("JournalNotFound", {
-		description: "An operation against a journal file that does not exist yet.",
-	}),
+  "JournalNotFound",
+  {
+    /** The path that does not exist. */
+    path: Schema.String,
+  },
+  $I.annote("JournalNotFound", {
+    description: "An operation against a journal file that does not exist yet.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		return `journal not found: ${this.path}`;
-	}
+  /** @internal */
+  override get message(): string {
+    return `journal not found: ${this.path}`;
+  }
 }
 
 /**
@@ -322,24 +322,24 @@ export class JournalNotFound extends Schema.TaggedError<JournalNotFound>($I`Jour
  * @since 0.0.0
  */
 export class UnserializableData extends Schema.TaggedError<UnserializableData>($I`UnserializableData`)(
-	"UnserializableData",
-	{
-		/** The event tag whose payload could not be serialized. */
-		event: Schema.String,
-		/** The value `JSON.stringify` threw, carried structurally. */
-		cause: Schema.Unknown,
-	},
-	$I.annote("UnserializableData", {
-		description: "A payload that validated against its schema but cannot be serialized to JSON.",
-	}),
+  "UnserializableData",
+  {
+    /** The event tag whose payload could not be serialized. */
+    event: Schema.String,
+    /** The value `JSON.stringify` threw, carried structurally. */
+    cause: Schema.Unknown,
+  },
+  $I.annote("UnserializableData", {
+    description: "A payload that validated against its schema but cannot be serialized to JSON.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		// Deliberately does not render `cause`: it may be the very cyclic value
-		// that could not be serialized in the first place.
-		const detail = this.cause instanceof Error ? this.cause.message : "value is not JSON-serializable";
-		return `cannot serialize payload for event ${JSON.stringify(this.event)}: ${detail}`;
-	}
+  /** @internal */
+  override get message(): string {
+    // Deliberately does not render `cause`: it may be the very cyclic value
+    // that could not be serialized in the first place.
+    const detail = this.cause instanceof Error ? this.cause.message : "value is not JSON-serializable";
+    return `cannot serialize payload for event ${JSON.stringify(this.event)}: ${detail}`;
+  }
 }
 
 /**
@@ -371,19 +371,19 @@ export class UnserializableData extends Schema.TaggedError<UnserializableData>($
  * @since 0.0.0
  */
 export class JournalClosed extends Schema.TaggedError<JournalClosed>($I`JournalClosed`)(
-	"JournalClosed",
-	{
-		/** The tag of the event whose append was refused. */
-		event: Schema.String,
-	},
-	$I.annote("JournalClosed", {
-		description: "An append refused because the journal service scope has closed.",
-	}),
+  "JournalClosed",
+  {
+    /** The tag of the event whose append was refused. */
+    event: Schema.String,
+  },
+  $I.annote("JournalClosed", {
+    description: "An append refused because the journal service scope has closed.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		return `cannot append ${JSON.stringify(this.event)}: the journal is closed`;
-	}
+  /** @internal */
+  override get message(): string {
+    return `cannot append ${JSON.stringify(this.event)}: the journal is closed`;
+  }
 }
 
 /**
@@ -440,25 +440,25 @@ export class JournalClosed extends Schema.TaggedError<JournalClosed>($I`JournalC
  * @since 0.0.0
  */
 export class JournalResync extends Schema.TaggedError<JournalResync>($I`JournalResync`)(
-	"JournalResync",
-	{
-		/** The journal path whose file changed identity or shrank. */
-		path: Schema.String,
-		/** Which contract breach was detected. Diagnostic; the recovery is the same. */
-		reason: Schema.Literals(["truncated", "replaced"]),
-		/** The logical offset the reader had consumed to. */
-		expected: Schema.Number,
-		/** The file's logical size when the breach was noticed. */
-		actual: Schema.Number,
-	},
-	$I.annote("JournalResync", {
-		description: "The journal file was truncated or replaced beneath a reader.",
-	}),
+  "JournalResync",
+  {
+    /** The journal path whose file changed identity or shrank. */
+    path: Schema.String,
+    /** Which contract breach was detected. Diagnostic; the recovery is the same. */
+    reason: Schema.Literals(["truncated", "replaced"]),
+    /** The logical offset the reader had consumed to. */
+    expected: Schema.Finite,
+    /** The file's logical size when the breach was noticed. */
+    actual: Schema.Finite,
+  },
+  $I.annote("JournalResync", {
+    description: "The journal file was truncated or replaced beneath a reader.",
+  })
 ) {
-	/** @internal */
-	override get message(): string {
-		return `journal ${this.reason} beneath the reader at ${this.path}: consumed ${this.expected}, file is now ${this.actual}`;
-	}
+  /** @internal */
+  override get message(): string {
+    return `journal ${this.reason} beneath the reader at ${this.path}: consumed ${this.expected}, file is now ${this.actual}`;
+  }
 }
 
 /**
@@ -481,11 +481,11 @@ export class JournalResync extends Schema.TaggedError<JournalResync>($I`JournalR
  * @since 0.0.0
  */
 export type JsonlError =
-	| MalformedLine
-	| UnknownEvent
-	| InvalidData
-	| UnserializableData
-	| TerminalViolation
-	| JournalClosed
-	| JournalNotFound
-	| JournalResync;
+  | MalformedLine
+  | UnknownEvent
+  | InvalidData
+  | UnserializableData
+  | TerminalViolation
+  | JournalClosed
+  | JournalNotFound
+  | JournalResync;

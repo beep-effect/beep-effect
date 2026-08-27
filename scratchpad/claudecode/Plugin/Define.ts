@@ -29,14 +29,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as O from "@beep/utils/Option";
+import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
-import * as Path from "effect/Path";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-
 import { PluginDefinitionError, PluginWriteError } from "../Errors.ts";
 import {
   CommandFrontmatter,
@@ -61,6 +60,8 @@ import {
 } from "./Layout.ts";
 import { PluginManifest } from "./Manifest.ts";
 
+const $I = $ScratchpadId.create("claudecode/Plugin/Define");
+
 const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
   A.isArray(value) && A.every(value, P.isString);
 
@@ -71,54 +72,114 @@ const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
 /**
  * A typed slash-command entry to be written to `commands/<name>.md`.
  *
+ * **Example** (Construct a command entry)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ *
+ * const entry = Plugin.command({ name: "review", body: "Review the change." })
+ * console.log(entry.name) // review
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface PluginCommandEntry {
-  readonly name: string;
-  readonly path?: string;
-  readonly frontmatter: CommandFrontmatter;
-  readonly body: string;
-}
+export class PluginCommandEntry extends S.Class<PluginCommandEntry>($I`PluginCommandEntry`)(
+  {
+    name: S.String,
+    path: S.String.pipe(S.optionalKey),
+    frontmatter: CommandFrontmatter,
+    body: S.String,
+  },
+  $I.annote("PluginCommandEntry", {
+    description: "Slash-command content and frontmatter mapped to a plugin-relative path.",
+  })
+) {}
 
 /**
  * A typed subagent entry to be written to `agents/<name>.md`.
  *
+ * **Example** (Construct a subagent entry)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ *
+ * const entry = Plugin.agent({
+ *   name: "reviewer",
+ *   description: "Reviews changes",
+ *   body: "Review changes."
+ * })
+ * console.log(entry.frontmatter.name) // reviewer
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface PluginAgentEntry {
-  readonly name: string;
-  readonly path?: string;
-  readonly frontmatter: SubagentFrontmatter;
-  readonly body: string;
-}
+export class PluginAgentEntry extends S.Class<PluginAgentEntry>($I`PluginAgentEntry`)(
+  {
+    name: S.String,
+    path: S.String.pipe(S.optionalKey),
+    frontmatter: SubagentFrontmatter,
+    body: S.String,
+  },
+  $I.annote("PluginAgentEntry", {
+    description: "Subagent content and frontmatter mapped to a plugin-relative path.",
+  })
+) {}
 
 /**
  * A typed skill entry to be written to `skills/<name>/SKILL.md`.
  *
- * @category models
- * @since 0.0.0
- */
-export interface PluginSkillEntry {
-  readonly name: string;
-  readonly path?: string;
-  readonly frontmatter: SkillFrontmatter;
-  readonly body: string;
-}
-
-/**
- * A typed output-style entry to be written to `output-styles/<name>.md`.
+ * **Example** (Construct a skill entry)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ *
+ * const entry = Plugin.skill({ name: "review", body: "Review changes." })
+ * console.log(entry.name) // review
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface PluginOutputStyleEntry {
-  readonly name: string;
-  readonly path?: string;
-  readonly frontmatter: OutputStyleFrontmatter;
-  readonly body: string;
-}
+export class PluginSkillEntry extends S.Class<PluginSkillEntry>($I`PluginSkillEntry`)(
+  {
+    name: S.String,
+    path: S.String.pipe(S.optionalKey),
+    frontmatter: SkillFrontmatter,
+    body: S.String,
+  },
+  $I.annote("PluginSkillEntry", {
+    description: "Skill content and frontmatter mapped to a plugin-relative path.",
+  })
+) {}
+
+/**
+ * A typed output-style entry to be written to `output-styles/<name>.md`.
+ *
+ * **Example** (Construct an output-style entry)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ *
+ * const entry = Plugin.outputStyle({ name: "concise", body: "Be concise." })
+ * console.log(entry.name) // concise
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PluginOutputStyleEntry extends S.Class<PluginOutputStyleEntry>($I`PluginOutputStyleEntry`)(
+  {
+    name: S.String,
+    path: S.String.pipe(S.optionalKey),
+    frontmatter: OutputStyleFrontmatter,
+    body: S.String,
+  },
+  $I.annote("PluginOutputStyleEntry", {
+    description: "Output-style content and frontmatter mapped to a plugin-relative path.",
+  })
+) {}
 
 /**
  * Encoded input accepted by {@link command}.
@@ -173,35 +234,74 @@ export type PluginOutputStyleConfig = Omit<OutputStyleFrontmatter.Encoded, "name
  * either a `PluginManifest` instance or a plain object that satisfies
  * its constructor; the latter is validated on entry.
  *
+ * **Example** (Describe a plugin definition input)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ * import * as S from "effect/Schema"
+ *
+ * const config = S.decodeUnknownSync(Plugin.PluginConfig)({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "review", body: "Review changes." })]
+ * })
+ * console.log(config.manifest)
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
-export interface PluginConfig {
-  readonly manifest: PluginManifest | PluginManifest.Encoded;
-  readonly commands?: ReadonlyArray<PluginCommandEntry>;
-  readonly agents?: ReadonlyArray<PluginAgentEntry>;
-  readonly skills?: ReadonlyArray<PluginSkillEntry>;
-  readonly outputStyles?: ReadonlyArray<PluginOutputStyleEntry>;
-  readonly hooksConfig?: HooksSection | HooksSectionEncoded;
-  readonly mcpConfig?: McpJsonFile | McpJsonFile.Encoded;
-}
+export const PluginConfig = S.Struct({
+  manifest: S.Union([S.toType(PluginManifest), S.toEncoded(PluginManifest)]),
+  commands: PluginCommandEntry.pipe(S.toType, S.Array, S.optionalKey),
+  agents: PluginAgentEntry.pipe(S.toType, S.Array, S.optionalKey),
+  skills: PluginSkillEntry.pipe(S.toType, S.Array, S.optionalKey),
+  outputStyles: PluginOutputStyleEntry.pipe(S.toType, S.Array, S.optionalKey),
+  hooksConfig: S.Union([S.toType(HooksSection), S.toEncoded(HooksSection)]).pipe(S.optionalKey),
+  mcpConfig: S.Union([S.toType(McpJsonFile), S.toEncoded(McpJsonFile)]).pipe(S.optionalKey),
+}).pipe(
+  $I.annoteSchema("PluginConfig", {
+    description: "Validated constructor input for a plugin manifest and its optional component definitions.",
+  })
+);
+
+/**
+ * Runtime type decoded by {@link PluginConfig}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PluginConfig = typeof PluginConfig.Type;
 
 /**
  * The fully-formed plugin definition ready to be written. Components
  * default to empty arrays; optional config files default to `None`.
  *
+ * **Example** (Define a minimal plugin)
+ *
+ * ```ts
+ * import { Plugin } from "effect-claudecode"
+ *
+ * const definition = Plugin.define({ manifest: { name: "review-tools" } })
+ * console.log(definition.commands.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface PluginDefinition {
-  readonly manifest: PluginManifest;
-  readonly commands: ReadonlyArray<PluginCommandEntry>;
-  readonly agents: ReadonlyArray<PluginAgentEntry>;
-  readonly skills: ReadonlyArray<PluginSkillEntry>;
-  readonly outputStyles: ReadonlyArray<PluginOutputStyleEntry>;
-  readonly hooksConfig: O.Option<HooksSection>;
-  readonly mcpConfig: O.Option<McpJsonFile>;
-}
+export class PluginDefinition extends S.Class<PluginDefinition>($I`PluginDefinition`)(
+  {
+    manifest: PluginManifest,
+    commands: S.Array(PluginCommandEntry),
+    agents: S.Array(PluginAgentEntry),
+    skills: S.Array(PluginSkillEntry),
+    outputStyles: S.Array(PluginOutputStyleEntry),
+    hooksConfig: S.Option(HooksSection),
+    mcpConfig: S.Option(McpJsonFile),
+  },
+  $I.annote("PluginDefinition", {
+    description: "Validated plugin definition with normalized component arrays and optional configuration files.",
+  })
+) {}
 
 // ---------------------------------------------------------------------------
 // define
@@ -224,12 +324,12 @@ export interface PluginDefinition {
  */
 export const command = (config: PluginCommandConfig): PluginCommandEntry => {
   const { name, path, body, ...frontmatter } = config;
-  return {
+  return PluginCommandEntry.make({
     name,
-    ...(path !== undefined ? { path } : {}),
+    ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
     frontmatter: S.decodeSync(CommandFrontmatter)(frontmatter),
     body,
-  };
+  });
 };
 
 /**
@@ -253,15 +353,15 @@ export const command = (config: PluginCommandConfig): PluginCommandEntry => {
  */
 export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
   const { name, path, body, ...frontmatter } = config;
-  return {
+  return PluginAgentEntry.make({
     name,
-    ...(path !== undefined ? { path } : {}),
+    ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
     frontmatter: S.decodeSync(SubagentFrontmatter)({
       name,
       ...frontmatter,
     }),
     body,
-  };
+  });
 };
 
 /**
@@ -281,15 +381,15 @@ export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
  */
 export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
   const { name, path, body, ...frontmatter } = config;
-  return {
+  return PluginSkillEntry.make({
     name,
-    ...(path !== undefined ? { path } : {}),
+    ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
     frontmatter: S.decodeSync(SkillFrontmatter)({
       name,
       ...frontmatter,
     }),
     body,
-  };
+  });
 };
 
 /**
@@ -309,15 +409,15 @@ export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
  */
 export const outputStyle = (config: PluginOutputStyleConfig): PluginOutputStyleEntry => {
   const { name, path, body, ...frontmatter } = config;
-  return {
+  return PluginOutputStyleEntry.make({
     name,
-    ...(path !== undefined ? { path } : {}),
+    ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
     frontmatter: S.decodeSync(OutputStyleFrontmatter)({
       name,
       ...frontmatter,
     }),
     body,
-  };
+  });
 };
 
 const normalizeHooksConfig = (hooksConfig: HooksSection | HooksSectionEncoded | undefined): O.Option<HooksSection> =>
@@ -436,7 +536,7 @@ const resolveConfigRelativePath = (options: {
 }): Effect.Effect<O.Option<string>, PluginWriteError> => {
   const specs = O.match(options.spec, {
     onNone: () => [],
-    onSome: (spec) => (typeof spec === "string" || isStringArray(spec) ? pathSpecs(O.some(spec)) : []),
+    onSome: (spec) => (P.isString(spec) || isStringArray(spec) ? pathSpecs(O.some(spec)) : []),
   });
   if (O.isSome(options.spec) && specs.length === 0) {
     return Effect.succeed(O.none());
@@ -488,15 +588,16 @@ const resolveConfigRelativePath = (options: {
  * @category constructors
  * @since 0.0.0
  */
-export const define = (config: PluginConfig): PluginDefinition => ({
-  manifest: S.is(PluginManifest)(config.manifest) ? config.manifest : S.decodeSync(PluginManifest)(config.manifest),
-  commands: config.commands ?? [],
-  agents: A.map(config.agents ?? [], normalizeAgentEntry),
-  skills: A.map(config.skills ?? [], normalizeSkillEntry),
-  outputStyles: A.map(config.outputStyles ?? [], normalizeOutputStyleEntry),
-  hooksConfig: normalizeHooksConfig(config.hooksConfig),
-  mcpConfig: normalizeMcpConfig(config.mcpConfig),
-});
+export const define = (config: PluginConfig): PluginDefinition =>
+  PluginDefinition.make({
+    manifest: S.is(PluginManifest)(config.manifest) ? config.manifest : S.decodeSync(PluginManifest)(config.manifest),
+    commands: config.commands ?? [],
+    agents: A.map(config.agents ?? [], normalizeAgentEntry),
+    skills: A.map(config.skills ?? [], normalizeSkillEntry),
+    outputStyles: A.map(config.outputStyles ?? [], normalizeOutputStyleEntry),
+    hooksConfig: normalizeHooksConfig(config.hooksConfig),
+    mcpConfig: normalizeMcpConfig(config.mcpConfig),
+  });
 
 // ---------------------------------------------------------------------------
 // write — internal helpers
@@ -682,7 +783,7 @@ const copyPathIfExists = (
 const staticPathSpecs = (spec: O.Option<unknown>, fallback: string): ReadonlyArray<string> =>
   O.match(spec, {
     onNone: () => [fallback],
-    onSome: (value) => (typeof value === "string" || isStringArray(value) ? pathSpecs(O.some(value)) : []),
+    onSome: (value) => (P.isString(value) || isStringArray(value) ? pathSpecs(O.some(value)) : []),
   });
 
 const copyLoadedStaticLayout = (
@@ -723,17 +824,18 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
   O.match(manifest.mcpServers, {
     onNone: () => manifest,
     onSome: (mcpServers) => {
-      if (typeof mcpServers === "string" || A.isArray(mcpServers)) {
+      if (P.isString(mcpServers) || A.isArray(mcpServers)) {
         return manifest;
       }
-      return O.match(S.decodeUnknownOption(McpJsonFile)({ mcpServers }), {
-        onNone: () => manifest,
-        onSome: (file) =>
+      return S.decodeUnknownOption(McpJsonFile)({ mcpServers }).pipe(
+        O.map((file) =>
           PluginManifest.make({
             ...manifest,
             mcpServers: O.some(toClaudeCodeJson(file).mcpServers),
-          }),
-      });
+          })
+        ),
+        O.getOrElse(() => manifest)
+      );
     },
   });
 
@@ -775,78 +877,88 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
  * @category serialization
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const write = (
-  definition: PluginDefinition,
-  destDir: string
-): Effect.Effect<void, PluginWriteError, FileSystem.FileSystem | Path.Path> =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    const manifest = syncManifest(definition);
-    const emittedManifest = manifestForWrite(manifest);
+export const write: {
+  (
+    destDir: string
+  ): (definition: PluginDefinition) => Effect.Effect<void, PluginWriteError, FileSystem.FileSystem | Path.Path>;
+  (
+    definition: PluginDefinition,
+    destDir: string
+  ): Effect.Effect<void, PluginWriteError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  2,
+  (
+    definition: PluginDefinition,
+    destDir: string
+  ): Effect.Effect<void, PluginWriteError, FileSystem.FileSystem | Path.Path> =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const manifest = syncManifest(definition);
+      const emittedManifest = manifestForWrite(manifest);
 
-    // .claude-plugin/plugin.json
-    const claudePluginDir = path.join(destDir, ".claude-plugin");
-    const manifestPath = path.join(claudePluginDir, "plugin.json");
-    const encodedManifest = yield* S.encodeEffect(PluginManifest)(emittedManifest).pipe(
-      Effect.mapError((cause) => PluginWriteError.make({ path: manifestPath, cause }))
-    );
-    yield* makeDir(claudePluginDir);
-    yield* writeFile(manifestPath, toJsonFileContent(encodedManifest));
+      // .claude-plugin/plugin.json
+      const claudePluginDir = path.join(destDir, ".claude-plugin");
+      const manifestPath = path.join(claudePluginDir, "plugin.json");
+      const encodedManifest = yield* S.encodeEffect(PluginManifest)(emittedManifest).pipe(
+        Effect.mapError((cause) => PluginWriteError.make({ path: manifestPath, cause }))
+      );
+      yield* makeDir(claudePluginDir);
+      yield* writeFile(manifestPath, toJsonFileContent(encodedManifest));
 
-    // commands/<name>.md
-    yield* writeCommandEntries(destDir, manifest.commands, definition.commands);
+      // commands/<name>.md
+      yield* writeCommandEntries(destDir, manifest.commands, definition.commands);
 
-    // agents/<name>.md
-    yield* writeFlatNamedEntries(destDir, manifest.agents, "agents", "agents", definition.agents, (entry) =>
-      renderSubagent(entry.frontmatter, entry.body)
-    );
+      // agents/<name>.md
+      yield* writeFlatNamedEntries(destDir, manifest.agents, "agents", "agents", definition.agents, (entry) =>
+        renderSubagent(entry.frontmatter, entry.body)
+      );
 
-    // skills/<name>/SKILL.md
-    yield* writeSkillEntries(destDir, manifest.skills, definition.skills);
+      // skills/<name>/SKILL.md
+      yield* writeSkillEntries(destDir, manifest.skills, definition.skills);
 
-    // output-styles/<name>.md
-    yield* writeFlatNamedEntries(
-      destDir,
-      manifest.outputStyles,
-      "outputStyles",
-      "output-styles",
-      definition.outputStyles,
-      (entry) => renderOutputStyle(entry.frontmatter, entry.body)
-    );
-
-    // hooks/hooks.json
-    if (O.isSome(definition.hooksConfig)) {
-      const hooksPath = yield* resolveConfigRelativePath({
+      // output-styles/<name>.md
+      yield* writeFlatNamedEntries(
         destDir,
-        field: "hooks",
-        fallback: "hooks/hooks.json",
-        spec: manifest.hooks,
-      });
-      if (O.isSome(hooksPath)) {
-        const outputPath = path.join(destDir, hooksPath.value);
-        const encodedHooks = yield* S.encodeEffect(HooksSection)(definition.hooksConfig.value).pipe(
-          Effect.mapError((cause) => PluginWriteError.make({ path: outputPath, cause }))
-        );
-        yield* writeFile(outputPath, toJsonFileContent({ hooks: encodedHooks }));
-      }
-    }
+        manifest.outputStyles,
+        "outputStyles",
+        "output-styles",
+        definition.outputStyles,
+        (entry) => renderOutputStyle(entry.frontmatter, entry.body)
+      );
 
-    // .mcp.json
-    if (O.isSome(definition.mcpConfig)) {
-      const mcpPath = yield* resolveConfigRelativePath({
-        destDir,
-        field: "mcpServers",
-        fallback: ".mcp.json",
-        spec: manifest.mcpServers,
-      });
-      if (O.isSome(mcpPath)) {
-        yield* writeFile(
-          path.join(destDir, mcpPath.value),
-          toJsonFileContent(toClaudeCodeJson(definition.mcpConfig.value))
-        );
+      // hooks/hooks.json
+      if (O.isSome(definition.hooksConfig)) {
+        const hooksPath = yield* resolveConfigRelativePath({
+          destDir,
+          field: "hooks",
+          fallback: "hooks/hooks.json",
+          spec: manifest.hooks,
+        });
+        if (O.isSome(hooksPath)) {
+          const outputPath = path.join(destDir, hooksPath.value);
+          const encodedHooks = yield* S.encodeEffect(HooksSection)(definition.hooksConfig.value).pipe(
+            Effect.mapError((cause) => PluginWriteError.make({ path: outputPath, cause }))
+          );
+          yield* writeFile(outputPath, toJsonFileContent({ hooks: encodedHooks }));
+        }
       }
-    }
 
-    yield* copyLoadedStaticLayout(definition, destDir);
-  });
+      // .mcp.json
+      if (O.isSome(definition.mcpConfig)) {
+        const mcpPath = yield* resolveConfigRelativePath({
+          destDir,
+          field: "mcpServers",
+          fallback: ".mcp.json",
+          spec: manifest.mcpServers,
+        });
+        if (O.isSome(mcpPath)) {
+          yield* writeFile(
+            path.join(destDir, mcpPath.value),
+            toJsonFileContent(toClaudeCodeJson(definition.mcpConfig.value))
+          );
+        }
+      }
+
+      yield* copyLoadedStaticLayout(definition, destDir);
+    })
+);

@@ -15,10 +15,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
 import {
-	TOML_LEX_ERROR_CODES,
-	TOML_PARSE_ERROR_CODES,
-	TOML_SEMANTIC_ERROR_CODES,
-	TOML_STRINGIFY_ERROR_CODES,
+  TOML_LEX_ERROR_CODES,
+  TOML_PARSE_ERROR_CODES,
+  TOML_SEMANTIC_ERROR_CODES,
+  TOML_STRINGIFY_ERROR_CODES,
 } from "./internal/diagnostics.ts";
 
 const $I = $ScratchpadId.create("toml/TomlDiagnostic");
@@ -41,9 +41,9 @@ const $I = $ScratchpadId.create("toml/TomlDiagnostic");
  * @since 0.0.0
  */
 export const TomlLexErrorCode = Schema.Literals(TOML_LEX_ERROR_CODES).pipe(
-	$I.annoteSchema("TomlLexErrorCode", {
-		description: "Error codes emitted by the TOML lexer stage.",
-	}),
+  $I.annoteSchema("TomlLexErrorCode", {
+    description: "Error codes emitted by the TOML lexer stage.",
+  })
 );
 
 /**
@@ -73,9 +73,9 @@ export type TomlLexErrorCode = typeof TomlLexErrorCode.Type;
  * @since 0.0.0
  */
 export const TomlParseErrorCode = Schema.Literals(TOML_PARSE_ERROR_CODES).pipe(
-	$I.annoteSchema("TomlParseErrorCode", {
-		description: "Error codes emitted by the TOML parser stage.",
-	}),
+  $I.annoteSchema("TomlParseErrorCode", {
+    description: "Error codes emitted by the TOML parser stage.",
+  })
 );
 
 /**
@@ -105,9 +105,9 @@ export type TomlParseErrorCode = typeof TomlParseErrorCode.Type;
  * @since 0.0.0
  */
 export const TomlSemanticErrorCode = Schema.Literals(TOML_SEMANTIC_ERROR_CODES).pipe(
-	$I.annoteSchema("TomlSemanticErrorCode", {
-		description: "Error codes emitted by the TOML semantic (table/key conflict) stage.",
-	}),
+  $I.annoteSchema("TomlSemanticErrorCode", {
+    description: "Error codes emitted by the TOML semantic (table/key conflict) stage.",
+  })
 );
 
 /**
@@ -137,9 +137,9 @@ export type TomlSemanticErrorCode = typeof TomlSemanticErrorCode.Type;
  * @since 0.0.0
  */
 export const TomlStringifyErrorCode = Schema.Literals(TOML_STRINGIFY_ERROR_CODES).pipe(
-	$I.annoteSchema("TomlStringifyErrorCode", {
-		description: "Error codes emitted by the TOML stringifier stage.",
-	}),
+  $I.annoteSchema("TomlStringifyErrorCode", {
+    description: "Error codes emitted by the TOML stringifier stage.",
+  })
 );
 
 /**
@@ -178,14 +178,14 @@ export type TomlStringifyErrorCode = typeof TomlStringifyErrorCode.Type;
  * @since 0.0.0
  */
 export const TomlErrorCode = Schema.Union([
-	TomlLexErrorCode,
-	TomlParseErrorCode,
-	TomlSemanticErrorCode,
-	TomlStringifyErrorCode,
+  TomlLexErrorCode,
+  TomlParseErrorCode,
+  TomlSemanticErrorCode,
+  TomlStringifyErrorCode,
 ]).pipe(
-	$I.annoteSchema("TomlErrorCode", {
-		description: "Union of all TOML error codes across lexer, parser, semantic, and stringify stages.",
-	}),
+  $I.annoteSchema("TomlErrorCode", {
+    description: "Union of all TOML error codes across lexer, parser, semantic, and stringify stages.",
+  })
 );
 
 /**
@@ -237,52 +237,52 @@ export type TomlErrorCode = typeof TomlErrorCode.Type;
  * @since 0.0.0
  */
 export class TomlDiagnostic extends Schema.Class<TomlDiagnostic>($I`TomlDiagnostic`)(
-	{
-		code: TomlErrorCode,
-		message: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
-		line: Schema.Number,
-		character: Schema.Number,
-	},
-	$I.annote("TomlDiagnostic", {
-		description: "One structured TOML diagnostic with a staged error code and 0-based source position.",
-	}),
+  {
+    code: TomlErrorCode,
+    message: Schema.String,
+    offset: Schema.Finite,
+    length: Schema.Finite,
+    line: Schema.Finite,
+    character: Schema.Finite,
+  },
+  $I.annote("TomlDiagnostic", {
+    description: "One structured TOML diagnostic with a staged error code and 0-based source position.",
+  })
 ) {
-	/**
-	 * Materialize an engine record, deriving `line`/`character` (0-based)
-	 * from `offset` against the source `text`. Advanced — the parse/stringify
-	 * entry points call this for you.
-	 *
-	 * **Example** (Derive line and character from an offset)
-	 *
-	 * ```ts
-	 * import { TomlDiagnostic } from "@beep/scratchpad/toml"
-	 *
-	 * const diagnostic = TomlDiagnostic.fromRaw("a = 1\nb = \n", {
-	 *   code: "ExpectedValue",
-	 *   message: "expected a value",
-	 *   offset: 10,
-	 *   length: 0,
-	 * })
-	 * console.log(diagnostic.line) // 1
-	 * console.log(diagnostic.character) // 4
-	 * ```
-	 */
-	static fromRaw(
-		source: string,
-		raw: { readonly code: TomlErrorCode; readonly message: string; readonly offset: number; readonly length: number },
-	): TomlDiagnostic {
-		const { line, character } = lineChar(source, raw.offset);
-		return TomlDiagnostic.make({
-			code: raw.code,
-			message: raw.message,
-			offset: raw.offset,
-			length: raw.length,
-			line,
-			character,
-		});
-	}
+  /**
+   * Materialize an engine record, deriving `line`/`character` (0-based)
+   * from `offset` against the source `text`. Advanced — the parse/stringify
+   * entry points call this for you.
+   *
+   * **Example** (Derive line and character from an offset)
+   *
+   * ```ts
+   * import { TomlDiagnostic } from "@beep/scratchpad/toml"
+   *
+   * const diagnostic = TomlDiagnostic.fromRaw("a = 1\nb = \n", {
+   *   code: "ExpectedValue",
+   *   message: "expected a value",
+   *   offset: 10,
+   *   length: 0,
+   * })
+   * console.log(diagnostic.line) // 1
+   * console.log(diagnostic.character) // 4
+   * ```
+   */
+  static fromRaw(
+    source: string,
+    raw: { readonly code: TomlErrorCode; readonly message: string; readonly offset: number; readonly length: number }
+  ): TomlDiagnostic {
+    const { line, character } = lineChar(source, raw.offset);
+    return TomlDiagnostic.make({
+      code: raw.code,
+      message: raw.message,
+      offset: raw.offset,
+      length: raw.length,
+      line,
+      character,
+    });
+  }
 }
 
 /**
@@ -291,21 +291,21 @@ export class TomlDiagnostic extends Schema.Class<TomlDiagnostic>($I`TomlDiagnost
  * a CRLF pair counts as a single newline.
  */
 function lineChar(text: string, offset: number): { line: number; character: number } {
-	let line = 0;
-	let lineStart = 0;
-	const limit = Math.min(offset, text.length);
-	for (let i = 0; i < limit; i++) {
-		const ch = text.charCodeAt(i);
-		if (ch === 0x0a) {
-			line++;
-			lineStart = i + 1;
-		} else if (ch === 0x0d) {
-			if (i + 1 < text.length && text.charCodeAt(i + 1) === 0x0a) {
-				i++;
-			}
-			line++;
-			lineStart = i + 1;
-		}
-	}
-	return { line, character: offset - lineStart };
+  let line = 0;
+  let lineStart = 0;
+  const limit = Math.min(offset, text.length);
+  for (let i = 0; i < limit; i++) {
+    const ch = text.charCodeAt(i);
+    if (ch === 0x0a) {
+      line++;
+      lineStart = i + 1;
+    } else if (ch === 0x0d) {
+      if (i + 1 < text.length && text.charCodeAt(i + 1) === 0x0a) {
+        i++;
+      }
+      line++;
+      lineStart = i + 1;
+    }
+  }
+  return { line, character: offset - lineStart };
 }

@@ -10,6 +10,11 @@
  * @since 0.0.0
  */
 
+import { HashSet } from "effect";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import { dual } from "effect/Function";
+
 /**
  * Keys that must never be copied from either side.
  *
@@ -20,7 +25,7 @@
  *
  * @internal
  */
-const FORBIDDEN = new Set(["__proto__", "constructor", "prototype"]);
+const FORBIDDEN = HashSet.make("__proto__", "constructor", "prototype");
 
 /**
  * Create an own data property, never invoking a setter inherited from the
@@ -29,7 +34,7 @@ const FORBIDDEN = new Set(["__proto__", "constructor", "prototype"]);
  * @internal
  */
 const define = (target: Record<string, unknown>, key: string, value: unknown): void => {
-	Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
+  Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
 };
 
 /**
@@ -66,7 +71,7 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
  * @since 0.0.0
  */
 export const isRecordLike = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && Object.prototype.toString.call(value) === "[object Object]";
+  P.isObjectKeyword(value) && Object.prototype.toString.call(value) === "[object Object]";
 
 /**
  * Whether a plain record, not a class instance, `Date`, array or `null`.
@@ -88,11 +93,11 @@ export const isRecordLike = (value: unknown): value is Record<string, unknown> =
  * @since 0.0.0
  */
 export const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-	if (!isRecordLike(value)) {
-		return false;
-	}
-	const proto = Object.getPrototypeOf(value);
-	return proto === Object.prototype || proto === null;
+  if (!isRecordLike(value)) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
 };
 
 /**
@@ -133,13 +138,16 @@ export const isPlainRecord = (value: unknown): value is Record<string, unknown> 
  * @category predicates
  * @since 0.0.0
  */
-export const canMerge = (base: unknown, patch: unknown): boolean => {
-	if (!isRecordLike(base) || !isRecordLike(patch)) {
-		return false;
-	}
-	const patchProto = Object.getPrototypeOf(patch);
-	return patchProto === Object.prototype || patchProto === null || patchProto === Object.getPrototypeOf(base);
-};
+export const canMerge: {
+  (base: unknown, patch: unknown): boolean;
+  (patch: unknown): (base: unknown) => boolean;
+} = dual(2, (base: unknown, patch: unknown): boolean => {
+  if (!isRecordLike(base) || !isRecordLike(patch)) {
+    return false;
+  }
+  const patchProto = Object.getPrototypeOf(patch);
+  return patchProto === Object.prototype || patchProto === null || patchProto === Object.getPrototypeOf(base);
+});
 
 /**
  * Shallow-merge `patch` over `base`, with `patch` winning.
@@ -187,18 +195,22 @@ export const canMerge = (base: unknown, patch: unknown): boolean => {
  * @category utilities
  * @since 0.0.0
  */
-export const shallowMerge = (
-	base: Record<string, unknown>,
-	patch: Record<string, unknown>,
-): Record<string, unknown> => {
-	const result: Record<string, unknown> = Object.create(Object.getPrototypeOf(base));
-	for (const key of Object.keys(base)) {
-		if (FORBIDDEN.has(key)) continue;
-		define(result, key, base[key]);
-	}
-	for (const key of Object.keys(patch)) {
-		if (FORBIDDEN.has(key)) continue;
-		define(result, key, patch[key]);
-	}
-	return result;
-};
+export const shallowMerge: {
+  (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown>;
+  (patch: Record<string, unknown>): (base: Record<string, unknown>) => Record<string, unknown>;
+} = dual(2, (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => {
+  const prototype = Object.getPrototypeOf(base);
+  const constructor = prototype?.constructor;
+  const result: Record<string, unknown> = P.isFunction(constructor)
+    ? (Reflect.construct(Object, [], constructor) as Record<string, unknown>)
+    : R.empty();
+  for (const key of R.keys(base)) {
+    if (HashSet.has(FORBIDDEN, key)) continue;
+    define(result, key, base[key]);
+  }
+  for (const key of R.keys(patch)) {
+    if (HashSet.has(FORBIDDEN, key)) continue;
+    define(result, key, patch[key]);
+  }
+  return result;
+});

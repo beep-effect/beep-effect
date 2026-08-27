@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 import type { DateTime } from "effect";
+import { dual } from "effect/Function";
 import type { EnvelopeFrame } from "./Envelope.ts";
 import type { JsonlEvent } from "./JsonlEvent.ts";
 
@@ -28,6 +29,10 @@ import type { JsonlEvent } from "./JsonlEvent.ts";
  * and universal under `TestClock`. Matching reads frame fields only; decoding
  * first and filtering afterwards inverts the package's cost guarantee.
  *
+ * Not a standalone runtime schema: `events` is indexed by the caller's generic
+ * registry, and the filter never decodes external input. The runtime envelope
+ * frame it reads is owned by {@link EnvelopeFrame}.
+ *
  * @see {@link EnvelopeFrame} for the frame fields this filter actually reads.
  * @see {@link Envelope.decodeSelectedResult} for filter-before-payload-decode.
  * @public
@@ -35,26 +40,26 @@ import type { JsonlEvent } from "./JsonlEvent.ts";
  * @since 0.0.0
  */
 export interface Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R> = JsonlEvent.Tag<R>> {
-	/**
-	 * Restrict to these event tags.
-	 *
-	 * Passing a literal array narrows the element type of the surface's stream to
-	 * exactly those variants, so a projection over a slice is exhaustively
-	 * checkable.
-	 */
-	readonly events?: ReadonlyArray<T> | undefined;
-	/** Restrict to these partition keys. An envelope with no `scope` matches none of them. */
-	readonly scopes?: ReadonlyArray<string> | undefined;
-	/** Lower bound on `at`, **inclusive**. */
-	readonly from?: DateTime.Utc | undefined;
-	/**
-	 * Upper bound on `at`, **exclusive**.
-	 *
-	 * Half-open so adjacent windows tile without double-delivering an envelope on
-	 * the seam — which matters because `at` collisions are ordinary at
-	 * millisecond resolution and universal under `TestClock`.
-	 */
-	readonly to?: DateTime.Utc | undefined;
+  /**
+   * Restrict to these event tags.
+   *
+   * Passing a literal array narrows the element type of the surface's stream to
+   * exactly those variants, so a projection over a slice is exhaustively
+   * checkable.
+   */
+  readonly events?: ReadonlyArray<T> | undefined;
+  /** Restrict to these partition keys. An envelope with no `scope` matches none of them. */
+  readonly scopes?: ReadonlyArray<string> | undefined;
+  /** Lower bound on `at`, **inclusive**. */
+  readonly from?: DateTime.Utc | undefined;
+  /**
+   * Upper bound on `at`, **exclusive**.
+   *
+   * Half-open so adjacent windows tile without double-delivering an envelope on
+   * the seam — which matters because `at` collisions are ordinary at
+   * millisecond resolution and universal under `TestClock`.
+   */
+  readonly to?: DateTime.Utc | undefined;
 }
 
 /**
@@ -72,16 +77,16 @@ export interface Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R
  * @since 0.0.0
  */
 export interface CursoredSlice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R> = JsonlEvent.Tag<R>>
-	extends Slice<R, T> {
-	/**
-	 * Resume from this logical byte offset, **inclusive**.
-	 *
-	 * Offsets are post-BOM, matching every offset this package emits. Persist a
-	 * processed envelope's `line.end` and pass it back to replay exactly the
-	 * remainder: `end` is the start of the next line, so nothing is redelivered
-	 * and nothing is skipped.
-	 */
-	readonly cursor?: number | undefined;
+  extends Slice<R, T> {
+  /**
+   * Resume from this logical byte offset, **inclusive**.
+   *
+   * Offsets are post-BOM, matching every offset this package emits. Persist a
+   * processed envelope's `line.end` and pass it back to replay exactly the
+   * remainder: `end` is the start of the next line, so nothing is redelivered
+   * and nothing is skipped.
+   */
+  readonly cursor?: number | undefined;
 }
 
 /**
@@ -126,21 +131,24 @@ export interface CursoredSlice<R extends JsonlEvent.Registry, T extends JsonlEve
  * @category predicates
  * @since 0.0.0
  */
-export const matchesFrame = (frame: EnvelopeFrame, slice: Slice<never, never> | undefined): boolean => {
-	if (slice === undefined) {
-		return true;
-	}
-	if (slice.events !== undefined && !slice.events.includes(frame.event as never)) {
-		return false;
-	}
-	if (slice.scopes !== undefined) {
-		if (frame.scope === undefined || !slice.scopes.includes(frame.scope)) {
-			return false;
-		}
-	}
-	const millis = frame.at.epochMilliseconds;
-	if (slice.from !== undefined && millis < slice.from.epochMilliseconds) {
-		return false;
-	}
-	return !(slice.to !== undefined && millis >= slice.to.epochMilliseconds);
-};
+export const matchesFrame: {
+  (frame: EnvelopeFrame, slice: Slice<never, never> | undefined): boolean;
+  (slice: Slice<never, never> | undefined): (frame: EnvelopeFrame) => boolean;
+} = dual(2, (frame: EnvelopeFrame, slice: Slice<never, never> | undefined): boolean => {
+  if (slice === undefined) {
+    return true;
+  }
+  if (slice.events !== undefined && !slice.events.includes(frame.event as never)) {
+    return false;
+  }
+  if (slice.scopes !== undefined) {
+    if (frame.scope === undefined || !slice.scopes.includes(frame.scope)) {
+      return false;
+    }
+  }
+  const millis = frame.at.epochMilliseconds;
+  if (slice.from !== undefined && millis < slice.from.epochMilliseconds) {
+    return false;
+  }
+  return !(slice.to !== undefined && millis >= slice.to.epochMilliseconds);
+});

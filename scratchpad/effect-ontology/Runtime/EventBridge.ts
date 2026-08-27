@@ -69,10 +69,12 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBridge");
  *   })
  * })
  * const handle = Effect.runSync(
- *   Effect.gen(function* () {
- *     const bridge = yield* EventBridgeService
- *     return yield* bridge.start
- *   }).pipe(Effect.provide(TestBridge))
+ *   Effect.scoped(
+ *     Effect.gen(function* () {
+ *       const bridge = yield* EventBridgeService
+ *       return yield* bridge.start
+ *     }).pipe(Effect.provide(TestBridge))
+ *   )
  * )
  * console.log("stop" in handle) // true
  * ```

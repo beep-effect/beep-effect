@@ -51,30 +51,30 @@ const $I = $ScratchpadId.create("jsonl/LineSlice");
  * @since 0.0.0
  */
 export class LineSlice extends Schema.Class<LineSlice>($I`LineSlice`)(
-	{
-		/** UTF-8 byte offset of this line's first content byte. */
-		offset: Schema.Number,
-		/**
-		 * UTF-8 byte offset just past this line's terminator — the offset at which
-		 * the next line begins, and the resume cursor for an incremental read.
-		 *
-		 * Equal to `offset + length` when the line is unterminated.
-		 */
-		end: Schema.Number,
-		/** UTF-8 byte length of `LineSlice.text`, excluding any terminator. */
-		length: Schema.Number,
-		/** The line's content, with its terminator and any paired `\r` removed. */
-		text: Schema.String,
-		/**
-		 * Whether a `\n` terminated this line in the source.
-		 *
-		 * `false` can only occur on the final line, and means the line **may be a
-		 * torn tail** — a writer caught mid-append. A reader walks back over it and
-		 * leaves its bytes unconsumed so the next read sees the completed line.
-		 */
-		terminated: Schema.Boolean,
-	},
-	$I.annote("LineSlice", {
-		description: "One candidate JSONL line located in the source by UTF-8 byte offsets.",
-	}),
+  {
+    /** UTF-8 byte offset of this line's first content byte. */
+    offset: Schema.Finite,
+    /**
+     * UTF-8 byte offset just past this line's terminator — the offset at which
+     * the next line begins, and the resume cursor for an incremental read.
+     *
+     * Equal to `offset + length` when the line is unterminated.
+     */
+    end: Schema.Finite,
+    /** UTF-8 byte length of `LineSlice.text`, excluding any terminator. */
+    length: Schema.Finite,
+    /** The line's content, with its terminator and any paired `\r` removed. */
+    text: Schema.String,
+    /**
+     * Whether a `\n` terminated this line in the source.
+     *
+     * `false` can only occur on the final line, and means the line **may be a
+     * torn tail** — a writer caught mid-append. A reader walks back over it and
+     * leaves its bytes unconsumed so the next read sees the completed line.
+     */
+    terminated: Schema.Boolean,
+  },
+  $I.annote("LineSlice", {
+    description: "One candidate JSONL line located in the source by UTF-8 byte offsets.",
+  })
 ) {}

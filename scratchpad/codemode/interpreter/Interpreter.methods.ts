@@ -10,7 +10,7 @@
 import { Unknown } from "@beep/schema/Unknown";
 import {Effect} from "effect";
 import * as S from "effect/Schema";
-import {O, P, A} from "@beep/utils";
+import {O, P, A, R, pipe} from "@beep/utils";
 import {
   type AstNode,
   CodeModeFunction,
@@ -229,7 +229,7 @@ export const isSupportedCallback = (value: unknown): value is SupportedCallback 
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
 export const invokeIntrinsic = <R>(
   runner: CallbackRunner<R>,
   ref: IntrinsicReference,
@@ -297,18 +297,18 @@ const coerceNumericArgument = <R>(
   value: unknown,
   node: AstNode,
 ): Effect.Effect<number, InterpreterFailure, R> => {
-  if (value === null || typeof value !== "object" || A.isArray(value) || isCodeModeValue(value)) {
+  if (!P.isObjectKeyword(value) || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToNumber(value));
   }
   return Effect.gen(function* () {
     const valueOf = Reflect.get(value, "valueOf");
-    if (Object.hasOwn(value, "valueOf") && typeofValue(valueOf) === "function") {
+    if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOf) === "function") {
       const result = yield* runner.invokeCallable(valueOf, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToNumber(result);
       }
     }
-    if (!Object.hasOwn(value, "toString")) return coerceToNumber(value);
+    if (!R.has(value as Readonly<Record<string, unknown>>, "toString")) return coerceToNumber(value);
     const toString = Reflect.get(value, "toString");
     if (typeofValue(toString) === "function") {
       const result = yield* runner.invokeCallable(toString, [], node);
@@ -372,7 +372,7 @@ const coerceNumericArgument = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
 export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown => {
   const unavailable = (namespace: string, name: string): never => {
     throw InterpreterRuntimeError.new(`${namespace}.${name} is not available.`, node);
@@ -470,7 +470,7 @@ const invokeStringMethod = (value: string, name: StringMethod, args: Array<unkno
         node,
       );
     }
-    return Array.from(value.matchAll(pattern), matchToValue);
+    return pipe(value.matchAll(pattern), A.fromIterable, A.map(matchToValue));
   }
   const normalize = (): string => {
       const form = optStr(0);
@@ -581,8 +581,7 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
     );
   }
   if (
-    source !== null &&
-    typeof source === "object" &&
+    P.isObjectKeyword(source) &&
     (Object.getPrototypeOf(source) === Object.prototype || Object.getPrototypeOf(source) === null)
   ) {
     const length = Reflect.get(source, "length");
@@ -638,7 +637,7 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest iterable, mapper, AST context, and callback runner are co-primary interpreter protocol inputs.
 export const invokeArrayFrom = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   args: Array<unknown>,
@@ -721,7 +720,7 @@ export const invokeArrayFrom = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Collection selector, source, AST context, and callback runner are co-primary interpreter protocol inputs.
 export const invokeGroupBy = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   namespace: "Map" | "Object",
@@ -749,12 +748,14 @@ export const invokeGroupBy = <R>(
         const group = result.map.get(key);
         if (group === undefined) result.map.set(key, [item]);
         else if (A.isArray(group)) group.push(item);
-        else return yield* Effect.die(new Error("CodeMode Map.groupBy stored a non-array group."));
+        else return yield* Effect.die(
+          InterpreterRuntimeError.new("CodeMode Map.groupBy stored a non-array group.", node, "InvalidDataValue")
+        );
         index += 1;
       }
     }
 
-    const result = SafeObject.make(Object.create(null));
+    const result = SafeObject.make(R.empty<string, unknown>());
     let index = 0;
     while (true) {
       const step = yield* cursor.next;
@@ -773,7 +774,9 @@ export const invokeGroupBy = <R>(
       const group = result[key];
       if (group === undefined) Reflect.set(result, key, [item]);
       else if (A.isArray(group)) group.push(item);
-      else return yield* Effect.die(new Error("CodeMode Object.groupBy stored a non-array group."));
+      else return yield* Effect.die(
+        InterpreterRuntimeError.new("CodeMode Object.groupBy stored a non-array group.", node, "InvalidDataValue")
+      );
       index += 1;
     }
   });
@@ -784,14 +787,14 @@ const coerceGroupByPropertyKey = <R>(
   value: unknown,
   node: AstNode,
 ): Effect.Effect<string, InterpreterFailure, R> => {
-  if (value === null || typeof value !== "object" || A.isArray(value) || isCodeModeValue(value)) {
+  if (!P.isObjectKeyword(value) || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToString(value));
   }
   if (CodeModePromise.is(value)) return Effect.succeed("[object Promise]");
   if (isRuntimeReference(value)) {
     throw InterpreterRuntimeError.new("Object.groupBy callback must return a data value.", node, "InvalidDataValue");
   }
-  if (!Object.hasOwn(value, "toString")) return Effect.succeed(coerceToString(value));
+  if (!R.has(value as Readonly<Record<string, unknown>>, "toString")) return Effect.succeed(coerceToString(value));
   return Effect.gen(function* () {
     const toString = Reflect.get(value, "toString");
     if (typeofValue(toString) === "function") {
@@ -801,7 +804,7 @@ const coerceGroupByPropertyKey = <R>(
       }
     }
     const valueOf = Reflect.get(value, "valueOf");
-    if (Object.hasOwn(value, "valueOf") && typeofValue(valueOf) === "function") {
+    if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOf) === "function") {
       const result = yield* runner.invokeCallable(valueOf, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToString(result);
@@ -827,14 +830,14 @@ const invokeStringReplacer = <R>(
   const collect = (...callbackArgs: Array<unknown>): string => {
     const match = callbackArgs[0];
     const groups = callbackArgs[callbackArgs.length - 1];
-    const hasGroups = groups !== null && typeof groups === "object";
+    const hasGroups = P.isObjectKeyword(groups);
     const offset = callbackArgs[callbackArgs.length - (hasGroups ? 3 : 2)];
-    if (typeof match !== "string" || typeof offset !== "number") {
+    if (!P.isString(match) || !P.isNumber(offset)) {
       throw InterpreterRuntimeError.new(`String.${name} produced an invalid replacement match.`, node);
     }
     if (hasGroups) {
-      const safeGroups = SafeObject.make(Object.create(null));
-      for (const [key, group] of Object.entries(groups)) {
+      const safeGroups = SafeObject.make(R.empty<string, unknown>());
+      for (const [key, group] of R.toEntries(groups)) {
         if (!isBlockedMember(key)) Reflect.set(safeGroups, key, group);
       }
       callbackArgs[callbackArgs.length - 1] = safeGroups;
@@ -919,7 +922,7 @@ const invokeStringReplacer = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Collection, callback, index, and runtime runner are co-primary interpreter protocol inputs.
 export const applyCollectionCallback = <R>(
   runner: CallbackRunner<R>,
   callback: unknown,
@@ -959,10 +962,10 @@ const invokeMapMethod = <R>(
         target.map.clear();
         return undefined;
       }),
-    keys: () => Effect.sync(() => Array.from(target.map.keys())),
-    values: () => Effect.sync(() => Array.from(target.map.values())),
+    keys: () => Effect.sync(() => A.fromIterable(target.map.keys())),
+    values: () => Effect.sync(() => A.fromIterable(target.map.values())),
     entries: () =>
-      Effect.sync(() => Array.from(target.map.entries(), ([key, item]): Array<unknown> => [key, item])),
+      Effect.sync(() => pipe(target.map.entries(), A.fromIterable, A.map(([key, item]): Array<unknown> => [key, item]))),
     forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Map.forEach", node);
       return Effect.gen(function* () {
@@ -994,10 +997,10 @@ const invokeSetMethod = <R>(
         target.set.clear();
         return undefined;
       }),
-    keys: () => Effect.sync(() => Array.from(target.set.values())),
-    values: () => Effect.sync(() => Array.from(target.set.values())),
+    keys: () => Effect.sync(() => A.fromIterable(target.set.values())),
+    values: () => Effect.sync(() => A.fromIterable(target.set.values())),
     entries: () =>
-      Effect.sync(() => Array.from(target.set.values(), (item): Array<unknown> => [item, item])),
+      Effect.sync(() => pipe(target.set.values(), A.fromIterable, A.map((item): Array<unknown> => [item, item]))),
     forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Set.forEach", node);
       return Effect.gen(function* () {
@@ -1125,7 +1128,7 @@ const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: SetO
       keys: () => Effect.succeed(source.map.keys()),
     });
   }
-  if (source === null || typeof source !== "object" || isCodeModeValue(source)) {
+  if (!P.isObjectKeyword(source) || isCodeModeValue(source)) {
     throw InterpreterRuntimeError.new(`Set.${name} expects a Set-like object.`, node).as("TypeError");
   }
   return Effect.gen(function* () {
@@ -1208,10 +1211,10 @@ const invokeURLSearchParamsMethod = <R>(
         target.params.sort();
         return undefined;
       }),
-    keys: () => Effect.sync(() => Array.from(target.params.keys())),
-    values: () => Effect.sync(() => Array.from(target.params.values())),
+    keys: () => Effect.sync(() => A.fromIterable(target.params.keys())),
+    values: () => Effect.sync(() => A.fromIterable(target.params.values())),
     entries: () =>
-      Effect.sync(() => Array.from(target.params.entries(), ([key, value]): Array<unknown> => [key, value])),
+      Effect.sync(() => pipe(target.params.entries(), A.fromIterable, A.map(([key, value]): Array<unknown> => [key, value]))),
     toString: () => Effect.sync(() => target.params.toString()),
     forEach: () => {
       requireArgs(1);
@@ -1233,7 +1236,7 @@ const invokeArrayMethod = <R>(
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const optNumber = (value: unknown, label: string): number | undefined => {
     if (value === undefined) return undefined;
-    if (typeof value !== "number")
+    if (!P.isNumber(value))
       throw InterpreterRuntimeError.new(`Array.${name} expects ${label} to be a number.`, node);
     return value;
   };
@@ -1255,13 +1258,19 @@ const invokeArrayMethod = <R>(
     };
     const sort = (): Effect.Effect<Array<unknown>, InterpreterFailure, R> => {
       const length = target.length;
-      const holeCount = Array.from({length}, (_, index) => Object.hasOwn(target, index)).filter((own) => !own).length;
+      const holeCount = pipe(
+        A.makeBy(length, (index) =>
+          R.has(target as unknown as Readonly<Record<string, unknown>>, String(index))
+        ),
+        A.filter((own) => !own),
+        A.length
+      );
       const itemCount = length - holeCount;
       return Effect.map(sortArray(runner, target, args[0], "Array.sort", node), (sorted) => {
         sorted.slice(0, itemCount).forEach((item, index) => {
           target[index] = item;
         });
-        Array.from({length: holeCount}, (_, index) => itemCount + index).forEach((index) => {
+        A.forEach(A.makeBy(holeCount, (index) => itemCount + index), (index) => {
           Reflect.deleteProperty(target, index);
         });
         return target;
@@ -1348,9 +1357,10 @@ const invokeArrayMethod = <R>(
             optNumber(args[2], "end"),
           ),
         ),
-      keys: () => Effect.succeed(Array.from(target.keys())),
+      keys: () => Effect.succeed(A.fromIterable(target.keys())),
       values: () => Effect.succeed([...target]),
-      entries: () => Effect.succeed(Array.from(target.entries(), ([index, item]): Array<unknown> => [index, item])),
+      entries: () =>
+        Effect.succeed(pipe(target.entries(), A.fromIterable, A.map(([index, item]): Array<unknown> => [index, item]))),
     });
   }
 

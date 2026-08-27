@@ -16,12 +16,9 @@ import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
+import { Duration, Effect, SchemaTransformation, Tuple } from "effect";
 import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Tuple from "effect/Tuple";
 
 const $I = $ScratchpadId.create("ontoskills/OntoSkills.models");
 const zero = NonNegativeInt.make(0);
@@ -38,7 +35,7 @@ const RequirementTypeBase = LiteralKit(["EnvVar", "Tool", "Hardware", "API", "Kn
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { RequirementType } from "./OntoSkills.models.ts"
+ * import { RequirementType } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(RequirementType)(RequirementType.Enum.Tool)) // true
  * console.log(S.is(RequirementType)("Plugin")) // false
@@ -72,7 +69,7 @@ export type RequirementType = typeof RequirementType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Requirement } from "./OntoSkills.models.ts"
+ * import { Requirement } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const requirement = S.decodeUnknownSync(Requirement)({
  *   type: "EnvVar",
@@ -105,7 +102,7 @@ const ExecutionPayloadExecutorBase = LiteralKit(["shell", "python", "node", "cla
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ExecutionPayloadExecutor } from "./OntoSkills.models.ts"
+ * import { ExecutionPayloadExecutor } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(ExecutionPayloadExecutor)(ExecutionPayloadExecutor.Enum.python)) // true
  * console.log(S.is(ExecutionPayloadExecutor)("ruby")) // false
@@ -142,7 +139,7 @@ export type ExecutionPayloadExecutor = typeof ExecutionPayloadExecutor.Type;
  * ```ts
  * import * as Duration from "effect/Duration"
  * import * as S from "effect/Schema"
- * import { DurationFromSeconds } from "./OntoSkills.models.ts"
+ * import { DurationFromSeconds } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const timeout = S.decodeUnknownSync(DurationFromSeconds)(30)
  * console.log(Duration.toSeconds(timeout)) // 30
@@ -181,7 +178,7 @@ export type DurationFromSeconds = typeof DurationFromSeconds.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ExecutionPayload } from "./OntoSkills.models.ts"
+ * import { ExecutionPayload } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const payload = S.decodeUnknownSync(ExecutionPayload)({
  *   executor: "shell",
@@ -216,7 +213,7 @@ export class ExecutionPayload extends S.Class<ExecutionPayload>($I`ExecutionPayl
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { StateUri } from "./OntoSkills.models.ts"
+ * import { StateUri } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(StateUri)("oc:Authenticated:admin")) // true
  * console.log(S.is(StateUri)("ready")) // false
@@ -256,7 +253,7 @@ export type StateUri = typeof StateUri.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { StateTransition } from "./OntoSkills.models.ts"
+ * import { StateTransition } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const transition = S.decodeUnknownSync(StateTransition)({
  *   requiresState: ["oc:SystemAuthenticated"],
@@ -298,7 +295,7 @@ const StateTransitionWire = StateTransition.pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { StateTransitionFromWire } from "./OntoSkills.models.ts"
+ * import { StateTransitionFromWire } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const transition = S.decodeUnknownSync(StateTransitionFromWire)(
  *   '{"requires_state":["oc:Ready"]}'
@@ -340,7 +337,7 @@ const ExecutionPayloadWire = ExecutionPayload.pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ExecutionPayloadFromWire } from "./OntoSkills.models.ts"
+ * import { ExecutionPayloadFromWire } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const payload = S.decodeUnknownSync(ExecutionPayloadFromWire)(
  *   '{"executor":"shell","code":"pwd","timeout":30}'
@@ -378,7 +375,7 @@ const SeverityLevelBase = LiteralKit(["CRITICAL", "HIGH", "MEDIUM", "LOW"]);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SeverityLevel } from "./OntoSkills.models.ts"
+ * import { SeverityLevel } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(SeverityLevel)(SeverityLevel.Enum.CRITICAL)) // true
  * console.log(S.is(SeverityLevel)("INFO")) // false
@@ -435,7 +432,7 @@ const KnowledgeNodeTypeBase = LiteralKit([
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { KnowledgeNodeType } from "./OntoSkills.models.ts"
+ * import { KnowledgeNodeType } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(KnowledgeNodeType)(KnowledgeNodeType.Enum.Procedure)) // true
  * console.log(S.is(KnowledgeNodeType)("Note")) // false
@@ -471,7 +468,7 @@ export type KnowledgeNodeType = typeof KnowledgeNodeType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { KnowledgeNode } from "./OntoSkills.models.ts"
+ * import { KnowledgeNode } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const node = S.decodeUnknownSync(KnowledgeNode)({
  *   nodeType: "Standard",
@@ -545,7 +542,7 @@ const KnowledgeNodeList = S.Array(KnowledgeNode).pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { KnowledgeNodesFromLLM } from "./OntoSkills.models.ts"
+ * import { KnowledgeNodesFromLLM } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const nodes = S.decodeUnknownSync(KnowledgeNodesFromLLM)([
  *   { node_type: "Standard", directive_content: "Validate input." },
@@ -587,7 +584,7 @@ export type KnowledgeNodesFromLLM = typeof KnowledgeNodesFromLLM.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { CodeAnnotation } from "./OntoSkills.models.ts"
+ * import { CodeAnnotation } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const annotation = S.decodeUnknownSync(CodeAnnotation)({
  *   index: 0,
@@ -614,7 +611,7 @@ export class CodeAnnotation extends S.Class<CodeAnnotation>($I`CodeAnnotation`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TableAnnotation } from "./OntoSkills.models.ts"
+ * import { TableAnnotation } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const annotation = S.decodeUnknownSync(TableAnnotation)({
  *   index: 0,
@@ -640,7 +637,7 @@ export class TableAnnotation extends S.Class<TableAnnotation>($I`TableAnnotation
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FlowchartAnnotation } from "./OntoSkills.models.ts"
+ * import { FlowchartAnnotation } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const annotation = S.decodeUnknownSync(FlowchartAnnotation)({
  *   index: 0,
@@ -668,7 +665,7 @@ const TemplateAnnotationTypeBase = LiteralKit(["prompt", "output", "boilerplate"
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TemplateAnnotationType } from "./OntoSkills.models.ts"
+ * import { TemplateAnnotationType } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(TemplateAnnotationType)(TemplateAnnotationType.Enum.prompt)) // true
  * console.log(S.is(TemplateAnnotationType)("system")) // false
@@ -700,7 +697,7 @@ export type TemplateAnnotationType = typeof TemplateAnnotationType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TemplateAnnotation } from "./OntoSkills.models.ts"
+ * import { TemplateAnnotation } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const annotation = S.decodeUnknownSync(TemplateAnnotation)({
  *   index: 0,
@@ -728,7 +725,7 @@ const ReferenceFilePurposeBase = LiteralKit(["api-reference", "examples", "guide
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ReferenceFilePurpose } from "./OntoSkills.models.ts"
+ * import { ReferenceFilePurpose } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(ReferenceFilePurpose)(ReferenceFilePurpose.Enum.guide)) // true
  * console.log(S.is(ReferenceFilePurpose)("readme")) // false
@@ -760,7 +757,7 @@ export type ReferenceFilePurpose = typeof ReferenceFilePurpose.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ReferenceFile } from "./OntoSkills.models.ts"
+ * import { ReferenceFile } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const reference = S.decodeUnknownSync(ReferenceFile)({
  *   relativePath: "references/guide.md",
@@ -786,7 +783,7 @@ export class ReferenceFile extends S.Class<ReferenceFile>($I`ReferenceFile`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Example } from "./OntoSkills.models.ts"
+ * import { Example } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const sample = S.decodeUnknownSync(Example)({
  *   name: "CSV",
@@ -818,7 +815,7 @@ export class Example extends S.Class<Example>($I`Example`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { WorkflowStep } from "./OntoSkills.models.ts"
+ * import { WorkflowStep } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const step = S.decodeUnknownSync(WorkflowStep)({
  *   stepId: "prepare",
@@ -850,7 +847,7 @@ export class WorkflowStep extends S.Class<WorkflowStep>($I`WorkflowStep`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Workflow } from "./OntoSkills.models.ts"
+ * import { Workflow } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const workflow = S.decodeUnknownSync(Workflow)({
  *   workflowId: "build",
@@ -884,7 +881,7 @@ export class Workflow extends S.Class<Workflow>($I`Workflow`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SkillId } from "./OntoSkills.models.ts"
+ * import { SkillId } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(SkillId)("docx-review")) // true
  * console.log(S.is(SkillId)("Docx Review")) // false
@@ -978,7 +975,7 @@ const RelationValue = S.String.check(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { RelationId } from "./OntoSkills.models.ts"
+ * import { RelationId } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const relation = S.decodeUnknownSync(RelationId)("author/package/office")
  * console.log(relation) // "office"
@@ -1033,7 +1030,7 @@ const BooleanFromOntoSkillsString = S.String.pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { IsUserInvocable } from "./OntoSkills.models.ts"
+ * import { IsUserInvocable } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.decodeUnknownSync(IsUserInvocable)("yes")) // true
  * console.log(S.decodeUnknownSync(IsUserInvocable)("no")) // false
@@ -1066,7 +1063,7 @@ const SkillTypeBase = LiteralKit(["executable", "declarative"]);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SkillType } from "./OntoSkills.models.ts"
+ * import { SkillType } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(SkillType)(SkillType.Enum.executable)) // true
  * console.log(S.is(SkillType)("script")) // false
@@ -1103,7 +1100,7 @@ export type SkillType = typeof SkillType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ExtractedSkill } from "./OntoSkills.models.ts"
+ * import { ExtractedSkill } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const skill = S.decodeUnknownSync(ExtractedSkill)({
  *   id: "docx-review",
@@ -1160,6 +1157,30 @@ export class ExtractedSkill extends S.Class<ExtractedSkill>($I`ExtractedSkill`)(
   static readonly skillType = (skill: ExtractedSkill): SkillType =>
     O.isSome(skill.executionPayload) ? "executable" : "declarative";
 
+  /**
+   * Whether this skill carries executable source (`executable`) or only
+   * declarative guidance (`declarative`).
+   *
+   * **Example** (Missing payload is declarative)
+   *
+   * ```ts
+   * import * as S from "effect/Schema"
+   * import { ExtractedSkill } from "../../../ontoskills/OntoSkills.models.ts"
+   *
+   * const skill = S.decodeUnknownSync(ExtractedSkill)({
+   *   id: "docx-review",
+   *   hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   *   nature: "review",
+   *   genus: "document",
+   *   differentia: "DOCX-specific comments",
+   *   intents: ["review-docx"],
+   * })
+   * console.log(skill.skillType)
+   * // => "declarative"
+   * ```
+   *
+   * @since 0.0.0
+   */
   get skillType(): SkillType {
     return ExtractedSkill.skillType(this);
   }
@@ -1213,7 +1234,7 @@ const SkillNameValue = S.String.check(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SkillName } from "./OntoSkills.models.ts"
+ * import { SkillName } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const name = S.decodeUnknownSync(SkillName)("CKM:Banner Design")
  * console.log(name) // "ckm-banner-design"
@@ -1248,7 +1269,7 @@ export type SkillName = typeof SkillName.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FrontmatterDescription } from "./OntoSkills.models.ts"
+ * import { FrontmatterDescription } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(FrontmatterDescription)("Reviews DOCX files")) // true
  * console.log(S.is(FrontmatterDescription)("<p>nope</p>")) // false
@@ -1292,7 +1313,7 @@ export type FrontmatterDescription = typeof FrontmatterDescription.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Frontmatter } from "./OntoSkills.models.ts"
+ * import { Frontmatter } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const frontmatter = S.decodeUnknownSync(Frontmatter)({
  *   name: "CKM:Banner Design",
@@ -1323,7 +1344,7 @@ export class Frontmatter extends S.Class<Frontmatter>($I`Frontmatter`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FileInfo } from "./OntoSkills.models.ts"
+ * import { FileInfo } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const file = S.decodeUnknownSync(FileInfo)({
  *   relativePath: "SKILL.md",
@@ -1358,7 +1379,7 @@ const FlowchartTypeBase = LiteralKit(["graphviz", "mermaid"]);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FlowchartType } from "./OntoSkills.models.ts"
+ * import { FlowchartType } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(FlowchartType)(FlowchartType.Enum.mermaid)) // true
  * console.log(S.is(FlowchartType)("plantuml")) // false
@@ -1404,7 +1425,7 @@ const ContentBlockTypeBase = LiteralKit([
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ContentBlockType } from "./OntoSkills.models.ts"
+ * import { ContentBlockType } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * console.log(S.is(ContentBlockType)(ContentBlockType.Enum.code_block)) // true
  * console.log(S.is(ContentBlockType)("image")) // false
@@ -1436,7 +1457,7 @@ export type ContentBlockType = typeof ContentBlockType.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { CodeBlock } from "./OntoSkills.models.ts"
+ * import { CodeBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const block = S.decodeUnknownSync(CodeBlock)({
  *   language: "ts",
@@ -1474,7 +1495,7 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { MarkdownTable } from "./OntoSkills.models.ts"
+ * import { MarkdownTable } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const table = S.decodeUnknownSync(MarkdownTable)({
  *   markdownSource: "| a | b |\n| --- | --- |\n| 1 | 2 |",
@@ -1509,7 +1530,7 @@ export class MarkdownTable extends S.Class<MarkdownTable>($I`MarkdownTable`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FlowchartBlock } from "./OntoSkills.models.ts"
+ * import { FlowchartBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const chart = S.decodeUnknownSync(FlowchartBlock)({
  *   source: "digraph { A -> B }",
@@ -1543,12 +1564,26 @@ export class FlowchartBlock extends S.Class<FlowchartBlock>($I`FlowchartBlock`)(
  * @since 0.0.0
  */
 export declare namespace ProcedureStep {
+  /**
+   * Decoded recursive procedure-step: instruction text, one-based position, and nested content blocks.
+   *
+   * @see {@link ProcedureStep} for the runtime codec that validates this shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Type = {
     readonly text: NonEmptyTrimmedStr;
     readonly position: PosInt;
     readonly children: ReadonlyArray<ContentBlock.Type>;
   };
 
+  /**
+   * Encoded recursive procedure-step accepted by {@link ProcedureStep} before decoding.
+   *
+   * @see {@link ProcedureStep} for the runtime codec and decoded shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = {
     readonly text: string;
     readonly position: number;
@@ -1580,7 +1615,7 @@ const ProcedureStepChildren: S.Codec<
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ProcedureStep } from "./OntoSkills.models.ts"
+ * import { ProcedureStep } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const step = S.decodeUnknownSync(ProcedureStep)({
  *   text: "Install dependencies",
@@ -1619,7 +1654,7 @@ export type ProcedureStep = typeof ProcedureStep.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { OrderedProcedure } from "./OntoSkills.models.ts"
+ * import { OrderedProcedure } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const procedure = S.decodeUnknownSync(OrderedProcedure)({
  *   items: [{ text: "Install dependencies", position: 1 }],
@@ -1653,7 +1688,7 @@ export class OrderedProcedure extends S.Class<OrderedProcedure>($I`OrderedProced
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { TemplateBlock } from "./OntoSkills.models.ts"
+ * import { TemplateBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const template = S.decodeUnknownSync(TemplateBlock)({
  *   content: "Hello {{name}}",
@@ -1686,7 +1721,7 @@ export class TemplateBlock extends S.Class<TemplateBlock>($I`TemplateBlock`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Paragraph } from "./OntoSkills.models.ts"
+ * import { Paragraph } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const paragraph = S.decodeUnknownSync(Paragraph)({
  *   textContent: "Reviews DOCX files.",
@@ -1719,12 +1754,26 @@ export class Paragraph extends S.Class<Paragraph>($I`Paragraph`)(
  * @since 0.0.0
  */
 export declare namespace BulletItem {
+  /**
+   * Decoded unordered-list item: display text, stable order, and nested content blocks.
+   *
+   * @see {@link BulletItem} for the runtime codec that validates this shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Type = {
     readonly text: NonEmptyTrimmedStr;
     readonly order: NonNegativeInt;
     readonly children: ReadonlyArray<ContentBlock.Type>;
   };
 
+  /**
+   * Encoded unordered-list item accepted by {@link BulletItem} before decoding.
+   *
+   * @see {@link BulletItem} for the runtime codec and decoded shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = {
     readonly text: string;
     readonly order: number;
@@ -1756,7 +1805,7 @@ const BulletItemChildren: S.Codec<
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { BulletItem } from "./OntoSkills.models.ts"
+ * import { BulletItem } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const item = S.decodeUnknownSync(BulletItem)({
  *   text: "Prefer schema-first models",
@@ -1795,7 +1844,7 @@ export type BulletItem = typeof BulletItem.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { BulletListBlock } from "./OntoSkills.models.ts"
+ * import { BulletListBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const list = S.decodeUnknownSync(BulletListBlock)({
  *   items: [{ text: "Prefer schema-first models", order: 0 }],
@@ -1829,7 +1878,7 @@ export class BulletListBlock extends S.Class<BulletListBlock>($I`BulletListBlock
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BlockQuoteBlock } from "./OntoSkills.models.ts"
+ * import { BlockQuoteBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const quote = S.decodeUnknownSync(BlockQuoteBlock)({
  *   content: "Ship the simplest codec that holds.",
@@ -1863,7 +1912,7 @@ export class BlockQuoteBlock extends S.Class<BlockQuoteBlock>($I`BlockQuoteBlock
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { HTMLBlock } from "./OntoSkills.models.ts"
+ * import { HTMLBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const html = S.decodeUnknownSync(HTMLBlock)({
  *   content: "<div class=\"callout\">Note</div>",
@@ -1895,7 +1944,7 @@ export class HTMLBlock extends S.Class<HTMLBlock>($I`HTMLBlock`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FrontmatterBlock } from "./OntoSkills.models.ts"
+ * import { FrontmatterBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const yaml = S.decodeUnknownSync(FrontmatterBlock)({
  *   rawYaml: "name: docx-review",
@@ -1928,7 +1977,7 @@ export class FrontmatterBlock extends S.Class<FrontmatterBlock>($I`FrontmatterBl
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { HeadingBlock } from "./OntoSkills.models.ts"
+ * import { HeadingBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const heading = S.decodeUnknownSync(HeadingBlock)({
  *   text: "Usage",
@@ -1962,7 +2011,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ContentBlock } from "./OntoSkills.models.ts"
+ * import { ContentBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const block = S.decodeUnknownSync(ContentBlock)({
  *   blockType: "paragraph",
@@ -2013,6 +2062,13 @@ export type ContentBlock = typeof ContentBlock.Type;
  * @since 0.0.0
  */
 export declare namespace ContentBlock {
+  /**
+   * Decoded Phase 1 content-block union discriminated by `blockType`.
+   *
+   * @see {@link ContentBlock} for the runtime codec that validates this union.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Type =
     | Paragraph
     | CodeBlock
@@ -2026,6 +2082,13 @@ export declare namespace ContentBlock {
     | FrontmatterBlock
     | HeadingBlock;
 
+  /**
+   * Encoded Phase 1 content-block union accepted by {@link ContentBlock} before decoding.
+   *
+   * @see {@link ContentBlock} for the runtime codec and decoded union.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded =
     | {
         readonly blockType?: "paragraph";
@@ -2102,6 +2165,13 @@ export declare namespace ContentBlock {
  * @since 0.0.0
  */
 export declare namespace Section {
+  /**
+   * Decoded heading-led section: title, level, order, blocks, and nested subsections.
+   *
+   * @see {@link Section} for the runtime codec that validates this shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Type = {
     readonly title: NonEmptyTrimmedStr;
     readonly level: PosInt;
@@ -2110,6 +2180,13 @@ export declare namespace Section {
     readonly subsections: ReadonlyArray<Type>;
   };
 
+  /**
+   * Encoded heading-led section accepted by {@link Section} before decoding.
+   *
+   * @see {@link Section} for the runtime codec and decoded shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = {
     readonly title: string;
     readonly level: number;
@@ -2153,7 +2230,7 @@ const SectionSubsections: S.Codec<ReadonlyArray<Section.Type>, ReadonlyArray<Sec
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Section } from "./OntoSkills.models.ts"
+ * import { Section } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const section = S.decodeUnknownSync(Section)({
  *   title: "Usage",
@@ -2195,7 +2272,7 @@ export type Section = typeof Section.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ContentExtraction } from "./OntoSkills.models.ts"
+ * import { ContentExtraction } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const extraction = S.decodeUnknownSync(ContentExtraction)({})
  * console.log(extraction.sections.length) // 0
@@ -2227,7 +2304,7 @@ export class ContentExtraction extends S.Class<ContentExtraction>($I`ContentExtr
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { FlatBlock } from "./OntoSkills.models.ts"
+ * import { FlatBlock } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const flat = S.decodeUnknownSync(FlatBlock)({
  *   blockId: "p-1",
@@ -2269,11 +2346,25 @@ export class FlatBlock extends S.Class<FlatBlock>($I`FlatBlock`)(
  * @since 0.0.0
  */
 export declare namespace SkeletonNode {
+  /**
+   * Decoded recursive skeleton node: a block identifier and nested child nodes.
+   *
+   * @see {@link SkeletonNode} for the runtime codec that validates this shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Type = {
     readonly blockId: NonEmptyTrimmedStr;
     readonly children: ReadonlyArray<Type>;
   };
 
+  /**
+   * Encoded recursive skeleton node accepted by {@link SkeletonNode} before decoding.
+   *
+   * @see {@link SkeletonNode} for the runtime codec and decoded shape.
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = {
     readonly blockId: string;
     readonly children: ReadonlyArray<Encoded> | undefined;
@@ -2304,7 +2395,7 @@ const SkeletonNodeChildren: S.Codec<
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SkeletonNode } from "./OntoSkills.models.ts"
+ * import { SkeletonNode } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const node = S.decodeUnknownSync(SkeletonNode)({
  *   blockId: "heading-1",
@@ -2341,7 +2432,7 @@ export type SkeletonNode = typeof SkeletonNode.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { SkeletonListItem } from "./OntoSkills.models.ts"
+ * import { SkeletonListItem } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const item = S.decodeUnknownSync(SkeletonListItem)({
  *   textBlockId: "li-1",
@@ -2369,7 +2460,7 @@ export class SkeletonListItem extends S.Class<SkeletonListItem>($I`SkeletonListI
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DocumentSkeleton } from "./OntoSkills.models.ts"
+ * import { DocumentSkeleton } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const skeleton = S.decodeUnknownSync(DocumentSkeleton)({
  *   sections: [{ blockId: "heading-1" }],
@@ -2399,7 +2490,7 @@ export class DocumentSkeleton extends S.Class<DocumentSkeleton>($I`DocumentSkele
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { DirectoryScan } from "./OntoSkills.models.ts"
+ * import { DirectoryScan } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const scan = S.decodeUnknownSync(DirectoryScan)({
  *   frontmatter: {
@@ -2446,7 +2537,7 @@ export class DirectoryScan extends S.Class<DirectoryScan>($I`DirectoryScan`)(
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { CompiledSkill } from "./OntoSkills.models.ts"
+ * import { CompiledSkill } from "../../../ontoskills/OntoSkills.models.ts"
  *
  * const compiled = S.decodeUnknownSync(CompiledSkill)({
  *   id: "docx-review",

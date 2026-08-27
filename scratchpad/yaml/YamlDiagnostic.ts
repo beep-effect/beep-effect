@@ -285,10 +285,10 @@ export class YamlDiagnostic extends Schema.Class<YamlDiagnostic>("YamlDiagnostic
 	{
 		code: YamlErrorCode,
 		message: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
-		line: Schema.Number,
-		character: Schema.Number,
+		offset: Schema.Finite,
+		length: Schema.Finite,
+		line: Schema.Finite,
+		character: Schema.Finite,
 	},
 	$I.annote("YamlDiagnostic", {
 		description: "A positioned YAML diagnostic whose fatality is determined by its error code.",
@@ -299,6 +299,17 @@ export class YamlDiagnostic extends Schema.Class<YamlDiagnostic>("YamlDiagnostic
 	 * abort a parse (vs. being recoverable warnings-as-data). Declared once,
 	 * as a property of the code — replacing the v3 source's three
 	 * subtly-differing inline fatal lists.
+	 *
+	 * **Example** (Distinguish fatal codes from DuplicateKey)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic } from "@beep/scratchpad/yaml"
+	 *
+	 * console.log(YamlDiagnostic.isFatal("UnexpectedToken")) // true
+	 * console.log(YamlDiagnostic.isFatal("DuplicateKey")) // false
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static isFatal(code: YamlErrorCode): boolean {
 		return isFatalCode(code);
@@ -308,6 +319,22 @@ export class YamlDiagnostic extends Schema.Class<YamlDiagnostic>("YamlDiagnostic
 	 * Materialize a raw engine diagnostic record into a `YamlDiagnostic`,
 	 * deriving `line`/`character` from `offset` against the source `text`.
 	 * Advanced — the parse/stringify entry points call this for you.
+	 *
+	 * **Example** (Derive line and character from an offset)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic } from "@beep/scratchpad/yaml"
+	 *
+	 * const diagnostic = YamlDiagnostic.fromRaw(
+	 *   { code: "UnexpectedToken", message: "unexpected ':'", offset: 2, length: 1 },
+	 *   "a:\n",
+	 * )
+	 *
+	 * console.log(diagnostic.line) // 0
+	 * console.log(diagnostic.character) // 2
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static fromRaw(
 		raw: { readonly code: YamlErrorCode; readonly message: string; readonly offset: number; readonly length: number },

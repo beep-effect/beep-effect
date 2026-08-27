@@ -237,15 +237,13 @@ const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
  *
  * **Example** (Use OntologyEmbeddings)
  * ```ts
- * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { GcsUri } from "@effect-ontology/Identity"
  * import { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const uri = S.decodeUnknownOption(GcsUri)("gs://beep-ontology/ontologies/football/ontology.ttl")
- * console.log(O.map(uri, OntologyEmbeddings.storagePathFor))
- * console.log(Effect.isEffect(OntologyEmbeddings.computeVersion("@prefix ex: <https://example.com/> .")))
+ * console.log(O.getOrThrow(O.map(uri, OntologyEmbeddings.storagePathFor))) // "gs://beep-ontology/ontologies/football/ontology-embeddings.json"
  * ```
  *
  * @invariant Every vector length equals `dimension`; version identity is a

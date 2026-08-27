@@ -27,7 +27,7 @@
  * **Example** (The shared depth cap)
  *
  * ```ts
- * import { MAX_NESTING_DEPTH } from "../../jsonc/internal/limits.ts";
+ * import { MAX_NESTING_DEPTH } from "../../../jsonc/internal/limits.ts";
  *
  * console.log(MAX_NESTING_DEPTH === 256); // true
  * ```

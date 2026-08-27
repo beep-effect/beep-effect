@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import  { SafeObject } from "@beep/schema/SafeObject";
+import { SafeObject } from "@beep/schema/SafeObject";
 import { A, O, P, pipe, Eq } from "@beep/utils";
 import {
   Cause,
@@ -37,6 +37,7 @@ import {
   RuntimeReference,
 } from "./Interpreter.model.ts"
 import { caughtErrorValue, normalizeError } from "./Interpreter.errors.ts"
+import { makeEmptySafeObject } from "../Codemode.values.ts";
 import { applyCollectionCallback, isSupportedCallback, type CallbackRunner, type SupportedCallback } from "./Interpreter.methods.ts"
 import { typeofValue } from "./Interpreter.references.ts"
 import { createAggregateErrorValue } from "../stdlib/StdLib.value.ts"
@@ -389,7 +390,7 @@ export type PromiseIdentity = MutableRef.MutableRef<O.Option<CodeModePromise>>
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
 export const resolvePromiseValue = <R>(
   runner: CallbackRunner<R>,
   value: unknown,
@@ -465,7 +466,7 @@ export const resolvePromiseValue = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
 export const resolvePromise = <R>(
   runner: CallbackRunner<R>,
   promises: PromiseRuntime<R>,
@@ -551,7 +552,7 @@ export const resolvePromise = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
 export const invokePromiseMethod = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   promises: PromiseRuntime<R>,
@@ -611,21 +612,17 @@ export const invokePromiseMethod = <R>(
             for (const item of items) {
               const exit = yield* promises.await(item)
               if (Exit.isSuccess(exit)) {
-                outcomes.push(
-                  Object.assign(
-                    SafeObject.make(Object.create(null)),
-                    { status: "fulfilled", value: exit.value },
-                  ),
-                )
+                const outcome = makeEmptySafeObject()
+                Reflect.set(outcome, "status", "fulfilled")
+                Reflect.set(outcome, "value", exit.value)
+                outcomes.push(outcome)
                 continue
               }
               if (Cause.hasInterruptsOnly(exit.cause)) return yield* Effect.failCause(exit.cause)
-              outcomes.push(
-                Object.assign(SafeObject.make(Object.create(null)), {
-                  status: "rejected",
-                  reason: caughtErrorValue(Cause.squash(exit.cause)),
-                }),
-              )
+              const outcome = makeEmptySafeObject()
+              Reflect.set(outcome, "status", "rejected")
+              Reflect.set(outcome, "reason", caughtErrorValue(Cause.squash(exit.cause)))
+              outcomes.push(outcome)
             }
             yield* Effect.yieldNow
             return outcomes
@@ -731,7 +728,7 @@ export const invokePromiseMethod = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
 export const invokePromiseInstanceMethod = <R>(
   runner: CallbackRunner<R>,
   promises: PromiseRuntime<R>,
@@ -820,7 +817,7 @@ export const invokePromiseInstanceMethod = <R>(
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Promise executor, AST node, and runtime are co-primary inputs for a newly allocated guest promise.
 export const constructPromise = <R>(
   runner: CallbackRunner<R>,
   promises: PromiseRuntime<R>,

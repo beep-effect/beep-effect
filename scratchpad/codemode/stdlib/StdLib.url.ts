@@ -16,6 +16,7 @@ import {
 import { CodeModeURL } from "../Codemode.values.ts"
 import { boundedData, coerceToString } from "./StdLib.value.ts"
 import { Result } from "effect"
+import { dual } from "effect/Function";
 import { LiteralKit } from "@beep/schema"
 import { P, A } from "@beep/utils";
 import {
@@ -126,8 +127,10 @@ export type urlWritableProperties = typeof urlWritableProperties.Type;
  * @category utilities
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const uriArgument = (value: unknown, label: string): string => coerceToString(boundedData(value, label))
+export const uriArgument: {
+  (label: string): (value: unknown) => string;
+  (value: unknown, label: string): string;
+} = dual(2, (value: unknown, label: string): string => coerceToString(boundedData(value, label)))
 
 /**
  * Dispatches guest `encodeURI`, `encodeURIComponent`, `decodeURI`, and
@@ -154,7 +157,7 @@ export const uriArgument = (value: unknown, label: string): string => coerceToSt
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeUriFunction = (
   ref: UriFunction,
   args: Array<unknown>,
@@ -208,9 +211,11 @@ export const invokeUriFunction = (
  * @category utilities
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const urlArgument = (value: unknown, label: string): string =>
-  CodeModeURL.is(value) ? value.url.href : uriArgument(value, label)
+export const urlArgument: {
+  (label: string): (value: unknown) => string;
+  (value: unknown, label: string): string;
+} = dual(2, (value: unknown, label: string): string =>
+  CodeModeURL.is(value) ? value.url.href : uriArgument(value, label))
 
 /**
  * Dispatches guest `URL.canParse` and `URL.parse`.
@@ -241,7 +246,7 @@ export const urlArgument = (value: unknown, label: string): string =>
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown => {
   if (A.isArrayEmpty(args)) throw InterpreterRuntimeError.new(`URL.${name} requires a URL argument.`, node).as("TypeError")
   const input = urlArgument(args[0], `URL.${name} input`)
@@ -280,6 +285,6 @@ export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: Ast
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeURLMethod = (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string =>
   value.url.href;

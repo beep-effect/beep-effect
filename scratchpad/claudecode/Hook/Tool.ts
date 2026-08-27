@@ -10,9 +10,8 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-
 import { HookToolDecodeError } from "../Errors.ts";
 import type * as PostToolUse from "./Events/PostToolUse.ts";
 import type * as PreToolUse from "./Events/PreToolUse.ts";
@@ -298,8 +297,8 @@ export class EditToolInput extends S.Class<EditToolInput>($I`EditToolInput`)(
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * const input = Hook.Tool.GlobToolInput.make({ pattern: "**/*.ts" })
- * console.log(input.pattern) // "**/*.ts"
+ * const input = Hook.Tool.GlobToolInput.make({ pattern: "**\/*.ts" })
+ * console.log(input.pattern) // "**\/*.ts"
  * ```
  *
  * @category schemas
@@ -865,12 +864,12 @@ export const EditAdapter = definePostAdapter({
  *   cwd: "/repo",
  *   hook_event_name: "PostToolUse",
  *   tool_name: "Glob",
- *   tool_input: { pattern: "**/*.ts" },
+ *   tool_input: { pattern: "**\/*.ts" },
  *   tool_response: { files: ["src/a.ts"] }
  * })
  * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.GlobAdapter, input))
  * console.log(Hook.Tool.GlobAdapter.toolName) // "Glob"
- * console.log(decoded.tool.pattern) // "**/*.ts"
+ * console.log(decoded.tool.pattern) // "**\/*.ts"
  * ```
  *
  * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
@@ -1754,9 +1753,9 @@ export declare namespace EditToolInput {
  * import { Hook } from "effect-claudecode"
  * import * as S from "effect/Schema"
  *
- * const input = Hook.Tool.GlobToolInput.make({ pattern: "**/*.ts" })
+ * const input = Hook.Tool.GlobToolInput.make({ pattern: "**\/*.ts" })
  * const encoded = S.encodeSync(Hook.Tool.GlobToolInput)(input)
- * console.log(encoded.pattern) // "**/*.ts"
+ * console.log(encoded.pattern) // "**\/*.ts"
  * ```
  *
  * @see {@link GlobToolInput} for the runtime schema, `.make`, and decoded fields.

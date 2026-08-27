@@ -5,14 +5,18 @@
  * Nodes deliberately carry no parent pointers (circular references would
  * break structural equality, serialization and Schema encode/decode). Child
  * relationships are expressed via `items`/`key`/`value`, and the recursive
- * types are handled with `Schema.suspend`.
+ * types are handled with `S.suspend`.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Option, Schema } from "effect";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
+import { MutableHashMap } from "effect";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import type { YamlPath } from "./YamlEdit.ts";
 
 const $I = $ScratchpadId.create("yaml/YamlNode");
@@ -35,16 +39,16 @@ const $I = $ScratchpadId.create("yaml/YamlNode");
  * @category schemas
  * @since 0.0.0
  */
-export const ScalarStyle = Schema.Literals([
-	"plain",
-	"single-quoted",
-	"double-quoted",
-	"block-literal",
-	"block-folded",
+export const ScalarStyle = S.Literals([
+  "plain",
+  "single-quoted",
+  "double-quoted",
+  "block-literal",
+  "block-folded",
 ]).pipe(
-	$I.annoteSchema("ScalarStyle", {
-		description: "YAML scalar presentation styles stored on composed scalar nodes.",
-	}),
+  $I.annoteSchema("ScalarStyle", {
+    description: "YAML scalar presentation styles stored on composed scalar nodes.",
+  }),
 );
 
 /**
@@ -75,10 +79,10 @@ export type ScalarStyle = typeof ScalarStyle.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const CollectionStyle = Schema.Literals(["block", "flow"]).pipe(
-	$I.annoteSchema("CollectionStyle", {
-		description: "YAML collection presentation styles stored on composed maps and sequences.",
-	}),
+export const CollectionStyle = S.Literals(["block", "flow"]).pipe(
+  $I.annoteSchema("CollectionStyle", {
+    description: "YAML collection presentation styles stored on composed maps and sequences.",
+  }),
 );
 
 /**
@@ -119,10 +123,10 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const QuoteStyle = Schema.Literals(["single", "double"]).pipe(
-	$I.annoteSchema("QuoteStyle", {
-		description: "Quote characters used when a plain-styled scalar requires quoting during stringify.",
-	}),
+export const QuoteStyle = S.Literals(["single", "double"]).pipe(
+  $I.annoteSchema("QuoteStyle", {
+    description: "Quote characters used when a plain-styled scalar requires quoting during stringify.",
+  }),
 );
 
 /**
@@ -162,10 +166,10 @@ export type QuoteStyle = typeof QuoteStyle.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const QuoteCompat = Schema.Literals(["yaml-1.1"]).pipe(
-	$I.annoteSchema("QuoteCompat", {
-		description: "Foreign resolution dialects the stringifier can defend against when quoting plain scalars.",
-	}),
+export const QuoteCompat = S.Literals(["yaml-1.1"]).pipe(
+  $I.annoteSchema("QuoteCompat", {
+    description: "Foreign resolution dialects the stringifier can defend against when quoting plain scalars.",
+  }),
 );
 
 /**
@@ -197,10 +201,10 @@ export type QuoteCompat = typeof QuoteCompat.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ScalarChomp = Schema.Literals(["strip", "clip", "keep"]).pipe(
-	$I.annoteSchema("ScalarChomp", {
-		description: "Block-scalar chomping indicators stored on composed scalar nodes.",
-	}),
+export const ScalarChomp = S.Literals(["strip", "clip", "keep"]).pipe(
+  $I.annoteSchema("ScalarChomp", {
+    description: "Block-scalar chomping indicators stored on composed scalar nodes.",
+  }),
 );
 
 /**
@@ -267,62 +271,103 @@ export type ScalarChomp = typeof ScalarChomp.Type;
  * @category models
  * @since 0.0.0
  */
-export class YamlScalar extends Schema.TaggedClass<YamlScalar>()(
-	"YamlScalar",
-	{
-		value: Schema.Unknown,
-		tag: Schema.optionalKey(Schema.String),
-		style: ScalarStyle,
-		anchor: Schema.optionalKey(Schema.String),
-		commentBefore: Schema.optionalKey(Schema.String),
-		comment: Schema.optionalKey(Schema.String),
-		spaceBefore: Schema.optionalKey(Schema.Boolean),
-		chomp: Schema.optionalKey(ScalarChomp),
-		blockIndent: Schema.optionalKey(Schema.Number),
-		raw: Schema.optionalKey(Schema.String),
-		sourceMultiline: Schema.optionalKey(Schema.Boolean),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("YamlScalar", {
-		description: "A YAML scalar AST node representing a leaf value such as a string, number, boolean, or null.",
-	}),
+export class YamlScalar extends S.TaggedClass<YamlScalar>()(
+  "YamlScalar",
+  {
+    value: S.Unknown,
+    tag: S.optionalKey(S.String),
+    style: ScalarStyle,
+    anchor: S.optionalKey(S.String),
+    commentBefore: S.optionalKey(S.String),
+    comment: S.optionalKey(S.String),
+    spaceBefore: S.optionalKey(S.Boolean),
+    chomp: S.optionalKey(ScalarChomp),
+    blockIndent: S.optionalKey(S.Finite),
+    raw: S.optionalKey(S.String),
+    sourceMultiline: S.optionalKey(S.Boolean),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("YamlScalar", {
+    description: "A YAML scalar AST node representing a leaf value such as a string, number, boolean, or null.",
+  }),
 ) {
-	/**
-	 * Navigate to a descendant by path (string segments for mapping keys,
-	 * numbers for sequence indices). `Option.none()` when any segment cannot
-	 * be resolved. Pure.
-	 */
-	find(path: YamlPath): Option.Option<YamlNode> {
-		return findByPath(this, path);
-	}
+  /**
+   * Navigate to a descendant by path (string segments for mapping keys,
+   * numbers for sequence indices). `O.none()` when any segment cannot
+   * be resolved. Pure.
+   *
+   * **Example** (Find the scalar itself)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlScalar } from "@beep/scratchpad/yaml"
+   *
+   * const scalar = YamlScalar.make({ value: "x", style: "plain", offset: 0, length: 1 })
+   * console.log(O.isSome(scalar.find([]))) // true
+   * ```
+   */
+  find(path: YamlPath): O.Option<YamlNode> {
+    return findByPath(this, path);
+  }
 
-	/**
-	 * Find the deepest node whose span contains `offset` (half-open interval),
-	 * or `Option.none()` when the offset falls outside this subtree. Pure.
-	 */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
-		return findDeepestAtOffset(this, offset);
-	}
+  /**
+   * Find the deepest node whose span contains `offset` (half-open interval),
+   * or `O.none()` when the offset falls outside this subtree. Pure.
+   *
+   * **Example** (Find a scalar by source offset)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlScalar } from "@beep/scratchpad/yaml"
+   *
+   * const scalar = YamlScalar.make({ value: "x", style: "plain", offset: 4, length: 1 })
+   * console.log(O.isSome(scalar.findAtOffset(4))) // true
+   * ```
+   */
+  findAtOffset(offset: number): O.Option<YamlNode> {
+    return findDeepestAtOffset(this, offset);
+  }
 
-	/**
-	 * Return the path from this node to the given descendant node (matched by
-	 * reference identity), or `Option.none()` when it is not in this subtree.
-	 * The inverse of {@link YamlScalar.find}. Pure.
-	 */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
-		return pathToNode(this, node);
-	}
+  /**
+   * Return the path from this node to the given descendant node (matched by
+   * reference identity), or `O.none()` when it is not in this subtree.
+   * The inverse of {@link YamlScalar.find}. Pure.
+   *
+   * **Example** (Find the scalar's empty self path)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlScalar } from "@beep/scratchpad/yaml"
+   *
+   * const scalar = YamlScalar.make({ value: "x", style: "plain", offset: 0, length: 1 })
+   * console.log(O.isSome(scalar.pathOf(scalar))) // true
+   * ```
+   */
+  pathOf(node: YamlNode): O.Option<YamlPath> {
+    return pathToNode(this, node);
+  }
 
-	/**
-	 * Reconstruct the plain JavaScript value of this subtree. Aliases resolve
-	 * through `anchors` (anchors encountered during the walk register
-	 * incrementally, so an alias sees the most recent definition at its point
-	 * of use); unresolvable aliases yield `null`. Pure and total.
-	 */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
-		return nodeToValue(this, anchors, defaultBudget());
-	}
+  /**
+   * Reconstruct the plain JavaScript value of this subtree. Aliases resolve
+   * through `anchors` (anchors encountered during the walk register
+   * incrementally, so an alias sees the most recent definition at its point
+   * of use); unresolvable aliases yield `null`. Pure and total.
+   *
+   * **Example** (Read a scalar value)
+   *
+   * ```ts
+   * import { YamlScalar } from "@beep/scratchpad/yaml"
+   *
+   * const scalar = YamlScalar.make({ value: "x", style: "plain", offset: 0, length: 1 })
+   * console.log(scalar.toValue()) // "x"
+   * ```
+   */
+  toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
+    return nodeToValue(this, anchors, defaultBudget());
+  }
+
+  static readonly is = S.is(YamlScalar);
 }
 
 /**
@@ -349,39 +394,88 @@ export class YamlScalar extends Schema.TaggedClass<YamlScalar>()(
  * @category models
  * @since 0.0.0
  */
-export class YamlAlias extends Schema.TaggedClass<YamlAlias>()(
-	"YamlAlias",
-	{
-		name: Schema.String,
-		offset: Schema.Number,
-		length: Schema.Number,
-		commentBefore: Schema.optionalKey(Schema.String),
-		comment: Schema.optionalKey(Schema.String),
-		spaceBefore: Schema.optionalKey(Schema.Boolean),
-	},
-	$I.annote("YamlAlias", {
-		description: "A YAML alias AST node referencing a previously defined anchor by name.",
-	}),
+export class YamlAlias extends S.TaggedClass<YamlAlias>()(
+  "YamlAlias",
+  {
+    name: S.String,
+    offset: S.Finite,
+    length: S.Finite,
+    commentBefore: S.optionalKey(S.String),
+    comment: S.optionalKey(S.String),
+    spaceBefore: S.optionalKey(S.Boolean),
+  },
+  $I.annote("YamlAlias", {
+    description: "A YAML alias AST node referencing a previously defined anchor by name.",
+  }),
 ) {
-	/** See `YamlScalar.find`. Pure. */
-	find(path: YamlPath): Option.Option<YamlNode> {
-		return findByPath(this, path);
-	}
+  /**
+   * See `YamlScalar.find`. Pure.
+   *
+   * **Example** (Find the alias itself)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlAlias } from "@beep/scratchpad/yaml"
+   *
+   * const alias = YamlAlias.make({ name: "item", offset: 0, length: 5 })
+   * console.log(O.isSome(alias.find([]))) // true
+   * ```
+   */
+  find(path: YamlPath): O.Option<YamlNode> {
+    return findByPath(this, path);
+  }
 
-	/** See `YamlScalar.findAtOffset`. Pure. */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
-		return findDeepestAtOffset(this, offset);
-	}
+  /**
+   * See `YamlScalar.findAtOffset`. Pure.
+   *
+   * **Example** (Find an alias by source offset)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlAlias } from "@beep/scratchpad/yaml"
+   *
+   * const alias = YamlAlias.make({ name: "item", offset: 2, length: 5 })
+   * console.log(O.isSome(alias.findAtOffset(2))) // true
+   * ```
+   */
+  findAtOffset(offset: number): O.Option<YamlNode> {
+    return findDeepestAtOffset(this, offset);
+  }
 
-	/** See `YamlScalar.pathOf`. Pure. */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
-		return pathToNode(this, node);
-	}
+  /**
+   * See `YamlScalar.pathOf`. Pure.
+   *
+   * **Example** (Find the alias's empty self path)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlAlias } from "@beep/scratchpad/yaml"
+   *
+   * const alias = YamlAlias.make({ name: "item", offset: 0, length: 5 })
+   * console.log(O.isSome(alias.pathOf(alias))) // true
+   * ```
+   */
+  pathOf(node: YamlNode): O.Option<YamlPath> {
+    return pathToNode(this, node);
+  }
 
-	/** See `YamlScalar.toValue`. Pure and total. */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
-		return nodeToValue(this, anchors, defaultBudget());
-	}
+  /**
+   * See `YamlScalar.toValue`. Pure and total.
+   *
+   * **Example** (Read an unresolved alias)
+   *
+   * ```ts
+   * import { YamlAlias } from "@beep/scratchpad/yaml"
+   *
+   * const alias = YamlAlias.make({ name: "missing", offset: 0, length: 8 })
+   * console.log(alias.toValue()) // null
+   * ```
+   */
+  toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
+    return nodeToValue(this, anchors, defaultBudget());
+  }
+
+  static readonly is = S.is(YamlAlias);
 }
 
 /**
@@ -389,50 +483,75 @@ export class YamlAlias extends Schema.TaggedClass<YamlAlias>()(
  * without the instance methods. Named so the recursive {@link (YamlNode:variable)}
  * codec can state its encoded side without a circular type annotation.
  *
+ * **Details**
+ *
+ * This interface is genuinely type-level machinery: it extends the encoded
+ * side derived directly from the schema class and exists only to break the
+ * recursive `YamlNode` codec annotation. It does not define independent data.
+ *
  * @see {@link YamlScalar} for the runtime class this encoded form corresponds to.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface YamlScalarEncoded extends Schema.Codec.Encoded<typeof YamlScalar> {}
+export interface YamlScalarEncoded extends S.Codec.Encoded<typeof YamlScalar> {
+}
 
 /**
  * The encoded (plain-object) form of a {@link YamlMap}. See
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
+ *
+ * **Details**
+ *
+ * This is the schema-derived encoded side of `YamlMap`, named only so the
+ * recursive union codec can reference it; it owns no shape independently.
  *
  * @see {@link YamlMap} for the runtime class this encoded form corresponds to.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface YamlMapEncoded extends Schema.Codec.Encoded<typeof YamlMap> {}
+export interface YamlMapEncoded extends S.Codec.Encoded<typeof YamlMap> {
+}
 
 /**
  * The encoded (plain-object) form of a {@link YamlSeq}. See
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
+ *
+ * **Details**
+ *
+ * This is the schema-derived encoded side of `YamlSeq`, named only so the
+ * recursive union codec can reference it; it owns no shape independently.
  *
  * @see {@link YamlSeq} for the runtime class this encoded form corresponds to.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface YamlSeqEncoded extends Schema.Codec.Encoded<typeof YamlSeq> {}
+export interface YamlSeqEncoded extends S.Codec.Encoded<typeof YamlSeq> {
+}
 
 /**
  * The encoded (plain-object) form of a {@link YamlAlias}. See
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
+ *
+ * **Details**
+ *
+ * This is the schema-derived encoded side of `YamlAlias`, named only so the
+ * recursive union codec can reference it; it owns no shape independently.
  *
  * @see {@link YamlAlias} for the runtime class this encoded form corresponds to.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface YamlAliasEncoded extends Schema.Codec.Encoded<typeof YamlAlias> {}
+export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {
+}
 
 /**
  * A discriminated-union schema covering all four YAML AST value node types:
  * {@link YamlScalar}, {@link YamlMap}, {@link YamlSeq} and {@link YamlAlias}.
- * Defined lazily via `Schema.suspend` to break the recursive reference chain
+ * Defined lazily via `S.suspend` to break the recursive reference chain
  * `YamlNode → YamlMap → YamlPair → YamlNode`.
  *
  * **Gotchas**
@@ -461,13 +580,13 @@ export interface YamlAliasEncoded extends Schema.Codec.Encoded<typeof YamlAlias>
  * @category schemas
  * @since 0.0.0
  */
-export const YamlNode: Schema.Codec<
-	YamlScalar | YamlMap | YamlSeq | YamlAlias,
-	YamlScalarEncoded | YamlMapEncoded | YamlSeqEncoded | YamlAliasEncoded
-> = Schema.suspend(() => Schema.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias])).pipe(
-	$I.annoteSchema("YamlNode", {
-		description: "Discriminated union of YAML AST value nodes: scalar, map, seq and alias.",
-	}),
+export const YamlNode: S.Codec<
+  YamlScalar | YamlMap | YamlSeq | YamlAlias,
+  YamlScalarEncoded | YamlMapEncoded | YamlSeqEncoded | YamlAliasEncoded
+> = S.suspend(() => S.Union([YamlScalar, YamlMap, YamlSeq, YamlAlias])).pipe(
+  $I.annoteSchema("YamlNode", {
+    description: "Discriminated union of YAML AST value nodes: scalar, map, seq and alias.",
+  }),
 );
 
 /**
@@ -501,7 +620,7 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  *   value: YamlScalar.make({ value: "Alice", style: "plain", offset: 6, length: 5 }),
  * })
  *
- * console.log(pair.key instanceof YamlScalar && pair.key.value) // "name"
+ * console.log(YamlScalar.is(pair.key) && pair.key.value) // "name"
  * ```
  *
  * @see {@link YamlMap} for the mapping that stores these pairs in `items`.
@@ -509,16 +628,17 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  * @category models
  * @since 0.0.0
  */
-export class YamlPair extends Schema.TaggedClass<YamlPair>()(
-	"YamlPair",
-	{
-		key: Schema.suspend((): typeof YamlNode => YamlNode),
-		value: Schema.NullOr(Schema.suspend((): typeof YamlNode => YamlNode)),
-	},
-	$I.annote("YamlPair", {
-		description: "A YAML key-value pair AST node representing one mapping entry.",
-	}),
-) {}
+export class YamlPair extends S.TaggedClass<YamlPair>()(
+  "YamlPair",
+  {
+    key: S.suspend((): typeof YamlNode => YamlNode),
+    value: S.NullOr(S.suspend((): typeof YamlNode => YamlNode)),
+  },
+  $I.annote("YamlPair", {
+    description: "A YAML key-value pair AST node representing one mapping entry.",
+  }),
+) {
+}
 
 /**
  * A YAML mapping AST node, representing a collection of {@link YamlPair}
@@ -560,43 +680,92 @@ export class YamlPair extends Schema.TaggedClass<YamlPair>()(
  * @category models
  * @since 0.0.0
  */
-export class YamlMap extends Schema.TaggedClass<YamlMap>()(
-	"YamlMap",
-	{
-		items: Schema.Array(Schema.suspend((): typeof YamlPair => YamlPair)),
-		tag: Schema.optionalKey(Schema.String),
-		anchor: Schema.optionalKey(Schema.String),
-		style: CollectionStyle,
-		commentBefore: Schema.optionalKey(Schema.String),
-		comment: Schema.optionalKey(Schema.String),
-		spaceBefore: Schema.optionalKey(Schema.Boolean),
-		sourceMultiline: Schema.optionalKey(Schema.Boolean),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("YamlMap", {
-		description: "A YAML mapping AST node representing a collection of key-value pairs.",
-	}),
+export class YamlMap extends S.TaggedClass<YamlMap>()(
+  "YamlMap",
+  {
+    items: S.Array(S.suspend((): typeof YamlPair => YamlPair)),
+    tag: S.optionalKey(S.String),
+    anchor: S.optionalKey(S.String),
+    style: CollectionStyle,
+    commentBefore: S.optionalKey(S.String),
+    comment: S.optionalKey(S.String),
+    spaceBefore: S.optionalKey(S.Boolean),
+    sourceMultiline: S.optionalKey(S.Boolean),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("YamlMap", {
+    description: "A YAML mapping AST node representing a collection of key-value pairs.",
+  }),
 ) {
-	/** See `YamlScalar.find`. Pure. */
-	find(path: YamlPath): Option.Option<YamlNode> {
-		return findByPath(this, path);
-	}
+  /**
+   * See `YamlScalar.find`. Pure.
+   *
+   * **Example** (Find an empty mapping by its root path)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlMap } from "@beep/scratchpad/yaml"
+   *
+   * const map = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+   * console.log(O.isSome(map.find([]))) // true
+   * ```
+   */
+  find(path: YamlPath): O.Option<YamlNode> {
+    return findByPath(this, path);
+  }
 
-	/** See `YamlScalar.findAtOffset`. Pure. */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
-		return findDeepestAtOffset(this, offset);
-	}
+  /**
+   * See `YamlScalar.findAtOffset`. Pure.
+   *
+   * **Example** (Find a mapping by source offset)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlMap } from "@beep/scratchpad/yaml"
+   *
+   * const map = YamlMap.make({ items: [], style: "flow", offset: 4, length: 2 })
+   * console.log(O.isSome(map.findAtOffset(4))) // true
+   * ```
+   */
+  findAtOffset(offset: number): O.Option<YamlNode> {
+    return findDeepestAtOffset(this, offset);
+  }
 
-	/** See `YamlScalar.pathOf`. Pure. */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
-		return pathToNode(this, node);
-	}
+  /**
+   * See `YamlScalar.pathOf`. Pure.
+   *
+   * **Example** (Find the mapping's empty self path)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlMap } from "@beep/scratchpad/yaml"
+   *
+   * const map = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+   * console.log(O.isSome(map.pathOf(map))) // true
+   * ```
+   */
+  pathOf(node: YamlNode): O.Option<YamlPath> {
+    return pathToNode(this, node);
+  }
 
-	/** See `YamlScalar.toValue`. Pure and total. */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
-		return nodeToValue(this, anchors, defaultBudget());
-	}
+  /**
+   * See `YamlScalar.toValue`. Pure and total.
+   *
+   * **Example** (Read an empty mapping)
+   *
+   * ```ts
+   * import { YamlMap } from "@beep/scratchpad/yaml"
+   *
+   * const map = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+   * console.log(map.toValue()) // {}
+   * ```
+   */
+  toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
+    return nodeToValue(this, anchors, defaultBudget());
+  }
+
+  static readonly is = S.is(YamlMap);
 }
 
 /**
@@ -629,83 +798,132 @@ export class YamlMap extends Schema.TaggedClass<YamlMap>()(
  * @category models
  * @since 0.0.0
  */
-export class YamlSeq extends Schema.TaggedClass<YamlSeq>()(
-	"YamlSeq",
-	{
-		items: Schema.Array(Schema.suspend((): typeof YamlNode => YamlNode)),
-		tag: Schema.optionalKey(Schema.String),
-		anchor: Schema.optionalKey(Schema.String),
-		style: CollectionStyle,
-		commentBefore: Schema.optionalKey(Schema.String),
-		comment: Schema.optionalKey(Schema.String),
-		spaceBefore: Schema.optionalKey(Schema.Boolean),
-		sourceMultiline: Schema.optionalKey(Schema.Boolean),
-		offset: Schema.Number,
-		length: Schema.Number,
-	},
-	$I.annote("YamlSeq", {
-		description: "A YAML sequence AST node representing an ordered list of nodes.",
-	}),
+export class YamlSeq extends S.TaggedClass<YamlSeq>()(
+  "YamlSeq",
+  {
+    items: S.Array(S.suspend((): typeof YamlNode => YamlNode)),
+    tag: S.optionalKey(S.String),
+    anchor: S.optionalKey(S.String),
+    style: CollectionStyle,
+    commentBefore: S.optionalKey(S.String),
+    comment: S.optionalKey(S.String),
+    spaceBefore: S.optionalKey(S.Boolean),
+    sourceMultiline: S.optionalKey(S.Boolean),
+    offset: S.Finite,
+    length: S.Finite,
+  },
+  $I.annote("YamlSeq", {
+    description: "A YAML sequence AST node representing an ordered list of nodes.",
+  }),
 ) {
-	/** See `YamlScalar.find`. Pure. */
-	find(path: YamlPath): Option.Option<YamlNode> {
-		return findByPath(this, path);
-	}
+  /**
+   * See `YamlScalar.find`. Pure.
+   *
+   * **Example** (Find an empty sequence by its root path)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlSeq } from "@beep/scratchpad/yaml"
+   *
+   * const sequence = YamlSeq.make({ items: [], style: "block", offset: 0, length: 2 })
+   * console.log(O.isSome(sequence.find([]))) // true
+   * ```
+   */
+  find(path: YamlPath): O.Option<YamlNode> {
+    return findByPath(this, path);
+  }
 
-	/** See `YamlScalar.findAtOffset`. Pure. */
-	findAtOffset(offset: number): Option.Option<YamlNode> {
-		return findDeepestAtOffset(this, offset);
-	}
+  /**
+   * See `YamlScalar.findAtOffset`. Pure.
+   *
+   * **Example** (Find a sequence by source offset)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlSeq } from "@beep/scratchpad/yaml"
+   *
+   * const sequence = YamlSeq.make({ items: [], style: "flow", offset: 4, length: 2 })
+   * console.log(O.isSome(sequence.findAtOffset(4))) // true
+   * ```
+   */
+  findAtOffset(offset: number): O.Option<YamlNode> {
+    return findDeepestAtOffset(this, offset);
+  }
 
-	/** See `YamlScalar.pathOf`. Pure. */
-	pathOf(node: YamlNode): Option.Option<YamlPath> {
-		return pathToNode(this, node);
-	}
+  /**
+   * See `YamlScalar.pathOf`. Pure.
+   *
+   * **Example** (Find the sequence's empty self path)
+   *
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { YamlSeq } from "@beep/scratchpad/yaml"
+   *
+   * const sequence = YamlSeq.make({ items: [], style: "block", offset: 0, length: 2 })
+   * console.log(O.isSome(sequence.pathOf(sequence))) // true
+   * ```
+   */
+  pathOf(node: YamlNode): O.Option<YamlPath> {
+    return pathToNode(this, node);
+  }
 
-	/** See `YamlScalar.toValue`. Pure and total. */
-	toValue(anchors?: Map<string, YamlNode>): unknown {
-		return nodeToValue(this, anchors, defaultBudget());
-	}
+  /**
+   * See `YamlScalar.toValue`. Pure and total.
+   *
+   * **Example** (Read an empty sequence)
+   *
+   * ```ts
+   * import { YamlSeq } from "@beep/scratchpad/yaml"
+   *
+   * const sequence = YamlSeq.make({ items: [], style: "block", offset: 0, length: 2 })
+   * console.log(sequence.toValue()) // []
+   * ```
+   */
+  toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
+    return nodeToValue(this, anchors, defaultBudget());
+  }
+
+  static readonly is = S.is(YamlSeq);
 }
 
 // ── Shared method implementations ───────────────────────────────────────────
 // Module-level so the four union classes share one body each. Declared after
 // the classes; function declarations hoist.
 
-function findByPath(root: YamlNode, path: YamlPath): Option.Option<YamlNode> {
-	let current: YamlNode | null = root;
+function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
+  let current: YamlNode | null = root;
 
-	for (const segment of path) {
-		if (current === null) {
-			return Option.none();
-		}
+  for (const segment of path) {
+    if (current === null) {
+      return O.none();
+    }
 
-		if (typeof segment === "string") {
-			// Navigate by key — requires a YamlMap
-			if (!(current instanceof YamlMap)) {
-				return Option.none();
-			}
-			const pair: YamlPair | undefined = current.items.find(
-				(p: YamlPair) => p.key instanceof YamlScalar && typeof p.key.value === "string" && p.key.value === segment,
-			);
-			if (!pair || pair.value === null) {
-				return Option.none();
-			}
-			current = pair.value;
-		} else {
-			// Navigate by index — requires a YamlSeq
-			if (!(current instanceof YamlSeq)) {
-				return Option.none();
-			}
-			const item: YamlNode | undefined = current.items[segment];
-			if (item === undefined) {
-				return Option.none();
-			}
-			current = item;
-		}
-	}
+    if (P.isString(segment)) {
+      // Navigate by key — requires a YamlMap
+      if (!YamlMap.is(current)) {
+        return O.none();
+      }
+      const pair: YamlPair | undefined = current.items.find(
+        (p: YamlPair) => YamlScalar.is(p.key) && P.isString(p.key.value) && p.key.value === segment,
+      );
+      if (P.isUndefined(pair) || pair.value === null) {
+        return O.none();
+      }
+      current = pair.value;
+    } else {
+      // Navigate by index — requires a YamlSeq
+      if (!YamlSeq.is(current)) {
+        return O.none();
+      }
+      const item: YamlNode | undefined = current.items[segment];
+      if (item === undefined) {
+        return O.none();
+      }
+      current = item;
+    }
+  }
 
-	return current === null ? Option.none() : Option.some(current);
+  return current === null ? O.none() : O.some(current);
 }
 
 /**
@@ -713,39 +931,39 @@ function findByPath(root: YamlNode, path: YamlPath): Option.Option<YamlNode> {
  * immediately after a node is NOT considered inside it.
  */
 function containsOffset(node: YamlNode, offset: number): boolean {
-	return offset >= node.offset && offset < node.offset + node.length;
+  return offset >= node.offset && offset < node.offset + node.length;
 }
 
-function findDeepestAtOffset(node: YamlNode, offset: number): Option.Option<YamlNode> {
-	if (!containsOffset(node, offset)) {
-		return Option.none();
-	}
+function findDeepestAtOffset(node: YamlNode, offset: number): O.Option<YamlNode> {
+  if (!containsOffset(node, offset)) {
+    return O.none();
+  }
 
-	if (node instanceof YamlMap) {
-		for (const pair of node.items) {
-			const keyResult = findDeepestAtOffset(pair.key, offset);
-			if (Option.isSome(keyResult)) return keyResult;
-			if (pair.value !== null) {
-				const valResult = findDeepestAtOffset(pair.value, offset);
-				if (Option.isSome(valResult)) return valResult;
-			}
-		}
-	}
+  if (YamlMap.is(node)) {
+    for (const pair of node.items) {
+      const keyResult = findDeepestAtOffset(pair.key, offset);
+      if (O.isSome(keyResult)) return keyResult;
+      if (pair.value !== null) {
+        const valResult = findDeepestAtOffset(pair.value, offset);
+        if (O.isSome(valResult)) return valResult;
+      }
+    }
+  }
 
-	if (node instanceof YamlSeq) {
-		for (const item of node.items) {
-			const itemResult = findDeepestAtOffset(item, offset);
-			if (Option.isSome(itemResult)) return itemResult;
-		}
-	}
+  if (YamlSeq.is(node)) {
+    for (const item of node.items) {
+      const itemResult = findDeepestAtOffset(item, offset);
+      if (O.isSome(itemResult)) return itemResult;
+    }
+  }
 
-	// This node contains the offset but no child does — this is the deepest
-	return Option.some(node);
+  // This node contains the offset but no child does — this is the deepest
+  return O.some(node);
 }
 
-function pathToNode(root: YamlNode, target: YamlNode): Option.Option<YamlPath> {
-	const path: Array<string | number> = [];
-	return descendToNode(root, target, path) ? Option.some(path) : Option.none();
+function pathToNode(root: YamlNode, target: YamlNode): O.Option<YamlPath> {
+  const path: Array<string | number> = [];
+  return descendToNode(root, target, path) ? O.some(path) : O.none();
 }
 
 /**
@@ -755,51 +973,56 @@ function pathToNode(root: YamlNode, target: YamlNode): Option.Option<YamlPath> {
  * addressable by path.
  */
 function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | number>): boolean {
-	if (node === target) {
-		return true;
-	}
+  if (node === target) {
+    return true;
+  }
 
-	if (node instanceof YamlMap) {
-		for (const pair of node.items) {
-			if (pair.key instanceof YamlScalar && typeof pair.key.value === "string") {
-				if (pair.key === target) {
-					path.push(pair.key.value);
-					return true;
-				}
-				if (pair.value !== null) {
-					path.push(pair.key.value);
-					if (descendToNode(pair.value, target, path)) {
-						return true;
-					}
-					path.pop();
-				}
-			}
-		}
-	}
+  if (YamlMap.is(node)) {
+    for (const pair of node.items) {
+      if (YamlScalar.is(pair.key) && P.isString(pair.key.value)) {
+        if (pair.key === target) {
+          path.push(pair.key.value);
+          return true;
+        }
+        if (pair.value !== null) {
+          path.push(pair.key.value);
+          if (descendToNode(pair.value, target, path)) {
+            return true;
+          }
+          path.pop();
+        }
+      }
+    }
+  }
 
-	if (node instanceof YamlSeq) {
-		for (let i = 0; i < node.items.length; i++) {
-			const item = node.items[i] as YamlNode;
-			path.push(i);
-			if (descendToNode(item, target, path)) {
-				return true;
-			}
-			path.pop();
-		}
-	}
+  if (YamlSeq.is(node)) {
+    for (let i = 0; i < node.items.length; i++) {
+      const item = node.items[i] as YamlNode;
+      path.push(i);
+      if (descendToNode(item, target, path)) {
+        return true;
+      }
+      path.pop();
+    }
+  }
 
-	return false;
+  return false;
 }
 
 /** Set a mapping key as an own data property — `__proto__` included. */
 function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknown): void {
-	if (key === "__proto__") {
-		// Own data property, not a prototype mutation — matches JSON.parse
-		// semantics and the jsonc precedent.
-		Object.defineProperty(obj, key, { value, writable: true, enumerable: true, configurable: true });
-	} else {
-		obj[key] = value;
-	}
+  if (key === "__proto__") {
+    // Own data property, not a prototype mutation — matches JSON.parse
+    // semantics and the jsonc precedent.
+    Object.defineProperty(obj, key, {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
+  } else {
+    obj[key] = value;
+  }
 }
 
 /**
@@ -840,11 +1063,20 @@ function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknow
  * @category errors
  * @since 0.0.0
  */
-export class AliasExpansionBudgetExceeded extends Error {
-	constructor(limit: number) {
-		super(`Alias expansion exceeded budget of ${limit} nodes`);
-		this.name = "AliasExpansionBudgetExceeded";
-	}
+export class AliasExpansionBudgetExceeded extends S.TaggedError<AliasExpansionBudgetExceeded>($I`AliasExpansionBudgetExceeded`)(
+  "AliasExpansionBudgetExceeded",
+  {
+    limit: S.Finite,
+  },
+  $I.annote("AliasExpansionBudgetExceeded", {
+    description: ""
+  })
+) {
+  static readonly is = S.is(AliasExpansionBudgetExceeded);
+
+  override get message() {
+    return `Alias expansion exceeded budget of ${this.limit} nodes`;
+  }
 }
 
 /**
@@ -881,7 +1113,7 @@ const ALIAS_EXPANSION_FACTOR = 10_000;
  * @since 0.0.0
  */
 export function aliasExpansionLimit(maxAliasCount: number): number {
-	return (maxAliasCount + 1) * ALIAS_EXPANSION_FACTOR;
+  return (maxAliasCount + 1) * ALIAS_EXPANSION_FACTOR;
 }
 
 /** Default cap for a direct `toValue()` call, matching the default `maxAliasCount` of 100. */
@@ -889,13 +1121,13 @@ const DEFAULT_ALIAS_EXPANSION_LIMIT = aliasExpansionLimit(100);
 
 /** Mutable counter carried through one value-extraction walk. */
 interface ExpansionBudget {
-	count: number;
-	readonly limit: number;
+  count: number;
+  readonly limit: number;
 }
 
 /** A fresh default budget for a direct `toValue()` call. */
 function defaultBudget(): ExpansionBudget {
-	return { count: 0, limit: DEFAULT_ALIAS_EXPANSION_LIMIT };
+  return {count: 0, limit: DEFAULT_ALIAS_EXPANSION_LIMIT};
 }
 
 /**
@@ -924,60 +1156,67 @@ function defaultBudget(): ExpansionBudget {
  * @category utilities
  * @since 0.0.0
  */
-export function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown {
-	return nodeToValue(node, anchors, { count: 0, limit: aliasExpansionLimit(maxAliasCount) });
-}
+export const nodeToJsValue: {
+  (node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): unknown,
+  (anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): (node: YamlNode | null) => unknown
+} = dual(3, (node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): unknown =>
+  nodeToValue(node, anchors, {
+    count: 0,
+    limit: aliasExpansionLimit(maxAliasCount)
+  }));
 
 function nodeToValue(
-	node: YamlNode | null,
-	anchors?: Map<string, YamlNode>,
-	budget?: ExpansionBudget,
-	counting = false,
+  node: YamlNode | null,
+  anchors?: MutableHashMap.MutableHashMap<string, YamlNode>,
+  budget?: ExpansionBudget,
+  counting = false,
 ): unknown {
-	if (node === null) return null;
-	// Count only nodes materialized *through* an alias expansion (counting=true).
-	// Alias-free content never ticks the counter, so large but benign documents
-	// are not falsely rejected; an exponential alias chain accumulates across the
-	// shared budget and trips the cap before the heap is exhausted.
-	if (counting && budget !== undefined) {
-		budget.count++;
-		if (budget.count > budget.limit) {
-			throw new AliasExpansionBudgetExceeded(budget.limit);
-		}
-	}
-	// Register this node's anchor incrementally so aliases resolve to the most
-	// recent anchor at the point of reference (not the last definition in the
-	// entire document).
-	if (anchors !== undefined && !(node instanceof YamlAlias) && node.anchor !== undefined) {
-		anchors.set(node.anchor, node);
-	}
-	if (node instanceof YamlScalar) return node.value;
-	if (node instanceof YamlMap) {
-		const result: Record<string, unknown> = {};
-		for (const pair of node.items) {
-			let key: string;
-			if (pair.key instanceof YamlScalar) {
-				// Register key anchor before resolving value
-				if (anchors !== undefined && pair.key.anchor !== undefined) {
-					anchors.set(pair.key.anchor, pair.key);
-				}
-				key = String(pair.key.value ?? "");
-			} else if (pair.key instanceof YamlAlias) {
-				const resolved = anchors?.get(pair.key.name);
-				// Resolving an alias key enters alias expansion → count its subtree.
-				key = resolved !== undefined ? String(nodeToValue(resolved, anchors, budget, true) ?? "") : "";
-			} else {
-				key = "";
-			}
-			setOwnProperty(result, key, nodeToValue(pair.value, anchors, budget, counting));
-		}
-		return result;
-	}
-	if (node instanceof YamlSeq) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
-	if (node instanceof YamlAlias) {
-		const resolved = anchors?.get(node.name);
-		// Resolving an alias enters alias expansion → count the resolved subtree.
-		return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;
-	}
-	return null;
+  if (node === null) return null;
+  // Count only nodes materialized *through* an alias expansion (counting=true).
+  // Alias-free content never ticks the counter, so large but benign documents
+  // are not falsely rejected; an exponential alias chain accumulates across the
+  // shared budget and trips the cap before the heap is exhausted.
+  if (counting && budget !== undefined) {
+    budget.count++;
+    if (budget.count > budget.limit) {
+      throw AliasExpansionBudgetExceeded.make({
+        limit: budget.limit,
+      });
+    }
+  }
+  // Register this node's anchor incrementally so aliases resolve to the most
+  // recent anchor at the point of reference (not the last definition in the
+  // entire document).
+  if (anchors !== undefined && !(YamlAlias.is(node)) && node.anchor !== undefined) {
+    MutableHashMap.set(anchors, node.anchor, node);
+  }
+  if (YamlScalar.is(node)) return node.value;
+  if (YamlMap.is(node)) {
+    const result: Record<string, unknown> = {};
+    for (const pair of node.items) {
+      let key: string;
+      if (YamlScalar.is(pair.key)) {
+        // Register key anchor before resolving value
+        if (anchors !== undefined && pair.key.anchor !== undefined) {
+          MutableHashMap.set(anchors, pair.key.anchor, pair.key);
+        }
+        key = String(pair.key.value ?? "");
+      } else if (YamlAlias.is(pair.key)) {
+        const resolved = anchors === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(anchors, pair.key.name));
+        // Resolving an alias key enters alias expansion → count its subtree.
+        key = resolved !== undefined ? String(nodeToValue(resolved, anchors, budget, true) ?? "") : "";
+      } else {
+        key = "";
+      }
+      setOwnProperty(result, key, nodeToValue(pair.value, anchors, budget, counting));
+    }
+    return result;
+  }
+  if (YamlSeq.is(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
+  if (YamlAlias.is(node)) {
+    const resolved = anchors === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(anchors, node.name));
+    // Resolving an alias enters alias expansion → count the resolved subtree.
+    return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;
+  }
+  return null;
 }

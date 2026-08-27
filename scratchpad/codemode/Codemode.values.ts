@@ -7,11 +7,36 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { SafeObject as SafeObjectSchema, type SafeObject } from "@beep/schema/SafeObject";
 import { Equal, Fiber } from "effect";
 import * as S from "effect/Schema";
 import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.values");
+
+/**
+ * Allocates the null-prototype data object used at guest-language boundaries.
+ *
+ * **Details**
+ *
+ * A null prototype prevents inherited host members from becoming observable
+ * guest data. Centralizing the allocation keeps that security invariant
+ * consistent across object literals, destructuring, JSON, RegExp groups,
+ * Promise outcomes, and guest error values.
+ *
+ * **Example** (Allocate an inherited-member-free object)
+ *
+ * ```ts
+ * import { makeEmptySafeObject } from "../../../codemode/Codemode.values.ts"
+ *
+ * const value = makeEmptySafeObject()
+ * console.log(Object.getPrototypeOf(value) === null) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeEmptySafeObject = (): SafeObject => SafeObjectSchema.make(Object.create(null));
 
 const CodeModeFiber = S.declare(
   (u: unknown): u is Fiber.Fiber<unknown, InterpreterFailure> => Fiber.isFiber(u)

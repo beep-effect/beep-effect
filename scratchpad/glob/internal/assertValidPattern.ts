@@ -1,7 +1,7 @@
 /**
  * Engine entry guard for glob pattern strings.
  *
- * Rejects a non-string as a `TypeError` defect and an over-length string as
+ * Rejects a non-string as a schema-backed invariant defect and an over-length string as
  * the typed {@link GuardExceeded} `PatternTooLong` signal the facade
  * materializes into {@link GlobPatternError}. A non-string cannot arrive
  * through the schema-typed public surface, so it is programmer error.
@@ -12,14 +12,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.ts";
+import * as P from "effect/Predicate";
+import { GlobInvariantError, GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.ts";
 
 /**
  * Assert that `pattern` is a string no longer than {@link MAX_PATTERN_LENGTH}.
  *
  * **Gotchas**
  *
- * Compile-time only. A non-string is a `TypeError` defect; length over the
+ * Compile-time only. A non-string is a {@link GlobInvariantError} defect; length over the
  * 64 KiB cap is {@link GuardExceeded} `PatternTooLong`, not a match-time
  * hang. Invalid options never reach this function.
  *
@@ -27,12 +28,12 @@ import { GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.ts";
  *
  * ```ts
  * import { assertValidPattern } from "../../glob/internal/assertValidPattern.ts"
- * import { GuardExceeded } from "../../glob/internal/limits.ts"
+ * import { GlobInvariantError, GuardExceeded } from "../../glob/internal/limits.ts"
  *
  * try {
  *   assertValidPattern(1)
  * } catch (error) {
- *   console.log(error instanceof TypeError) // true
+ *   console.log(error instanceof GlobInvariantError) // true
  * }
  *
  * try {
@@ -42,7 +43,7 @@ import { GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.ts";
  * }
  * ```
  *
- * @throws `TypeError` when `pattern` is not a string — a programmer defect
+ * @throws {@link GlobInvariantError} when `pattern` is not a string — a programmer defect
  * outside the typed error channel.
  * @throws `GuardExceeded` with reason `PatternTooLong` when the string
  * exceeds 64 KiB.
@@ -50,12 +51,14 @@ import { GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.ts";
  * @category assertions
  * @since 0.0.0
  */
-export const assertValidPattern: (pattern: unknown) => void = (pattern: unknown): asserts pattern is string => {
-	if (typeof pattern !== "string") {
-		throw new TypeError("invalid pattern");
+export const assertValidPattern: (pattern: unknown) => asserts pattern is string = (
+	pattern: unknown,
+): asserts pattern is string => {
+	if (!P.isString(pattern)) {
+		throw GlobInvariantError.make({ operation: "assertValidPattern", detail: "pattern must be a string" });
 	}
 
 	if (pattern.length > MAX_PATTERN_LENGTH) {
-		throw new GuardExceeded("PatternTooLong", MAX_PATTERN_LENGTH, pattern.length);
+		throw GuardExceeded.make({ reason: "PatternTooLong", limit: MAX_PATTERN_LENGTH, actual: pattern.length });
 	}
 };

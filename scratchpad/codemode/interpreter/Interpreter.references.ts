@@ -250,7 +250,7 @@ export const containsOpaqueReference = (value: unknown): boolean => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Container, candidate value, diagnostic label, and AST node are co-primary invariant-check inputs.
 export const rejectCircularInsertion = (container: object, value: unknown, label: string, node: AstNode): void => {
   const pending: Array<Iterator<unknown>> = [[value].values()]
   const seen = MutableHashSet.empty<object>()

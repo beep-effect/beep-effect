@@ -10,7 +10,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Effect, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import { O as OU } from "@beep/utils";
+import { Effect, MutableHashMap, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import { dual } from "effect/Function";
 import { composeAllDocuments, composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
 import type { RawYamlDocument } from "./internal/raw-document.ts";
@@ -22,6 +24,8 @@ import type { YamlNode as YamlNodeType } from "./YamlNode.ts";
 import { YamlNode } from "./YamlNode.ts";
 
 const $I = $ScratchpadId.create("yaml/YamlDocument");
+const isStringifyFailure = Schema.is(StringifyFailure);
+const isStringifyDepthExceeded = Schema.is(StringifyDepthExceeded);
 
 /**
  * A YAML directive appearing before a document (e.g. `%YAML 1.2` or
@@ -124,7 +128,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 		const raw = composeFirstDocument(text, toParseInput(options));
 		const fatal = raw.errors.filter((e) => isFatalCode(e.code));
 		if (fatal.length > 0) {
-			return yield* new YamlParseError({
+			return yield* YamlParseError.make({
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 				input: text,
 			});
@@ -144,7 +148,7 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 			...documents.flatMap((d) => d.errors.filter((e) => isFatalCode(e.code))),
 		];
 		if (fatal.length > 0) {
-			return yield* new YamlParseError({
+			return yield* YamlParseError.make({
 				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
 				input: text,
 			});
@@ -160,6 +164,17 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 	 * Schema-producing: each call returns a fresh schema whose derivation
 	 * caches are not shared across calls; bind the result to a `const` on hot
 	 * paths.
+	 *
+	 * **Example** (Decode a YAML document through Schema)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import * as S from "effect/Schema"
+	 * import { YamlDocument } from "@beep/scratchpad/yaml"
+	 *
+	 * const document = Effect.runSync(S.decodeEffect(YamlDocument.schema())("name: Alice\n"))
+	 * console.log(document.toValue()) // { name: "Alice" }
+	 * ```
 	 */
 	static schema(options?: YamlParseOptions): Schema.Codec<YamlDocument, string> {
 		return Schema.String.pipe(
@@ -197,13 +212,23 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 	 * unfolded regardless of the option. Callers that need folding should
 	 * render the plain value instead — `Yaml.stringify(doc.toValue(), options)`
 	 * — at the cost of the document-level framing and styles this path preserves.
+	 *
+	 * **Example** (Stringify a parsed document)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import { YamlDocument } from "@beep/scratchpad/yaml"
+	 *
+	 * const document = Effect.runSync(YamlDocument.parse("name: Alice\n"))
+	 * console.log(Effect.runSync(document.stringify())) // "name: Alice\n"
+	 * ```
 	 */
 	stringify(options?: YamlStringifyOptions): Effect.Effect<string, YamlStringifyError> {
 		return Effect.try({
 			try: () => stringifyDocument(toRawDocument(this), toStringifyInput(options)),
 			catch: (defect) => {
-				if (defect instanceof StringifyFailure) {
-					return new YamlStringifyError({
+				if (isStringifyFailure(defect)) {
+					return YamlStringifyError.make({
 						diagnostics: [
 							YamlDiagnostic.make({
 								code: "CircularReference",
@@ -220,8 +245,8 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 				// A synthetic AST nested deeper than the stringifier's cap overflowed
 				// the node-path recursion — surface it typed, not as a stack-overflow
 				// defect.
-				if (defect instanceof StringifyDepthExceeded) {
-					return new YamlStringifyError({
+				if (isStringifyDepthExceeded(defect)) {
+					return YamlStringifyError.make({
 						diagnostics: [
 							YamlDiagnostic.make({
 								code: "NestingDepthExceeded",
@@ -244,10 +269,20 @@ export class YamlDocument extends Schema.Class<YamlDocument>("YamlDocument")(
 	 * Reconstruct the plain JavaScript value of this document's contents,
 	 * resolving anchors and aliases. `null` for an empty document. Pure and
 	 * total.
+	 *
+	 * **Example** (Resolve an alias into a plain value)
+	 *
+	 * ```ts
+	 * import { Effect } from "effect"
+	 * import { YamlDocument } from "@beep/scratchpad/yaml"
+	 *
+	 * const document = Effect.runSync(YamlDocument.parse("a: &id 1\nb: *id\n"))
+	 * console.log(document.toValue()) // { a: 1, b: 1 }
+	 * ```
 	 */
 	toValue(): unknown {
 		if (this.contents === null) return null;
-		const anchors = new Map<string, YamlNodeType>();
+		const anchors = MutableHashMap.empty<string, YamlNodeType>();
 		return this.contents.toValue(anchors);
 	}
 }
@@ -300,19 +335,19 @@ const toStringifyInput = (options?: YamlStringifyOptions) =>
  * @category utilities
  * @since 0.0.0
  */
-export function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument {
-	return fromRawDocument(raw, text);
-}
+export const documentFromRaw: {
+	(text: string): (raw: RawYamlDocument) => YamlDocument;
+	(raw: RawYamlDocument, text: string): YamlDocument;
+} = dual(2, (raw: RawYamlDocument, text: string): YamlDocument => fromRawDocument(raw, text));
 
 /** Materialize a raw engine document into the public class. */
 function fromRawDocument(raw: RawYamlDocument, text: string): YamlDocument {
-	return new YamlDocument({
+	return YamlDocument.make({
 		contents: raw.contents,
 		errors: raw.errors.map((e) => YamlDiagnostic.fromRaw(e, text)),
 		warnings: raw.warnings.map((w) => YamlDiagnostic.fromRaw(w, text)),
-		directives: raw.directives.map((d) => new YamlDirective({ name: d.name, parameters: d.parameters })),
-		...(raw.commentBefore !== undefined ? { commentBefore: raw.commentBefore } : {}),
-		...(raw.comment !== undefined ? { comment: raw.comment } : {}),
+		directives: raw.directives.map((d) => YamlDirective.make({ name: d.name, parameters: d.parameters })),
+		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(raw.commentBefore), comment: OU.fromUndefinedOr(raw.comment) }),
 		hasDocumentStart: raw.hasDocumentStart,
 		hasDocumentEnd: raw.hasDocumentEnd,
 		hasDocumentStartTab: raw.hasDocumentStartTab,
@@ -326,8 +361,7 @@ function toRawDocument(doc: YamlDocument): RawYamlDocument {
 		errors: [],
 		warnings: [],
 		directives: doc.directives,
-		...(doc.commentBefore !== undefined ? { commentBefore: doc.commentBefore } : {}),
-		...(doc.comment !== undefined ? { comment: doc.comment } : {}),
+		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(doc.commentBefore), comment: OU.fromUndefinedOr(doc.comment) }),
 		hasDocumentStart: doc.hasDocumentStart ?? false,
 		hasDocumentEnd: doc.hasDocumentEnd ?? false,
 		hasDocumentStartTab: doc.hasDocumentStartTab ?? false,

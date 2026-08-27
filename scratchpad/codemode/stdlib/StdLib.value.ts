@@ -24,8 +24,10 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  makeEmptySafeObject,
 } from "../Codemode.values.ts"
 import { DateTime } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { A, P } from "@beep/utils";
 
@@ -422,9 +424,11 @@ const ErrorBrand: unique symbol = Symbol("codemode.error")
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Error constructor name and message are co-primary inputs for a newly allocated guest value.
 export const createErrorValue = (name: ErrorConstructorName, message: string): SafeObject => {
-  const value = Object.assign(SafeObject.make(Object.create(null)), { name, message })
+  const value = makeEmptySafeObject()
+  Reflect.set(value, "name", name)
+  Reflect.set(value, "message", message)
   Object.defineProperty(value, ErrorBrand, { value: name })
   return value
 }
@@ -445,9 +449,12 @@ export const createErrorValue = (name: ErrorConstructorName, message: string): S
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject =>
-  Object.assign(createErrorValue("AggregateError", message), { errors })
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Aggregate members and message are co-primary inputs for a newly allocated guest error.
+export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject => {
+  const value = createErrorValue("AggregateError", message)
+  Reflect.set(value, "errors", errors)
+  return value
+}
 
 /**
  * Reads the guest Error constructor name stored on an error brand, if present.
@@ -491,8 +498,10 @@ export const errorBrandName = (value: unknown): ErrorConstructorName | undefined
  * @category utilities
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const boundedData = (value: unknown, label: string): unknown => copyIn(value, label, true)
+export const boundedData: {
+  (label: string): (value: unknown) => unknown;
+  (value: unknown, label: string): unknown;
+} = dual(2, (value: unknown, label: string): unknown => copyIn(value, label, true))
 
 /**
  * Coerces a guest value to a string using CodeMode Date/RegExp/URL and Error
@@ -542,7 +551,7 @@ export const coerceToString = (value: unknown): string => {
     return `${name}: ${message}`
   }
   if (P.isObjectKeyword(value)) {
-    return Array.isArray(value)
+    return A.isArray(value)
       ? value.map((item) => (item === null || item === undefined ? "" : coerceToString(item))).join(",")
       : "[object Object]"
   }
@@ -580,7 +589,7 @@ export const coerceToNumber = (value: unknown): number => {
   if (isCodeModeValue(value)) return Number.NaN
   // Arrays coerce through our own string coercion: host Number(array) joins with host
   // ToPrimitive, which throws on the null-prototype objects the interpreter produces.
-  if (Array.isArray(value)) return Number(coerceToString(value))
+  if (A.isArray(value)) return Number(coerceToString(value))
   return P.isNotNull(value) && P.isObjectKeyword(value) ? Number.NaN : Number(value)
 }
 
@@ -613,7 +622,7 @@ export const coerceToNumber = (value: unknown): number => {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown => {
   const withoutArguments = A.isArrayEmpty(args)
   const raw = args[0]

@@ -85,7 +85,7 @@ export const toManifestPath = (value: string): string => {
 };
 
 const normalizePathSpecForManifest = (spec: string | ReadonlyArray<string>): string | ReadonlyArray<string> =>
-  typeof spec === "string" ? toManifestPath(spec) : A.map(spec, toManifestPath);
+  P.isString(spec) ? toManifestPath(spec) : A.map(spec, toManifestPath);
 
 const isDefaultComponentSpec = (key: ComponentKey, spec: string): boolean =>
   normalizeManifestPath(spec) === canonicalComponentPaths[key];
@@ -98,7 +98,7 @@ const normalizedComponentSpec = (spec: O.Option<ComponentPathSpec>, key: Compone
     return O.none();
   }
   const specValue = spec.value;
-  if (typeof specValue === "string") {
+  if (P.isString(specValue)) {
     return isDefaultComponentSpec(key, specValue) ? O.none() : O.some(toManifestPath(specValue));
   }
   if (specValue.length === 1 && isDefaultComponentSpec(key, specValue[0] ?? "")) {
@@ -117,10 +117,10 @@ const normalizeServerSpec = (spec: O.Option<ServerConfigSpec>, key: ConfigKey): 
   O.match(spec, {
     onNone: () => O.none(),
     onSome: (specValue) => {
-      if (typeof specValue !== "string" && !isStringArray(specValue)) {
+      if (!P.isString(specValue) && !isStringArray(specValue)) {
         return O.some(specValue);
       }
-      if (typeof specValue === "string") {
+      if (P.isString(specValue)) {
         return isDefaultConfigSpec(key, specValue) ? O.none() : O.some(toManifestPath(specValue));
       }
       if (specValue.length === 1 && isDefaultConfigSpec(key, specValue[0] ?? "")) {
@@ -131,7 +131,7 @@ const normalizeServerSpec = (spec: O.Option<ServerConfigSpec>, key: ConfigKey): 
   });
 
 const normalizeHooksPathSpec = (specValue: string | ReadonlyArray<string>): O.Option<HooksSpec> => {
-  if (typeof specValue === "string") {
+  if (P.isString(specValue)) {
     return isDefaultConfigSpec("hooks", specValue) ? O.none() : O.some(toManifestPath(specValue));
   }
   if (specValue.length === 1 && isDefaultConfigSpec("hooks", specValue[0] ?? "")) {
@@ -144,7 +144,7 @@ const keepOrDefaultHooksSpec = (spec: O.Option<HooksSpec>, hasConfig: boolean): 
   O.match(spec, {
     onNone: () => O.none(),
     onSome: (specValue) => {
-      if (typeof specValue !== "string" && !isStringArray(specValue)) {
+      if (!P.isString(specValue) && !isStringArray(specValue)) {
         return O.some(specValue);
       }
       if (!hasConfig) {
@@ -165,7 +165,7 @@ const keepOrDefaultServerSpec = (
   O.match(spec, {
     onNone: () => O.none(),
     onSome: (specValue) => {
-      if (typeof specValue !== "string" && !isStringArray(specValue)) {
+      if (!P.isString(specValue) && !isStringArray(specValue)) {
         return O.some(specValue);
       }
       if (!hasConfig) {
@@ -183,7 +183,7 @@ const normalizedExperimentalPathSpec = (
   fallback: string
 ): O.Option<ComponentPathSpec> =>
   O.flatMap(spec, (specValue) => {
-    if (typeof specValue === "string") {
+    if (P.isString(specValue)) {
       return normalizeManifestPath(specValue) === fallback
         ? O.none<ComponentPathSpec>()
         : O.some(toManifestPath(specValue));
@@ -228,7 +228,7 @@ const normalizedExperimentalSpec = (spec: O.Option<ExperimentalSpec>): O.Option<
 export const pathSpecs = (spec: O.Option<string | ReadonlyArray<string>>): ReadonlyArray<string> =>
   O.match(spec, {
     onNone: () => [],
-    onSome: (specValue) => A.filter(typeof specValue === "string" ? [specValue] : specValue, isSafePluginPath),
+    onSome: (specValue) => A.filter(P.isString(specValue) ? [specValue] : specValue, isSafePluginPath),
   });
 
 /**

@@ -72,7 +72,7 @@ const randomUuid = Effect.all([
  * console.log(input.objectType) // "iri"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimInput`)(
@@ -116,7 +116,7 @@ export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimIn
  * console.log(result.claimId) // "claim-ada-founded"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class DeprecationResult extends S.Class<DeprecationResult>($I`DeprecationResult`)(

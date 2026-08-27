@@ -12,6 +12,7 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import type { Quad } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
@@ -25,10 +26,9 @@ import * as S from "effect/Schema";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { ContentHash } from "../Domain/Identity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
-import { AssertionId } from "../Domain/Schema/KnowledgeModel.ts";
+import { AssertionId, AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
-import type { ClaimRow } from "../Repository/schema.ts";
+import { Claims, type ClaimRow } from "../Repository/schema.ts";
 import { sha256 } from "../Utils/Hash.ts";
 import { canonicalLiteral, canonicalQuad } from "../Utils/Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
@@ -39,6 +39,37 @@ const RDF_PREDICATE = makeCanonicalNamedNode(`${RDF_NAMESPACE}predicate`);
 const RDF_OBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}object`);
 const PROV_GENERATED_AT_TIME = makeCanonicalNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
+
+const AssertionDecision = LiteralKit(["accept", "synthesize", "manual"]).pipe(
+  $I.annoteSchema("AssertionDecision", {
+    description: "Curation decision used to create an assertion.",
+  })
+);
+
+const AssertionObjectType = LiteralKit(["iri", "literal"]).pipe(
+  $I.annoteSchema("AssertionObjectType", {
+    description: "IRI or literal RDF assertion-object representation.",
+  })
+);
+
+const AssertionOverride = S.Class<AssertionOverride>($I`AssertionOverride`)(
+  {
+    subject: S.String.pipe(S.optionalKey),
+    predicate: S.String.pipe(S.optionalKey),
+    object: S.String.pipe(S.optionalKey),
+    objectType: AssertionObjectType.pipe(S.optionalKey),
+  },
+  $I.annote("AssertionOverride", {
+    description: "Optional replacement values used by synthesized and manual assertions.",
+  })
+);
+
+interface AssertionOverride {
+  readonly subject?: string;
+  readonly predicate?: string;
+  readonly object?: string;
+  readonly objectType?: "iri" | "literal";
+}
 
 // =============================================================================
 // Types
@@ -51,38 +82,40 @@ const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
  * **Example** (Accept claims into an assertion)
  *
  * ```ts
- * import type { CreateAssertionInput } from "@effect-ontology/Service/Assertion"
+ * import { CreateAssertionInput } from "@effect-ontology/Service/Assertion"
  *
- * const input: CreateAssertionInput = {
+ * const input = CreateAssertionInput.make({
  *   ontologyId: "core",
  *   claimIds: ["claim-ada-founded"],
  *   decision: "accept"
- * }
+ * })
  * console.log(input.decision) // "accept"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface CreateAssertionInput {
-  /** Ontology scope shared by all source claims */
-  readonly ontologyId: string;
-  /** Claim IDs this assertion is derived from */
-  readonly claimIds: ReadonlyArray<string>;
-  /** How the assertion was created */
-  readonly decision: "accept" | "synthesize" | "manual";
-  /** Who curated this assertion */
-  readonly curatedBy?: string;
-  /** Override the triple values (for synthesize/manual) */
-  readonly override?: {
-    readonly subject?: string;
-    readonly predicate?: string;
-    readonly object?: string;
-    readonly objectType?: "iri" | "literal";
-  };
-  /** Confidence score (0-1), defaults to average of source claims */
-  readonly confidence?: Confidence;
-}
+export class CreateAssertionInput extends S.Class<CreateAssertionInput>($I`CreateAssertionInput`)(
+  {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope shared by every source claim." }),
+    claimIds: S.NonEmptyArray(S.NonEmptyString).annotateKey({
+      description: "One or more claim identifiers from which the assertion is derived.",
+    }),
+    decision: AssertionDecision.annotateKey({ description: "Curation decision used to create the assertion." }),
+    curatedBy: S.NonEmptyString.pipe(S.optionalKey).annotateKey({
+      description: "Optional curator identity.",
+    }),
+    override: AssertionOverride.pipe(S.optionalKey).annotateKey({
+      description: "Optional RDF triple replacements for synthesized or manual assertions.",
+    }),
+    confidence: Confidence.pipe(S.optionalKey).annotateKey({
+      description: "Optional confidence override in the unit interval.",
+    }),
+  },
+  $I.annote("CreateAssertionInput", {
+    description: "Validated source claims, decision, curator, overrides, and confidence for assertion creation.",
+  })
+) {}
 
 /**
  * Filter for querying assertions
@@ -91,27 +124,32 @@ export interface CreateAssertionInput {
  * **Example** (Filter accepted assertions)
  *
  * ```ts
- * import type { AssertionFilter } from "@effect-ontology/Service/Assertion"
+ * import { AssertionFilter } from "@effect-ontology/Service/Assertion"
  *
- * const filter: AssertionFilter = {
+ * const filter = AssertionFilter.make({
  *   subjectIri: "https://example.org/Ada",
  *   status: "accepted",
  *   limit: 20
- * }
+ * })
  * console.log(filter.limit) // 20
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface AssertionFilter {
-  readonly subjectIri?: string;
-  readonly predicateIri?: string;
-  readonly status?: AssertionStatus;
-  readonly curatedBy?: string;
-  readonly limit?: number;
-  readonly offset?: number;
-}
+export class AssertionFilter extends S.Class<AssertionFilter>($I`AssertionFilter`)(
+  {
+    subjectIri: S.String.pipe(S.optionalKey),
+    predicateIri: S.String.pipe(S.optionalKey),
+    status: AssertionStatus.pipe(S.optionalKey),
+    curatedBy: S.String.pipe(S.optionalKey),
+    limit: S.Natural.pipe(S.optionalKey),
+    offset: S.Natural.pipe(S.optionalKey),
+  },
+  $I.annote("AssertionFilter", {
+    description: "Optional subject, predicate, status, curator, limit, and offset for assertion queries.",
+  })
+) {}
 
 /**
  * Assertion with full provenance information
@@ -120,19 +158,43 @@ export interface AssertionFilter {
  * **Example** (Attach source claims)
  *
  * ```ts
- * import type { AssertionWithProvenance } from "@effect-ontology/Service/Assertion"
+ * import { AssertionWithProvenance } from "@effect-ontology/Service/Assertion"
  *
- * const empty: AssertionWithProvenance["sourceClaims"] = []
- * console.log(empty.length) // 0
+ * const result = AssertionWithProvenance.make({
+ *   assertion: AssertionRow.make({
+ *     id: "assertion-1",
+ *     ontologyId: "core",
+ *     subjectIri: "https://example.org/Ada",
+ *     predicateIri: "https://example.org/name",
+ *     objectValue: "Ada",
+ *     objectType: "literal",
+ *     status: "accepted",
+ *     assertedAt: new Date(0),
+ *     derivedFrom: ["claim-1"],
+ *     curatedBy: null,
+ *     confidence: 0.9,
+ *     validFrom: null,
+ *     validTo: null,
+ *     rejectedAt: null,
+ *     rejectionReason: null
+ *   }),
+ *   sourceClaims: []
+ * })
+ * console.log(result.sourceClaims.length) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface AssertionWithProvenance {
-  readonly assertion: AssertionRow;
-  readonly sourceClaims: Array<ClaimRow>;
-}
+export class AssertionWithProvenance extends S.Class<AssertionWithProvenance>($I`AssertionWithProvenance`)(
+  {
+    assertion: S.suspend((): typeof AssertionRow => AssertionRow),
+    sourceClaims: S.Array(Claims).pipe(S.mutable),
+  },
+  $I.annote("AssertionWithProvenance", {
+    description: "Curated assertion paired with the complete set of source claim rows.",
+  })
+) {}
 
 /**
  * Internal assertion row type (matches what we store)
@@ -141,10 +203,9 @@ export interface AssertionWithProvenance {
  * **Example** (Read assertion identity)
  *
  * ```ts
- * import type { AssertionRow } from "@effect-ontology/Service/Assertion"
+ * import { AssertionRow } from "@effect-ontology/Service/Assertion"
  *
- * const idOf = (row: AssertionRow): string => row.id
- * const row = {
+ * const row = AssertionRow.make({
  *   id: "assertion-1",
  *   ontologyId: "core",
  *   subjectIri: "https://example.org/Ada",
@@ -160,30 +221,35 @@ export interface AssertionWithProvenance {
  *   validTo: null,
  *   rejectedAt: null,
  *   rejectionReason: null
- * } satisfies AssertionRow
- * console.log(idOf(row)) // "assertion-1"
+ * })
+ * console.log(row.id) // "assertion-1"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface AssertionRow {
-  readonly id: string;
-  readonly ontologyId: string;
-  readonly subjectIri: string;
-  readonly predicateIri: string;
-  readonly objectValue: string;
-  readonly objectType: "iri" | "literal";
-  readonly status: AssertionStatus;
-  readonly assertedAt: Date;
-  readonly derivedFrom: ReadonlyArray<string>;
-  readonly curatedBy: string | null;
-  readonly confidence: Confidence;
-  readonly validFrom: Date | null;
-  readonly validTo: Date | null;
-  readonly rejectedAt: Date | null;
-  readonly rejectionReason: string | null;
-}
+export class AssertionRow extends S.Class<AssertionRow>($I`AssertionRow`)(
+  {
+    id: S.NonEmptyString,
+    ontologyId: S.NonEmptyString,
+    subjectIri: S.NonEmptyString,
+    predicateIri: S.NonEmptyString,
+    objectValue: S.String,
+    objectType: AssertionObjectType,
+    status: AssertionStatus,
+    assertedAt: S.Date,
+    derivedFrom: S.NonEmptyArray(S.NonEmptyString),
+    curatedBy: S.NullOr(S.NonEmptyString),
+    confidence: Confidence,
+    validFrom: S.NullOr(S.Date),
+    validTo: S.NullOr(S.Date),
+    rejectedAt: S.NullOr(S.Date),
+    rejectionReason: S.NullOr(S.NonEmptyString),
+  },
+  $I.annote("AssertionRow", {
+    description: "Stored assertion triple, lifecycle status, provenance, curator, confidence, and validity window.",
+  })
+) {}
 
 /**
  *  Typed failure for assertion lifecycle operations.
@@ -346,7 +412,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         )
       );
       const id = AssertionId.fromContentHash(ContentHash.make(hash));
-      const assertionRow: AssertionRow = {
+      const assertionRow = AssertionRow.make({
         id,
         ontologyId: input.ontologyId,
         subjectIri,
@@ -362,7 +428,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         validTo: baseClaim.validTo ?? null,
         rejectedAt: null,
         rejectionReason: null,
-      };
+      });
       yield* Ref.update(assertionsRef, (assertions) => HashMap.set(assertions, id, assertionRow));
       return assertionRow;
     });
@@ -383,10 +449,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           sourceClaims.push(claim.value);
         }
       }
-      return O.some({
-        assertion: assertion.value,
-        sourceClaims,
-      });
+      return O.some(AssertionWithProvenance.make({ assertion: assertion.value, sourceClaims }));
     });
 
     /**
@@ -454,12 +517,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           message: `Assertion not found: ${assertionId}`,
         });
       }
-      const updated: AssertionRow = {
+      const updated = AssertionRow.make({
         ...assertion.value,
         status: "rejected",
         rejectedAt: DateTime.toDate(now),
         rejectionReason: reason,
-      };
+      });
       yield* Ref.update(assertionsRef, HashMap.set(AssertionId.fromUnknown(assertion.value.id), updated));
     });
 

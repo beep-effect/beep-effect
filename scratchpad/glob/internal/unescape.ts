@@ -8,6 +8,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import type { EngineOptions } from "./types.ts";
 
 const unescapePattern = (
@@ -67,4 +69,9 @@ const unescapePattern = (
  * @category decoding
  * @since 0.0.0
  */
-export const unescape = unescapePattern;
+export const unescape: {
+	(): (s: string) => string;
+	(s: string): string;
+	(options: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
+	(s: string, options: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
+} = dual((args) => P.isString(args[0]), unescapePattern);

@@ -5,9 +5,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { Effect, Match, Result, Schema, SchemaIssue, SchemaTransformation } from "effect";
 import { formatComparator, parseComparator } from "./internal/grammar.ts";
 import { SemVer } from "./SemVer.ts";
+
+const $I = $ScratchpadId.create("semver/Comparator");
 
 /**
  * Indicates that a string could not be parsed as a single comparator.
@@ -35,16 +38,41 @@ import { SemVer } from "./SemVer.ts";
  * @category errors
  * @since 0.0.0
  */
-export class InvalidComparatorError extends Schema.TaggedError<InvalidComparatorError>()("InvalidComparatorError", {
-	/** The raw input string that failed to parse. */
-	input: Schema.String,
-	/** The character position where parsing failed, if available. */
-	position: Schema.optionalKey(Schema.Number),
-}) {
-	override get message(): string {
-		const base = `Invalid comparator: "${this.input}"`;
-		return this.position !== undefined ? `${base} at position ${this.position}` : base;
-	}
+export class InvalidComparatorError extends Schema.TaggedError<InvalidComparatorError>($I`InvalidComparatorError`)(
+  "InvalidComparatorError",
+  {
+    /** The raw input string that failed to parse. */
+    input: Schema.String,
+    /** The character position where parsing failed, if available. */
+    position: Schema.optionalKey(Schema.Finite),
+  },
+  $I.annote("InvalidComparatorError", {
+    description: "Raised when input cannot be parsed as one complete SemVer comparator.",
+  })
+) {
+  /**
+   * Human-readable parse failure, including the raw input and the grammar
+   * position when the parser recorded one.
+   *
+   * **Example** (Read the message from rejected range sugar)
+   *
+   * ```ts
+   * import { Comparator } from "@beep/scratchpad/semver";
+   * import { Result } from "effect";
+   *
+   * const parsed = Comparator.parseResult("^1.2.3");
+   * if (Result.isFailure(parsed)) {
+   *   console.log(parsed.failure.message);
+   *   // => Invalid comparator: "^1.2.3" at position 0
+   * }
+   * ```
+   *
+   * @since 0.0.0
+   */
+  override get message(): string {
+    const base = `Invalid comparator: "${this.input}"`;
+    return this.position !== undefined ? `${base} at position ${this.position}` : base;
+  }
 }
 
 /**
@@ -74,117 +102,150 @@ export class InvalidComparatorError extends Schema.TaggedError<InvalidComparator
  * @category schemas
  * @since 0.0.0
  */
-export class Comparator extends Schema.Class<Comparator>("Comparator")({
-	/** The relational operator applied to `version`; a missing prefix in the source string means `=`. */
-	operator: Schema.Literals(["=", ">", ">=", "<", "<="]),
-	/** The version the operator is applied against. */
-	version: SemVer,
-}) {
-	// ── Schema ──────────────────────────────────────────────────────────
+export class Comparator extends Schema.Class<Comparator>($I`Comparator`)(
+  {
+    /** The relational operator applied to `version`; a missing prefix in the source string means `=`. */
+    operator: Schema.Literals(["=", ">", ">=", "<", "<="]),
+    /** The version the operator is applied against. */
+    version: SemVer,
+  },
+  $I.annote("Comparator", {
+    description: "One relational operator applied to a complete strict SemVer version.",
+  })
+) {
+  // ── Schema ──────────────────────────────────────────────────────────
 
-	/**
-	 * Schema transformation between the comparator string (e.g. `">=1.2.3"`)
-	 * and {@link Comparator}.
-	 */
-	static readonly FromString: Schema.Codec<Comparator, string> = Schema.String.pipe(
-		Schema.decodeTo(
-			Comparator,
-			SchemaTransformation.transformOrFail({
-				decode: (input: string) => {
-					const result = parseComparator(input);
-					return result.ok
-						? Effect.succeed(result.value)
-						: Effect.fail(
-								new SchemaIssue.InvalidValue(
-									{ message: `Invalid comparator: "${result.input}" at position ${result.position}` },
-									input,
-								),
-							);
-				},
-				encode: (parts) => Effect.succeed(formatComparator(parts)),
-			}),
-		),
-	);
+  /**
+   * Schema transformation between the comparator string (e.g. `">=1.2.3"`)
+   * and {@link Comparator}.
+   */
+  static readonly FromString: Schema.Codec<Comparator, string> = Schema.String.pipe(
+    Schema.decodeTo(
+      Comparator,
+      SchemaTransformation.transformOrFail({
+        decode: (input: string) => {
+          const result = parseComparator(input);
+          return result.ok
+            ? Effect.succeed(result.value)
+            : Effect.fail(
+                new SchemaIssue.InvalidValue(
+                  { message: `Invalid comparator: "${result.input}" at position ${result.position}` },
+                  input
+                )
+              );
+        },
+        encode: (parts) => Effect.succeed(formatComparator(parts)),
+      })
+    )
+  );
 
-	// ── Construction ────────────────────────────────────────────────────
+  // ── Construction ────────────────────────────────────────────────────
 
-	/**
-	 * Parse a comparator string (e.g. `">=1.2.3"`), synchronously, returning a
-	 * `Result` instead of an `Effect`.
-	 *
-	 * **Details**
-	 *
-	 * {@link Comparator.parse} is defined in terms of this function; the two
-	 * never diverge. Reach for the `Effect` variant inside Effect code — it
-	 * carries the `Comparator.parse` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * **Example** (Inspect the operator on a successful parse)
-	 *
-	 * ```ts
-	 * import { Comparator } from "@beep/scratchpad/semver";
-	 * import { Result } from "effect";
-	 *
-	 * const ok = Comparator.parseResult(">=1.2.3");
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success.operator); // => ">="
-	 * }
-	 * ```
-	 *
-	 * @param input - the comparator string to parse
-	 * @returns a `Result` succeeding with the parsed {@link Comparator}, or
-	 * failing with {@link InvalidComparatorError}.
-	 * @see {@link Comparator.parse} for the Effect variant with a tracing span.
-	 */
-	static parseResult(input: string): Result.Result<Comparator, InvalidComparatorError> {
-		const result = parseComparator(input);
-		if (!result.ok) {
-			return Result.fail(new InvalidComparatorError({ input: result.input, position: result.position }));
-		}
-		return Result.succeed(
-			Comparator.make({ operator: result.value.operator, version: SemVer.make(result.value.version) }),
-		);
-	}
+  /**
+   * Parse a comparator string (e.g. `">=1.2.3"`), synchronously, returning a
+   * `Result` instead of an `Effect`.
+   *
+   * **Details**
+   *
+   * {@link Comparator.parse} is defined in terms of this function; the two
+   * never diverge. Reach for the `Effect` variant inside Effect code — it
+   * carries the `Comparator.parse` tracing span — and for this one at
+   * synchronous boundaries.
+   *
+   * **Example** (Inspect the operator on a successful parse)
+   *
+   * ```ts
+   * import { Comparator } from "@beep/scratchpad/semver";
+   * import { Result } from "effect";
+   *
+   * const ok = Comparator.parseResult(">=1.2.3");
+   * if (Result.isSuccess(ok)) {
+   *   console.log(ok.success.operator); // => ">="
+   * }
+   * ```
+   *
+   * @param input - the comparator string to parse
+   * @returns a `Result` succeeding with the parsed {@link Comparator}, or
+   * failing with {@link InvalidComparatorError}.
+   * @see {@link Comparator.parse} for the Effect variant with a tracing span.
+   * @since 0.0.0
+   */
+  static parseResult(input: string): Result.Result<Comparator, InvalidComparatorError> {
+    const result = parseComparator(input);
+    if (!result.ok) {
+      return Result.fail(InvalidComparatorError.make({ input: result.input, position: result.position }));
+    }
+    return Result.succeed(
+      Comparator.make({ operator: result.value.operator, version: SemVer.make(result.value.version) })
+    );
+  }
 
-	/**
-	 * Parse a comparator string (e.g. `">=1.2.3"`). Defined in terms of
-	 * {@link Comparator.parseResult} — synchronous callers can use that variant
-	 * directly.
-	 *
-	 * @param input - the comparator string to parse
-	 * @returns the parsed {@link Comparator}. Fails with
-	 * {@link InvalidComparatorError}.
-	 */
-	static readonly parse = Effect.fn("Comparator.parse")((input: string) =>
-		Effect.fromResult(Comparator.parseResult(input)),
-	);
+  /**
+   * Parse a comparator string (e.g. `">=1.2.3"`). Defined in terms of
+   * {@link Comparator.parseResult} — synchronous callers can use that variant
+   * directly.
+   *
+   * @param input - the comparator string to parse
+   * @returns the parsed {@link Comparator}. Fails with
+   * {@link InvalidComparatorError}.
+   */
+  static readonly parse = Effect.fn("Comparator.parse")((input: string) =>
+    Effect.fromResult(Comparator.parseResult(input))
+  );
 
-	// ── Instance ────────────────────────────────────────────────────────
+  // ── Instance ────────────────────────────────────────────────────────
 
-	/** Test whether a version satisfies this comparator. */
-	test(version: SemVer): boolean {
-		const cmp = version.compare(this.version);
-		switch (this.operator) {
-			case "=":
-				return cmp === 0;
-			case ">":
-				return cmp > 0;
-			case ">=":
-				return cmp >= 0;
-			case "<":
-				return cmp < 0;
-			case "<=":
-				return cmp <= 0;
-		}
-	}
+  /**
+   * Test whether a version satisfies this comparator.
+   *
+   * **Example** (Inclusive `>=` against the bound and a lower version)
+   *
+   * ```ts
+   * import { Comparator, SemVer } from "@beep/scratchpad/semver";
+   * import { Result } from "effect";
+   *
+   * const comparator = Result.getOrThrow(Comparator.parseResult(">=1.2.3"));
+   * console.log(comparator.test(SemVer.of(1, 2, 3))); // => true
+   * console.log(comparator.test(SemVer.of(1, 2, 2))); // => false
+   * ```
+   *
+   * @since 0.0.0
+   */
+  test(version: SemVer): boolean {
+    const cmp = version.compare(this.version);
+    return Match.value(this.operator).pipe(
+      Match.when("=", () => cmp === 0),
+      Match.when(">", () => cmp > 0),
+      Match.when(">=", () => cmp >= 0),
+      Match.when("<", () => cmp < 0),
+      Match.when("<=", () => cmp <= 0),
+      Match.exhaustive
+    );
+  }
 
-	/** The comparator string; the `=` operator is implicit. */
-	override toString(): string {
-		return formatComparator(this);
-	}
+  /**
+   * The comparator string; the `=` operator is implicit.
+   *
+   * **Example** (Drop implicit `=` and keep an inequality prefix)
+   *
+   * ```ts
+   * import { Comparator } from "@beep/scratchpad/semver";
+   * import { Result } from "effect";
+   *
+   * console.log(Result.getOrThrow(Comparator.parseResult("=1.2.3")).toString());
+   * // => "1.2.3"
+   * console.log(Result.getOrThrow(Comparator.parseResult(">=1.2.3")).toString());
+   * // => ">=1.2.3"
+   * ```
+   *
+   * @since 0.0.0
+   */
+  override toString(): string {
+    return formatComparator(this);
+  }
 
-	/** @internal */
-	[Symbol.for("nodejs.util.inspect.custom")](): string {
-		return this.toString();
-	}
+  /** @internal */
+  [Symbol.for("nodejs.util.inspect.custom")](): string {
+    return this.toString();
+  }
 }

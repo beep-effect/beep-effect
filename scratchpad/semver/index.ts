@@ -32,17 +32,17 @@
 
 export { Comparator, InvalidComparatorError } from "./Comparator.ts";
 export {
-	type ComparatorSet,
-	InvalidRangeError,
-	Range,
-	UnsatisfiableConstraintError,
+  ComparatorSet,
+  InvalidRangeError,
+  Range,
+  UnsatisfiableConstraintError,
 } from "./Range.ts";
 export { InvalidVersionError, SemVer, SemVerBump } from "./SemVer.ts";
 export {
-	EmptyCacheError,
-	UnsatisfiedRangeError,
-	VersionCache,
-	type VersionCacheShape,
-	VersionNotFoundError,
+  EmptyCacheError,
+  UnsatisfiedRangeError,
+  VersionCache,
+  type VersionCacheShape,
+  VersionNotFoundError,
 } from "./VersionCache.ts";
 export { VersionDiff } from "./VersionDiff.ts";

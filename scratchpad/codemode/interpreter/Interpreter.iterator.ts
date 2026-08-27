@@ -9,6 +9,7 @@
  * @since 0.0.0
  */
 import { Effect, Exit } from "effect"
+import { dual } from "effect/Function";
 import type { AstNode, InterpreterFailure } from "./Interpreter.model.ts"
 
 /**
@@ -88,8 +89,15 @@ export type SyncIteratorRunner<R> = {
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const preserveConsumerError = <A, R>(
+export const preserveConsumerError: {
+  <A, R>(effect: Effect.Effect<A, InterpreterFailure, R>): (
+    cursor: IteratorCursor<R>
+  ) => Effect.Effect<A, InterpreterFailure, R>;
+  <A, R>(
+    cursor: IteratorCursor<R>,
+    effect: Effect.Effect<A, InterpreterFailure, R>
+  ): Effect.Effect<A, InterpreterFailure, R>;
+} = dual(2, <A, R>(
   cursor: IteratorCursor<R>,
   effect: Effect.Effect<A, InterpreterFailure, R>,
 ): Effect.Effect<A, InterpreterFailure, R> =>
@@ -97,4 +105,4 @@ export const preserveConsumerError = <A, R>(
     Exit.isSuccess(exit)
       ? Effect.succeed(exit.value)
       : Effect.andThen(Effect.exit(cursor.close), Effect.failCause(exit.cause)),
-  )
+  ))

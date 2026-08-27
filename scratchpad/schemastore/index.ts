@@ -48,53 +48,53 @@
 
 export { AnnotationCarriers, CarrierDepthExceededError } from "./AnnotationCarriers.ts";
 export {
-	CanonicalJson,
-	type CanonicalJsonError,
-	type CanonicalJsonOptions,
-	JsonDepthExceededError,
-	NonJsonValueError,
+  CanonicalJson,
+  type CanonicalJsonError,
+  CanonicalJsonOptions,
+  JsonDepthExceededError,
+  NonJsonValueError,
 } from "./CanonicalJson.ts";
 export { CatalogEntry, CatalogLintFinding } from "./CatalogEntry.ts";
-export { DocumentDiff, type SchemaChange } from "./DocumentDiff.ts";
+export { DocumentDiff, SchemaChange } from "./DocumentDiff.ts";
 export { DocumentLint, DocumentLintFinding } from "./DocumentLint.ts";
 export { KeywordFamilies } from "./KeywordFamilies.ts";
 export {
-	type CheckResult,
-	SchemaFile,
-	SchemaFileNotFoundError,
-	SchemaFileReadError,
-	type SchemaFileShape,
-	SchemaFileWriteError,
-	type SchemaWriteOptions,
-	type WriteChange,
-	type WriteOutcome,
-	type WriteResult,
+  CheckResult,
+  SchemaFile,
+  SchemaFileNotFoundError,
+  SchemaFileReadError,
+  type SchemaFileShape,
+  SchemaFileWriteError,
+  SchemaWriteOptions,
+  WriteChange,
+  WriteOutcome,
+  WriteResult,
 } from "./SchemaFile.ts";
 export {
-	type PipelineCheckResult,
-	PipelineFinding,
-	type PipelineResult,
-	SchemaGateError,
-	SchemaPipeline,
-	type SchemaPipelineOptions,
+  PipelineCheckResult,
+  PipelineFinding,
+  PipelineResult,
+  SchemaGateError,
+  SchemaPipeline,
+  type SchemaPipelineOptions,
 } from "./SchemaPipeline.ts";
 export { SchemaTarget } from "./SchemaTarget.ts";
 export {
-	SchemaValidator,
-	SchemaValidatorError,
-	type SchemaValidatorOptions,
-	type SchemaValidatorShape,
-	ValidationFinding,
+  SchemaValidator,
+  SchemaValidatorError,
+  SchemaValidatorOptions,
+  type SchemaValidatorShape,
+  ValidationFinding,
 } from "./SchemaValidator.ts";
 export {
-	type CatalogUrls,
-	InvalidSchemaVersionError,
-	SchemaVersion,
-	SchemaVersioning,
+  CatalogUrls,
+  InvalidSchemaVersionError,
+  SchemaVersion,
+  SchemaVersioning,
 } from "./SchemaVersioning.ts";
 export {
-	DRAFT_07_META_SCHEMA,
-	SchemaConversionError,
-	StoreDocument,
-	type StoreDocumentOptions,
+  DRAFT_07_META_SCHEMA,
+  SchemaConversionError,
+  StoreDocument,
+  type StoreDocumentOptions,
 } from "./StoreDocument.ts";

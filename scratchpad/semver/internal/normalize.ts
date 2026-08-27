@@ -8,47 +8,41 @@
  */
 import type { ComparatorParts } from "./order.ts";
 import { compareParts } from "./order.ts";
+import { Match, MutableHashSet } from "effect";
 
-const operatorWeight = (op: string): number => {
-	switch (op) {
-		case ">=":
-			return 0;
-		case ">":
-			return 1;
-		case "=":
-			return 2;
-		case "<":
-			return 3;
-		case "<=":
-			return 4;
-		default:
-			return 5;
-	}
-};
+const operatorWeight = (op: string): number =>
+  Match.value(op).pipe(
+    Match.when(">=", () => 0),
+    Match.when(">", () => 1),
+    Match.when("=", () => 2),
+    Match.when("<", () => 3),
+    Match.when("<=", () => 4),
+    Match.orElse(() => 5)
+  );
 
 const sortComparators = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> =>
-	[...set].sort((a, b) => {
-		const w = operatorWeight(a.operator) - operatorWeight(b.operator);
-		if (w !== 0) return w;
-		return compareParts(a.version, b.version);
-	});
+  [...set].sort((a, b) => {
+    const w = operatorWeight(a.operator) - operatorWeight(b.operator);
+    if (w !== 0) return w;
+    return compareParts(a.version, b.version);
+  });
 
 const removeDuplicates = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> => {
-	const seen = new Set<string>();
-	return set.filter((c) => {
-		const v = c.version;
-		const pre = v.prerelease.length > 0 ? `-${v.prerelease.join(".")}` : "";
-		// Build metadata is ignored per SemVer §10 — comparators differing
-		// only in build metadata are semantically identical constraints.
-		const key = `${c.operator}${v.major}.${v.minor}.${v.patch}${pre}`;
-		if (seen.has(key)) return false;
-		seen.add(key);
-		return true;
-	});
+  const seen = MutableHashSet.empty<string>();
+  return set.filter((c) => {
+    const v = c.version;
+    const pre = v.prerelease.length > 0 ? `-${v.prerelease.join(".")}` : "";
+    // Build metadata is ignored per SemVer §10 — comparators differing
+    // only in build metadata are semantically identical constraints.
+    const key = `${c.operator}${v.major}.${v.minor}.${v.patch}${pre}`;
+    if (MutableHashSet.has(seen, key)) return false;
+    MutableHashSet.add(seen, key);
+    return true;
+  });
 };
 
 const normalizeComparatorSet = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> =>
-	sortComparators(removeDuplicates(set));
+  sortComparators(removeDuplicates(set));
 
 /**
  * Normalize every comparator set in a range: sort and deduplicate each
@@ -70,7 +64,7 @@ const normalizeComparatorSet = (set: ReadonlyArray<ComparatorParts>): ReadonlyAr
  * **Example** (Collapse build-only duplicates and sort by operator)
  *
  * ```ts
- * import { normalizeSets } from "../../semver/internal/normalize.ts";
+ * import { normalizeSets } from "../../../semver/internal/normalize.ts";
  *
  * const sets = normalizeSets([
  *   [
@@ -100,5 +94,5 @@ const normalizeComparatorSet = (set: ReadonlyArray<ComparatorParts>): ReadonlyAr
  * @since 0.0.0
  */
 export const normalizeSets = (
-	sets: ReadonlyArray<ReadonlyArray<ComparatorParts>>,
+  sets: ReadonlyArray<ReadonlyArray<ComparatorParts>>
 ): ReadonlyArray<ReadonlyArray<ComparatorParts>> => sets.map(normalizeComparatorSet);

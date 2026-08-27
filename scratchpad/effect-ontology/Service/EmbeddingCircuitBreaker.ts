@@ -77,7 +77,7 @@ export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
  * console.log(config.maxFailures) // 3
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`ProviderCircuitConfig`)(
@@ -108,7 +108,7 @@ export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`Pro
  * console.log(status.state) // "closed"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CircuitStatus extends S.Class<CircuitStatus>($I`CircuitStatus`)(

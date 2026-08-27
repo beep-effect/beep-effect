@@ -9,17 +9,12 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import { Context, Duration, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import type * as Config from "effect/Config";
-import * as Context from "effect/Context";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as R from "effect/Record";
-
+import * as S from "effect/Schema";
 import type {
   McpConfigError,
   PluginLoadError,
@@ -47,11 +42,16 @@ const $I = $ScratchpadId.create("claudecode/ClaudeProject");
  * @category configuration
  * @since 0.0.0
  */
-export interface ClaudeProjectOptions {
-  readonly cwd: string;
-  readonly pluginRoot?: string;
-  readonly mcpPath?: string;
-}
+export class ClaudeProjectOptions extends S.Class<ClaudeProjectOptions>($I`ClaudeProjectOptions`)(
+  {
+    cwd: S.String,
+    pluginRoot: S.String.pipe(S.optionalKey),
+    mcpPath: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("ClaudeProjectOptions", {
+    description: "Project root plus optional plugin and MCP configuration path overrides.",
+  })
+) {}
 
 /**
  * Explicit cache invalidators for the project service.
@@ -227,11 +227,18 @@ export const layer = (options: ClaudeProjectOptions): Layer.Layer<Service, never
  * **Example** (Read the project root)
  *
  * ```ts
- * import { ClaudeProject } from "effect-claudecode"
+ * import { ClaudeProject, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const cwd = Effect.map(ClaudeProject.project, (service) => service.cwd)
- * console.log(cwd)
+ * const fileSystem = Testing.makeMockFileSystem()
+ * const cwd = await Effect.runPromise(
+ *   ClaudeProject.project.pipe(
+ *     Effect.map((service) => service.cwd),
+ *     Effect.provide(ClaudeProject.layer({ cwd: "/repo" })),
+ *     Effect.provide(fileSystem.layer)
+ *   )
+ * )
+ * console.log(cwd) // "/repo"
  * ```
  *
  * @effects Requires {@link Service}; does not fail.

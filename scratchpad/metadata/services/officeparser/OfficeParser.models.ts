@@ -6,21 +6,524 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-// import * as Context from "effect/Context";
-// import officeparser from "officeparser";
-// import * as S from "effect/Schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-// import * as SchemaUtils from "@beep/schema/SchemaUtils";
-// import * as Tuple from "effect/Tuple";
-// import {cast, pipe} from "effect/Function";
-// import * as A from "@beep/utils/Array";
-// import * as R from "@beep/utils/Record";
-// import * as Struct from "@beep/utils/Struct";
-// import {EmptyStructError, entries} from "@beep/utils/Struct";
-// import {Match} from "effect";
-// import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("metadata/services/officeparser/OfficeParser.models");
+
+const runtimeFunction = <A extends Function>() =>
+  S.declare<A>((input: unknown): input is A => P.isFunction(input));
+
+const AbortSignalSchema = S.declare<AbortSignal>(
+  (input: unknown): input is AbortSignal =>
+    P.isObject(input) &&
+    P.hasProperty(input, "aborted") &&
+    P.isBoolean(input.aborted) &&
+    P.hasProperty(input, "addEventListener") &&
+    P.isFunction(input.addEventListener)
+).pipe(
+  $I.annoteSchema("AbortSignalSchema", {
+    description: "Identity-preserving runtime contract for a platform AbortSignal.",
+  })
+);
+
+const NonNegativeInt = S.Natural.pipe(
+  $I.annoteSchema("NonNegativeInt", {
+    description: "Safe non-negative integer used for counts, offsets, and zero-disable timeouts.",
+  })
+);
+
+const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveInt", {
+    description: "Safe positive integer used for one-based positions and resource limits.",
+  })
+);
+
+const SimilarityThreshold = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(
+  $I.annoteSchema("SimilarityThreshold", {
+    description: "Cosine similarity threshold from zero through one.",
+  })
+);
+
+const PdfScale = S.Finite.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PdfScale", {
+    description: "Positive PDF page-rendering scale factor.",
+  })
+);
+
+const OfficeIssueSeverity = LiteralKit(["warning", "info", "error"]).pipe(
+  $I.annoteSchema("OfficeIssueSeverity", { description: "Severity assigned to a parser diagnostic." })
+);
+
+const StandaloneStyleMode = LiteralKit(["full", "scoped", "none"]).pipe(
+  $I.annoteSchema("StandaloneStyleMode", { description: "CSS inclusion mode for standalone HTML output." })
+);
+
+const StructuredStyleOperator = LiteralKit(["=", "~="]).pipe(
+  $I.annoteSchema("StructuredStyleOperator", { description: "Comparison operator for a structured style attribute." })
+);
+
+/**
+ * Schema-derived decoded type for {@link OcrTimeoutConfig}.
+ *
+ * @see {@link OcrTimeoutConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OcrTimeoutConfig = typeof OcrTimeoutConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link OcrConfig}.
+ *
+ * @see {@link OcrConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OcrConfig = typeof OcrConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link CommonOfficeParserConfig}.
+ *
+ * @see {@link CommonOfficeParserConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CommonOfficeParserConfig = typeof CommonOfficeParserConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link HtmlParserConfig}.
+ *
+ * @see {@link HtmlParserConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HtmlParserConfig = typeof HtmlParserConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link DecompressionLimits}.
+ *
+ * @see {@link DecompressionLimits} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DecompressionLimits = typeof DecompressionLimits.Type;
+
+/**
+ * Schema-derived decoded type for {@link OfficeIssue}.
+ *
+ * @see {@link OfficeIssue} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OfficeIssue = typeof OfficeIssue.Type;
+
+/**
+ * Schema-derived decoded type for {@link MetadataOverrides}.
+ *
+ * @see {@link MetadataOverrides} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MetadataOverrides = typeof MetadataOverrides.Type;
+
+/**
+ * Schema-derived decoded type for {@link CommonGeneratorConfig}.
+ *
+ * @see {@link CommonGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CommonGeneratorConfig = typeof CommonGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link HtmlInjectionConfig}.
+ *
+ * @see {@link HtmlInjectionConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HtmlInjectionConfig = typeof HtmlInjectionConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link StandaloneConfig}.
+ *
+ * @see {@link StandaloneConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StandaloneConfig = typeof StandaloneConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link HtmlGeneratorConfig}.
+ *
+ * @see {@link HtmlGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HtmlGeneratorConfig = typeof HtmlGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link PdfGeneratorConfig}.
+ *
+ * @see {@link PdfGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PdfGeneratorConfig = typeof PdfGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link StructuredStyleMapping}.
+ *
+ * @see {@link StructuredStyleMapping} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StructuredStyleMapping = typeof StructuredStyleMapping.Type;
+
+/**
+ * Schema-derived decoded type for {@link RtfGeneratorConfig}.
+ *
+ * @see {@link RtfGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RtfGeneratorConfig = typeof RtfGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link CsvGeneratorConfig}.
+ *
+ * @see {@link CsvGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CsvGeneratorConfig = typeof CsvGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link MarkdownDialectConfig}.
+ *
+ * @see {@link MarkdownDialectConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MarkdownDialectConfig = typeof MarkdownDialectConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link FallbackToHtmlConfig}.
+ *
+ * @see {@link FallbackToHtmlConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FallbackToHtmlConfig = typeof FallbackToHtmlConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link MdGeneratorConfig}.
+ *
+ * @see {@link MdGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MdGeneratorConfig = typeof MdGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link TextGeneratorConfig}.
+ *
+ * @see {@link TextGeneratorConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextGeneratorConfig = typeof TextGeneratorConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link BaseChunkingConfig}.
+ *
+ * @see {@link BaseChunkingConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BaseChunkingConfig = typeof BaseChunkingConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link FixedSizeChunkingConfig}.
+ *
+ * @see {@link FixedSizeChunkingConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FixedSizeChunkingConfig = typeof FixedSizeChunkingConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link DocumentStructureChunkingConfig}.
+ *
+ * @see {@link DocumentStructureChunkingConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DocumentStructureChunkingConfig = typeof DocumentStructureChunkingConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link SemanticChunkingConfig}.
+ *
+ * @see {@link SemanticChunkingConfig} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SemanticChunkingConfig = typeof SemanticChunkingConfig.Type;
+
+/**
+ * Schema-derived decoded type for {@link OfficeChunk}.
+ *
+ * @see {@link OfficeChunk} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OfficeChunk = typeof OfficeChunk.Type;
+
+/**
+ * Schema-derived decoded type for {@link TextFormatting}.
+ *
+ * @see {@link TextFormatting} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextFormatting = typeof TextFormatting.Type;
+
+/**
+ * Schema-derived decoded type for {@link SlideMetadata}.
+ *
+ * @see {@link SlideMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SlideMetadata = typeof SlideMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link SheetMetadata}.
+ *
+ * @see {@link SheetMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SheetMetadata = typeof SheetMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link IndentationMetadata}.
+ *
+ * @see {@link IndentationMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IndentationMetadata = typeof IndentationMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link HeadingMetadata}.
+ *
+ * @see {@link HeadingMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HeadingMetadata = typeof HeadingMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link ParagraphMetadata}.
+ *
+ * @see {@link ParagraphMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ParagraphMetadata = typeof ParagraphMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link ListMetadata}.
+ *
+ * @see {@link ListMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ListMetadata = typeof ListMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link CellMetadata}.
+ *
+ * @see {@link CellMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CellMetadata = typeof CellMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link TableMetadata}.
+ *
+ * @see {@link TableMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TableMetadata = typeof TableMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link ChartMetadata}.
+ *
+ * @see {@link ChartMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ChartMetadata = typeof ChartMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link ImageMetadata}.
+ *
+ * @see {@link ImageMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ImageMetadata = typeof ImageMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link EmbedMetadata}.
+ *
+ * @see {@link EmbedMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbedMetadata = typeof EmbedMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link AdmonitionMetadata}.
+ *
+ * @see {@link AdmonitionMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AdmonitionMetadata = typeof AdmonitionMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link PageMetadata}.
+ *
+ * @see {@link PageMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PageMetadata = typeof PageMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link TextMetadata}.
+ *
+ * @see {@link TextMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextMetadata = typeof TextMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link NoteMetadata}.
+ *
+ * @see {@link NoteMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type NoteMetadata = typeof NoteMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link BreakMetadata}.
+ *
+ * @see {@link BreakMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BreakMetadata = typeof BreakMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link CodeMetadata}.
+ *
+ * @see {@link CodeMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CodeMetadata = typeof CodeMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link CommentMetadata}.
+ *
+ * @see {@link CommentMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CommentMetadata = typeof CommentMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link HeaderFooterMetadata}.
+ *
+ * @see {@link HeaderFooterMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HeaderFooterMetadata = typeof HeaderFooterMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link BaseContentNode}.
+ *
+ * @see {@link BaseContentNode} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BaseContentNode = BaseContentNodeShape;
+
+/**
+ * Schema-derived decoded type for {@link ChartData}.
+ *
+ * @see {@link ChartData} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ChartData = typeof ChartData.Type;
+
+/**
+ * Schema-derived decoded type for {@link OfficeAttachment}.
+ *
+ * @see {@link OfficeAttachment} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OfficeAttachment = typeof OfficeAttachment.Type;
+
+/**
+ * Schema-derived decoded type for {@link OfficeMetadata}.
+ *
+ * @see {@link OfficeMetadata} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OfficeMetadata = typeof OfficeMetadata.Type;
+
+/**
+ * Schema-derived decoded type for {@link OfficeAuxiliaryContent}.
+ *
+ * @see {@link OfficeAuxiliaryContent} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OfficeAuxiliaryContent = typeof OfficeAuxiliaryContent.Type;
+
+/**
+ * Schema-derived decoded type for {@link OfficeParserAST}.
+ *
+ * @see {@link OfficeParserAST} for the runtime schema and construction helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OfficeParserAST = typeof OfficeParserAST.Type;
+
+/**
+ * Destination-specific conversion result decoded by {@link ConversionResult}.
+ *
+ * @see {@link ConversionResult} for the runtime schema factory.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConversionResult<D extends UniversalGeneratorFormat> = ConversionResultShape<D>;
+
 
 /**
  * Stable failure codes from OfficeParser parse and generate operations.
@@ -192,7 +695,7 @@ export type OfficeWarningType = typeof OfficeWarningType.Type;
  * @category configuration
  * @since 0.0.0
  */
-export interface OcrTimeoutConfig {
+interface OcrTimeoutConfigShape {
   /**
    * Timeout in milliseconds of inactivity before the OCR worker pool is
    * automatically terminated and freed.
@@ -253,12 +756,38 @@ export interface OcrTimeoutConfig {
 }
 
 /**
+ * Runtime schema for the OCR timeout configuration.
+ *
+ * **Example** (Validate timeout settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OcrTimeoutConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(OcrTimeoutConfig))({ workerLoad: 60_000 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OcrTimeoutConfig = S.Class<OcrTimeoutConfigShape>($I`OcrTimeoutConfig`)(
+  {
+    autoTerminate: S.optionalKey(NonNegativeInt),
+    workerLoad: S.optionalKey(NonNegativeInt),
+    recognition: S.optionalKey(NonNegativeInt),
+  },
+  $I.annote("OcrTimeoutConfig", {
+    description: "Nested millisecond timeouts for OCR worker-pool lifecycle, language load, and recognition.",
+  })
+);
+
+/**
  * Controls OCR language data, worker assets, cancellation, and timeouts during attachment extraction.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface OcrConfig {
+interface OcrConfigShape {
   /**
    * Language for OCR.
    * Default is 'eng'.
@@ -316,12 +845,41 @@ export interface OcrConfig {
 }
 
 /**
+ * Runtime schema for shared OCR configuration.
+ *
+ * **Example** (Validate OCR language settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OcrConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(OcrConfig))({ language: "eng+fra" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OcrConfig = S.Class<OcrConfigShape>($I`OcrConfig`)(
+  {
+    language: S.optionalKey(S.String),
+    workerPath: S.optionalKey(S.String),
+    corePath: S.optionalKey(S.String),
+    langPath: S.optionalKey(S.String),
+    timeout: S.optionalKey(OcrTimeoutConfig),
+    abortSignal: AbortSignalSchema.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("OcrConfig", {
+    description: "OCR language data, worker assets, cancellation, and timeout configuration.",
+  })
+);
+
+/**
  * Controls parsing behavior that applies regardless of the detected Office format.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface CommonOfficeParserConfig {
+interface CommonOfficeParserConfigShape {
   /**
    * Callback for warnings or non-fatal errors encountered during parsing.
    * Allows you to capture issues like OCR failures or attachment extraction errors
@@ -469,6 +1027,48 @@ export interface CommonOfficeParserConfig {
 }
 
 /**
+ * Runtime schema for format-independent OfficeParser options.
+ *
+ * **Example** (Validate parser options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CommonOfficeParserConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(CommonOfficeParserConfig))({ ignoreComments: true, fileType: "docx" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CommonOfficeParserConfig = S.Class<CommonOfficeParserConfigShape>($I`CommonOfficeParserConfig`)(
+  {
+    onWarning: S.optionalKey(runtimeFunction<(issue: OfficeIssue) => void>()),
+    newlineDelimiter: S.optionalKey(S.String),
+    ignoreNotes: S.optionalKey(S.Boolean),
+    ignoreComments: S.optionalKey(S.Boolean),
+    ignoreHeadersAndFooters: S.optionalKey(S.Boolean),
+    ignoreSlideMasters: S.optionalKey(S.Boolean),
+    extractAttachments: S.optionalKey(S.Boolean),
+    includeRawContent: S.optionalKey(S.Boolean),
+    ocr: S.optionalKey(S.Boolean),
+    ocrConfig: S.optionalKey(OcrConfig),
+    abortSignal: AbortSignalSchema.pipe(S.NullOr, S.optionalKey),
+    serializeRawContent: S.optionalKey(S.Boolean),
+    preserveXmlWhitespace: S.optionalKey(S.Boolean),
+    pdfWorkerSrc: S.optionalKey(S.String),
+    includeBreakNodes: S.optionalKey(S.Boolean),
+    ignoreInternalLinks: S.optionalKey(S.Boolean),
+    fileType: S.suspend((): typeof SupportedFileType => SupportedFileType).pipe(S.NullOr, S.optionalKey),
+    csvDelimiter: S.optionalKey(S.String),
+    decompressionLimits: S.optionalKey(S.suspend((): typeof DecompressionLimits => DecompressionLimits)),
+  },
+  $I.annote("CommonOfficeParserConfig", {
+    description: "Parsing behavior that applies regardless of the detected Office format.",
+  })
+);
+
+/**
  * Controls preservation behavior shared by HTML, XHTML, and EPUB parsing.
  *
  * **Details**
@@ -482,7 +1082,7 @@ export interface CommonOfficeParserConfig {
  * @category configuration
  * @since 0.0.0
  */
-export interface HtmlParserConfig {
+interface HtmlParserConfigShape {
   /**
    * Preserve source HTML attributes that no typed metadata field consumed, on
    * `OfficeContentNode.htmlAttributes`, so they can be replayed on generation.
@@ -528,6 +1128,32 @@ export interface HtmlParserConfig {
 }
 
 /**
+ * Runtime schema for HTML parser preservation settings.
+ *
+ * **Example** (Validate iframe preservation)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HtmlParserConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(HtmlParserConfig))({ preserveIframes: ["vimeo.com"] })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlParserConfig = S.Class<HtmlParserConfigShape>($I`HtmlParserConfig`)(
+  {
+    preserveAttributes: S.optionalKey(S.Boolean),
+    preserveIframes: S.optionalKey(S.Union([S.Boolean, S.Array(S.String).pipe(S.mutable)])),
+    embedFolkForms: S.optionalKey(S.Boolean),
+  },
+  $I.annote("HtmlParserConfig", {
+    description: "Preservation behavior shared by HTML, XHTML, and EPUB parsing.",
+  })
+);
+
+/**
  * Maps an input format string to its corresponding format-specific parser configuration, mirroring
  * `GeneratorSpecificConfig<D>` on the generator side. Unlike the generator side, the input format is
  * usually runtime-detected rather than known statically at the `parseOffice()` call site, so this
@@ -548,12 +1174,36 @@ type ParserSpecificConfig<F extends string> = F extends "html" | "epub"
 export type OfficeParserConfig<F extends string = string> = CommonOfficeParserConfig & ParserSpecificConfig<F>;
 
 /**
+ * Runtime schema for the complete parser configuration surface.
+ *
+ * **Example** (Validate HTML parser settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeParserConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(OfficeParserConfig))({ fileType: "html", htmlParserConfig: { preserveAttributes: true } })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeParserConfig = S.Class<OfficeParserConfig>($I`OfficeParserConfig`)(
+  {
+    ...CommonOfficeParserConfig.fields,
+    htmlParserConfig: S.optionalKey(HtmlParserConfig),
+  },
+  $I.annote("OfficeParserConfig", {
+    description: "Format-independent and input-format-specific OfficeParser settings.",
+  })
+);
+
+/**
  * Caps archive expansion and table-cell materialization before malformed documents consume excessive memory.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface DecompressionLimits {
+interface DecompressionLimitsShape {
   /**
    * Maximum allowed total uncompressed size (in bytes) of files extracted from a ZIP archive.
    * Applies to OOXML (DOCX, XLSX, PPTX) and ODF (ODT, ODP, ODS) formats.
@@ -593,6 +1243,32 @@ export interface DecompressionLimits {
 }
 
 /**
+ * Runtime schema for archive and table expansion limits.
+ *
+ * **Example** (Validate decompression limits)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DecompressionLimits } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(DecompressionLimits))({ maxZipEntries: 1_000 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DecompressionLimits = S.Class<DecompressionLimitsShape>($I`DecompressionLimits`)(
+  {
+    maxUncompressedBytes: S.optionalKey(PositiveInt),
+    maxZipEntries: S.optionalKey(PositiveInt),
+    maxTableCells: S.optionalKey(PositiveInt),
+  },
+  $I.annote("DecompressionLimits", {
+    description: "Limits applied during ZIP extraction and repeated-cell expansion.",
+  })
+);
+
+/**
  * Describes parser settings after defaults and format-specific options have been resolved.
  *
  * @category configuration
@@ -606,7 +1282,7 @@ export type FullOfficeParserConfig = DeepRequired<OfficeParserConfig>;
  * @category diagnostics
  * @since 0.0.0
  */
-export interface OfficeIssue {
+interface OfficeIssueShape {
   /** The severity of the issue. */
   readonly type: "warning" | "info" | "error";
   /** Human-readable message text. */
@@ -616,8 +1292,38 @@ export interface OfficeIssue {
   /** A unique error code for programmatic handling. */
   readonly code: OfficeWarningType | OfficeErrorType;
   /** Optional additional context or original error object. */
-  readonly details?: undefined | any;
+  readonly details?: undefined | unknown;
 }
+
+/**
+ * Runtime schema for a structured OfficeParser diagnostic.
+ *
+ * **Example** (Validate a warning)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeIssue } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(OfficeIssue))({ type: "warning", message: "OCR skipped", code: "OCR_FAILED" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeIssue = S.Class<OfficeIssueShape>($I`OfficeIssue`)(
+  {
+    type: OfficeIssueSeverity,
+    message: S.String,
+    node: S.suspend((): typeof OfficeContentNode => OfficeContentNode).pipe(S.optionalKey),
+    code: S.Union([OfficeWarningType, OfficeErrorType]),
+    details: S.optionalKey(S.Unknown),
+  },
+  $I.annote("OfficeIssue", {
+    description: "Structured warning, informational message, or error reported by OfficeParser.",
+  })
+);
+
+const isEncodedOfficeIssue = S.is(S.toEncoded(OfficeIssue));
 
 /**
  * Adds an optional structured OfficeParser diagnostic to a standard JavaScript `Error`.
@@ -653,6 +1359,38 @@ export interface OfficeError extends Error {
 }
 
 /**
+ * Identity-preserving runtime schema for native errors carrying an optional OfficeParser issue.
+ *
+ * **Gotchas**
+ *
+ * This remains a behavioral `Error` interface rather than an `S.TaggedError`: cancellation and
+ * third-party failures must retain their native error identity, prototype, and `name`.
+ *
+ * **Example** (Validate an enriched native error)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeError } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(OfficeError)(new Error("parse failed"))) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeError = S.declare<OfficeError>(
+  (input: unknown): input is OfficeError =>
+    P.isError(input) &&
+    (!P.hasProperty(input, "officeIssue") ||
+      input.officeIssue === undefined ||
+      isEncodedOfficeIssue(input.officeIssue))
+).pipe(
+  $I.annoteSchema("OfficeError", {
+    description: "Native Error optionally enriched with a structured OfficeParser diagnostic.",
+  })
+);
+
+/**
  * The result of a document conversion operation.
  */
 type ConversionValue<D extends UniversalGeneratorFormat> = D extends "pdf"
@@ -672,7 +1410,7 @@ type ConversionValue<D extends UniversalGeneratorFormat> = D extends "pdf"
  * @category models
  * @since 0.0.0
  */
-export interface ConversionResult<D extends UniversalGeneratorFormat> {
+interface ConversionResultShape<D extends UniversalGeneratorFormat> {
   /** The actual generated content (HTML, Markdown, Text, OfficeChunk[], etc.). */
   readonly value: ConversionValue<D>;
   /** A collection of issues (warnings/infos) generated during the process. */
@@ -680,12 +1418,59 @@ export interface ConversionResult<D extends UniversalGeneratorFormat> {
 }
 
 /**
+ * Build the runtime schema for a destination-specific conversion result.
+ *
+ * **Example** (Build a text-result schema)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ConversionResult } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * const TextResult = ConversionResult<"text">(S.String)
+ * console.log(S.is(S.toEncoded(TextResult))({ value: "hello", messages: [] })) // true
+ * ```
+ *
+ * @category schema-factories
+ * @since 0.0.0
+ */
+export const ConversionResult = <D extends UniversalGeneratorFormat>(value: S.Schema<ConversionValue<D>>) =>
+  S.Class<ConversionResultShape<D>>($I`ConversionResult`)(
+    {
+      value,
+      messages: S.Array(OfficeIssue).pipe(S.mutable),
+    },
+    $I.annote("ConversionResult", {
+      description: "Generated content paired with non-fatal conversion diagnostics.",
+    })
+  );
+
+/**
  * Lists destination formats available for every supported source document.
  *
+ * **Example** (Guard an HTML destination)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UniversalGeneratorFormat } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(UniversalGeneratorFormat)("html")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UniversalGeneratorFormat = LiteralKit(["text", "md", "html", "pdf", "csv", "rtf", "chunks", "epub"]).pipe(
+  $I.annoteSchema("UniversalGeneratorFormat", {
+    description: "Destination formats available for every supported OfficeParser source.",
+  })
+);
+
+/**
+ * Decoded destination-format member of {@link UniversalGeneratorFormat}.
+ *
+ * @see {@link UniversalGeneratorFormat} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type UniversalGeneratorFormat = "text" | "md" | "html" | "pdf" | "csv" | "rtf" | "chunks" | "epub";
+export type UniversalGeneratorFormat = typeof UniversalGeneratorFormat.Type;
 
 /**
  * Selects generator destinations for a source type; the current mapping permits every universal format.
@@ -705,7 +1490,7 @@ export type SupportedDestination<_T extends SupportedFileType = SupportedFileTyp
  * @category configuration
  * @since 0.0.0
  */
-export interface MetadataOverrides {
+interface MetadataOverridesShape {
   /** Document title. */
   readonly title?: undefined | string;
   /** Document author. */
@@ -747,13 +1532,52 @@ export interface MetadataOverrides {
   readonly custom?: undefined | Record<string, string | number | boolean | Date>;
 }
 
+const MetadataOverrideValue = S.Union([S.String, S.Finite, S.Boolean, S.Date]).pipe(
+  $I.annoteSchema("MetadataOverrideValue", {
+    description: "Scalar value accepted by a custom metadata override.",
+  })
+);
+
+/**
+ * Runtime schema for document metadata overrides.
+ *
+ * **Example** (Validate title and modification overrides)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MetadataOverrides } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(MetadataOverrides))({ title: "Q4", modified: new Date(0) })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataOverrides = S.Class<MetadataOverridesShape>($I`MetadataOverrides`)(
+  {
+    title: S.optionalKey(S.String),
+    author: S.optionalKey(S.String),
+    description: S.optionalKey(S.String),
+    subject: S.optionalKey(S.String),
+    keywords: S.optionalKey(S.String),
+    lastModifiedBy: S.optionalKey(S.String),
+    created: S.optionalKey(S.Date),
+    modified: S.optionalKey(S.Date),
+    language: S.optionalKey(S.String),
+    custom: S.optionalKey(S.Record(S.String, MetadataOverrideValue)),
+  },
+  $I.annote("MetadataOverrides", {
+    description: "Document metadata fields replaced when a generator writes output.",
+  })
+);
+
 /**
  * Controls parsing-independent behavior shared by every document generator.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface CommonGeneratorConfig {
+interface CommonGeneratorConfigShape {
   /**
    * Runs before each node is generated and may filter, replace, mutate, or asynchronously inspect it.
    *
@@ -895,6 +1719,48 @@ export interface CommonGeneratorConfig {
 }
 
 /**
+ * Runtime schema for parsing-independent generator behavior.
+ *
+ * **Example** (Validate shared generator settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CommonGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ *
+ * console.log(S.is(S.toEncoded(CommonGeneratorConfig))({ includeImages: true, generateIds: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CommonGeneratorConfig = S.Class<CommonGeneratorConfigShape>($I`CommonGeneratorConfig`)(
+  {
+    onNode: S.optionalKey(
+      runtimeFunction<(node: OfficeContentNode) => string | false | Promise<string | false | void> | void>()
+    ),
+    onWarning: S.optionalKey(runtimeFunction<(issue: OfficeIssue) => void>()),
+    styleMap: S.optionalKey(
+      S.Union([
+        S.Array(S.String).pipe(S.mutable),
+        S.Array(S.suspend((): typeof StructuredStyleMapping => StructuredStyleMapping)).pipe(S.mutable),
+      ])
+    ),
+    includeFormatting: S.optionalKey(S.Boolean),
+    generateIds: S.optionalKey(S.Boolean),
+    renderMetadata: S.optionalKey(S.Boolean),
+    metadataOverrides: S.optionalKey(MetadataOverrides),
+    ignoreDefaultStyleMap: S.optionalKey(S.Boolean),
+    includeImages: S.optionalKey(S.Boolean),
+    includeCharts: S.optionalKey(S.Boolean),
+    ignoreInternalLinks: S.optionalKey(S.Boolean),
+    abortSignal: AbortSignalSchema.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("CommonGeneratorConfig", {
+    description: "Parsing-independent behavior shared by every document generator.",
+  })
+);
+
+/**
  * Maps a destination format to the matching generator-specific configuration.
  */
 type GeneratorSpecificConfig<D extends string> = D extends "html"
@@ -1010,7 +1876,7 @@ export type FullGeneratorConfig = DeepRequired<
  * @category configuration
  * @since 0.0.0
  */
-export interface HtmlInjectionConfig {
+interface HtmlInjectionConfigShape {
   /** Raw HTML injected immediately after the opening <head> tag */
   readonly headStart?: undefined | string;
   /** Raw HTML injected immediately before the closing </head> tag */
@@ -1022,6 +1888,32 @@ export interface HtmlInjectionConfig {
 }
 
 /**
+ * Runtime schema for HTML envelope injection points.
+ *
+ * **Example** (Validate a head injection)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HtmlInjectionConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(HtmlInjectionConfig))({ headEnd: "<style></style>" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlInjectionConfig = S.Class<HtmlInjectionConfigShape>($I`HtmlInjectionConfig`)(
+  {
+    headStart: S.optionalKey(S.String),
+    headEnd: S.optionalKey(S.String),
+    bodyStart: S.optionalKey(S.String),
+    bodyEnd: S.optionalKey(S.String),
+  },
+  $I.annote("HtmlInjectionConfig", {
+    description: "Caller-supplied HTML placed at defined document-envelope points.",
+  })
+);
+
+/**
  * Selects which parts of a complete HTML document surround generated content.
  *
  * **Details**
@@ -1031,7 +1923,7 @@ export interface HtmlInjectionConfig {
  * @category configuration
  * @since 0.0.0
  */
-export interface StandaloneConfig {
+interface StandaloneConfigShape {
   /**
    * Wrap the output in `<!DOCTYPE html><html><head>…</head><body>…</body></html>`.
    * When false, only the inner content fragment is emitted. Defaults to true.
@@ -1074,12 +1966,40 @@ export interface StandaloneConfig {
 }
 
 /**
+ * Runtime schema for granular standalone HTML output settings.
+ *
+ * **Example** (Validate a fragment configuration)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StandaloneConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(StandaloneConfig))({ document: false, styles: "scoped" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StandaloneConfig = S.Class<StandaloneConfigShape>($I`StandaloneConfig`)(
+  {
+    document: S.optionalKey(S.Boolean),
+    metaTags: S.optionalKey(S.Boolean),
+    styles: StandaloneStyleMode.pipe(S.optionalKey),
+    scripts: S.optionalKey(S.Boolean),
+    headInjections: S.optionalKey(S.Boolean),
+    bodyInjections: S.optionalKey(S.Boolean),
+  },
+  $I.annote("StandaloneConfig", {
+    description: "Parts of a complete HTML document that surround generated content.",
+  })
+);
+
+/**
  * Controls HTML document wrapping, assets, layout, and embed handling.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface HtmlGeneratorConfig {
+interface HtmlGeneratorConfigShape {
   /**
    * Whether to wrap the output in a full HTML document structure (e.g., <html>, <head>, etc.).
    * Pass an object instead of a boolean for granular control over individual parts of the
@@ -1137,12 +2057,41 @@ export interface HtmlGeneratorConfig {
 }
 
 /**
+ * Runtime schema for HTML generator settings.
+ *
+ * **Example** (Validate HTML output settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HtmlGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(HtmlGeneratorConfig))({ standalone: true, gatedEmbeds: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlGeneratorConfig = S.Class<HtmlGeneratorConfigShape>($I`HtmlGeneratorConfig`)(
+  {
+    standalone: S.optionalKey(S.Union([S.Boolean, StandaloneConfig])),
+    chartJsSrc: S.optionalKey(S.String),
+    containerWidth: S.optionalKey(S.Union([S.String, S.Finite])),
+    customCss: S.optionalKey(S.String),
+    injections: S.optionalKey(HtmlInjectionConfig),
+    sourceAttributes: S.optionalKey(S.Boolean),
+    gatedEmbeds: S.optionalKey(S.Boolean),
+  },
+  $I.annote("HtmlGeneratorConfig", {
+    description: "HTML document wrapping, assets, layout, and embed handling settings.",
+  })
+);
+
+/**
  * Controls page layout, browser launch settings, and rendering timeouts for PDF output.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface PdfGeneratorConfig {
+interface PdfGeneratorConfigShape {
   /** Paper format. Defaults to 'A4'. */
   readonly format?:
     | undefined
@@ -1197,7 +2146,7 @@ export interface PdfGeneratorConfig {
    * Optional Puppeteer launch options for Node.js environment.
    * Useful for setting custom executable paths or args in CI/CD.
    */
-  readonly launchOptions?: undefined | any;
+  readonly launchOptions?: undefined | unknown;
   /**
    * Timeout in milliseconds for PDF generation.
    * Limits the time spent waiting for Puppeteer to launch, load content, and render PDF.
@@ -1205,6 +2154,67 @@ export interface PdfGeneratorConfig {
    */
   readonly timeout?: undefined | number;
 }
+
+const PdfMargin = S.Class<PdfMargin>($I`PdfMargin`)(
+  {
+    top: S.optionalKey(S.Union([S.String, S.Finite])),
+    right: S.optionalKey(S.Union([S.String, S.Finite])),
+    bottom: S.optionalKey(S.Union([S.String, S.Finite])),
+    left: S.optionalKey(S.Union([S.String, S.Finite])),
+  },
+  $I.annote("PdfMargin", {
+    description: "Optional top, right, bottom, and left PDF page margins.",
+  })
+);
+interface PdfMargin {
+  readonly top?: undefined | string | number;
+  readonly right?: undefined | string | number;
+  readonly bottom?: undefined | string | number;
+  readonly left?: undefined | string | number;
+}
+
+const PdfPaperFormat = LiteralKit([
+  "letter", "legal", "tabloid", "ledger", "a0", "a1", "a2", "a3", "a4", "a5", "a6",
+  "Letter", "Legal", "Tabloid", "Ledger", "A0", "A1", "A2", "A3", "A4", "A5", "A6",
+]).pipe(
+  $I.annoteSchema("PdfPaperFormat", {
+    description: "Named paper formats accepted by the PDF generator.",
+  })
+);
+
+/**
+ * Runtime schema for PDF rendering settings.
+ *
+ * **Example** (Validate PDF page settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PdfGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(PdfGeneratorConfig))({ format: "A4", landscape: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PdfGeneratorConfig = S.Class<PdfGeneratorConfigShape>($I`PdfGeneratorConfig`)(
+  {
+    format: S.optionalKey(PdfPaperFormat),
+    width: S.optionalKey(S.Union([S.String, S.Finite])),
+    height: S.optionalKey(S.Union([S.String, S.Finite])),
+    landscape: S.optionalKey(S.Boolean),
+    printBackground: S.optionalKey(S.Boolean),
+    scale: S.optionalKey(PdfScale),
+    margin: S.optionalKey(PdfMargin),
+    displayHeaderFooter: S.optionalKey(S.Boolean),
+    headerTemplate: S.optionalKey(S.String),
+    footerTemplate: S.optionalKey(S.String),
+    launchOptions: S.optionalKey(S.Unknown),
+    timeout: S.optionalKey(NonNegativeInt),
+  },
+  $I.annote("PdfGeneratorConfig", {
+    description: "PDF page layout, browser launch, and rendering timeout settings.",
+  })
+);
 
 /**
  * Maps parsed node selectors to generated tags, classes, attributes, and freshness behavior.
@@ -1218,7 +2228,7 @@ export interface PdfGeneratorConfig {
  * @category configuration
  * @since 0.0.0
  */
-export interface StructuredStyleMapping {
+interface StructuredStyleMappingShape {
   /**
    * The criteria used to identify which AST nodes should be transformed.
    * Think of this as the "Source Filter".
@@ -1288,15 +2298,113 @@ export interface StructuredStyleMapping {
   };
 }
 
+const StructuredStyleAttributeMatcher = S.Class<StructuredStyleAttributeMatcher>($I`StructuredStyleAttributeMatcher`)(
+  {
+    value: S.Union([S.String, S.Finite, S.Boolean]),
+    operator: StructuredStyleOperator,
+  },
+  $I.annote("StructuredStyleAttributeMatcher", {
+    description: "Value and equality operator used by a structured style selector.",
+  })
+);
+interface StructuredStyleAttributeMatcher {
+  readonly value: string | number | boolean;
+  readonly operator: "=" | "~=";
+}
+
+const StructuredStyleSelector = S.Class<StructuredStyleSelector>($I`StructuredStyleSelector`)(
+  {
+    nodeType: S.suspend((): typeof OfficeContentNodeType => OfficeContentNodeType).pipe(S.optionalKey),
+    attributes: S.optionalKey(
+      S.Record(
+        S.String,
+        S.Union([S.String, S.Finite, S.Boolean, StructuredStyleAttributeMatcher])
+      )
+    ),
+  },
+  $I.annote("StructuredStyleSelector", {
+    description: "Node type and attribute criteria for a structured style mapping.",
+  })
+);
+interface StructuredStyleSelector {
+  readonly nodeType?: undefined | OfficeContentNodeType;
+  readonly attributes?:
+    | undefined
+    | Record<string, string | number | boolean | StructuredStyleAttributeMatcher>;
+}
+
+const StructuredStyleOutput = S.Class<StructuredStyleOutput>($I`StructuredStyleOutput`)(
+  {
+    tag: S.String,
+    classes: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    attributes: S.optionalKey(S.Record(S.String, S.String)),
+    fresh: S.optionalKey(S.Boolean),
+  },
+  $I.annote("StructuredStyleOutput", {
+    description: "Generated tag, classes, attributes, and freshness behavior for a style mapping.",
+  })
+);
+interface StructuredStyleOutput {
+  readonly tag: string;
+  readonly classes?: undefined | string[];
+  readonly attributes?: undefined | Record<string, string>;
+  readonly fresh?: undefined | boolean;
+}
+
+/**
+ * Runtime schema for a structured style mapping.
+ *
+ * **Example** (Validate a heading mapping)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StructuredStyleMapping } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(StructuredStyleMapping))({ selector: { nodeType: "paragraph" }, output: { tag: "h1" } })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StructuredStyleMapping = S.Class<StructuredStyleMappingShape>($I`StructuredStyleMapping`)(
+  {
+    selector: StructuredStyleSelector,
+    output: StructuredStyleOutput,
+  },
+  $I.annote("StructuredStyleMapping", {
+    description: "Parsed node selector mapped to generated tag, class, attribute, and freshness behavior.",
+  })
+);
+
 /**
  * Reserves destination-specific settings for RTF output.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface RtfGeneratorConfig {
+interface RtfGeneratorConfigShape {
   // Reserved for future RTF-specific options like page size or font embedding
 }
+
+/**
+ * Runtime schema for the currently empty RTF-specific configuration.
+ *
+ * **Example** (Validate default RTF settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RtfGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(RtfGeneratorConfig))({})) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RtfGeneratorConfig = S.Class<RtfGeneratorConfigShape>($I`RtfGeneratorConfig`)(
+  {},
+  $I.annote("RtfGeneratorConfig", {
+    description: "Reserved destination-specific settings for RTF output.",
+  })
+);
 
 /**
  * Controls sheet selection, sheet merging, and delimiters for CSV output.
@@ -1304,7 +2412,7 @@ export interface RtfGeneratorConfig {
  * @category configuration
  * @since 0.0.0
  */
-export interface CsvGeneratorConfig {
+interface CsvGeneratorConfigShape {
   /**
    * Range of sheets to export.
    * Supports formats like "1", "1-3", "1,2", "1,3-5,7".
@@ -1326,16 +2434,62 @@ export interface CsvGeneratorConfig {
 }
 
 /**
+ * Runtime schema for CSV generator settings.
+ *
+ * **Example** (Validate CSV sheet settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CsvGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(CsvGeneratorConfig))({ sheets: "1-3", mergeSheets: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CsvGeneratorConfig = S.Class<CsvGeneratorConfigShape>($I`CsvGeneratorConfig`)(
+  {
+    sheets: S.optionalKey(S.String),
+    mergeSheets: S.optionalKey(S.Boolean),
+    columnDelimiter: S.optionalKey(S.String),
+  },
+  $I.annote("CsvGeneratorConfig", {
+    description: "CSV sheet selection, merging, and delimiter settings.",
+  })
+);
+
+/**
  * Selects a named group of Markdown syntax choices for generation.
  *
  * **Details**
  *
  * The `extended` preset preserves the library's historical output with all supported extensions enabled and GitHub-style admonitions.
  *
+ * **Example** (Guard a GitHub preset)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MarkdownDialectPreset } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(MarkdownDialectPreset)("github")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MarkdownDialectPreset = LiteralKit(["extended", "github", "gitlab", "obsidian", "pandoc", "commonmark"]).pipe(
+  $I.annoteSchema("MarkdownDialectPreset", {
+    description: "Named groups of Markdown syntax choices for generation.",
+  })
+);
+
+/**
+ * Decoded preset member of {@link MarkdownDialectPreset}.
+ *
+ * @see {@link MarkdownDialectPreset} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type MarkdownDialectPreset = "extended" | "github" | "gitlab" | "obsidian" | "pandoc" | "commonmark";
+export type MarkdownDialectPreset = typeof MarkdownDialectPreset.Type;
 
 /*
  * Per-capability syntax variants for `MarkdownDialectConfig`. Each is named for the *syntax* it
@@ -1353,59 +2507,203 @@ export type MarkdownDialectPreset = "extended" | "github" | "gitlab" | "obsidian
  *
  * `blockquote` uses GitHub's `> [!NOTE]`, `fence` uses GitLab's `:::note`, `fence-attribute` uses Pandoc's `::: {.note}`, and `none` emits a plain labeled blockquote.
  *
+ * **Example** (Guard blockquote admonitions)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { AdmonitionSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(AdmonitionSyntax)("blockquote")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AdmonitionSyntax = LiteralKit(["blockquote", "fence", "fence-attribute", "none"]).pipe(
+  $I.annoteSchema("AdmonitionSyntax", { description: "Markdown carriers available for admonitions." })
+);
+/**
+ * Decoded syntax member of {@link AdmonitionSyntax}.
+ *
+ * @see {@link AdmonitionSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type AdmonitionSyntax = "blockquote" | "fence" | "fence-attribute" | "none";
+export type AdmonitionSyntax = typeof AdmonitionSyntax.Type;
 /**
  * Selects `==text==` highlighting or disables highlight syntax.
  *
+ * **Example** (Guard equals highlighting)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HighlightSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(HighlightSyntax)("equals")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HighlightSyntax = LiteralKit(["equals", "none"]).pipe(
+  $I.annoteSchema("HighlightSyntax", { description: "Markdown highlight syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link HighlightSyntax}.
+ *
+ * @see {@link HighlightSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type HighlightSyntax = "equals" | "none";
+export type HighlightSyntax = typeof HighlightSyntax.Type;
 /**
  * Selects GFM `~~text~~` strikethrough or disables strikethrough syntax.
  *
+ * **Example** (Guard tilde strikethrough)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StrikethroughSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(StrikethroughSyntax)("tilde")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StrikethroughSyntax = LiteralKit(["tilde", "none"]).pipe(
+  $I.annoteSchema("StrikethroughSyntax", { description: "Markdown strikethrough syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link StrikethroughSyntax}.
+ *
+ * @see {@link StrikethroughSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type StrikethroughSyntax = "tilde" | "none";
+export type StrikethroughSyntax = typeof StrikethroughSyntax.Type;
 /**
  * Selects colon-based definition lists or disables definition-list syntax.
  *
+ * **Example** (Guard colon definition lists)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DefinitionListSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(DefinitionListSyntax)("colon")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DefinitionListSyntax = LiteralKit(["colon", "none"]).pipe(
+  $I.annoteSchema("DefinitionListSyntax", { description: "Markdown definition-list syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link DefinitionListSyntax}.
+ *
+ * @see {@link DefinitionListSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type DefinitionListSyntax = "colon" | "none";
+export type DefinitionListSyntax = typeof DefinitionListSyntax.Type;
 /**
  * Selects caret-based `[^id]` footnotes or disables footnote syntax.
  *
+ * **Example** (Guard caret footnotes)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FootnoteSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(FootnoteSyntax)("caret")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FootnoteSyntax = LiteralKit(["caret", "none"]).pipe(
+  $I.annoteSchema("FootnoteSyntax", { description: "Markdown footnote syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link FootnoteSyntax}.
+ *
+ * @see {@link FootnoteSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type FootnoteSyntax = "caret" | "none";
+export type FootnoteSyntax = typeof FootnoteSyntax.Type;
 /**
  * Selects Pandoc-style at-citekey citations (`[@` + `citekey]`) or disables citation syntax.
  *
+ * **Example** (Guard at-sign citations)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CitationSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(CitationSyntax)("at")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CitationSyntax = LiteralKit(["at", "none"]).pipe(
+  $I.annoteSchema("CitationSyntax", { description: "Markdown citation syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link CitationSyntax}.
+ *
+ * @see {@link CitationSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type CitationSyntax = "at" | "none";
+export type CitationSyntax = typeof CitationSyntax.Type;
 /**
  * Selects `[[Page]]` wikilinks or disables wikilink syntax.
  *
+ * **Example** (Guard double-bracket wikilinks)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WikilinkSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(WikilinkSyntax)("double-bracket")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WikilinkSyntax = LiteralKit(["double-bracket", "none"]).pipe(
+  $I.annoteSchema("WikilinkSyntax", { description: "Markdown wikilink syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link WikilinkSyntax}.
+ *
+ * @see {@link WikilinkSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type WikilinkSyntax = "double-bracket" | "none";
+export type WikilinkSyntax = typeof WikilinkSyntax.Type;
 /**
  * Selects brace-delimited attribute lists or disables attribute-list syntax.
  *
+ * **Example** (Guard brace attribute lists)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { AttributeListSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(AttributeListSyntax)("brace")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AttributeListSyntax = LiteralKit(["brace", "none"]).pipe(
+  $I.annoteSchema("AttributeListSyntax", { description: "Markdown attribute-list syntax selection." })
+);
+/**
+ * Decoded syntax member of {@link AttributeListSyntax}.
+ *
+ * @see {@link AttributeListSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type AttributeListSyntax = "brace" | "none";
+export type AttributeListSyntax = typeof AttributeListSyntax.Type;
 /**
  * Selects how embedded media nodes are written to Markdown.
  *
@@ -1413,10 +2711,100 @@ export type AttributeListSyntax = "brace" | "none";
  *
  * `html` preserves the historical `<div>` or `<iframe>` output. `directive` emits remark-directive leaves for compatible editors. `link` emits a plain media link. `thumbnail` emits a linked YouTube preview and falls back to a link for other providers.
  *
+ * **Example** (Guard directive embeds)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EmbedSyntax } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(EmbedSyntax)("directive")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EmbedSyntax = LiteralKit(["html", "directive", "link", "thumbnail"]).pipe(
+  $I.annoteSchema("EmbedSyntax", { description: "Markdown representation used for embedded media nodes." })
+);
+/**
+ * Decoded syntax member of {@link EmbedSyntax}.
+ *
+ * @see {@link EmbedSyntax} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type EmbedSyntax = "html" | "directive" | "link" | "thumbnail";
+export type EmbedSyntax = typeof EmbedSyntax.Type;
+
+const MathSyntax = LiteralKit(["dollar", "none"]).pipe(
+  $I.annoteSchema("MathSyntax", { description: "Markdown math syntax selection." })
+);
+
+const BulletListMarker = LiteralKit(["-", "*", "+"]).pipe(
+  $I.annoteSchema("BulletListMarker", { description: "Marker used for unordered Markdown list items." })
+);
+
+const OrderedListMarker = LiteralKit([".", ")"]).pipe(
+  $I.annoteSchema("OrderedListMarker", { description: "Suffix used after ordered Markdown list numbers." })
+);
+
+const EmphasisMarker = LiteralKit(["asterisk", "underscore"]).pipe(
+  $I.annoteSchema("EmphasisMarker", { description: "Delimiter family used for Markdown emphasis." })
+);
+
+const MarkdownTableSyntax = LiteralKit(["native", "html"]).pipe(
+  $I.annoteSchema("MarkdownTableSyntax", { description: "Markdown table representation selection." })
+);
+
+const HorizontalAlignment = LiteralKit(["left", "center", "right"]).pipe(
+  $I.annoteSchema("HorizontalAlignment", { description: "Horizontal layout alignment." })
+);
+
+const DocumentSplitBoundary = LiteralKit(["page", "slide", "sheet", "heading", "paragraph"]).pipe(
+  $I.annoteSchema("DocumentSplitBoundary", { description: "Source structure used as a chunk boundary." })
+);
+
+const TableSplitStrategy = LiteralKit(["row", "flatten"]).pipe(
+  $I.annoteSchema("TableSplitStrategy", { description: "Strategy used to split table content across chunks." })
+);
+
+const ListType = LiteralKit(["ordered", "unordered"]).pipe(
+  $I.annoteSchema("ListType", { description: "Ordered or unordered list classification." })
+);
+
+const EmbedType = LiteralKit(["youtube", "iframe"]).pipe(
+  $I.annoteSchema("EmbedType", { description: "Recognized embedded-media provider family." })
+);
+
+const AdmonitionType = LiteralKit(["note", "tip", "important", "warning", "caution"]).pipe(
+  $I.annoteSchema("AdmonitionType", { description: "Semantic admonition category." })
+);
+
+const AdmonitionSourceSyntax = LiteralKit(["github", "gitlab"]).pipe(
+  $I.annoteSchema("AdmonitionSourceSyntax", { description: "Markdown syntax family that produced an admonition." })
+);
+
+const LinkType = LiteralKit(["internal", "external"]).pipe(
+  $I.annoteSchema("LinkType", { description: "Internal or external text-link destination." })
+);
+
+const NoteType = LiteralKit(["footnote", "endnote"]).pipe(
+  $I.annoteSchema("NoteType", { description: "Footnote or endnote classification." })
+);
+
+const BreakType = LiteralKit(["column", "page", "lastRenderedPage", "textWrapping", "carriageReturn", "thematic"]).pipe(
+  $I.annoteSchema("BreakType", { description: "Document break classification." })
+);
+
+const BreakClear = LiteralKit(["all", "left", "none", "right"]).pipe(
+  $I.annoteSchema("BreakClear", { description: "Float-clearing behavior attached to a document break." })
+);
+
+const MathDisplayMode = LiteralKit(["inline", "block"]).pipe(
+  $I.annoteSchema("MathDisplayMode", { description: "Inline or block mathematical display mode." })
+);
+
+const OfficeAttachmentType = LiteralKit(["image", "chart"]).pipe(
+  $I.annoteSchema("OfficeAttachmentType", { description: "Extracted attachment content category." })
+);
 
 /**
  * Selects Markdown syntax for features whose representation differs across dialects.
@@ -1428,7 +2816,7 @@ export type EmbedSyntax = "html" | "directive" | "link" | "thumbnail";
  * @category configuration
  * @since 0.0.0
  */
-export interface MarkdownDialectConfig {
+interface MarkdownDialectConfigShape {
   /** Base preset any omitted field inherits from. Defaults to 'extended'. */
   readonly extends?: undefined | MarkdownDialectPreset;
   /**
@@ -1504,6 +2892,43 @@ export interface MarkdownDialectConfig {
 }
 
 /**
+ * Runtime schema for per-capability Markdown dialect choices.
+ *
+ * **Example** (Validate a GitHub-derived dialect)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MarkdownDialectConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(MarkdownDialectConfig))({ extends: "github", footnotes: "caret" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MarkdownDialectConfig = S.Class<MarkdownDialectConfigShape>($I`MarkdownDialectConfig`)(
+  {
+    extends: MarkdownDialectPreset.pipe(S.optionalKey),
+    admonitions: AdmonitionSyntax.pipe(S.optionalKey),
+    definitionLists: DefinitionListSyntax.pipe(S.optionalKey),
+    footnotes: FootnoteSyntax.pipe(S.optionalKey),
+    citations: CitationSyntax.pipe(S.optionalKey),
+    wikilinks: WikilinkSyntax.pipe(S.optionalKey),
+    math: MathSyntax.pipe(S.optionalKey),
+    attributeLists: AttributeListSyntax.pipe(S.optionalKey),
+    strikethrough: StrikethroughSyntax.pipe(S.optionalKey),
+    highlight: HighlightSyntax.pipe(S.optionalKey),
+    bulletListMarker: BulletListMarker.pipe(S.optionalKey),
+    orderedListMarker: OrderedListMarker.pipe(S.optionalKey),
+    emphasisMarker: EmphasisMarker.pipe(S.optionalKey),
+    tables: MarkdownTableSyntax.pipe(S.optionalKey),
+    embeds: EmbedSyntax.pipe(S.optionalKey),
+  },
+  $I.annote("MarkdownDialectConfig", {
+    description: "Markdown syntax choices whose representation differs across dialects.",
+  })
+);
+
+/**
  * Selects which unsupported Markdown features may fall back to raw HTML.
  *
  * **Details**
@@ -1513,7 +2938,7 @@ export interface MarkdownDialectConfig {
  * @category configuration
  * @since 0.0.0
  */
-export interface FallbackToHtmlConfig {
+interface FallbackToHtmlConfigShape {
   /** Underline/subscript/superscript via `<u>`/`<sub>`/`<sup>`. */
   readonly textFormatting?: undefined | boolean;
   /** Heading/paragraph text alignment via `<div style="text-align:...">`. */
@@ -1542,12 +2967,41 @@ export interface FallbackToHtmlConfig {
 }
 
 /**
+ * Runtime schema for unsupported-Markdown HTML fallbacks.
+ *
+ * **Example** (Validate granular fallbacks)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FallbackToHtmlConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(FallbackToHtmlConfig))({ tables: true, inlineFormatting: false })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FallbackToHtmlConfig = S.Class<FallbackToHtmlConfigShape>($I`FallbackToHtmlConfig`)(
+  {
+    textFormatting: S.optionalKey(S.Boolean),
+    alignment: S.optionalKey(S.Boolean),
+    anchors: S.optionalKey(S.Boolean),
+    tables: S.optionalKey(S.Boolean),
+    cellLineBreaks: S.optionalKey(S.Boolean),
+    itemLineBreaks: S.optionalKey(S.Boolean),
+    inlineFormatting: S.optionalKey(S.Boolean),
+  },
+  $I.annote("FallbackToHtmlConfig", {
+    description: "Unsupported Markdown features allowed to fall back to raw HTML.",
+  })
+);
+
+/**
  * Controls Markdown dialect selection and raw-HTML fallbacks.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface MdGeneratorConfig {
+interface MdGeneratorConfigShape {
   /**
    * Whether to fallback to HTML tags for features not supported by standard Markdown.
    * Pass an object instead of a boolean for granular control over individual parts (text
@@ -1585,12 +3039,36 @@ export interface MdGeneratorConfig {
 }
 
 /**
+ * Runtime schema for Markdown generator settings.
+ *
+ * **Example** (Validate Markdown output settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MdGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(MdGeneratorConfig))({ fallbackToHtml: false, dialect: "commonmark" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MdGeneratorConfig = S.Class<MdGeneratorConfigShape>($I`MdGeneratorConfig`)(
+  {
+    fallbackToHtml: S.optionalKey(S.Union([S.Boolean, FallbackToHtmlConfig])),
+    dialect: S.optionalKey(S.Union([MarkdownDialectPreset, MarkdownDialectConfig])),
+  },
+  $I.annote("MdGeneratorConfig", {
+    description: "Markdown dialect selection and raw-HTML fallback settings.",
+  })
+);
+
+/**
  * Controls line endings, layout preservation, and note rendering in plain-text output.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface TextGeneratorConfig {
+interface TextGeneratorConfigShape {
   /**
    * The delimiter used for every new line.
    * Defaults to '\n'.
@@ -1620,6 +3098,31 @@ export interface TextGeneratorConfig {
   readonly renderNotes?: undefined | boolean;
 }
 
+/**
+ * Runtime schema for plain-text generator settings.
+ *
+ * **Example** (Validate text layout settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextGeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(TextGeneratorConfig))({ newlineDelimiter: "\r\n", preserveLayout: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextGeneratorConfig = S.Class<TextGeneratorConfigShape>($I`TextGeneratorConfig`)(
+  {
+    newlineDelimiter: S.optionalKey(S.String),
+    preserveLayout: S.optionalKey(S.Boolean),
+    renderNotes: S.optionalKey(S.Boolean),
+  },
+  $I.annote("TextGeneratorConfig", {
+    description: "Plain-text line ending, layout preservation, and note rendering settings.",
+  })
+);
+
 // ─── Chunking Types ───────────────────────────────────────────────────────────
 
 /**
@@ -1629,10 +3132,31 @@ export interface TextGeneratorConfig {
  *
  * `fixed-size` uses size and overlap limits. `document-structure` follows source boundaries. `semantic` uses embedding similarity to detect topic changes.
  *
+ * **Example** (Guard fixed-size chunking)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ChunkingStrategy } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(ChunkingStrategy)("fixed-size")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChunkingStrategy = LiteralKit(["fixed-size", "document-structure", "semantic"]).pipe(
+  $I.annoteSchema("ChunkingStrategy", {
+    description: "Strategies for dividing parsed content into retrieval chunks.",
+  })
+);
+
+/**
+ * Decoded strategy member of {@link ChunkingStrategy}.
+ *
+ * @see {@link ChunkingStrategy} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type ChunkingStrategy = "fixed-size" | "document-structure" | "semantic";
+export type ChunkingStrategy = typeof ChunkingStrategy.Type;
 
 /**
  * Defines limits and metadata behavior shared by every chunking strategy.
@@ -1640,7 +3164,7 @@ export type ChunkingStrategy = "fixed-size" | "document-structure" | "semantic";
  * @category configuration
  * @since 0.0.0
  */
-export interface BaseChunkingConfig {
+interface BaseChunkingConfigShape {
   /**
    * The strategy used for chunking.
    * Default is 'document-structure'.
@@ -1702,12 +3226,41 @@ export interface BaseChunkingConfig {
 }
 
 /**
+ * Runtime schema for settings shared by every chunking strategy.
+ *
+ * **Example** (Validate shared chunk settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BaseChunkingConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(BaseChunkingConfig))({ stripWhitespace: true, addStartIndex: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BaseChunkingConfig = S.Class<BaseChunkingConfigShape>($I`BaseChunkingConfig`)(
+  {
+    strategy: ChunkingStrategy.pipe(S.optionalKey),
+    lengthFunction: S.optionalKey(runtimeFunction<(text: string) => number>()),
+    stripWhitespace: S.optionalKey(S.Boolean),
+    includeMetadata: S.optionalKey(S.Boolean),
+    addStartIndex: S.optionalKey(S.Boolean),
+    sentenceBoundaryRegex: S.optionalKey(S.Union([S.String, S.RegExp])),
+    abbreviations: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("BaseChunkingConfig", {
+    description: "Limits and metadata behavior shared by every chunking strategy.",
+  })
+);
+
+/**
  * Splits text by size and overlap using an ordered separator list.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface FixedSizeChunkingConfig extends BaseChunkingConfig {
+interface FixedSizeChunkingConfigShape extends BaseChunkingConfig {
   readonly strategy: "fixed-size";
 
   /**
@@ -1734,12 +3287,39 @@ export interface FixedSizeChunkingConfig extends BaseChunkingConfig {
 }
 
 /**
+ * Runtime schema for fixed-size chunking settings.
+ *
+ * **Example** (Validate fixed-size chunks)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FixedSizeChunkingConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(FixedSizeChunkingConfig))({ strategy: "fixed-size", chunkSize: 1_000 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FixedSizeChunkingConfig = S.Class<FixedSizeChunkingConfigShape>($I`FixedSizeChunkingConfig`)(
+  {
+    ...BaseChunkingConfig.fields,
+    strategy: S.Literal("fixed-size"),
+    chunkSize: S.optionalKey(PositiveInt),
+    chunkOverlap: S.optionalKey(NonNegativeInt),
+    separators: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("FixedSizeChunkingConfig", {
+    description: "Text chunking by size and overlap using an ordered separator list.",
+  })
+);
+
+/**
  * Splits content at source-defined boundaries such as headings, pages, slides, and sheets.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface DocumentStructureChunkingConfig extends BaseChunkingConfig {
+interface DocumentStructureChunkingConfigShape extends BaseChunkingConfig {
   readonly strategy: "document-structure";
 
   /**
@@ -1772,12 +3352,41 @@ export interface DocumentStructureChunkingConfig extends BaseChunkingConfig {
 }
 
 /**
+ * Runtime schema for document-structure chunking settings.
+ *
+ * **Example** (Validate heading chunks)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DocumentStructureChunkingConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(DocumentStructureChunkingConfig))({ strategy: "document-structure", splitBy: "heading" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DocumentStructureChunkingConfig = S.Class<DocumentStructureChunkingConfigShape>(
+  $I`DocumentStructureChunkingConfig`
+)(
+  {
+    ...BaseChunkingConfig.fields,
+    strategy: S.Literal("document-structure"),
+    splitBy: DocumentSplitBoundary.pipe(S.optionalKey),
+    maxChunkSize: S.optionalKey(PositiveInt),
+    tableSplitStrategy: TableSplitStrategy.pipe(S.optionalKey),
+  },
+  $I.annote("DocumentStructureChunkingConfig", {
+    description: "Content chunking at source-defined document boundaries.",
+  })
+);
+
+/**
  * Splits content where embedding similarity indicates a topic change.
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface SemanticChunkingConfig extends BaseChunkingConfig {
+interface SemanticChunkingConfigShape extends BaseChunkingConfig {
   readonly strategy: "semantic";
 
   /**
@@ -1829,12 +3438,122 @@ export interface SemanticChunkingConfig extends BaseChunkingConfig {
 }
 
 /**
+ * Runtime schema for semantic chunking settings.
+ *
+ * **Example** (Validate semantic chunks)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SemanticChunkingConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * const embeddingFunction = async (text: string) => [text.length]
+ * console.log(S.is(S.toEncoded(SemanticChunkingConfig))({ strategy: "semantic", embeddingFunction })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SemanticChunkingConfig = S.Class<SemanticChunkingConfigShape>($I`SemanticChunkingConfig`)(
+  {
+    ...BaseChunkingConfig.fields,
+    strategy: S.Literal("semantic"),
+    embeddingFunction: runtimeFunction<(text: string) => Promise<number[]>>(),
+    similarityThreshold: S.optionalKey(SimilarityThreshold),
+    maxChunkSize: S.optionalKey(PositiveInt),
+    bufferSize: S.optionalKey(NonNegativeInt),
+    embeddingBatchSize: S.optionalKey(PositiveInt),
+    timeout: S.optionalKey(NonNegativeInt),
+  },
+  $I.annote("SemanticChunkingConfig", {
+    description: "Content chunking where embedding similarity indicates a topic change.",
+  })
+);
+
+/**
  * Selects the settings required by each supported chunking strategy.
  *
  * @category configuration
  * @since 0.0.0
  */
 export type ChunkingConfig = FixedSizeChunkingConfig | DocumentStructureChunkingConfig | SemanticChunkingConfig;
+
+/**
+ * Runtime schema for the chunking-strategy union.
+ *
+ * **Example** (Guard fixed-size settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ChunkingConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(ChunkingConfig))({ strategy: "fixed-size", chunkSize: 500 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChunkingConfig = S.Union([
+  FixedSizeChunkingConfig,
+  DocumentStructureChunkingConfig,
+  SemanticChunkingConfig,
+]).pipe(
+  $I.annoteSchema("ChunkingConfig", {
+    description: "Settings required by each supported chunking strategy.",
+  })
+);
+
+/**
+ * Runtime schema for the complete generator configuration surface.
+ *
+ * **Example** (Validate an HTML generator configuration)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GeneratorConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(GeneratorConfig))({ includeImages: true, htmlConfig: { standalone: false } })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GeneratorConfig = S.Class<GeneratorConfig>($I`GeneratorConfig`)(
+  {
+    ...CommonGeneratorConfig.fields,
+    htmlConfig: S.optionalKey(HtmlGeneratorConfig),
+    mdConfig: S.optionalKey(MdGeneratorConfig),
+    pdfConfig: S.optionalKey(PdfGeneratorConfig),
+    csvConfig: S.optionalKey(CsvGeneratorConfig),
+    textConfig: S.optionalKey(TextGeneratorConfig),
+    rtfConfig: S.optionalKey(RtfGeneratorConfig),
+    chunksConfig: S.optionalKey(ChunkingConfig),
+  },
+  $I.annote("GeneratorConfig", {
+    description: "Shared and destination-specific document generator settings.",
+  })
+);
+
+/**
+ * Runtime schema for one-step parse-and-generate settings.
+ *
+ * **Example** (Validate converter settings)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeConverterConfig } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(OfficeConverterConfig))({ parseConfig: { fileType: "docx" }, generatorConfig: {} })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeConverterConfig = S.Class<OfficeConverterConfig>($I`OfficeConverterConfig`)(
+  {
+    parseConfig: S.optionalKey(OfficeParserConfig),
+    generatorConfig: S.optionalKey(GeneratorConfig),
+    onWarning: S.optionalKey(runtimeFunction<(issue: OfficeIssue) => void>()),
+  },
+  $I.annote("OfficeConverterConfig", {
+    description: "Source parsing and destination generation settings for one-step conversion.",
+  })
+);
 
 /**
  * Carries chunk text and its source location for retrieval pipelines.
@@ -1848,7 +3567,7 @@ export type ChunkingConfig = FixedSizeChunkingConfig | DocumentStructureChunking
  * @category models
  * @since 0.0.0
  */
-export interface OfficeChunk {
+interface OfficeChunkShape {
   /** The text content of this chunk. This is what gets embedded. */
   readonly text: string;
 
@@ -1871,7 +3590,7 @@ export interface OfficeChunk {
     /** True if this chunk is part of a table split. */
     readonly isTableChunk?: undefined | boolean;
     /** Extensible for user-defined metadata. */
-    readonly [key: string]: any;
+    readonly [key: string]: unknown;
   };
 
   /** The start character index of this chunk in the full document text. Only set when `addStartIndex` is true. */
@@ -1880,33 +3599,111 @@ export interface OfficeChunk {
   readonly endIndex?: undefined | number;
 }
 
+interface OfficeChunkMetadata {
+  readonly sourceType: SupportedFileType;
+  readonly pageNumber?: undefined | number;
+  readonly slideNumber?: undefined | number;
+  readonly sheetName?: undefined | string;
+  readonly closestHeading?: undefined | string;
+  readonly isTableChunk?: undefined | boolean;
+  readonly [key: string]: unknown;
+}
+
+const OfficeChunkMetadata = S.Class<OfficeChunkMetadata>($I`OfficeChunkMetadata`)(
+  {
+    sourceType: S.suspend((): typeof SupportedFileType => SupportedFileType),
+    pageNumber: S.optionalKey(PositiveInt),
+    slideNumber: S.optionalKey(PositiveInt),
+    sheetName: S.optionalKey(S.String),
+    closestHeading: S.optionalKey(S.String),
+    isTableChunk: S.optionalKey(S.Boolean),
+  },
+  $I.annote("OfficeChunkMetadata", {
+    description: "Source location and retrieval metadata attached to an Office chunk.",
+  })
+);
+
+/**
+ * Runtime schema for one retrieval chunk and its source location.
+ *
+ * **Example** (Validate a page chunk)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeChunk } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(OfficeChunk))({ text: "Hello", metadata: { sourceType: "pdf", pageNumber: 1 } })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeChunk = S.Class<OfficeChunkShape>($I`OfficeChunk`)(
+  {
+    text: S.String,
+    metadata: OfficeChunkMetadata,
+    startIndex: S.optionalKey(NonNegativeInt),
+    endIndex: S.optionalKey(NonNegativeInt),
+  },
+  $I.annote("OfficeChunk", {
+    description: "Chunk text and source location for retrieval pipelines.",
+  })
+);
+
 // ─── End Chunking Types ────────────────────────────────────────────────────────
 
 /**
  * Lists source formats accepted by the parser.
  *
+ * **Example** (Guard a DOCX source)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SupportedFileType } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(SupportedFileType)("docx")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SupportedFileType = LiteralKit([
+  "docx",
+  "pptx",
+  "xlsx",
+  "odt",
+  "odp",
+  "ods",
+  "pdf",
+  "rtf",
+  "md",
+  "html",
+  "csv",
+  "epub",
+]).pipe(
+  $I.annoteSchema("SupportedFileType", {
+    description: "Source formats accepted by the OfficeParser boundary.",
+  })
+);
+
+/**
+ * Decoded source-format member of {@link SupportedFileType}.
+ *
+ * @see {@link SupportedFileType} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type SupportedFileType =
-  | "docx"
-  | "pptx"
-  | "xlsx"
-  | "odt"
-  | "odp"
-  | "ods"
-  | "pdf"
-  | "rtf"
-  | "md"
-  | "html"
-  | "csv"
-  | "epub";
+export type SupportedFileType = typeof SupportedFileType.Type;
 
 /**
  * A structural stand-in for the web `Blob`/`File` so `parseOffice`/`convert` accept them in the
  * browser without pulling the DOM lib into this package's types. Any object with an
  * `arrayBuffer()` method qualifies. When `name` is present (as on a `File`) it is used only for
  * extension-based type detection, never as a filesystem path.
+ *
+ * **Gotchas**
+ *
+ * This intentionally remains a behavioral interface: its `arrayBuffer()` method is a
+ * capability protocol implemented by platform `Blob` and `File` objects, not inert data that
+ * can be reconstructed by a schema class.
  *
  * @category interop
  * @since 0.0.0
@@ -1920,69 +3717,134 @@ export interface BlobLike {
 /**
  * Lists discriminator values used by document content nodes.
  *
+ * **Example** (Guard a paragraph node)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeContentNodeType } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(OfficeContentNodeType)("paragraph")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeContentNodeType = LiteralKit([
+  "paragraph",
+  "heading",
+  "table",
+  "list",
+  "text",
+  "image",
+  "chart",
+  "drawing",
+  "slide",
+  "note",
+  "sheet",
+  "row",
+  "cell",
+  "page",
+  "break",
+  "code",
+  "comment",
+  "header",
+  "footer",
+  "slideMaster",
+  "embed",
+  "admonition",
+  "definitionList",
+  "definitionTerm",
+  "definitionDescription",
+]).pipe(
+  $I.annoteSchema("OfficeContentNodeType", {
+    description: "Discriminator values used by document content nodes.",
+  })
+);
+
+/**
+ * Decoded content-node discriminator member of {@link OfficeContentNodeType}.
+ *
+ * @see {@link OfficeContentNodeType} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type OfficeContentNodeType =
-  | "paragraph"
-  | "heading"
-  | "table"
-  | "list"
-  | "text"
-  | "image"
-  | "chart"
-  | "drawing"
-  | "slide"
-  | "note"
-  | "sheet"
-  | "row"
-  | "cell"
-  | "page"
-  | "break"
-  | "code"
-  | "comment"
-  | "header"
-  | "footer"
-  | "slideMaster"
-  | "embed"
-  | "admonition"
-  | "definitionList"
-  | "definitionTerm"
-  | "definitionDescription";
+export type OfficeContentNodeType = typeof OfficeContentNodeType.Type;
 
 /**
  * Lists media types used for extracted attachments.
  *
+ * **Example** (Guard a PNG attachment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeMimeType } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(OfficeMimeType)("image/png")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeMimeType = LiteralKit([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/bmp",
+  "image/tiff",
+  "image/svg+xml",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.oasis.opendocument.chart",
+  "application/vnd.oasis.opendocument.spreadsheet",
+  "application/vnd.oasis.opendocument.text",
+  "application/vnd.oasis.opendocument.presentation",
+  "application/rtf",
+  "text/csv",
+  "text/markdown",
+  "text/html",
+]).pipe(
+  $I.annoteSchema("OfficeMimeType", {
+    description: "Media types used for extracted OfficeParser attachments.",
+  })
+);
+
+/**
+ * Decoded attachment media type from {@link OfficeMimeType}.
+ *
+ * @see {@link OfficeMimeType} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type OfficeMimeType =
-  | "image/jpeg"
-  | "image/png"
-  | "image/gif"
-  | "image/bmp"
-  | "image/tiff"
-  | "image/svg+xml"
-  | "application/pdf"
-  | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  | "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-  | "application/vnd.oasis.opendocument.chart"
-  | "application/vnd.oasis.opendocument.spreadsheet"
-  | "application/vnd.oasis.opendocument.text"
-  | "application/vnd.oasis.opendocument.presentation"
-  | "application/rtf"
-  | "text/csv"
-  | "text/markdown"
-  | "text/html";
+export type OfficeMimeType = typeof OfficeMimeType.Type;
 
 /**
  * Constrains alignment values shared by text, paragraph, and spreadsheet metadata.
  *
+ * **Example** (Guard centered text)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextAlignment } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(TextAlignment)("center")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextAlignment = LiteralKit(["left", "center", "right", "justify"]).pipe(
+  $I.annoteSchema("TextAlignment", {
+    description: "Alignment values shared by text, paragraph, and spreadsheet metadata.",
+  })
+);
+
+/**
+ * Decoded alignment member of {@link TextAlignment}.
+ *
+ * @see {@link TextAlignment} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type TextAlignment = "left" | "center" | "right" | "justify";
+export type TextAlignment = typeof TextAlignment.Type;
 
 /**
  * Captures formatting that was explicitly applied to a text run.
@@ -2004,7 +3866,7 @@ export type TextAlignment = "left" | "center" | "right" | "justify";
  * @category models
  * @since 0.0.0
  */
-export interface TextFormatting {
+interface TextFormattingShape {
   /**
    * Whether the text is bold.
    * Corresponds to `<w:b/>` in OOXML, `\b` in RTF.
@@ -2075,6 +3937,37 @@ export interface TextFormatting {
 }
 
 /**
+ * Runtime schema for explicitly applied text formatting.
+ *
+ * **Example** (Guard bold text)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextFormatting } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(TextFormatting))({ bold: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextFormatting = S.Class<TextFormattingShape>($I`TextFormatting`)(
+  {
+    bold: S.optionalKey(S.Boolean),
+    italic: S.optionalKey(S.Boolean),
+    underline: S.optionalKey(S.Boolean),
+    strikethrough: S.optionalKey(S.Boolean),
+    color: S.optionalKey(S.String),
+    backgroundColor: S.optionalKey(S.String),
+    size: S.optionalKey(S.String),
+    font: S.optionalKey(S.String),
+    subscript: S.optionalKey(S.Boolean),
+    superscript: S.optionalKey(S.Boolean),
+    alignment: S.optionalKey(TextAlignment),
+  },
+  $I.annote("TextFormatting", { description: "Formatting explicitly applied to a text run." })
+);
+
+/**
  * Locates a content node within a presentation slide and its related note or anchors.
  *
  * **Example** (Locate a slide note)
@@ -2093,7 +3986,7 @@ export interface TextFormatting {
  * @category models
  * @since 0.0.0
  */
-export interface SlideMetadata {
+interface SlideMetadataShape {
   /** The slide number (1-based). */
   readonly slideNumber: number;
 
@@ -2109,12 +4002,36 @@ export interface SlideMetadata {
 }
 
 /**
+ * Runtime schema for slide metadata.
+ *
+ * **Example** (Guard a slide)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SlideMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(SlideMetadata))({ slideNumber: 1 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SlideMetadata = S.Class<SlideMetadataShape>($I`SlideMetadata`)(
+  {
+    slideNumber: PositiveInt,
+    noteId: S.optionalKey(S.String),
+    style: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("SlideMetadata", { description: "Presentation slide location, style, notes, and anchors." })
+);
+
+/**
  * Locates a content node within a workbook sheet and preserves its style and anchors.
  *
  * @category models
  * @since 0.0.0
  */
-export interface SheetMetadata {
+interface SheetMetadataShape {
   /** The name of the sheet. */
   readonly sheetName: string;
   /** The style of the sheet. */
@@ -2124,12 +4041,35 @@ export interface SheetMetadata {
 }
 
 /**
+ * Runtime schema for worksheet metadata.
+ *
+ * **Example** (Guard a sheet)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SheetMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(SheetMetadata))({ sheetName: "Q4" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SheetMetadata = S.Class<SheetMetadataShape>($I`SheetMetadata`)(
+  {
+    sheetName: S.String,
+    style: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("SheetMetadata", { description: "Workbook sheet location, style, and anchors." })
+);
+
+/**
  * Records paragraph indentation measurements, typically in OOXML twips.
  *
  * @category models
  * @since 0.0.0
  */
-export interface IndentationMetadata {
+interface IndentationMetadataShape {
   /** Left indentation. */
   readonly left?: undefined | number;
   /** Right indentation. */
@@ -2141,12 +4081,36 @@ export interface IndentationMetadata {
 }
 
 /**
+ * Runtime schema for paragraph indentation.
+ *
+ * **Example** (Guard left indentation)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { IndentationMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(IndentationMetadata))({ left: 720 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const IndentationMetadata = S.Class<IndentationMetadataShape>($I`IndentationMetadata`)(
+  {
+    left: S.optionalKey(S.Finite),
+    right: S.optionalKey(S.Finite),
+    firstLine: S.optionalKey(S.Finite),
+    hanging: S.optionalKey(S.Finite),
+  },
+  $I.annote("IndentationMetadata", { description: "Paragraph indentation measurements, typically in OOXML twips." })
+);
+
+/**
  * Records a heading's level, alignment, style, indentation, and anchors.
  *
  * @category models
  * @since 0.0.0
  */
-export interface HeadingMetadata {
+interface HeadingMetadataShape {
   /** The heading level (e.g., 1 for H1). */
   readonly level: number;
   /** The alignment of the heading. */
@@ -2160,12 +4124,37 @@ export interface HeadingMetadata {
 }
 
 /**
+ * Runtime schema for heading metadata.
+ *
+ * **Example** (Guard an H1)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeadingMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(HeadingMetadata))({ level: 1 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HeadingMetadata = S.Class<HeadingMetadataShape>($I`HeadingMetadata`)(
+  {
+    level: PositiveInt,
+    alignment: S.optionalKey(TextAlignment),
+    style: S.optionalKey(S.String),
+    paragraphIndentation: S.optionalKey(IndentationMetadata),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("HeadingMetadata", { description: "Heading level, alignment, style, indentation, and anchors." })
+);
+
+/**
  * Records a paragraph's alignment, style, indentation, and anchors.
  *
  * @category models
  * @since 0.0.0
  */
-export interface ParagraphMetadata {
+interface ParagraphMetadataShape {
   /** The alignment of the paragraph. */
   readonly alignment?: undefined | TextAlignment;
   /** The style of the paragraph. */
@@ -2175,6 +4164,30 @@ export interface ParagraphMetadata {
   /** Unique anchor IDs for internal linking. */
   readonly anchorIds?: undefined | string[];
 }
+
+/**
+ * Runtime schema for paragraph metadata.
+ *
+ * **Example** (Guard alignment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ParagraphMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(ParagraphMetadata))({ alignment: "left" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ParagraphMetadata = S.Class<ParagraphMetadataShape>($I`ParagraphMetadata`)(
+  {
+    alignment: S.optionalKey(TextAlignment),
+    style: S.optionalKey(S.String),
+    paragraphIndentation: S.optionalKey(IndentationMetadata),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("ParagraphMetadata", { description: "Paragraph alignment, style, indentation, and anchors." })
+);
 
 /**
  * Identifies a list item and records its nesting, alignment, task state, and source style.
@@ -2199,7 +4212,7 @@ export interface ParagraphMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface ListMetadata {
+interface ListMetadataShape {
   /**
    * The type of list: 'ordered' (numbered) or 'unordered' (bulleted).
    */
@@ -2244,6 +4257,37 @@ export interface ListMetadata {
 }
 
 /**
+ * Runtime schema for list-item metadata.
+ *
+ * **Example** (Guard a list item)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ListMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * const item = { listType: "ordered", indentation: 0, alignment: "left", listId: "1", itemIndex: 0 }
+ * console.log(S.is(S.toEncoded(ListMetadata))(item)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ListMetadata = S.Class<ListMetadataShape>($I`ListMetadata`)(
+  {
+    listType: ListType,
+    indentation: NonNegativeInt,
+    paragraphIndentation: S.optionalKey(IndentationMetadata),
+    alignment: TextAlignment,
+    listId: S.String,
+    itemIndex: NonNegativeInt,
+    style: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    isTask: S.optionalKey(S.Boolean),
+    checked: S.optionalKey(S.Boolean),
+  },
+  $I.annote("ListMetadata", { description: "List identity, nesting, alignment, task state, and source style." })
+);
+
+/**
  * Locates a cell within a parsed table and records spans, alignment, style, and color.
  *
  * **Example** (Locate a merged header cell)
@@ -2265,7 +4309,7 @@ export interface ListMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface CellMetadata {
+interface CellMetadataShape {
   /**
    * The row index of the cell (0-based).
    */
@@ -2297,6 +4341,34 @@ export interface CellMetadata {
 }
 
 /**
+ * Runtime schema for table-cell metadata.
+ *
+ * **Example** (Guard a cell)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CellMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(CellMetadata))({ row: 0, col: 1 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CellMetadata = S.Class<CellMetadataShape>($I`CellMetadata`)(
+  {
+    row: NonNegativeInt,
+    col: NonNegativeInt,
+    align: HorizontalAlignment.pipe(S.optionalKey),
+    rowSpan: S.optionalKey(PositiveInt),
+    colSpan: S.optionalKey(PositiveInt),
+    style: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    backgroundColor: S.optionalKey(S.String),
+  },
+  $I.annote("CellMetadata", { description: "Table-cell coordinates, spans, alignment, style, and color." })
+);
+
+/**
  * Preserves table anchors and page alignment.
  *
  * **Example** (Center a table on the page)
@@ -2315,7 +4387,7 @@ export interface CellMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface TableMetadata {
+interface TableMetadataShape {
   /** Unique anchor IDs for internal linking. */
   readonly anchorIds?: undefined | string[];
   /**
@@ -2323,6 +4395,28 @@ export interface TableMetadata {
    */
   readonly align?: undefined | "left" | "center" | "right";
 }
+
+/**
+ * Runtime schema for table metadata.
+ *
+ * **Example** (Guard a centered table)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(TableMetadata))({ align: "center" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TableMetadata = S.Class<TableMetadataShape>($I`TableMetadata`)(
+  {
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    align: HorizontalAlignment.pipe(S.optionalKey),
+  },
+  $I.annote("TableMetadata", { description: "Table anchors and page alignment." })
+);
 
 /**
  * Links a chart node to the attachment that stores its extracted chart data.
@@ -2340,7 +4434,7 @@ export interface TableMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface ChartMetadata {
+interface ChartMetadataShape {
   /**
    * The name of the attachment that contains the actual chart data.
    * Use this to look up the full chart data from the attachments array.
@@ -2349,6 +4443,28 @@ export interface ChartMetadata {
   /** Unique anchor IDs for internal linking. */
   readonly anchorIds?: undefined | string[];
 }
+
+/**
+ * Runtime schema for chart metadata.
+ *
+ * **Example** (Guard a chart link)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ChartMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(ChartMetadata))({ attachmentName: "chart.xml" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChartMetadata = S.Class<ChartMetadataShape>($I`ChartMetadata`)(
+  {
+    attachmentName: S.String,
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+  },
+  $I.annote("ChartMetadata", { description: "Chart node link to its extracted attachment." })
+);
 
 /**
  * Links an image node to its attachment and preserves display metadata.
@@ -2371,7 +4487,7 @@ export interface ChartMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface ImageMetadata {
+interface ImageMetadataShape {
   /**
    * The name of the attachment that contains the actual image data.
    * Use this to look up the full image data from the attachments array.
@@ -2404,12 +4520,39 @@ export interface ImageMetadata {
 }
 
 /**
+ * Runtime schema for image metadata.
+ *
+ * **Example** (Guard an image link)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ImageMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(ImageMetadata))({ attachmentName: "logo.png" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ImageMetadata = S.Class<ImageMetadataShape>($I`ImageMetadata`)(
+  {
+    attachmentName: S.String,
+    altText: S.optionalKey(S.String),
+    url: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    width: S.optionalKey(S.String),
+    align: HorizontalAlignment.pipe(S.optionalKey),
+    title: S.optionalKey(S.String),
+  },
+  $I.annote("ImageMetadata", { description: "Image attachment link and display metadata." })
+);
+
+/**
  * Preserves the source, dimensions, alignment, and label of embedded external media.
  *
  * @category models
  * @since 0.0.0
  */
-export interface EmbedMetadata {
+interface EmbedMetadataShape {
   /**
    * The kind of embed. 'youtube' is recognized from a `data-youtube-video` wrapper or a YouTube
    * iframe; 'iframe' is a generic preserved iframe (opt-in via `HtmlParserConfig.preserveIframes`).
@@ -2431,18 +4574,68 @@ export interface EmbedMetadata {
 }
 
 /**
+ * Runtime schema for embedded-media metadata.
+ *
+ * **Example** (Guard a YouTube embed)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EmbedMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(EmbedMetadata))({ embedType: "youtube", videoId: "abc" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EmbedMetadata = S.Class<EmbedMetadataShape>($I`EmbedMetadata`)(
+  {
+    embedType: EmbedType,
+    videoId: S.optionalKey(S.String),
+    url: S.optionalKey(S.String),
+    width: S.optionalKey(S.String),
+    height: S.optionalKey(S.String),
+    align: HorizontalAlignment.pipe(S.optionalKey),
+    label: S.optionalKey(S.String),
+  },
+  $I.annote("EmbedMetadata", { description: "Source, dimensions, alignment, and label of embedded media." })
+);
+
+/**
  * Preserves an admonition's kind, title, and parsed Markdown syntax.
  *
  * @category models
  * @since 0.0.0
  */
-export interface AdmonitionMetadata {
+interface AdmonitionMetadataShape {
   readonly admonitionType: "note" | "tip" | "important" | "warning" | "caution";
   /** Optional custom title; falls back to the type label. */
   readonly title?: undefined | string;
   /** Which concrete input syntax produced this node. Always populated by the parser. */
   readonly sourceSyntax?: undefined | "github" | "gitlab";
 }
+
+/**
+ * Runtime schema for admonition metadata.
+ *
+ * **Example** (Guard a note)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { AdmonitionMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(AdmonitionMetadata))({ admonitionType: "note" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AdmonitionMetadata = S.Class<AdmonitionMetadataShape>($I`AdmonitionMetadata`)(
+  {
+    admonitionType: AdmonitionType,
+    title: S.optionalKey(S.String),
+    sourceSyntax: AdmonitionSourceSyntax.pipe(S.optionalKey),
+  },
+  $I.annote("AdmonitionMetadata", { description: "Admonition kind, title, and parsed Markdown syntax." })
+);
 
 /**
  * Identifies the source PDF page for a content node.
@@ -2460,12 +4653,31 @@ export interface AdmonitionMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface PageMetadata {
+interface PageMetadataShape {
   /**
    * The page number (1-based) from the PDF document.
    */
   readonly pageNumber: number;
 }
+
+/**
+ * Runtime schema for page metadata.
+ *
+ * **Example** (Guard a page)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PageMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(PageMetadata))({ pageNumber: 1 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PageMetadata = S.Class<PageMetadataShape>($I`PageMetadata`)(
+  { pageNumber: PositiveInt },
+  $I.annote("PageMetadata", { description: "Source PDF page number for a content node." })
+);
 
 /**
  * Preserves links, citations, abbreviations, wikilinks, and style data for a text run.
@@ -2486,7 +4698,7 @@ export interface PageMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface TextMetadata {
+interface TextMetadataShape {
   /** Style name of the text */
   readonly style?: undefined | string;
 
@@ -2528,6 +4740,33 @@ export interface TextMetadata {
 }
 
 /**
+ * Runtime schema for text-run metadata.
+ *
+ * **Example** (Guard an external link)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(TextMetadata))({ link: "https://example.com", linkType: "external" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextMetadata = S.Class<TextMetadataShape>($I`TextMetadata`)(
+  {
+    style: S.optionalKey(S.String),
+    link: S.optionalKey(S.String),
+    linkType: LinkType.pipe(S.optionalKey),
+    abbreviationTitle: S.optionalKey(S.String),
+    citationKey: S.optionalKey(S.String),
+    wikilink: S.optionalKey(S.Boolean),
+    title: S.optionalKey(S.String),
+  },
+  $I.annote("TextMetadata", { description: "Links, citations, abbreviations, wikilinks, and style data for a text run." })
+);
+
+/**
  * Identifies a footnote or endnote and records its source anchors and reference state.
  *
  * **Example** (Identify a footnote)
@@ -2546,7 +4785,7 @@ export interface TextMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface NoteMetadata {
+interface NoteMetadataShape {
   /**
    * Type of note: 'footnote' or 'endnote'.
    */
@@ -2571,12 +4810,37 @@ export interface NoteMetadata {
 }
 
 /**
+ * Runtime schema for note metadata.
+ *
+ * **Example** (Guard a footnote)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NoteMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(NoteMetadata))({ noteType: "footnote", noteId: "1" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NoteMetadata = S.Class<NoteMetadataShape>($I`NoteMetadata`)(
+  {
+    noteType: NoteType.pipe(S.optionalKey),
+    noteId: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    slideNumber: S.optionalKey(PositiveInt),
+    unreferenced: S.optionalKey(S.Boolean),
+  },
+  $I.annote("NoteMetadata", { description: "Footnote or endnote identity, anchors, and reference state." })
+);
+
+/**
  * Distinguishes line, page, column, thematic, and other document breaks.
  *
  * @category models
  * @since 0.0.0
  */
-export interface BreakMetadata {
+interface BreakMetadataShape {
   /**
    * Type of break. The break type determines the next location where
    * text shall be placed.
@@ -2603,12 +4867,34 @@ export interface BreakMetadata {
 }
 
 /**
+ * Runtime schema for document-break metadata.
+ *
+ * **Example** (Guard a page break)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BreakMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(BreakMetadata))({ breakType: "page" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BreakMetadata = S.Class<BreakMetadataShape>($I`BreakMetadata`)(
+  {
+    breakType: BreakType,
+    clear: BreakClear.pipe(S.optionalKey),
+  },
+  $I.annote("BreakMetadata", { description: "Line, page, column, thematic, and other document breaks." })
+);
+
+/**
  * Preserves the language, anchors, and math status of a code block.
  *
  * @category models
  * @since 0.0.0
  */
-export interface CodeMetadata {
+interface CodeMetadataShape {
   /** The programming language of the code block (e.g., 'typescript', 'python') */
   readonly language?: undefined | string;
   /** Unique anchor IDs for internal linking. */
@@ -2622,12 +4908,35 @@ export interface CodeMetadata {
 }
 
 /**
+ * Runtime schema for code-block metadata.
+ *
+ * **Example** (Guard TypeScript code)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CodeMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(CodeMetadata))({ language: "typescript" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodeMetadata = S.Class<CodeMetadataShape>($I`CodeMetadata`)(
+  {
+    language: S.optionalKey(S.String),
+    anchorIds: S.Array(S.String).pipe(S.mutable, S.optionalKey),
+    math: MathDisplayMode.pipe(S.optionalKey),
+  },
+  $I.annote("CodeMetadata", { description: "Language, anchors, and math status of a code block." })
+);
+
+/**
  * Associates comment content with a document node.
  *
  * @category models
  * @since 0.0.0
  */
-export interface CommentMetadata {
+interface CommentMetadataShape {
   readonly author?: undefined | string;
   readonly initials?: undefined | string;
   readonly date?: undefined | string;
@@ -2635,14 +4944,57 @@ export interface CommentMetadata {
 }
 
 /**
+ * Runtime schema for comment metadata.
+ *
+ * **Example** (Guard an author)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CommentMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(CommentMetadata))({ author: "Ada" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CommentMetadata = S.Class<CommentMetadataShape>($I`CommentMetadata`)(
+  {
+    author: S.optionalKey(S.String),
+    initials: S.optionalKey(S.String),
+    date: S.optionalKey(S.String),
+    commentId: S.optionalKey(S.String),
+  },
+  $I.annote("CommentMetadata", { description: "Comment identity and authorship associated with a document node." })
+);
+
+/**
  * Marks content extracted from a document header or footer.
  *
  * @category models
  * @since 0.0.0
  */
-export interface HeaderFooterMetadata {
+interface HeaderFooterMetadataShape {
   readonly type: "default" | "first" | "even" | string;
 }
+
+/**
+ * Runtime schema for header or footer metadata.
+ *
+ * **Example** (Guard a first-page header)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeaderFooterMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(HeaderFooterMetadata))({ type: "first" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HeaderFooterMetadata = S.Class<HeaderFooterMetadataShape>($I`HeaderFooterMetadata`)(
+  { type: S.String },
+  $I.annote("HeaderFooterMetadata", { description: "Section kind for content extracted from a document header or footer." })
+);
 
 /**
  * Maps content-node variants to the metadata shapes they may carry.
@@ -2670,6 +5022,46 @@ export type ContentMetadata =
   | EmbedMetadata
   | AdmonitionMetadata
   | undefined;
+
+/**
+ * Runtime schema for content-node metadata variants.
+ *
+ * **Example** (Guard heading metadata)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ContentMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(ContentMetadata))({ level: 1 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ContentMetadata = S.Union([
+  SlideMetadata,
+  SheetMetadata,
+  HeadingMetadata,
+  ListMetadata,
+  CellMetadata,
+  ImageMetadata,
+  ChartMetadata,
+  PageMetadata,
+  ParagraphMetadata,
+  TextMetadata,
+  NoteMetadata,
+  BreakMetadata,
+  CodeMetadata,
+  CommentMetadata,
+  HeaderFooterMetadata,
+  TableMetadata,
+  EmbedMetadata,
+  AdmonitionMetadata,
+  S.Undefined,
+]).pipe(
+  $I.annoteSchema("ContentMetadata", {
+    description: "Metadata shapes carried by document content-node variants.",
+  })
+);
 
 /**
  * Defines fields shared by every node in the parsed document tree.
@@ -2710,7 +5102,7 @@ export type ContentMetadata =
  * @category models
  * @since 0.0.0
  */
-export interface BaseContentNode {
+interface BaseContentNodeShape {
   /**
    * The complete text content of the node and all its children combined.
    * For container nodes (paragraph, heading), this is the concatenation of all child text.
@@ -2776,6 +5168,35 @@ export interface BaseContentNode {
    */
   readonly htmlAttributes?: undefined | Record<string, string>;
 }
+
+/**
+ * Runtime schema for fields shared by every content node.
+ *
+ * **Example** (Guard shared text fields)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BaseContentNode } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(BaseContentNode))({ text: "Hello" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BaseContentNode = S.Class<BaseContentNodeShape>($I`BaseContentNode`)(
+  {
+    text: S.optionalKey(S.String),
+    children: S.suspend(() => S.Array(OfficeContentNode).pipe(S.mutable)).pipe(S.optionalKey),
+    comments: S.suspend(() => S.Array(OfficeContentNode).pipe(S.mutable)).pipe(S.optionalKey),
+    notes: S.suspend(() => S.Array(OfficeContentNode).pipe(S.mutable)).pipe(S.optionalKey),
+    formatting: S.optionalKey(TextFormatting),
+    rawContent: S.optionalKey(S.String),
+    htmlAttributes: S.optionalKey(S.Record(S.String, S.String)),
+  },
+  $I.annote("BaseContentNode", {
+    description: "Text, children, comments, notes, formatting, and source fields shared by every content node.",
+  })
+);
 
 /**
  * Models one discriminated node in the parsed document tree.
@@ -2874,13 +5295,76 @@ export type OfficeContentNode = BaseContentNode &
       }
   );
 
+const ContentMetadataByNodeType = {
+  slide: SlideMetadata,
+  sheet: SheetMetadata,
+  heading: HeadingMetadata,
+  list: ListMetadata,
+  cell: CellMetadata,
+  image: ImageMetadata,
+  chart: ChartMetadata,
+  page: PageMetadata,
+  paragraph: ParagraphMetadata,
+  text: TextMetadata,
+  note: NoteMetadata,
+  break: BreakMetadata,
+  code: CodeMetadata,
+  comment: CommentMetadata,
+  header: HeaderFooterMetadata,
+  footer: HeaderFooterMetadata,
+  table: TableMetadata,
+  row: S.Undefined,
+  drawing: S.Undefined,
+  slideMaster: SlideMetadata,
+  embed: EmbedMetadata,
+  admonition: AdmonitionMetadata,
+  definitionList: S.Undefined,
+  definitionTerm: S.Undefined,
+  definitionDescription: S.Undefined,
+} satisfies Readonly<Record<OfficeContentNodeType, S.Top>>;
+
+const isBaseContentNode = S.is(S.toEncoded(BaseContentNode));
+const isOfficeContentNodeType = S.is(OfficeContentNodeType);
+const isContentMetadataByNodeType = R.map(ContentMetadataByNodeType, (schema) => S.is(S.toEncoded(schema)));
+
+/**
+ * Identity-preserving recursive runtime schema companion for {@link OfficeContentNode}.
+ *
+ * **Example** (Guard a paragraph node)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeContentNode } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(OfficeContentNode)({ type: "paragraph", text: "Hello" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeContentNode: S.declare<OfficeContentNode> = S.declare<OfficeContentNode>(
+  (input: unknown): input is OfficeContentNode => {
+    if (!P.hasProperty(input, "type") || !isOfficeContentNodeType(input.type) || !isBaseContentNode(input)) {
+      return false;
+    }
+    return (
+      !P.hasProperty(input, "metadata") ||
+      input.metadata === undefined ||
+      isContentMetadataByNodeType[input.type](input.metadata)
+    );
+  }
+).pipe(
+  $I.annoteSchema("OfficeContentNode", {
+    description: "Recursive discriminated node in the parsed Office document tree.",
+  })
+);
+
 /**
  * Stores chart titles, labels, datasets, and raw text extracted from chart markup.
  *
  * @category models
  * @since 0.0.0
  */
-export interface ChartData {
+interface ChartDataShape {
   /** Chart title (if any) */
   readonly title?: undefined | string;
 
@@ -2914,6 +5398,51 @@ export interface ChartData {
   readonly rawTexts: string[];
 }
 
+interface ChartDataSet {
+  readonly name?: undefined | string;
+  readonly values: string[];
+  readonly pointLabels: string[];
+}
+
+const ChartDataSet = S.Class<ChartDataSet>($I`ChartDataSet`)(
+  {
+    name: S.optionalKey(S.String),
+    values: S.Array(S.String).pipe(S.mutable),
+    pointLabels: S.Array(S.String).pipe(S.mutable),
+  },
+  $I.annote("ChartDataSet", {
+    description: "One named set of chart values and per-point labels.",
+  })
+);
+
+/**
+ * Runtime schema for extracted chart data.
+ *
+ * **Example** (Validate an empty chart)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ChartData } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(ChartData))({ dataSets: [], labels: [], rawTexts: [] })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChartData = S.Class<ChartDataShape>($I`ChartData`)(
+  {
+    title: S.optionalKey(S.String),
+    xAxisTitle: S.optionalKey(S.String),
+    yAxisTitle: S.optionalKey(S.String),
+    dataSets: S.Array(ChartDataSet).pipe(S.mutable),
+    labels: S.Array(S.String).pipe(S.mutable),
+    rawTexts: S.Array(S.String).pipe(S.mutable),
+  },
+  $I.annote("ChartData", {
+    description: "Chart titles, labels, datasets, and raw text extracted from chart markup.",
+  })
+);
+
 /**
  * Stores an extracted binary resource and any OCR, accessibility, or chart metadata associated with it.
  *
@@ -2937,7 +5466,7 @@ export interface ChartData {
  * @category models
  * @since 0.0.0
  */
-export interface OfficeAttachment {
+interface OfficeAttachmentShape {
   /**
    * The category of the attachment.
    * Helps identify what kind of content this represents.
@@ -2995,12 +5524,42 @@ export interface OfficeAttachment {
 }
 
 /**
+ * Runtime schema for an extracted document attachment.
+ *
+ * **Example** (Validate an image attachment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeAttachment } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(OfficeAttachment))({ type: "image", mimeType: "image/png", data: "AA==", name: "a.png", extension: "png" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeAttachment = S.Class<OfficeAttachmentShape>($I`OfficeAttachment`)(
+  {
+    type: OfficeAttachmentType,
+    mimeType: OfficeMimeType,
+    data: S.String,
+    name: S.String,
+    extension: S.String,
+    ocrText: S.optionalKey(S.String),
+    altText: S.optionalKey(S.String),
+    chartData: S.optionalKey(ChartData),
+  },
+  $I.annote("OfficeAttachment", {
+    description: "Extracted binary resource with OCR, accessibility, or chart metadata.",
+  })
+);
+
+/**
  * Preserves standard and source-native document properties discovered during parsing.
  *
  * @category models
  * @since 0.0.0
  */
-export interface OfficeMetadata {
+interface OfficeMetadataShape {
   /** The title of the document. */
   readonly title?: undefined | string;
   /** The author of the document. */
@@ -3038,8 +5597,49 @@ export interface OfficeMetadata {
    * Consumers can use this to access properties not mapped to the standard OfficeMetadata fields.
    * Examples: all <meta> tags in HTML, app.xml properties in DOCX, XMP dicts in PDF.
    */
-  readonly nativeProperties?: undefined | Record<string, any>;
+  readonly nativeProperties?: undefined | Record<string, unknown>;
 }
+
+const OfficeMetadataValue = S.Union([S.String, S.Finite, S.Boolean, S.Date]).pipe(
+  $I.annoteSchema("OfficeMetadataValue", {
+    description: "Scalar value accepted by a typed custom Office metadata property.",
+  })
+);
+
+/**
+ * Runtime schema for standard and source-native document properties.
+ *
+ * **Example** (Validate document identity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeMetadata } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(OfficeMetadata))({ title: "Annual report", pages: 12 })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeMetadata = S.Class<OfficeMetadataShape>($I`OfficeMetadata`)(
+  {
+    title: S.optionalKey(S.String),
+    author: S.optionalKey(S.String),
+    lastModifiedBy: S.optionalKey(S.String),
+    created: S.optionalKey(S.Date),
+    modified: S.optionalKey(S.Date),
+    description: S.optionalKey(S.String),
+    subject: S.optionalKey(S.String),
+    pages: S.optionalKey(NonNegativeInt),
+    formatting: S.optionalKey(TextFormatting),
+    styleMap: S.optionalKey(S.Record(S.String, TextFormatting)),
+    customProperties: S.optionalKey(S.Record(S.String, OfficeMetadataValue)),
+    keywords: S.optionalKey(S.String),
+    nativeProperties: S.optionalKey(S.Record(S.String, S.Unknown)),
+  },
+  $I.annote("OfficeMetadata", {
+    description: "Standard and source-native document properties discovered during parsing.",
+  })
+);
 
 /**
  * Separates headers, footers, and slide masters from the main document flow.
@@ -3047,7 +5647,7 @@ export interface OfficeMetadata {
  * @category models
  * @since 0.0.0
  */
-export interface OfficeAuxiliaryContent {
+interface OfficeAuxiliaryContentShape {
   /** Headers extracted from the document. */
   readonly headers?: undefined | ReadonlyArray<OfficeContentNode>;
   /** Footers extracted from the document. */
@@ -3055,6 +5655,31 @@ export interface OfficeAuxiliaryContent {
   /** Slide Masters extracted from presentations. */
   readonly slideMasters?: undefined | ReadonlyArray<OfficeContentNode>;
 }
+
+/**
+ * Runtime schema for out-of-band document layout content.
+ *
+ * **Example** (Validate empty auxiliary content)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeAuxiliaryContent } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * console.log(S.is(S.toEncoded(OfficeAuxiliaryContent))({ headers: [], footers: [] })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeAuxiliaryContent = S.Class<OfficeAuxiliaryContentShape>($I`OfficeAuxiliaryContent`)(
+  {
+    headers: S.Array(OfficeContentNode).pipe(S.optionalKey),
+    footers: S.Array(OfficeContentNode).pipe(S.optionalKey),
+    slideMasters: S.Array(OfficeContentNode).pipe(S.optionalKey),
+  },
+  $I.annote("OfficeAuxiliaryContent", {
+    description: "Headers, footers, and slide masters separated from the main document flow.",
+  })
+);
 
 /**
  * Collects parsed content, metadata, attachments, diagnostics, and conversion behavior for one source document.
@@ -3090,7 +5715,7 @@ export interface OfficeAuxiliaryContent {
  * @category models
  * @since 0.0.0
  */
-export interface OfficeParserAST {
+interface OfficeParserASTShape {
   /**
    * The original configuration used to parse this document.
    * This includes options like OCR settings, delimiter choices, and filtering flags.
@@ -3150,3 +5775,34 @@ export interface OfficeParserAST {
     config?: undefined | GeneratorConfig<D>
   ) => Promise<ConversionResult<D>>;
 }
+
+/**
+ * Runtime schema for a parsed Office document AST and its conversion capability.
+ *
+ * **Example** (Validate a parsed document shell)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OfficeParserAST } from "../../../metadata/services/officeparser/OfficeParser.models.ts"
+ * const to = async () => ({ value: "", messages: [] })
+ * console.log(S.is(S.toEncoded(OfficeParserAST))({ config: {}, type: "docx", metadata: {}, content: [], attachments: [], warnings: [], to })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OfficeParserAST = S.Class<OfficeParserASTShape>($I`OfficeParserAST`)(
+  {
+    config: OfficeParserConfig,
+    type: SupportedFileType,
+    metadata: OfficeMetadata,
+    content: S.Array(OfficeContentNode),
+    auxiliary: S.optionalKey(OfficeAuxiliaryContent),
+    attachments: S.Array(OfficeAttachment),
+    warnings: S.Array(OfficeIssue),
+    to: runtimeFunction<OfficeParserASTShape["to"]>(),
+  },
+  $I.annote("OfficeParserAST", {
+    description: "Parsed document content, metadata, attachments, diagnostics, and conversion capability.",
+  })
+);

@@ -12,7 +12,9 @@
  * @since 0.0.0
  */
 
+import { O as OU } from "@beep/utils";
 import { Data, Stream } from "effect";
+import * as P from "effect/Predicate";
 import { composeAllDocuments } from "./internal/composer/document.ts";
 import type { RawYamlDocument } from "./internal/raw-document.ts";
 import type { YamlParseOptions } from "./Yaml.ts";
@@ -148,6 +150,17 @@ export class YamlVisitor {
 	 * (fatal or not, including an exceeded `maxAliasCount`, recorded as
 	 * `AliasCountExceeded`) surface as `Error` events inside the stream rather
 	 * than failing it.
+	 *
+	 * **Example** (Collect document events)
+	 *
+	 * ```ts
+	 * import { Effect, Stream } from "effect"
+	 * import { YamlVisitor } from "@beep/scratchpad/yaml"
+	 *
+	 * const events = Effect.runSync(Stream.runCollect(YamlVisitor.visit("name: Alice\n")))
+	 * console.log(events[0]?._tag) // "DocumentStart"
+	 * console.log(events.some((event) => event._tag === "Scalar")) // true
+	 * ```
 	 */
 	static visit(text: string, options?: YamlParseOptions): Stream.Stream<YamlVisitorEvent> {
 		return Stream.fromIterable(visitGen(text, options));
@@ -207,7 +220,7 @@ function* walkDocument(doc: RawYamlDocument, text: string): Generator<YamlVisito
 }
 
 function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-	if (node instanceof YamlScalar) {
+	if (YamlScalar.is(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -219,10 +232,9 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			depth,
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) })
 		});
-	} else if (node instanceof YamlAlias) {
+	} else if (YamlAlias.is(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -230,7 +242,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.comment, placement: "trailing" });
 		}
 		yield YamlVisitorEvent.Alias({ path, depth, name: node.name });
-	} else if (node instanceof YamlMap) {
+	} else if (YamlMap.is(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -241,14 +253,13 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			path,
 			depth,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) })
 		});
 		for (const pair of node.items) {
 			yield* walkPair(pair, path, depth + 1);
 		}
 		yield YamlVisitorEvent.MapEnd({ path, depth });
-	} else if (node instanceof YamlSeq) {
+	} else if (YamlSeq.is(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -259,8 +270,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			path,
 			depth,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) })
 		});
 		for (let i = 0; i < node.items.length; i++) {
 			const item = node.items[i] as YamlNode;
@@ -271,11 +281,11 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 }
 
 function* walkPair(pair: YamlPair, parentPath: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-	const resolvedKey = pair.key instanceof YamlScalar ? pair.key.value : null;
-	const resolvedValue = pair.value instanceof YamlScalar ? pair.value.value : null;
+	const resolvedKey = YamlScalar.is(pair.key) ? pair.key.value : null;
+	const resolvedValue = YamlScalar.is(pair.value) ? pair.value.value : null;
 
 	const keySegment: string | number =
-		typeof resolvedKey === "string" ? resolvedKey : typeof resolvedKey === "number" ? resolvedKey : String(resolvedKey);
+		P.isString(resolvedKey) ? resolvedKey : P.isNumber(resolvedKey) ? resolvedKey : String(resolvedKey);
 
 	const pairPath: YamlPath = [...parentPath, keySegment];
 

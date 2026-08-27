@@ -44,7 +44,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
  * console.log(metadata.ontologyId) // "core"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata`)(
@@ -79,7 +79,7 @@ export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata
  * console.log(result.claimsInserted) // 3
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class PersistenceResult extends S.Class<PersistenceResult>($I`PersistenceResult`)(

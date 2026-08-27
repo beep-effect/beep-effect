@@ -72,23 +72,25 @@ const isBudgetedStage = S.is(BudgetedStage);
  * **Example** (Use the TokenBudgetState contract)
  *
  * ```ts
- * import type { TokenBudgetState } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { TokenBudgetState } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * const state: TokenBudgetState = { total: 100_000, used: 0, byStage: {} }
+ * const state = TokenBudgetState.make({ total: 100_000, used: 0, byStage: {} })
  * console.log(state.used) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface TokenBudgetState {
-  /** Total token budget for the request */
-  readonly total: number;
-  /** Total tokens used across all stages */
-  readonly used: number;
-  /** Tokens used per stage */
-  readonly byStage: Record<string, number>;
-}
+export class TokenBudgetState extends S.Class<TokenBudgetState>($I`TokenBudgetState`)(
+  {
+    total: S.Natural.annotateKey({ description: "Total token budget for the request." }),
+    used: S.Natural.annotateKey({ description: "Tokens used across all stages." }),
+    byStage: S.Record(S.String, S.Natural).annotateKey({ description: "Token usage indexed by stage name." }),
+  },
+  $I.annote("TokenBudgetState", {
+    description: "Total and per-stage token consumption for one request budget.",
+  })
+) {}
 
 /**
  * Budget allocation percentages by stage
@@ -200,11 +202,7 @@ const getStageBudget = (stage: string, total: number): number => {
  * Default implementation using Effect Ref for state
  */
 const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: number = 4096) {
-  const state = yield* Ref.make<TokenBudgetState>({
-    total: initialTotal,
-    used: 0,
-    byStage: {},
-  });
+  const state = yield* Ref.make(TokenBudgetState.make({ total: initialTotal, used: 0, byStage: {} }));
 
   return {
     canAfford: (stage: string, tokens: number) =>
@@ -217,14 +215,16 @@ const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: numbe
       ),
 
     recordUsage: (stage: string, tokens: number) =>
-      Ref.update(state, (s) => ({
-        ...s,
-        used: s.used + tokens,
-        byStage: {
-          ...s.byStage,
-          [stage]: (s.byStage[stage] ?? 0) + tokens,
-        },
-      })),
+      Ref.update(state, (s) =>
+        TokenBudgetState.make({
+          ...s,
+          used: s.used + tokens,
+          byStage: {
+            ...s.byStage,
+            [stage]: (s.byStage[stage] ?? 0) + tokens,
+          },
+        })
+      ),
 
     getRemaining: Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
 
@@ -239,7 +239,7 @@ const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: numbe
 
     getState: Ref.get(state),
 
-    reset: (total: number = 4096) => Ref.set(state, { total, used: 0, byStage: {} }),
+    reset: (total: number = 4096) => Ref.set(state, TokenBudgetState.make({ total, used: 0, byStage: {} })),
   };
 });
 

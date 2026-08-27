@@ -8,6 +8,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import type { EngineOptions } from "./types.ts";
 
 const escapePattern = (
@@ -59,4 +61,9 @@ const escapePattern = (
  * @category encoding
  * @since 0.0.0
  */
-export const escape = escapePattern;
+export const escape: {
+	(): (s: string) => string;
+	(s: string): string;
+	(options: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
+	(s: string, options: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
+} = dual((args) => P.isString(args[0]), escapePattern);

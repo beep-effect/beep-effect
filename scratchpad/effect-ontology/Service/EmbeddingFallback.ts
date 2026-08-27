@@ -48,7 +48,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
  * console.log(FallbackChainConfig.make({ providers: ["voyage", "nomic"], logFallbacks: true }).providers.length) // 2
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`FallbackChainConfig`)(
@@ -75,7 +75,7 @@ export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`Fallbac
  * console.log(O.isNone(info.lastFallbackReason)) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ActiveProviderInfo extends S.Class<ActiveProviderInfo>($I`ActiveProviderInfo`)(

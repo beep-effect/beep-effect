@@ -7,7 +7,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { P, A } from "@beep/utils"
+import { P, A, R } from "@beep/utils"
 import { Effect } from "effect"
 import {
   type AstNode,
@@ -19,7 +19,7 @@ import {
 } from "../interpreter/Interpreter.model.ts"
 import { containsOpaqueReference } from "../interpreter/Interpreter.references.ts"
 import { isBlockedMember } from "../Codemode.tool-runtime.ts"
-import { isCodeModeValue, CodeModePromise } from "../Codemode.values.ts"
+import { isCodeModeValue, CodeModePromise, makeEmptySafeObject } from "../Codemode.values.ts"
 import { boundedData, coerceToString } from "./StdLib.value.ts"
 import { preserveConsumerError, type SyncIteratorRunner } from "../interpreter/Interpreter.iterator.ts"
 import { type ObjectStatic, objectStatics } from "../Codemode.method-names.ts"
@@ -93,7 +93,7 @@ type DirectObjectMethod = Exclude<ObjectStatic, "fromEntries" | "groupBy">;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown => {
   const requireObject = (): object => {
     const input = args[0]
@@ -120,12 +120,12 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
     Reflect.set(out, key, item)
   }
   return DirectObjectMethod.$match(name, {
-    keys: () => Object.keys(requireObject()),
-    values: () => Object.values(requireObject()),
-    entries: () => A.map(Object.entries(requireObject()), ([key, item]) => [key, item]),
+    keys: () => R.keys(requireObject()),
+    values: () => R.values(requireObject()),
+    entries: () => A.map(R.toEntries(requireObject()), ([key, item]) => [key, item]),
     hasOwn: () =>
-      P.hasProperty(
-        requireObject(),
+      R.has(
+        requireObject() as Readonly<Record<string | symbol, unknown>>,
         args[1] === AsyncIteratorSymbol || args[1] === IteratorSymbol ? args[1] : String(args[1]),
       ),
     is: () => {
@@ -145,7 +145,7 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
         if (!P.isObjectKeyword(source) || A.isArray(source)) {
           throw InterpreterRuntimeError.new("Object.assign expects data objects.", node)
         }
-        for (const [key, item] of Object.entries(source)) guardedSet(out, key, item)
+        for (const [key, item] of R.toEntries(source)) guardedSet(out, key, item)
         for (const symbol of IteratorSymbols) {
           if (P.hasProperty(source, symbol)) Reflect.set(out, symbol, Reflect.get(source, symbol))
         }
@@ -197,13 +197,13 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest iterable, AST context, and callback runner are co-primary interpreter protocol inputs.
 export const invokeObjectFromEntries = <R>(
   runner: SyncIteratorRunner<R>,
   source: unknown,
   node: AstNode,
 ): Effect.Effect<Record<string, unknown>, InterpreterFailure, R> => {
-  const out: Record<string, unknown> = Object.create(null)
+  const out: Record<string, unknown> = makeEmptySafeObject()
   return Effect.gen(function* () {
     const cursor = yield* runner.syncIterator(source, node)
     if (P.isUndefined(cursor)) {

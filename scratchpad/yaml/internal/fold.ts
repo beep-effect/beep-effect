@@ -11,6 +11,8 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
+
 /**
  * Column-based line folding for a single logical scalar line (YAML 1.2 flow
  * folding, §7.3 / §8.2.1). Breaks the content at "safe" single-space
@@ -37,15 +39,25 @@
  * import { Effect } from "effect"
  * import { Yaml, YamlStringifyOptions } from "@beep/scratchpad/yaml"
  *
- * const text = Effect.runSync(Yaml.stringify("abcdefghij", YamlStringifyOptions.make({ lineWidth: 0 })))
- * console.log(text.includes("abcdefghij")) // true
+ * const phrase = "one two three four five six seven"
+ * const unwrapped = Effect.runSync(
+ *   Yaml.stringify({ a: phrase }, YamlStringifyOptions.make({ lineWidth: 0, finalNewline: false })),
+ * )
+ * const wrapped = Effect.runSync(
+ *   Yaml.stringify({ a: phrase }, YamlStringifyOptions.make({ lineWidth: 8, finalNewline: false })),
+ * )
+ * console.log(unwrapped.includes("one two three four five six seven")) // true
+ * console.log(wrapped.includes("one two three four five six seven")) // false
  * ```
  *
  * @internal
  * @category folding
  * @since 0.0.0
  */
-export function foldScalarLine(text: string, indent: string, lineWidth: number, indentAtStart: number): string {
+export const foldScalarLine: {
+	(text: string, indent: string, lineWidth: number, indentAtStart: number): string;
+	(indent: string, lineWidth: number, indentAtStart: number): (text: string) => string;
+} = dual(4, (text: string, indent: string, lineWidth: number, indentAtStart: number): string => {
 	if (lineWidth <= 0) return text;
 	// Chars a continuation line can hold before reaching the width column. Guard
 	// against a pathological indent >= lineWidth (nothing would fit) by never
@@ -79,7 +91,7 @@ export function foldScalarLine(text: string, indent: string, lineWidth: number, 
 		result += `\n${indent}${text.slice(fold + 1, sliceEnd)}`;
 	}
 	return result;
-}
+});
 
 /**
  * Apply {@link foldScalarLine} to an already-rendered scalar according to its
@@ -102,17 +114,26 @@ export function foldScalarLine(text: string, indent: string, lineWidth: number, 
  *
  * ```ts
  * import { Effect } from "effect"
- * import { Yaml } from "@beep/scratchpad/yaml"
+ * import { Yaml, YamlStringifyOptions } from "@beep/scratchpad/yaml"
  *
- * const value = Effect.runSync(Yaml.parse("a: |\n  keep this line whole\n"))
- * console.log(JSON.stringify(value).includes("keep this line whole")) // true
+ * const text = Effect.runSync(
+ *   Yaml.stringify(
+ *     { a: "keep this line whole enough to wrap\nstill here" },
+ *     YamlStringifyOptions.make({ lineWidth: 10 }),
+ *   ),
+ * )
+ * console.log(text.includes("|")) // true
+ * console.log(text.includes("keep this line whole enough to wrap")) // true
  * ```
  *
  * @internal
  * @category folding
  * @since 0.0.0
  */
-export function foldRenderedScalar(rendered: string, indent: string, lineWidth: number): string {
+export const foldRenderedScalar: {
+	(rendered: string, indent: string, lineWidth: number): string;
+	(indent: string, lineWidth: number): (rendered: string) => string;
+} = dual(3, (rendered: string, indent: string, lineWidth: number): string => {
 	if (lineWidth <= 0 || rendered.length === 0) return rendered;
 	const first = rendered[0];
 	// Block-literal and single-quoted are never width-folded.
@@ -146,7 +167,7 @@ export function foldRenderedScalar(rendered: string, indent: string, lineWidth: 
 	}
 	// Plain scalar.
 	return foldScalarLine(rendered, indent, lineWidth, indent.length);
-}
+});
 
 /**
  * C0 control characters (except TAB) that must be escaped in double-quoted scalars.
@@ -230,7 +251,7 @@ export function hasInteriorTrailingWhitespace(s: string): boolean {
  * import { Yaml } from "@beep/scratchpad/yaml"
  *
  * const value = Effect.runSync(Yaml.parse("a: \"x\\n \\ty\"\n"))
- * console.log(JSON.stringify(value).includes("x")) // true
+ * console.log(JSON.stringify(value).includes("x\\n \\ty")) // true
  * ```
  *
  * @internal
@@ -263,20 +284,23 @@ export function hasNewlineSpacesTab(s: string): boolean {
  * Returns null if the content cannot safely be represented as single-quoted
  * (carriage returns or non-tab control characters).
  *
- * **Example** (Multi-line single-quoted value)
+ * **Example** (Single-quoted newlines fold to a space)
  *
  * ```ts
  * import { Effect } from "effect"
  * import { Yaml } from "@beep/scratchpad/yaml"
  *
- * console.log(Effect.runSync(Yaml.parse("a: 'hello\n  world'\n")))
+ * console.log(Effect.runSync(Yaml.parse("a: 'hello\n  world'\n"))) // { a: "hello world" }
  * ```
  *
  * @internal
  * @category formatting
  * @since 0.0.0
  */
-export function renderSingleQuotedMultiline(s: string, indent: string): string | null {
+export const renderSingleQuotedMultiline: {
+	(s: string, indent: string): string | null;
+	(indent: string): (s: string) => string | null;
+} = dual(2, (s: string, indent: string): string | null => {
 	// CR or non-tab control chars cannot be represented in single-quoted
 	for (let i = 0; i < s.length; i++) {
 		const code = s.charCodeAt(i);
@@ -307,7 +331,7 @@ export function renderSingleQuotedMultiline(s: string, indent: string): string |
 		i = nlEnd;
 	}
 	return `'${result}'`;
-}
+});
 
 /**
  * Renders a string scalar using block literal style (pipe `|`).
@@ -326,21 +350,26 @@ export function renderSingleQuotedMultiline(s: string, indent: string): string |
  * import { Yaml } from "@beep/scratchpad/yaml"
  *
  * const value = Effect.runSync(Yaml.parse("a: |\n  hello\n  world\n"))
- * console.log(JSON.stringify(value).includes("hello")) // true
+ * console.log(JSON.stringify(value).includes("hello\\nworld")) // true
  * ```
  *
  * @internal
  * @category formatting
  * @since 0.0.0
  */
-export function renderBlockLiteral(
-	s: string,
-	indent: string,
-	explicitChomp?: "strip" | "clip" | "keep",
-	parentPosition?: "block-map-value" | "block-seq-item",
-	preserveKeep = false,
-	explicitIndent?: number,
-): string {
+interface BlockLiteralRenderOptions {
+	readonly indent: string;
+	readonly explicitChomp?: "strip" | "clip" | "keep";
+	readonly parentPosition?: "block-map-value" | "block-seq-item";
+	readonly preserveKeep: boolean;
+	readonly explicitIndent?: number;
+}
+
+export const renderBlockLiteral: {
+	(s: string, options: BlockLiteralRenderOptions): string;
+	(options: BlockLiteralRenderOptions): (s: string) => string;
+} = dual(2, (s: string, options: BlockLiteralRenderOptions): string => {
+	const { indent, explicitChomp, parentPosition, preserveKeep = false, explicitIndent } = options;
 	// Compute chomp indicator from the value's trailing-newline structure.
 	// `+` (keep) is required when the value retains more than one trailing
 	// newline OR when the value consists solely of newlines (otherwise `|`
@@ -375,7 +404,7 @@ export function renderBlockLiteral(
 	let indentIndicator = "";
 	const firstContent = lines.find((l) => l !== "");
 	const hasContent = firstContent !== undefined;
-	if (firstContent?.startsWith(" ") || (lines.length > 0 && lines[0] === "" && hasContent)) {
+	if ((firstContent !== undefined && firstContent.startsWith(" ")) || (lines.length > 0 && lines[0] === "" && hasContent)) {
 		indentIndicator = String(indent.length);
 	} else if (!hasContent && chomp === "+" && parentPosition === "block-map-value" && indent.length > 0) {
 		indentIndicator = String(indent.length);
@@ -386,7 +415,7 @@ export function renderBlockLiteral(
 		indentIndicator = String(explicitIndent);
 	}
 	return `|${indentIndicator}${chomp}\n${lines.map((l) => (l === "" ? "" : `${indent}${l}`)).join("\n")}`;
-}
+});
 
 /**
  * Renders a string scalar using block folded style (greater-than `>`).
@@ -410,12 +439,17 @@ export function renderBlockLiteral(
  * @category formatting
  * @since 0.0.0
  */
-export function renderBlockFolded(
-	s: string,
-	indent: string,
-	explicitChomp?: "strip" | "clip" | "keep",
-	explicitIndent?: number,
-): string {
+interface BlockFoldedRenderOptions {
+	readonly indent: string;
+	readonly explicitChomp?: "strip" | "clip" | "keep";
+	readonly explicitIndent?: number;
+}
+
+export const renderBlockFolded: {
+	(s: string, options: BlockFoldedRenderOptions): string;
+	(options: BlockFoldedRenderOptions): (s: string) => string;
+} = dual(2, (s: string, options: BlockFoldedRenderOptions): string => {
+	const { indent, explicitChomp, explicitIndent } = options;
 	// Chomp derivation mirrors renderBlockLiteral; `explicitChomp` /
 	// `explicitIndent` are fidelity-path header preservation (a redundant
 	// explicit `+` or `>2` re-emits byte-intact) — canonical callers pass
@@ -450,7 +484,7 @@ export function renderBlockFolded(
 	let indentIndicator = "";
 	const firstContent = valueLines.find((l) => l !== "");
 	if (
-		firstContent?.startsWith(" ") ||
+		(firstContent !== undefined && firstContent.startsWith(" ")) ||
 		(valueLines.length >= 2 && valueLines[0] === "" && valueLines[1] === "" && firstContent !== undefined)
 	) {
 		indentIndicator = String(indent.length);
@@ -528,4 +562,4 @@ export function renderBlockFolded(
 	}
 
 	return `>${indentIndicator}${chomp}\n${outputLines.join("\n")}`;
-}
+});

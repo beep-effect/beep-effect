@@ -20,42 +20,85 @@
 // translate the various posix character classes into unicode properties
 // this works across all unicode locales
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { GlobInvariantError } from "./limits.ts";
+
+const $I = $ScratchpadId.create("glob/internal/braceExpressions");
+
 // { <posix class>: [<translation>, /u flag required, negated]
-const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
-	"[:alnum:]": ["\\p{L}\\p{Nl}\\p{Nd}", true],
-	"[:alpha:]": ["\\p{L}\\p{Nl}", true],
-	"[:ascii:]": ["\\x00-\\x7f", false],
-	"[:blank:]": ["\\p{Zs}\\t", true],
-	"[:cntrl:]": ["\\p{Cc}", true],
-	"[:digit:]": ["\\p{Nd}", true],
+const posixClasses: Readonly<Record<string, readonly [expression: string, unicode: boolean, negated: boolean]>> = {
+	"[:alnum:]": ["\\p{L}\\p{Nl}\\p{Nd}", true, false],
+	"[:alpha:]": ["\\p{L}\\p{Nl}", true, false],
+	"[:ascii:]": ["\\x00-\\x7f", false, false],
+	"[:blank:]": ["\\p{Zs}\\t", true, false],
+	"[:cntrl:]": ["\\p{Cc}", true, false],
+	"[:digit:]": ["\\p{Nd}", true, false],
 	"[:graph:]": ["\\p{Z}\\p{C}", true, true],
-	"[:lower:]": ["\\p{Ll}", true],
-	"[:print:]": ["\\p{C}", true],
-	"[:punct:]": ["\\p{P}", true],
-	"[:space:]": ["\\p{Z}\\t\\r\\n\\v\\f", true],
-	"[:upper:]": ["\\p{Lu}", true],
-	"[:word:]": ["\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}", true],
-	"[:xdigit:]": ["A-Fa-f0-9", false],
+	"[:lower:]": ["\\p{Ll}", true, false],
+	"[:print:]": ["\\p{C}", true, false],
+	"[:punct:]": ["\\p{P}", true, false],
+	"[:space:]": ["\\p{Z}\\t\\r\\n\\v\\f", true, false],
+	"[:upper:]": ["\\p{Lu}", true, false],
+	"[:word:]": ["\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}", true, false],
+	"[:xdigit:]": ["A-Fa-f0-9", false, false],
 };
 
 // only need to escape a few things inside of brace expressions
 // escapes: [ \ ] -
-const braceEscape = (s: string): string => s.replace(/[[\]\\-]/g, "\\$&");
+const braceEscape = Str.replace(/[[\]\\-]/g, "\\$&");
 // escape all regexp magic characters
-const regexpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+const regexpEscape = Str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
 // everything has already been escaped, we just have to join
-const rangesToString = (ranges: Array<string>): string => ranges.join("");
+const rangesToString = A.join("");
 
 /**
- * Tuple returned by {@link parseClass}: regexp source, whether `/u` is
- * required, how many characters were consumed, and whether the class is magic.
+ * Runtime schema for the tuple returned by {@link parseClass}: regexp source,
+ * whether `/u` is required, consumed character count, and magic status.
  *
+ * **Example** (Decode a parsed class tuple)
+ *
+ * ```ts
+ * import { ParseClassResult } from "../../glob/internal/braceExpressions.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const result = S.decodeUnknownSync(ParseClassResult)(["[a-z]", false, 5, true])
+ * console.log(result[2]) // 5
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ParseClassResult = S.Tuple([S.String, S.Boolean, S.Natural, S.Boolean]).pipe(
+	$I.annoteSchema("ParseClassResult", {
+		description: "Compiled character-class source, Unicode flag, consumed count, and magic status.",
+	}),
+);
+
+/**
+ * Decoded tuple produced by {@link ParseClassResult}.
+ *
+ * **Example** (Declare a parsed class tuple)
+ *
+ * ```ts
+ * import type { ParseClassResult } from "../../glob/internal/braceExpressions.ts"
+ *
+ * const result = ["[a-z]", false, 5, true] satisfies ParseClassResult
+ * console.log(result[2]) // 5
+ * ```
+ *
+ * @see {@link ParseClassResult} for runtime validation.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, hasMagic: boolean];
+export type ParseClassResult = typeof ParseClassResult.Type;
 
 /**
  * Compile a glob `[...]` class at `position` into regexp source.
@@ -75,25 +118,29 @@ export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, h
  *
  * ```ts
  * import { parseClass } from "../../glob/internal/braceExpressions.ts"
+ * import { GlobInvariantError } from "../../glob/internal/limits.ts"
  *
  * console.log(parseClass("[a-z]", 0)) // ["[a-z]", false, 5, true]
  * console.log(parseClass("[_]", 0)) // ["_", false, 3, false]
  * try {
  *   parseClass("a", 0)
  * } catch (error) {
- *   console.log(error instanceof Error && error.message) // "not in a brace expression"
+ *   console.log(error instanceof GlobInvariantError && error.detail) // "not in a brace expression"
  * }
  * ```
  *
- * @throws `Error` with message `not in a brace expression` when `glob[position]` is not `"["`.
+ * @throws {@link GlobInvariantError} when `glob[position]` is not `"["`.
  * @internal
  * @category parsing
  * @since 0.0.0
  */
-export const parseClass = (glob: string, position: number): ParseClassResult => {
+export const parseClass: {
+	(position: number): (glob: string) => ParseClassResult;
+	(glob: string, position: number): ParseClassResult;
+} = dual(2, (glob: string, position: number): ParseClassResult => {
 	const pos = position;
 	if (glob.charAt(pos) !== "[") {
-		throw new Error("not in a brace expression");
+		throw GlobInvariantError.make({ operation: "parseClass", detail: "not in a brace expression" });
 	}
 	const ranges: Array<string> = [];
 	const negs: Array<string> = [];
@@ -129,10 +176,10 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 		}
 		if (c === "[" && !escaping) {
 			// either a posix class, a collation equivalent, or just a [
-			for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
-				if (glob.startsWith(cls, i)) {
+			for (const [cls, [unip, u, neg]] of R.toEntries(posixClasses)) {
+				if (Str.startsWith(cls, i)(glob)) {
 					// invalid, [a-[] is fine, but not [a-[:alpha]]
-					if (rangeStart) {
+					if (rangeStart.length > 0) {
 						return ["$.", false, glob.length - pos, true];
 					}
 					i += cls.length;
@@ -146,7 +193,7 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 
 		// now it's just a normal character, effectively
 		escaping = false;
-		if (rangeStart) {
+		if (rangeStart.length > 0) {
 			// throw this range away if it's not valid, but others
 			// can still match.
 			if (c > rangeStart) {
@@ -161,12 +208,12 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 
 		// now might be the start of a range.
 		// can be either c-d or c-] or c<more...>] or c] at this point
-		if (glob.startsWith("-]", i + 1)) {
+		if (Str.startsWith("-]", i + 1)(glob)) {
 			ranges.push(braceEscape(`${c}-`));
 			i += 2;
 			continue;
 		}
-		if (glob.startsWith("-", i + 1)) {
+		if (Str.startsWith("-", i + 1)(glob)) {
 			rangeStart = c;
 			i += 2;
 			continue;
@@ -185,7 +232,7 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 
 	// if we got no ranges and no negates, then we have a range that
 	// cannot possibly match anything, and that poisons the whole glob
-	if (!ranges.length && !negs.length) {
+	if (ranges.length === 0 && negs.length === 0) {
 		return ["$.", false, glob.length - pos, true];
 	}
 
@@ -195,13 +242,14 @@ export const parseClass = (glob: string, position: number): ParseClassResult => 
 	// character. [_] is a perfectly valid way to escape glob magic chars.
 	const soleRange = ranges[0];
 	if (negs.length === 0 && ranges.length === 1 && soleRange !== undefined && /^\\?.$/.test(soleRange) && !negate) {
-		const r = soleRange.length === 2 ? soleRange.slice(-1) : soleRange;
+		const r = soleRange.length === 2 ? Str.slice(-1)(soleRange) : soleRange;
 		return [regexpEscape(r), false, endPos - pos, false];
 	}
 
 	const sranges = `[${negate ? "^" : ""}${rangesToString(ranges)}]`;
 	const snegs = `[${negate ? "" : "^"}${rangesToString(negs)}]`;
-	const comb = ranges.length && negs.length ? `(${sranges}|${snegs})` : ranges.length ? sranges : snegs;
+	const comb =
+		ranges.length > 0 && negs.length > 0 ? `(${sranges}|${snegs})` : ranges.length > 0 ? sranges : snegs;
 
 	return [comb, uflag, endPos - pos, true];
-};
+});

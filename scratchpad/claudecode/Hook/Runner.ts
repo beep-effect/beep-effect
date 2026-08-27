@@ -16,18 +16,13 @@ import { SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { runMain as platformRunMain } from "@effect/platform-node-shared/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node-shared/NodeStdio";
+import { Cause, Effect, Exit, Stdio, Stream } from "effect";
 import * as A from "effect/Array";
-import * as Cause from "effect/Cause";
-import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import type * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import * as Stdio from "effect/Stdio";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-
 import {
   HookControlledExit,
   HookHandlerError,
@@ -131,7 +126,7 @@ export const processOutput = (options: {
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- This process-output constructor has no data operand; currying the optional exit code would misstate its semantics.
 export const stderrExit = (stderr: string, exitCode = 2): HookProcessOutput => processOutput({ stderr, exitCode });
 
 /**
@@ -458,15 +453,29 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
  * @category workflows
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void) => {
-  if (Exit.isSuccess(exit)) return onExit(0);
-  if (Cause.hasInterruptsOnly(exit.cause)) return onExit(130);
+export const hookTeardown: {
+  <E, A>(onExit: (code: number) => void): (exit: Exit.Exit<E, A>) => void;
+  <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void): void;
+} = dual(2, <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void): void => {
+  if (Exit.isSuccess(exit)) {
+    onExit(0);
+    return;
+  }
+  if (Cause.hasInterruptsOnly(exit.cause)) {
+    onExit(130);
+    return;
+  }
   const squashed = Cause.squash(exit.cause);
-  if (S.is(HookControlledExit)(squashed)) return onExit(squashed.code);
-  if (S.is(HookInputDecodeError)(squashed)) return onExit(2);
-  return onExit(1);
-};
+  if (S.is(HookControlledExit)(squashed)) {
+    onExit(squashed.code);
+    return;
+  }
+  if (S.is(HookInputDecodeError)(squashed)) {
+    onExit(2);
+    return;
+  }
+  onExit(1);
+});
 
 // ---------------------------------------------------------------------------
 // Public runMain / dispatch
@@ -500,6 +509,7 @@ export const runMain = <In extends HookInputEnvelope, Out, E>(
 ): void =>
   platformRunMain(
     runHookProgram(hook).pipe(
+      // The platform runner is the process application boundary for the Node stdio layer.
       // @effect-diagnostics-next-line strictEffectProvide:off
       Effect.provide(NodeStdio.layer)
     ),
@@ -542,6 +552,7 @@ export const runMain = <In extends HookInputEnvelope, Out, E>(
 export const dispatch = <E>(hooks: DispatchMap<E, HookContext.Service>): void =>
   platformRunMain(
     runDispatchProgram<E, HookContext.Service>(hooks).pipe(
+      // The platform runner is the process application boundary for the Node stdio layer.
       // @effect-diagnostics-next-line strictEffectProvide:off
       Effect.provide(NodeStdio.layer)
     ),

@@ -9,10 +9,9 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
@@ -309,7 +308,7 @@ export const renameSession = (sessionTitle: string): Output =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; its optional flags only configure the new value.
 export const watchPaths = (paths: ReadonlyArray<string>, options?: { readonly reloadSkills?: boolean }): Output =>
   Output.make({
     hookSpecificOutput: O.some(

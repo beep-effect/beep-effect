@@ -10,6 +10,7 @@ import {
   type StringStatic,
   stringStatics,
 } from "../Codemode.method-names.ts"
+import * as P from "effect/Predicate";
 
 export {
   stringMethods,
@@ -36,10 +37,10 @@ export {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeStringStatic = (name: StringStatic, args: Array<unknown>, node: AstNode): unknown => {
   const codes = args.map((arg) => {
-    if (typeof arg !== "number") throw InterpreterRuntimeError.new(`String.${name} expects number arguments.`, node)
+    if (!P.isNumber(arg)) throw InterpreterRuntimeError.new(`String.${name} expects number arguments.`, node)
     return arg
   })
   return stringStatics.$match(name, {

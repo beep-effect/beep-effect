@@ -2067,10 +2067,36 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
  * **Example** (Describe recovery semantics)
  *
  * ```ts
- * import type { ErrorRecoverySemantics } from "@effect-ontology/Contract/ProgressStreaming"
+ * import { ErrorRecoverySemantics } from "@effect-ontology/Contract/ProgressStreaming"
  *
- * const streamEnds = (semantics: ErrorRecoverySemantics): true => semantics.clientCancellation.streamEnds
- * console.log(typeof streamEnds) // "function"
+ * const semantics = ErrorRecoverySemantics.make({
+ *   systemicErrors: {
+ *     fatal: true,
+ *     streamEnds: true,
+ *     partialResults: true,
+ *     resumable: "some"
+ *   },
+ *   contentErrors: {
+ *     fatal: false,
+ *     streamEnds: false,
+ *     partialResults: false,
+ *     chunkSkipped: true,
+ *     continuesWithNextChunk: true
+ *   },
+ *   backpressure: {
+ *     fatal: false,
+ *     streamEnds: "maybe",
+ *     eventLossPossible: true,
+ *     clientShouldAction: true
+ *   },
+ *   clientCancellation: {
+ *     fatal: false,
+ *     streamEnds: true,
+ *     graceful: true,
+ *     partialResults: true
+ *   }
+ * })
+ * console.log(semantics.clientCancellation.streamEnds) // true
  * ```
  *
  * @category protocols

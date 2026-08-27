@@ -87,7 +87,7 @@ export type numberConstants = typeof numberConstants.Type;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeNumberMethod = (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown => {
   const optNum = (index: number): number | undefined => {
     const arg = args[index];
@@ -132,7 +132,7 @@ export const invokeNumberMethod = (value: number, name: NumberMethod, args: Arra
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown => {
   const value = args[0];
   return numberStatics.$match(name, {

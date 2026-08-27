@@ -19,35 +19,35 @@ export type { TomlBoundCodec } from "./Toml.ts";
 export { Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions } from "./Toml.ts";
 export { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "./TomlDateTime.ts";
 export {
-	TomlDiagnostic,
-	TomlErrorCode,
-	TomlLexErrorCode,
-	TomlParseErrorCode,
-	TomlSemanticErrorCode,
-	TomlStringifyErrorCode,
+  TomlDiagnostic,
+  TomlErrorCode,
+  TomlLexErrorCode,
+  TomlParseErrorCode,
+  TomlSemanticErrorCode,
+  TomlStringifyErrorCode,
 } from "./TomlDiagnostic.ts";
 export { TomlDocument } from "./TomlDocument.ts";
-export type { TomlPath, TomlSegment } from "./TomlEdit.ts";
+export { TomlPath, TomlSegment } from "./TomlEdit.ts";
 export { TomlEdit, TomlRange } from "./TomlEdit.ts";
-export type { TomlRangeLike } from "./TomlFormat.ts";
+export { TomlRangeLike } from "./TomlFormat.ts";
 export { TomlFormat, TomlFormattingOptions, TomlModificationError } from "./TomlFormat.ts";
 export {
-	TomlArray,
-	TomlArrayTableHeader,
-	TomlBoolean,
-	TomlDateTimeLiteral,
-	TomlExpression,
-	TomlFloat,
-	TomlInlineEntry,
-	TomlInlineTable,
-	TomlInteger,
-	TomlKey,
-	TomlKeyKind,
-	TomlKeyValue,
-	TomlString,
-	TomlStringStyle,
-	TomlTableHeader,
-	TomlTrivia,
-	TomlValueNode,
+  TomlArray,
+  TomlArrayTableHeader,
+  TomlBoolean,
+  TomlDateTimeLiteral,
+  TomlExpression,
+  TomlFloat,
+  TomlInlineEntry,
+  TomlInlineTable,
+  TomlInteger,
+  TomlKey,
+  TomlKeyKind,
+  TomlKeyValue,
+  TomlString,
+  TomlStringStyle,
+  TomlTableHeader,
+  TomlTrivia,
+  TomlValueNode,
 } from "./TomlNode.ts";
 export { TomlVisitor, TomlVisitorEvent } from "./TomlVisitor.ts";

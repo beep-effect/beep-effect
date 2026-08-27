@@ -15,8 +15,14 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { O as OU } from "@beep/utils";
+import { Schema } from "effect";
+import { dual } from "effect/Function";
 import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
+
+const $I = $ScratchpadId.create("yaml/internal/composer/comments");
 
 /**
  * The comment field triple accepted by {@link withCommentFields}.
@@ -26,16 +32,31 @@ import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
  * Node-level model: comments live on nodes, not pairs. Absent-value
  * trailing comments land on the key.
  *
+ * **Example** (Guard a comment field bag)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CommentFields } from "@beep/scratchpad/yaml/internal/composer/comments"
+ *
+ * console.log(S.is(CommentFields)({ commentBefore: "lead", spaceBefore: true })) // true
+ * ```
+ *
  * @see {@link withCommentFields} for the merge helper that consumes this triple.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export interface CommentFields {
-	commentBefore?: string;
-	comment?: string;
-	spaceBefore?: boolean;
-}
+export const CommentFields = Schema.Struct({
+	commentBefore: Schema.optionalKey(Schema.String),
+	comment: Schema.optionalKey(Schema.String),
+	spaceBefore: Schema.optionalKey(Schema.Boolean),
+}).pipe(
+	$I.annoteSchema("CommentFields", {
+		description: "Optional leading, trailing and blank-line fidelity carried by a YAML node.",
+	}),
+);
+
+export type CommentFields = typeof CommentFields.Type;
 
 /**
  * True when the source text between `start` (exclusive of its line) and `end`
@@ -50,15 +71,27 @@ export interface CommentFields {
  * console.log(YamlFormat.formatToString("a: 1\n\nb: 2\n").includes("\n\n")) // true
  * ```
  *
+ * **Example** (Guard an escaped comment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EscapedComment } from "@beep/scratchpad/yaml/internal/composer/comments"
+ *
+ * console.log(S.is(EscapedComment)({ text: "tail", offset: 4 })) // true
+ * ```
+ *
  * @internal
  * @category predicates
  * @since 0.0.0
  */
-export function hasBlankLineBetween(text: string, start: number, end: number): boolean {
+export const hasBlankLineBetween: {
+	(text: string, start: number, end: number): boolean;
+	(start: number, end: number): (text: string) => boolean;
+} = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	const gap = text.slice(Math.max(0, start), Math.max(0, end));
 	return /\n[ \t\r]*\n/.test(gap);
-}
+});
 
 /**
  * True when there is no line break between `start` and `end` in `text`.
@@ -75,10 +108,13 @@ export function hasBlankLineBetween(text: string, start: number, end: number): b
  * @category predicates
  * @since 0.0.0
  */
-export function sameLineSpan(text: string, start: number, end: number): boolean {
+export const sameLineSpan: {
+	(text: string, start: number, end: number): boolean;
+	(start: number, end: number): (text: string) => boolean;
+} = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	return !text.slice(Math.max(0, start), Math.max(0, end)).includes("\n");
-}
+});
 
 /**
  * True when only horizontal whitespace precedes `offset` on its line — i.e.
@@ -97,7 +133,10 @@ export function sameLineSpan(text: string, start: number, end: number): boolean 
  * @category predicates
  * @since 0.0.0
  */
-export function isOwnLineAt(text: string, offset: number): boolean {
+export const isOwnLineAt: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => {
 	let i = offset - 1;
 	while (i >= 0) {
 		const ch = text[i];
@@ -108,7 +147,7 @@ export function isOwnLineAt(text: string, offset: number): boolean {
 		return ch === "\n" || ch === "\r";
 	}
 	return true;
-}
+});
 
 /**
  * True when the only thing before `offset` on its line is a block indicator —
@@ -117,19 +156,22 @@ export function isOwnLineAt(text: string, offset: number): boolean {
  * came before (`? # c` / ` - seq1`). Without this, the `? ` prefix makes the
  * comment look like a trailing comment on the previous entry.
  *
- * **Example** (Sequence-entry comment stays with the item)
+ * **Example** (Sequence-entry comment leads the item)
  *
  * ```ts
  * import { YamlFormat } from "@beep/scratchpad/yaml"
  *
- * console.log(YamlFormat.formatToString("- # c\n  item\n").includes("# c")) // true
+ * console.log(YamlFormat.formatToString("- # c\n  item\n").startsWith("# c\n- item")) // true
  * ```
  *
  * @internal
  * @category predicates
  * @since 0.0.0
  */
-export function isAfterIndicatorOnly(text: string, offset: number): boolean {
+export const isAfterIndicatorOnly: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => {
 	let i = offset - 1;
 	let sawIndicator = false;
 	while (i >= 0) {
@@ -146,7 +188,7 @@ export function isAfterIndicatorOnly(text: string, offset: number): boolean {
 		return sawIndicator && (ch === "\n" || ch === "\r");
 	}
 	return sawIndicator;
-}
+});
 
 /**
  * True when the line immediately above the line containing `offset` is blank
@@ -166,9 +208,10 @@ export function isAfterIndicatorOnly(text: string, offset: number): boolean {
  * @category predicates
  * @since 0.0.0
  */
-export function hasBlankLineAbove(text: string, offset: number): boolean {
-	return blankLineAboveStart(text, offset) >= 0;
-}
+export const hasBlankLineAbove: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => blankLineAboveStart(text, offset) >= 0);
 
 /**
  * Start offset of the blank line immediately above the line containing
@@ -176,25 +219,31 @@ export function hasBlankLineAbove(text: string, offset: number): boolean {
  * {@link hasBlankLineAbove}, for callers that must locate the blank line
  * (e.g. to test whether it falls inside a preceding scalar token's span).
  *
- * **Example** (Used to decide keep-chomp content vs style)
+ * **Example** (Format does not grow a keep-chomp trailing blank)
  *
  * ```ts
  * import { YamlFormat } from "@beep/scratchpad/yaml"
  *
- * console.log(YamlFormat.formatToString("a: |+\n  keep\n\n").includes("|+")) // true
+ * const src = "a: |+\n  keep\n\n"
+ * const formatted = YamlFormat.formatToString(src)
+ * console.log(formatted.includes("|+")) // true
+ * console.log(YamlFormat.formatToString(formatted) === formatted) // true
  * ```
  *
  * @internal
  * @category getters
  * @since 0.0.0
  */
-export function blankLineAboveStart(text: string, offset: number): number {
+export const blankLineAboveStart: {
+	(text: string, offset: number): number;
+	(offset: number): (text: string) => number;
+} = dual(2, (text: string, offset: number): number => {
 	const lineBreak = text.lastIndexOf("\n", Math.max(0, offset - 1));
 	if (lineBreak < 0) return -1;
 	const prevBreak = text.lastIndexOf("\n", lineBreak - 1);
 	const prevLine = text.slice(prevBreak + 1, lineBreak);
 	return prevLine.trim() === "" ? prevBreak + 1 : -1;
-}
+});
 
 /**
  * The deepest trailing scalar reached by descending last-child edges from
@@ -204,14 +253,14 @@ export function blankLineAboveStart(text: string, offset: number): number {
 function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
 	let current: YamlNode = node;
 	for (;;) {
-		if (current instanceof YamlScalar) return current;
-		if (current instanceof YamlMap) {
+		if (YamlScalar.is(current)) return current;
+		if (YamlMap.is(current)) {
 			const last = current.items[current.items.length - 1];
 			if (last === undefined) return undefined;
 			current = last.value ?? last.key;
 			continue;
 		}
-		if (current instanceof YamlSeq) {
+		if (YamlSeq.is(current)) {
 			const last = current.items[current.items.length - 1];
 			if (last === undefined) return undefined;
 			current = last;
@@ -249,21 +298,24 @@ function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
  * import { Yaml } from "@beep/scratchpad/yaml"
  *
  * const value = Effect.runSync(Yaml.parse("a: |+\n  keep\n\n"))
- * console.log(JSON.stringify(value).includes("keep")) // true
+ * console.log(JSON.stringify(value).includes("keep\\n\\n")) // true
  * ```
  *
  * @internal
  * @category predicates
  * @since 0.0.0
  */
-export function blankAboveIsKeepChompContent(text: string, offset: number, prev: YamlNode | undefined): boolean {
+export const blankAboveIsKeepChompContent: {
+	(text: string, offset: number, prev: YamlNode | undefined): boolean;
+	(offset: number, prev: YamlNode | undefined): (text: string) => boolean;
+} = dual(3, (text: string, offset: number, prev: YamlNode | undefined): boolean => {
 	if (prev === undefined) return false;
 	const scalar = deepestTrailingScalar(prev);
 	if (scalar === undefined || scalar.chomp !== "keep") return false;
 	if (scalar.style !== "block-literal" && scalar.style !== "block-folded") return false;
 	const start = blankLineAboveStart(text, offset);
 	return start >= scalar.offset && start < scalar.offset + scalar.length;
-}
+});
 
 /**
  * True when the line immediately below the line containing `offset` is blank
@@ -277,20 +329,23 @@ export function blankAboveIsKeepChompContent(text: string, offset: number, prev:
  * ```ts
  * import { YamlFormat } from "@beep/scratchpad/yaml"
  *
- * console.log(YamlFormat.formatToString("# a\n\nb: 1\n").includes("# a")) // true
+ * console.log(YamlFormat.formatToString("# a\n\nb: 1\n").includes("# a\n\nb:")) // true
  * ```
  *
  * @internal
  * @category predicates
  * @since 0.0.0
  */
-export function hasBlankLineBelow(text: string, offset: number): boolean {
+export const hasBlankLineBelow: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => {
 	const lineEnd = text.indexOf("\n", Math.max(0, offset));
 	if (lineEnd < 0) return false;
 	const nextEnd = text.indexOf("\n", lineEnd + 1);
 	if (nextEnd < 0) return false;
 	return text.slice(lineEnd + 1, nextEnd).trim() === "";
-}
+});
 
 /**
  * The stored text of a comment token: the RAW post-`#` slice, reference
@@ -316,8 +371,8 @@ export function hasBlankLineBelow(text: string, offset: number): boolean {
  * ```ts
  * import { YamlFormat } from "@beep/scratchpad/yaml"
  *
- * console.log(YamlFormat.formatToString("#\na: 1\n").includes("#")) // true
- * console.log(YamlFormat.formatToString("# \na: 1\n").includes("#")) // true
+ * console.log(YamlFormat.formatToString("#\na: 1\n").includes("#\n")) // true
+ * console.log(YamlFormat.formatToString("# \na: 1\n").includes("# \n")) // true
  * ```
  *
  * @internal
@@ -337,16 +392,17 @@ export function rawCommentText(source: string): string {
  * ```ts
  * import { YamlFormat } from "@beep/scratchpad/yaml"
  *
- * console.log(YamlFormat.formatToString("# a\n# b\nc: 1\n").includes("# a")) // true
+ * console.log(YamlFormat.formatToString("# a\n# b\nc: 1\n").includes("# a\n# b")) // true
  * ```
  *
  * @internal
  * @category utilities
  * @since 0.0.0
  */
-export function joinComments(a: string | undefined, b: string): string {
-	return a === undefined ? b : `${a}\n${b}`;
-}
+export const joinComments: {
+	(a: string | undefined, b: string): string;
+	(b: string): (a: string | undefined) => string;
+} = dual(2, (a: string | undefined, b: string): string => a === undefined ? b : `${a}\n${b}`);
 
 /**
  * Zero-based column of `offset` within its line.
@@ -356,17 +412,20 @@ export function joinComments(a: string | undefined, b: string): string {
  * ```ts
  * import { YamlFormat } from "@beep/scratchpad/yaml"
  *
- * console.log(YamlFormat.formatToString("a:\n  # inner\n  b: 1\n").includes("# inner")) // true
+ * console.log(YamlFormat.formatToString("a:\n  # inner\n  b: 1\n").includes("  # inner")) // true
  * ```
  *
  * @internal
  * @category getters
  * @since 0.0.0
  */
-export function columnAt(text: string, offset: number): number {
+export const columnAt: {
+	(text: string, offset: number): number;
+	(offset: number): (text: string) => number;
+} = dual(2, (text: string, offset: number): number => {
 	if (offset <= 0) return 0;
 	return offset - (text.lastIndexOf("\n", offset - 1) + 1);
-}
+});
 
 /**
  * A comment that outlived its collection: it sat after the collection's last
@@ -380,10 +439,16 @@ export function columnAt(text: string, offset: number): number {
  * @category type-level
  * @since 0.0.0
  */
-export interface EscapedComment {
-	readonly text: string;
-	readonly offset: number;
-}
+export const EscapedComment = Schema.Struct({
+	text: Schema.String,
+	offset: Schema.Finite,
+}).pipe(
+	$I.annoteSchema("EscapedComment", {
+		description: "Comment promoted from a nested collection for attachment by an outer composer scope.",
+	}),
+);
+
+export type EscapedComment = typeof EscapedComment.Type;
 
 /**
  * Rebuild `node` with the given comment fields merged in (existing fields are
@@ -409,53 +474,50 @@ export interface EscapedComment {
  * @category mapping
  * @since 0.0.0
  */
-export function withCommentFields(node: YamlNode, fields: CommentFields): YamlNode {
-	if (node instanceof YamlScalar) {
-		return new YamlScalar({
+export const withCommentFields: {
+	(node: YamlNode, fields: CommentFields): YamlNode;
+	(fields: CommentFields): (node: YamlNode) => YamlNode;
+} = dual(2, (node: YamlNode, fields: CommentFields): YamlNode => {
+	if (YamlScalar.is(node)) {
+		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) }),
 			...mergedCommentFields(node, fields),
-			...(node.chomp !== undefined ? { chomp: node.chomp } : {}),
-			...(node.blockIndent !== undefined ? { blockIndent: node.blockIndent } : {}),
-			...(node.raw !== undefined ? { raw: node.raw } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...OU.getSomesStruct({ chomp: OU.fromUndefinedOr(node.chomp), blockIndent: OU.fromUndefinedOr(node.blockIndent), raw: OU.fromUndefinedOr(node.raw), sourceMultiline: OU.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlMap) {
-		return new YamlMap({
+	if (YamlMap.is(node)) {
+		return YamlMap.make({
 			items: node.items,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) }),
 			...mergedCommentFields(node, fields),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...OU.getSomesStruct({ sourceMultiline: OU.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	if (node instanceof YamlSeq) {
-		return new YamlSeq({
+	if (YamlSeq.is(node)) {
+		return YamlSeq.make({
 			items: node.items,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...OU.getSomesStruct({ tag: OU.fromUndefinedOr(node.tag), anchor: OU.fromUndefinedOr(node.anchor) }),
 			...mergedCommentFields(node, fields),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...OU.getSomesStruct({ sourceMultiline: OU.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
 	}
-	return new YamlAlias({
+	return YamlAlias.make({
 		name: node.name,
 		...mergedCommentFields(node, fields),
 		offset: node.offset,
 		length: node.length,
 	});
-}
+});
 
 function mergedCommentFields(existing: CommentFields, incoming: CommentFields): CommentFields {
 	const commentBefore =
@@ -472,8 +534,6 @@ function mergedCommentFields(existing: CommentFields, incoming: CommentFields): 
 			: existing.comment;
 	const spaceBefore = incoming.spaceBefore ?? existing.spaceBefore;
 	return {
-		...(commentBefore !== undefined ? { commentBefore } : {}),
-		...(comment !== undefined ? { comment } : {}),
-		...(spaceBefore !== undefined ? { spaceBefore } : {}),
+		...OU.getSomesStruct({ commentBefore: OU.fromUndefinedOr(commentBefore), comment: OU.fromUndefinedOr(comment), spaceBefore: OU.fromUndefinedOr(spaceBefore) })
 	};
 }

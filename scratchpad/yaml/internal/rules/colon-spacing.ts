@@ -95,7 +95,7 @@ export const colonSpacing: YamlRule = {
 			const hasContentBefore = i >= 0 && ctx.text[i] !== "\n" && ctx.text[i] !== "\r" && ctx.text[i] !== "\t";
 			if (hasContentBefore && before > maxBefore) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "colon-spacing",
 						severity: "error",
 						message: `Too many spaces before ":" (${before} > ${maxBefore})`,
@@ -124,7 +124,7 @@ export const colonSpacing: YamlRule = {
 			if (next === undefined || next === "\n" || next === "\r" || next === "#") continue;
 			if (after > maxAfter) {
 				out.push(
-					new YamlLintDiagnostic({
+					YamlLintDiagnostic.make({
 						rule: "colon-spacing",
 						severity: "error",
 						message: `Too many spaces after ":" (${after} > ${maxAfter})`,

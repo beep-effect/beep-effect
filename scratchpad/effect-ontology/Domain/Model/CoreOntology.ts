@@ -207,10 +207,10 @@ const withSeedDerivedIdStatics =
  *
  * **Example** (Use MentionId)
  * ```ts
- * import { Effect } from "effect"
  * import { MentionId } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(Effect.isEffect(MentionId.fromCoordinates("doc-1", 0, 5))) // true
+ * console.log(MentionId.is("mention-a1b2c3d4e5f6")) // true
+ * console.log(MentionId.is("mention-DEADBEEFCAFE")) // false
  * ```
  *
  * @invariant `mention-` followed by exactly 12 lowercase hexadecimal characters.
@@ -363,10 +363,10 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  *
  * **Example** (Use CanonicalEntityId)
  * ```ts
- * import { Effect } from "effect"
  * import { CanonicalEntityId } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(Effect.isEffect(CanonicalEntityId.fromSeed("Bruce Harrell"))) // true
+ * console.log(CanonicalEntityId.is("entity-a1b2c3d4e5f6")) // true
+ * console.log(CanonicalEntityId.is("Bruce Harrell")) // false
  * ```
  *
  * @category identifiers
@@ -453,7 +453,7 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
   /**
    * Whether at least one other entity was merged into this canonical form.
    *
-   * **Example** (Use EventId)
+   * **Example** (Observe empty mergedFrom)
    * ```ts
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
@@ -480,10 +480,10 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
  *
  * **Example** (Use EventId)
  * ```ts
- * import { Effect } from "effect"
  * import { EventId } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(Effect.isEffect(EventId.fromSeed("announcement-2026-07-25"))) // true
+ * console.log(EventId.is("event-a1b2c3d4e5f6")) // true
+ * console.log(EventId.is("event-DEADBEEFCAFE")) // false
  * ```
  *
  * @category identifiers
@@ -723,7 +723,7 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
   /**
    * Whether this event has an explicit instant or interval.
    *
-   * **Example** (Use CoreOperationErrorFields)
+   * **Example** (Observe unspecified EventTime)
    * ```ts
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"

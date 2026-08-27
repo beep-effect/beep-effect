@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { Schema } from "effect";
+import { HashSet, Schema } from "effect";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -44,13 +44,13 @@ export const documentStartOptions = Schema.Struct({
 	present: Schema.optionalKey(Schema.Boolean),
 });
 
-const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark", "directive"]);
+const TRIVIA = HashSet.make("newline", "whitespace", "comment", "byte-order-mark", "directive");
 
 /** True when the stream carries `%YAML`/`%TAG` directives — which REQUIRE `---`. */
 const hasDirectives = (ctx: LintContext): boolean => ctx.tokens.some((t) => t.kind === "directive");
 
 /** The first non-trivia token: it decides whether the stream is headed by `---`. */
-const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((t) => !TRIVIA.has(t.kind));
+const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((t) => !HashSet.has(TRIVIA, t.kind));
 
 /**
  * The `---` marker at the head of the stream.
@@ -87,7 +87,7 @@ export const documentStart: YamlRule = {
 		const headed = first?.kind === "document-start";
 		if (present && !headed && ctx.text.trim() !== "") {
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-start",
 					severity: "error",
 					message: 'Missing "---" document start marker',
@@ -111,7 +111,7 @@ export const documentStart: YamlRule = {
 			// (two characters under CRLF, one under LF).
 			const terminator = ctx.text.startsWith("\r\n", first.offset + first.length) ? 2 : 1;
 			return [
-				new YamlLintDiagnostic({
+				YamlLintDiagnostic.make({
 					rule: "document-start",
 					severity: "error",
 					message: 'Forbidden "---" document start marker',

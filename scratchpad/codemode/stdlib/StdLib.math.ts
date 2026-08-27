@@ -91,7 +91,7 @@ type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number => {
   // Validate only the arguments the method consumes; like JS, extras are ignored
   // (so built-ins work as callbacks receiving (element, index, array)).
@@ -186,7 +186,7 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest iterable, AST context, and callback runner are co-primary interpreter protocol inputs.
 export const invokeMathSumPrecise = <R>(
   runner: SyncIteratorRunner<R>,
   source: unknown,

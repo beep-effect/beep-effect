@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for the `Mcp.McpServerConfig` discriminated union and the
  * `Mcp.McpJsonFile` + `Mcp.loadJson` pair.
@@ -584,3 +583,4 @@ describe("Mcp.toClaudeCodeJson", () => {
     })
   );
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

@@ -14,13 +14,11 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { Unknown } from "@beep/schema/Unknown";
+import { Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { TranscriptReadError } from "../Errors.ts";
 
 // ---------------------------------------------------------------------------

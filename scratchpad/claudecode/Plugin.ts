@@ -69,15 +69,9 @@ export {
  */
 export type {
   PluginAgentConfig,
-  PluginAgentEntry,
   PluginCommandConfig,
-  PluginCommandEntry,
-  PluginConfig,
-  PluginDefinition,
   PluginOutputStyleConfig,
-  PluginOutputStyleEntry,
   PluginSkillConfig,
-  PluginSkillEntry,
 } from "./Plugin/Define.ts";
 /**
  * Re-exports plugin constructors and filesystem serialization.
@@ -90,6 +84,12 @@ export {
   command,
   define,
   outputStyle,
+  PluginAgentEntry,
+  PluginCommandEntry,
+  PluginConfig,
+  PluginDefinition,
+  PluginOutputStyleEntry,
+  PluginSkillEntry,
   skill,
   write,
 } from "./Plugin/Define.ts";
@@ -108,14 +108,7 @@ export * as Layout from "./Plugin/Layout.ts";
  * @category models
  * @since 0.0.0
  */
-export type { LoadedPlugin, PluginScan } from "./Plugin/Load.ts";
-/**
- * Re-exports plugin scanning, decoding, and manifest normalization.
- *
- * @category normalization
- * @since 0.0.0
- */
-export { load, scan, sync } from "./Plugin/Load.ts";
+export { LoadedPlugin, load, PluginScan, scan, sync } from "./Plugin/Load.ts";
 
 /**
  * Re-exports the on-disk plugin diagnostic report model.
@@ -123,16 +116,10 @@ export { load, scan, sync } from "./Plugin/Load.ts";
  * @category diagnostics
  * @since 0.0.0
  */
-export type { PluginDoctorReport } from "./Plugin/Validate.ts";
-/**
- * Re-exports plugin diagnostic models, typed errors, and validation operations.
- *
- * @category diagnostics
- * @since 0.0.0
- */
 export {
   doctor,
   lint,
+  PluginDoctorReport,
   PluginIssue,
   PluginIssueSeverity,
   PluginLintReport,
