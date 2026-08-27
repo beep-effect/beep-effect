@@ -757,7 +757,10 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
   return YeetMonitorFailedJob.make({
     databaseId: job.databaseId,
     flakeClass,
-    logPending: logUnavailable && !runCompleted,
+    // A truncated capture is definitive evidence that the log is too large for
+    // the classifier; polling again cannot make that same capture complete.
+    // Only a failed fetch can still be the short materialization lag we defer.
+    logPending: result.exitCode !== 0 && !result.truncated && !runCompleted,
     name: job.name,
   });
 });

@@ -1013,6 +1013,31 @@ describe("comment rows and --until-event", () => {
     )
   );
 
+  it.live("reports an all-terminal red as an event wake", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent: true });
+
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(1);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "fail", name: "Coverage", state: "FAILURE" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
   // The settle window batches a comment burst into one wake: the second
   // comment lands inside the window and joins the session instead of costing
   // a second one. A comment-only exit is a clean zero.

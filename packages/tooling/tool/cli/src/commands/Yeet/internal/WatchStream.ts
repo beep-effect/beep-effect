@@ -379,6 +379,24 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
  * a hostile comment cannot bloat the stream or smuggle escape codes through a
  * consumer that echoes rows verbatim.
  *
+ * **Example** (Construct a comment row)
+ *
+ * ```ts
+ * import { YeetCommentPosted } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetCommentPosted.make({
+ *   at: "2026-08-27T00:00:00Z",
+ *   author: "octocat",
+ *   body: "Please add a regression test.",
+ *   commentId: 44,
+ *   createdAt: "2026-08-27T00:00:00Z",
+ *   headSha: "abc123",
+ *   source: "issue",
+ *   url: "https://github.com/o/r/pull/1#issuecomment-44",
+ * })
+ * console.log(row.kind) // "comment-posted"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

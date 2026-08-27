@@ -455,12 +455,19 @@ const watchStreamEnd = (
   settleTicks: O.Option<number>
 ): O.Option<YeetWatchEndReason> => {
   const end = watchTickEnd(snapshot, emptyPolls);
-  if (O.isSome(end)) {
+  // A merged or closed PR remains terminal regardless of the check census.
+  // For an open PR, a red is the actionable event even if it also made every
+  // check terminal; supervisors route the end row by this reason.
+  if (
+    O.exists(end, (reason) => YeetWatchEndReason.is["pr-merged"](reason) || YeetWatchEndReason.is["pr-closed"](reason))
+  ) {
     return end;
   }
-  const eventExit =
-    untilEvent && (countYeetWatchFailures(snapshot) > 0 || O.exists(settleTicks, (remaining) => remaining <= 0));
-  return eventExit ? O.some(YeetWatchEndReason.Enum.event) : O.none();
+  const eventExit = untilEvent && countYeetWatchFailures(snapshot) > 0;
+  if (eventExit || (untilEvent && O.exists(settleTicks, (remaining) => remaining <= 0))) {
+    return O.some(YeetWatchEndReason.Enum.event);
+  }
+  return end;
 };
 
 // A zero-check snapshot inside the registration window is narrated to stderr
@@ -576,6 +583,13 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   yield* supersedeYeetDispatchState(context.repoRoot, current.headSha, current.prNumber, startedAt);
   yield* convergeYeetWatchDispatch(context, current, startedAt);
   let emptyPolls = A.isReadonlyArrayEmpty(current.checks) ? 1 : 0;
+
+  // A red snapshot is already durable after convergence. Do not let a slow
+  // comments endpoint delay the immediate `--until-event` wake it promises.
+  const initialEnd = watchStreamEnd(untilEvent, current, emptyPolls, O.none());
+  if (O.isSome(initialEnd)) {
+    return yield* emitWatchEnded(current, initialEnd.value);
+  }
 
   const comments = yield* openWatchCommentSession(context, current.prNumber);
   // The opening poll drains the gap since the last session's watermark, so a
