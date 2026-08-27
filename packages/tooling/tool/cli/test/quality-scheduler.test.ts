@@ -4,6 +4,7 @@ import {
   admissionCapacityTokensFor,
   admissionStatus,
   admissionTokenWeight,
+  isOvershootLoserForTesting,
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
@@ -488,6 +489,134 @@ describe("quality-scheduler", () => {
             expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
             yield* Fiber.interrupt(stuck);
           })
+        );
+      })
+    ));
+
+  it("rolls back every lease outside the capacity-fitting admission prefix", () => {
+    const lease = (pid: number, admittedAtMillis: number, weightTokens: number) =>
+      YeetAdmissionLease.make({
+        schemaVersion: "yeet-admission-lease/v1",
+        pid,
+        procStart: "1",
+        kind: "merged-preview",
+        weightTokens,
+        priority: "verify",
+        originKey: `origin-${pid}`,
+        checkoutRoot: `/repo/${pid}`,
+        branch: "feat/x",
+        command: "bun run beep yeet verify",
+        startedAt: `2026-08-27T00:00:0${pid}Z`,
+        admittedAtMillis,
+        heartbeatAtMillis: admittedAtMillis + 5000,
+      });
+    const first = lease(1, 100, 5);
+    const second = lease(2, 200, 5);
+    const third = lease(3, 300, 5);
+    const state = {
+      leases: [
+        { path: "/a", lease: third },
+        { path: "/b", lease: first },
+        { path: "/c", lease: second },
+      ],
+      tickets: [],
+      dead: [],
+      quarantined: [],
+    };
+    // 5 + 5 + 5 against capacity 8: only the oldest admission fits the prefix.
+    expect(isOvershootLoserForTesting(state, 8, first)).toBe(false);
+    expect(isOvershootLoserForTesting(state, 8, second)).toBe(true);
+    expect(isOvershootLoserForTesting(state, 8, third)).toBe(true);
+    // Within capacity nothing rolls back.
+    expect(isOvershootLoserForTesting(state, 15, third)).toBe(false);
+  });
+
+  it("fails closed when the admission state directory cannot be listed", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            // Materialize the directories, then make the queue unlistable.
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            yield* fs.chmod(tempRoot.queue, 0o000);
+            const failure = yield* admissionStatus(fastConfig).pipe(Effect.flip);
+            expect(failure._tag).toBe("QualitySchedulerError");
+            expect(failure.message).toContain("Failed to list admission state");
+            yield* fs.chmod(tempRoot.queue, 0o700);
+          })
+        );
+      })
+    ));
+
+  it("releases the origin gate when lease staging fails after acquisition", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const releases = yield* Ref.make(0);
+            const gate = {
+              tryAcquire: Effect.succeed(O.some("origin-lease")),
+              release: (_: string) => Ref.update(releases, (count) => count + 1),
+            };
+            // Materialize the directories, then make the leases dir unwritable
+            // so staging the lease fails after the gate has been acquired.
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            yield* fs.chmod(tempRoot.leases, 0o500);
+            const failure = yield* withQualityAdmission(request(), gate, Effect.succeed("never"), fastConfig).pipe(
+              Effect.flip
+            );
+            expect(failure._tag).toBe("QualitySchedulerError");
+            expect(yield* Ref.get(releases)).toBe(1);
+            yield* fs.chmod(tempRoot.leases, 0o700);
+            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+          })
+        );
+      })
+    ));
+
+  it("keeps persisted quarantine contents on the status surface", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            const parked = path.join(tempRoot.quarantine, "old.lease.json.123");
+            yield* fs.writeFileString(parked, "{not json");
+            const snapshot = yield* admissionStatus(fastConfig);
+            expect(snapshot.quarantined).toContain(parked);
+          })
+        );
+      })
+    ));
+
+  it("bypasses weighted admission when the hard floor is unattainable", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(14);
+        yield* withAdmissionTempRoot(
+          gibRef,
+          (tempRoot) =>
+            Effect.gen(function* () {
+              // 18 GiB total clears one slot numerically but can never hold the
+              // 15 GiB floor plus a 5 GiB slot of available memory.
+              const result = yield* withQualityAdmission(
+                request(),
+                noAdmissionOriginGate,
+                Effect.succeed("ran"),
+                fastConfig
+              );
+              expect(result).toBe("ran");
+              expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
+              expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(0);
+            }),
+          18
         );
       })
     ));

@@ -101,6 +101,15 @@ a stale-heartbeat diagnostic (never a kill signal), and the `/proc` stat parser
 consolidated so the fleet registry, proof coordinator, and scheduler share one
 implementation.
 
+A second adversarial round on the PR itself (Codex review + Greptile, PR #870) added five
+more hardening fixes: an unlistable coordination directory now fails closed instead of
+reading as empty state (which would have zeroed the capacity math), overshoot rollback is
+prefix-based over the admission order so an N-way race rolls back every excess lease (not
+just the single newest), the origin gate is released on any post-acquire failure
+(encode/stage/link), files already moved into quarantine stay on the `scheduler status`
+surface, and the small-host bypass now requires the hard floor plus one slot to be
+attainable from installed memory (a 15-18 GiB host bypasses instead of waiting forever).
+
 ## Follow-ups (tracked in PLAN P4)
 
 D2 adaptive lane concurrency (scheduler-selected turbo args); D3 remainder (PSI/load

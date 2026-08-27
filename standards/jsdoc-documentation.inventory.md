@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-27T16:25:51.442Z
+Generated: 2026-08-27T17:30:46.148Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 71 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2508 |
-| publicExports | 16824 |
+| publicModules | 2512 |
+| publicExports | 16858 |
 | openModules | 398 |
 | openExports | 134 |
 | missingExportExamples | 4 |
@@ -73,7 +73,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 212 | 1669 | 46 | 9 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 216 | 1703 | 46 | 9 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |

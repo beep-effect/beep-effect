@@ -535,12 +535,16 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
     readonly dead: ReadonlyArray<string>;
     readonly quarantined: ReadonlyArray<string>;
   },
-  never,
+  QualitySchedulerError,
   FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const names = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+  // Fail closed: an unlistable coordination directory must never masquerade
+  // as an empty one, or every active lease would vanish from capacity math.
+  const names = yield* fs
+    .readDirectory(directory)
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
   const classified = yield* Effect.forEach(A.filter(names, Str.endsWith(".json")), (name) => {
     const entryPath = path.join(directory, name);
     return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
@@ -564,7 +568,7 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
 const scanAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   repair: boolean
-): Effect.fn.Return<LiveAdmissionState, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
@@ -773,22 +777,50 @@ const encodeLeaseText = Effect.fnUntraced(function* (
 // immutable admission instant (never the heartbeat, which established leases
 // refresh continuously); rollback happens before `use` starts, so running
 // work is never preempted.
+const admissionInstantOrder: Order.Order<YeetAdmissionLease> = pipe(
+  Order.mapInput(Order.Number, (lease: YeetAdmissionLease) => lease.admittedAtMillis),
+  Order.combine(Order.mapInput(Order.Number, (lease: YeetAdmissionLease) => lease.pid)),
+  Order.combine(Order.mapInput(Order.String, (lease: YeetAdmissionLease) => lease.startedAt))
+);
+
 const isOvershootLoser = (state: LiveAdmissionState, capacityTokens: number, own: YeetAdmissionLease): boolean => {
-  if (activeTokenTotal(state) <= capacityTokens) {
-    return false;
-  }
-  const newest = A.reduce(state.leases, O.none<YeetAdmissionLease>(), (best, { lease }) =>
-    O.match(best, {
-      onNone: () => O.some(lease),
-      onSome: (current) =>
-        lease.admittedAtMillis > current.admittedAtMillis ||
-        (lease.admittedAtMillis === current.admittedAtMillis && lease.pid > current.pid)
-          ? O.some(lease)
-          : best,
-    })
+  const ordered = A.sort(
+    A.map(state.leases, ({ lease }) => lease),
+    admissionInstantOrder
   );
-  return O.exists(newest, (lease) => lease.pid === own.pid && lease.startedAt === own.startedAt);
+  let cumulative = 0;
+  for (const lease of ordered) {
+    cumulative = cumulative + lease.weightTokens;
+    if (lease.pid === own.pid && lease.startedAt === own.startedAt) {
+      return cumulative > capacityTokens;
+    }
+  }
+  return false;
 };
+
+/**
+ * Whether one lease sits outside the capacity-fitting admission prefix.
+ *
+ * Leases are ordered by their immutable admission instant; every racing
+ * contender whose cumulative weight exceeds capacity rolls itself back, so a
+ * three-way over-admission cannot leave two excess proofs running.
+ *
+ * **Example** (Reference the overshoot predicate)
+ *
+ * ```ts
+ * import { isOvershootLoserForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof isOvershootLoserForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const isOvershootLoserForTesting: {
+  (capacityTokens: number, own: YeetAdmissionLease): (state: LiveAdmissionState) => boolean;
+  (state: LiveAdmissionState, capacityTokens: number, own: YeetAdmissionLease): boolean;
+} = dual(3, isOvershootLoser);
 
 interface AdmissionAttempt<OriginLease> {
   readonly admitted: O.Option<AdmittedState<OriginLease>>;
@@ -806,11 +838,42 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
   QualitySchedulerError | GateError,
   FileSystem.FileSystem | Path.Path | MemoryStats | GateRequirements
 > {
-  const path = yield* Path.Path;
   const originLease = yield* gate.tryAcquire;
   if (O.isNone(originLease)) {
     return { admitted: O.none(), originBusy: true };
   }
+  // From here the origin lease is owned: any failure before ownership hands
+  // over to the admitted-state finalizer must release it (both review bots
+  // flagged the leak on encode/stage/link failures); the overshoot rollback
+  // success path releases it explicitly below.
+  const selfLease = yield* stageSelfLease(directories, request, ticket, config).pipe(
+    Effect.onError(() => gate.release(originLease.value).pipe(Effect.ignore))
+  );
+  if (O.isNone(selfLease)) {
+    yield* gate.release(originLease.value);
+    return { admitted: O.none(), originBusy: false };
+  }
+  return {
+    admitted: O.some({
+      leasePath: selfLease.value.leasePath,
+      lease: selfLease.value.lease,
+      originLease: originLease.value,
+    }),
+    originBusy: false,
+  };
+});
+
+const stageSelfLease = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  request: AdmissionRequest,
+  ticket: YeetAdmissionTicket,
+  config: AdmissionConfig
+): Effect.fn.Return<
+  O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string }>,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | MemoryStats
+> {
+  const path = yield* Path.Path;
   const nowMillis = yield* Clock.currentTimeMillis;
   const lease = YeetAdmissionLease.make({
     schemaVersion: "yeet-admission-lease/v1",
@@ -830,7 +893,6 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const created = yield* tryCreateExclusive(leasePath, `${yield* encodeLeaseText(lease)}\n`);
   if (!created) {
-    yield* gate.release(originLease.value);
     return yield* QualitySchedulerError.make({
       message: `Admission lease ${leasePath} already exists for this ticket; remove it and retry.`,
     });
@@ -841,10 +903,9 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
   if (isOvershootLoser(rescanned, capacityNow, lease)) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
-    yield* gate.release(originLease.value);
-    return { admitted: O.none(), originBusy: false };
+    return O.none();
   }
-  return { admitted: O.some({ leasePath, lease, originLease: originLease.value }), originBusy: false };
+  return O.some({ lease, leasePath });
 });
 
 const heartbeatLoop = Effect.fnUntraced(function* (
@@ -1069,11 +1130,13 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   // not wait forever: clamp the weight to the machine ceiling, or fall back to
   // origin-gate-only coordination (the pre-scheduler behavior) when even one
   // token can never be admitted.
-  const machineCeiling = admissionCapacityTokensFor(
-    yield* stats.totalGib,
-    AdmissionConfig.make({ ...resolved, hardFloorGib: 0 })
-  );
-  if (machineCeiling <= 0) {
+  const totalGib = yield* stats.totalGib;
+  const machineCeiling = admissionCapacityTokensFor(totalGib, AdmissionConfig.make({ ...resolved, hardFloorGib: 0 }));
+  // A host must be able to hold the hard floor PLUS one slot of available
+  // memory; kernel and resident overhead keep MemAvailable well below the
+  // installed total, so a total near the floor can never admit anything.
+  const floorAttainable = totalGib >= resolved.hardFloorGib + resolved.slotSizeGib;
+  if (machineCeiling <= 0 || !floorAttainable) {
     yield* Console.log(
       `[yeet] admission: installed memory is below the scheduling envelope; coordinating ${request.kind} through the origin gate only`
     );
@@ -1195,10 +1258,17 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   config: AdmissionConfig,
   repair: boolean
-): Effect.fn.Return<AdmissionSnapshot, never, FileSystem.FileSystem | Path.Path | MemoryStats> {
+): Effect.fn.Return<AdmissionSnapshot, QualitySchedulerError, FileSystem.FileSystem | Path.Path | MemoryStats> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const state = yield* scanAdmissionState(directories, repair);
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
+  // Files already moved into quarantine stay on the operator's inspection
+  // surface until they are removed by hand.
+  const persistedQuarantine = yield* fs
+    .readDirectory(directories.quarantine)
+    .pipe(Effect.map(A.map((name) => path.join(directories.quarantine, name))), Effect.orElseSucceed(A.empty<string>));
   return AdmissionSnapshot.make({
     capacityTokens: admissionCapacityTokensFor(availableGib, config),
     activeTokens: activeTokenTotal(state),
@@ -1207,7 +1277,7 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
     leases: A.map(state.leases, ({ lease }) => lease),
     tickets: A.map(state.tickets, ({ ticket }) => ticket),
     dead: state.dead,
-    quarantined: state.quarantined,
+    quarantined: A.appendAll(state.quarantined, persistedQuarantine),
   });
 });
 
