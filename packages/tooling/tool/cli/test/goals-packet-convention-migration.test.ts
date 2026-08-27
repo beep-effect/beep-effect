@@ -119,7 +119,7 @@ const preparePartialTraceRecovery = Effect.fnUntraced(function* () {
   const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
   if (O.isNone(recovery)) return yield* Effect.die("expected trace recovery seed");
   let interrupted = false;
-  yield* Effect.exit(
+  const interruptedExit = yield* Effect.exit(
     applyPacketGenesisSeed(recovery.value).pipe(
       Effect.provideService(FileSystem.FileSystem, {
         ...fs,
@@ -135,6 +135,8 @@ const preparePartialTraceRecovery = Effect.fnUntraced(function* () {
       })
     )
   );
+  expect(Exit.isFailure(interruptedExit)).toBe(true);
+  expect(yield* fs.exists(recovery.value.tracePath)).toBe(false);
   const partialTrace = Str.takeLeft(32)(recovery.value.traceText);
   yield* fs.writeFileString(recovery.value.tracePath, partialTrace);
   const retry = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
@@ -1424,6 +1426,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         })
       );
       expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
+      expect(O.isNone(yield* planPacketGenesisSeed(packet, manifest, "2026-08-28T00:00:00.000Z"))).toBe(true);
       const foreignTrace = '{"foreign":true}\n';
       yield* fs.writeFileString(retry.tracePath, foreignTrace);
       const foreignRecovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-29T00:00:00.000Z");
