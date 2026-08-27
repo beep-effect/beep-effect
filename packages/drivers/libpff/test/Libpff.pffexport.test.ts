@@ -129,6 +129,12 @@ const failingStub = `#!/usr/bin/env bash
 exit 2
 `;
 
+const corruptFailingStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+printf 'input archive is corrupt\n' >&2
+exit 2
+`;
+
 const makeMissingBinaryEngine = (exportRoot: string) =>
   makePffexportFileProcessingEngine(
     PffexportEngineConfig.make({ exportRoot, pffexportPath: "/nonexistent/pffexport-missing" })
@@ -188,7 +194,7 @@ describe("makePffexportFileProcessingEngine", () => {
     ));
 
   it.effect(
-    "refuses archive export when the caller omits source bytes",
+    "exports directly from a file locator when the caller omits source bytes",
     Effect.fnUntraced(
       function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -201,10 +207,10 @@ describe("makePffexportFileProcessingEngine", () => {
           source: SourceArtifact.make(sourceWithoutBytes),
         });
 
-        const error = yield* engine.exportArchive(operationWithoutBytes).pipe(Effect.flip);
+        const result = yield* engine.exportArchive(operationWithoutBytes);
 
-        expect(error.reason).toBe("archive-export-failed");
-        expect(error.message).toContain("caller-supplied source bytes");
+        expect(result.children.length).toBeGreaterThan(0);
+        expect(result.sourceArtifactId).toBe(operation.source.id);
       },
       Effect.scoped,
       provideTestLayer
@@ -592,6 +598,25 @@ describe("makePffexportFileProcessingEngine", () => {
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
         expect(error.reason).toBe("engine-unavailable");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "classifies bounded process diagnostics without retaining raw stderr",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(corruptFailingStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+
+        expect(error.details).toStrictEqual({ exitCode: "2", processClassification: "corrupt" });
+        expect(error.message).not.toContain("input archive is corrupt");
       },
       Effect.scoped,
       provideTestLayer

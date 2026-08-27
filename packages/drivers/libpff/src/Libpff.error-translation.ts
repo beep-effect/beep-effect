@@ -215,7 +215,15 @@ export const libpffOperationError: {
           ...operationErrorContext(operation),
           message: options.exportFailedMessage ?? defaultExportFailedMessage,
           ...O.getSomesStruct({
-            details: O.map(error.exitCode, (exitCode) => ({ exitCode: `${exitCode}` })),
+            details: O.liftPredicate(
+              {
+                ...O.getSomesStruct({
+                  exitCode: O.map(error.exitCode, (exitCode) => `${exitCode}`),
+                  processClassification: error.processClassification,
+                }),
+              },
+              (details) => details.exitCode !== undefined || details.processClassification !== undefined
+            ),
           }),
         })
       ),
