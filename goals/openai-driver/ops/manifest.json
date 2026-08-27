@@ -5,12 +5,12 @@
     "title": "OpenAI Driver (@beep/openai)",
     "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-24",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/openai-driver",
   "lifecycle": "active",
-  "statusNote": "Scaffolded 2026-08-24 by the docs-only graduation ceremony (M3, MAP v1.0 packet #2); P0 Research starts on its own PR beside the lab's C0 work.",
+  "statusNote": "P0 completed 2026-08-27 against @effect/ai-openai 4.0.0-rc.112; implementation is active in the scaffolded @beep/openai workspace.",
   "mission": "Ship @beep/openai, a thin driver mirroring @beep/anthropic that composes @effect/ai-openai's shipped OpenAiClient, OpenAiLanguageModel, and OpenAiEmbeddingModel behind typed config and errors and exposes Layer factories for both model kinds; no engine code.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -54,17 +54,17 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -85,7 +85,7 @@
     "bun run beep goals index --check",
     "bun run beep goals doctor",
     "bun run beep lint reflection-artifacts",
-    "bun run docgen:local",
+    "bun run docgen:local -- --full",
     "bun run beep yeet verify"
   ],
   "stopConditions": [

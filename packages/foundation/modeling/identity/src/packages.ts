@@ -190,7 +190,8 @@ const generatedComposers = $I.compose(
   "effect-drizzle",
   "skill-contract",
   "codegen-kit",
-  "brand"
+  "brand",
+  "openai"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2531,3 +2532,20 @@ export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = com
  * @since 0.0.0
  */
 export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = composers.$BrandId;
+
+/**
+ * Identity composer for `@beep/openai`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $OpenaiId } from "@beep/identity"
+ *
+ * const id = $OpenaiId.make("Openai")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $OpenaiId: Identity.IdentityComposer<"@beep/openai"> = composers.$OpenaiId;

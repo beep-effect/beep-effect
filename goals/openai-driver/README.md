@@ -45,15 +45,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, not started. Next concrete action: verify the `@effect/ai-openai`
-4.0.0-rc.111 surface against the Effect reference checkout (embedding `.model()`
-vs `.layer()`, `OpenAiClient.layerConfig` options), pick the default model ids
-from the reference `Model` unions, then scaffold with
-`bun run beep create-package openai --family drivers --description "Product-neutral Effect driver for OpenAI."`.
+P2 Verify, active. P0 re-verified the composition contract against
+`@effect/ai-openai` 4.0.0-rc.112 and Effect reference `dd99ab007e`; P1 then
+scaffolded and implemented the package. Build, typecheck, 100% targeted
+coverage, package tests, and package-scoped docgen are green.
 
 ## Latest Evidence
 
-Not started.
+- [`history/2026-08-27-p0-research.md`](./history/2026-08-27-p0-research.md)
+  records the upstream API proof, selected defaults, and scaffold result.
+- `bun run --cwd packages/drivers/openai test`: 3 files and 9 tests passed.
+- `bun run docgen:local -- --package @beep/openai`: 15 examples compiled.
 
 ## Notes
 

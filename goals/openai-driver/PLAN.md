@@ -2,15 +2,15 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Verify the `@effect/ai-openai` rc.111 surface against the Effect reference checkout, pick default model ids, and confirm the scaffold command. | Composition facts in `SPEC.md` re-verified; default ids recorded in the decision log; no blockers. |
-| P1 Implement | pending | Scaffold via `bun run beep create-package openai --family drivers`, write config, service, tests, docs, and the changeset. | `SPEC.md` acceptance criteria are met locally. |
-| P2 Verify | pending | Run package tests, `bun run docgen:local`, governance gates, and `bun run beep yeet verify`. | Verification is green or blockers are attributed and documented. |
+| P0 Research | completed | Verify the `@effect/ai-openai` rc.112 surface against the Effect reference checkout, pick default model ids, and confirm the scaffold command. | Composition facts in `SPEC.md` re-verified; default ids recorded in the decision log; no blockers. |
+| P1 Implement | completed | Scaffold via `bun run beep create-package openai --family drivers`, write config, service, tests, docs, and the changeset. | `SPEC.md` acceptance criteria are met locally. |
+| P2 Verify | active | Run package tests, `bun run docgen:local -- --full`, governance gates, and `bun run beep yeet verify`. | Verification is green or blockers are attributed and documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
@@ -60,6 +60,6 @@ rg -n "openai-driver|GOAL.md|agentLaunchers|packetAnchorDocument" goals/openai-d
 git diff --check -- goals/openai-driver
 bun run beep goals index --check
 bun run beep goals doctor
-bun run docgen:local
+bun run docgen:local -- --full
 bun run beep yeet verify
 ```
