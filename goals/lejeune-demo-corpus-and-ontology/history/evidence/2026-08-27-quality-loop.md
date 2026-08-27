@@ -188,3 +188,56 @@ and derive quote/synthetic projection rows back from the persisted bundle before
   drift. The lab audit stayed green at three files/22 tests.
 - Schema-first, Knip, Fallow dead-code, Fallow audit attribution, and `git diff --check` passed
   with zero introduced findings.
+
+## Round 5 inventory
+
+Quality and Architecture reported zero required findings against exact commit
+`8731483a73e48969d22d856066c7662053821f33`. Schema/domain reported five required findings.
+All five belonged to the changed initiative scope. None was rejected or waived:
+
+| Inventory | Required contract | Status |
+| --- | --- | --- |
+| `LEJ-SCHEMA-R5-001` | Close the immutable v1 bundle against every ordered canonical fixture value and relationship. | fixed in `398c5bf7078c291d28cc3c6ffc43a04ae73dd768` |
+| `LEJ-SCHEMA-R5-002` | Close all six rule rows against exact facts, stops, citations, and fixture semantics. | fixed in `398c5bf7078c291d28cc3c6ffc43a04ae73dd768` |
+| `LEJ-SCHEMA-R5-003` | Pin the frozen provider metadata, candidate order, digest, and canonical source. | fixed in `398c5bf7078c291d28cc3c6ffc43a04ae73dd768` |
+| `LEJ-SCHEMA-R5-004` | Prevent duplicate or dangling mutable-ledger identities in v1. | fixed in `398c5bf7078c291d28cc3c6ffc43a04ae73dd768` |
+| `LEJ-SCHEMA-R5-005` | Validate the five persisted documents as one identity-bound publication before promotion. | fixed in `398c5bf7078c291d28cc3c6ffc43a04ae73dd768` |
+
+### Round 5 fixer proof
+
+- One production canonical fixture tuple now owns all four source texts and hashes, all 20
+  ordered extraction rows, both missing-field questions, and every project, product, component,
+  RFQ, quote-line, and relationship value. The immutable decoder compares both fixtures with
+  schema-derived equivalence.
+- The six canonical rule results now include ordered matched facts, exact stop reasons, full
+  governing-source data, dispositions, and human-stop state. Replay proves that the pure rule
+  evaluator returns that exact tuple.
+- The generic provider result remains available for live smoke work. Persisted replay refines it
+  to an exact frozen v1 recording with pinned provider, model, timestamp, ordered candidates,
+  digest, revisions, and canonical source text.
+- Review-ledger v1 now permits only the published empty tuples. A later mutation contract must
+  introduce a new version before approvals or claims can be persisted.
+- Publication readback decodes all five JSON documents, hashes the exact `bundle.json` bytes read
+  from disk, and closes receipt and projection identities, projection contents, ledger state, and
+  retention policy before the single publication-root rename.
+- Mutation tests reject source hash/content/order drift, extraction/component order drift,
+  missing-field and entity semantic drift, stale rule results, fact and stop changes, provider
+  metadata and candidate-order changes, noncanonical provider grounding, nonempty ledgers, exact
+  bundle-byte changes, sidecars from another identity, and retention-policy mismatch.
+- The lab audit passed production build, typecheck, three test files/23 tests, and Biome over 28
+  files. Schema-first reported zero missing or stale entries and zero advisories. Knip reported
+  `current=3 baseline=3 introduced=0`; Fallow dead-code reported zero findings; Fallow audit
+  reported zero introduced findings.
+- After merging current `origin/main`, two fresh provider-offline and network-offline publications
+  returned identity `395e10a9282d39ead0fcc8b601e3bdb3c087916c43e61504dcb3638688fb9815`.
+  Their bundle, receipt, projection metadata, review ledger, and retention metadata were
+  byte-identical.
+
+## Round 6 preflight
+
+The first quality pass on the clean delivery worktree found no source regression. It did find
+that the new linked worktree had no local dependency tree, which made tsgo, Knip, and Fallow
+report dependency-resolution failures. `bun install --frozen-lockfile` provisioned the committed
+tree with lifecycle scripts. The same pass also found this missing Round 5 record and the stale
+test count in the golden report. Both evidence gaps were corrected before the ten-role panel
+restarted.

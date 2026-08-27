@@ -10,8 +10,8 @@ generators, frozen expectations, and the sanitized provider recording are tracke
 ## Fixture and extraction proof
 
 `bun run --cwd apps/labs/lejeune-bolt-workbench audit` passed on 2026-08-27 with three test
-files and 21 tests, including schema-derived retention-authorization round trips and the
-transactional publication/extension boundary matrix.
+files and 23 tests. Coverage includes schema-derived retention and empty-ledger round trips, the
+persisted-contract mutation matrix, and the transactional publication/extension boundary matrix.
 
 The fixture test generated the same four sources twice and matched these frozen SHA-256 hashes:
 
@@ -73,7 +73,8 @@ header, credential, usage record, or real data.
 
 ## Offline replay and retention proof
 
-Two fresh durable builds completed with provider and network availability forced to `false`.
+Two fresh post-Round-5 durable builds completed with provider and network availability forced to
+`false`.
 Both produced bundle identity
 `395e10a9282d39ead0fcc8b601e3bdb3c087916c43e61504dcb3638688fb9815`; their `bundle.json`,
 `golden-replay.json`, `projection-metadata.json`, separate `review-ledger.json`, and
