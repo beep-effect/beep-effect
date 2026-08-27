@@ -1,0 +1,53 @@
+{
+  "version": "gold/v1",
+  "paperId": "05afbbf3e1e9",
+  "subset": "relation",
+  "labels": [
+    {
+      "predicate": "affiliated_with",
+      "subjectStartChar": 87,
+      "subjectEndChar": 184,
+      "subjectSha256": "08a230a3916926b388ead21aced92835327fd7630177bb21afa9393462bf9c88",
+      "objectStartChar": 185,
+      "objectEndChar": 249,
+      "objectSha256": "bdaf93e956110314eb6b4ad242e0731258601cd278b09a3e42b44881549ff3b7",
+      "startChar": 87,
+      "endChar": 249,
+      "quoteSha256": "321eaa6b88631781d1cadffb803d306a9d55c4f6ad6f09c325873736c7e8645e",
+      "verified": false
+    },
+    {
+      "predicate": "selected",
+      "subjectStartChar": 789,
+      "subjectEndChar": 791,
+      "subjectSha256": "f3fe997b8d1ce8187681a84a35ee34efa871dd7ed39df22ac2d9b2b5d745220a",
+      "objectStartChar": 821,
+      "objectEndChar": 841,
+      "objectSha256": "dc5571c83bb3646a41e87cc4a683bed9d5ccb1422f29bc5e1af657252ba4d2b8",
+      "startChar": 789,
+      "endChar": 841,
+      "quoteSha256": "3b28eccd806b7afa1bee6adbb4be57597f3b527b57f0658e0ea013dccd2da6b5",
+      "verified": false
+    },
+    {
+      "predicate": "shows",
+      "subjectStartChar": 1348,
+      "subjectEndChar": 1360,
+      "subjectSha256": "a1028498e7ec0421a9b08d29790328fff2f2486ac2164343439e2cc3db95875e",
+      "objectStartChar": 1384,
+      "objectEndChar": 1408,
+      "objectSha256": "63ad2890f3e7b68dddab07e286ff2912d411fd60d913261533830fce0ac3ca03",
+      "startChar": 1348,
+      "endChar": 1408,
+      "quoteSha256": "d4317b6f0d798b58ecb613fa7c8eb3a84966f4b73ca63d1f4d7ab36aceb8187e",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

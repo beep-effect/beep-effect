@@ -1,0 +1,185 @@
+{
+  "version": "gold/v1",
+  "paperId": "06c93f91ef3d",
+  "subset": "entity",
+  "labels": [
+    {
+      "cluster": "PromptAid",
+      "endChar": 9,
+      "entityType": "system",
+      "labelSha256": "c0a0771b45c35d24d4b641567ef7c42ca7194ad4981fca25261ff506e938eefc",
+      "quoteSha256": "c0a0771b45c35d24d4b641567ef7c42ca7194ad4981fca25261ff506e938eefc",
+      "startChar": 0,
+      "verified": false
+    },
+    {
+      "cluster": "LLMs",
+      "endChar": 115,
+      "entityType": "model family",
+      "labelSha256": "0340bfb383fca6f23f7323d7eba231cf17df7c67a21fe779e04018098a0d2170",
+      "quoteSha256": "0340bfb383fca6f23f7323d7eba231cf17df7c67a21fe779e04018098a0d2170",
+      "startChar": 94,
+      "verified": false
+    },
+    {
+      "cluster": "Aditi Mishra",
+      "endChar": 128,
+      "entityType": "person",
+      "labelSha256": "36c7254a0898d91908a72c2201fc91daa7eb3109d9becb9811e87180da18a1d7",
+      "quoteSha256": "36c7254a0898d91908a72c2201fc91daa7eb3109d9becb9811e87180da18a1d7",
+      "startChar": 116,
+      "verified": false
+    },
+    {
+      "cluster": "Arizona State University",
+      "endChar": 154,
+      "entityType": "organization",
+      "labelSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "quoteSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "startChar": 130,
+      "verified": false
+    },
+    {
+      "cluster": "Utkarsh Soni",
+      "endChar": 167,
+      "entityType": "person",
+      "labelSha256": "2c11879e9bfe6f79089bc887d72a3beb8b07dfca2b8153ebe920200c0edc148b",
+      "quoteSha256": "2c11879e9bfe6f79089bc887d72a3beb8b07dfca2b8153ebe920200c0edc148b",
+      "startChar": 155,
+      "verified": false
+    },
+    {
+      "cluster": "Arizona State University",
+      "endChar": 193,
+      "entityType": "organization",
+      "labelSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "quoteSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "startChar": 169,
+      "verified": false
+    },
+    {
+      "cluster": "Anjana Arunkumar",
+      "endChar": 210,
+      "entityType": "person",
+      "labelSha256": "942a4c9f608e704a2e2b33cae7e76538e07c1b68dad4c9c4319b307ad6a4688a",
+      "quoteSha256": "942a4c9f608e704a2e2b33cae7e76538e07c1b68dad4c9c4319b307ad6a4688a",
+      "startChar": 194,
+      "verified": false
+    },
+    {
+      "cluster": "Arizona State University",
+      "endChar": 236,
+      "entityType": "organization",
+      "labelSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "quoteSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "startChar": 212,
+      "verified": false
+    },
+    {
+      "cluster": "Jinbin Huang",
+      "endChar": 249,
+      "entityType": "person",
+      "labelSha256": "9447599bea9886e42afc46e2637cc7501cf9197d653028eaeffa4722d3000540",
+      "quoteSha256": "9447599bea9886e42afc46e2637cc7501cf9197d653028eaeffa4722d3000540",
+      "startChar": 237,
+      "verified": false
+    },
+    {
+      "cluster": "Arizona State University",
+      "endChar": 275,
+      "entityType": "organization",
+      "labelSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "quoteSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "startChar": 251,
+      "verified": false
+    },
+    {
+      "cluster": "Bum Chul Kwon",
+      "endChar": 289,
+      "entityType": "person",
+      "labelSha256": "2e03ade4a8bc58e954430f79a687f46a3fde1094c4f936d7a0a59587c2be3269",
+      "quoteSha256": "2e03ade4a8bc58e954430f79a687f46a3fde1094c4f936d7a0a59587c2be3269",
+      "startChar": 276,
+      "verified": false
+    },
+    {
+      "cluster": "IBM Research",
+      "endChar": 303,
+      "entityType": "organization",
+      "labelSha256": "62a7498cf0ba5ec2d12a07c468f51c60a38d71f7114f08ac8c72450525c91008",
+      "quoteSha256": "62a7498cf0ba5ec2d12a07c468f51c60a38d71f7114f08ac8c72450525c91008",
+      "startChar": 291,
+      "verified": false
+    },
+    {
+      "cluster": "Chris Bryan",
+      "endChar": 315,
+      "entityType": "person",
+      "labelSha256": "8abf96ea490f895669e5545be2bb033d1d0947d34a1d9307d91a900d0702ff5f",
+      "quoteSha256": "8abf96ea490f895669e5545be2bb033d1d0947d34a1d9307d91a900d0702ff5f",
+      "startChar": 304,
+      "verified": false
+    },
+    {
+      "cluster": "Arizona State University",
+      "endChar": 342,
+      "entityType": "organization",
+      "labelSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "quoteSha256": "60ad74dd5ad644f88782fed1133587c03582b086362ce0c16651e1b76870a740",
+      "startChar": 318,
+      "verified": false
+    },
+    {
+      "cluster": "PromptAid",
+      "endChar": 465,
+      "entityType": "system",
+      "labelSha256": "5cf20d7f8e46e6b6095185f8897bd0b124f7ac67eb80719ee8b3410556700416",
+      "quoteSha256": "5cf20d7f8e46e6b6095185f8897bd0b124f7ac67eb80719ee8b3410556700416",
+      "startChar": 456,
+      "verified": false
+    },
+    {
+      "cluster": "ag news",
+      "endChar": 504,
+      "entityType": "dataset",
+      "labelSha256": "da56ada96c6fb0784ecb5e3261bab3641acf4bfe7e78703eae3e3cd50d3037b4",
+      "quoteSha256": "da56ada96c6fb0784ecb5e3261bab3641acf4bfe7e78703eae3e3cd50d3037b4",
+      "startChar": 497,
+      "verified": false
+    },
+    {
+      "cluster": "LLMs",
+      "endChar": 973,
+      "entityType": "model family",
+      "labelSha256": "cc760bd146368600b967e672ab4f1c753d628c851bc5855b37de32afdb2e91b4",
+      "quoteSha256": "cc760bd146368600b967e672ab4f1c753d628c851bc5855b37de32afdb2e91b4",
+      "startChar": 969,
+      "verified": false
+    },
+    {
+      "cluster": "NLP",
+      "endChar": 1082,
+      "entityType": "field",
+      "labelSha256": "b3782288b3dd220c397069a826fb0b4bbbf47ae9e42d856c1da731616fc5827d",
+      "quoteSha256": "b3782288b3dd220c397069a826fb0b4bbbf47ae9e42d856c1da731616fc5827d",
+      "startChar": 1079,
+      "verified": false
+    },
+    {
+      "cluster": "PromptAid",
+      "endChar": 1735,
+      "entityType": "system",
+      "labelSha256": "5cf20d7f8e46e6b6095185f8897bd0b124f7ac67eb80719ee8b3410556700416",
+      "quoteSha256": "5cf20d7f8e46e6b6095185f8897bd0b124f7ac67eb80719ee8b3410556700416",
+      "startChar": 1726,
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

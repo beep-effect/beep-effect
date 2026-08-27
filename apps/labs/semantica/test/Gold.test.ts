@@ -3,7 +3,7 @@
 import { SourceTextExtractor } from "@beep/provenance";
 import { NonNegativeInt } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path, Stream } from "effect";
+import { Duration, Effect, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -14,7 +14,7 @@ import * as Response from "effect/unstable/ai/Response";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand } from "@/canary/Command";
-import { proposeGold } from "@/canary/Gold";
+import { proposeGold, resolveGoldQuoteAnchor } from "@/canary/Gold";
 import { CorpusManifest, CorpusPaperId } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import { F1Catalog, F1Index } from "@/fixtures/F1";
@@ -25,7 +25,7 @@ import { LabConfig } from "@/runtime/Config";
 import { sha256TextSync } from "@/schema/Digest";
 import { Origin, SourceDocument } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
-import { GoldFile, GoldRef } from "@/schema/Gold";
+import { CurrentGoldDocumentText, GoldFile, GoldRef } from "@/schema/Gold";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
@@ -66,10 +66,15 @@ const proposalForPrompt = (prompt: string): string => {
   if (Str.includes("\nSUBSET=relation\nSOURCE_TEXT_BEGIN")(prompt)) {
     return '{"labels":[{"endChar":20,"object":"Beta","predicate":"relates-to","quote":"Café relates to Beta","startChar":0,"subject":"Café"},{"endChar":20,"object":"Beta","predicate":"fabricated","quote":"Café relates to Beta","startChar":0,"subject":"Ghost"}]}';
   }
-  return '{"labels":[{"depth":0,"endChar":4,"quote":"Café","role":"title","startChar":0}]}';
+  return '{"labels":[{"depth":0,"endChar":4,"quote":"Café","role":"title","startChar":0},{"depth":1,"endChar":9,"quote":"Beta","role":"section","startChar":2}]}';
 };
 
-const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
+const makeGoldTestLayer = (
+  manifest: CorpusManifest,
+  fixtures: F1Index,
+  goldGenerationTimeout = Duration.minutes(45),
+  stallGeneration = false
+) => {
   const documentId = DocumentId.make(sourceDigest);
   const documentFor = (paperId: CorpusPaperId) =>
     SourceDocument.make({
@@ -120,11 +125,13 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
     LanguageModel.LanguageModel,
     LanguageModel.make({
       generateText: (options) =>
-        Effect.succeed([
-          Response.makePart("text", {
-            text: proposalForPrompt(options.prompt.pipe(promptText)),
-          }),
-        ]),
+        stallGeneration
+          ? Effect.never
+          : Effect.succeed([
+              Response.makePart("text", {
+                text: proposalForPrompt(options.prompt.pipe(promptText)),
+              }),
+            ]),
       streamText: () => Stream.empty,
     })
   );
@@ -142,6 +149,7 @@ const makeGoldTestLayer = (manifest: CorpusManifest, fixtures: F1Index) => {
       corpusRoot: O.none(),
       extractorModel: "stub-extractor-20260826",
       goldDirectory: "fixtures/gold/v1",
+      goldGenerationTimeout,
       goldModel: "stub-gold-20260826",
       ledgerRoot: ".beep/semantica/ledger",
       mode: "replay",
@@ -173,6 +181,58 @@ describe("C0 gold proposer", () => {
     );
   });
 
+  it("keeps an exact claimed anchor ahead of an earlier whitespace-folded occurrence", () => {
+    expect(resolveGoldQuoteAnchor("Alpha   Beta Alpha Beta", "Alpha Beta", 13)).toEqual(O.some([13, 23, "Alpha Beta"]));
+  });
+
+  it("drops exact quote occurrences beyond the bounded drift window", () => {
+    const text = A.join(["CT", Str.repeat(2_001)("x")], "");
+
+    expect(resolveGoldQuoteAnchor(text, "CT", 2_002)).toEqual(O.none());
+  });
+
+  it("maps whitespace-folded matches back to exact document offsets and text", () => {
+    expect(resolveGoldQuoteAnchor("prefix Evidence\n   across\tlines suffix", "Evidence across lines", 7)).toEqual(
+      O.some([7, 31, "Evidence\n   across\tlines"])
+    );
+  });
+
+  it("maps discretionary PDF hyphenation back to the exact document slice", () => {
+    expect(resolveGoldQuoteAnchor("prefix classifi-\n  cation result", "classification result", 7)).toEqual(
+      O.some([7, 32, "classifi-\n  cation result"])
+    );
+  });
+
+  it("maps a gold-generation deadline to GoldUnavailable", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const manifest = yield* fs
+              .readFileString("fixtures/w1.manifest.json")
+              .pipe(Effect.flatMap(S.decodeEffect(CorpusManifestJson)));
+            const fixtures = yield* fs
+              .readFileString("fixtures/f1/index.json")
+              .pipe(Effect.flatMap(S.decodeEffect(F1IndexJson)));
+            const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-timeout-" });
+            const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures, Duration.zero, true))(
+              proposeGold({
+                manifestPath: "stub.manifest.json",
+                outputDirectory,
+                paper: O.some(A.getUnsafe(manifest.rows, 0).id),
+                subset: O.none(),
+              })
+            ).pipe(Effect.flip);
+
+            expect(error).toBeInstanceOf(GoldUnavailable);
+            expect(error.reason).toBe("provider-failed");
+            expect(error.message).toContain("generation timeout");
+          })
+        )
+      )
+    ));
+
   it("writes partial labels, drops invalid anchors and relation endpoints, and defers gold.json", () =>
     Effect.runPromise(
       provideScopedLayer(BunServices.layer)(
@@ -199,9 +259,9 @@ describe("C0 gold proposer", () => {
               })
             );
 
-            expect(result.total).toBe(6);
-            expect(result.accepted).toBe(4);
-            expect(result.fraction).toBe(4 / 6);
+            expect(result.total).toBe(7);
+            expect(result.accepted).toBe(5);
+            expect(result.fraction).toBe(5 / 7);
             expect(A.length(result.files)).toBe(3);
             expect(result.reference.status).toBe("not-written");
             if (result.reference.status === "not-written") {
@@ -221,8 +281,17 @@ describe("C0 gold proposer", () => {
             const decodedFiles = yield* Effect.forEach(["structure", "entity", "relation"] as const, (subset) =>
               fs
                 .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
-                .pipe(Effect.flatMap(S.decodeEffect(GoldFileJson)))
+                .pipe(
+                  Effect.flatMap(S.decodeEffect(GoldFileJson)),
+                  Effect.provideService(CurrentGoldDocumentText, sourceText)
+                )
             );
+            const structureFile = A.findFirst(decodedFiles, (file) => file.subset === "structure");
+            expect(O.map(structureFile, (file) => A.length(file.labels))).toEqual(O.some(2));
+            const reanchored = structureFile.pipe(
+              O.flatMap((file) => A.findFirst(file.labels, (label) => label.quote === "Beta"))
+            );
+            expect(O.map(reanchored, (label) => [label.startChar, label.endChar])).toEqual(O.some([16, 20]));
             const entityFile = A.findFirst(decodedFiles, (file) => file.subset === "entity");
             expect(O.map(entityFile, (file) => A.length(file.labels))).toEqual(O.some(2));
             const relationFile = A.findFirst(decodedFiles, (file) => file.subset === "relation");
@@ -257,8 +326,8 @@ describe("C0 gold proposer", () => {
             );
 
             expect(result.files).toHaveLength(18);
-            expect(result.total).toBe(31);
-            expect(result.accepted).toBe(23);
+            expect(result.total).toBe(41);
+            expect(result.accepted).toBe(33);
             expect(result.reference.status).toBe("written");
             const reference = yield* fs
               .readFileString(path.join(outputDirectory, "gold.json"))
@@ -338,13 +407,18 @@ describe("C0 gold proposer", () => {
 
             const stalePaper = A.getUnsafe(manifest.rows, 9).id;
             const stalePath = path.join(outputDirectory, `${stalePaper}.structure.json`);
-            const staleFile = yield* fs.readFileString(stalePath).pipe(Effect.flatMap(S.decodeEffect(GoldFileJson)));
+            const staleFile = yield* fs
+              .readFileString(stalePath)
+              .pipe(
+                Effect.flatMap(S.decodeEffect(GoldFileJson)),
+                Effect.provideService(CurrentGoldDocumentText, sourceText)
+              );
             const staleProposer = ModelIdentity.make({
               ...proposer,
               name: "stale-gold-20260825",
               revision: "stale-gold-20260825",
             });
-            const staleValue = yield* S.decodeEffect(GoldFile)({ ...staleFile, proposer: staleProposer });
+            const staleValue = yield* GoldFile.makeEffect({ ...staleFile, proposer: staleProposer });
             const staleJson = yield* S.encodeEffect(GoldFileJson)(staleValue);
             yield* fs.writeFileString(stalePath, `${staleJson}\n`);
 

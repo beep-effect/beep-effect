@@ -36,6 +36,7 @@ import * as Toolkit from "effect/unstable/ai/Toolkit";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { TUnsafe } from "@beep/types";
+import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
@@ -273,6 +274,64 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       expect(captured).toHaveLength(1);
       expect(captured[0]?.model).toBe("compat-model");
       expect(captured[0]?.messages).toEqual([{ content: [{ text: "hello", type: "text" }], role: "user" }]);
+      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(false);
+      expect(Object.hasOwn(captured[0] ?? {}, "tool_choice")).toBe(false);
+    })
+  );
+
+  it.effect(
+    "declares tool_choice alongside declared tools",
+    Effect.fnUntraced(function* () {
+      const requests = yield* Ref.make<ReadonlyArray<OpenAiCompatChatCompletionRequest>>([]);
+      const languageModel = yield* makeFromProvider({
+        model: "compat-model",
+        moduleName: "OpenAiCompatLanguageModelTest",
+        provider: {
+          createChatCompletion: (request) =>
+            pipe(Ref.update(requests, A.append(request)), Effect.as(makeResponse("hello from compat"))),
+          streamChatCompletion: () => Stream.empty,
+        },
+      });
+
+      const WeatherTool = Tool.make("weather", {
+        parameters: S.Struct({ city: S.String }),
+        success: S.String,
+      });
+      const namedChoice: LanguageModel.ToolChoice<"weather"> = { tool: "weather" };
+      const requiredChoice: LanguageModel.ToolChoice<"weather"> = { mode: "required", oneOf: ["weather"] };
+      const autoChoice: LanguageModel.ToolChoice<"weather"> = { mode: "auto", oneOf: ["weather"] };
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: "auto",
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: namedChoice,
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: requiredChoice,
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      yield* languageModel.generateText({
+        disableToolCallResolution: true,
+        prompt: "weather",
+        toolChoice: autoChoice,
+        toolkit: Toolkit.make(WeatherTool),
+      });
+      const captured = yield* Ref.get(requests);
+
+      expect(captured).toHaveLength(4);
+      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(true);
+      expect(captured[0]?.tool_choice).toBe("auto");
+      expect(captured[1]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
+      expect(captured[2]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
+      expect(captured[3]?.tool_choice).toBe("auto");
     })
   );
 

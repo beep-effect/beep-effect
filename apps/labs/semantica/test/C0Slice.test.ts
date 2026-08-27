@@ -3,7 +3,7 @@
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path, Ref, Stream } from "effect";
+import { Duration, Effect, FileSystem, Layer, Path, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -101,6 +101,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 corpusRoot: O.none(),
                 extractorModel: "stub-extractor-20260826",
                 goldDirectory,
+                goldGenerationTimeout: Duration.minutes(45),
                 goldModel: "stub-gold-20260826",
                 ledgerRoot,
                 mode: "live",

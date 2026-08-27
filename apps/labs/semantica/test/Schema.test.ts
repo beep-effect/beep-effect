@@ -69,7 +69,16 @@ import {
   makeClaimId,
   StructureRole,
 } from "@/schema/Evidence";
-import { GoldEntityLabel, GoldFile, GoldRef, GoldRelationLabel, GoldStructureLabel, GoldSubset } from "@/schema/Gold";
+import {
+  CurrentGoldDocumentText,
+  GoldEntityLabel,
+  GoldFile,
+  GoldFileEncoded,
+  GoldRef,
+  GoldRelationLabel,
+  GoldStructureLabel,
+  GoldSubset,
+} from "@/schema/Gold";
 import {
   DocumentId,
   isBatchId,
@@ -131,6 +140,15 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
+
+const roundTripGoldFile = (value: GoldFileValue): void => {
+  const encoded = Result.getOrThrow(S.encodeResult(GoldFile)(value));
+  const decoded = Effect.runSync(
+    S.decodeEffect(GoldFile)(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"))
+  );
+
+  expect(S.toEquivalence(S.toType(GoldFile))(decoded, value)).toBe(true);
 };
 
 const rejects = <Schema extends S.Codec<unknown>>(schema: Schema, value: unknown): boolean =>
@@ -518,7 +536,7 @@ describe("C0 schema exports", () => {
       }) as ExtractOutcomeValue,
       conflictBasis: "same-anchor-different-label" as ConflictBasisValue,
       eventBody: EventBody.cases.Ingested.make({ kind: "Ingested", document: documentId }) as EventBodyValue,
-      goldFile: S.decodeSync(GoldFile)({
+      goldFile: GoldFile.make({
         version: "gold/v1",
         paperId: paper1,
         subset: "entity",
@@ -610,7 +628,11 @@ describe("C0 schema round trips", () => {
       GoldRelationLabel.make({
         predicate: "uses",
         subject: "Effect",
+        subjectStartChar: anchor.startChar,
+        subjectEndChar: anchor.endChar,
         object: "Schema",
+        objectStartChar: anchor.startChar,
+        objectEndChar: anchor.endChar,
         startChar: anchor.startChar,
         endChar: anchor.endChar,
         quote: anchor.quote,
@@ -638,6 +660,84 @@ describe("C0 schema round trips", () => {
       modelBytes: 250,
     });
     roundTrip(EvalRunTelemetry, telemetry);
+  });
+
+  it("encodes gold labels without corpus text and hydrates exact document slices", () => {
+    const text = "Effect uses Schema";
+    const structure = GoldFile.make({
+      labels: [
+        GoldStructureLabel.make({
+          depth: NonNegativeInt.make(0),
+          endChar: NonNegativeInt.make(6),
+          quote: "Effect",
+          role: "title",
+          startChar: NonNegativeInt.make(0),
+          verified: false,
+        }),
+      ],
+      paperId: paper1,
+      proposer: proposerModel,
+      subset: "structure",
+      version: "gold/v1",
+    });
+    const entity = GoldFile.make({
+      labels: [
+        GoldEntityLabel.make({
+          cluster: "software-effect",
+          endChar: NonNegativeInt.make(6),
+          entityType: "software",
+          label: "Effect",
+          quote: "Effect",
+          startChar: NonNegativeInt.make(0),
+          verified: false,
+        }),
+      ],
+      paperId: paper1,
+      proposer: proposerModel,
+      subset: "entity",
+      version: "gold/v1",
+    });
+    const relation = GoldFile.make({
+      labels: [
+        GoldRelationLabel.make({
+          endChar: NonNegativeInt.make(18),
+          object: "Schema",
+          objectEndChar: NonNegativeInt.make(18),
+          objectStartChar: NonNegativeInt.make(12),
+          predicate: "uses",
+          quote: text,
+          startChar: NonNegativeInt.make(0),
+          subject: "Effect",
+          subjectEndChar: NonNegativeInt.make(6),
+          subjectStartChar: NonNegativeInt.make(0),
+          verified: false,
+        }),
+      ],
+      paperId: paper1,
+      proposer: proposerModel,
+      subset: "relation",
+      version: "gold/v1",
+    });
+    const encodedStructure = Result.getOrThrow(S.encodeResult(GoldFile)(structure));
+    const encodedEntity = Result.getOrThrow(S.encodeResult(GoldFile)(entity));
+    const encodedRelation = Result.getOrThrow(S.encodeResult(GoldFile)(relation));
+
+    expect(encodedStructure.labels[0]).not.toHaveProperty("quote");
+    expect(encodedStructure.labels[0]).toHaveProperty("quoteSha256");
+    expect(encodedEntity.labels[0]).not.toHaveProperty("label");
+    expect(encodedEntity.labels[0]).not.toHaveProperty("quote");
+    expect(encodedEntity.labels[0]).toHaveProperty("labelSha256");
+    expect(encodedRelation.labels[0]).not.toHaveProperty("object");
+    expect(encodedRelation.labels[0]).not.toHaveProperty("quote");
+    expect(encodedRelation.labels[0]).not.toHaveProperty("subject");
+    expect(encodedRelation.labels[0]).toHaveProperty("objectSha256");
+    expect(encodedRelation.labels[0]).toHaveProperty("quoteSha256");
+    expect(encodedRelation.labels[0]).toHaveProperty("subjectSha256");
+
+    const hydrated = Effect.runSync(
+      S.decodeEffect(GoldFile)(encodedRelation).pipe(Effect.provideService(CurrentGoldDocumentText, text))
+    );
+    expect(hydrated).toEqual(relation);
   });
 
   it("round-trips every tagged-union member", () => {
@@ -687,30 +787,30 @@ describe("C0 schema round trips", () => {
     ];
     A.forEach(eventBodies, (body) => roundTrip(EventBody, body));
 
-    const structureFile = S.decodeSync(GoldFile)({
+    const structureFile = GoldFile.make({
       version: "gold/v1",
       paperId: paper1,
       subset: "structure",
       labels: [],
       proposer: proposerModel,
     });
-    const entityFile = S.decodeSync(GoldFile)({
+    const entityFile = GoldFile.make({
       version: "gold/v1",
       paperId: paper1,
       subset: "entity",
       labels: [],
       proposer: proposerModel,
     });
-    const relationFile = S.decodeSync(GoldFile)({
+    const relationFile = GoldFile.make({
       version: "gold/v1",
       paperId: paper1,
       subset: "relation",
       labels: [],
       proposer: proposerModel,
     });
-    roundTrip(GoldFile, structureFile);
-    roundTrip(GoldFile, entityFile);
-    roundTrip(GoldFile, relationFile);
+    roundTripGoldFile(structureFile);
+    roundTripGoldFile(entityFile);
+    roundTripGoldFile(relationFile);
   });
 
   it("round-trips every typed error", () => {
@@ -1029,7 +1129,7 @@ describe("gold refinements", () => {
     expect(S.is(GoldRef)(goldRef)).toBe(true);
     expect(rejects(GoldRef, { ...goldRef, proposer: hostedModel })).toBe(true);
     expect(
-      rejects(GoldFile, {
+      rejects(GoldFileEncoded, {
         version: "gold/v1",
         paperId: paper1,
         subset: "entity",
@@ -1050,9 +1150,18 @@ describe("gold refinements", () => {
     expect(
       rejects(GoldEntityLabel, { ...shared, cluster: "software-effect", label: "Effect", entityType: "software" })
     ).toBe(false);
-    expect(rejects(GoldRelationLabel, { ...shared, predicate: "uses", subject: "Effect", object: "Schema" })).toBe(
-      false
-    );
+    expect(
+      rejects(GoldRelationLabel, {
+        ...shared,
+        object: "Schema",
+        objectEndChar: anchor.endChar,
+        objectStartChar: anchor.startChar,
+        predicate: "uses",
+        subject: "Effect",
+        subjectEndChar: anchor.endChar,
+        subjectStartChar: anchor.startChar,
+      })
+    ).toBe(false);
     expect(rejects(GoldStructureLabel, { ...shared, endChar: 5, role: "title", depth: 0 })).toBe(true);
     expect(
       rejects(GoldEntityLabel, {
@@ -1067,8 +1176,12 @@ describe("gold refinements", () => {
       rejects(GoldRelationLabel, {
         ...shared,
         endChar: 5,
+        objectEndChar: anchor.endChar,
+        objectStartChar: anchor.startChar,
         predicate: "uses",
         subject: "Effect",
+        subjectEndChar: anchor.endChar,
+        subjectStartChar: anchor.startChar,
         object: "Schema",
       })
     ).toBe(true);
