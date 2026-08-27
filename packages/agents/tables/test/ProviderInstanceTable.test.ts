@@ -49,11 +49,15 @@ describe("ProviderInstance table", () => {
     expect(columns.label.name).toBe("label");
     expect(columns.lastProbe.name).toBe("last_probe");
     expect(columns.lastProbe.notNull).toBe(false);
-    expect(getTableConfig(providerInstanceTable).indexes.map((index) => index.config.name)).toEqual([
-      "agents_provider_instance_org_id_btree_idx",
-      "agents_provider_instance_source_btree_idx",
-      "agents_provider_instance_public_id_unique_idx",
-    ]);
+    const indexNames = getTableConfig(providerInstanceTable).indexes.map((index) => index.config.name);
+    expect(indexNames).toHaveLength(3);
+    expect(indexNames).toEqual(
+      expect.arrayContaining([
+        "agents_provider_instance_org_id_btree_idx",
+        "agents_provider_instance_source_btree_idx",
+        "agents_provider_instance_public_id_unique_idx",
+      ])
+    );
   });
 
   it("persists only the exact token-free ProviderInstance column set", () => {

@@ -1,6 +1,8 @@
 /**
  * Shared machinery behind the entity tier family.
  *
+ * **Details**
+ *
  * The tiers (`BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`) are
  * thin compositions over one PostgreSQL effect-drizzle kit lineage. This
  * module owns the shared column packs, the capability mixins, the
@@ -38,6 +40,14 @@ import type * as EntityId from "./EntityId.ts";
 /**
  * Timestamp and optimistic-version columns shared by every tier.
  *
+ * **Example** (Inspect the base column pack)
+ *
+ * ```ts
+ * import { baseColumns } from "@beep/shared-domain/entity/EntityKit"
+ *
+ * console.log(Object.keys(baseColumns))
+ * ```
+ *
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -55,6 +65,14 @@ export const baseColumns = {
 /**
  * Actor-provenance and schema-lineage columns added by the audit capability.
  *
+ * **Example** (Inspect the audit column pack)
+ *
+ * ```ts
+ * import { auditColumns } from "@beep/shared-domain/entity/EntityKit"
+ *
+ * console.log(Object.keys(auditColumns))
+ * ```
+ *
  * @internal
  * @category schemas
  * @since 0.0.0
@@ -68,6 +86,14 @@ export const auditColumns = {
 
 /**
  * Tenant-scoping column added by the org capability.
+ *
+ * **Example** (Inspect the org column pack)
+ *
+ * ```ts
+ * import { orgColumns } from "@beep/shared-domain/entity/EntityKit"
+ *
+ * console.log(Object.keys(orgColumns))
+ * ```
  *
  * @internal
  * @category schemas

@@ -2,9 +2,12 @@
 "@beep/effect-drizzle": minor
 "@beep/shared-domain": minor
 "@beep/agents-domain": patch
+"@beep/agents-tables": patch
 "@beep/architecture-lab-domain": patch
+"@beep/architecture-lab-tables": patch
 "@beep/documents-domain": patch
 "@beep/epistemic-domain": patch
+"@beep/epistemic-tables": patch
 "@beep/law-practice-domain": patch
 "@beep/repo-configs": patch
 "@beep/workspace-domain": patch

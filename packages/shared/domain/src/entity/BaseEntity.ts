@@ -52,6 +52,14 @@ export const Entity = entityFactory(kit);
 /**
  * PostgreSQL toolkit bound to the base tier (column combinators plus `Table`).
  *
+ * **Example** (Use the base toolkit)
+ *
+ * ```ts
+ * import { pg } from "@beep/shared-domain/entity/BaseEntity"
+ *
+ * console.log(typeof pg.text) // "function"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -59,6 +67,14 @@ export const pg: Pg.PgToolkit = kit.pg;
 
 /**
  * Table-extras namespace for multi-column indexes and checks.
+ *
+ * **Example** (Access base table extras)
+ *
+ * ```ts
+ * import { Table } from "@beep/shared-domain/entity/BaseEntity"
+ *
+ * console.log(typeof Table.index) // "function"
+ * ```
  *
  * @category constructors
  * @since 0.0.0

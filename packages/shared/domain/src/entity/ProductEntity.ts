@@ -1,6 +1,8 @@
 /**
  * Product entity tier backed by `@beep/effect-drizzle`.
  *
+ * **Details**
+ *
  * The full persisted-product contract: base timestamps and row version, audit
  * provenance, tenant org scoping, and the id-derived identity columns
  * (branded serial id, entity-type literal, and url-safe public id with its
@@ -95,6 +97,14 @@ export const Entity = EntityKit.productEntityFactory(kit);
  * PostgreSQL toolkit bound to the product tier (column combinators plus
  * `Table`).
  *
+ * **Example** (Use the product toolkit)
+ *
+ * ```ts
+ * import { pg } from "@beep/shared-domain/entity/ProductEntity"
+ *
+ * console.log(typeof pg.jsonb) // "function"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -102,6 +112,14 @@ export const pg: Pg.PgToolkit = kit.pg;
 
 /**
  * Table-extras namespace for multi-column indexes and checks.
+ *
+ * **Example** (Access product table extras)
+ *
+ * ```ts
+ * import { Table } from "@beep/shared-domain/entity/ProductEntity"
+ *
+ * console.log(typeof Table.uniqueIndex) // "function"
+ * ```
  *
  * @category constructors
  * @since 0.0.0
