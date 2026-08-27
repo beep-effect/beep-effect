@@ -2,12 +2,15 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Equal, HashSet, identity, Number as N, Tuple } from "effect";
+import { Context, Effect, Equal, HashSet, identity, Number as N, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CorpusPaperId } from "@/corpus/Manifest";
+import { sha256TextSync } from "@/schema/Digest";
 import { CoreferenceCluster, StructureRole } from "@/schema/Evidence";
 import { ModelIdentity } from "@/schema/Model";
+import type { SchemaAST } from "effect";
 
 const $I = $SemanticaId.create("schema/Gold");
 
@@ -184,10 +187,26 @@ export class GoldEntityLabel extends S.Class<GoldEntityLabel>($I`GoldEntityLabel
 const GoldRelationLabelFields = S.Struct({
   predicate: S.NonEmptyString,
   subject: S.NonEmptyString,
+  subjectStartChar: NonNegativeInt,
+  subjectEndChar: NonNegativeInt,
   object: S.NonEmptyString,
+  objectStartChar: NonNegativeInt,
+  objectEndChar: NonNegativeInt,
   ...TextAnchorFields,
   verified: S.Boolean,
 });
+
+const GoldRelationEndpointWidthCheck = S.makeFilter(
+  (label: typeof GoldRelationLabelFields.Type) =>
+    N.isLessThan(label.subjectStartChar, label.subjectEndChar) &&
+    N.isLessThan(label.objectStartChar, label.objectEndChar),
+  {
+    identifier: $I`GoldRelationEndpointWidthCheck`,
+    title: "Gold relation endpoint widths",
+    description: "Requires subject and object endpoint anchors to have positive UTF-16 widths.",
+    message: "Gold relation endpoint anchors must satisfy startChar < endChar.",
+  }
+);
 
 /**
  * Anchored relation gold label with deterministic endpoint surfaces.
@@ -204,18 +223,258 @@ const GoldRelationLabelFields = S.Struct({
  * @since 0.0.0
  */
 export class GoldRelationLabel extends S.Class<GoldRelationLabel>($I`GoldRelationLabel`)(
-  GoldRelationLabelFields.mapFields(identity).check(TextAnchorWidthCheck),
+  GoldRelationLabelFields.mapFields(identity).check(TextAnchorWidthCheck, GoldRelationEndpointWidthCheck),
   $I.annote("GoldRelationLabel", {
     description: "Relation predicate and endpoint surfaces grounded to canonical paper text with a spot-check marker.",
   })
 ) {}
+
+/**
+ * Canonical document text supplied while decoding a digest-only gold file.
+ *
+ * **Example** (Provide gold document text)
+ *
+ * ```ts
+ * import { CurrentGoldDocumentText } from "@/schema/Gold"
+ * import { Effect } from "effect"
+ *
+ * const text = CurrentGoldDocumentText.pipe(
+ *   Effect.provideService(CurrentGoldDocumentText, "Canonical paper text")
+ * )
+ * console.log(Effect.isEffect(text)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class CurrentGoldDocumentText extends Context.Service<CurrentGoldDocumentText, string>()(
+  $I`CurrentGoldDocumentText`
+) {}
+
+const sha256Equivalence = S.toEquivalence(Sha256Hex);
+
+const digestMismatch = (input: unknown, options: SchemaAST.ParseOptions, field: string): SchemaIssue.InvalidValue =>
+  new SchemaIssue.InvalidValue(
+    { message: `Gold ${field} digest does not match the canonical document slice.` },
+    input,
+    options
+  );
+
+const sliceForDigest = (
+  text: string,
+  startChar: number,
+  endChar: number,
+  digest: Sha256Hex,
+  input: unknown,
+  options: SchemaAST.ParseOptions,
+  field: string
+): Effect.Effect<string, SchemaIssue.InvalidValue> => {
+  const value = Str.slice(startChar, endChar)(text);
+  return sha256Equivalence(sha256TextSync(value), digest)
+    ? Effect.succeed(value)
+    : Effect.fail(digestMismatch(input, options, field));
+};
+
+class EncodedGoldStructureLabel extends S.Class<EncodedGoldStructureLabel>($I`EncodedGoldStructureLabel`)(
+  {
+    role: StructureRole,
+    depth: NonNegativeInt,
+    startChar: TextAnchorFields.startChar,
+    endChar: TextAnchorFields.endChar,
+    quoteSha256: Sha256Hex,
+    verified: S.Boolean,
+  },
+  $I.annote("EncodedGoldStructureLabel", {
+    description: "Digest-only persisted structural gold label without W1 corpus text.",
+  })
+) {}
+
+const GoldStructureLabelFromEncoded = EncodedGoldStructureLabel.pipe(
+  S.decodeTo(GoldStructureLabel, {
+    decode: SchemaGetter.transformOrFail<GoldStructureLabel, EncodedGoldStructureLabel, CurrentGoldDocumentText>(
+      (label, options) =>
+        CurrentGoldDocumentText.use((text) =>
+          sliceForDigest(text, label.startChar, label.endChar, label.quoteSha256, label, options, "quote").pipe(
+            Effect.map((quote) =>
+              GoldStructureLabel.make({
+                depth: label.depth,
+                endChar: label.endChar,
+                quote,
+                role: label.role,
+                startChar: label.startChar,
+                verified: label.verified,
+              })
+            )
+          )
+        )
+    ),
+    encode: SchemaGetter.transform<EncodedGoldStructureLabel, typeof GoldStructureLabel.Encoded>((label) =>
+      EncodedGoldStructureLabel.make({
+        depth: NonNegativeInt.make(label.depth),
+        endChar: NonNegativeInt.make(label.endChar),
+        quoteSha256: sha256TextSync(label.quote),
+        role: label.role,
+        startChar: NonNegativeInt.make(label.startChar),
+        verified: label.verified,
+      })
+    ),
+  })
+);
+
+class EncodedGoldEntityLabel extends S.Class<EncodedGoldEntityLabel>($I`EncodedGoldEntityLabel`)(
+  {
+    cluster: CoreferenceCluster,
+    endChar: TextAnchorFields.endChar,
+    entityType: S.NonEmptyString,
+    labelSha256: Sha256Hex,
+    quoteSha256: Sha256Hex,
+    startChar: TextAnchorFields.startChar,
+    verified: S.Boolean,
+  },
+  $I.annote("EncodedGoldEntityLabel", {
+    description: "Digest-only persisted entity gold label without W1 corpus text.",
+  })
+) {}
+
+const GoldEntityLabelFromEncoded = EncodedGoldEntityLabel.pipe(
+  S.decodeTo(GoldEntityLabel, {
+    decode: SchemaGetter.transformOrFail<GoldEntityLabel, EncodedGoldEntityLabel, CurrentGoldDocumentText>(
+      (label, options) =>
+        CurrentGoldDocumentText.use((text) => {
+          const quote = sliceForDigest(
+            text,
+            label.startChar,
+            label.endChar,
+            label.quoteSha256,
+            label,
+            options,
+            "quote"
+          );
+          const entityLabel = sliceForDigest(
+            text,
+            label.startChar,
+            label.endChar,
+            label.labelSha256,
+            label,
+            options,
+            "entity label"
+          );
+          return Effect.all({ label: entityLabel, quote }).pipe(
+            Effect.map(({ label: hydratedLabel, quote: hydratedQuote }) =>
+              GoldEntityLabel.make({
+                cluster: label.cluster,
+                endChar: label.endChar,
+                entityType: label.entityType,
+                label: hydratedLabel,
+                quote: hydratedQuote,
+                startChar: label.startChar,
+                verified: label.verified,
+              })
+            )
+          );
+        })
+    ),
+    encode: SchemaGetter.transform<EncodedGoldEntityLabel, typeof GoldEntityLabel.Encoded>((label) =>
+      EncodedGoldEntityLabel.make({
+        cluster: label.cluster,
+        endChar: NonNegativeInt.make(label.endChar),
+        entityType: label.entityType,
+        labelSha256: sha256TextSync(label.label),
+        quoteSha256: sha256TextSync(label.quote),
+        startChar: NonNegativeInt.make(label.startChar),
+        verified: label.verified,
+      })
+    ),
+  })
+);
+
+class EncodedGoldRelationLabel extends S.Class<EncodedGoldRelationLabel>($I`EncodedGoldRelationLabel`)(
+  {
+    predicate: S.NonEmptyString,
+    subjectStartChar: NonNegativeInt,
+    subjectEndChar: NonNegativeInt,
+    subjectSha256: Sha256Hex,
+    objectStartChar: NonNegativeInt,
+    objectEndChar: NonNegativeInt,
+    objectSha256: Sha256Hex,
+    startChar: TextAnchorFields.startChar,
+    endChar: TextAnchorFields.endChar,
+    quoteSha256: Sha256Hex,
+    verified: S.Boolean,
+  },
+  $I.annote("EncodedGoldRelationLabel", {
+    description: "Digest-only persisted relation gold label with anchored subject and object surfaces.",
+  })
+) {}
+
+const GoldRelationLabelFromEncoded = EncodedGoldRelationLabel.pipe(
+  S.decodeTo(GoldRelationLabel, {
+    decode: SchemaGetter.transformOrFail<GoldRelationLabel, EncodedGoldRelationLabel, CurrentGoldDocumentText>(
+      (label, options) =>
+        CurrentGoldDocumentText.use((text) =>
+          Effect.all({
+            object: sliceForDigest(
+              text,
+              label.objectStartChar,
+              label.objectEndChar,
+              label.objectSha256,
+              label,
+              options,
+              "relation object"
+            ),
+            quote: sliceForDigest(text, label.startChar, label.endChar, label.quoteSha256, label, options, "quote"),
+            subject: sliceForDigest(
+              text,
+              label.subjectStartChar,
+              label.subjectEndChar,
+              label.subjectSha256,
+              label,
+              options,
+              "relation subject"
+            ),
+          }).pipe(
+            Effect.map((surfaces) =>
+              GoldRelationLabel.make({
+                endChar: label.endChar,
+                object: surfaces.object,
+                objectEndChar: label.objectEndChar,
+                objectStartChar: label.objectStartChar,
+                predicate: label.predicate,
+                quote: surfaces.quote,
+                startChar: label.startChar,
+                subject: surfaces.subject,
+                subjectEndChar: label.subjectEndChar,
+                subjectStartChar: label.subjectStartChar,
+                verified: label.verified,
+              })
+            )
+          )
+        )
+    ),
+    encode: SchemaGetter.transform<EncodedGoldRelationLabel, typeof GoldRelationLabel.Encoded>((label) =>
+      EncodedGoldRelationLabel.make({
+        endChar: NonNegativeInt.make(label.endChar),
+        objectEndChar: NonNegativeInt.make(label.objectEndChar),
+        objectSha256: sha256TextSync(label.object),
+        objectStartChar: NonNegativeInt.make(label.objectStartChar),
+        predicate: label.predicate,
+        quoteSha256: sha256TextSync(label.quote),
+        startChar: NonNegativeInt.make(label.startChar),
+        subjectEndChar: NonNegativeInt.make(label.subjectEndChar),
+        subjectSha256: sha256TextSync(label.subject),
+        subjectStartChar: NonNegativeInt.make(label.subjectStartChar),
+        verified: label.verified,
+      })
+    ),
+  })
+);
 
 class GoldStructureFile extends S.Class<GoldStructureFile>($I`GoldStructureFile`)(
   {
     version: S.Literal("gold/v1"),
     paperId: CorpusPaperId,
     subset: S.tag("structure"),
-    labels: S.Array(GoldStructureLabel),
+    labels: S.Array(GoldStructureLabelFromEncoded),
     proposer: ModelIdentity,
   },
   $I.annote("GoldStructureFile", {
@@ -228,7 +487,7 @@ class GoldEntityFile extends S.Class<GoldEntityFile>($I`GoldEntityFile`)(
     version: S.Literal("gold/v1"),
     paperId: CorpusPaperId,
     subset: S.tag("entity"),
-    labels: S.Array(GoldEntityLabel),
+    labels: S.Array(GoldEntityLabelFromEncoded),
     proposer: ModelIdentity,
   },
   $I.annote("GoldEntityFile", {
@@ -241,7 +500,7 @@ class GoldRelationFile extends S.Class<GoldRelationFile>($I`GoldRelationFile`)(
     version: S.Literal("gold/v1"),
     paperId: CorpusPaperId,
     subset: S.tag("relation"),
-    labels: S.Array(GoldRelationLabel),
+    labels: S.Array(GoldRelationLabelFromEncoded),
     proposer: ModelIdentity,
   },
   $I.annote("GoldRelationFile", {
@@ -308,3 +567,51 @@ export const GoldFile = GoldFileDefinition.check(GoldFileProposerCheck).pipe(
  * @since 0.0.0
  */
 export type GoldFile = typeof GoldFile.Type;
+
+/**
+ * Type helpers associated with the gold file codec.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GoldFile {
+  /**
+   * Digest-only representation persisted under `fixtures/gold/v1`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GoldFile.Encoded;
+}
+
+const GoldFileEncodedDefinition = S.toEncoded(GoldFile);
+
+const GoldFileEncodedProposerCheck = S.makeFilter(
+  (file: typeof GoldFileEncodedDefinition.Type) => file.proposer.taskType === "gold-proposal",
+  {
+    identifier: $I`GoldFileEncodedProposerCheck`,
+    title: "Encoded gold file proposer task",
+    description: "Requires every persisted gold label file to retain the gold-proposal task role.",
+    message: "GoldFileEncoded proposer.taskType must equal gold-proposal.",
+  }
+);
+
+/**
+ * Digest-only gold file schema used for reference hashing before hydration.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GoldFileEncoded = GoldFileEncodedDefinition.check(GoldFileEncodedProposerCheck).pipe(
+  $I.annoteSchema("GoldFileEncoded", {
+    description: "Persisted gold-v1 file shape containing offsets and digests but no W1 corpus text.",
+  })
+);
+
+/**
+ * Digest-only persisted gold file value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoldFileEncoded = typeof GoldFileEncoded.Type;

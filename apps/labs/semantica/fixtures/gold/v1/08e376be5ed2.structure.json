@@ -1,0 +1,174 @@
+{
+  "version": "gold/v1",
+  "paperId": "08e376be5ed2",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 217,
+      "endChar": 268,
+      "quoteSha256": "615bb981f1dfc1043c521d238acd8db4832128846881755fcdd8595268fa5173",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 724,
+      "endChar": 736,
+      "quoteSha256": "b605350bc00209520b7cd8f546322663356ba630708f71bbf30aead6b3dd608e",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 2108,
+      "endChar": 2141,
+      "quoteSha256": "e47ee526b6a8d300cd4bfefde85be40f744ee47f6d1a4a144a06d209cca5844d",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 2442,
+      "endChar": 3781,
+      "quoteSha256": "0aff6fe4f2c1e38ef75e91c5bc831a2cdadf415678461515129340fb56ecbac0",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 3782,
+      "endChar": 3790,
+      "quoteSha256": "8bfdb93cafaa91477de5fa9fa09d33946f57adae516e2ab45a309df988f36ba1",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 22981,
+      "endChar": 23014,
+      "quoteSha256": "24060f9147c44224c5075b9c514def436997d0b13b2c6f8b0fe2442f469600eb",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 23518,
+      "endChar": 23550,
+      "quoteSha256": "2ac508ea6d25607e3fd8ff847c744e4deb8ffc03c7463c3c22b5d0e1fef5dce1",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 24002,
+      "endChar": 24032,
+      "quoteSha256": "8161cec953fb3ff4a297d76aa1e0720e60afeaaddf0a22b5335c4f99b0819f4f",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34254,
+      "endChar": 34319,
+      "quoteSha256": "2c88c1a2335675aabdb67a0e825cc67225db3ec2b1de559388bd6e3de8edf832",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34320,
+      "endChar": 34419,
+      "quoteSha256": "5fb356aea02547b59ffbd32e6586d0e685f7479c56e7a4019c425538c4bc53cd",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34420,
+      "endChar": 34552,
+      "quoteSha256": "099bb28e99048480d39a6208bbd3916ec00d6515b7f6e91122f6d7d3d73bee11",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34553,
+      "endChar": 34658,
+      "quoteSha256": "7bd6a5341dd811befa73d57d49165934b4f1616a5c36b5d498583a51cf7cd8a1",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34659,
+      "endChar": 34730,
+      "quoteSha256": "5b2789ca5ca20b9b63656f965088d7c55aa301133ea64013849349933531950e",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34731,
+      "endChar": 34891,
+      "quoteSha256": "a367d661a7663b00f7491bc9046dfb40a38e7f4387cf1519635d06dcc67fd01a",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34892,
+      "endChar": 34978,
+      "quoteSha256": "9efba75f59fc178e737e9237fbb1a60bacf9a1d1bca2faa8a02a1252a050237f",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34979,
+      "endChar": 35113,
+      "quoteSha256": "d270fa81f4aecb25b58a7f5a12484fd64ce4ff0265bcae62c37305d4ceab1303",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35114,
+      "endChar": 35245,
+      "quoteSha256": "a533e7b8849ebc7b3f7180e1c64bb9f288539d73877b62fc1cad1e99fd98a102",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35246,
+      "endChar": 35397,
+      "quoteSha256": "ec39daf1814f2d738fcaca28f2a77ab14b9274f06e5324dce0a0147a6fc3e753",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35398,
+      "endChar": 35446,
+      "quoteSha256": "f90a8d3b0164b0e2b393b3a7b9bf287a184a653e31fe1e54a9035856bdb56424",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35447,
+      "endChar": 35528,
+      "quoteSha256": "d362261fc80a8084b9d5bd42eb17bfafbc8f2706fdb7ed9c171fdaf043c135ba",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}

@@ -4,6 +4,7 @@ import type { Effect } from "effect";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldUnavailable } from "@/schema/Errors";
 import type { GoldFile } from "@/schema/Gold";
+import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
 const $I = $SemanticaId.create("services/GoldSource");
 
@@ -14,7 +15,10 @@ const $I = $SemanticaId.create("services/GoldSource");
  * @since 0.0.0
  */
 interface GoldSourceShape {
-  readonly load: (paperIds: ReadonlyArray<CorpusPaperId>) => Effect.Effect<ReadonlyArray<GoldFile>, GoldUnavailable>;
+  readonly load: (
+    paperIds: ReadonlyArray<CorpusPaperId>,
+    documents: ReadonlyArray<LedgerDocumentSnapshot>
+  ) => Effect.Effect<ReadonlyArray<GoldFile>, GoldUnavailable>;
 }
 
 /**

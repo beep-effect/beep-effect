@@ -1,5 +1,6 @@
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Layer, Logger } from "effect";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder";
 import { F1CatalogLive } from "@/fixtures/F1";
 import { CanaryC0Live } from "@/layers/CanaryC0Live";
@@ -17,7 +18,12 @@ const LoggingLive = Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)],
   mergeWithExisting: false,
 });
 
-const InfrastructureLive = Layer.mergeAll(BunServices.layer, LabConfigLive, LoggingLive);
+// Bun's fetch aborts at ~300s by default even when the request carries a longer
+// AbortSignal; hosted-model generations over full papers routinely need more.
+// Bun honors this non-standard RequestInit extension to lift that ceiling.
+const FetchTimeoutDisabledLive = Layer.succeed(FetchHttpClient.RequestInit, { timeout: false } as RequestInit);
+
+const InfrastructureLive = Layer.mergeAll(BunServices.layer, FetchTimeoutDisabledLive, LabConfigLive, LoggingLive);
 
 const P1ServicesLive = Layer.merge(CorpusManifestBuilderLive, F1CatalogLive).pipe(Layer.provide(InfrastructureLive));
 

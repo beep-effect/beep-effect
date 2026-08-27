@@ -1,0 +1,206 @@
+{
+  "version": "gold/v1",
+  "paperId": "10828be135bf",
+  "subset": "structure",
+  "labels": [
+    {
+      "role": "title",
+      "depth": 0,
+      "startChar": 0,
+      "endChar": 55,
+      "quoteSha256": "8f6c5badffc4cbc9507f974461dbc75eceb91f5237b2c919d07bb46ab6d138e7",
+      "verified": false
+    },
+    {
+      "role": "abstract",
+      "depth": 0,
+      "startChar": 209,
+      "endChar": 1377,
+      "quoteSha256": "8fa507aa641d89c94eec541f161785d3bbbf3b3f5c0438a670a1d507f8877b22",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 1378,
+      "endChar": 1392,
+      "quoteSha256": "c9234967b670c32478644b4236ec8fd2f351225696cacbcd0fad1f1838b95170",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 2217,
+      "endChar": 2232,
+      "quoteSha256": "707932bc5cb8be2bda8de0ee55086325204708862342710c72289dd31a99910e",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 3480,
+      "endChar": 3504,
+      "quoteSha256": "78cf941cf91df3789a614185e81cfd5dd1fefbb5c1a02e66a561de0fdf5d1a66",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 12518,
+      "endChar": 12541,
+      "quoteSha256": "533d36f01bd7215dc269e779492989a88e6e289db72a7261536abd25775125bd",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 15966,
+      "endChar": 15975,
+      "quoteSha256": "936b66b6125a421d8eb66aa408a57c203fa9418ca2fd2a8766b090c2b43bef0e",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 15976,
+      "endChar": 15999,
+      "quoteSha256": "9a13e120d61a80d346f3f386a90b5f80685f60c7f76f4abc5ceeb04bb5351b69",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 2,
+      "startChar": 21762,
+      "endChar": 21790,
+      "quoteSha256": "c12301732da76b4c5db8599c10be63d09fea74ca975dfa4bf353dc7d821559e8",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 26053,
+      "endChar": 26065,
+      "quoteSha256": "b1b033d480eeefd0eb13c01928f7aea4351422222816892e6b4d5375a3174e0b",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 31132,
+      "endChar": 31145,
+      "quoteSha256": "8aea59c18215b655f5537ee9abe02eab71164926e6f1a02fa0617be48c84dfba",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 32796,
+      "endChar": 32808,
+      "quoteSha256": "57cf5cd97bc68a0b5b414f3a4bd37ce6fdc6aef7551eed33330a511604e5684a",
+      "verified": false
+    },
+    {
+      "role": "section",
+      "depth": 1,
+      "startChar": 34089,
+      "endChar": 34099,
+      "quoteSha256": "69824d3b0e70ca6aaa0da1613b65fd914c442bf1f7ad1bb22bcdfbdfe1a05e39",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34100,
+      "endChar": 34221,
+      "quoteSha256": "91a3ac931783cd79e601f75be9cbcd4d6d496c126ede8f1af24334d50186e6da",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34222,
+      "endChar": 34369,
+      "quoteSha256": "f59504742be737d0f0d77147dec047d9637550c8490105486e74dc178bf93d7c",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34370,
+      "endChar": 34519,
+      "quoteSha256": "b7f9d646c109b47b05813fe7bbe5bd32d59e8b8830c7c1818e4cd8a15d352602",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34520,
+      "endChar": 34652,
+      "quoteSha256": "5e49adc2502eebf02f4145537acb55f037e9a4bf0f83d00a3c6f8b48fd2c653d",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34653,
+      "endChar": 34874,
+      "quoteSha256": "5c42e95382f5b023b62784385941740f3e3f2bd2d36b060f7048be14f9eab79a",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 34875,
+      "endChar": 35058,
+      "quoteSha256": "74052b4f1829db3e976bac52bbdfd9b1d20336fa223f6636b99464b472df0dc1",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35059,
+      "endChar": 35169,
+      "quoteSha256": "c7f246e803b8c8fcd2ab7ec685ed8e63f8ad3733f2cae7cdf279b75710bb69ff",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35170,
+      "endChar": 35374,
+      "quoteSha256": "ef077578a1c2dae8db0b340d0244711a6e1e0eb458de6239e15161935cd19215",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35375,
+      "endChar": 35496,
+      "quoteSha256": "f0f19e843e26831d047c0fcfc385762f36912964a59eac9a8a94f26953bf00ab",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35497,
+      "endChar": 35641,
+      "quoteSha256": "f0550ba8c69b4683db08f520d515afa6435e6d1d2de4d34e85dabc26ff20e085",
+      "verified": false
+    },
+    {
+      "role": "reference",
+      "depth": 0,
+      "startChar": 35642,
+      "endChar": 35881,
+      "quoteSha256": "c0ab649c7f972aec46e97f476cf2c2512df3588aad34f03cd100c6a2b994f839",
+      "verified": false
+    }
+  ],
+  "proposer": {
+    "provider": "xai",
+    "name": "grok-4.6",
+    "revision": "grok-4.6",
+    "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+    "taskType": "gold-proposal"
+  }
+}
