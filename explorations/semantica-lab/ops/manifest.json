@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "decompose",
     "openQuestions": [
-      "Does the evidence-quote candidate's zero-spend preview ground at least one relation on at least one frozen paper? (DECISIONS E1-E7; preview and operator gold spot-check both gate the live probe)"
+      "Does the evidence-quote candidate's zero-spend preview ground at least one relation on at least one frozen paper? (DECISIONS E1-E8; preview and the operator spot-check-and-repair pass both gate the live probe; a second park is terminal)"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

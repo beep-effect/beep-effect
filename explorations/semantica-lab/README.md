@@ -21,11 +21,12 @@ and opens a neuro-symbolic reasoning work stream.
 
 Does the evidence-quote candidate's zero-spend preview ground at least one
 relation on at least one frozen paper? The candidate is defined (DECISIONS
-E1-E7, 2026-08-27): a fold alignment tier in the shared aligner, a lab-local
+E1-E8, 2026-08-27): a fold alignment tier in the shared aligner, a lab-local
 subject/object/evidence-quote relation contract, endpoints anchored inside
-the evidence span, and a target written toward gold's relation classes. The
-preview and the operator gold spot-check both gate the live probe; the paused
-`semantica-canary` packet resumes only after both clear.
+the evidence span, and a target enumerating the frozen gold predicate
+vocabulary verbatim. The preview and the operator gold spot-check-and-repair
+pass both gate the live probe; the paused `semantica-canary` packet resumes
+only after both clear, and a second park is terminal (E8).
 
 ## Read This First
 
@@ -53,13 +54,17 @@ owns *decisions and research* (D2).
   replayed the three breaker cache entries against regenerated canonical text
   and hydrated the frozen gold relation labels. Findings: 10 of 16 retry
   relation candidates differ from a true span only by whitespace or
-  end-of-line hyphenation; gold relations already carry evidence quotes with
-  both endpoints inside them; gold predicates are document-metadata classes
-  while the parked candidate hunted content relations. A grill-with-docs
-  session locked E1-E7 in DECISIONS: fold alignment tier in
-  `@beep/langextract`, lab-local relation evidence contract, endpoint
-  anchoring inside the evidence span, gold-class target, preview and
-  spot-check gates before the probe, fresh S1 budget for the new slate row.
+  end-of-line hyphenation; all 13 gold evidence quotes contain both endpoint
+  surfaces (even where gold's anchor offsets sit outside the quote); the
+  frozen predicate vocabulary is 8 exact strings, mostly document-metadata
+  with two content relations and one spelling variant, while the parked
+  candidate hunted a different content-relation set. A grill-with-docs
+  session plus review closeout locked E1-E8 in DECISIONS: fold alignment
+  tier in `@beep/langextract`, lab-local relation evidence contract,
+  endpoint anchoring inside the evidence span, frozen-vocabulary target,
+  preview and spot-check-and-repair gates before the probe, a versioned
+  candidate identity, and bounded re-entry (one candidate; a second park is
+  terminal).
 - 2026-08-26 (C0 Extraction probe breaker): the candidate and its one allowed
   prompt-tightening retry failed the frozen relation-paper slate. Review
   invalidated two earlier apparent live/replay passes because repeated endpoint
