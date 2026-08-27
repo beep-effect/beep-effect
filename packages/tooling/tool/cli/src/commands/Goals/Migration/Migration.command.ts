@@ -21,8 +21,10 @@ import { lintGoalFleet, planManifestTranslation } from "./ManifestTranslation.ts
 import { TranslationReport } from "./Migration.schemas.ts";
 import {
   applyPacketGenesisSeed,
+  isRecoverableGenesisSeed,
   PacketForkRepairApplier,
   PacketForkRepairApplierLive,
+  planPacketGenesisRecovery,
   planPacketGenesisSeed,
   quarantineOwnedGenesisEvents,
 } from "./PacketMutation.ts";
@@ -173,10 +175,12 @@ const planConventionMigration = Effect.fn("Goals.planConventionMigration")(funct
   const plans = A.map(records, planManifestTranslation);
   const translations = A.getSomes(A.map(plans, (plan) => plan.translation));
   let seeds = A.empty<PacketGenesisSeed>();
-  for (const translation of translations) {
-    const record = A.findFirst(records, (item) => item.slug === translation.slug);
-    if (O.isNone(record)) continue;
-    const seed = yield* planPacketGenesisSeed(record.value, translation.content, at);
+  for (const [record, plan] of A.zip(records, plans)) {
+    const seed = O.isSome(plan.translation)
+      ? yield* planPacketGenesisSeed(record, plan.translation.value.content, at)
+      : record.manifestText !== undefined && A.isReadonlyArrayEmpty(plan.issues)
+        ? yield* planPacketGenesisRecovery(record, record.manifestText)
+        : O.none<PacketGenesisSeed>();
     if (O.isSome(seed)) seeds = A.append(seeds, seed.value);
   }
   return {
@@ -300,6 +304,7 @@ type ManifestSnapshot = {
 type SeedSnapshot = {
   readonly eventsDirectory: string;
   readonly packetRoot: string;
+  readonly priorEventsPresent: boolean;
   readonly priorTrace: O.Option<string>;
   readonly seed: PacketGenesisSeed;
 };
@@ -365,12 +370,13 @@ const snapshotGenesisSeeds = Effect.fn("Goals.snapshotGenesisSeeds")(function* (
       .pipe(
         Effect.mapError((error) => PacketStreamError.new(seed.slug, `event stream inspection failed: ${error.message}`))
       );
-    if (streamPresent) {
+    if (streamPresent && !(yield* isRecoverableGenesisSeed(seed))) {
       return yield* PacketStreamError.new(seed.slug, "event stream appeared after planning; re-run preview");
     }
     snapshots = A.append(snapshots, {
       eventsDirectory: path.resolve(seed.eventsDirectory),
       packetRoot: path.resolve(path.dirname(path.dirname(seed.eventsDirectory))),
+      priorEventsPresent: streamPresent,
       priorTrace: yield* readOptionalSnapshot(seed.tracePath, `trace snapshot failed for ${seed.slug}`),
       seed,
     });
@@ -403,29 +409,31 @@ const rollbackManifest = Effect.fn("Goals.rollbackManifest")(function* (snapshot
 const rollbackSeed = Effect.fn("Goals.rollbackSeed")(function* (snapshot: SeedSnapshot) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const eventPath = path.join(snapshot.eventsDirectory, snapshot.seed.eventFileName);
-  const entries = yield* fs
-    .readDirectory(snapshot.eventsDirectory)
-    .pipe(
-      Effect.mapError((error) =>
-        PacketStreamError.new(snapshot.seed.slug, `seed rollback scan failed: ${error.message}`)
-      )
-    );
-  if (A.length(entries) !== 1 || entries[0] !== snapshot.seed.eventFileName) {
-    return yield* PacketStreamError.new(
-      snapshot.seed.slug,
-      "seed rollback conflict: event directory contains foreign bytes"
-    );
-  }
-  const eventText = yield* fs
-    .readFileString(eventPath)
-    .pipe(
-      Effect.mapError((error) =>
-        PacketStreamError.new(snapshot.seed.slug, `seed rollback event read failed: ${error.message}`)
-      )
-    );
-  if (eventText !== snapshot.seed.eventText) {
-    return yield* PacketStreamError.new(snapshot.seed.slug, "seed rollback conflict: event bytes changed");
+  if (!snapshot.priorEventsPresent) {
+    const eventPath = path.join(snapshot.eventsDirectory, snapshot.seed.eventFileName);
+    const entries = yield* fs
+      .readDirectory(snapshot.eventsDirectory)
+      .pipe(
+        Effect.mapError((error) =>
+          PacketStreamError.new(snapshot.seed.slug, `seed rollback scan failed: ${error.message}`)
+        )
+      );
+    if (A.length(entries) !== 1 || entries[0] !== snapshot.seed.eventFileName) {
+      return yield* PacketStreamError.new(
+        snapshot.seed.slug,
+        "seed rollback conflict: event directory contains foreign bytes"
+      );
+    }
+    const eventText = yield* fs
+      .readFileString(eventPath)
+      .pipe(
+        Effect.mapError((error) =>
+          PacketStreamError.new(snapshot.seed.slug, `seed rollback event read failed: ${error.message}`)
+        )
+      );
+    if (eventText !== snapshot.seed.eventText) {
+      return yield* PacketStreamError.new(snapshot.seed.slug, "seed rollback conflict: event bytes changed");
+    }
   }
   const traceText = yield* fs
     .readFileString(snapshot.seed.tracePath)
@@ -453,7 +461,7 @@ const rollbackSeed = Effect.fn("Goals.rollbackSeed")(function* (snapshot: SeedSn
         )
       ),
   });
-  yield* quarantineOwnedGenesisEvents(snapshot.seed, "seed rollback");
+  if (!snapshot.priorEventsPresent) yield* quarantineOwnedGenesisEvents(snapshot.seed, "seed rollback");
 });
 
 const rollbackConventionMutation = Effect.fn("Goals.rollbackConventionMutation")(function* (

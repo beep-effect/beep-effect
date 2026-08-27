@@ -1056,7 +1056,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         planned.value.eventText
       );
 
-      const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
+      const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
       expect(O.isSome(recovery)).toBe(true);
       if (O.isNone(recovery)) return;
       yield* applyPacketGenesisSeed(recovery.value);
@@ -2003,6 +2003,78 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           );
           expect(Exit.isSuccess(noOp)).toBe(true);
           expect(yield* readProjectFile(reportPath)).toBe(report);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "recovers an existing v2 genesis across timestamps and rolls back only its repaired trace",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const manifest = `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "demo", status: "active" },
+            lifecycle: "active",
+            packetPath: "goals/demo",
+            completionGate,
+          })}\n`;
+          yield* writeProjectFile("goals/demo/ops/manifest.json", manifest);
+          yield* writeProjectFile(
+            "goals/packet-convention-migration/ops/manifest.json",
+            `${encodeJson({
+              schemaVersion: "initiative-manifest/v2",
+              initiative: { id: "packet-convention-migration", status: "active" },
+              lifecycle: "active",
+              packetPath: "goals/packet-convention-migration",
+              completionGate,
+            })}\n`
+          );
+          const packet = GoalPacketRecord.make({
+            slug: "demo",
+            packetPath: "goals/demo",
+            manifestPath: "goals/demo/ops/manifest.json",
+            readmePath: "goals/demo/README.md",
+            manifestText: manifest,
+          });
+          const seed = yield* planPacketGenesisSeed(packet, manifest, "2026-08-25T00:00:00.000Z");
+          expect(O.isSome(seed)).toBe(true);
+          if (O.isNone(seed)) return;
+          const fs = yield* FileSystem.FileSystem;
+          const eventPath = `${seed.value.eventsDirectory}/${seed.value.eventFileName}`;
+          yield* fs.makeDirectory(seed.value.eventsDirectory, { recursive: true });
+          yield* fs.writeFileString(eventPath, seed.value.eventText);
+          const blockedReportRoot = "goals/packet-convention-migration/history/report-parent";
+          yield* writeProjectFile(blockedReportRoot, "blocks report directory\n");
+
+          const failed = yield* Effect.exit(
+            runMigration([
+              "--apply",
+              "--at",
+              "2026-08-26T00:00:00.000Z",
+              "--report",
+              `${blockedReportRoot}/migration.md`,
+            ])
+          );
+          expectReportedExit(failed);
+          expect(yield* fs.readFileString(eventPath)).toBe(seed.value.eventText);
+          expect(yield* fs.exists(seed.value.tracePath)).toBe(false);
+
+          yield* fs.remove(blockedReportRoot);
+          yield* fs.makeDirectory(blockedReportRoot);
+          const applied = yield* Effect.exit(
+            runMigration([
+              "--apply",
+              "--at",
+              "2026-08-27T00:00:00.000Z",
+              "--report",
+              `${blockedReportRoot}/migration.md`,
+            ])
+          );
+          expect(Exit.isSuccess(applied)).toBe(true);
+          expect(yield* fs.readFileString(eventPath)).toBe(seed.value.eventText);
+          expect(yield* fs.readFileString(seed.value.tracePath)).toBe(seed.value.traceText);
         })
       );
     })

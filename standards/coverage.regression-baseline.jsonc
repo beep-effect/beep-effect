@@ -22438,12 +22438,12 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts": {
-          "lines": 98.68,
-          "statements": 98,
-          "branches": 95.45,
-          "functions": 98.57,
+          "lines": 98.24,
+          "statements": 97.98,
+          "branches": 95.91,
+          "functions": 98.55,
           "uncovered": {
-            "lines": 3,
+            "lines": 4,
             "statements": 5,
             "branches": 4,
             "functions": 1
@@ -22462,15 +22462,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts": {
-          "lines": 93.53,
-          "statements": 93.42,
-          "branches": 98.71,
-          "functions": 77.04,
+          "lines": 93.47,
+          "statements": 92.27,
+          "branches": 94.44,
+          "functions": 77.94,
           "uncovered": {
-            "lines": 13,
-            "statements": 14,
-            "branches": 1,
-            "functions": 14
+            "lines": 15,
+            "statements": 19,
+            "branches": 5,
+            "functions": 15
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.errors.ts": {

@@ -1,0 +1,73 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/law-pulse.sh'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/home/elpresidank/YeeBois/projects/beep-effect17/.codex/hooks/hook-pulse.sh'"
+          }
+        ]
+      }
+    ]
+  }
+}

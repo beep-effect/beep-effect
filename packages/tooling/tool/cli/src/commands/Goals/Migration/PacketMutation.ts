@@ -31,6 +31,7 @@ import {
 import { PACKET_TRACE_SEGMENTS } from "../PacketCore/PacketTransitionWriter.ts";
 import { goalStagePosition } from "../SetStatus.ts";
 import { PacketGenesisSeed } from "./Migration.schemas.ts";
+import type { GoalManifest } from "../Goals.schemas.ts";
 import type { GoalPacketRecord } from "../Inventory.ts";
 import type { PacketDerivedState } from "../PacketCore/PacketCore.schemas.ts";
 import type { PacketStreamListing } from "../PacketCore/PacketEventStore.ts";
@@ -286,7 +287,33 @@ export const PacketForkRepairApplierLive: Layer.Layer<
   PacketEventStore | FileSystem.FileSystem | Path.Path
 > = Layer.effect(PacketForkRepairApplier, makePacketForkRepairApplier());
 
-const isRecoverableGenesisSeed = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+/**
+ * Whether a seed describes the exact owned event of a trace-less stream.
+ *
+ * **Example** (Build a recovery check)
+ *
+ * ```ts
+ * import { isRecoverableGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
+ * import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas"
+ * import { Effect } from "effect"
+ *
+ * const seed = PacketGenesisSeed.make({
+ *   slug: "demo",
+ *   eventsDirectory: "goals/demo/ops/events",
+ *   eventFileName: "00001-packet-created-deadbeef.json",
+ *   eventText: "{}\n",
+ *   tracePath: "goals/demo/ops/trace.json",
+ *   traceText: "{}\n",
+ * })
+ * console.log(Effect.isEffect(isRecoverableGenesisSeed(seed)))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const isRecoverableGenesisSeed = Effect.fn("Goals.isRecoverableGenesisSeed")(function* (
+  seed: PacketGenesisSeed
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePresent = yield* fs
@@ -301,6 +328,142 @@ const isRecoverableGenesisSeed = Effect.fnUntraced(function* (seed: PacketGenesi
     .readFileString(path.join(seed.eventsDirectory, seed.eventFileName))
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis recovery read failed: ${error.message}`)));
   return existingEvent === seed.eventText;
+});
+
+const decodeGenesisManifest = Effect.fnUntraced(function* (record: GoalPacketRecord, manifestText: string) {
+  const parsed = parseGoalManifestText(manifestText);
+  if (O.isNone(parsed)) {
+    return yield* streamError(record.slug, "translated manifest cannot seed genesis because it is invalid JSON");
+  }
+  return yield* decodeGoalManifest(parsed.value).pipe(
+    Effect.mapError((error) =>
+      streamError(
+        record.slug,
+        `translated manifest cannot seed genesis because schema decoding failed: ${error.message}`
+      )
+    )
+  );
+});
+
+const genesisEvent = (packet: PacketEvent["packet"], manifest: GoalManifest, at: PacketEvent["at"]): PacketEvent => {
+  const position = goalStagePosition(manifest);
+  return PacketEvent.make({
+    schemaVersion: "packet-event/v1",
+    packet,
+    root: "goals",
+    seq: 1,
+    expectedRevision: 0,
+    at,
+    actor: "convention-migration",
+    body: {
+      type: "packet-created",
+      status: manifest.initiative.status,
+      ...(O.isSome(position) ? { stage: position.value.stage, ordinal: position.value.ordinal } : {}),
+    },
+  });
+};
+
+const renderGenesisSeed = Effect.fnUntraced(function* (
+  slug: PacketEvent["packet"],
+  eventsDirectory: string,
+  tracePath: string,
+  event: PacketEvent
+) {
+  const id = yield* packetEventDigest(event).pipe(
+    Effect.mapError((error) => streamError(slug, `genesis digest failed: ${error.message}`))
+  );
+  const eventText = yield* renderPacketEventFile(event).pipe(
+    Effect.mapError((error) => streamError(slug, `genesis render failed: ${error.message}`))
+  );
+  const stored = StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event });
+  const derived = foldPacketEvents({ packet: slug, root: "goals", events: [stored] });
+  const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived, [stored])).pipe(
+    Effect.mapError((error) => streamError(slug, `genesis trace render failed: ${error.message}`))
+  );
+  return PacketGenesisSeed.make({
+    slug,
+    eventsDirectory,
+    eventFileName: stored.fileName,
+    eventText,
+    tracePath,
+    traceText,
+  });
+});
+
+const planExistingGenesisRecovery = Effect.fnUntraced(function* (
+  record: GoalPacketRecord,
+  manifest: GoalManifest,
+  eventsDirectory: string,
+  tracePath: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const store = yield* PacketEventStore;
+  const tracePresent = yield* fs
+    .exists(tracePath)
+    .pipe(Effect.mapError((error) => streamError(record.slug, `genesis trace inspection failed: ${error.message}`)));
+  if (tracePresent) return O.none<PacketGenesisSeed>();
+  const listing = yield* store.list(
+    PacketStreamLocator.make({ packet: record.slug, root: "goals", packetPath: record.packetPath })
+  );
+  if (A.length(listing.events) !== 1 || A.isReadonlyArrayNonEmpty(listing.issues)) {
+    return O.none<PacketGenesisSeed>();
+  }
+  const stored = listing.events[0];
+  if (stored === undefined) return O.none<PacketGenesisSeed>();
+  const seed = yield* renderGenesisSeed(
+    record.slug,
+    eventsDirectory,
+    tracePath,
+    genesisEvent(record.slug, manifest, stored.event.at)
+  );
+  if (!(yield* isRecoverableGenesisSeed(seed))) {
+    return O.none<PacketGenesisSeed>();
+  }
+  return O.some(seed);
+});
+
+/**
+ * Plan trace recovery for an already translated packet carrying an owned
+ * genesis event but no trace projection.
+ *
+ * **Example** (Build a recovery plan)
+ *
+ * ```ts
+ * import { planPacketGenesisRecovery } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
+ * import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory"
+ * import { Effect } from "effect"
+ *
+ * const record = GoalPacketRecord.make({
+ *   slug: "demo",
+ *   packetPath: "goals/demo",
+ *   manifestPath: "goals/demo/ops/manifest.json",
+ *   readmePath: "goals/demo/README.md",
+ * })
+ * console.log(Effect.isEffect(planPacketGenesisRecovery(record, "{}")))
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const planPacketGenesisRecovery = Effect.fn("Goals.planPacketGenesisRecovery")(function* (
+  record: GoalPacketRecord,
+  manifestText: string
+) {
+  if (!isPacketSlug(record.slug)) {
+    return yield* streamError(record.slug, `directory name "${record.slug}" is not a valid packet slug`);
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const eventsDirectory = path.join(record.packetPath, ...PACKET_EVENTS_SEGMENTS);
+  const eventsPresent = yield* fs.exists(eventsDirectory).pipe(Effect.orElseSucceed(() => false));
+  if (!eventsPresent) return O.none<PacketGenesisSeed>();
+  const manifest = yield* decodeGenesisManifest(record, manifestText);
+  return yield* planExistingGenesisRecovery(
+    record,
+    manifest,
+    eventsDirectory,
+    path.join(record.packetPath, ...PACKET_TRACE_SEGMENTS)
+  );
 });
 
 /**
@@ -346,60 +509,17 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
   const eventsDirectory = path.join(record.packetPath, ...PACKET_EVENTS_SEGMENTS);
   const tracePath = path.join(record.packetPath, ...PACKET_TRACE_SEGMENTS);
   const eventsPresent = yield* fs.exists(eventsDirectory).pipe(Effect.orElseSucceed(() => false));
-  const parsed = parseGoalManifestText(manifestText);
-  if (O.isNone(parsed)) {
-    return yield* streamError(record.slug, "translated manifest cannot seed genesis because it is invalid JSON");
-  }
   if (!isPacketSlug(record.slug)) {
     return yield* streamError(record.slug, `directory name "${record.slug}" is not a valid packet slug`);
   }
+  const manifest = yield* decodeGenesisManifest(record, manifestText);
+  if (eventsPresent) return yield* planExistingGenesisRecovery(record, manifest, eventsDirectory, tracePath);
   if (!S.is(PacketEventTimestamp)(at)) {
     return yield* streamError(record.slug, `adoption timestamp "${at}" is not a full ISO-8601 date-time`);
   }
-  const manifest = yield* decodeGoalManifest(parsed.value).pipe(
-    Effect.mapError((error) =>
-      streamError(
-        record.slug,
-        `translated manifest cannot seed genesis because schema decoding failed: ${error.message}`
-      )
-    )
+  return O.some(
+    yield* renderGenesisSeed(record.slug, eventsDirectory, tracePath, genesisEvent(record.slug, manifest, at))
   );
-  const position = goalStagePosition(manifest);
-  const event = PacketEvent.make({
-    schemaVersion: "packet-event/v1",
-    packet: record.slug,
-    root: "goals",
-    seq: 1,
-    expectedRevision: 0,
-    at,
-    actor: "convention-migration",
-    body: {
-      type: "packet-created",
-      status: manifest.initiative.status,
-      ...(O.isSome(position) ? { stage: position.value.stage, ordinal: position.value.ordinal } : {}),
-    },
-  });
-  const id = yield* packetEventDigest(event).pipe(
-    Effect.mapError((error) => streamError(record.slug, `genesis digest failed: ${error.message}`))
-  );
-  const eventText = yield* renderPacketEventFile(event).pipe(
-    Effect.mapError((error) => streamError(record.slug, `genesis render failed: ${error.message}`))
-  );
-  const stored = StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event });
-  const derived = foldPacketEvents({ packet: record.slug, root: "goals", events: [stored] });
-  const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived, [stored])).pipe(
-    Effect.mapError((error) => streamError(record.slug, `genesis trace render failed: ${error.message}`))
-  );
-  const seed = PacketGenesisSeed.make({
-    slug: record.slug,
-    eventsDirectory,
-    eventFileName: stored.fileName,
-    eventText,
-    tracePath,
-    traceText,
-  });
-  if (!eventsPresent) return O.some(seed);
-  return (yield* isRecoverableGenesisSeed(seed)) ? O.some(seed) : O.none<PacketGenesisSeed>();
 });
 
 const removeQuarantinedGenesisEvent = Effect.fnUntraced(function* (
