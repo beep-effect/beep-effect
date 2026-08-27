@@ -134,6 +134,36 @@ export class SourceStabilityObservation extends S.Class<SourceStabilityObservati
   })
 ) {}
 
+/**
+ * Result of incrementally hashing a file or file prefix.
+ *
+ * **Example** (Describe a streamed hash)
+ *
+ * ```ts
+ * import { StreamingHashResult } from "@beep/repo-cli/commands/Corpus"
+ * import { Sha256Hex } from "@beep/schema"
+ *
+ * const result = StreamingHashResult.make({
+ *   bytes: 0,
+ *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ * })
+ * console.log(result.bytes) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StreamingHashResult extends S.Class<StreamingHashResult>($I`StreamingHashResult`)(
+  {
+    bytes: NonNegativeInt,
+    sha256: Sha256Hex,
+  },
+  $I.annote("StreamingHashResult", {
+    title: "Streaming Hash Result",
+    description: "SHA-256 digest and byte count produced without materializing the complete file in memory.",
+  })
+) {}
+
 class CopiedOutcome extends S.Class<CopiedOutcome>($I`CopiedOutcome`)(
   {
     kind: S.tag("copied"),
@@ -541,6 +571,32 @@ export class CapacityMeasurement extends S.Class<CapacityMeasurement>($I`Capacit
   })
 ) {}
 
+/**
+ * Roots supplied to the T7 preservation commands.
+ *
+ * **Example** (Configure synthetic roots)
+ *
+ * ```ts
+ * import { T7PreservationOptions } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const options = T7PreservationOptions.make({ corpusRoot: "/tmp/archive", t7Root: "/tmp/source" })
+ * console.log(options.t7Root) // "/tmp/source"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class T7PreservationOptions extends S.Class<T7PreservationOptions>($I`T7PreservationOptions`)(
+  {
+    corpusRoot: S.NonEmptyString,
+    t7Root: S.NonEmptyString,
+  },
+  $I.annote("T7PreservationOptions", {
+    title: "T7 Preservation Options",
+    description: "Out-of-repo corpus archive home and removable-drive root used by a preservation operation.",
+  })
+) {}
+
 class PreflightProposed extends S.Class<PreflightProposed>($I`PreflightProposed`)(
   {
     kind: S.tag("proposed"),
@@ -620,6 +676,49 @@ export const CapacityPreflight = CapacityPreflightKind.mapMembers(
  * @since 0.0.0
  */
 export type CapacityPreflight = typeof CapacityPreflight.Type;
+
+/**
+ * JSON codec for persisted capacity preflight state.
+ *
+ * **Example** (Inspect the codec)
+ *
+ * ```ts
+ * import { CapacityPreflightJson } from "@beep/repo-cli/commands/Corpus"
+ *
+ * console.log(typeof CapacityPreflightJson.decode) // "function"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const CapacityPreflightJson = JsonStringCodec(CapacityPreflight);
+
+/**
+ * Aggregate outcome of a preservation archive run.
+ *
+ * **Example** (Describe an empty run)
+ *
+ * ```ts
+ * import { PreservationRunSummary } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const summary = PreservationRunSummary.make({ attempted: 0, passed: 0, unapproved: 0 })
+ * console.log(summary.passed) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PreservationRunSummary extends S.Class<PreservationRunSummary>($I`PreservationRunSummary`)(
+  {
+    attempted: NonNegativeInt,
+    passed: NonNegativeInt,
+    unapproved: NonNegativeInt,
+  },
+  $I.annote("PreservationRunSummary", {
+    title: "Preservation Run Summary",
+    description: "Attempt, approved-terminal, and unapproved-terminal counts from one preservation run.",
+  })
+) {}
 
 class VerifiedOutcome extends S.Class<VerifiedOutcome>($I`VerifiedOutcome`)(
   {
@@ -795,6 +894,37 @@ export class PreservationVerificationSummary extends S.Class<PreservationVerific
   $I.annote("PreservationVerificationSummary", {
     title: "Preservation Verification Summary",
     description: "Aggregate counts for one fresh-process verification pass over the destination manifest.",
+  })
+) {}
+
+/**
+ * Rows and aggregate counts returned by an independent verification pass.
+ *
+ * **Example** (Describe an empty report)
+ *
+ * ```ts
+ * import { PreservationVerificationReport } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const report = PreservationVerificationReport.make({
+ *   rows: [],
+ *   summary: { bytesVerified: 0, hashMismatched: 0, missing: 0, rowsChecked: 0, sizeMismatched: 0, verified: 0 }
+ * })
+ * console.log(report.rows.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PreservationVerificationReport extends S.Class<PreservationVerificationReport>(
+  $I`PreservationVerificationReport`
+)(
+  {
+    rows: S.Array(PreservationVerificationRow),
+    summary: PreservationVerificationSummary,
+  },
+  $I.annote("PreservationVerificationReport", {
+    title: "Preservation Verification Report",
+    description: "Per-object verification rows paired with their aggregate preservation summary.",
   })
 ) {}
 
