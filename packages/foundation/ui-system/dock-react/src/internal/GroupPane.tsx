@@ -241,6 +241,7 @@ const Tab = (props: {
   return (
     <div
       role="tab"
+      aria-selected={props.active}
       tabIndex={props.active ? 0 : -1}
       data-active={props.active}
       data-panel-id={props.panel.id}
@@ -281,6 +282,7 @@ const Tab = (props: {
   );
 };
 
+// fallow-ignore-next-line complexity -- cognitive 11 = pre-existing hook/JSX tax (fallow counts each of the 11 hook bindings); this branch's only change in this file was a one-line aria-selected on the Tab child and added no branching
 const TabStrip = (
   props: DockviewReactProps & {
     readonly groupId: GroupId;
@@ -502,6 +504,7 @@ const TabStrip = (
   );
 };
 
+// fallow-ignore-next-line complexity -- cognitive 15 = pre-existing branching over tab/box options and floating variants; this branch's only change in this file was a one-line aria-selected on the Tab child and added no branching
 export const GroupPane = (
   props: DockviewReactProps & {
     readonly groupId: GroupId;

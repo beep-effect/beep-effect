@@ -8,6 +8,7 @@
 import {
   applyOntologyInspectorActionAtom,
   ontologyInspectorFormStateAtom,
+  ontologyPathAtom,
   ontologyPredicateSuggestionsAtom,
   selectedOntologyResourceAtom,
   setOntologyInspectorInputAtoms,
@@ -194,10 +195,20 @@ const OntologyAddTripleForm = (): JSX.Element => {
  * @since 0.0.0
  */
 export function OntologyInspectorRegion(): JSX.Element {
+  const path = useAtomValue(ontologyPathAtom);
+
   return (
     <>
       <OntologyInspectorSummary />
-      <OntologyAddTripleForm />
+      {O.isNone(path) ? (
+        // Same honest empty state Explorer/Source use: a sessionless Add Triple
+        // form is all disabled buttons dressed up as an invitation to type.
+        <p className="flex min-h-0 flex-1 items-center justify-center p-3 text-sm text-muted-foreground">
+          No ontology file open
+        </p>
+      ) : (
+        <OntologyAddTripleForm />
+      )}
     </>
   );
 }

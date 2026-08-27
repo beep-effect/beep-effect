@@ -252,7 +252,9 @@
         "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**"
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
       ],
       "outputs": ["storybook-static/**"]
     },
@@ -270,7 +272,9 @@
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
       ]
     }
   }

@@ -563,11 +563,11 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
  */
 export const DMS_MIRROR_FIXTURE_ROOT_ID = RemoteItemId.make("fx-root");
 
-const connectedAvailability = DmsMirrorAvailability.of({
-  probe: Effect.succeed(
-    DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID) })
-  ),
-});
+const connectedProbe = Effect.succeed(
+  DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID) })
+);
+
+const connectedAvailability = DmsMirrorAvailability.of({ probe: connectedProbe, refresh: connectedProbe });
 
 /**
  * Deterministic fixture layer providing the DMS mirror port, a connected

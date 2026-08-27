@@ -291,7 +291,7 @@ describe("the message you just sent", { concurrent: false }, () => {
       expect(scrollIntoView).not.toHaveBeenCalled();
 
       O.getOrThrow(scheduledFrame)(0);
-      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "end" });
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "end" });
     })
   );
 

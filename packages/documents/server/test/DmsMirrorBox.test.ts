@@ -834,6 +834,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       expect(uploadError.retryable).toBe(false);
       expect(uploadError.reason).toContain("status 400");
       expect(uploadError.reason).toContain("bad_request");
+      // Mirror verbs carry the same probe-facing classification the
+      // availability layer reads: an unclassifiable 400 stays the fallback.
+      expect(uploadError.disconnectReason).toEqual(O.some("probe-failed"));
 
       const thrown = makeFakeBox({
         events: { getEvents: () => Promise.reject("boom") },
@@ -861,6 +864,7 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       expect(probe.connected).toBe(true);
       expect(probe.provider).toBe("box");
       expect(O.isSome(probe.rootRemoteId)).toBe(true);
+      expect(O.isSome(probe.probedAt)).toBe(true);
     })
   );
 
@@ -877,6 +881,106 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       expect(probe.connected).toBe(false);
       expect(O.isNone(probe.rootRemoteId)).toBe(true);
+      // A status-less SDK throw carries no classification signal, so the
+      // probe stays on the unclassified fallback.
+      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
+      expect(O.isSome(probe.probedAt)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "classifies availability probe failures from the Box status",
+    Effect.fnUntraced(function* () {
+      const probeWithStatus = (statusCode: number) =>
+        Effect.gen(function* () {
+          const availability = yield* DmsMirrorAvailability;
+          return yield* availability.probe;
+        }).pipe(
+          provideScopedLayer(
+            availabilityLayer(
+              makeFakeBox({
+                folders: { getFolderItems: () => Promise.reject({ responseInfo: { statusCode } }) },
+              })
+            )
+          )
+        );
+
+      const unauthorized = yield* probeWithStatus(401);
+      expect(unauthorized.connected).toBe(false);
+      expect(unauthorized.disconnectReason).toEqual(O.some("auth-failed"));
+
+      const forbidden = yield* probeWithStatus(403);
+      expect(forbidden.disconnectReason).toEqual(O.some("root-unreachable"));
+
+      const missingRoot = yield* probeWithStatus(404);
+      expect(missingRoot.disconnectReason).toEqual(O.some("root-unreachable"));
+
+      const rateLimited = yield* probeWithStatus(429);
+      expect(rateLimited.disconnectReason).toEqual(O.some("transient"));
+
+      const serverDown = yield* probeWithStatus(503);
+      expect(serverDown.disconnectReason).toEqual(O.some("transient"));
+
+      const badRequest = yield* probeWithStatus(400);
+      expect(badRequest.disconnectReason).toEqual(O.some("probe-failed"));
+    })
+  );
+
+  it.effect(
+    "falls back to probe-failed when the resolved mirror-root id fails decoding",
+    Effect.fnUntraced(function* () {
+      // The driver accepts an empty folder id, but RemoteItemId is non-empty:
+      // the probe's own decode step fails, which is the SchemaError (not
+      // DmsMirrorUnavailable) classification path.
+      const malformed = makeFakeBox({
+        folders: {
+          getFolderItems: () =>
+            Promise.resolve({
+              entries: [{ id: "", name: BOX_MIRROR_DEFAULT_ROOT_NAME, type: "folder" }],
+            }),
+        },
+      });
+      const probe = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        return yield* availability.probe;
+      }).pipe(provideScopedLayer(availabilityLayer(malformed)));
+
+      expect(probe.connected).toBe(false);
+      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
+      expect(O.isNone(probe.rootRemoteId)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "refresh bypasses the cached probe answer and asks Box again",
+    Effect.fnUntraced(function* () {
+      // Overrides replace the harness implementation (and its counter), so
+      // the override counts its own invocations.
+      const calls = { getFolderItems: 0 };
+      const failing = makeFakeBox({
+        folders: {
+          getFolderItems: () => {
+            calls.getFolderItems += 1;
+            return Promise.reject({ responseInfo: { statusCode: 503 } });
+          },
+        },
+      });
+      const outcome = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        const first = yield* availability.probe;
+        const cached = yield* availability.probe;
+        const callsBeforeRefresh = calls.getFolderItems;
+        const refreshed = yield* availability.refresh;
+        return { callsAfterRefresh: calls.getFolderItems, callsBeforeRefresh, cached, first, refreshed };
+      }).pipe(provideScopedLayer(availabilityLayer(failing)));
+
+      expect(outcome.first.connected).toBe(false);
+      // Within the failure TTL a passive probe replays the cached answer …
+      expect(outcome.cached).toBe(outcome.first);
+      // … while an explicit refresh must actually re-ask Box.
+      expect(outcome.callsAfterRefresh).toBeGreaterThan(outcome.callsBeforeRefresh);
+      expect(outcome.refreshed.disconnectReason).toEqual(O.some("transient"));
+      expect(O.isSome(outcome.refreshed.probedAt)).toBe(true);
     })
   );
 });
