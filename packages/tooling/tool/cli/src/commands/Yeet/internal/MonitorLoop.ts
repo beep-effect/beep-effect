@@ -379,6 +379,15 @@ export class YeetMonitorNeedsCodeFix extends S.Class<YeetMonitorNeedsCodeFix>($I
  * completes. The decision spends nothing and asserts nothing: the same job is
  * classified again on the next poll, when the log usually exists.
  *
+ * **Example** (Defer a red job)
+ *
+ * ```ts
+ * import { YeetMonitorAwaitingLog } from "@beep/repo-cli/test/Yeet"
+ *
+ * const decision = YeetMonitorAwaitingLog.make({ databaseId: 991, name: "Check" })
+ * console.log(decision.status) // "awaiting-log"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
