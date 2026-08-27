@@ -72,3 +72,20 @@
 - **Disposition:** implementation simplified in this packet; tier-composition
   improvement remains for the Yeet quality workflow.
 - **Owner:** Yeet review-fix tier maintainers.
+
+## 2026-08-27 — Local publish proof omits the hosted coverage ratchet
+
+- **What happened:** the exact-head local publication proof passed 2,346 unit
+  tests, Effect test laws, and every local quality lane, but the hosted
+  `Heavy / Coverage Regression` check rejected reduced coverage in
+  `Explore/Check.ts` after the fleet-lint integration.
+- **Evidence:** hosted run `33042895609`, job `98420264729`, reported branch,
+  function, line, and statement regressions for `Explore/Check.ts`. A focused
+  fleet-graph command test restored that file to 100 percent across all four
+  measures.
+- **What would have prevented it:** include the affected coverage ratchet in
+  the local publication proof whenever changed packages have a committed
+  coverage floor, or name it as an explicit hosted-only gate before push.
+- **Disposition:** focused coverage added in this packet; local/hosted proof
+  parity remains a Yeet workflow improvement.
+- **Owner:** Yeet proof-planning and coverage-ratchet maintainers.
