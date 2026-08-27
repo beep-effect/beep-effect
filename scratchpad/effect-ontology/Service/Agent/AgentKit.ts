@@ -99,8 +99,7 @@ const mergeTask = (task: AgentTask, updates: Partial<AgentTask>): AgentTask => A
  * @category services
  * @since 0.0.0
  */
-export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
-  make: Effect.gen(function* () {
+const makeAgentKit = Effect.gen(function* () {
     const config = yield* ConfigService;
     const ontologyAgent = yield* OntologyAgent;
     const ontologyService = yield* OntologyService;
@@ -333,7 +332,30 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       corrector: correctorAgent,
       registerDefaults,
     };
-  }),
+});
+
+/**
+ * Built-in Agent adapters that share {@link AgentTask} as the pipeline envelope.
+ *
+ * **Example** (Acquire the kit from its Default layer)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { AgentKit } from "@effect-ontology/Service/Agent/AgentKit"
+ *
+ * const program = Effect.gen(function* () {
+ *   const kit = yield* AgentKit
+ *   return kit
+ * }).pipe(Effect.provide(AgentKit.Default))
+ *
+ * console.log(program)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class AgentKit extends Context.Service<AgentKit, Effect.Success<typeof makeAgentKit>>()($I`AgentKit`, {
+  make: makeAgentKit,
 }) {
   static readonly Default = Layer.effect(this, this.make).pipe(
     Layer.provide([

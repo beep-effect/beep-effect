@@ -77,6 +77,8 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
   })
 ) {}
 
+type EventEntryCodec = S.Codec<OntologyEventEntry>;
+
 /**
  * Runtime schema for a canonical event entry from the journal.
  *
@@ -109,7 +111,9 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
  * @category schemas
  * @since 0.0.0
  */
-export const EventEntry = S.toType(OntologyEventEntry).pipe(
+export const EventEntry: ReturnType<typeof SchemaUtils.withEffectCodecStatics<EventEntryCodec>> = S.toType(
+  OntologyEventEntry
+).pipe(
   $I.annoteSchema("EventEntry", {
     description: "Canonical journal event payload consumed by EventBus subscribers.",
   }),

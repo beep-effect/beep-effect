@@ -186,8 +186,7 @@ const makeExtractionMetrics = (outcome: ExtractionOutcome, duration: Duration.Du
  * @category services
  * @since 0.0.0
  */
-export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyAgent`, {
-  make: Effect.gen(function* () {
+const makeOntologyAgent = Effect.gen(function* () {
     const config = yield* ConfigService;
     const ontologyService = yield* OntologyService;
     const extractionWorkflow = yield* ExtractionWorkflow;
@@ -1105,8 +1104,32 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         reasoner.wouldInfer(store, reasoningConfig ?? ReasoningConfig.rdfs())
       ),
     };
-  }),
-}) {
+});
+
+/**
+ * High-level ontology extraction, validation, reasoning, and query service.
+ *
+ * **Example** (Compose ontology extraction)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { OntologyAgent } from "@effect-ontology/Service/OntologyAgent"
+ *
+ * const program = Effect.gen(function* () {
+ *   const agent = yield* OntologyAgent
+ *   return yield* agent.extract("Ada founded Acme.")
+ * }).pipe(Effect.provide(OntologyAgent.Default))
+ *
+ * console.log(program)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class OntologyAgent extends Context.Service<OntologyAgent, Effect.Success<typeof makeOntologyAgent>>()(
+  $I`OntologyAgent`,
+  { make: makeOntologyAgent }
+) {
   static readonly Default = Layer.effect(this, this.make).pipe(
     Layer.provide([
       // Effect.Service deps with self-contained defaults

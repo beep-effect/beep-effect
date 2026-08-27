@@ -151,26 +151,7 @@ const relationToN3Quad = (relation: Relation, baseNamespace: string, prefixes: R
  */
 type N3Store = N3.Store;
 
-/**
- * Mutable N3 workflow store retained inside the experiment.
- *
- * @internal This is not an RDF domain contract and is deliberately absent
- * from the experiment entrypoint. Canonical external boundaries use
- * `@beep/rdf` Dataset; this wrapper exists only for mutation-heavy legacy
- * reasoning workflows until those workflows are ported to immutable datasets.
- *
- * @since 0.0.0
- */
-class RdfStoreHandle {
-  readonly #backend: N3Store;
-
-  constructor(backend: N3Store) {
-    this.#backend = backend;
-  }
-
-  static readonly is = (value: unknown): value is RdfStoreHandle => value instanceof RdfStoreHandle;
-  static readonly backend = (store: RdfStoreHandle): N3Store => store.#backend;
-}
+declare const RdfStoreTypeId: unique symbol;
 
 /**
  * Opaque mutable RDF workflow-store handle.
@@ -184,7 +165,31 @@ class RdfStoreHandle {
  * @category type-level
  * @since 0.0.0
  */
-export type RdfStore = RdfStoreHandle;
+export interface RdfStore {
+  readonly [RdfStoreTypeId]: typeof RdfStoreTypeId;
+}
+
+/**
+ * Mutable N3 workflow store retained inside the experiment.
+ *
+ * @internal This is not an RDF domain contract and is deliberately absent
+ * from the experiment entrypoint. Canonical external boundaries use
+ * `@beep/rdf` Dataset; this wrapper exists only for mutation-heavy legacy
+ * reasoning workflows until those workflows are ported to immutable datasets.
+ *
+ * @since 0.0.0
+ */
+class RdfStoreHandle implements RdfStore {
+  declare readonly [RdfStoreTypeId]: typeof RdfStoreTypeId;
+  readonly #backend: N3Store;
+
+  constructor(backend: N3Store) {
+    this.#backend = backend;
+  }
+
+  static readonly is = (value: unknown): value is RdfStore => value instanceof RdfStoreHandle;
+  static readonly backend = (store: RdfStore): N3Store => (store as RdfStoreHandle).#backend;
+}
 
 /**
  *  Guard for opaque workflow-store handles created by this module.

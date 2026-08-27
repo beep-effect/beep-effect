@@ -139,7 +139,7 @@ export type PubSubClientConfigSchema = typeof PubSubClientConfigSchema.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type PubSubClientConfig = typeof PubSubClientConfigSchema.Type;
+export type PubSubClientConfig = PubSubClientConfigSchema;
 
 // =============================================================================
 // Service Interface

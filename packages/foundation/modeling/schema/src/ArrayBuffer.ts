@@ -18,7 +18,10 @@ import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("ArrayBuffer");
 
-const NotDetached = S.makeFilter<globalThis.ArrayBuffer>((buffer) => buffer.detached !== true, {
+const isNotDetached = (buffer: globalThis.ArrayBuffer): boolean =>
+  Result.isSuccess(Result.try(() => new globalThis.Uint8Array(buffer)));
+
+const NotDetached = S.makeFilter<globalThis.ArrayBuffer>(isNotDetached, {
   identifier: $I`NotDetachedCheck`,
   title: "Attached ArrayBuffer",
   description:
@@ -44,8 +47,8 @@ const arrayBufferFromBase64String = SchemaTransformation.transformOrFail<globalT
 
 const byteEquivalence = (self: globalThis.ArrayBuffer, that: globalThis.ArrayBuffer): boolean =>
   self === that ||
-  (self.detached !== true &&
-    that.detached !== true &&
+  (isNotDetached(self) &&
+    isNotDetached(that) &&
     Eq.equals(new globalThis.Uint8Array(self), new globalThis.Uint8Array(that)));
 
 /**

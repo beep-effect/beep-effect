@@ -55,6 +55,15 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBroadcastRouter");
 // Protocol Types
 // =============================================================================
 
+const BroadcastEventDefinition = S.Struct({
+  type: S.tag("event"),
+  entry: OntologyEventEntry,
+  ontologyId: OntologyName,
+  timestamp: NonNegativeInt,
+});
+
+type BroadcastEventCodec = S.Codec<typeof BroadcastEventDefinition.Type, typeof BroadcastEventDefinition.Encoded>;
+
 /**
  * Schema for ontology event envelopes broadcast to WebSocket clients.
  *
@@ -70,12 +79,7 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBroadcastRouter");
  * @category schemas
  * @since 0.0.0
  */
-export const BroadcastEvent = S.Struct({
-  type: S.tag("event"),
-  entry: OntologyEventEntry,
-  ontologyId: OntologyName,
-  timestamp: NonNegativeInt,
-}).pipe(
+export const BroadcastEvent: BroadcastEventCodec = BroadcastEventDefinition.pipe(
   $I.annoteSchema("BroadcastEvent", {
     description: "Ontology event envelope broadcast to WebSocket clients.",
   })

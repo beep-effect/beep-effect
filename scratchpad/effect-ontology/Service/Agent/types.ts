@@ -32,10 +32,12 @@ import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
-const RdfStoreFromSelf = S.declare(isRdfStore).annotate({
+const RdfStoreFromSelf: S.Codec<RdfStore> = S.declare(isRdfStore).annotate({
   title: "RdfStore",
   description: "Opaque mutable RDF workflow store created by RdfBuilder.",
 });
+
+type AgentGraphCodec = S.Codec<KnowledgeGraph | RdfStore, typeof KnowledgeGraph.Encoded | RdfStore>;
 
 /**
  * Graph representation accepted at agent workflow boundaries.
@@ -58,7 +60,10 @@ const RdfStoreFromSelf = S.declare(isRdfStore).annotate({
  * @category schemas
  * @since 0.0.0
  */
-export const AgentGraph = S.Union([KnowledgeGraph, RdfStoreFromSelf]).pipe(
+export const AgentGraph: ReturnType<typeof SchemaUtils.withEffectCodecStatics<AgentGraphCodec>> = S.Union([
+  KnowledgeGraph,
+  RdfStoreFromSelf,
+]).pipe(
   $I.annoteSchema("AgentGraph", {
     description: "Agent graph boundary accepting a knowledge graph or opaque RDF store.",
     toArbitrary: () => S.toArbitrary(KnowledgeGraph),

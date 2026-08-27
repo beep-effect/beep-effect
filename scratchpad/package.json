@@ -4,6 +4,22 @@
   "private": true,
   "type": "module",
   "homepage": "https://github.com/beep-effect/beep-effect/tree/main/scratchpad",
+  "exports": {
+    "./beep-docs": "./beep-docs/api-reference/index.ts",
+    "./codemode": "./codemode/index.ts",
+    "./glob": "./glob/index.ts",
+    "./jsonc": "./jsonc/index.ts",
+    "./jsonl": "./jsonl/index.ts",
+    "./memfs": "./memfs/index.ts",
+    "./metadata": "./metadata/Metadata.models.ts",
+    "./microdata": "./microdata/Microdata.model.ts",
+    "./ontoskills/registry": "./ontoskills/registry/Registry.models.ts",
+    "./schemastore": "./schemastore/index.ts",
+    "./semver": "./semver/index.ts",
+    "./toml": "./toml/index.ts",
+    "./yaml": "./yaml/index.ts",
+    "./*": "./*.ts"
+  },
   "scripts": {
     "audit:effect-ontology-arbitraries": "bun effect-ontology/scripts/audit-arbitraries.ts",
     "audit:effect-ontology-docs": "bun effect-ontology/scripts/audit-documentation.ts",
