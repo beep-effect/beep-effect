@@ -38,6 +38,7 @@
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
+    "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
     "./test": "./src/test.ts",
     "./internal/*": null,
     "./package.json": "./package.json"

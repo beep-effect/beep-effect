@@ -2009,6 +2009,7 @@
         "allow": [
           "@beep/identity",
           "@beep/law-practice-domain",
+          "@beep/md",
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
@@ -2017,6 +2018,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/law-practice-domain",
+          "@beep/md",
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
@@ -2040,6 +2042,7 @@
           "@beep/law-practice-use-cases",
           "@beep/libpff",
           "@beep/mcp-kit",
+          "@beep/md",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
@@ -2063,6 +2066,7 @@
           "@beep/law-practice-use-cases",
           "@beep/libpff",
           "@beep/mcp-kit",
+          "@beep/md",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",

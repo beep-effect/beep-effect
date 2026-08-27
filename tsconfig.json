@@ -1969,6 +1969,12 @@
       ],
       "@beep/shared-domain/entity/OrgEntity": [
         "./packages/shared/domain/src/entity/OrgEntity.ts"
+      ],
+      "@beep/law-practice-domain/values/PatentDocument": [
+        "./packages/law-practice/domain/src/values/PatentDocument/index.ts"
+      ],
+      "@beep/law-practice-use-cases/PatentClaimCandidate": [
+        "./packages/law-practice/use-cases/src/PatentClaimCandidate/index.ts"
       ]
     }
   }

@@ -1,6 +1,7 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { Table as CandidateClaimTable } from "@beep/epistemic-tables/entities/CandidateClaim";
 import { Table as EvidenceTable } from "@beep/epistemic-tables/entities/Evidence";
+import { normalizePatentApplicationDocument } from "@beep/law-practice-domain/values/PatentDocument";
 import {
   buildPracticeKgBundle,
   LawPracticeServerLive,
@@ -9,18 +10,22 @@ import {
   PracticeKgBundleManifest,
   PracticeKgClaimsOptions,
   PracticeKgOptions,
+  PracticeKgPatentDocumentInput,
   PracticeKgProjectionsLive,
   PracticeKgQueries,
   PracticeKgToolkitLayer,
   runPracticeKgClaimsBatch,
 } from "@beep/law-practice-server";
 import { DbSchema } from "@beep/law-practice-tables";
+import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import {
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCandidateClaimsResult,
+  PracticeKgCandidateClaimToolRow,
   PracticeKgToolError,
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
+import { Md } from "@beep/md";
 import * as Pglite from "@beep/pglite";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -86,6 +91,7 @@ const decodeToolTextResult = S.decodeUnknownEffect(ToolTextResult);
 const decodeToolErrorJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolError));
 const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolResult));
 const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
+const decodeCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
   A.sort(
     A.map(R.values(columns), (column) => column.name),
@@ -113,6 +119,37 @@ const fixtureLanguageModel = Layer.effect(
     streamText: () => Stream.empty,
   })
 );
+
+const normalizedPatentFixture = Md.make([
+  Md.h1("TITLE OF THE INVENTION"),
+  Md.p("Optical sensor alert system"),
+  Md.h1("CROSS-REFERENCE TO RELATED APPLICATIONS"),
+  Md.p("Not applicable."),
+  Md.h1("STATEMENT REGARDING FEDERALLY SPONSORED RESEARCH OR DEVELOPMENT"),
+  Md.p("Not applicable."),
+  Md.h1("NAMES OF THE PARTIES TO A JOINT RESEARCH AGREEMENT"),
+  Md.p("Not applicable."),
+  Md.h1("INCORPORATION BY REFERENCE"),
+  Md.p("Not applicable."),
+  Md.h1("STATEMENT REGARDING PRIOR DISCLOSURES BY THE INVENTOR OR A JOINT INVENTOR"),
+  Md.p("Not applicable."),
+  Md.h1("BACKGROUND OF THE INVENTION"),
+  Md.p("Optical sensors may detect changes in ambient light."),
+  Md.h1("BRIEF SUMMARY OF THE INVENTION"),
+  Md.p("A processor emits an alert in response to an optical sensor."),
+  Md.h1("BRIEF DESCRIPTION OF THE DRAWINGS"),
+  Md.p("Figure 1 depicts the sensor system."),
+  Md.h1("DETAILED DESCRIPTION OF THE INVENTION"),
+  Md.p("The optical sensor communicates with the processor."),
+  Md.h1("CLAIMS"),
+  Md.p("1. A sensor system comprising an optical sensor and a processor."),
+  Md.p("2. The sensor system of claim 1, wherein the optical sensor detects light."),
+  Md.p("3. The sensor system of claim 2, wherein the processor emits an alert."),
+  Md.h1("ABSTRACT"),
+  Md.p("An optical sensor alert system is disclosed."),
+  Md.h1("SEQUENCE LISTING"),
+  Md.p("Not applicable."),
+]);
 
 const testLayer = NodeServices.layer;
 const provideTestLayer = provideScopedLayer(testLayer);
@@ -646,6 +683,68 @@ describe("practice KG projections", () => {
             })
         );
       }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
+    }, provideTestLayer),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "persists claims from one normalized Markdown patent without invoking duplicate extraction",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const bundleOut = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-patent-bundle-" });
+      const inputs = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-patent-inputs-" });
+      const document = yield* normalizePatentApplicationDocument(normalizedPatentFixture);
+      const forbiddenReview = OfficeActionReview.of({
+        extractCandidate: Effect.fn("OfficeActionReview.extractCandidate")(() =>
+          Effect.die("Normalized patent claims must not invoke office-action extraction.")
+        ),
+        review: Effect.fn("OfficeActionReview.review")(() =>
+          Effect.die("Normalized patent claims must not invoke office-action review.")
+        ),
+      });
+      const claimsLayer = Layer.mergeAll(
+        Layer.succeed(OfficeActionReview, forbiddenReview),
+        Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })
+      );
+
+      const summary = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({
+          bundleOut,
+          inputs,
+          patentDocuments: [
+            PracticeKgPatentDocumentInput.make({
+              docket: "20001US05",
+              document,
+              sourceFile: "20001US05-patent.md",
+            }),
+          ],
+        })
+      ).pipe(provideScopedLayer(claimsLayer));
+
+      expect(summary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
+      const rows = yield* Effect.gen(function* () {
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        return yield* sql
+          .unsafe(PracticeKgQueries.candidateClaims, ["20001US05", null, null])
+          .pipe(Effect.flatMap(decodeCandidateClaimRows));
+      }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
+
+      expect(A.map(rows, ({ claimText }) => claimText)).toStrictEqual(
+        A.map(document.claims, ({ claimText }) => claimText)
+      );
+      expect(
+        A.every(
+          rows,
+          ({ evidenceQuote, sourceFile }) => sourceFile === "20001US05-patent.md" && evidenceQuote.length > 0
+        )
+      ).toBe(true);
+      expect(
+        A.every(
+          rows,
+          ({ endChar, evidenceQuote, startChar }) => document.sourceText.slice(startChar, endChar) === evidenceQuote
+        )
+      ).toBe(true);
     }, provideTestLayer),
     { timeout: 120_000 }
   );

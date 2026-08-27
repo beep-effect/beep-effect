@@ -42,12 +42,12 @@ practice-KG claims batch consumes that contract.
 
 ## Acceptance Criteria
 
-- [ ] Patent application sections decode to a closed ordered domain.
-- [ ] Claims preserve preamble, transition, body, and dependency relations.
-- [ ] One Md fixture normalizes headings into the typed section contract.
-- [ ] The practice-KG claims batch consumes the schema without duplicate
+- [x] Patent application sections decode to a closed ordered domain.
+- [x] Claims preserve preamble, transition, body, and dependency relations.
+- [x] One Md fixture normalizes headings into the typed section contract.
+- [x] The practice-KG claims batch consumes the schema without duplicate
       heading/claim parsing.
-- [ ] Normative citations and focused behavior tests cover valid and invalid
+- [x] Normative citations and focused behavior tests cover valid and invalid
       section/claim cases.
 
 ## First Vertical Slice

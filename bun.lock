@@ -2210,6 +2210,7 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/md": "workspace:^",
         "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
@@ -2247,6 +2248,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/md": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",

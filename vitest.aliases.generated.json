@@ -1795,5 +1795,11 @@
     "./packages/foundation/ui-system/editor/src/capability/toolbar.tsx"
   ],
   "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
-  "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"]
+  "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
+  "@beep/law-practice-domain/values/PatentDocument": [
+    "./packages/law-practice/domain/src/values/PatentDocument/index.ts"
+  ],
+  "@beep/law-practice-use-cases/PatentClaimCandidate": [
+    "./packages/law-practice/use-cases/src/PatentClaimCandidate/index.ts"
+  ]
 }
