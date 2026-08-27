@@ -1,0 +1,37 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 3,
+    "furthestStage": "P3",
+    "issues": [],
+    "packet": "law-practice-office-action-extraction-rung",
+    "resumeStage": "P3",
+    "revision": 1,
+    "root": "goals",
+    "status": "completed-retained",
+    "tip": {
+      "id": "ef748fcb85a17dc52ae585396e665980d4f247eb1708ee3b9b75026a89cbc85e",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "ef748fcb85a17dc52ae585396e665980d4f247eb1708ee3b9b75026a89cbc85e",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "ordinal": 3,
+        "stage": "P3",
+        "status": "completed-retained",
+        "type": "packet-created"
+      },
+      "id": "ef748fcb85a17dc52ae585396e665980d4f247eb1708ee3b9b75026a89cbc85e",
+      "seq": 1
+    }
+  ]
+}

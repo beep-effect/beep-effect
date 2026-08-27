@@ -1,0 +1,32 @@
+{
+  "derived": {
+    "forks": [],
+    "issues": [],
+    "packet": "trustgraph-doc-ontology",
+    "revision": 1,
+    "root": "goals",
+    "status": "reference",
+    "tip": {
+      "id": "79e940be0d4825808e8f6f19c7ebac06d0ed9240849f90ec6c3372a9c01d484f",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "79e940be0d4825808e8f6f19c7ebac06d0ed9240849f90ec6c3372a9c01d484f",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "status": "reference",
+        "type": "packet-created"
+      },
+      "id": "79e940be0d4825808e8f6f19c7ebac06d0ed9240849f90ec6c3372a9c01d484f",
+      "seq": 1
+    }
+  ]
+}

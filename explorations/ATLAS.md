@@ -49,18 +49,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   with PacketCore + ExecutionRecord proof migrations; wave 2 (protocol kit)
   gated; `$I` stays static; decoupled from identity-iri-fibered. Next:
   Benjamin's BRIEF review, then decompose.
-- [`packet-system-redesign`](./packet-system-redesign/README.md) — reopened at
-  `decompose` 2026-08-26 after
+- [`packet-system-redesign`](./packet-system-redesign/README.md) — reopened
+  at `decompose` 2026-08-26:
   [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  reached its close train. The Session B grill chartered the fleet
-  convention-migration campaign as candidate 6 — its own goal packet, first
-  reopener, owning Amendment G's repair applier and the `ops/events/` opt-in
-  freeze — and ruled on the amendments queued 2026-08-25: H ratified without
-  its `GOAL.md` render, I rejected with a named-consumer-gated schema.org
-  successor requeued, J ratified and pulled forward onto `@beep/skill-contract`
-  (D17–D23). Candidates 2–4 stay gated; React v2 stays on KSA static-v1
-  daily-use evidence. Next: which packet owns the J kernel work, and candidate
-  6's first slice.
+  closed `completed-retained` through its own guarded writer (rung-4
+  hardening #848), which satisfied the candidate-2/3 gate and fired the
+  ratified reopen convention. Session B chartered
+  [`goals/packet-convention-migration`](../goals/packet-convention-migration/README.md)
+  as candidate 6 and first reopener. H was ratified without generated
+  `GOAL.md`; I was rejected for a named-consumer-gated schema.org successor;
+  J moved to `@beep/skill-contract` and is routed through the existing
+  `typed-agent-skill-contracts` exploration. Candidate 6 begins with the fork
+  applier, while candidates 2–4 and React v2 retain their stated gates
+  (D17–D26).
 - [`semantica-lab`](./semantica-lab/README.md) — reopened at `decompose`
   2026-08-26 after the C0 Extraction probe breaker fired. The candidate and its
   one retry failed the frozen relation-paper slate; review invalidated two
@@ -270,10 +271,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated 2026-08-24 (spine 2026-08-13) into
   [`skill-contract-kernel`](../goals/skill-contract-kernel/README.md):
   `@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
-  SKILL.md render-as-encode projection — sole promised-now goal, still
-  unexecuted. Waves 2–6 (KG ingestion, ops ladder, browser leases, memory
-  routing, fleet protocols) remain reopen-at-`decompose` MAP points; the MAP's
-  protocol-as-value coordination section governs waves 2/3/4/6 seams.
+  SKILL.md render-as-encode projection. Reopened at `decompose` 2026-08-26 by
+  packet-system-redesign D22/D24 to shape Amendment J's five-outcome gate
+  certificate/reach/apply-plan upgrade. Exact placement (new candidate 7 or an
+  explicit later-wave amendment) is open; the completed kernel goal stays
+  closed. Waves 2–6 retain their existing gates and protocol-as-value seams.
 - [`ci-hang-observability`](./ci-hang-observability/README.md) — graduated
   2026-08-23 into
   [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md): per-step
