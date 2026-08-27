@@ -24,6 +24,7 @@ import {
   PacketForkRepairApplier,
   PacketForkRepairApplierLive,
   planPacketGenesisSeed,
+  quarantineOwnedGenesisEvents,
 } from "./PacketMutation.ts";
 import type { GoalPacketRecord } from "../Inventory.ts";
 import type { ManifestTranslation, PacketGenesisSeed } from "./Migration.schemas.ts";
@@ -452,13 +453,7 @@ const rollbackSeed = Effect.fn("Goals.rollbackSeed")(function* (snapshot: SeedSn
         )
       ),
   });
-  yield* fs
-    .remove(snapshot.eventsDirectory, { recursive: true })
-    .pipe(
-      Effect.mapError((error) =>
-        PacketStreamError.new(snapshot.seed.slug, `seed rollback event remove failed: ${error.message}`)
-      )
-    );
+  yield* quarantineOwnedGenesisEvents(snapshot.seed, "seed rollback");
 });
 
 const rollbackConventionMutation = Effect.fn("Goals.rollbackConventionMutation")(function* (

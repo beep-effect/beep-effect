@@ -119,3 +119,80 @@
 - **Disposition:** workflow fix — keep unrelated upstream cleanup out of this
   PR and publish only the packet receipt.
 - **Owner:** Yeet repair-scope maintainers.
+
+## 2026-08-27 — Sandboxed package coverage loses child-process pipe output
+
+- **What happened:** `XDG_RUNTIME_DIR=/tmp bun run coverage --
+  --filter=@beep/repo-cli` completed 2,352 tests but failed the package before
+  the coverage comparator because the large-output child-process test received
+  no captured stdout.
+- **Evidence:** `test/step-git-exec.test.ts:102` reported
+  `AssertionError: expected +0 to be 1048576 // Object.is equality`. An earlier
+  run without the runtime-directory override also failed with
+  `EROFS: read-only file system, open
+  '/run/user/1000/beep-yeet-proof-locks-...lock'`; the override removed every
+  coordinator-lock failure.
+- **What would have prevented it:** run package coverage in a host environment
+  that permits child-process pipe capture and a writable runtime directory, or
+  provide an environment-safe capture fixture for the exact-limit test.
+- **Disposition:** environment-only proof friction. The focused migration suite
+  remains green, but this sandbox cannot produce the authoritative package
+  coverage verdict.
+- **Owner:** repo-cli process-test and coverage-lane maintainers.
+
+## 2026-08-27 — Non-recursive `fs.rm` cannot remove-if-empty; the "safe" fix
+
+- **What happened:** a first-pass fix for the Greptile rollback-race finding
+  (`PacketMutation.ts` genesis rollback deleting concurrent event data)
+  replaced a recursive directory remove with a non-recursive
+  `fs.remove(eventsDirectory)`, catching `ENOTEMPTY`/`EEXIST`/`ERR_FS_EISDIR`
+  as a safe no-op. Verified against real Node `fs.rm` semantics: without
+  `recursive: true`, `fs.rm` throws `ERR_FS_EISDIR` for *any* directory
+  target, empty or not — Node cannot distinguish emptiness without the
+  recursive flag. Every rollback therefore always hit the caught branch and
+  never removed the directory, silently orphaning an empty
+  `ops/events/` after any failed genesis seed and permanently blocking retry
+  (`applyPacketGenesisSeed` refuses to reseed when the directory still
+  exists). A pre-existing committed test that asserted full directory removal
+  had been quietly weakened to match the regression instead of catching it.
+- **Evidence:** `node -e 'fs.rmSync(emptyDir)'` throws `ERR_FS_EISDIR` on an
+  empty directory identically to a non-empty one (reproduced directly).
+  `packages/platform/node-shared/src/internal/utils.ts` in the `.repos/effect`
+  checkout confirms `ENOTEMPTY` has no explicit `SystemErrorTag` mapping
+  either (falls through to `Unknown`), so tag-based matching on `_tag` alone
+  cannot even discriminate the case.
+- **What would have prevented it:** empirically test load-bearing `fs`
+  assumptions against the real runtime instead of pattern-matching on error
+  code names, and treat a weakened pre-existing assertion in a "fix" diff as
+  a regression signal, not a simplification.
+- **Disposition:** fixed by atomically renaming the new `ops/events` directory
+  into a unique quarantine under the same `ops/` parent. Rollback validates
+  and removes only its owned event inside that private path. A writer that
+  targets canonical `ops/events` after the rename creates a separate directory
+  that rollback never removes; foreign bytes that arrive before the rename
+  remain in quarantine and the failure reports their preservation path.
+  Effect v4's `FileSystem.rename` provides the atomic handoff without a direct
+  `node:fs` import.
+- **Owner:** PacketMutation genesis-rollback maintainers.
+
+## 2026-08-27 — Coverage ratchet holds new files to zero uncovered units
+
+- **What happened:** the "Heavy / Coverage Regression" CI failure reported
+  per-metric percentages (e.g. "functions 40.81%") that read like target
+  floors to clear. The actual ratchet rule for a file with no baseline
+  identity (brand new in the PR) is stricter: any uncovered line, branch, or
+  function counts as a regression row, i.e. an effective 100% bar, not the
+  quoted percentage. Reaching a higher percentage without reaching zero
+  uncovered units still fails the gate.
+- **Evidence:** `bun run coverage -- --filter=@beep/repo-cli` continued
+  reporting `[coverage-ratchet]` regression rows such as "new file has 18
+  uncovered unit(s) at 64.7%" for `PacketMutation.ts` even after test
+  additions roughly doubled its function coverage from the original CI
+  failure's baseline.
+- **What would have prevented it:** have the CI failure message state the
+  new-file rule explicitly ("0 uncovered units required") instead of only a
+  percentage, so remediation is scoped correctly on the first pass.
+- **Disposition:** informational — remediation is "close every uncovered
+  unit or get reviewer sign-off on `--write-baseline`," not "raise the
+  percentage."
+- **Owner:** coverage-ratchet lane maintainers.

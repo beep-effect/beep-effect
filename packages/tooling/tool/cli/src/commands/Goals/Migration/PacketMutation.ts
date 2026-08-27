@@ -384,6 +384,92 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
 });
 
 /**
+ * Atomically isolates and removes one owned genesis event directory.
+ *
+ * **Gotchas**
+ *
+ * Foreign bytes are never removed. Bytes observed before the rename remain in
+ * quarantine, while writers targeting the canonical path after the rename use
+ * a separate directory.
+ *
+ * **Example** (Build a rollback effect)
+ *
+ * ```ts
+ * import { quarantineOwnedGenesisEvents } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation"
+ * import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas"
+ * import { Effect } from "effect"
+ *
+ * const seed = PacketGenesisSeed.make({
+ *   slug: "demo",
+ *   eventsDirectory: "goals/demo/ops/events",
+ *   eventFileName: "00001-packet-created-deadbeef.json",
+ *   eventText: "{}\n",
+ *   tracePath: "goals/demo/ops/trace.json",
+ *   traceText: "{}\n",
+ * })
+ *
+ * console.log(Effect.isEffect(quarantineOwnedGenesisEvents(seed, "genesis rollback"))) // true
+ * ```
+ *
+ * @internal
+ * @param seed - Genesis event ownership record.
+ * @param context - Error-message prefix for the calling rollback operation.
+ * @returns An Effect that removes only the exact owned event directory.
+ * @category error-handling
+ * @since 0.0.0
+ */
+export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGenesisEvents")(function* (
+  seed: PacketGenesisSeed,
+  context: "genesis rollback" | "seed rollback"
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* fs
+    .readDirectory(seed.eventsDirectory)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} scan failed: ${error.message}`)));
+  if (A.isReadonlyArrayNonEmpty(entries) && (A.length(entries) !== 1 || entries[0] !== seed.eventFileName)) {
+    return yield* streamError(seed.slug, `${context} conflict: event directory contains foreign bytes`);
+  }
+  const rollbackRoot = yield* fs
+    .makeTempDirectory({ directory: path.dirname(seed.eventsDirectory), prefix: ".genesis-rollback-" })
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} quarantine failed: ${error.message}`)));
+  const quarantineDirectory = path.join(rollbackRoot, "events");
+  yield* fs
+    .rename(seed.eventsDirectory, quarantineDirectory)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} quarantine failed: ${error.message}`)));
+  const quarantinedEntries = yield* fs
+    .readDirectory(quarantineDirectory)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} rescan failed: ${error.message}`)));
+  if (A.isReadonlyArrayNonEmpty(quarantinedEntries)) {
+    if (A.length(quarantinedEntries) !== 1 || quarantinedEntries[0] !== seed.eventFileName) {
+      return yield* streamError(seed.slug, `${context} conflict: foreign bytes preserved at ${quarantineDirectory}`);
+    }
+    const quarantinedEventPath = path.join(quarantineDirectory, seed.eventFileName);
+    const content = yield* fs
+      .readFileString(quarantinedEventPath)
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event read failed: ${error.message}`)));
+    if (content !== seed.eventText) {
+      return yield* streamError(
+        seed.slug,
+        `${context} conflict: changed event bytes preserved at ${quarantineDirectory}`
+      );
+    }
+    yield* fs
+      .remove(quarantinedEventPath)
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event remove failed: ${error.message}`)));
+  }
+  const remaining = yield* fs
+    .readDirectory(quarantineDirectory)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} rescan failed: ${error.message}`)));
+  if (A.isReadonlyArrayNonEmpty(remaining)) {
+    return yield* streamError(seed.slug, `${context} conflict: foreign bytes preserved at ${quarantineDirectory}`);
+  }
+  yield* fs
+    .remove(rollbackRoot, { recursive: true })
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event remove failed: ${error.message}`)));
+});
+
+/**
  * Apply one precomputed genesis seed.
  *
  * **Example** (Build the filesystem effect)
@@ -421,23 +507,7 @@ export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(
   let createdEventsDirectory = false;
   const rollback = Effect.fnUntraced(function* () {
     if (!createdEventsDirectory) return;
-    const entries = yield* fs
-      .readDirectory(seed.eventsDirectory)
-      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback scan failed: ${error.message}`)));
-    if (A.isReadonlyArrayNonEmpty(entries)) {
-      if (A.length(entries) !== 1 || entries[0] !== seed.eventFileName) {
-        return yield* streamError(seed.slug, "genesis rollback conflict: event directory contains foreign bytes");
-      }
-      const content = yield* fs
-        .readFileString(eventPath)
-        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback read failed: ${error.message}`)));
-      if (content !== seed.eventText) {
-        return yield* streamError(seed.slug, "genesis rollback conflict: event bytes changed after creation");
-      }
-    }
-    yield* fs
-      .remove(seed.eventsDirectory, { recursive: true })
-      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback remove failed: ${error.message}`)));
+    yield* quarantineOwnedGenesisEvents(seed, "genesis rollback");
   });
   const mutation = Effect.gen(function* () {
     yield* fs
