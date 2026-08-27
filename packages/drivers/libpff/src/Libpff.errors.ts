@@ -13,7 +13,11 @@ import * as S from "effect/Schema";
 
 const $I = $LibpffId.create("Libpff.errors");
 const LibpffErrorReasonBase = LiteralKit(["config", "engine-unavailable", "output-limit", "process", "timeout"]);
-const LibpffProcessClassification = LiteralKit(["codepage", "corrupt", "password"]);
+const LibpffProcessClassification = LiteralKit(["codepage", "corrupt", "password"]).pipe(
+  $I.annoteSchema("LibpffProcessClassification", {
+    description: "Sanitized classification derived from bounded pffexport process diagnostics.",
+  })
+);
 
 /**
  * Technical libpff failure reasons.

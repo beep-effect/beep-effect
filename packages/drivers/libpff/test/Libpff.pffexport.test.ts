@@ -1,6 +1,11 @@
-import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
+import {
+  ArtifactId,
+  ArtifactLocator,
+  ContentDigest,
+  OperationId,
+  SourceArtifact,
+} from "@beep/file-processing/Artifact";
 import { ExportArchiveOperation } from "@beep/file-processing/Operation";
-import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import {
   encodePffexportMessageRecordJson,
   makePffexportFileProcessingEngine,
@@ -14,6 +19,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Encoding, FileSystem, Path, Result } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -23,6 +29,7 @@ const provideTestLayer = provideScopedLayer(testLayer);
 
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
 const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord)(fc);
+const fixtureDigestHex = "166df44db090f14dbb3ec7730fc17e78c170477163a6c913e5485d075c4b92d0";
 
 const stubVersionBanner = 'if [ "$1" = "-V" ]; then printf "pffexport 20260608\\n\\nCopyright (C) test\\n"; exit 0; fi';
 
@@ -122,7 +129,27 @@ kill -SEGV $$
 
 const sleepingStub = `#!/usr/bin/env bash
 ${stubVersionBanner}
-sleep 30
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+sleep 1
+printf 'late write' > "$target.late"
+`;
+
+const symlinkOutputStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+mkdir -p "$target.export"
+ln -s /etc/passwd "$target.export/escaped"
+exit 0
 `;
 
 const failingStub = `#!/usr/bin/env bash
@@ -152,7 +179,9 @@ const fixture = Effect.fn(function* (stubScript: string) {
   yield* fs.writeFile(sourcePath, sourceBytes);
   const exportRoot = path.join(dir, "out");
 
-  const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
+  const artifactId = yield* S.decodeEffect(ArtifactId)(`artifact:${fixtureDigestHex}`);
+  const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${fixtureDigestHex}`);
+  const operationId = yield* S.decodeEffect(OperationId)(`operation:${fixtureDigestHex}`);
   const locatorValue = yield* S.decodeEffect(PosixPath)(sourcePath);
   const relativePath = yield* S.decodeEffect(PosixPath)("mailbox.pst");
 
@@ -211,6 +240,37 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         expect(result.sourceArtifactId).toBe(operation.source.id);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.live(
+    "isolates a file-locator export inside bubblewrap when configured",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const bwrapPath = "/usr/bin/bwrap";
+        if (!(yield* fs.exists(bwrapPath))) return;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            pffexportPath: stubPath,
+          })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({
+            ...operation,
+            source: SourceArtifact.make(sourceWithoutBytes),
+          })
+        );
+
+        expect(result.children.length).toBeGreaterThan(0);
+        expect(result.warnings).toStrictEqual([]);
       },
       Effect.scoped,
       provideTestLayer
@@ -422,6 +482,8 @@ describe("makePffexportFileProcessingEngine", () => {
     "maps a hung pffexport process to operation-timed-out",
     Effect.fnUntraced(
       function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(sleepingStub);
         const engine = yield* makePffexportFileProcessingEngine(
           yield* S.decodeEffect(PffexportEngineConfig)({
@@ -434,6 +496,8 @@ describe("makePffexportFileProcessingEngine", () => {
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
         expect(error.reason).toBe("operation-timed-out");
+        yield* Effect.sleep("1250 millis");
+        expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`))).toBe(false);
       },
       Effect.scoped,
       provideTestLayer
@@ -488,6 +552,49 @@ describe("makePffexportFileProcessingEngine", () => {
         expect(
           result.warnings.filter((warning) => warning.includes("materialization budget was exceeded"))
         ).toHaveLength(1);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "fails closed when raw pffexport output reaches the configured retained-byte ceiling",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
+        const config = yield* S.decodeEffect(PffexportEngineConfig)({
+          exportRoot,
+          maxOutputBytes: 1,
+          pffexportPath: stubPath,
+        });
+        const engine = yield* makePffexportFileProcessingEngine(config);
+
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+        const retainedTree = path.join(exportRoot, `${operation.source.id}.export`);
+
+        expect(error.reason).toBe("output-limit-exceeded");
+        expect(yield* fs.exists(retainedTree)).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects symbolic links in untrusted pffexport output",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, exportRoot, stubPath } = yield* fixture(symlinkOutputStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+
+        expect(error.reason).toBe("archive-export-failed");
       },
       Effect.scoped,
       provideTestLayer
