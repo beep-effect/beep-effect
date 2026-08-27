@@ -1344,7 +1344,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   it.effect(
     "reports a trace-recovery staging failure",
     Effect.fnUntraced(function* () {
-      const { fs, retry } = yield* preparePartialTraceRecovery();
+      const { fs, partialTrace, retry } = yield* preparePartialTraceRecovery();
       const exit = yield* Effect.exit(
         applyPacketGenesisSeed(retry).pipe(
           Effect.provideService(FileSystem.FileSystem, {
@@ -1357,13 +1357,14 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         )
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine failed");
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(partialTrace);
     })
   );
 
   it.effect(
     "reports a trace-recovery quarantine read failure",
     Effect.fnUntraced(function* () {
-      const { fs, retry } = yield* preparePartialTraceRecovery();
+      const { fs, partialTrace, retry } = yield* preparePartialTraceRecovery();
       let quarantinedTracePath = "";
       const exit = yield* Effect.exit(
         applyPacketGenesisSeed(retry).pipe(
@@ -1381,6 +1382,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         )
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine read failed");
+      expect(yield* fs.exists(quarantinedTracePath)).toBe(true);
+      expect(yield* fs.readFileString(quarantinedTracePath)).toBe(partialTrace);
     })
   );
 
