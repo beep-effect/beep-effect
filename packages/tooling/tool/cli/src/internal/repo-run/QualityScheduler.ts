@@ -1071,13 +1071,12 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
   return yield* Effect.acquireUseRelease(
     Effect.forkChild(heartbeatLoop(admitted.leasePath, admitted.lease, config)),
     () => restore(use),
-    (heartbeat) =>
-      Effect.gen(function* () {
-        yield* Fiber.interrupt(heartbeat);
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(admitted.leasePath, { force: true }).pipe(Effect.ignore);
-        yield* releaseOrigin(admitted.originLease);
-      })
+    Effect.fnUntraced(function* (heartbeat) {
+      yield* Fiber.interrupt(heartbeat);
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.remove(admitted.leasePath, { force: true }).pipe(Effect.ignore);
+      yield* releaseOrigin(admitted.originLease);
+    })
   );
 });
 
@@ -1178,24 +1177,22 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
         }
         return ticket;
       }),
-      (enqueued) =>
-        Effect.gen(function* () {
-          const admitted = yield* waitForAdmission(
-            directories,
-            admittedRequest,
-            ticketPath,
-            enqueued,
-            gate,
-            resolved,
-            restore
-          );
-          return yield* runAdmitted(admitted, gate.release, use, resolved, restore);
-        }),
-      () =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
-        })
+      Effect.fnUntraced(function* (enqueued) {
+        const admitted = yield* waitForAdmission(
+          directories,
+          admittedRequest,
+          ticketPath,
+          enqueued,
+          gate,
+          resolved,
+          restore
+        );
+        return yield* runAdmitted(admitted, gate.release, use, resolved, restore);
+      }),
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
+      })
     )
   );
 });
@@ -1214,8 +1211,8 @@ const bypassAdmission = Effect.fnUntraced(function* <
   use: Effect.Effect<Success, UseError, UseRequirements>,
   config: AdmissionConfig
 ): Effect.fn.Return<Success, UseError | GateError | QualitySchedulerError, UseRequirements | GateRequirements> {
-  return yield* Effect.uninterruptibleMask((restore) =>
-    Effect.gen(function* () {
+  return yield* Effect.uninterruptibleMask(
+    Effect.fnUntraced(function* (restore) {
       let origin = yield* gate.tryAcquire;
       while (O.isNone(origin)) {
         yield* restore(Effect.sleep(Duration.millis(config.heartbeatSeconds * 1000)));
