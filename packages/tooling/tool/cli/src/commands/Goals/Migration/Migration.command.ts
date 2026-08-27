@@ -29,7 +29,7 @@ import {
   quarantineOwnedGenesisEvents,
 } from "./PacketMutation.ts";
 import type { GoalPacketRecord } from "../Inventory.ts";
-import type { ManifestTranslation, PacketGenesisSeed } from "./Migration.schemas.ts";
+import type { ManifestTranslation, ManifestTranslationPlan, PacketGenesisSeed } from "./Migration.schemas.ts";
 
 /**
  * Default committed report path for a fleet migration apply.
@@ -158,6 +158,33 @@ type ConventionPlan = {
   readonly records: ReadonlyArray<GoalPacketRecord>;
 };
 
+const planConventionSeed = Effect.fnUntraced(function* (
+  record: GoalPacketRecord,
+  plan: ManifestTranslationPlan,
+  at: string
+) {
+  if (O.isSome(plan.translation)) {
+    return yield* planPacketGenesisSeed(record, plan.translation.value.content, at);
+  }
+  if (record.manifestText === undefined || A.isReadonlyArrayNonEmpty(plan.issues)) {
+    return O.none<PacketGenesisSeed>();
+  }
+  return yield* planPacketGenesisRecovery(record, record.manifestText);
+});
+
+const planConventionSeeds = Effect.fnUntraced(function* (
+  records: ReadonlyArray<GoalPacketRecord>,
+  plans: ReadonlyArray<ManifestTranslationPlan>,
+  at: string
+) {
+  let seeds = A.empty<PacketGenesisSeed>();
+  for (const [record, plan] of A.zip(records, plans)) {
+    const seed = yield* planConventionSeed(record, plan, at);
+    if (O.isSome(seed)) seeds = A.append(seeds, seed.value);
+  }
+  return seeds;
+});
+
 const planConventionMigration = Effect.fn("Goals.planConventionMigration")(function* (
   mode: "preview" | "apply",
   at: string
@@ -174,15 +201,7 @@ const planConventionMigration = Effect.fn("Goals.planConventionMigration")(funct
   }
   const plans = A.map(records, planManifestTranslation);
   const translations = A.getSomes(A.map(plans, (plan) => plan.translation));
-  let seeds = A.empty<PacketGenesisSeed>();
-  for (const [record, plan] of A.zip(records, plans)) {
-    const seed = O.isSome(plan.translation)
-      ? yield* planPacketGenesisSeed(record, plan.translation.value.content, at)
-      : record.manifestText !== undefined && A.isReadonlyArrayEmpty(plan.issues)
-        ? yield* planPacketGenesisRecovery(record, record.manifestText)
-        : O.none<PacketGenesisSeed>();
-    if (O.isSome(seed)) seeds = A.append(seeds, seed.value);
-  }
+  const seeds = yield* planConventionSeeds(records, plans, at);
   return {
     records,
     report: TranslationReport.make({

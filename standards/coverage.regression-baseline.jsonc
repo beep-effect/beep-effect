@@ -22438,10 +22438,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts": {
-          "lines": 98.24,
-          "statements": 97.98,
+          "lines": 98.31,
+          "statements": 98.05,
           "branches": 95.91,
-          "functions": 98.55,
+          "functions": 98.59,
           "uncovered": {
             "lines": 4,
             "statements": 5,
