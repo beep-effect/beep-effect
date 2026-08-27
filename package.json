@@ -480,7 +480,8 @@
     "packages/drivers/obs",
     "packages/drivers/exiftool",
     "packages/drivers/gov-legal-mcp",
-    "packages/drivers/openai"
+    "packages/drivers/openai",
+    "apps/todox"
   ],
   "dependencies": {
     "brace-expansion": "^5.0.9",
