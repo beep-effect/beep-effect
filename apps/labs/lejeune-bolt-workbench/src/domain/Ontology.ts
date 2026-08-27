@@ -7,11 +7,31 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LocalDateFromString } from "@beep/schema/LocalDate";
+import { ISOStr } from "@beep/schema/Timestamp";
+import { HttpsUrl } from "@beep/schema/URL";
+import { DateTime, Result } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $LejeuneBoltWorkbenchId.create("domain/Ontology");
 
-/** Stable kebab-case identity for one lab-local ontology instance. @category identifiers @since 0.0.0 */
+/**
+ * Stable kebab-case identity for one lab-local ontology instance.
+ *
+ * **Example** (Decode an entity identifier)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EntityId } from "@/domain/Ontology"
+ *
+ * console.log(S.decodeUnknownSync(EntityId)("rfq-a"))
+ * ```
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
 export const EntityId = S.NonEmptyString.check(
   S.isPattern(/^[a-z][a-z0-9-]*$/u, {
     identifier: $I`EntityIdPatternCheck`,
@@ -26,14 +46,39 @@ export const EntityId = S.NonEmptyString.check(
   })
 );
 
-/** Fixed ISO calendar date used by the deterministic bundle. @category schemas @since 0.0.0 */
+/** Runtime type decoded by {@link EntityId}. @category models @since 0.0.0 */
+export type EntityId = typeof EntityId.Type;
+
+const ValidIsoDateCheck = S.makeFilter((value: string) => O.isSome(S.decodeOption(LocalDateFromString)(value)), {
+  identifier: $I`ValidIsoDateCheck`,
+  title: "Valid ISO Calendar Date",
+  description: "Checks that an ISO date names a real calendar day.",
+  message: "Expected a valid calendar date.",
+});
+
+/**
+ * Fixed ISO calendar date used by the deterministic bundle.
+ *
+ * **Example** (Decode a calendar date)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { IsoDate } from "@/domain/Ontology"
+ *
+ * console.log(S.decodeUnknownSync(IsoDate)("2026-09-30"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IsoDate = S.String.check(
   S.isPattern(/^\d{4}-\d{2}-\d{2}$/u, {
     identifier: $I`IsoDatePatternCheck`,
     title: "ISO Calendar Date",
     description: "Checks the YYYY-MM-DD date representation frozen by the demo bundle.",
     message: "Expected a YYYY-MM-DD calendar date.",
-  })
+  }),
+  ValidIsoDateCheck
 ).pipe(
   S.brand("LeJeuneIsoDate"),
   $I.annoteSchema("IsoDate", {
@@ -41,20 +86,58 @@ export const IsoDate = S.String.check(
   })
 );
 
-/** Fixed millisecond-precision UTC timestamp used by synthetic records. @category schemas @since 0.0.0 */
+/** Runtime type decoded by {@link IsoDate}. @category models @since 0.0.0 */
+export type IsoDate = typeof IsoDate.Type;
+
+const isSharedIsoString = S.is(ISOStr);
+const ValidIsoTimestampCheck = S.makeFilter(
+  (value: string) =>
+    Result.try({
+      try: () =>
+        isSharedIsoString(value) &&
+        O.exists(DateTime.make(value), (dateTime) => Str.Equivalence(DateTime.formatIso(dateTime), value)),
+      catch: () => false,
+    }).pipe(Result.getOrElse(() => false)),
+  {
+    identifier: $I`ValidIsoTimestampCheck`,
+    title: "Valid ISO UTC Timestamp",
+    description: "Safely reuses the shared ISO timestamp schema to reject impossible instants.",
+    message: "Expected a valid ISO UTC timestamp.",
+  }
+);
+
+/**
+ * Fixed millisecond-precision UTC timestamp used by synthetic records.
+ *
+ * **Example** (Decode a UTC timestamp)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { IsoTimestamp } from "@/domain/Ontology"
+ *
+ * console.log(S.decodeUnknownSync(IsoTimestamp)("2026-08-27T12:00:00.000Z"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IsoTimestamp = S.String.check(
   S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u, {
     identifier: $I`IsoTimestampPatternCheck`,
     title: "ISO UTC Timestamp",
     description: "Checks the millisecond-precision UTC timestamps frozen by the demo bundle.",
     message: "Expected a millisecond-precision UTC timestamp ending in Z.",
-  })
+  }),
+  ValidIsoTimestampCheck
 ).pipe(
   S.brand("LeJeuneIsoTimestamp"),
   $I.annoteSchema("IsoTimestamp", {
     description: "Millisecond-precision UTC timestamp used by synthetic and review records.",
   })
 );
+
+/** Runtime type decoded by {@link IsoTimestamp}. @category models @since 0.0.0 */
+export type IsoTimestamp = typeof IsoTimestamp.Type;
 
 /**
  * Exact top-level ontology class vocabulary authorized for the lunch bundle.
@@ -86,6 +169,33 @@ export const OntologyClassName = LiteralKit([
 ]).pipe(
   $I.annoteSchema("OntologyClassName", {
     description: "The complete and closed twelve-class ontology for the fixed LeJeune lunch scenario.",
+  })
+);
+
+/** Runtime type decoded by {@link OntologyClassName}. @category models @since 0.0.0 */
+export type OntologyClassName = typeof OntologyClassName.Type;
+
+const ComponentKind = LiteralKit(["bolt", "nut", "washer", "dti"]).pipe(
+  $I.annoteSchema("ComponentKind", {
+    description: "The closed component-kind vocabulary used by the fixed assembly fixtures.",
+  })
+);
+
+const ComponentStrength = LiteralKit(["325", "490", "325-compatible"]).pipe(
+  $I.annoteSchema("ComponentStrength", {
+    description: "The bounded strength and compatibility vocabulary used by the fixed assemblies.",
+  })
+);
+
+const ApprovalDecision = LiteralKit(["approve", "edit", "reject"]).pipe(
+  $I.annoteSchema("ApprovalDecision", {
+    description: "The closed set of lab-local review decisions.",
+  })
+);
+
+const ExpertClaimReviewStatus = LiteralKit(["candidate", "approved", "superseded"]).pipe(
+  $I.annoteSchema("ExpertClaimReviewStatus", {
+    description: "The closed lifecycle for a review-gated expert claim.",
   })
 );
 
@@ -134,10 +244,10 @@ export class Component extends S.Class<Component>($I`Component`)(
   {
     finishId: EntityId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     id: EntityId,
-    kind: LiteralKit(["bolt", "nut", "washer", "dti"]),
+    kind: ComponentKind,
     label: S.NonEmptyString,
     standardId: EntityId,
-    strengthClass: S.NonEmptyString,
+    strengthClass: ComponentStrength,
   },
   $I.annote("Component", {
     description: "A bolt, nut, washer, or DTI participating in one fixed-story assembly.",
@@ -164,7 +274,7 @@ export class Standard extends S.Class<Standard>($I`Standard`)(
     designation: S.NonEmptyString,
     id: EntityId,
     revision: S.NonEmptyString,
-    sourceUrl: S.NonEmptyString,
+    sourceUrl: HttpsUrl,
   },
   $I.annote("Standard", {
     description: "A technical designation with an explicit revision or access date and an opening URL.",
@@ -293,10 +403,10 @@ export class Project extends S.Class<Project>($I`Project`)(
 export class RFQ extends S.Class<RFQ>($I`RFQ`)(
   {
     id: EntityId,
-    missingFields: S.NonEmptyArray(S.NonEmptyString),
+    missingFields: S.Tuple([S.NonEmptyString]),
     projectId: EntityId,
-    quoteLineIds: S.NonEmptyArray(EntityId),
-    sourceDocumentIds: S.NonEmptyArray(EntityId),
+    quoteLineIds: S.Tuple([EntityId]),
+    sourceDocumentIds: S.Tuple([EntityId, EntityId]),
   },
   $I.annote("RFQ", {
     description: "A fixed-layout RFQ that preserves every required value the sources did not provide.",
@@ -372,7 +482,7 @@ export class LotCertificate extends S.Class<LotCertificate>($I`LotCertificate`)(
  */
 export class Approval extends S.Class<Approval>($I`Approval`)(
   {
-    decision: LiteralKit(["approve", "edit", "reject"]),
+    decision: ApprovalDecision,
     id: EntityId,
     recordedAt: IsoTimestamp,
     reviewer: S.NonEmptyString,
@@ -400,8 +510,8 @@ export class Approval extends S.Class<Approval>($I`Approval`)(
 export class ExpertClaim extends S.Class<ExpertClaim>($I`ExpertClaim`)(
   {
     id: EntityId,
-    reviewStatus: LiteralKit(["candidate", "approved", "superseded"]),
-    sourceUrl: S.NonEmptyString,
+    reviewStatus: ExpertClaimReviewStatus,
+    sourceUrl: HttpsUrl,
     statement: S.NonEmptyString,
     validFrom: IsoDate,
   },

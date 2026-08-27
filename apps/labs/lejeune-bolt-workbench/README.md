@@ -33,29 +33,47 @@ identity.
 
 ## Commands
 
+Run the commands in this section from the repository root.
+
 ```bash
-bun run check
-bun run test
-bun run lint
+bun run --cwd apps/labs/lejeune-bolt-workbench check
+bun run --cwd apps/labs/lejeune-bolt-workbench test
+bun run --cwd apps/labs/lejeune-bolt-workbench lint
 ```
 
-Record the one live Anthropic smoke result through secret injection. The script writes
-only candidate labels and source text, the model name, a timestamp, and a response hash.
+The checked-in provider recording is frozen and write-once. By default, the smoke command
+targets that file and refuses to run when it already exists; it never silently refreshes or
+overwrites the lunch input. A first authorized freeze, when the file is intentionally absent,
+uses Anthropic through secret injection:
 
 ```bash
 op run --env-file=.env -- bun run --cwd apps/labs/lejeune-bolt-workbench provider:smoke
 ```
 
-Anthropic is the required first attempt. If that provider call fails, use the authorized
-same-day Venice fallback:
+To propose a reviewed refresh, write a separate machine-local candidate. The command refuses
+an existing candidate path as well. Review the candidate and its diff before deliberately
+promoting it through an approved goal:
 
 ```bash
-op run --env-file=.env -- env LEJEUNE_PROVIDER=venice-ai \
-  bun run --cwd apps/labs/lejeune-bolt-workbench provider:smoke
+LEJEUNE_RECORDING_MODE=reviewed-refresh \
+LEJEUNE_REVIEW_RECORDING_OUT=.beep/lejeune-provider-recording-review.json \
+op run --env-file=.env -- bun run --cwd apps/labs/lejeune-bolt-workbench provider:smoke
 ```
 
-Build into new machine-local directories. The command refuses to overwrite an existing
-bundle root and keeps mutable review state in a separate directory.
+Anthropic is the required first attempt. If that call fails, add
+`LEJEUNE_PROVIDER=venice-ai` to the reviewed-refresh command for the authorized same-day
+Venice fallback.
+
+The sanitized recording contains only versioned source and extraction-contract revisions,
+its success status, synthetic document id, provider, model, timestamp, response SHA-256, and
+exactly three candidate label/text pairs. Before any recording is written or replayed, the app verifies the canonical candidate digest, exact
+`project`/`delivery_date`/`finish` label set, and verbatim grounding in the synthetic
+source. It retains no request envelope, authorization header, credential, usage record, or
+real data.
+
+Build into two new machine-local directories. The command refuses either existing final root
+without modifying it. It builds and validates under unique adjacent staging roots, atomically
+publishes the completed directories, and removes only staging paths it owns after failure.
 
 ```bash
 LEJEUNE_BUNDLE_ROOT=.beep/lejeune-demo-bundle \
@@ -68,12 +86,30 @@ repository stores their deterministic generators, source hashes, expected spans,
 sanitized provider recording. It does not store raw public pages, customer payloads,
 credentials, or copied standards.
 
-Mutable review data must be deleted or promoted under a new approved goal by 2026-09-30.
+Mutable review data must be deleted or promoted under a new approved goal by 2026-09-30,
+unless an explicitly consented pilot grants and records a new retention term. On and after
+that date, the builder fails at the retention boundary before publishing either final root.
+
+The demo operator owns the disposition. Delete the exact machine-local mutable root after
+reviewing its configured path, or promote it through an approved goal. A consented extension
+must be a schema-valid `lejeune-retention-authorization/v1` JSON record with an owner, decision
+reference, authorization timestamp, and future disposition date. Supply that reviewed record
+explicitly; the builder never infers or silently extends retention:
+
+```bash
+LEJEUNE_RETENTION_AUTHORIZATION=.beep/lejeune-retention-authorization.json \
+LEJEUNE_BUNDLE_ROOT=.beep/lejeune-demo-bundle-extended \
+LEJEUNE_MUTABLE_ROOT=.beep/lejeune-demo-review-extended \
+bun run --cwd apps/labs/lejeune-bolt-workbench bundle:build
+```
+
+The immutable receipt and the projection metadata sidecar carry their schema revision, bundle
+version, and bundle identity so future rebuild tooling can reject incompatible persisted data.
 
 ## Development server
 
 ```bash
-bun run dev
+bun run --cwd apps/labs/lejeune-bolt-workbench dev
 ```
 
 The app uses the required portless URL printed by the command. This workspace is a

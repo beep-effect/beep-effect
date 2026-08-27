@@ -10,7 +10,7 @@ import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import * as Rdf from "@beep/rdf/Rdf";
-import { PosInt } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
@@ -20,6 +20,9 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { NormalizedFixture, ProjectionSnapshot, RuleResult } from "@/domain/Bundle";
 import { LotCertificate, OntologyClassName, SupplierOffer } from "@/domain/Ontology";
+import type { DuckDbError } from "@beep/duckdb";
+import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";
+import type * as SqlError from "effect/unstable/sql/SqlError";
 
 const $I = $LejeuneBoltWorkbenchId.create("domain/Projections");
 const LEJEUNE_ONTOLOGY_NAMESPACE = "https://beep.dev/lejeune/ontology/";
@@ -75,10 +78,10 @@ CROSS JOIN corpus c`,
  */
 export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput`)(
   {
-    certificates: S.NonEmptyArray(LotCertificate),
-    fixtures: S.NonEmptyArray(NormalizedFixture),
-    offers: S.NonEmptyArray(SupplierOffer),
-    rules: S.NonEmptyArray(RuleResult),
+    certificates: S.Tuple([LotCertificate, LotCertificate]),
+    fixtures: S.Tuple([NormalizedFixture, NormalizedFixture]),
+    offers: S.Tuple([SupplierOffer, SupplierOffer]),
+    rules: S.Tuple([RuleResult, RuleResult, RuleResult, RuleResult, RuleResult, RuleResult]),
   },
   $I.annote("ProjectionInput", {
     description: "The normalized fixtures, cited rules, and synthetic records projected into the three local stores.",
@@ -88,22 +91,16 @@ export class ProjectionInput extends S.Class<ProjectionInput>($I`ProjectionInput
 /**
  * Typed local projection failure.
  *
- * **Example** (Create a query-stage failure)
- *
- * ```ts
- * import { ProjectionError } from "@/domain/Projections"
- *
- * console.log(ProjectionError.make({ message: "query failed", stage: "duckdb" })._tag)
- * ```
- *
  * @category errors
  * @since 0.0.0
  */
 class ProjectionError extends S.TaggedError<ProjectionError>($I`ProjectionError`)(
   "ProjectionError",
   {
+    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    engine: LiteralKit(["pglite", "duckdb", "oxigraph", "snapshot"]),
     message: S.NonEmptyString,
-    stage: S.NonEmptyString,
+    operation: LiteralKit(["rebuild", "decode", "query", "validate"]),
   },
   $I.annoteError<ProjectionError>("ProjectionError", {
     title: "LeJeune projection error",
@@ -111,12 +108,34 @@ class ProjectionError extends S.TaggedError<ProjectionError>($I`ProjectionError`
   })
 ) {}
 
-const projectionError = (stage: string, message: string): ProjectionError => ProjectionError.make({ message, stage });
+const isProjectionError = S.is(ProjectionError);
 
-class ProjectionLayerOptions extends S.Class<ProjectionLayerOptions>($I`ProjectionLayerOptions`)(
+const projectionError = (
+  engine: ProjectionError["engine"],
+  operation: ProjectionError["operation"],
+  message: string,
+  cause?: unknown
+): ProjectionError => ProjectionError.make({ cause, engine, message, operation });
+
+const normalizeProjectionError = (
+  engine: ProjectionError["engine"],
+  operation: ProjectionError["operation"],
+  cause: ProjectionError | SqlError.SqlError | DuckDbError | SparqlQueryError
+): ProjectionError =>
+  isProjectionError(cause)
+    ? cause
+    : projectionError(engine, operation, `The ${engine} ${operation} operation failed.`, cause);
+
+const annotateProjectionOutcome = <A2, E2, R2>(effect: Effect.Effect<A2, E2, R2>): Effect.Effect<A2, E2, R2> =>
+  effect.pipe(
+    Effect.tap(() => Effect.annotateCurrentSpan("db.operation.outcome", "success")),
+    Effect.tapError(() => Effect.annotateCurrentSpan("db.operation.outcome", "error"))
+  );
+
+export class ProjectionLayerOptions extends S.Class<ProjectionLayerOptions>($I`ProjectionLayerOptions`)(
   {
     duckDbPath: S.NonEmptyString,
-    pgliteDataDir: S.optionalKey(S.NonEmptyString),
+    pgliteDataDir: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ProjectionLayerOptions", {
     description: "Caller-selected machine-local paths for one scoped projection layer.",
@@ -125,10 +144,12 @@ class ProjectionLayerOptions extends S.Class<ProjectionLayerOptions>($I`Projecti
 
 const decodeRows = <Schema extends S.Codec<unknown>>(stage: string, schema: Schema, input: unknown) =>
   S.decodeUnknownEffect(schema)(input).pipe(
-    Effect.mapError(() => projectionError(stage, `The ${stage} query returned an unexpected row shape.`))
+    Effect.mapError((cause) =>
+      projectionError("snapshot", "decode", `The ${stage} query returned an unexpected row shape.`, cause)
+    )
   );
 
-const pgliteProjection = Effect.fn("LeJeuneProjections.pglite")(function* (input: ProjectionInput) {
+const pgliteProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
   yield* sql.unsafe(
     "CREATE TABLE quote_lines (id TEXT PRIMARY KEY, product_variant_id TEXT NOT NULL, quantity INTEGER NOT NULL)"
@@ -147,7 +168,7 @@ const pgliteProjection = Effect.fn("LeJeuneProjections.pglite")(function* (input
         fixture.quoteLine.productVariantId,
         fixture.quoteLine.quantity,
       ]),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     input.rules,
@@ -158,7 +179,7 @@ const pgliteProjection = Effect.fn("LeJeuneProjections.pglite")(function* (input
         result.disposition,
         result.requiresHuman,
       ]),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     input.offers,
@@ -169,7 +190,7 @@ const pgliteProjection = Effect.fn("LeJeuneProjections.pglite")(function* (input
         offer.recordLabel,
         offer.observedAt,
       ]),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     input.certificates,
@@ -180,7 +201,7 @@ const pgliteProjection = Effect.fn("LeJeuneProjections.pglite")(function* (input
         certificate.recordLabel,
         certificate.issuedAt,
       ]),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const quoteRows = yield* sql
     .unsafe("SELECT id, quantity FROM quote_lines ORDER BY id")
@@ -198,14 +219,14 @@ const pgliteProjection = Effect.fn("LeJeuneProjections.pglite")(function* (input
   };
 });
 
-const duckDbProjection = Effect.fn("LeJeuneProjections.duckdb")(function* (input: ProjectionInput) {
+const duckDbProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
   const duckdb = yield* DuckDb;
   yield* duckdb.run("CREATE TABLE corpus_documents (id VARCHAR PRIMARY KEY, body VARCHAR NOT NULL)");
   yield* duckdb.run("CREATE TABLE rule_citations (id VARCHAR PRIMARY KEY, url VARCHAR NOT NULL)");
   yield* Effect.forEach(
     A.flatMap(input.fixtures, (fixture) => fixture.sources),
     (source) => duckdb.run("INSERT INTO corpus_documents VALUES ($id, $body)", { body: source.text, id: source.id }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     input.rules,
@@ -214,9 +235,12 @@ const duckDbProjection = Effect.fn("LeJeuneProjections.duckdb")(function* (input
         id: result.source.id,
         url: result.source.url,
       }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
-  yield* Effect.forEach(createDuckDbFullTextProjection, (statement) => duckdb.run(statement), { discard: true });
+  yield* Effect.forEach(createDuckDbFullTextProjection, (statement) => duckdb.run(statement), {
+    concurrency: 1,
+    discard: true,
+  });
   const countRows = yield* duckdb
     .query("SELECT CAST(count(*) AS INTEGER) AS count FROM corpus_documents")
     .pipe(Effect.flatMap((rows) => decodeRows("duckdb-count", S.NonEmptyArray(DuckCountRow), rows)));
@@ -251,7 +275,7 @@ const ontologyDataset = (rules: ReadonlyArray<RuleResult>): Rdf.Dataset =>
     ),
   ]);
 
-const oxigraphProjection = Effect.fn("LeJeuneProjections.oxigraph")(function* (input: ProjectionInput) {
+const oxigraphProjection = Effect.fnUntraced(function* (input: ProjectionInput) {
   const sparql = yield* SparqlQueryService;
   const result = yield* sparql.execute(
     SparqlQueryRequest.make({
@@ -264,26 +288,18 @@ SELECT ?class WHERE { ?class rdf:type owl:Class } ORDER BY ?class`,
   );
   const rows = yield* Match.value(result).pipe(
     Match.when({ profile: "select" }, (select) => Effect.succeed(select.rows)),
-    Match.orElse(() => projectionError("oxigraph", "The ontology class query did not return a SELECT result."))
+    Match.orElse(() => projectionError("oxigraph", "query", "The ontology class query did not return a SELECT result."))
   );
   return yield* Effect.forEach(
     rows,
     (row) =>
       O.match(O.fromUndefinedOr(row.class), {
-        onNone: () => projectionError("oxigraph", "The ontology class query returned an unbound class."),
+        onNone: () => projectionError("oxigraph", "query", "The ontology class query returned an unbound class."),
         onSome: (term) => Effect.succeed(Str.replace(LEJEUNE_ONTOLOGY_NAMESPACE, "")(term.value)),
       }),
     { concurrency: 1 }
   );
 });
-
-const requireNonEmpty = <A2>(
-  stage: string,
-  values: ReadonlyArray<A2>
-): Effect.Effect<A.NonEmptyReadonlyArray<A2>, ProjectionError> =>
-  A.isReadonlyArrayNonEmpty(values)
-    ? Effect.succeed(values)
-    : Effect.fail(projectionError(stage, `The ${stage} projection unexpectedly returned no rows.`));
 
 /**
  * Build and query the three local projections using their injected service layers.
@@ -299,24 +315,43 @@ const requireNonEmpty = <A2>(
  * @category projections
  * @since 0.0.0
  */
-export const buildProjectionSnapshot = Effect.fn("LeJeuneProjections.build")(function* (input: ProjectionInput) {
-  const [pglite, duckdb, ontologyClasses] = yield* Effect.all(
-    [pgliteProjection(input), duckDbProjection(input), oxigraphProjection(input)],
-    { concurrency: 3 }
+export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(function* (input: ProjectionInput) {
+  const pgliteEffect = pgliteProjection(input).pipe(
+    Effect.mapError((cause) => normalizeProjectionError("pglite", "rebuild", cause)),
+    annotateProjectionOutcome,
+    Effect.withSpan("db.query", {
+      attributes: { "db.operation.name": "rebuild", "db.system": "pglite" },
+    })
   );
-  const citations = yield* requireNonEmpty("citations", duckdb.citations);
-  const quoteLines = yield* requireNonEmpty("quote-lines", pglite.quoteLines);
-  const ruleDispositions = yield* requireNonEmpty("rules", pglite.ruleDispositions);
-  const syntheticRecords = yield* requireNonEmpty("synthetic-records", pglite.syntheticRecords);
-  const classes = yield* requireNonEmpty("ontology", ontologyClasses);
-  return ProjectionSnapshot.make({
-    citations,
-    documentCount: PosInt.make(duckdb.documentCount),
-    ontologyClasses: classes,
-    quoteLines,
-    ruleDispositions,
-    syntheticRecords,
+  const duckDbEffect = duckDbProjection(input).pipe(
+    Effect.mapError((cause) => normalizeProjectionError("duckdb", "rebuild", cause)),
+    annotateProjectionOutcome,
+    Effect.withSpan("db.query", {
+      attributes: { "db.operation.name": "rebuild", "db.system": "duckdb" },
+    })
+  );
+  const oxigraphEffect = oxigraphProjection(input).pipe(
+    Effect.mapError((cause) => normalizeProjectionError("oxigraph", "query", cause)),
+    annotateProjectionOutcome,
+    Effect.withSpan("db.query", {
+      attributes: { "db.operation.name": "select", "db.system": "oxigraph" },
+    })
+  );
+  const [pglite, duckdb, ontologyClasses] = yield* Effect.all([pgliteEffect, duckDbEffect, oxigraphEffect], {
+    concurrency: 3,
   });
+  return yield* S.decodeUnknownEffect(ProjectionSnapshot)({
+    citations: duckdb.citations,
+    documentCount: duckdb.documentCount,
+    ontologyClasses,
+    quoteLines: pglite.quoteLines,
+    ruleDispositions: pglite.ruleDispositions,
+    syntheticRecords: pglite.syntheticRecords,
+  }).pipe(
+    Effect.mapError((cause) =>
+      projectionError("snapshot", "validate", "The projection snapshot violated its fixed contract.", cause)
+    )
+  );
 });
 
 /**
@@ -332,14 +367,14 @@ export const buildProjectionSnapshot = Effect.fn("LeJeuneProjections.build")(fun
  * ```ts
  * import { makeProjectionLayer } from "@/domain/Projections"
  *
- * console.log(makeProjectionLayer({ duckDbPath: ":memory:" }))
+ * console.log(makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" })))
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
 export const makeProjectionLayer = (options: ProjectionLayerOptions) => {
-  const pgliteLayer = O.match(O.fromUndefinedOr(options.pgliteDataDir), {
+  const pgliteLayer = O.match(options.pgliteDataDir, {
     onNone: makePgliteLayer,
     onSome: (dataDir) => makePgliteLayer({ dataDir }),
   });

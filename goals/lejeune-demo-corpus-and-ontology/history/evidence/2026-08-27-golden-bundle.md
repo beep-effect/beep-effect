@@ -9,8 +9,8 @@ generators, frozen expectations, and the sanitized provider recording are tracke
 
 ## Fixture and extraction proof
 
-`bun run --cwd apps/labs/lejeune-bolt-workbench audit` passed on 2026-08-27 with two test files
-and six tests.
+`bun run --cwd apps/labs/lejeune-bolt-workbench audit` passed on 2026-08-27 with three test
+files and 18 tests.
 
 The fixture test generated the same four sources twice and matched these frozen SHA-256 hashes:
 
@@ -65,22 +65,27 @@ op run --env-file=.env -- bun run --cwd apps/labs/lejeune-bolt-workbench provide
 ```
 
 `@beep/anthropic` succeeded with `claude-opus-4-6` at `2026-08-27T12:25:18.044Z`. The sanitized
-recording contains three source-grounded candidates and only the recording status, synthetic
-document id, provider, model, timestamp, response SHA-256, and candidate label/text pairs. It
-contains no request envelope, authorization header, credential, usage record, or real data.
+recording contains three source-grounded candidates and only versioned source/extraction
+contracts, the recording status, synthetic document id, provider, model, timestamp, response
+SHA-256, and candidate label/text pairs. It contains no request envelope, authorization
+header, credential, usage record, or real data.
 
 ## Offline replay and retention proof
 
 Two fresh durable builds completed with provider and network availability forced to `false`.
 Both produced bundle identity
-`9dc90206975f7892b6cd39b1c52ece3d2fc3bbe3587ebd86c2fc9cbae5485aa3`; their `bundle.json` and
-`golden-replay.json` files were byte-identical. The receipt declares replay mode
-`recorded-offline` and retains the committed queries, citations, rule results, and synthetic
-records.
+`5ed5639e9ce9cd090cdb253f975e5bc9ee18ddea2de5dc3d9d7f857f33b57cf6`; their `bundle.json`,
+`golden-replay.json`, `projection-metadata.json`, and separate `review-ledger.json` files were
+byte-identical. The versioned receipt declares replay mode `recorded-offline` and retains the
+committed queries, citations, rule results, and synthetic records. The projection metadata
+binds both durable stores to the same bundle identity and explicit projection contract.
 
 The separate mutable ledger is empty and declares `delete-or-promote` with disposition date
-`2026-09-30`. The immutable bundle builder refuses an existing target or a shared immutable and
-mutable root.
+`2026-09-30`. The transactional builder refuses an existing target or a shared immutable and
+mutable root. Clock-controlled integration tests also prove that the builder publishes neither
+root on the disposition date without authority, and accepts only a schema-decoded reviewed
+extension whose authorization timestamp is not in the future and whose new disposition is
+later than build time.
 
 ## Acceptance audit
 
@@ -95,7 +100,7 @@ mutable root.
 | live `@beep/anthropic` recording without secrets | pass |
 | complete provider-offline and network-offline replay | pass |
 | raw/customer/third-party payloads and secrets absent | pass; final tracked inventory runs before publication |
-| 2026-09-30 mutable-corpus disposition | pass |
+| 2026-09-30 mutable-corpus disposition | pass; fail-closed boundary and reviewed-extension test |
 | unrelated churn absent | pass; unrelated `.codex/` work remains unstaged |
 
 Repository-wide Yeet and hosted merge-readiness evidence is appended during publication.

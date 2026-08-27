@@ -25,11 +25,28 @@ import * as Str from "effect/String";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { SourceDocument } from "@/domain/Bundle";
+import { EntityId } from "@/domain/Ontology";
 import type { Sha256Hex } from "@beep/schema";
 
 const $I = $LejeuneBoltWorkbenchId.create("fixtures/Sources");
 
-const OUTLOOK_BODY = `SYNTHETIC RFQ A | Project North Loop Canopy | Delivery 2026-09-12 | Domestic required | Finish MG B695 Class 55`;
+/**
+ * Exact synthetic RFQ A text used by fixture generation and provider-recording verification.
+ *
+ * **Example** (Confirm the synthetic marker)
+ *
+ * ```ts
+ * import { RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources"
+ * import * as Str from "effect/String"
+ *
+ * console.log(Str.startsWith("SYNTHETIC RFQ A")(RFQ_A_OUTLOOK_BODY)) // true
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const RFQ_A_OUTLOOK_BODY =
+  "SYNTHETIC RFQ A | Project North Loop Canopy | Delivery 2026-09-12 | Domestic required | Finish MG B695 Class 55";
 const PROSE_EMAIL = `SYNTHETIC RFQ B for County Shops Expansion. Delivery is 2026-09-20 and certification is required. Do not infer coating approval.`;
 const XLSX_ROW_TEXT = "A-1 | TC assembly | F1852 Type 1 | 7/8 in | 3-1/4 in | 180 | F959 Type 325";
 const PDF_SCHEDULE_TEXT =
@@ -81,6 +98,7 @@ const decodeWorksheetXml = decodeXmlTextAs(XlsxDocument);
 export class FixtureError extends S.TaggedError<FixtureError>($I`FixtureError`)(
   "FixtureError",
   {
+    cause: S.optionalKey(S.Defect({ includeStack: true })),
     message: S.NonEmptyString,
     stage: S.NonEmptyString,
   },
@@ -119,17 +137,26 @@ export class GeneratedFixtureArtifacts extends S.Class<GeneratedFixtureArtifacts
 
 const fixtureError = (stage: string, message: string): FixtureError => FixtureError.make({ message, stage });
 
-const makeXlsxBytes = (): Uint8Array =>
-  zipSync(
-    {
-      "[Content_Types].xml": strToU8(contentTypesXml),
-      "_rels/.rels": strToU8(rootRelationshipsXml),
-      "xl/_rels/workbook.xml.rels": strToU8(workbookRelationshipsXml),
-      "xl/workbook.xml": strToU8(workbookXml),
-      "xl/worksheets/sheet1.xml": strToU8(worksheetXml),
-    },
-    { level: 9, mtime: FIXED_PDF_DATE }
-  );
+const fixtureErrorWithCause = (stage: string, message: string, cause: unknown): FixtureError =>
+  FixtureError.make({ cause, message, stage });
+
+const makeXlsxBytes = Effect.fn("LeJeuneFixtures.makeXlsxBytes")(() =>
+  Effect.try({
+    try: () =>
+      zipSync(
+        {
+          "[Content_Types].xml": strToU8(contentTypesXml),
+          "_rels/.rels": strToU8(rootRelationshipsXml),
+          "xl/_rels/workbook.xml.rels": strToU8(workbookRelationshipsXml),
+          "xl/workbook.xml": strToU8(workbookXml),
+          "xl/worksheets/sheet1.xml": strToU8(worksheetXml),
+        },
+        { level: 9, mtime: FIXED_PDF_DATE }
+      ),
+    catch: (cause) =>
+      fixtureErrorWithCause("xlsx-generate", "Failed to generate the deterministic synthetic XLSX fixture.", cause),
+  })
+);
 
 const makePdfBytes = Effect.fn("LeJeuneFixtures.makePdfBytes")(function* () {
   return yield* Effect.tryPromise({
@@ -148,14 +175,15 @@ const makePdfBytes = Effect.fn("LeJeuneFixtures.makePdfBytes")(function* () {
           return document.save({ addDefaultPage: false, useObjectStreams: false });
         });
       }),
-    catch: () => fixtureError("pdf-generate", "Failed to generate the deterministic synthetic PDF fixture."),
+    catch: (cause) =>
+      fixtureErrorWithCause("pdf-generate", "Failed to generate the deterministic synthetic PDF fixture.", cause),
   });
 });
 
 const parseXlsx = Effect.fn("LeJeuneFixtures.parseXlsx")(function* (bytes: Uint8Array) {
   const files = yield* Effect.try({
     try: () => unzipSync(bytes),
-    catch: () => fixtureError("xlsx-unzip", "Failed to open the synthetic XLSX fixture."),
+    catch: (cause) => fixtureErrorWithCause("xlsx-unzip", "Failed to open the synthetic XLSX fixture.", cause),
   });
   const sheetBytes = O.fromUndefinedOr(files["xl/worksheets/sheet1.xml"]);
   const sheet = yield* O.match(sheetBytes, {
@@ -163,10 +191,12 @@ const parseXlsx = Effect.fn("LeJeuneFixtures.parseXlsx")(function* (bytes: Uint8
     onSome: (value) =>
       Effect.try({
         try: () => strFromU8(value),
-        catch: () => fixtureError("xlsx-parse", "Synthetic XLSX worksheet is not valid UTF-8."),
+        catch: (cause) => fixtureErrorWithCause("xlsx-parse", "Synthetic XLSX worksheet is not valid UTF-8.", cause),
       }).pipe(
         Effect.flatMap(decodeWorksheetXml),
-        Effect.mapError(() => fixtureError("xlsx-parse", "Synthetic XLSX worksheet did not match the fixed layout."))
+        Effect.mapError((cause) =>
+          fixtureErrorWithCause("xlsx-parse", "Synthetic XLSX worksheet did not match the fixed layout.", cause)
+        )
       ),
   });
   const dataRow = yield* O.match(A.get(sheet.worksheet.sheetData.row, 1), {
@@ -202,7 +232,9 @@ const makePdfOperation = (id: string, digest: Sha256Hex, bytes: Uint8Array): Ext
 
 const parsePdf = Effect.fn("LeJeuneFixtures.parsePdf")(function* (id: string, digest: Sha256Hex, bytes: Uint8Array) {
   const result = yield* DocTextFileProcessingEngine.extract(makePdfOperation(id, digest, bytes)).pipe(
-    Effect.mapError(() => fixtureError("pdf-parse", "The synthetic PDF text layer could not be extracted."))
+    Effect.mapError((cause) =>
+      fixtureErrorWithCause("pdf-parse", "The synthetic PDF text layer could not be extracted.", cause)
+    )
   );
   const text = O.fromUndefinedOr(result.text);
   return yield* O.match(text, {
@@ -216,7 +248,7 @@ const parsePdf = Effect.fn("LeJeuneFixtures.parsePdf")(function* (id: string, di
 
 const hashBytes = (bytes: Uint8Array) =>
   Sha256HexFromBytes.decodeEffect(bytes).pipe(
-    Effect.mapError(() => fixtureError("sha256", "Failed to hash synthetic fixture bytes."))
+    Effect.mapError((cause) => fixtureErrorWithCause("sha256", "Failed to hash synthetic fixture bytes.", cause))
   );
 
 /**
@@ -240,8 +272,8 @@ const hashBytes = (bytes: Uint8Array) =>
  * @since 0.0.0
  */
 export const buildFixtureArtifacts = Effect.gen(function* () {
-  const rfqAEmail = strToU8(OUTLOOK_BODY);
-  const rfqAXlsx = makeXlsxBytes();
+  const rfqAEmail = strToU8(RFQ_A_OUTLOOK_BODY);
+  const rfqAXlsx = yield* makeXlsxBytes();
   const rfqBEmail = strToU8(PROSE_EMAIL);
   const rfqBPdf = yield* makePdfBytes();
   const [rfqAEmailHash, rfqAXlsxHash, rfqBEmailHash, rfqBPdfHash] = yield* Effect.all(
@@ -253,15 +285,15 @@ export const buildFixtureArtifacts = Effect.gen(function* () {
   const sources = [
     SourceDocument.make({
       format: "outlook-body-table",
-      id: "rfq-a-outlook-body",
+      id: EntityId.make("rfq-a-outlook-body"),
       layoutId: "rfq-a",
       mediaType: "text/plain",
       sha256: rfqAEmailHash,
-      text: OUTLOOK_BODY,
+      text: RFQ_A_OUTLOOK_BODY,
     }),
     SourceDocument.make({
       format: "xlsx-takeoff",
-      id: "rfq-a-xlsx-takeoff",
+      id: EntityId.make("rfq-a-xlsx-takeoff"),
       layoutId: "rfq-a",
       mediaType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       sha256: rfqAXlsxHash,
@@ -269,7 +301,7 @@ export const buildFixtureArtifacts = Effect.gen(function* () {
     }),
     SourceDocument.make({
       format: "prose-email",
-      id: "rfq-b-prose-email",
+      id: EntityId.make("rfq-b-prose-email"),
       layoutId: "rfq-b",
       mediaType: "text/plain",
       sha256: rfqBEmailHash,
@@ -277,7 +309,7 @@ export const buildFixtureArtifacts = Effect.gen(function* () {
     }),
     SourceDocument.make({
       format: "pdf-text-layer",
-      id: "rfq-b-pdf-schedule",
+      id: EntityId.make("rfq-b-pdf-schedule"),
       layoutId: "rfq-b",
       mediaType: "application/pdf",
       sha256: rfqBPdfHash,

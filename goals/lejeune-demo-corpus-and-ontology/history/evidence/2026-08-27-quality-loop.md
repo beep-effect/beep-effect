@@ -1,0 +1,72 @@
+# Quality Review/Fix Loop — 2026-08-27
+
+## Baseline
+
+- Baseline commit: `7503098fcbb57cfaf71738f92e88480056fbae76`
+- Base: `origin/main`
+- Lab audit: green (build, typecheck, two test files, six tests, lint)
+- Cheap gates: 12/12 green after generated config, Effect import, schema-first, Knip, and
+  fallow repairs
+- Unrelated `.codex/` work: excluded from the commit and every fixer surface
+- Full Yeet: deferred while the shared proof coordinator is owned by other checkouts
+
+## Round 1 panel
+
+All ten required read-only roles reviewed the same committed baseline:
+
+1. Quality Gate Reviewer
+2. Architecture Boundary Reviewer
+3. Schema And Domain Reviewer
+4. Effect Law Reviewer
+5. Error Boundary Reviewer
+6. Testing Reviewer
+7. Observability Reviewer
+8. Documentation And API Reviewer
+9. Reuse And Duplication Reviewer
+10. Evolution And Deprecation Reviewer
+
+## Deduplicated inventory
+
+| Inventory | Source findings | Blocking | Fix group | Status |
+| --- | --- | --- | --- | --- |
+| `META-001` declared dependency graph | `ARCH-R1-001`, `QG-R1-001`, `REUSE-R1-001` | yes | package metadata/generated config | fixed; round 2 pending |
+| `DOC-001` generated identity example | `DAPI-R1-001` | yes | identity generator | fixed; round 2 pending |
+| `SCHEMA-001` persisted integrity and exact cardinalities | `LEJ-SCHEMA-R1-001`, `002`, `005`; `LEJ-TEST-R1-001` | yes | bundle/fixture schemas | fixed; round 2 pending |
+| `RULE-001` canonical rule semantics | `LEJ-SCHEMA-R1-003`; `LEJ-TEST-R1-004` | yes | ontology/rules/tests | fixed; round 2 pending |
+| `TIME-001` semantic dates and shared timestamp reuse | `LEJ-SCHEMA-R1-004`, `REUSE-R1-002` | yes | ontology schemas/tests | fixed; round 2 pending |
+| `REPLAY-001` committed recording integrity/offline test | `LEJ-TEST-R1-002`; provider part of `LEJ-SCHEMA-R1-001` | yes | replay schemas/tests | fixed; round 2 pending |
+| `FS-001` transactional bundle publication | `EB-R1-001`, `LEJ-TEST-R1-003` | yes, P0 | server/filesystem tests | fixed; round 2 pending |
+| `ERROR-001` closed, cause-preserving errors | `EB-R1-002`, `EFFECT-R1-001`, `002`, `005`; `LEJ-OBS-R1-002` | yes | domain and server boundaries | fixed; round 2 pending |
+| `EFFECT-001` Option and explicit DB sequencing | `EFFECT-R1-003`, `004` | yes | projections | fixed; round 2 pending |
+| `OBS-001` workflow spans and safe attributes | `LEJ-OBS-R1-001`, `002`, `003` | yes | domain/server boundaries | fixed; round 2 pending |
+| `EVOL-001` frozen/versioned recording and bundle contracts | `LEJ-EVOL-R1-001`, `003` | yes | provider/bundle/docs | fixed; round 2 pending |
+| `RETENTION-001` enforceable 2026-09-30 disposition | `LEJ-EVOL-R1-002` | yes | retention boundary/runbook | fixed; round 2 pending |
+| `DOC-002` accurate private-module and operator docs | `DAPI-R1-002`, `003` | yes | lab source/README | fixed; round 2 pending |
+| `PROOF-001` final docgen and exact-tree Yeet | `QG-R1-002` | yes | repository proof | queued |
+| `CLEANUP-001` prebuilt provider matcher | `EFFECT-R1-006` | no | provider server | backlog |
+
+No blocker was rejected or waived. Duplicates were merged by their shared acceptance surface.
+
+## Fixer ownership
+
+- Metadata/API fixer: lab manifest, generated project graph/lock, identity generator/test/output.
+- Schema/domain fixer: domain schemas, rules, projections, replay, fixture-manifest schema, and
+  `Bundle.test.ts`.
+- Server/boundary fixer: server entrypoints, fixture generator, operator README, and a separate
+  durable-builder integration test.
+
+The next round reruns focused acceptance, the green baseline, and the same ten-role panel. The
+loop closes only at zero required findings, followed by full Yeet and hosted merge-readiness.
+
+## Round 1 fix integration
+
+- The lab audit passed with production build, typecheck, three test files, 18 tests, and lint.
+- Transactional builder tests cover existing-root preservation, same/nested-root rejection,
+  staging cleanup, byte-identical fresh builds, cutoff refusal, and reviewed retention extension.
+- Persisted provider, receipt, and projection metadata now carry explicit schema and contract
+  revisions; the projection sidecar binds both durable stores to the bundle identity.
+- Two final-evidence rebuilds returned identity
+  `5ed5639e9ce9cd090cdb253f975e5bc9ee18ddea2de5dc3d9d7f857f33b57cf6` and byte-identical
+  bundle, receipt, projection metadata, and mutable-ledger JSON.
+- `docgen:local` correctly reported that this global-input change requires the full docgen proof;
+  that proof remains part of `PROOF-001`, not a waiver.

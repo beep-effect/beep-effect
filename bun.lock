@@ -93,6 +93,7 @@
         "@beep/doc-text": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/identity": "workspace:^",
         "@beep/langextract": "workspace:^",
         "@beep/nlp": "workspace:^",
         "@beep/oxigraph": "workspace:^",
@@ -102,7 +103,6 @@
         "@beep/schema": "workspace:^",
         "@beep/semantic-web": "workspace:^",
         "@beep/ui": "workspace:^",
-        "@beep/utils": "workspace:^",
         "@beep/venice-ai": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
@@ -112,6 +112,7 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",

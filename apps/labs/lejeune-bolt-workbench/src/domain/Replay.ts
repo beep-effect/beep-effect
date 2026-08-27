@@ -6,15 +6,19 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { strToU8 } from "fflate";
 import {
+  BUNDLE_VERSION,
   GoldenReplayReceipt,
   ImmutableDemoBundle,
   ImmutableDemoBundleFromJsonString,
+  MUTABLE_CORPUS_DISPOSITION_DATE,
   MutableReviewLedger,
+  PROVIDER_RECORDING_SOURCE_TEXT,
+  verifyProviderRecording,
 } from "@/domain/Bundle";
 import { buildNormalizedFixtures } from "@/domain/Normalize";
 import { buildProjectionSnapshot, ProjectionInput } from "@/domain/Projections";
@@ -27,14 +31,6 @@ const $I = $LejeuneBoltWorkbenchId.create("domain/Replay");
 
 /**
  * Complete immutable bundle, separate mutable ledger, and offline receipt.
- *
- * **Example** (Inspect the bundle field)
- *
- * ```ts
- * import { ReplayBuild } from "@/domain/Replay"
- *
- * console.log(ReplayBuild.fields.bundle !== undefined) // true
- * ```
  *
  * @category models
  * @since 0.0.0
@@ -50,9 +46,36 @@ class ReplayBuild extends S.Class<ReplayBuild>($I`ReplayBuild`)(
   })
 ) {}
 
-const hashBundle = Effect.fn("LeJeuneReplay.hashBundle")(function* (bundle: ImmutableDemoBundle) {
-  const encoded = yield* S.encodeEffect(ImmutableDemoBundleFromJsonString)(bundle);
-  return yield* Sha256HexFromBytes.decodeEffect(strToU8(encoded));
+const ReplayOperation = LiteralKit(["encode-bundle", "hash-bundle"]);
+
+class ReplayError extends S.TaggedError<ReplayError>($I`ReplayError`)(
+  "ReplayError",
+  {
+    cause: S.Defect({ includeStack: true }),
+    message: S.NonEmptyString,
+    operation: ReplayOperation,
+  },
+  $I.annoteError<ReplayError>("ReplayError", {
+    title: "LeJeune replay error",
+    description: "A closed encoding or hashing failure while constructing the deterministic replay receipt.",
+  })
+) {}
+
+const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
+  const encoded = yield* S.encodeEffect(ImmutableDemoBundleFromJsonString)(bundle).pipe(
+    Effect.mapError((cause) =>
+      ReplayError.make({
+        cause,
+        message: "The immutable demo bundle could not be encoded.",
+        operation: "encode-bundle",
+      })
+    )
+  );
+  return yield* Sha256HexFromBytes.decodeEffect(strToU8(encoded)).pipe(
+    Effect.mapError((cause) =>
+      ReplayError.make({ cause, message: "The immutable demo bundle could not be hashed.", operation: "hash-bundle" })
+    )
+  );
 });
 
 /**
@@ -75,7 +98,8 @@ const hashBundle = Effect.fn("LeJeuneReplay.hashBundle")(function* (bundle: Immu
  * @category replay
  * @since 0.0.0
  */
-export const replayOffline = Effect.fn("LeJeuneReplay.offline")(function* (providerRecording: ProviderRecording) {
+export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (providerRecording: ProviderRecording) {
+  yield* verifyProviderRecording(providerRecording, PROVIDER_RECORDING_SOURCE_TEXT);
   const artifacts = yield* buildFixtureArtifacts;
   const fixtures = yield* buildNormalizedFixtures(artifacts);
   const rules = yield* evaluateRules(fixtures);
@@ -89,12 +113,12 @@ export const replayOffline = Effect.fn("LeJeuneReplay.offline")(function* (provi
     })
   );
   const bundle = ImmutableDemoBundle.make({
-    bundleVersion: "lejeune-demo-bundle/v1",
+    bundleVersion: BUNDLE_VERSION,
     certificates: referenceData.certificates,
     finishes: referenceData.finishes,
     fixtures,
     mutableCorpusDisposition: "delete-or-promote",
-    mutableCorpusDispositionDate: "2026-09-30",
+    mutableCorpusDispositionDate: MUTABLE_CORPUS_DISPOSITION_DATE,
     offers: referenceData.offers,
     projection,
     providerRecording,
@@ -107,10 +131,11 @@ export const replayOffline = Effect.fn("LeJeuneReplay.offline")(function* (provi
     approvals: [],
     claims: [],
     disposition: "delete-or-promote",
-    dispositionDate: "2026-09-30",
+    dispositionDate: MUTABLE_CORPUS_DISPOSITION_DATE,
     schemaVersion: "lejeune-review-ledger/v1",
   });
   const receipt = GoldenReplayReceipt.make({
+    bundleVersion: BUNDLE_VERSION,
     bundleIdentity,
     networkAvailable: false,
     projection,

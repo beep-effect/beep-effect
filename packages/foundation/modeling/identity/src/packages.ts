@@ -214,7 +214,7 @@ const composers = {
  * import { $ApiDocsId } from "@beep/identity"
  *
  * const id = $ApiDocsId.make("ApiDocs")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration
@@ -231,7 +231,7 @@ export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers
  * import { $LejeuneBoltWorkbenchId } from "@beep/identity"
  *
  * const id = $LejeuneBoltWorkbenchId.make("LejeuneBoltWorkbench")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration
@@ -249,7 +249,7 @@ export const $LejeuneBoltWorkbenchId: Identity.IdentityComposer<"@beep/lejeune-b
  * import { $SemanticaId } from "@beep/identity"
  *
  * const id = $SemanticaId.make("Semantica")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration
@@ -266,7 +266,7 @@ export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = compos
  * import { $TrustgraphWorkbenchId } from "@beep/identity"
  *
  * const id = $TrustgraphWorkbenchId.make("TrustgraphWorkbench")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration

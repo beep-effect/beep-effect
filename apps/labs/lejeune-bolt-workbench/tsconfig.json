@@ -56,6 +56,9 @@
       "path": "../../../packages/foundation/capability/semantic-web/tsconfig.json"
     },
     {
+      "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../../packages/foundation/modeling/nlp/tsconfig.json"
     },
     {
@@ -69,6 +72,9 @@
     },
     {
       "path": "../../../packages/foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

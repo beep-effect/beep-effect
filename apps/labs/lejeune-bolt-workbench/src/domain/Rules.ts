@@ -7,12 +7,15 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan";
+import { PosixPath } from "@beep/schema";
+import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { RuleResult, RuleSource } from "@/domain/Bundle";
+import { EntityId } from "@/domain/Ontology";
 import { FixtureError } from "@/fixtures/Sources";
 import type { NormalizedFixture } from "@/domain/Bundle";
 
@@ -20,6 +23,10 @@ const MATCHED_ASSEMBLY_EVIDENCE =
   "Galvanized bolts and tension-control bolts are manufactured matched bolt-and-nut assembly cases.";
 const DTI_STRENGTH_EVIDENCE = "ASTM F959 DTIs are designated Type 325 or Type 490 to match bolt strength.";
 const A490_HDG_EVIDENCE = "A490 bolts must not be hot-dip galvanized or electroplated.";
+const A490_STANDARD_ID = EntityId.make("astm-a490-type-1");
+const RULE_RESEARCH_PATH = PosixPath.make(
+  "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md"
+);
 
 interface RuleSourceInput {
   readonly evidence: string;
@@ -29,7 +36,7 @@ interface RuleSourceInput {
   readonly url: string;
 }
 
-const makeRuleSource = Effect.fn("LeJeuneRules.makeRuleSource")(function* (input: RuleSourceInput) {
+const makeRuleSource = Effect.fnUntraced(function* (input: RuleSourceInput) {
   const candidate = GroundedExtraction.cases.unaligned.make({ label: "rule-evidence", text: input.evidence });
   const anchors = yield* locateGroundedExtractions([candidate], input.evidence);
   const evidenceAnchor = yield* O.match(A.head(anchors), {
@@ -41,11 +48,11 @@ const makeRuleSource = Effect.fn("LeJeuneRules.makeRuleSource")(function* (input
     accessedOn: "2026-08-25",
     evidence: input.evidence,
     evidenceAnchor,
-    id: input.id,
-    researchPath: "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
+    id: EntityId.make(input.id),
+    researchPath: RULE_RESEARCH_PATH,
     revision: input.revision,
     title: input.title,
-    url: input.url,
+    url: HttpsUrl.make(input.url),
   });
 });
 
@@ -62,7 +69,7 @@ const matchedAssemblyResult = (fixture: NormalizedFixture, source: RuleSource): 
     Bool.match({
       onFalse: () =>
         RuleResult.make({
-          caseId: `${fixture.rfq.id}-matched-assembly-mismatch`,
+          caseId: EntityId.make(`${fixture.rfq.id}-matched-assembly-mismatch`),
           disposition: "mismatch",
           matchedFacts: [fixture.productVariant.label, "Required matched bolt + nut + washer set is incomplete."],
           requiresHuman: true,
@@ -72,7 +79,7 @@ const matchedAssemblyResult = (fixture: NormalizedFixture, source: RuleSource): 
         }),
       onTrue: () =>
         RuleResult.make({
-          caseId: `${fixture.rfq.id}-matched-assembly-positive`,
+          caseId: EntityId.make(`${fixture.rfq.id}-matched-assembly-positive`),
           disposition: "pass",
           matchedFacts: [fixture.productVariant.label, "Bolt, nut, and washer components are present."],
           requiresHuman: false,
@@ -95,7 +102,7 @@ const dtiStrengthResult = (fixture: NormalizedFixture, source: RuleSource): Rule
     Bool.match({
       onFalse: () =>
         RuleResult.make({
-          caseId: `${fixture.rfq.id}-dti-strength-mismatch`,
+          caseId: EntityId.make(`${fixture.rfq.id}-dti-strength-mismatch`),
           disposition: "mismatch",
           matchedFacts: [
             `Bolt strength: ${O.map(bolt, (component) => component.strengthClass).pipe(O.getOrElse(() => "missing"))}`,
@@ -108,7 +115,7 @@ const dtiStrengthResult = (fixture: NormalizedFixture, source: RuleSource): Rule
         }),
       onTrue: () =>
         RuleResult.make({
-          caseId: `${fixture.rfq.id}-dti-strength-positive`,
+          caseId: EntityId.make(`${fixture.rfq.id}-dti-strength-positive`),
           disposition: "pass",
           matchedFacts: [
             `Bolt strength: ${O.map(bolt, (component) => component.strengthClass).pipe(O.getOrElse(() => "missing"))}`,
@@ -124,14 +131,14 @@ const dtiStrengthResult = (fixture: NormalizedFixture, source: RuleSource): Rule
 };
 
 const a490HdgResult = (fixture: NormalizedFixture, source: RuleSource): RuleResult => {
-  const isA490 = Str.includes("A490")(fixture.productVariant.label);
+  const isA490 = Str.Equivalence(fixture.productVariant.standardId, A490_STANDARD_ID);
   const isHdg = Str.Equivalence(fixture.productVariant.finishId, "hot-dip-galvanized");
   return pipe(
     Bool.and(isA490, isHdg),
     Bool.match({
       onFalse: () =>
         RuleResult.make({
-          caseId: `${fixture.rfq.id}-a490-hdg-positive`,
+          caseId: EntityId.make(`${fixture.rfq.id}-a490-hdg-positive`),
           disposition: "pass",
           matchedFacts: [`Product: ${fixture.productVariant.label}`, `Finish id: ${fixture.productVariant.finishId}`],
           requiresHuman: false,
@@ -141,7 +148,7 @@ const a490HdgResult = (fixture: NormalizedFixture, source: RuleSource): RuleResu
         }),
       onTrue: () =>
         RuleResult.make({
-          caseId: `${fixture.rfq.id}-a490-hdg-refusal`,
+          caseId: EntityId.make(`${fixture.rfq.id}-a490-hdg-refusal`),
           disposition: "refuse",
           matchedFacts: [`Product: ${fixture.productVariant.label}`, `Finish id: ${fixture.productVariant.finishId}`],
           requiresHuman: true,
@@ -172,7 +179,7 @@ const a490HdgResult = (fixture: NormalizedFixture, source: RuleSource): RuleResu
  * @category rules
  * @since 0.0.0
  */
-export const evaluateRules = Effect.fn("LeJeuneRules.evaluateRules")(function* (
+export const evaluateRules = Effect.fn("lejeune.rules.evaluate")(function* (
   fixtures: readonly [NormalizedFixture, NormalizedFixture]
 ) {
   const [matchedSource, dtiSource, coatingSource] = yield* Effect.all(

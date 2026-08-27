@@ -12,10 +12,10 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { ExtractedField, MissingField, NormalizedFixture } from "@/domain/Bundle";
+import { ExtractedField, MissingField, makeNormalizedFixture } from "@/domain/Bundle";
 import { Component, EntityId, IsoDate, ProductVariant, Project, QuoteLine, RFQ } from "@/domain/Ontology";
 import { FixtureError } from "@/fixtures/Sources";
-import type { SourceDocument } from "@/domain/Bundle";
+import type { NormalizedFixture, SourceDocument } from "@/domain/Bundle";
 import type { GeneratedFixtureArtifacts } from "@/fixtures/Sources";
 
 interface FieldLocator {
@@ -29,10 +29,10 @@ const isoDate = IsoDate.make;
 const makeProductVariant = (
   components: NormalizedFixture["components"],
   fields: {
-    readonly finishId: typeof EntityId.Type;
-    readonly id: typeof EntityId.Type;
+    readonly finishId: EntityId;
+    readonly id: EntityId;
     readonly label: string;
-    readonly standardId: typeof EntityId.Type;
+    readonly standardId: EntityId;
   }
 ) =>
   ProductVariant.make({
@@ -43,10 +43,7 @@ const makeProductVariant = (
     standardId: fields.standardId,
   });
 
-const sourceById = Effect.fn("LeJeuneNormalize.sourceById")(function* (
-  sources: ReadonlyArray<SourceDocument>,
-  id: string
-) {
+const sourceById = Effect.fnUntraced(function* (sources: ReadonlyArray<SourceDocument>, id: string) {
   return yield* O.match(
     A.findFirst(sources, (source) => Str.Equivalence(source.id, id)),
     {
@@ -56,10 +53,7 @@ const sourceById = Effect.fn("LeJeuneNormalize.sourceById")(function* (
   );
 });
 
-const locateFields = Effect.fn("LeJeuneNormalize.locateFields")(function* (
-  source: SourceDocument,
-  fields: ReadonlyArray<FieldLocator>
-) {
+const locateFields = Effect.fnUntraced(function* (source: SourceDocument, fields: ReadonlyArray<FieldLocator>) {
   return yield* Effect.forEach(
     fields,
     Effect.fnUntraced(function* (field) {
@@ -91,7 +85,7 @@ const locateFields = Effect.fn("LeJeuneNormalize.locateFields")(function* (
   );
 });
 
-const normalizeRfqA = Effect.fn("LeJeuneNormalize.normalizeRfqA")(function* (sources: ReadonlyArray<SourceDocument>) {
+const normalizeRfqA = Effect.fnUntraced(function* (sources: ReadonlyArray<SourceDocument>) {
   const email = yield* sourceById(sources, "rfq-a-outlook-body");
   const xlsx = yield* sourceById(sources, "rfq-a-xlsx-takeoff");
   const emailFields = yield* locateFields(email, [
@@ -166,7 +160,7 @@ const normalizeRfqA = Effect.fn("LeJeuneNormalize.normalizeRfqA")(function* (sou
   if (!A.isReadonlyArrayNonEmpty(extractedFields)) {
     return yield* FixtureError.make({ stage: "normalize", message: "RFQ A produced no exact extracted fields." });
   }
-  return NormalizedFixture.make({
+  return yield* makeNormalizedFixture({
     components,
     extractedFields,
     missingFields: [
@@ -181,10 +175,14 @@ const normalizeRfqA = Effect.fn("LeJeuneNormalize.normalizeRfqA")(function* (sou
     quoteLine,
     rfq,
     sources: [email, xlsx],
-  });
+  }).pipe(
+    Effect.mapError((cause) =>
+      FixtureError.make({ cause, stage: "normalize", message: "RFQ A failed the persisted fixture contract." })
+    )
+  );
 });
 
-const normalizeRfqB = Effect.fn("LeJeuneNormalize.normalizeRfqB")(function* (sources: ReadonlyArray<SourceDocument>) {
+const normalizeRfqB = Effect.fnUntraced(function* (sources: ReadonlyArray<SourceDocument>) {
   const email = yield* sourceById(sources, "rfq-b-prose-email");
   const pdf = yield* sourceById(sources, "rfq-b-pdf-schedule");
   const emailFields = yield* locateFields(email, [
@@ -247,7 +245,7 @@ const normalizeRfqB = Effect.fn("LeJeuneNormalize.normalizeRfqB")(function* (sou
   if (!A.isReadonlyArrayNonEmpty(extractedFields)) {
     return yield* FixtureError.make({ stage: "normalize", message: "RFQ B produced no exact extracted fields." });
   }
-  return NormalizedFixture.make({
+  return yield* makeNormalizedFixture({
     components,
     extractedFields,
     missingFields: [
@@ -262,7 +260,11 @@ const normalizeRfqB = Effect.fn("LeJeuneNormalize.normalizeRfqB")(function* (sou
     quoteLine,
     rfq,
     sources: [email, pdf],
-  });
+  }).pipe(
+    Effect.mapError((cause) =>
+      FixtureError.make({ cause, stage: "normalize", message: "RFQ B failed the persisted fixture contract." })
+    )
+  );
 });
 
 /**
@@ -279,7 +281,7 @@ const normalizeRfqB = Effect.fn("LeJeuneNormalize.normalizeRfqB")(function* (sou
  * @category normalization
  * @since 0.0.0
  */
-export const buildNormalizedFixtures = Effect.fn("LeJeuneNormalize.buildNormalizedFixtures")(function* (
+export const buildNormalizedFixtures = Effect.fn("lejeune.fixture.normalize")(function* (
   artifacts: GeneratedFixtureArtifacts
 ) {
   const [rfqA, rfqB] = yield* Effect.all([normalizeRfqA(artifacts.sources), normalizeRfqB(artifacts.sources)], {

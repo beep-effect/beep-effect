@@ -7,6 +7,7 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { PosInt } from "@beep/schema";
+import { HttpsUrl } from "@beep/schema/URL";
 import * as S from "effect/Schema";
 import {
   EntityId,
@@ -24,28 +25,21 @@ const $I = $LejeuneBoltWorkbenchId.create("domain/ReferenceData");
 const entityId = EntityId.make;
 const isoDate = IsoDate.make;
 const isoTimestamp = IsoTimestamp.make;
+const httpsUrl = HttpsUrl.make;
 
 /**
  * The fixed standards, finishes, tools, offers, and lot certificates used by replay.
- *
- * **Example** (Inspect the synthetic offers collection)
- *
- * ```ts
- * import { ReferenceData } from "@/domain/ReferenceData"
- *
- * console.log(ReferenceData.fields.offers !== undefined) // true
- * ```
  *
  * @category models
  * @since 0.0.0
  */
 class ReferenceData extends S.Class<ReferenceData>($I`ReferenceData`)(
   {
-    certificates: S.NonEmptyArray(LotCertificate),
-    finishes: S.NonEmptyArray(Finish),
-    offers: S.NonEmptyArray(SupplierOffer),
-    standards: S.NonEmptyArray(Standard),
-    tools: S.NonEmptyArray(Tool),
+    certificates: S.Tuple([LotCertificate, LotCertificate]),
+    finishes: S.Tuple([Finish, Finish]),
+    offers: S.Tuple([SupplierOffer, SupplierOffer]),
+    standards: S.Tuple([Standard, Standard, Standard, Standard, Standard]),
+    tools: S.Tuple([Tool, Tool]),
   },
   $I.annote("ReferenceData", {
     description: "The immutable cited and synthetic support records required by the fixed replay bundle.",
@@ -121,35 +115,35 @@ export const buildReferenceData = (fixtures: readonly [NormalizedFixture, Normal
         designation: "ASTM F1852 Type 1",
         id: entityId("astm-f1852-type-1"),
         revision: "F3125 consolidated designation; RCSC 2020 context",
-        sourceUrl: "https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/",
+        sourceUrl: httpsUrl("https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/"),
       }),
       Standard.make({
         accessedOn: isoDate("2026-08-25"),
         designation: "ASTM A563 DH",
         id: entityId("astm-a563-dh"),
         revision: "Compatibility summary accessed 2026-08-25",
-        sourceUrl: "https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/",
+        sourceUrl: httpsUrl("https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/"),
       }),
       Standard.make({
         accessedOn: isoDate("2026-08-25"),
         designation: "ASTM F436 Type 1",
         id: entityId("astm-f436-type-1"),
         revision: "Compatibility summary accessed 2026-08-25",
-        sourceUrl: "https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/",
+        sourceUrl: httpsUrl("https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/"),
       }),
       Standard.make({
         accessedOn: isoDate("2026-08-25"),
         designation: "ASTM F959 Type 325",
         id: entityId("astm-f959-type-325"),
         revision: "ASTM F959 technical summary accessed 2026-08-25",
-        sourceUrl: "https://www.portlandbolt.com/technical/specifications/astm-f959/",
+        sourceUrl: httpsUrl("https://www.portlandbolt.com/technical/specifications/astm-f959/"),
       }),
       Standard.make({
         accessedOn: isoDate("2026-08-25"),
         designation: "ASTM A490 Type 1",
         id: entityId("astm-a490-type-1"),
         revision: "F3125 consolidated designation; coating summary accessed 2026-08-25",
-        sourceUrl: "https://blueprint.fastenal.com/structural-bolts.html",
+        sourceUrl: httpsUrl("https://blueprint.fastenal.com/structural-bolts.html"),
       }),
     ],
     tools: [
