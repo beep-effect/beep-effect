@@ -3,14 +3,14 @@
   "initiative": {
     "id": "openai-driver",
     "title": "OpenAI Driver (@beep/openai)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-24",
     "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/openai-driver",
-  "lifecycle": "active",
-  "statusNote": "P2 completed 2026-08-27 with full Yeet verification, 100% package coverage, full docgen, and zero required quality-review blockers; P3 publication is active.",
+  "lifecycle": "completed-retained",
+  "statusNote": "P0-P4 completed 2026-08-27: PR #864 contains the full goal, exact-head Yeet verification passed all 25 lanes, package coverage is 100%, full docgen passed, and the quality review has zero required blockers.",
   "mission": "Ship @beep/openai, a thin driver mirroring @beep/anthropic that composes @effect/ai-openai's shipped OpenAiClient, OpenAiLanguageModel, and OpenAiEmbeddingModel behind typed config and errors and exposes Layer factories for both model kinds; no engine code.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -69,12 +69,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

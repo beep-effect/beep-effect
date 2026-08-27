@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -45,10 +45,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet: PR to mergeable, active. P0 re-verified the composition contract
-against `@effect/ai-openai` 4.0.0-rc.112 and Effect reference `dd99ab007e`;
-P1 scaffolded and implemented the package; P2 completed the local proof and
-quality-review loop. Publication and hosted closeout remain.
+P4 Close, complete. P0 re-verified the composition contract against
+`@effect/ai-openai` 4.0.0-rc.112 and Effect reference `dd99ab007e`; P1
+scaffolded and implemented the package; P2 completed the local proof and
+quality-review loop; P3 published the single goal PR for hosted closeout.
 
 ## Latest Evidence
 
@@ -59,11 +59,16 @@ quality-review loop. Publication and hosted closeout remain.
 - `bun run docgen:local -- --package @beep/openai`: 15 examples compiled.
 - `bun run docgen:local -- --full`: 131 package docgen tasks and the generated
   documentation aggregate completed successfully.
-- `bun run beep yeet verify` passed before the quality review; the final
-  `review-fix` tier then passed build, typecheck, lint, unit, and fresh full
-  docgen after all reviewer findings were addressed.
+- Exact-head `bun run beep yeet verify` passed at
+  `2b82f9aaaf70a9252036d6650434d248a34fee02`: all 25 lanes were green,
+  including build, typecheck, lint, unit, both integration waves, the JSDoc
+  ratchet, and full docgen.
 - The ten-role quality panel and its confirmation pass report zero required
   blockers.
+- [PR #864](https://github.com/beep-effect/beep-effect/pull/864) contains the
+  entire goal; its hosted closeout is monitored through Yeet.
+- [`history/reflections/2026-08-27-codex.md`](./history/reflections/2026-08-27-codex.md)
+  records the P4 closeout reflection.
 
 ## Notes
 

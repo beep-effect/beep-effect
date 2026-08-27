@@ -70,3 +70,39 @@
 - Prevention: quality-loop instructions should spell out
   `bun run beep yeet verify --tier review-fix` rather than referring to the
   tier name without its operator syntax.
+
+## 2026-08-27: concurrent checkout ownership during publication
+
+- Work: preserve the verified driver branch through publication.
+- Evidence: the original checkout moved to another feature branch with active
+  edits while the driver proof was running, so publication continued from a
+  clean linked worktree dedicated to `feat/openai-driver`.
+- Prevention: long-running goal workflows should claim a linked worktree before
+  the first full proof when the source checkout is shared with other agents.
+
+## 2026-08-27: proof coordinator starvation
+
+- Work: publish an exact commit immediately after its full Yeet proof passed.
+- Evidence: multiple sibling in-process waiters reacquired the repository-wide
+  coordinator ahead of a shell-level push-only waiter; publication could
+  compete only after using the same in-process acquisition path.
+- Prevention: the coordinator should provide FIFO tickets or an atomic wait
+  mode so verified publication cannot starve behind newly queued full proofs.
+
+## 2026-08-27: reusable-proof publish flag coupling
+
+- Work: push an already verified, clean commit and open its PR.
+- Evidence: `yeet publish --push-only --pr --monitor` was rejected because this
+  CLI version also requires `--reuse-verified`.
+- Prevention: publish help and workflow guidance should present the accepted
+  form as `yeet publish --push-only --reuse-verified --pr --monitor`.
+
+## 2026-08-27: non-required deployment check stopped monitoring
+
+- Work: monitor PR #864 after its first publication.
+- Evidence: Yeet's fail-fast watch stopped on Vercel deployment rate limits,
+  while `gh pr checks --required` excluded both Vercel contexts and showed the
+  repository's required checks passing or still running.
+- Prevention: Yeet monitor should classify required checks separately from
+  informational deployment contexts and report, rather than fail on, the
+  latter when mergeability does not depend on them.
