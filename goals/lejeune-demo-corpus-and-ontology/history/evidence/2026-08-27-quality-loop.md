@@ -73,3 +73,36 @@ loop closes only at zero required findings, followed by full Yeet and hosted mer
 - The schema-first gate initially exposed missing schema-derived arbitrary coverage after the
   codec suite grew. A focused retention-authorization round-trip property closed it; the rerun
   reported zero missing/stale entries and zero schema-first advisories.
+
+## Round 2 inventory
+
+The Quality Gate, Architecture Boundary, and Schema And Domain roles reviewed exact commit
+`0ce27feb5078d4c2ecd5c31246670e0a5d0e3f16`. No finding was rejected or waived. Their
+deduplicated required inventory is:
+
+| Inventory | Source findings | Fix group | Status |
+| --- | --- | --- | --- |
+| `ARCH-001` driver-neutral app-local topology | `ARCH-R2-001` | module topology and imports | queued |
+| `RETENTION-002` durable effective authority | `ARCH-R2-002`, `LEJ-SCHEMA-R2-005` | retention schema, mutable metadata, builder tests | schema fixed; builder queued |
+| `FS-002` crash-consistent two-root publication contract | `ARCH-R2-003` | publication protocol and recovery tests | queued |
+| `DEAD-001` introduced unused schema exports | `QG-R2-001` | schema/API cleanup | fixed; rereview pending |
+| `COMPLEXITY-001` bundle closure predicates | `QG-R2-002` | named invariant predicates and tests | fixed; rereview pending |
+| `RULE-002` exact rule-case/projection contract | `LEJ-SCHEMA-R2-001` | bundle rule contract | fixed; rereview pending |
+| `RULE-003` matched-assembly compatibility proof | `LEJ-SCHEMA-R2-002` | ontology/rule evaluator | fixed; rereview pending |
+| `PROVIDER-002` closed recording provenance and label semantics | `LEJ-SCHEMA-R2-003` | provider schema/verifier | fixed; rereview pending |
+| `FIXTURE-002` closed manifest identity graph | `LEJ-SCHEMA-R2-004` | manifest schema/verifier | fixed; rereview pending |
+| `PROOF-001` full docgen and exact-tree Yeet | `QG-R2-003` | repository proof | queued after fixes |
+
+The remaining seven panel roles will review the same settled fix commit. Any new required
+finding reopens the loop; full proof remains an acceptance step, never a waiver.
+
+### Schema/domain fixer proof
+
+- Lab check, all three test files and 19 tests, and lab lint passed.
+- Knip passed with `current=3 baseline=3 introduced=0`.
+- Fallow dead-code passed with zero findings.
+- Fallow audit passed with zero introduced findings; its sole finding is the existing
+  non-blocking provider-smoke duplication attributed `inherited-adjacent`.
+- Negative tests now reject rule/source/projection swizzles, incompatible or unproven matched
+  assemblies, wrong provider documents and label values, manifest identity/hash/reference
+  drift, and retention records that do not extend both their authorization date and the cutoff.

@@ -9,7 +9,7 @@ import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan";
 import { PosixPath } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
-import { Effect, pipe } from "effect";
+import { Effect, identity, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -18,12 +18,17 @@ import { RuleResult, RuleSource } from "@/domain/Bundle";
 import { EntityId } from "@/domain/Ontology";
 import { FixtureError } from "@/fixtures/Sources";
 import type { NormalizedFixture } from "@/domain/Bundle";
+import type { Component } from "@/domain/Ontology";
 
 const MATCHED_ASSEMBLY_EVIDENCE =
   "Galvanized bolts and tension-control bolts are manufactured matched bolt-and-nut assembly cases.";
 const DTI_STRENGTH_EVIDENCE = "ASTM F959 DTIs are designated Type 325 or Type 490 to match bolt strength.";
 const A490_HDG_EVIDENCE = "A490 bolts must not be hot-dip galvanized or electroplated.";
 const A490_STANDARD_ID = EntityId.make("astm-a490-type-1");
+const MATCHED_ASSEMBLY_STANDARD_ID = EntityId.make("astm-f1852-type-1");
+const MATCHED_ASSEMBLY_NUT_STANDARD_ID = EntityId.make("astm-a563-dh");
+const MATCHED_ASSEMBLY_WASHER_STANDARD_ID = EntityId.make("astm-f436-type-1");
+const MATCHED_ASSEMBLY_FINISH_ID = EntityId.make("mechanical-galvanized-b695-class-55");
 const RULE_RESEARCH_PATH = PosixPath.make(
   "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md"
 );
@@ -56,14 +61,56 @@ const makeRuleSource = Effect.fnUntraced(function* (input: RuleSourceInput) {
   });
 });
 
-const componentKindPresent = (fixture: NormalizedFixture, kind: "bolt" | "nut" | "washer" | "dti"): boolean =>
-  A.some(fixture.components, (component) => Str.Equivalence(component.kind, kind));
+const componentByKind = (fixture: NormalizedFixture, kind: "bolt" | "nut" | "washer") =>
+  A.findFirst(fixture.components, (component) => Str.Equivalence(component.kind, kind));
+
+const componentMatchesAssemblyContract = (
+  component: O.Option<Component>,
+  standardId: EntityId,
+  strengthClass: "325" | "325-compatible"
+): boolean =>
+  O.exists(component, (candidate) =>
+    A.every(
+      [Str.Equivalence(candidate.standardId, standardId), Str.Equivalence(candidate.strengthClass, strengthClass)],
+      identity
+    )
+  );
+
+const hasMatchedAssemblySourceFact = (fixture: NormalizedFixture): boolean =>
+  A.some(fixture.extractedFields, (field) =>
+    A.every(
+      [
+        Str.Equivalence(field.name, "product"),
+        Str.Equivalence(field.sourceDocumentId, "rfq-a-xlsx-takeoff"),
+        Str.Equivalence(field.value, "TC assembly"),
+      ],
+      identity
+    )
+  );
+
+const hasCompatibleMatchedAssembly = (fixture: NormalizedFixture): boolean =>
+  A.every(
+    [
+      hasMatchedAssemblySourceFact(fixture),
+      Str.Equivalence(fixture.productVariant.standardId, MATCHED_ASSEMBLY_STANDARD_ID),
+      Str.Equivalence(fixture.productVariant.finishId, MATCHED_ASSEMBLY_FINISH_ID),
+      componentMatchesAssemblyContract(componentByKind(fixture, "bolt"), MATCHED_ASSEMBLY_STANDARD_ID, "325"),
+      componentMatchesAssemblyContract(
+        componentByKind(fixture, "nut"),
+        MATCHED_ASSEMBLY_NUT_STANDARD_ID,
+        "325-compatible"
+      ),
+      componentMatchesAssemblyContract(
+        componentByKind(fixture, "washer"),
+        MATCHED_ASSEMBLY_WASHER_STANDARD_ID,
+        "325-compatible"
+      ),
+    ],
+    identity
+  );
 
 const matchedAssemblyResult = (fixture: NormalizedFixture, source: RuleSource): RuleResult => {
-  const complete =
-    componentKindPresent(fixture, "bolt") &&
-    componentKindPresent(fixture, "nut") &&
-    componentKindPresent(fixture, "washer");
+  const complete = hasCompatibleMatchedAssembly(fixture);
   return pipe(
     complete,
     Bool.match({
@@ -71,7 +118,10 @@ const matchedAssemblyResult = (fixture: NormalizedFixture, source: RuleSource): 
         RuleResult.make({
           caseId: EntityId.make(`${fixture.rfq.id}-matched-assembly-mismatch`),
           disposition: "mismatch",
-          matchedFacts: [fixture.productVariant.label, "Required matched bolt + nut + washer set is incomplete."],
+          matchedFacts: [
+            fixture.productVariant.label,
+            "Exact TC-assembly provenance or the compatible bolt, nut, and washer contract is incomplete.",
+          ],
           requiresHuman: true,
           ruleId: "matched-assembly",
           source,
@@ -81,7 +131,10 @@ const matchedAssemblyResult = (fixture: NormalizedFixture, source: RuleSource): 
         RuleResult.make({
           caseId: EntityId.make(`${fixture.rfq.id}-matched-assembly-positive`),
           disposition: "pass",
-          matchedFacts: [fixture.productVariant.label, "Bolt, nut, and washer components are present."],
+          matchedFacts: [
+            fixture.productVariant.label,
+            "Exact TC-assembly provenance and the canonical 325-compatible bolt, nut, and washer are present.",
+          ],
           requiresHuman: false,
           ruleId: "matched-assembly",
           source,

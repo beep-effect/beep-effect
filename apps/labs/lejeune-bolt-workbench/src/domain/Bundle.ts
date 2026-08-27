@@ -11,7 +11,9 @@ import { LiteralKit, PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/sche
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strToU8 } from "fflate";
@@ -188,8 +190,7 @@ const fixtureAnchorsAreGrounded = (fixture: NormalizedFixtureFields): boolean =>
     )
   );
 
-const fixtureReferencesAreClosed = (fixture: NormalizedFixtureFields): boolean => {
-  const [missing] = fixture.missingFields;
+const fixtureHasExpectedComponentCardinality = (fixture: NormalizedFixtureFields): boolean => {
   const [firstSource, secondSource] = fixture.sources;
   const layoutId = firstSource.layoutId;
   const isRfqA = RfqLayoutId.is["rfq-a"](layoutId);
@@ -198,31 +199,64 @@ const fixtureReferencesAreClosed = (fixture: NormalizedFixtureFields): boolean =
   const hasExpectedSourceFormats = isRfqA
     ? A.contains(sourceFormats, "outlook-body-table") && A.contains(sourceFormats, "xlsx-takeoff")
     : A.contains(sourceFormats, "prose-email") && A.contains(sourceFormats, "pdf-text-layer");
-  return (
-    A.length(fixture.components) === expectedComponentCount &&
-    Str.Equivalence(fixture.rfq.id, layoutId) &&
-    Str.Equivalence(secondSource.layoutId, layoutId) &&
-    hasExpectedSourceFormats &&
-    Str.Equivalence(fixture.project.id, fixture.rfq.projectId) &&
-    Str.Equivalence(fixture.quoteLine.rfqId, fixture.rfq.id) &&
-    Str.Equivalence(fixture.quoteLine.productVariantId, fixture.productVariant.id) &&
-    Str.Equivalence(fixture.rfq.quoteLineIds[0], fixture.quoteLine.id) &&
-    Str.Equivalence(missing.rfqId, fixture.rfq.id) &&
-    Str.Equivalence(missing.field, fixture.rfq.missingFields[0]) &&
-    A.every(fixture.rfq.sourceDocumentIds, (id) =>
-      A.some(fixture.sources, (source) => Str.Equivalence(source.id, id))
-    ) &&
-    A.every(fixture.sources, (source) =>
-      A.some(fixture.rfq.sourceDocumentIds, (id) => Str.Equivalence(source.id, id))
-    ) &&
-    A.length(fixture.productVariant.componentIds) === A.length(fixture.components) &&
-    A.length(A.dedupe(A.map(fixture.components, (component) => component.id))) === A.length(fixture.components) &&
-    A.length(A.dedupe(fixture.productVariant.componentIds)) === A.length(fixture.productVariant.componentIds) &&
-    A.every(fixture.components, (component) =>
-      A.some(fixture.productVariant.componentIds, (id) => Str.Equivalence(component.id, id))
-    )
+  return A.every(
+    [
+      A.length(fixture.components) === expectedComponentCount,
+      Str.Equivalence(secondSource.layoutId, layoutId),
+      hasExpectedSourceFormats,
+    ],
+    identity
   );
 };
+
+const fixtureCoreReferencesAreClosed = (fixture: NormalizedFixtureFields): boolean => {
+  const [missing] = fixture.missingFields;
+  const [firstSource] = fixture.sources;
+  return A.every(
+    [
+      Str.Equivalence(fixture.rfq.id, firstSource.layoutId),
+      Str.Equivalence(fixture.project.id, fixture.rfq.projectId),
+      Str.Equivalence(fixture.quoteLine.rfqId, fixture.rfq.id),
+      Str.Equivalence(fixture.quoteLine.productVariantId, fixture.productVariant.id),
+      Str.Equivalence(fixture.rfq.quoteLineIds[0], fixture.quoteLine.id),
+      Str.Equivalence(missing.rfqId, fixture.rfq.id),
+      Str.Equivalence(missing.field, fixture.rfq.missingFields[0]),
+    ],
+    identity
+  );
+};
+
+const fixtureSourceReferencesAreClosed = (fixture: NormalizedFixtureFields): boolean => {
+  const sourceIds = A.map(fixture.sources, (source) => source.id);
+  const identitiesAreUnique = A.length(A.dedupe(sourceIds)) === A.length(sourceIds);
+  const rfqReferencesSources = A.every(fixture.rfq.sourceDocumentIds, (id) => A.contains(sourceIds, id));
+  const sourcesAreReferenced = A.every(sourceIds, (id) => A.contains(fixture.rfq.sourceDocumentIds, id));
+  return A.every([identitiesAreUnique, rfqReferencesSources, sourcesAreReferenced], identity);
+};
+
+const fixtureComponentReferencesAreClosed = (fixture: NormalizedFixtureFields): boolean => {
+  const componentIds = A.map(fixture.components, (component) => component.id);
+  return A.every(
+    [
+      A.length(fixture.productVariant.componentIds) === A.length(componentIds),
+      A.length(A.dedupe(componentIds)) === A.length(componentIds),
+      A.length(A.dedupe(fixture.productVariant.componentIds)) === A.length(fixture.productVariant.componentIds),
+      A.every(componentIds, (id) => A.contains(fixture.productVariant.componentIds, id)),
+    ],
+    identity
+  );
+};
+
+const fixtureReferencesAreClosed = (fixture: NormalizedFixtureFields): boolean =>
+  A.every(
+    [
+      fixtureHasExpectedComponentCardinality(fixture),
+      fixtureCoreReferencesAreClosed(fixture),
+      fixtureSourceReferencesAreClosed(fixture),
+      fixtureComponentReferencesAreClosed(fixture),
+    ],
+    identity
+  );
 
 const NormalizedFixtureChecks = S.makeFilterGroup(
   [
@@ -387,9 +421,15 @@ export class RuleResult extends S.Class<RuleResult>($I`RuleResult`)(
  * @category models
  * @since 0.0.0
  */
+const ProviderCandidateLabel = LiteralKit(["project", "delivery_date", "finish"]).pipe(
+  $I.annoteSchema("ProviderCandidateLabel", {
+    description: "The exact three extraction labels authorized by the frozen RFQ A provider contract.",
+  })
+);
+
 export class ProviderCandidate extends S.Class<ProviderCandidate>($I`ProviderCandidate`)(
   {
-    label: LiteralKit(["project", "delivery_date", "finish"]),
+    label: ProviderCandidateLabel,
     text: S.NonEmptyString,
   },
   $I.annote("ProviderCandidate", {
@@ -400,6 +440,9 @@ export class ProviderCandidate extends S.Class<ProviderCandidate>($I`ProviderCan
 /** Exact sanitized source text authorized for provider-recording verification. @category fixtures @since 0.0.0 */
 export const PROVIDER_RECORDING_SOURCE_TEXT =
   "SYNTHETIC RFQ A | Project North Loop Canopy | Delivery 2026-09-12 | Domestic required | Finish MG B695 Class 55";
+
+/** Exact request identity authorized by provider-recording contract v1. @category fixtures @since 0.0.0 */
+export const PROVIDER_RECORDING_DOCUMENT_ID = EntityId.make("lejeune-provider-smoke-rfq-a");
 
 /** Canonical compact codec used when hashing a sanitized candidate list. @category codecs @since 0.0.0 */
 export const ProviderCandidateListFromJsonString = S.fromJsonString(
@@ -423,7 +466,7 @@ export const ProviderCandidateListFromJsonString = S.fromJsonString(
 export class ProviderRecording extends S.Class<ProviderRecording>($I`ProviderRecording`)(
   {
     candidates: S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate]),
-    documentId: EntityId,
+    documentId: S.Literal(PROVIDER_RECORDING_DOCUMENT_ID),
     extractionContractRevision: S.tag("lejeune-rfq-a-extraction/v1"),
     model: S.NonEmptyString,
     provider: LiteralKit(["anthropic", "openai-compat", "venice-ai", "xai"]),
@@ -442,11 +485,12 @@ const ProviderRecordingIntegrityIssue = LiteralKit([
   "candidate-encoding",
   "candidate-digest",
   "candidate-labels",
+  "candidate-contract",
   "source-grounding",
 ]);
 
 /** Typed failure raised when a persisted provider recording cannot be trusted for offline replay. @category errors @since 0.0.0 */
-export class ProviderRecordingIntegrityError extends S.TaggedError<ProviderRecordingIntegrityError>(
+class ProviderRecordingIntegrityError extends S.TaggedError<ProviderRecordingIntegrityError>(
   $I`ProviderRecordingIntegrityError`
 )(
   "ProviderRecordingIntegrityError",
@@ -466,6 +510,15 @@ const providerIntegrityError = (
   message: string,
   cause?: unknown
 ): ProviderRecordingIntegrityError => ProviderRecordingIntegrityError.make({ cause, issue, message });
+
+const expectedProviderCandidateText = ProviderCandidateLabel.$match({
+  project: () => "North Loop Canopy",
+  delivery_date: () => "2026-09-12",
+  finish: () => "MG B695 Class 55",
+});
+
+const providerCandidateMatchesContract = (candidate: ProviderCandidate): boolean =>
+  Str.Equivalence(candidate.text, expectedProviderCandidateText(candidate.label));
 
 /**
  * Verify the canonical candidate digest and source grounding of a committed provider recording.
@@ -505,6 +558,12 @@ export const verifyProviderRecording = Effect.fn("lejeune.provider.verify_record
     return yield* providerIntegrityError(
       "candidate-labels",
       "The provider recording must contain project, delivery_date, and finish exactly once."
+    );
+  }
+  if (!A.every(recording.candidates, providerCandidateMatchesContract)) {
+    return yield* providerIntegrityError(
+      "candidate-contract",
+      "Every provider candidate label must retain the exact value authorized by extraction contract v1."
     );
   }
   if (!A.every(recording.candidates, (candidate) => Str.includes(candidate.text)(sourceText))) {
@@ -605,16 +664,68 @@ const ImmutableDemoBundleFields = S.Struct({
 
 type ImmutableDemoBundleFields = typeof ImmutableDemoBundleFields.Type;
 
-const FixedRuleCaseId = LiteralKit([
-  "rfq-a-matched-assembly-positive",
-  "rfq-b-matched-assembly-mismatch",
-  "rfq-a-dti-strength-positive",
-  "rfq-b-dti-strength-mismatch",
-  "rfq-a-a490-hdg-positive",
-  "rfq-b-a490-hdg-refusal",
-]);
+class RuleCaseContract extends S.Class<RuleCaseContract>($I`RuleCaseContract`)(
+  {
+    caseId: EntityId,
+    disposition: RuleDisposition,
+    requiresHuman: S.Boolean,
+    ruleId: RuleId,
+    sourceId: EntityId,
+  },
+  $I.annote("RuleCaseContract", {
+    description: "One canonical rule, case, citation, disposition, and human-stop row in the frozen replay matrix.",
+  })
+) {}
 
-const FixedRuleSourceId = LiteralKit(["aisc-matched-assembly", "portland-bolt-astm-f959", "fastenal-a490-coating"]);
+const CanonicalRuleCases: ReadonlyArray<RuleCaseContract> = [
+  RuleCaseContract.make({
+    caseId: EntityId.make("rfq-a-matched-assembly-positive"),
+    disposition: "pass",
+    requiresHuman: false,
+    ruleId: "matched-assembly",
+    sourceId: EntityId.make("aisc-matched-assembly"),
+  }),
+  RuleCaseContract.make({
+    caseId: EntityId.make("rfq-b-matched-assembly-mismatch"),
+    disposition: "mismatch",
+    requiresHuman: true,
+    ruleId: "matched-assembly",
+    sourceId: EntityId.make("aisc-matched-assembly"),
+  }),
+  RuleCaseContract.make({
+    caseId: EntityId.make("rfq-a-dti-strength-positive"),
+    disposition: "pass",
+    requiresHuman: false,
+    ruleId: "dti-strength-match",
+    sourceId: EntityId.make("portland-bolt-astm-f959"),
+  }),
+  RuleCaseContract.make({
+    caseId: EntityId.make("rfq-b-dti-strength-mismatch"),
+    disposition: "mismatch",
+    requiresHuman: true,
+    ruleId: "dti-strength-match",
+    sourceId: EntityId.make("portland-bolt-astm-f959"),
+  }),
+  RuleCaseContract.make({
+    caseId: EntityId.make("rfq-a-a490-hdg-positive"),
+    disposition: "pass",
+    requiresHuman: false,
+    ruleId: "a490-hdg-refusal",
+    sourceId: EntityId.make("fastenal-a490-coating"),
+  }),
+  RuleCaseContract.make({
+    caseId: EntityId.make("rfq-b-a490-hdg-refusal"),
+    disposition: "refuse",
+    requiresHuman: true,
+    ruleId: "a490-hdg-refusal",
+    sourceId: EntityId.make("fastenal-a490-coating"),
+  }),
+];
+
+const ruleProjectionRow = (ruleCase: RuleCaseContract): string =>
+  `${ruleCase.ruleId}|${ruleCase.caseId}|${ruleCase.disposition}`;
+
+const CanonicalRuleProjectionRows = A.sort(A.map(CanonicalRuleCases, ruleProjectionRow), Str.Order);
 
 const hasEntityId = (values: ReadonlyArray<{ readonly id: string }>, id: string): boolean =>
   A.some(values, (value) => Str.Equivalence(value.id, id));
@@ -622,43 +733,97 @@ const hasEntityId = (values: ReadonlyArray<{ readonly id: string }>, id: string)
 const hasUniqueEntityIds = (values: ReadonlyArray<{ readonly id: string }>): boolean =>
   A.length(A.dedupe(A.map(values, (value) => value.id))) === A.length(values);
 
-const bundleReferencesAreClosed = (bundle: ImmutableDemoBundleFields): boolean => {
-  const variants = A.map(bundle.fixtures, (fixture) => fixture.productVariant);
-  const components = A.flatMap(bundle.fixtures, (fixture) => fixture.components);
-  const referencesExist =
-    A.every(
-      variants,
-      (variant) => hasEntityId(bundle.finishes, variant.finishId) && hasEntityId(bundle.standards, variant.standardId)
-    ) &&
-    A.every(
-      components,
-      (component) =>
-        hasEntityId(bundle.standards, component.standardId) &&
-        O.match(component.finishId, {
-          onNone: () => true,
-          onSome: (finishId) => hasEntityId(bundle.finishes, finishId),
-        })
-    ) &&
-    A.every(bundle.offers, (offer) => hasEntityId(variants, offer.productVariantId)) &&
-    A.every(bundle.certificates, (certificate) => hasEntityId(bundle.standards, certificate.standardId));
-  const identitiesAreUnique = A.every(
+const productVariantReferencesExist = (bundle: ImmutableDemoBundleFields, variant: ProductVariant): boolean =>
+  A.every(
+    [hasEntityId(bundle.finishes, variant.finishId), hasEntityId(bundle.standards, variant.standardId)],
+    identity
+  );
+
+const componentReferencesExist = (bundle: ImmutableDemoBundleFields, component: Component): boolean =>
+  A.every(
+    [
+      hasEntityId(bundle.standards, component.standardId),
+      O.match(component.finishId, {
+        onNone: () => true,
+        onSome: (finishId) => hasEntityId(bundle.finishes, finishId),
+      }),
+    ],
+    identity
+  );
+
+const bundleProductVariants = (bundle: ImmutableDemoBundleFields): ReadonlyArray<ProductVariant> =>
+  A.map(bundle.fixtures, (fixture) => fixture.productVariant);
+
+const bundleComponents = (bundle: ImmutableDemoBundleFields): ReadonlyArray<Component> =>
+  A.flatMap(bundle.fixtures, (fixture) => fixture.components);
+
+const bundleOntologyReferencesExist = (bundle: ImmutableDemoBundleFields): boolean => {
+  const variants = bundleProductVariants(bundle);
+  const components = bundleComponents(bundle);
+  return A.every(
+    [
+      A.every(variants, (variant) => productVariantReferencesExist(bundle, variant)),
+      A.every(components, (component) => componentReferencesExist(bundle, component)),
+      A.every(bundle.offers, (offer) => hasEntityId(variants, offer.productVariantId)),
+      A.every(bundle.certificates, (certificate) => hasEntityId(bundle.standards, certificate.standardId)),
+    ],
+    identity
+  );
+};
+
+const bundleEntityIdentitiesAreUnique = (bundle: ImmutableDemoBundleFields): boolean => {
+  const variants = bundleProductVariants(bundle);
+  const components = bundleComponents(bundle);
+  return A.every(
     [bundle.certificates, bundle.finishes, variants, components, bundle.offers, bundle.standards, bundle.tools],
     hasUniqueEntityIds
   );
+};
+
+const bundleFixtureIdentitiesAreClosed = (bundle: ImmutableDemoBundleFields): boolean => {
   const fixtureIds = A.map(bundle.fixtures, (fixture) => fixture.rfq.id);
-  const ruleCaseIds = A.map(bundle.rules, (rule) => rule.caseId);
-  const ruleSourceIds = A.dedupe(A.map(bundle.rules, (rule) => rule.source.id));
-  return (
-    referencesExist &&
-    identitiesAreUnique &&
-    A.length(A.dedupe(fixtureIds)) === RfqLayoutId.Options.length &&
-    A.every(RfqLayoutId.Options, (id) => A.some(fixtureIds, (candidate) => Str.Equivalence(candidate, id))) &&
-    A.length(A.dedupe(ruleCaseIds)) === FixedRuleCaseId.Options.length &&
-    A.every(FixedRuleCaseId.Options, (id) => A.some(ruleCaseIds, (candidate) => Str.Equivalence(candidate, id))) &&
-    A.length(ruleSourceIds) === FixedRuleSourceId.Options.length &&
-    A.every(FixedRuleSourceId.Options, (id) => A.some(ruleSourceIds, (candidate) => Str.Equivalence(candidate, id)))
+  return A.every(
+    [
+      A.length(A.dedupe(fixtureIds)) === RfqLayoutId.Options.length,
+      A.every(RfqLayoutId.Options, (id) => A.some(fixtureIds, (candidate) => Str.Equivalence(candidate, id))),
+    ],
+    identity
   );
 };
+
+const ruleMatchesContract = (rule: RuleResult, ruleCase: RuleCaseContract): boolean =>
+  A.every(
+    [
+      Str.Equivalence(rule.caseId, ruleCase.caseId),
+      Str.Equivalence(rule.ruleId, ruleCase.ruleId),
+      Str.Equivalence(rule.source.id, ruleCase.sourceId),
+      Str.Equivalence(rule.disposition, ruleCase.disposition),
+      Bool.Equivalence(rule.requiresHuman, ruleCase.requiresHuman),
+    ],
+    identity
+  );
+
+const bundleRuleContractIsClosed = (bundle: ImmutableDemoBundleFields): boolean => {
+  const rulesMatch = A.every(A.zip(bundle.rules, CanonicalRuleCases), ([rule, ruleCase]) =>
+    ruleMatchesContract(rule, ruleCase)
+  );
+  const projectionRowsMatch = A.every(
+    A.zip(bundle.projection.ruleDispositions, CanonicalRuleProjectionRows),
+    ([actual, expected]) => Str.Equivalence(actual, expected)
+  );
+  return A.every([rulesMatch, projectionRowsMatch], identity);
+};
+
+const bundleReferencesAreClosed = (bundle: ImmutableDemoBundleFields): boolean =>
+  A.every(
+    [
+      bundleOntologyReferencesExist(bundle),
+      bundleEntityIdentitiesAreUnique(bundle),
+      bundleFixtureIdentitiesAreClosed(bundle),
+      bundleRuleContractIsClosed(bundle),
+    ],
+    identity
+  );
 
 const ImmutableDemoBundleCheck = S.makeFilter(bundleReferencesAreClosed, {
   identifier: $I`ImmutableDemoBundleReferenceCheck`,
@@ -745,15 +910,36 @@ export class GoldenReplayReceipt extends S.Class<GoldenReplayReceipt>($I`GoldenR
  * @category retention
  * @since 0.0.0
  */
-export class RetentionAuthorization extends S.Class<RetentionAuthorization>($I`RetentionAuthorization`)(
-  {
-    authorization: LiteralKit(["consented-pilot", "promoted"]),
-    authorizedAt: IsoTimestamp,
-    decisionReference: S.NonEmptyString,
-    newDispositionDate: IsoDate,
-    owner: S.NonEmptyString,
-    schemaVersion: S.tag("lejeune-retention-authorization/v1"),
+const RetentionAuthorizationFields = S.Struct({
+  authorization: LiteralKit(["consented-pilot", "promoted"]),
+  authorizedAt: IsoTimestamp,
+  decisionReference: S.NonEmptyString,
+  newDispositionDate: IsoDate,
+  owner: S.NonEmptyString,
+  schemaVersion: S.tag("lejeune-retention-authorization/v1"),
+});
+
+const RetentionAuthorizationExtensionCheck = S.makeFilter(
+  (authorization: typeof RetentionAuthorizationFields.Type) => {
+    const authorizedOn = Str.slice(0, 10)(authorization.authorizedAt);
+    return A.every(
+      [
+        Order.isGreaterThan(Str.Order)(authorization.newDispositionDate, MUTABLE_CORPUS_DISPOSITION_DATE),
+        Order.isGreaterThan(Str.Order)(authorization.newDispositionDate, authorizedOn),
+      ],
+      identity
+    );
   },
+  {
+    identifier: $I`RetentionAuthorizationExtensionCheck`,
+    title: "Retention Authorization Extension",
+    description: "Requires a reviewed retention term to extend both the fixed cutoff and its authorization date.",
+    message: "New disposition date must be later than 2026-09-30 and the authorization date.",
+  }
+);
+
+export class RetentionAuthorization extends S.Class<RetentionAuthorization>($I`RetentionAuthorization`)(
+  RetentionAuthorizationFields.mapFields(identity).check(RetentionAuthorizationExtensionCheck),
   $I.annote("RetentionAuthorization", {
     description: "A reviewed consent or promotion record that grants a later mutable-corpus disposition date.",
   })

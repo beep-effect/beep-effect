@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { Sha256Hex } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -10,11 +10,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
+import { strToU8 } from "fflate";
 import {
   ImmutableDemoBundle,
   NormalizedFixture,
   PROVIDER_RECORDING_SOURCE_TEXT,
   ProjectionSnapshot,
+  ProviderCandidate,
+  ProviderCandidateListFromJsonString,
   ProviderRecording,
   ProviderRecordingFromJsonString,
   RetentionAuthorization,
@@ -32,10 +35,15 @@ import {
 import { buildReferenceData } from "@/domain/ReferenceData";
 import { replayOffline } from "@/domain/Replay";
 import { evaluateRules } from "@/domain/Rules";
-import { FrozenFixtureManifest } from "@/fixtures/FixtureManifest";
+import { FrozenFixtureManifest, FrozenSourceHash } from "@/fixtures/FixtureManifest";
 import fixtureManifestJson from "@/fixtures/fixture-manifest.json";
 import providerRecordingJson from "@/fixtures/provider-recording.json?raw";
 import { buildFixtureArtifacts } from "@/fixtures/Sources";
+import type {
+  IsoDate as IsoDateValue,
+  IsoTimestamp as IsoTimestampValue,
+  OntologyClassName as OntologyClassNameValue,
+} from "@/domain/Ontology";
 
 const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 const makeInMemoryProjectionLayer = () => makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }));
@@ -59,6 +67,7 @@ describe("LeJeune deterministic fixture bundle", () => {
       }).pipe(provideBunCrypto);
       const manifest = yield* S.decodeUnknownEffect(FrozenFixtureManifest)(fixtureManifestJson);
 
+      expect(S.is(FrozenSourceHash)(manifest.sources[0])).toBe(true);
       expect(A.map(first.sources, (source) => [source.id, source.sha256])).toEqual([
         ["rfq-a-outlook-body", "ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"],
         ["rfq-a-xlsx-takeoff", "09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5"],
@@ -113,8 +122,9 @@ describe("LeJeune deterministic fixture bundle", () => {
       const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
       const fixtures = yield* buildNormalizedFixtures(artifacts);
       const results = yield* evaluateRules(fixtures);
+      const ontologyClasses: ReadonlyArray<OntologyClassNameValue> = OntologyClassName.Options;
 
-      expect(OntologyClassName.Options).toEqual([
+      expect(ontologyClasses).toEqual([
         "ProductVariant",
         "Component",
         "Standard",
@@ -175,6 +185,47 @@ describe("LeJeune deterministic fixture bundle", () => {
         O.getOrThrow(A.findFirst(renamedResults, (result) => Str.Equivalence(result.caseId, "rfq-b-a490-hdg-refusal")))
           .disposition
       ).toBe("refuse");
+
+      const encodedRfqA = yield* S.encodeEffect(NormalizedFixture)(rfqA);
+      const incompatibleComponents = A.map(encodedRfqA.components, (component) =>
+        Str.Equivalence(component.kind, "nut")
+          ? { ...component, standardId: "astm-a490-type-1", strengthClass: "490" }
+          : component
+      );
+      const incompatibleAssembly = yield* S.decodeUnknownEffect(NormalizedFixture)({
+        ...encodedRfqA,
+        components: incompatibleComponents,
+      });
+      const incompatibleResults = yield* evaluateRules([incompatibleAssembly, rfqB]);
+      const incompatibleMatchedResult = O.getOrThrow(
+        A.findFirst(incompatibleResults, (result) => Str.Equivalence(result.caseId, "rfq-a-matched-assembly-mismatch"))
+      );
+      expect([incompatibleMatchedResult.disposition, incompatibleMatchedResult.requiresHuman]).toEqual([
+        "mismatch",
+        true,
+      ]);
+
+      const provenanceFields = A.map(encodedRfqA.extractedFields, (field) =>
+        Str.Equivalence(field.name, "product")
+          ? { ...field, anchor: { ...field.anchor, quote: "XX assembly" }, value: "XX assembly" }
+          : field
+      );
+      const provenanceSources = A.map(encodedRfqA.sources, (source) =>
+        Str.Equivalence(source.id, "rfq-a-xlsx-takeoff")
+          ? { ...source, text: Str.replace("TC assembly", "XX assembly")(source.text) }
+          : source
+      );
+      const unprovenAssembly = yield* S.decodeUnknownEffect(NormalizedFixture)({
+        ...encodedRfqA,
+        extractedFields: provenanceFields,
+        sources: provenanceSources,
+      });
+      const unprovenResults = yield* evaluateRules([unprovenAssembly, rfqB]);
+      expect(
+        O.getOrThrow(
+          A.findFirst(unprovenResults, (result) => Str.Equivalence(result.caseId, "rfq-a-matched-assembly-mismatch"))
+        ).disposition
+      ).toBe("mismatch");
     })
   );
 
@@ -249,6 +300,9 @@ describe("LeJeune deterministic fixture bundle", () => {
   it.effect(
     "rejects impossible semantic dates and timestamps",
     Effect.fnUntraced(function* () {
+      const validDate: IsoDateValue = yield* S.decodeEffect(IsoDate)("2026-09-30");
+      const validTimestamp: IsoTimestampValue = yield* S.decodeEffect(IsoTimestamp)("2026-08-27T12:00:00.000Z");
+      expect([validDate, validTimestamp]).toEqual(["2026-09-30", "2026-08-27T12:00:00.000Z"]);
       const invalidDates = ["2026-99-99", "2026-02-30"] as const;
       for (const value of invalidDates) {
         const failure = yield* Effect.flip(S.decodeEffect(IsoDate)(value));
@@ -273,8 +327,18 @@ describe("LeJeune deterministic fixture bundle", () => {
       const rule = yield* S.encodeEffect(RuleResult)(rules[1]);
       const bundle = yield* S.encodeEffect(ImmutableDemoBundle)(replay.bundle);
       const [firstField, ...remainingFields] = fixture.extractedFields;
+      const [firstFixtureSource, secondFixtureSource] = fixture.sources;
+      const [firstManifestField, ...remainingManifestFields] = fixtureManifestJson.extractedFields;
+      const [firstBundleRule, secondBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule] =
+        bundle.rules;
+      const recordingPayload = yield* S.encodeEffect(ProviderRecording)(recording);
 
       const fixtureSourceCardinality: unknown = { ...fixture, sources: A.take(fixture.sources, 1) };
+      const fixtureDuplicateSourceIdentity: unknown = {
+        ...fixture,
+        rfq: { ...fixture.rfq, sourceDocumentIds: [firstFixtureSource.id, firstFixtureSource.id] },
+        sources: [firstFixtureSource, { ...secondFixtureSource, id: firstFixtureSource.id }],
+      };
       const fixtureDanglingSource: unknown = {
         ...fixture,
         extractedFields: [{ ...firstField, sourceDocumentId: "dangling-source" }, ...remainingFields],
@@ -292,23 +356,129 @@ describe("LeJeune deterministic fixture bundle", () => {
         ...fixtureManifestJson,
         sources: A.take(fixtureManifestJson.sources, 1),
       };
+      const manifestDuplicateSource: unknown = {
+        ...fixtureManifestJson,
+        sources: [
+          fixtureManifestJson.sources[0],
+          fixtureManifestJson.sources[0],
+          fixtureManifestJson.sources[2],
+          fixtureManifestJson.sources[3],
+        ],
+      };
+      const manifestHashDrift: unknown = {
+        ...fixtureManifestJson,
+        sources: [
+          {
+            ...fixtureManifestJson.sources[0],
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000",
+          },
+          ...A.drop(fixtureManifestJson.sources, 1),
+        ],
+      };
+      const manifestDanglingExtraction: unknown = {
+        ...fixtureManifestJson,
+        extractedFields: [{ ...firstManifestField, sourceDocumentId: "dangling-source" }, ...remainingManifestFields],
+      };
+      const manifestDuplicateExtraction: unknown = {
+        ...fixtureManifestJson,
+        extractedFields: [firstManifestField, firstManifestField, ...A.drop(remainingManifestFields, 1)],
+      };
+      const manifestMissingFieldDrift: unknown = {
+        ...fixtureManifestJson,
+        missingFields: ["rfq-a|domesticOrigin", "rfq-b|certificationRequirement"],
+      };
       const bundleFixtureCardinality: unknown = { ...bundle, fixtures: A.take(bundle.fixtures, 1) };
       const bundleRuleCardinality: unknown = { ...bundle, rules: A.take(bundle.rules, 1) };
+      const bundleRuleIdDrift: unknown = {
+        ...bundle,
+        rules: [
+          { ...firstBundleRule, ruleId: "dti-strength-match" },
+          secondBundleRule,
+          thirdBundleRule,
+          fourthBundleRule,
+          fifthBundleRule,
+          sixthBundleRule,
+        ],
+      };
+      const bundleRuleSourceDrift: unknown = {
+        ...bundle,
+        rules: [
+          { ...firstBundleRule, source: thirdBundleRule.source },
+          secondBundleRule,
+          thirdBundleRule,
+          fourthBundleRule,
+          fifthBundleRule,
+          sixthBundleRule,
+        ],
+      };
+      const bundleRuleDispositionDrift: unknown = {
+        ...bundle,
+        rules: [
+          { ...firstBundleRule, disposition: "mismatch", requiresHuman: true },
+          secondBundleRule,
+          thirdBundleRule,
+          fourthBundleRule,
+          fifthBundleRule,
+          sixthBundleRule,
+        ],
+      };
+      const bundleRuleOrderDrift: unknown = {
+        ...bundle,
+        rules: [secondBundleRule, firstBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule],
+      };
       const projectionClassVocabulary: unknown = {
         ...bundle.projection,
         ontologyClasses: ["BogusClass", ...A.drop(bundle.projection.ontologyClasses, 1)],
       };
+      const projectionRuleOrderDrift: unknown = {
+        ...bundle.projection,
+        ruleDispositions: [
+          bundle.projection.ruleDispositions[1],
+          bundle.projection.ruleDispositions[0],
+          ...A.drop(bundle.projection.ruleDispositions, 2),
+        ],
+      };
+      const providerDocumentDrift: unknown = { ...recordingPayload, documentId: "unrelated-document" };
+      const retentionBeforeCutoff = {
+        authorization: "promoted",
+        authorizedAt: "2026-08-27T12:00:00.000Z",
+        decisionReference: "goal/decision",
+        newDispositionDate: "2026-09-01",
+        owner: "demo operator",
+        schemaVersion: "lejeune-retention-authorization/v1",
+      };
+      const retentionAtCutoff: unknown = { ...retentionBeforeCutoff, newDispositionDate: "2026-09-30" };
+      const retentionBeforeAuthorization: unknown = {
+        ...retentionBeforeCutoff,
+        authorizedAt: "2027-01-02T12:00:00.000Z",
+        newDispositionDate: "2027-01-01",
+      };
 
       const corruptions: ReadonlyArray<readonly [string, Effect.Effect<unknown, S.SchemaError>]> = [
         ["fixture-source-cardinality", S.decodeUnknownEffect(NormalizedFixture)(fixtureSourceCardinality)],
+        ["fixture-duplicate-source-identity", S.decodeUnknownEffect(NormalizedFixture)(fixtureDuplicateSourceIdentity)],
         ["fixture-dangling-source", S.decodeUnknownEffect(NormalizedFixture)(fixtureDanglingSource)],
         ["fixture-value-drift", S.decodeUnknownEffect(NormalizedFixture)(fixtureValueDrift)],
         ["fixture-referential-drift", S.decodeUnknownEffect(NormalizedFixture)(fixtureReferentialDrift)],
         ["rule-human-stop", S.decodeUnknownEffect(RuleResult)(ruleHumanStop)],
         ["manifest-source-cardinality", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestSourceCardinality)],
+        ["manifest-duplicate-source", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDuplicateSource)],
+        ["manifest-hash-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestHashDrift)],
+        ["manifest-dangling-extraction", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDanglingExtraction)],
+        ["manifest-duplicate-extraction", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDuplicateExtraction)],
+        ["manifest-missing-field-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestMissingFieldDrift)],
         ["bundle-fixture-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFixtureCardinality)],
         ["bundle-rule-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleCardinality)],
+        ["bundle-rule-id-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleIdDrift)],
+        ["bundle-rule-source-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceDrift)],
+        ["bundle-rule-disposition-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleDispositionDrift)],
+        ["bundle-rule-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleOrderDrift)],
         ["projection-class-vocabulary", S.decodeUnknownEffect(ProjectionSnapshot)(projectionClassVocabulary)],
+        ["projection-rule-order", S.decodeUnknownEffect(ProjectionSnapshot)(projectionRuleOrderDrift)],
+        ["provider-document-drift", S.decodeUnknownEffect(ProviderRecording)(providerDocumentDrift)],
+        ["retention-before-cutoff", S.decodeUnknownEffect(RetentionAuthorization)(retentionBeforeCutoff)],
+        ["retention-at-cutoff", S.decodeUnknownEffect(RetentionAuthorization)(retentionAtCutoff)],
+        ["retention-before-authorization", S.decodeUnknownEffect(RetentionAuthorization)(retentionBeforeAuthorization)],
       ];
 
       for (const [name, decode] of corruptions) {
@@ -340,6 +510,27 @@ describe("LeJeune deterministic fixture bundle", () => {
       );
       expect(digestFailure._tag).toBe("ProviderRecordingIntegrityError");
       expect(digestFailure.issue).toBe("candidate-digest");
+
+      const [projectCandidate, deliveryCandidate, finishCandidate] = recording.candidates;
+      const swappedCandidates = yield* S.decodeEffect(
+        S.Tuple([ProviderCandidate, ProviderCandidate, ProviderCandidate])
+      )([
+        { label: projectCandidate.label, text: deliveryCandidate.text },
+        { label: deliveryCandidate.label, text: projectCandidate.text },
+        finishCandidate,
+      ]);
+      const swappedCandidateJson = yield* S.encodeEffect(ProviderCandidateListFromJsonString)(swappedCandidates);
+      const swappedDigest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(swappedCandidateJson)).pipe(
+        provideBunCrypto
+      );
+      const contractFailure = yield* Effect.flip(
+        verifyProviderRecording(
+          ProviderRecording.make({ ...recording, candidates: swappedCandidates, responseSha256: swappedDigest }),
+          PROVIDER_RECORDING_SOURCE_TEXT
+        ).pipe(provideBunCrypto)
+      );
+      expect(contractFailure._tag).toBe("ProviderRecordingIntegrityError");
+      expect(contractFailure.issue).toBe("candidate-contract");
 
       const groundingFailure = yield* Effect.flip(
         verifyProviderRecording(recording, "SYNTHETIC unrelated source").pipe(provideBunCrypto)

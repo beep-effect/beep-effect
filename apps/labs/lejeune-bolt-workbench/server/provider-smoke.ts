@@ -26,13 +26,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strToU8 } from "fflate";
 import {
+  PROVIDER_RECORDING_DOCUMENT_ID,
   ProviderCandidate,
   ProviderCandidateListFromJsonString,
   ProviderRecording,
   ProviderRecordingFromJsonString,
   verifyProviderRecording,
 } from "@/domain/Bundle";
-import { EntityId, IsoTimestamp } from "@/domain/Ontology";
+import { IsoTimestamp } from "@/domain/Ontology";
 import { RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
 
 const $I = $LejeuneBoltWorkbenchId.create("server/provider-smoke");
@@ -327,7 +328,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
   );
   const recording = ProviderRecording.make({
     candidates: verifiedCandidates,
-    documentId: EntityId.make("lejeune-provider-smoke-rfq-a"),
+    documentId: PROVIDER_RECORDING_DOCUMENT_ID,
     model,
     provider,
     recordedAt,
