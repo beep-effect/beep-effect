@@ -7,6 +7,13 @@
 import { $LangExtractId } from "@beep/identity";
 import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
 import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
+import {
+  toTextAnchorVerificationReceipt,
+  VerifySourceTextIdentityInput,
+  VerifyTextAnchorInput,
+  verifySourceTextIdentity,
+  verifyTextAnchor,
+} from "@beep/provenance/VerifiedTextAnchor";
 import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -16,11 +23,34 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import { dual, flow, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import { MAX_LOCATOR_LENGTH, MAX_SOURCE_TEXT_LENGTH } from "./VerifiedSpan.config.ts";
+import {
+  MAX_LOCATOR_LENGTH,
+  MAX_SOURCE_TEXT_LENGTH,
+  VERIFIED_SPAN_NORMALIZATION_VERSION,
+} from "./VerifiedSpan.config.ts";
 import { VerifiedSpanError } from "./VerifiedSpan.errors.ts";
-import { TextOffsetUnit, Utf16TextRange } from "./VerifiedSpan.model.ts";
+import {
+  TextOffsetUnit,
+  Utf16TextRange,
+  VerifiedSpanAttemptFailure,
+  VerifiedSpanAttemptKind,
+  VerifiedSpanAttemptOutcome,
+  VerifiedSpanAttemptRecord,
+  VerifiedSpanHistory,
+} from "./VerifiedSpan.model.ts";
 import type { GroundedExtraction } from "@beep/langextract/Extraction";
-import type { RawTextChunk, TextOffsetRange } from "./VerifiedSpan.model.ts";
+import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
+import type * as Crypto from "effect/Crypto";
+import type {
+  BeginVerifiedSpanHistoryInput,
+  ContinueVerifiedSpanHistoryInput,
+  RawTextChunk,
+  TextOffsetRange,
+  VerifiedSpanAttemptId,
+  VerifiedSpanAttemptOutcome as VerifiedSpanAttemptOutcomeType,
+  VerifiedSpanHistory as VerifiedSpanHistoryType,
+} from "./VerifiedSpan.model.ts";
 
 const $I = $LangExtractId.create("VerifiedSpan");
 const combiningMarkPattern = /^\p{M}$/u;
@@ -679,5 +709,313 @@ export const locateGroundedExtractions: {
         ),
       { concurrency: 1 }
     );
+  })
+);
+
+const attemptFailure = (
+  stage: VerifiedSpanAttemptFailure["stage"],
+  reason: VerifiedSpanAttemptFailure["reason"],
+  candidateIndex: O.Option<NonNegativeInt> = O.none()
+): VerifiedSpanAttemptFailure =>
+  VerifiedSpanAttemptFailure.make({
+    candidateIndex,
+    reason,
+    stage,
+  });
+
+const failedAttemptOutcome = (failure: VerifiedSpanAttemptFailure): VerifiedSpanAttemptOutcomeType =>
+  VerifiedSpanAttemptOutcome.cases.failed.make({ failure });
+
+const verifiedAttemptOutcome = (
+  receipts: ReadonlyArray<TextAnchorVerificationReceipt>
+): VerifiedSpanAttemptOutcomeType =>
+  A.match(receipts, {
+    onEmpty: () => failedAttemptOutcome(attemptFailure("anchor", "invalid-anchor")),
+    onNonEmpty: (anchors) => VerifiedSpanAttemptOutcome.cases.verified.make({ anchors }),
+  });
+
+type AttemptRunInput = BeginVerifiedSpanHistoryInput | ContinueVerifiedSpanHistoryInput;
+
+const attemptRecord = (
+  input: AttemptRunInput,
+  expectedSource: SourceTextIdentity,
+  matterRef: string,
+  kind: VerifiedSpanAttemptKind,
+  previousAttemptId: O.Option<VerifiedSpanAttemptId>,
+  outcome: VerifiedSpanAttemptOutcomeType
+): VerifiedSpanAttemptRecord =>
+  VerifiedSpanAttemptRecord.make({
+    attemptId: input.attemptId,
+    attemptedAt: input.attemptedAt,
+    candidates: input.candidates,
+    engine: input.engine,
+    expectedSource,
+    kind,
+    matterRef,
+    normalizationVersion: VERIFIED_SPAN_NORMALIZATION_VERSION,
+    outcome,
+    previousAttemptId,
+    source: input.source,
+  });
+
+const verifyLocatedAnchors = (
+  input: AttemptRunInput,
+  expectedSource: SourceTextIdentity,
+  anchors: ReadonlyArray<TextAnchor>
+): Effect.Effect<VerifiedSpanAttemptOutcomeType, never, Crypto.Crypto> =>
+  Effect.forEach(
+    anchors,
+    (anchor, index) =>
+      verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor,
+          expectedSource,
+          source: input.source,
+          sourceText: input.sourceText,
+        })
+      ).pipe(
+        Effect.map(toTextAnchorVerificationReceipt),
+        Effect.mapError((error) => attemptFailure("anchor", error.reason, O.some(NonNegativeInt.make(index))))
+      ),
+    { concurrency: 1 }
+  ).pipe(
+    Effect.match({
+      onFailure: failedAttemptOutcome,
+      onSuccess: verifiedAttemptOutcome,
+    })
+  );
+
+const locateAttemptOutcome = (
+  input: AttemptRunInput,
+  expectedSource: SourceTextIdentity
+): Effect.Effect<VerifiedSpanAttemptOutcomeType, never, Crypto.Crypto> =>
+  locateGroundedExtractions(input.candidates, input.sourceText).pipe(
+    Effect.matchEffect({
+      onFailure: (error) =>
+        Effect.succeed(failedAttemptOutcome(attemptFailure("location", error.reason, error.candidateIndex))),
+      onSuccess: (anchors) => verifyLocatedAnchors(input, expectedSource, anchors),
+    })
+  );
+
+const sourceIdentityMatchesMatter = (
+  matterRef: string,
+  expectedSource: SourceTextIdentity,
+  source: SourceTextIdentity
+): boolean => Eq.equals(matterRef, expectedSource.scopeRef) && Eq.equals(matterRef, source.scopeRef);
+
+const usesSupportedNormalization = (expectedSource: SourceTextIdentity, source: SourceTextIdentity): boolean =>
+  Eq.equals(expectedSource.normalizationVersion, VERIFIED_SPAN_NORMALIZATION_VERSION) &&
+  Eq.equals(source.normalizationVersion, VERIFIED_SPAN_NORMALIZATION_VERSION);
+
+const runAttempt = Effect.fnUntraced(function* (
+  input: AttemptRunInput,
+  expectedSource: SourceTextIdentity,
+  matterRef: string,
+  kind: VerifiedSpanAttemptKind,
+  previousAttemptId: O.Option<VerifiedSpanAttemptId>
+): Effect.fn.Return<VerifiedSpanAttemptRecord, never, Crypto.Crypto> {
+  if (!sourceIdentityMatchesMatter(matterRef, expectedSource, input.source)) {
+    return attemptRecord(
+      input,
+      expectedSource,
+      matterRef,
+      kind,
+      previousAttemptId,
+      failedAttemptOutcome(attemptFailure("source", "cross-scope"))
+    );
+  }
+  if (!usesSupportedNormalization(expectedSource, input.source)) {
+    return attemptRecord(
+      input,
+      expectedSource,
+      matterRef,
+      kind,
+      previousAttemptId,
+      failedAttemptOutcome(attemptFailure("source", "normalization-version-mismatch"))
+    );
+  }
+
+  const outcome = yield* verifySourceTextIdentity(
+    VerifySourceTextIdentityInput.make({
+      expectedSource,
+      source: input.source,
+      sourceText: input.sourceText,
+    })
+  ).pipe(
+    Effect.matchEffect({
+      onFailure: (error) => Effect.succeed(failedAttemptOutcome(attemptFailure("source", error.reason))),
+      onSuccess: () =>
+        A.match(input.candidates, {
+          onEmpty: () => Effect.succeed(VerifiedSpanAttemptOutcome.cases["no-candidates"].make({})),
+          onNonEmpty: () => locateAttemptOutcome(input, expectedSource),
+        }),
+    })
+  );
+
+  return attemptRecord(input, expectedSource, matterRef, kind, previousAttemptId, outcome);
+});
+
+const lastHistoryAttempt = (
+  history: VerifiedSpanHistoryType
+): Effect.Effect<VerifiedSpanAttemptRecord, VerifiedSpanError> =>
+  Effect.fromOption(A.last(history.attempts), () => VerifiedSpanError.fromReason("invalid-history"));
+
+const appendHistoryAttempt = (
+  history: VerifiedSpanHistoryType,
+  attempt: VerifiedSpanAttemptRecord
+): VerifiedSpanHistoryType =>
+  VerifiedSpanHistory.make({
+    attempts: A.append(history.attempts, attempt),
+  });
+
+const containsAttemptId = (history: VerifiedSpanHistoryType, attemptId: VerifiedSpanAttemptId): boolean =>
+  A.some(history.attempts, (attempt) => Eq.equals(attempt.attemptId, attemptId));
+
+const isStaleSourceFailure = (outcome: VerifiedSpanAttemptOutcomeType): boolean =>
+  VerifiedSpanAttemptOutcome.match({
+    failed: ({ failure }) => Eq.equals(failure.reason, "stale-source"),
+    "no-candidates": () => false,
+    verified: () => false,
+  })(outcome);
+
+/**
+ * Start an append-only verified-span history from direct
+ * `GroundedExtraction[]` candidates.
+ *
+ * **Details**
+ *
+ * Source, matter, and normalization checks happen before an empty candidate
+ * batch can become a durable `no-candidates` outcome. Successful outcomes
+ * contain only receipts whose raw slices were re-verified.
+ *
+ * **Example** (Inspect the history-start operation)
+ *
+ * ```ts import.meta.vitest name="Inspect the history-start operation"
+ * import { beginVerifiedSpanHistory } from "@beep/langextract/VerifiedSpan"
+ *
+ * typeof beginVerifiedSpanHistory // => "function"
+ * ```
+ *
+ * @effects Requires `Crypto.Crypto` for source-digest and exact-anchor proof.
+ * @category validation
+ * @since 0.0.0
+ */
+export const beginVerifiedSpanHistory = Effect.fn("VerifiedSpan.beginHistory")(function* (
+  input: BeginVerifiedSpanHistoryInput
+): Effect.fn.Return<VerifiedSpanHistoryType, never, Crypto.Crypto> {
+  const attempt = yield* runAttempt(
+    input,
+    input.expectedSource,
+    input.matterRef,
+    VerifiedSpanAttemptKind.Enum.verification,
+    O.none()
+  );
+  return VerifiedSpanHistory.make({ attempts: [attempt] });
+});
+
+/**
+ * Re-verify the latest authorized source without changing anchor authority.
+ *
+ * **Details**
+ *
+ * The previous successful source remains the expected identity. A new source
+ * manifestation therefore appends a typed `stale-source` failure instead of
+ * silently rewriting its anchor.
+ *
+ * **Example** (Inspect the current-source verification operation)
+ *
+ * ```ts import.meta.vitest name="Inspect the current-source verification operation"
+ * import { verifyCurrentSpanHistory } from "@beep/langextract/VerifiedSpan"
+ *
+ * typeof verifyCurrentSpanHistory // => "function"
+ * ```
+ *
+ * @effects Requires `Crypto.Crypto` for source-digest and exact-anchor proof.
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifyCurrentSpanHistory: {
+  (
+    input: ContinueVerifiedSpanHistoryInput
+  ): (history: VerifiedSpanHistoryType) => Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+  (
+    history: VerifiedSpanHistoryType,
+    input: ContinueVerifiedSpanHistoryInput
+  ): Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+} = dual(
+  2,
+  Effect.fn("VerifiedSpan.verifyCurrentHistory")(function* (
+    history: VerifiedSpanHistoryType,
+    input: ContinueVerifiedSpanHistoryInput
+  ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto> {
+    const previous = yield* lastHistoryAttempt(history);
+    if (
+      Bool.or(
+        Bool.not(VerifiedSpanAttemptOutcome.guards.verified(previous.outcome)),
+        containsAttemptId(history, input.attemptId)
+      )
+    ) {
+      return yield* VerifiedSpanError.fromReason("invalid-history");
+    }
+    const attempt = yield* runAttempt(
+      input,
+      previous.source,
+      previous.matterRef,
+      VerifiedSpanAttemptKind.Enum.verification,
+      O.some(previous.attemptId)
+    );
+    return appendHistoryAttempt(history, attempt);
+  })
+);
+
+/**
+ * Append a deterministic re-anchor only after a retained stale-source
+ * verification failure.
+ *
+ * **Details**
+ *
+ * The new source becomes authoritative only inside this explicit operation,
+ * and every new anchor repeats locator-to-raw recovery, source digest proof,
+ * UTF-16 boundary checks, and exact raw-slice equality. The predecessor link
+ * preserves both the failed attempt and the prior successful receipt.
+ *
+ * **Example** (Inspect the re-anchor operation)
+ *
+ * ```ts import.meta.vitest name="Inspect the re-anchor operation"
+ * import { reanchorVerifiedSpanHistory } from "@beep/langextract/VerifiedSpan"
+ *
+ * typeof reanchorVerifiedSpanHistory // => "function"
+ * ```
+ *
+ * @effects Requires `Crypto.Crypto` for source-digest and exact-anchor proof.
+ * @category validation
+ * @since 0.0.0
+ */
+export const reanchorVerifiedSpanHistory: {
+  (
+    input: ContinueVerifiedSpanHistoryInput
+  ): (history: VerifiedSpanHistoryType) => Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+  (
+    history: VerifiedSpanHistoryType,
+    input: ContinueVerifiedSpanHistoryInput
+  ): Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+} = dual(
+  2,
+  Effect.fn("VerifiedSpan.reanchorHistory")(function* (
+    history: VerifiedSpanHistoryType,
+    input: ContinueVerifiedSpanHistoryInput
+  ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto> {
+    const previous = yield* lastHistoryAttempt(history);
+    if (Bool.or(Bool.not(isStaleSourceFailure(previous.outcome)), containsAttemptId(history, input.attemptId))) {
+      return yield* VerifiedSpanError.fromReason("invalid-history");
+    }
+    const attempt = yield* runAttempt(
+      input,
+      input.source,
+      previous.matterRef,
+      VerifiedSpanAttemptKind.Enum["re-anchor"],
+      O.some(previous.attemptId)
+    );
+    return appendHistoryAttempt(history, attempt);
   })
 );

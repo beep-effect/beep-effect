@@ -103,6 +103,35 @@ export class VerifiedTextAnchorError extends S.TaggedError<VerifiedTextAnchorErr
 }
 
 /**
+ * Inputs required to prove one resolved raw-text manifestation against its
+ * authorized source identity.
+ *
+ * **Example** (Inspect source verification fields)
+ *
+ * ```ts import.meta.vitest name="Inspect source verification fields"
+ * import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnchor"
+ *
+ * VerifySourceTextIdentityInput.fields.sourceText !== undefined // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class VerifySourceTextIdentityInput extends S.Class<VerifySourceTextIdentityInput>(
+  $I`VerifySourceTextIdentityInput`
+)(
+  {
+    expectedSource: SourceTextIdentity,
+    source: SourceTextIdentity,
+    sourceText: S.String,
+  },
+  $I.annote("VerifySourceTextIdentityInput", {
+    description:
+      "Expected and resolved source identities plus the exact raw source text whose digest must match the resolved identity.",
+  })
+) {}
+
+/**
  * Inputs required to bind an anchor to an expected source identity.
  *
  * **Details**
@@ -310,6 +339,76 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
   });
 
 /**
+ * Prove that resolved raw text belongs to the exact authorized source
+ * manifestation before any anchor or negative attempt relies on it.
+ *
+ * **Details**
+ *
+ * The check rejects cross-scope identities, any identity/version drift, and a
+ * raw-text digest mismatch. Success returns no forgeable proof value; callers
+ * must remain in the successful Effect continuation.
+ *
+ * **Example** (Verify an empty source manifestation)
+ *
+ * ```ts
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import { Effect } from "effect"
+ * import {
+ *   SourceTextDigest,
+ *   SourceTextExtractor,
+ *   SourceTextIdentity,
+ * } from "@beep/provenance/SourceTextIdentity"
+ * import {
+ *   VerifySourceTextIdentityInput,
+ *   verifySourceTextIdentity,
+ * } from "@beep/provenance/VerifiedTextAnchor"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const digest = SourceTextDigest.make(
+ *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * const source = SourceTextIdentity.make({
+ *   extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
+ *   locator: PosixPath.make("empty.txt"),
+ *   normalizationVersion: "1",
+ *   scopeRef: "matter:example",
+ *   sourceDigest: digest,
+ *   sourceRef: "source:empty",
+ *   textDigest: digest,
+ * })
+ * const program = verifySourceTextIdentity(VerifySourceTextIdentityInput.make({
+ *   expectedSource: source,
+ *   source,
+ *   sourceText: "",
+ * })).pipe(Effect.provide(BunCrypto.layer))
+ *
+ * Effect.runPromise(program).then(() => console.log("verified"))
+ * ```
+ *
+ * @effects Requires `Crypto.Crypto` to hash the raw source text; failures use
+ * the sanitized {@link VerifiedTextAnchorError} channel.
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifySourceTextIdentity = Effect.fn("VerifiedTextAnchor.verifySourceTextIdentity")(function* (
+  input: VerifySourceTextIdentityInput
+): Effect.fn.Return<void, VerifiedTextAnchorError, Crypto.Crypto> {
+  if (!Eq.equals(input.expectedSource.scopeRef, input.source.scopeRef)) {
+    return yield* VerifiedTextAnchorError.fromReason("cross-scope");
+  }
+  if (!sourceTextIdentityEquivalence(input.expectedSource, input.source)) {
+    return yield* VerifiedTextAnchorError.fromReason("stale-source");
+  }
+  const sourceTextDigest = yield* decodeSha256HexFromBytes(Uint8Array.from(utf8Encoder.encode(input.sourceText))).pipe(
+    Effect.map((digest) => SourceTextDigest.make(`sha256:${digest}`)),
+    Effect.mapError(() => VerifiedTextAnchorError.fromReason("stale-source"))
+  );
+  if (!sourceTextDigestEquivalence(sourceTextDigest, input.source.textDigest)) {
+    return yield* VerifiedTextAnchorError.fromReason("stale-source");
+  }
+});
+
+/**
  * Prove a candidate anchor against an authorized, exact source manifestation.
  *
  * **Details**
@@ -370,19 +469,13 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
 export const verifyTextAnchor = Effect.fn("VerifiedTextAnchor.verify")(function* (
   input: VerifyTextAnchorInput
 ): Effect.fn.Return<VerifiedTextAnchor, VerifiedTextAnchorError, Crypto.Crypto> {
-  if (!Eq.equals(input.expectedSource.scopeRef, input.source.scopeRef)) {
-    return yield* VerifiedTextAnchorError.fromReason("cross-scope");
-  }
-  if (!sourceTextIdentityEquivalence(input.expectedSource, input.source)) {
-    return yield* VerifiedTextAnchorError.fromReason("stale-source");
-  }
-  const sourceTextDigest = yield* decodeSha256HexFromBytes(Uint8Array.from(utf8Encoder.encode(input.sourceText))).pipe(
-    Effect.map((digest) => SourceTextDigest.make(`sha256:${digest}`)),
-    Effect.mapError(() => VerifiedTextAnchorError.fromReason("stale-source"))
+  yield* verifySourceTextIdentity(
+    VerifySourceTextIdentityInput.make({
+      expectedSource: input.expectedSource,
+      source: input.source,
+      sourceText: input.sourceText,
+    })
   );
-  if (!sourceTextDigestEquivalence(sourceTextDigest, input.source.textDigest)) {
-    return yield* VerifiedTextAnchorError.fromReason("stale-source");
-  }
   if (
     input.anchor.endChar > Str.length(input.sourceText) ||
     !isUtf16Boundary(input.sourceText, input.anchor.startChar) ||

@@ -4,7 +4,9 @@ import {
   TextAnchorVerificationReceipt,
   toTextAnchorVerificationReceipt,
   VerifiedTextAnchor,
+  VerifySourceTextIdentityInput,
   VerifyTextAnchorInput,
+  verifySourceTextIdentity,
   verifyTextAnchor,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -42,6 +44,21 @@ const identity = (overrides: Partial<SourceTextIdentity> = {}): SourceTextIdenti
   });
 
 describe("@beep/provenance VerifiedTextAnchor", () => {
+  it.effect(
+    "verifies a source manifestation independently of any anchor",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+
+      yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({
+          expectedSource: source,
+          source,
+          sourceText: "fact",
+        })
+      );
+    }, provideBunCrypto)
+  );
+
   it.effect(
     "binds an exact raw UTF-16 slice to its source identity",
     Effect.fnUntraced(function* () {
