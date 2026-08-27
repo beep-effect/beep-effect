@@ -1,0 +1,37 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 1,
+    "furthestStage": "P1",
+    "issues": [],
+    "packet": "agentic-professional-runtime",
+    "resumeStage": "P1",
+    "revision": 1,
+    "root": "goals",
+    "status": "active",
+    "tip": {
+      "id": "92abcfe48c0e059788f7f23fbc5436a5abd6d5228f39ddff3090de69702f9778",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "92abcfe48c0e059788f7f23fbc5436a5abd6d5228f39ddff3090de69702f9778",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "ordinal": 1,
+        "stage": "P1",
+        "status": "active",
+        "type": "packet-created"
+      },
+      "id": "92abcfe48c0e059788f7f23fbc5436a5abd6d5228f39ddff3090de69702f9778",
+      "seq": 1
+    }
+  ]
+}

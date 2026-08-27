@@ -54,12 +54,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
   closed `completed-retained` through its own guarded writer (rung-4
   hardening #848), which satisfied the candidate-2/3 gate and fired the
-  ratified reopen convention. Candidates 2 and 3 are therefore eligible for
-  this decompose pass — the Next Open Question weighs them against the fleet
-  convention-migration campaign; candidate 4 still gates on observed
-  self-hosting friction, and React v2 stays on KSA static-v1 daily-use
-  evidence. The Session B rulings (queued amendments, fleet-campaign charter)
-  land as their own docs PR.
+  ratified reopen convention. Session B chartered
+  [`goals/packet-convention-migration`](../goals/packet-convention-migration/README.md)
+  as candidate 6 and first reopener. H was ratified without generated
+  `GOAL.md`; I was rejected for a named-consumer-gated schema.org successor;
+  J moved to `@beep/skill-contract` and is routed through the existing
+  `typed-agent-skill-contracts` exploration. Candidate 6 begins with the fork
+  applier, while candidates 2–4 and React v2 retain their stated gates
+  (D17–D26).
 - [`semantica-lab`](./semantica-lab/README.md) — reopened at `decompose`
   2026-08-26 after the C0 Extraction probe breaker fired. The candidate and its
   one retry failed the frozen relation-paper slate; review invalidated two
@@ -269,10 +271,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated 2026-08-24 (spine 2026-08-13) into
   [`skill-contract-kernel`](../goals/skill-contract-kernel/README.md):
   `@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
-  SKILL.md render-as-encode projection — sole promised-now goal, still
-  unexecuted. Waves 2–6 (KG ingestion, ops ladder, browser leases, memory
-  routing, fleet protocols) remain reopen-at-`decompose` MAP points; the MAP's
-  protocol-as-value coordination section governs waves 2/3/4/6 seams.
+  SKILL.md render-as-encode projection. Reopened at `decompose` 2026-08-26 by
+  packet-system-redesign D22/D24 to shape Amendment J's five-outcome gate
+  certificate/reach/apply-plan upgrade. Exact placement (new candidate 7 or an
+  explicit later-wave amendment) is open; the completed kernel goal stays
+  closed. Waves 2–6 retain their existing gates and protocol-as-value seams.
 - [`ci-hang-observability`](./ci-hang-observability/README.md) — graduated
   2026-08-23 into
   [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md): per-step

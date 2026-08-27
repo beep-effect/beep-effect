@@ -1,6 +1,10 @@
 # Vendored subtree mirrors and reference repositories are not first-party runtime code.
 .repos/
 
+# Impeccable is vendored agent tooling mirrored for Claude Code and GitHub Copilot.
+.claude/skills/impeccable/
+.github/skills/impeccable/
+
 # Goal history outputs are documentation, not shipped code.
 goals/**/history/outputs/
 

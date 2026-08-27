@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "oppold-corpus-pipeline",
     "title": "Oppold Corpus Pipeline",
