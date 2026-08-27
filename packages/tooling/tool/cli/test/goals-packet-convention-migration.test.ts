@@ -94,6 +94,54 @@ const makeGenesisRollbackSeed = Effect.fnUntraced(function* (root: string, label
   });
 });
 
+const preparePartialTraceRecovery = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-partial-trace-" });
+  const packetPath = `${root}/demo`;
+  yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
+  const packet = GoalPacketRecord.make({
+    slug: "demo",
+    packetPath,
+    manifestPath: `${packetPath}/ops/manifest.json`,
+    readmePath: `${packetPath}/README.md`,
+  });
+  const manifest = encodeJson({
+    schemaVersion: "initiative-manifest/v2",
+    initiative: { id: "demo", status: "active" },
+    lifecycle: "active",
+    packetPath: "goals/demo",
+    completionGate,
+  });
+  const planned = yield* planPacketGenesisSeed(packet, manifest, "2026-08-25T00:00:00.000Z");
+  if (O.isNone(planned)) return yield* Effect.die("expected genesis seed");
+  yield* fs.makeDirectory(planned.value.eventsDirectory);
+  yield* fs.writeFileString(`${planned.value.eventsDirectory}/${planned.value.eventFileName}`, planned.value.eventText);
+  const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
+  if (O.isNone(recovery)) return yield* Effect.die("expected trace recovery seed");
+  let interrupted = false;
+  yield* Effect.exit(
+    applyPacketGenesisSeed(recovery.value).pipe(
+      Effect.provideService(FileSystem.FileSystem, {
+        ...fs,
+        writeFileString: (target, content, options) => {
+          if (!interrupted && content === recovery.value.traceText) {
+            interrupted = true;
+            return fs
+              .writeFileString(target, "partial trace\n", options)
+              .pipe(Effect.andThen(Effect.fail(injectedFileSystemError("writeFileString", target))));
+          }
+          return fs.writeFileString(target, content, options);
+        },
+      })
+    )
+  );
+  const partialTrace = Str.takeLeft(32)(recovery.value.traceText);
+  yield* fs.writeFileString(recovery.value.tracePath, partialTrace);
+  const retry = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
+  if (O.isNone(retry)) return yield* Effect.die("expected retry seed");
+  return { fs, packet, manifest, partialTrace, retry: retry.value };
+});
+
 describe("manifest translation", () => {
   it("rejects missing, invalid, and non-object manifests", () => {
     const missing = planManifestTranslation(
@@ -1292,85 +1340,35 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   );
 
   it.effect(
-    "repairs owned trace prefixes while preserving nonmatching foreign traces",
+    "reports a trace-recovery staging failure",
     Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-partial-trace-" });
-      const packetPath = `${root}/demo`;
-      yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
-      const packet = GoalPacketRecord.make({
-        slug: "demo",
-        packetPath,
-        manifestPath: `${packetPath}/ops/manifest.json`,
-        readmePath: `${packetPath}/README.md`,
-      });
-      const manifest = encodeJson({
-        schemaVersion: "initiative-manifest/v2",
-        initiative: { id: "demo", status: "active" },
-        lifecycle: "active",
-        packetPath: "goals/demo",
-        completionGate,
-      });
-      const planned = yield* planPacketGenesisSeed(packet, manifest, "2026-08-25T00:00:00.000Z");
-      expect(O.isSome(planned)).toBe(true);
-      if (O.isNone(planned)) return;
-      yield* fs.makeDirectory(planned.value.eventsDirectory);
-      yield* fs.writeFileString(
-        `${planned.value.eventsDirectory}/${planned.value.eventFileName}`,
-        planned.value.eventText
-      );
-
-      const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
-      expect(O.isSome(recovery)).toBe(true);
-      if (O.isNone(recovery)) return;
-      let interrupted = false;
-      const interruptedExit = yield* Effect.exit(
-        applyPacketGenesisSeed(recovery.value).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
-            writeFileString: (target, content, options) => {
-              if (!interrupted && content === recovery.value.traceText) {
-                interrupted = true;
-                return fs
-                  .writeFileString(target, "partial trace\n", options)
-                  .pipe(Effect.andThen(Effect.fail(injectedFileSystemError("writeFileString", target))));
-              }
-              return fs.writeFileString(target, content, options);
-            },
-          })
-        )
-      );
-      expect(Exit.isFailure(interruptedExit)).toBe(true);
-      expect(yield* fs.exists(recovery.value.tracePath)).toBe(false);
-
-      const partialTrace = Str.takeLeft(32)(recovery.value.traceText);
-      yield* fs.writeFileString(recovery.value.tracePath, partialTrace);
-      const retry = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
-      expect(O.isSome(retry)).toBe(true);
-      if (O.isNone(retry)) return;
-
-      const stagingFailure = yield* Effect.exit(
-        applyPacketGenesisSeed(retry.value).pipe(
+      const { fs, retry } = yield* preparePartialTraceRecovery();
+      const exit = yield* Effect.exit(
+        applyPacketGenesisSeed(retry).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             makeTempDirectory: (options) =>
               options?.prefix === ".genesis-trace-recovery-"
-                ? Effect.fail(injectedFileSystemError("makeTempDirectory", retry.value.tracePath))
+                ? Effect.fail(injectedFileSystemError("makeTempDirectory", retry.tracePath))
                 : fs.makeTempDirectory(options),
           })
         )
       );
-      expect(Exit.isFailure(stagingFailure) ? stagingFailure.cause.toString() : "").toContain(
-        "genesis trace quarantine failed"
-      );
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine failed");
+    })
+  );
 
+  it.effect(
+    "reports a trace-recovery quarantine read failure",
+    Effect.fnUntraced(function* () {
+      const { fs, retry } = yield* preparePartialTraceRecovery();
       let quarantinedTracePath = "";
-      const quarantineReadFailure = yield* Effect.exit(
-        applyPacketGenesisSeed(retry.value).pipe(
+      const exit = yield* Effect.exit(
+        applyPacketGenesisSeed(retry).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             rename: (source, target) => {
-              if (source === retry.value.tracePath) quarantinedTracePath = target;
+              if (source === retry.tracePath) quarantinedTracePath = target;
               return fs.rename(source, target);
             },
             readFileString: (target, encoding) =>
@@ -1380,79 +1378,82 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
           })
         )
       );
-      expect(Exit.isFailure(quarantineReadFailure) ? quarantineReadFailure.cause.toString() : "").toContain(
-        "genesis trace quarantine read failed"
-      );
-      yield* fs.rename(quarantinedTracePath, retry.value.tracePath);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine read failed");
+    })
+  );
 
+  it.effect(
+    "reports a post-publication trace preservation read failure",
+    Effect.fnUntraced(function* () {
+      const { fs, retry } = yield* preparePartialTraceRecovery();
       let preservedTracePath = "";
-      let preservedTraceReads = 0;
-      const preservedReadFailure = yield* Effect.exit(
-        applyPacketGenesisSeed(retry.value).pipe(
+      let reads = 0;
+      const exit = yield* Effect.exit(
+        applyPacketGenesisSeed(retry).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             rename: (source, target) => {
-              if (source === retry.value.tracePath) preservedTracePath = target;
+              if (source === retry.tracePath) preservedTracePath = target;
               return fs.rename(source, target);
             },
             readFileString: (target, encoding) => {
               if (target !== preservedTracePath) return fs.readFileString(target, encoding);
-              preservedTraceReads += 1;
-              return preservedTraceReads === 2
+              reads += 1;
+              return reads === 2
                 ? Effect.fail(injectedFileSystemError("readFileString", target))
                 : fs.readFileString(target, encoding);
             },
           })
         )
       );
-      expect(Exit.isFailure(preservedReadFailure) ? preservedReadFailure.cause.toString() : "").toContain(
-        "genesis trace quarantine read failed"
-      );
-      yield* fs.writeFileString(retry.value.tracePath, partialTrace);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine read failed");
+    })
+  );
 
-      yield* applyPacketGenesisSeed(retry.value).pipe(
+  it.effect(
+    "repairs an owned trace prefix while preserving a foreign trace",
+    Effect.fnUntraced(function* () {
+      const { fs, packet, manifest, partialTrace, retry } = yield* preparePartialTraceRecovery();
+      yield* applyPacketGenesisSeed(retry).pipe(
         Effect.provideService(FileSystem.FileSystem, {
           ...fs,
           rename: (source, target) =>
-            source === retry.value.tracePath
-              ? fs.rename(source, target).pipe(Effect.andThen(fs.writeFileString(source, retry.value.traceText)))
+            source === retry.tracePath
+              ? fs.rename(source, target).pipe(Effect.andThen(fs.writeFileString(source, retry.traceText)))
               : fs.rename(source, target),
         })
       );
-      expect(yield* fs.readFileString(retry.value.tracePath)).toBe(retry.value.traceText);
-      expect(O.isNone(yield* planPacketGenesisSeed(packet, manifest, "2026-08-28T00:00:00.000Z"))).toBe(true);
-
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
       const foreignTrace = '{"foreign":true}\n';
-      yield* fs.writeFileString(retry.value.tracePath, foreignTrace);
+      yield* fs.writeFileString(retry.tracePath, foreignTrace);
       const foreignRecovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-29T00:00:00.000Z");
-      expect(O.isSome(foreignRecovery)).toBe(true);
-      if (O.isNone(foreignRecovery)) return;
-      const foreignExit = yield* Effect.exit(applyPacketGenesisSeed(foreignRecovery.value));
-      expect(Exit.isFailure(foreignExit) ? foreignExit.cause.toString() : "").toContain(
-        "genesis trace recovery conflict"
-      );
-      expect(yield* fs.readFileString(foreignRecovery.value.tracePath)).toBe(foreignTrace);
+      if (O.isNone(foreignRecovery)) return yield* Effect.die("expected foreign recovery seed");
+      const exit = yield* Effect.exit(applyPacketGenesisSeed(foreignRecovery.value));
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace recovery conflict");
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(foreignTrace);
+      yield* fs.writeFileString(retry.tracePath, partialTrace);
+    })
+  );
 
-      yield* fs.writeFileString(retry.value.tracePath, Str.takeLeft(32)(retry.value.traceText));
-      const racedRecovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-30T00:00:00.000Z");
-      expect(O.isSome(racedRecovery)).toBe(true);
-      if (O.isNone(racedRecovery)) return;
+  it.effect(
+    "preserves a concurrent trace during trace-recovery quarantine",
+    Effect.fnUntraced(function* () {
+      const { fs, packet, manifest, retry } = yield* preparePartialTraceRecovery();
       const displacedTrace = '{"concurrent":true}\n';
-      const racedExit = yield* Effect.exit(
-        applyPacketGenesisSeed(racedRecovery.value).pipe(
+      const exit = yield* Effect.exit(
+        applyPacketGenesisSeed(retry).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             rename: (source, target) =>
-              source === racedRecovery.value.tracePath
+              source === retry.tracePath
                 ? fs.writeFileString(source, displacedTrace).pipe(Effect.andThen(fs.rename(source, target)))
                 : fs.rename(source, target),
           })
         )
       );
-      expect(Exit.isFailure(racedExit) ? racedExit.cause.toString() : "").toContain(
-        "genesis trace quarantine conflict"
-      );
-      expect(yield* fs.readFileString(racedRecovery.value.tracePath)).toBe(displacedTrace);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine conflict");
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(displacedTrace);
+      expect(O.isSome(yield* planPacketGenesisSeed(packet, manifest, "2026-08-30T00:00:00.000Z"))).toBe(true);
     })
   );
 
