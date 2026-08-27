@@ -297,7 +297,7 @@ const coverageFor = (
   const covered = A.getSomes(
     A.map(snapshot.documents, (document) =>
       Origin.match(document.document.origin, {
-        Fixture: () => O.none<Coverage>(),
+        Fixture: O.none<Coverage>,
         W1Paper: (origin) =>
           A.findFirst(subsetFiles, (file) => Str.Equivalence(file.paperId, origin.paperId)).pipe(
             O.map((file): Coverage => [document, file])
@@ -338,7 +338,7 @@ const predictedSpans = (
   predictedValues(coverage, outcomes, lane, (document, claim) =>
     ClaimBody.match(claim.body, {
       Entity: (body) => (kind === "Entity" ? O.some(spanKey(document.document.id, body)) : O.none<string>()),
-      Relation: () => O.none<string>(),
+      Relation: O.none<string>,
       Structure: (body) => (kind === "Structure" ? O.some(spanKey(document.document.id, body)) : O.none<string>()),
     })
   );
@@ -372,8 +372,8 @@ const predictedTriples = (
     return A.getSomes(
       A.map(claims, (claim) =>
         ClaimBody.match(claim.body, {
-          Entity: () => O.none<string>(),
-          Structure: () => O.none<string>(),
+          Entity: O.none<string>,
+          Structure: O.none<string>,
           Relation: (body) =>
             O.all([entityQuote(claims, body.subject), entityQuote(claims, body.object)]).pipe(
               O.map(
@@ -412,8 +412,8 @@ const entityAssignments = (
             ]
           )
         ),
-      Relation: () => O.none<EntityClusterAssignment>(),
-      Structure: () => O.none<EntityClusterAssignment>(),
+      Relation: O.none<EntityClusterAssignment>,
+      Structure: O.none<EntityClusterAssignment>,
     })
   );
   const gold = A.flatMap(coverage, ([document, file]): ReadonlyArray<EntityClusterAssignment> => {

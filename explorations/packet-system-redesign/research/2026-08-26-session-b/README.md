@@ -20,8 +20,18 @@ claim.
 | [`G3-amendment-H-prior-art.md`](./G3-amendment-H-prior-art.md) | Is generating an agent launcher from typed plan data better than authoring it? | Not supported; the closest shipped analogs all kept the prompt authored |
 
 The rung-4 implementation lane's report is process evidence rather than packet
-content and is not carried here; its result is the code in PR
-`feat/packet-core-rung-4` and the rung-4 paragraph in the goal's `PLAN.md`.
+content and is not carried here; its evidence is PR #848 (merged 2026-08-26,
+squash 80c5693d2a) and the rung-4 paragraph in
+[`goals/packet-control-plane-core/PLAN.md`](../../../../goals/packet-control-plane-core/PLAN.md).
+
+## Citation baseline
+
+The lane reports promise a `path:line` citation on every repo claim. Those
+line numbers resolve against the tree the lanes audited — `main` at
+`5c6fa7c2e109` (2026-08-26, before the Session B docs PR). The Session B
+section that PR inserts into `MAP.md` shifts later line numbers, so resolve
+`MAP.md:<line>` citations from C2/C3/C4 against that revision, not the current
+file. The reports are frozen evidence and are not renumbered after capture.
 
 ## Reading order for the rulings
 

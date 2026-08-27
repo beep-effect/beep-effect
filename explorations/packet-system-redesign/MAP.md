@@ -95,11 +95,13 @@ machinery and bounds stream opt-in.
 
 Ratified at the Session B grill, which also chartered the fleet
 convention-migration campaign as candidate 6 (D17–D19) and scoped the in-toto
-deferral (D23). Evidence: seven lanes under
+deferral (D23). Evidence: six lane reports under
 [`research/2026-08-26-session-b/`](./research/2026-08-26-session-b/) — three
-repo audits and three web prior-art sweeps, plus the rung-4 implementation
-lane. The three candidates queued on 2026-08-25 were H, I, and J; two are
-ratified in reshaped form and one is rejected.
+repo audits and three web prior-art sweeps; the seventh lane was the rung-4
+implementation itself, whose evidence is PR #848 and the rung-4 paragraph of
+[`goals/packet-control-plane-core/PLAN.md`](../../goals/packet-control-plane-core/PLAN.md).
+The three candidates queued on 2026-08-25 were H, I, and J; two are ratified
+in reshaped form and one is rejected.
 
 - **Amendment H (candidate 3) — typed `PacketWorkPlan`, hand-authored
   launcher.** The manifest gains a schema-first work plan: each phase step

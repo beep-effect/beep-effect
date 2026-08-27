@@ -24,6 +24,7 @@ import {
   DmsEventType,
   DmsMirror,
   DmsMirrorAvailability,
+  DmsMirrorDisconnectReason,
   DmsMirrorProbe,
   DmsMirrorUnavailable,
   DmsRemoteEvent,
@@ -36,6 +37,7 @@ import {
   Clock,
   Config,
   Context,
+  DateTime,
   Duration,
   Effect,
   flow,
@@ -243,8 +245,32 @@ const boxFailureReason = (error: BoxError): string => {
   return `Box ${method} failed: ${error.reason}${status}${code}`;
 };
 
+/**
+ * Probe-facing classification of a status-bearing Box failure: auth rejections
+ * point at the credentials, a missing root at the folder, and rate limits or
+ * server errors at Box itself; everything else stays the unclassified
+ * fallback.
+ */
+const disconnectReasonFromStatus: (status: number) => DmsMirrorDisconnectReason = Match.type<number>().pipe(
+  Match.withReturnType<DmsMirrorDisconnectReason>(),
+  Match.when(401, DmsMirrorDisconnectReason.thunk["auth-failed"]),
+  Match.whenOr(403, 404, DmsMirrorDisconnectReason.thunk["root-unreachable"]),
+  Match.when(transientBoxStatus, DmsMirrorDisconnectReason.thunk.transient),
+  Match.orElse(DmsMirrorDisconnectReason.thunk["probe-failed"])
+);
+
+const boxDisconnectReason = (error: BoxError): DmsMirrorDisconnectReason =>
+  O.match(error.status, {
+    onNone: () =>
+      BoxErrorReason.is.transport(error.reason)
+        ? DmsMirrorDisconnectReason.Enum.transient
+        : DmsMirrorDisconnectReason.Enum["probe-failed"],
+    onSome: disconnectReasonFromStatus,
+  });
+
 const boxUnavailable = (error: BoxError): DmsMirrorUnavailable =>
   DmsMirrorUnavailable.make({
+    disconnectReason: pipe(error, boxDisconnectReason, O.some),
     provider: "box",
     reason: boxFailureReason(error),
     retryable: isRetryableBoxFailure(error),
@@ -759,6 +785,21 @@ type MirrorProbeCacheEntry = {
   readonly probe: DmsMirrorProbe;
 };
 
+type MirrorProbeFailure = DmsMirrorUnavailable | S.SchemaError;
+
+const probeDisconnectReason = (error: MirrorProbeFailure): DmsMirrorDisconnectReason =>
+  P.isTagged(error, "DmsMirrorUnavailable")
+    ? O.getOrElse(error.disconnectReason, DmsMirrorDisconnectReason.thunk["probe-failed"])
+    : DmsMirrorDisconnectReason.Enum["probe-failed"];
+
+/**
+ * BoxError fields are sanitized at the driver boundary, so the mirror failure
+ * diagnostic (reason literal, status, code) is safe to log verbatim; a schema
+ * failure here can only be a malformed folder id.
+ */
+const probeFailureDetail = (error: MirrorProbeFailure): string =>
+  P.isTagged(error, "DmsMirrorUnavailable") ? error.reason : "mirror root id decoding failed";
+
 /**
  * Availability layer probing the Box mirror adapter.
  *
@@ -767,8 +808,11 @@ type MirrorProbeCacheEntry = {
  * The probe resolves the mirror-root folder id (cached for
  * {@link MIRROR_ROOT_CACHE_TTL}): success reports `connected: true` with
  * `rootRemoteId` set; any driver failure reports `connected: false` without
- * failing the probe. Applications supply their own disconnected variant when no
- * Box credentials are configured.
+ * failing the probe, carrying the {@link DmsMirrorDisconnectReason}
+ * classification captured from the Box failure (auth rejection, missing root,
+ * transient outage) plus the `probedAt` timestamp of the resolution, and logs
+ * the classified failure at warning level. Applications supply their own
+ * disconnected variant when no Box credentials are configured.
  *
  * **Example** (Log availability layer)
  *
@@ -789,20 +833,48 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
     const cache = yield* Ref.make<O.Option<MirrorProbeCacheEntry>>(O.none());
 
-    const resolve = resolveMirrorRootId.pipe(
-      Effect.flatMap(decodeRemoteItemId),
-      Effect.match({
-        onFailure: () =>
-          DmsMirrorProbe.make({
-            connected: false,
-            disconnectReason: O.some("probe-failed"),
-            provider: "box",
-            rootRemoteId: O.none(),
-          }),
-        onSuccess: (rootRemoteId) =>
-          DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(rootRemoteId) }),
-      })
-    );
+    const resolve = (probedAt: DateTime.Utc) =>
+      resolveMirrorRootId.pipe(
+        Effect.flatMap(decodeRemoteItemId),
+        Effect.matchEffect({
+          onFailure: (error) => {
+            const disconnectReason = probeDisconnectReason(error);
+            return Effect.logWarning("Box mirror availability probe failed").pipe(
+              Effect.annotateLogs({
+                "documents.sync.disconnect_reason": disconnectReason,
+                "documents.sync.failure": probeFailureDetail(error),
+                "documents.sync.provider": "box",
+              }),
+              Effect.as(
+                DmsMirrorProbe.make({
+                  connected: false,
+                  disconnectReason: O.some(disconnectReason),
+                  probedAt: O.some(probedAt),
+                  provider: "box",
+                  rootRemoteId: O.none(),
+                })
+              )
+            );
+          },
+          onSuccess: (rootRemoteId) =>
+            Effect.succeed(
+              DmsMirrorProbe.make({
+                connected: true,
+                probedAt: O.some(probedAt),
+                provider: "box",
+                rootRemoteId: O.some(rootRemoteId),
+              })
+            ),
+        })
+      );
+
+    const probeNow = Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      const probe = yield* resolve(DateTime.makeUnsafe(now));
+      const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
+      yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
+      return probe;
+    });
 
     return DmsMirrorAvailability.of({
       probe: Effect.gen(function* () {
@@ -811,11 +883,12 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
         if (O.isSome(cached) && cached.value.expiresAt > now) {
           return cached.value.probe;
         }
-        const probe = yield* resolve;
-        const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
-        yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
-        return probe;
+        return yield* probeNow;
       }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)),
+      // An operator's explicit retry must re-ask Box, not replay the cached
+      // failure for the rest of its TTL; the fresh answer replaces the cache
+      // so passive reads immediately agree with what the retry saw.
+      refresh: probeNow.pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxRefresh`)),
     });
   })
 );

@@ -76,6 +76,31 @@ Carried inside the two imported documents (each claim is cited inline there):
   Raw streaming-json transcripts + prompts under `grok/raw/` and
   `grok/prompts/`. Synthesis: [`../RESEARCH.md`](../RESEARCH.md).
 
+- Session B lane reports (2026-08-26, six reports under
+  [`2026-08-26-session-b/`](./2026-08-26-session-b/), index in its README;
+  every external claim cited inline with fetched links, all sources
+  reference-only, nothing vendored):
+  - `G1-amendment-I-prior-art.md` — CWLProv (Khan et al., GigaScience 2019)
+    and its authors' move to schema.org JSON-LD (Workflow Run RO-Crate,
+    PLOS ONE 2025); Nextflow's 2025 removal of its legacy provenance format
+    for a native lineage store; P-Plan (unmaintained) and AgentO
+    (w3id.org/agentic-ai/onto rev 0.2) adoption status; WorkflowHub,
+    Croissant, and nanopublication join evidence.
+  - `G2-amendment-J-prior-art.md` — W3C EARL 1.0 Schema + WAI-ACT five-way
+    outcome vocabulary; OpenSSF Scorecard per-check reasons with
+    inconclusive-excluded aggregation; CycloneDX compositions
+    (complete/incomplete/unknown); in-toto attestation Statement envelope;
+    SHACL `sh:conforms`; Terraform stale-plan apply-by-id semantics.
+  - `G3-amendment-H-prior-art.md` — CrewAI, Mastra, and Google ADK typed
+    task/agent configs with hand-authored prompts; AGENTS.md convention
+    (60k+ projects, no required fields); DSPy issue #8042 (compile gain lost
+    when the prompt was materialized as Markdown). Method caveats inside the
+    report flag secondarily-cited primaries.
+  - `C2-amendment-J.md`, `C3-amendment-H.md`, `C4-amendment-I.md` — in-repo
+    audits (gate honesty census, 14-launcher census, substrate/join audit);
+    `path:line` citations only, no new upstream sources. C2's companion recon
+    repos (ontoskills, open-ontologies, mykg) are already in the table above.
+
 ## 4. In-repo capability references
 
 | Capability | Path | Disposition |

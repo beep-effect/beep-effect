@@ -308,14 +308,6 @@
     "thresholdOverrides": [
       {
         "files": [
-          "packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx"
-        ],
-        "functions": ["TripleValidationMessages"],
-        "maxCrap": 73,
-        "reason": "Pre-existing function unchanged by the import-extension migration; Fallow audit attributes its CRAP finding as introduced when the file's import suffix changes. Review by 2026-10-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
-      },
-      {
-        "files": [
           "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"
         ],
         "functions": ["sparqlResultPreview", "runSparqlFromKeyboard"],
