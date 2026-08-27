@@ -145,48 +145,50 @@ const VaultOnboarding = ({
   readonly actions: DocumentIntakeSurface["actions"];
   readonly selection: VaultSelectionStateType;
 }): JSX.Element => (
-  <div className="flex h-full min-h-64 w-full items-center justify-center bg-background text-foreground">
-    <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
-      <h1 className="text-lg font-semibold">Choose workspace vault</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
-      {VaultSelectionState.match(selection, {
-        idle: () => (
-          <VaultChooseRow disabled={false} label="Choose folder" onChoose={actions.chooseVault} status={O.none()} />
-        ),
-        choosing: () => (
-          <VaultChooseRow
-            disabled
-            label="Choosing folder…"
-            onChoose={actions.chooseVault}
-            status={O.some("Opening folder picker")}
-          />
-        ),
-        manual: ({ draftPath, message }) => (
-          <ManualVaultPathForm
-            draftPath={draftPath}
-            message={message}
-            onCancel={actions.cancelManualVaultPath}
-            onSubmit={actions.submitManualVaultPath}
-          />
-        ),
-        saving: () => (
-          <VaultChooseRow
-            disabled
-            label="Saving…"
-            onChoose={actions.chooseVault}
-            status={O.some("Saving workspace vault")}
-          />
-        ),
-        failed: ({ message }) => (
-          <VaultChooseRow
-            disabled={false}
-            label="Choose folder"
-            onChoose={actions.chooseVault}
-            status={O.some(message)}
-          />
-        ),
-      })}
-    </section>
+  <div className="h-full min-h-0 w-full overflow-y-auto bg-background text-foreground">
+    <div className="flex min-h-full w-full items-center justify-center p-4">
+      <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
+        <h1 className="text-lg font-semibold">Choose workspace vault</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
+        {VaultSelectionState.match(selection, {
+          idle: () => (
+            <VaultChooseRow disabled={false} label="Choose folder" onChoose={actions.chooseVault} status={O.none()} />
+          ),
+          choosing: () => (
+            <VaultChooseRow
+              disabled
+              label="Choosing folder…"
+              onChoose={actions.chooseVault}
+              status={O.some("Opening folder picker")}
+            />
+          ),
+          manual: ({ draftPath, message }) => (
+            <ManualVaultPathForm
+              draftPath={draftPath}
+              message={message}
+              onCancel={actions.cancelManualVaultPath}
+              onSubmit={actions.submitManualVaultPath}
+            />
+          ),
+          saving: () => (
+            <VaultChooseRow
+              disabled
+              label="Saving…"
+              onChoose={actions.chooseVault}
+              status={O.some("Saving workspace vault")}
+            />
+          ),
+          failed: ({ message }) => (
+            <VaultChooseRow
+              disabled={false}
+              label="Choose folder"
+              onChoose={actions.chooseVault}
+              status={O.some(message)}
+            />
+          ),
+        })}
+      </section>
+    </div>
   </div>
 );
 

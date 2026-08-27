@@ -3,8 +3,7 @@
  *
  * Substituted for the Box-backed adapter when no Box credentials (neither the
  * CCG trio nor `CLOUD_BOX_TOKEN`) are configured: every mirror verb fails with
- * a typed, non-retryable
- * `DmsMirrorUnavailable` carrying setup guidance, and the availability probe
+ * a typed, non-retryable `DmsMirrorUnavailable` carrying setup guidance, and the availability probe
  * reports the provider as disconnected so the sync status surface can render
  * an honest connection state.
  *
@@ -24,7 +23,7 @@ import * as O from "effect/Option";
 const disconnected = Effect.fail(
   DmsMirrorUnavailable.make({
     provider: "box",
-    reason: "Box is not connected. Set CLOUD_BOX_TOKEN and restart the app.",
+    reason: "Box is not connected. Configure CCG credentials or set CLOUD_BOX_TOKEN, then restart the app.",
     retryable: false,
   })
 );
@@ -59,6 +58,10 @@ export const DmsMirrorDisconnectedLayer: Layer.Layer<DmsMirror> = Layer.succeed(
   })
 );
 
+const disconnectedProbe = Effect.succeed(
+  DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("credentials-missing"), provider: "box" })
+);
+
 /**
  * `DmsMirrorAvailability` layer whose probe reports Box as disconnected.
  *
@@ -76,9 +79,5 @@ export const DmsMirrorDisconnectedLayer: Layer.Layer<DmsMirror> = Layer.succeed(
  */
 export const DmsMirrorAvailabilityDisconnectedLayer: Layer.Layer<DmsMirrorAvailability> = Layer.succeed(
   DmsMirrorAvailability,
-  DmsMirrorAvailability.of({
-    probe: Effect.succeed(
-      DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("credentials-missing"), provider: "box" })
-    ),
-  })
+  DmsMirrorAvailability.of({ probe: disconnectedProbe, refresh: disconnectedProbe })
 );

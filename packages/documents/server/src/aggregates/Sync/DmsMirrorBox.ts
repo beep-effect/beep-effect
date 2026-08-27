@@ -253,8 +253,8 @@ const boxFailureReason = (error: BoxError): string => {
  */
 const disconnectReasonFromStatus: (status: number) => DmsMirrorDisconnectReason = Match.type<number>().pipe(
   Match.withReturnType<DmsMirrorDisconnectReason>(),
-  Match.whenOr(401, 403, DmsMirrorDisconnectReason.thunk["auth-failed"]),
-  Match.when(404, DmsMirrorDisconnectReason.thunk["root-unreachable"]),
+  Match.when(401, DmsMirrorDisconnectReason.thunk["auth-failed"]),
+  Match.whenOr(403, 404, DmsMirrorDisconnectReason.thunk["root-unreachable"]),
   Match.when(transientBoxStatus, DmsMirrorDisconnectReason.thunk.transient),
   Match.orElse(DmsMirrorDisconnectReason.thunk["probe-failed"])
 );
@@ -868,6 +868,14 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
         })
       );
 
+    const probeNow = Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      const probe = yield* resolve(DateTime.makeUnsafe(now));
+      const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
+      yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
+      return probe;
+    });
+
     return DmsMirrorAvailability.of({
       probe: Effect.gen(function* () {
         const now = yield* Clock.currentTimeMillis;
@@ -875,11 +883,12 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
         if (O.isSome(cached) && cached.value.expiresAt > now) {
           return cached.value.probe;
         }
-        const probe = yield* resolve(DateTime.makeUnsafe(now));
-        const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
-        yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
-        return probe;
+        return yield* probeNow;
       }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)),
+      // An operator's explicit retry must re-ask Box, not replay the cached
+      // failure for the rest of its TTL; the fresh answer replaces the cache
+      // so passive reads immediately agree with what the retry saw.
+      refresh: probeNow.pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxRefresh`)),
     });
   })
 );

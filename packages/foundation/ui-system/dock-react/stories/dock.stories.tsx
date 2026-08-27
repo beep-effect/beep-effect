@@ -18,7 +18,7 @@ import {
   VerticalSplitLayout,
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import * as O from "effect/Option";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { DockAtomGraph, DockPanelProps, DockRenderer, DockTabProps } from "@beep/dock-react";
@@ -52,6 +52,9 @@ const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HT
   if (height !== undefined) host.style.height = height;
   return host;
 };
+
+const openOverflowMenu = (trigger: HTMLElement): Effect.Effect<void> =>
+  trigger.getAttribute("aria-expanded") === "true" ? Effect.void : Effect.promise(() => userEvent.click(trigger));
 
 const workspace = PopulatedWorkspace.make({
   root: SplitNode.make({
@@ -331,14 +334,30 @@ export const TabOverflow: Story = {
         pinHost(canvasElement, "320px");
         const trigger = yield* Effect.promise(() => canvas.findByRole("button", { name: /overflowed tabs/ }));
         yield* Effect.promise(() => userEvent.click(trigger));
-        yield* Effect.promise(() => userEvent.click(canvas.getByRole("menuitem", { name: "Overflow Delta" })));
-        yield* Effect.promise(() =>
-          waitFor(() =>
-            expect(
-              canvasElement.querySelector("[data-panel-id='story-overflow-delta']")?.getAttribute("data-active")
-            ).toBe("true")
-          )
-        );
+        // The strip keeps re-measuring while the menu opens, so a menuitem
+        // handle can go stale between query and click (and CI's full chromium
+        // paints the menu later than the local headless shell). Re-query and
+        // re-click inside the retry until the activation actually lands.
+        const deltaActive = (): boolean =>
+          canvasElement.querySelector("[data-panel-id='story-overflow-delta']")?.getAttribute("data-active") === "true";
+        const activateOverflowDelta = Effect.gen(function* () {
+          if (deltaActive()) return;
+          yield* openOverflowMenu(trigger);
+          // The open flag is registry-backed, so the menu mounts on the next
+          // render rather than inside the trigger's click turn. Give that
+          // render a frame, then query a fresh item handle for this attempt.
+          yield* Effect.sleep(Duration.millis(50));
+          const item = canvas.queryByRole("menuitem", { name: "Overflow Delta" });
+          if (item === null) {
+            return yield* Effect.fail("Overflow Delta menu item did not mount");
+          }
+          yield* Effect.promise(() => userEvent.click(item));
+          yield* Effect.sleep(Duration.millis(50));
+          if (!deltaActive()) {
+            return yield* Effect.fail("Overflow Delta did not activate");
+          }
+        });
+        yield* activateOverflowDelta.pipe(Effect.retry({ times: 9 }));
       })
     ),
 };

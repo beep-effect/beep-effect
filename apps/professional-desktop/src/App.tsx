@@ -797,7 +797,10 @@ const DesktopShell = ({
             that misjudges its height gets clipped instead of growing a second, outer
             scrollbar over the top of the pane that was already scrolling. Everything
             inside scrolls in its own pane. */}
-        <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
+        {/* Keep the viewport shell on one compositor layer. Software-rendered
+            browser captures otherwise expose partial text-tile repaints for a
+            frame when dock portals swap active content. */}
+        <div className="isolate flex h-dvh min-h-0 w-full transform-gpu flex-col overflow-hidden bg-background text-foreground">
           <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
             <span className="mr-3 text-sm font-semibold">BEEP</span>
             {A.map(shellNavPanels, (item) => (

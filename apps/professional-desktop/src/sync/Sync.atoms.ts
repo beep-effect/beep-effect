@@ -7,6 +7,7 @@
 
 import { chatProtocolLayerAtom } from "@beep/agents-client";
 import {
+  GetVaultSyncStatusPayload,
   MarkVaultSyncConflictReviewedPayload,
   VaultSyncRpcs,
   VaultSyncWorkspacePayload,
@@ -246,9 +247,71 @@ export const vaultSyncPanelStateAtoms = Atom.family((_workspaceId: WorkspaceIden
  * @since 0.0.0
  */
 export const vaultSyncStatusAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  DesktopSyncClient.query("GetVaultSyncStatus", VaultSyncWorkspacePayload.make({ workspaceId }), {
+  DesktopSyncClient.query("GetVaultSyncStatus", GetVaultSyncStatusPayload.make({ workspaceId }), {
     reactivityKeys: [vaultSyncStatusKey(workspaceId)],
   })
+);
+
+const forceVaultSyncProbe = Effect.fn("documents.vault_sync.force_probe")(function* (
+  workspaceId: WorkspaceIdentity.WorkspaceId,
+  client: DesktopSyncClient["Service"]
+) {
+  const reactivity = yield* Reactivity.Reactivity;
+  yield* Effect.annotateCurrentSpan({
+    "documents.vault_sync.workspace_id": workspaceId,
+  });
+  yield* Reactivity.mutation(
+    client("GetVaultSyncStatus", GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId })),
+    [vaultSyncStatusKey(workspaceId)]
+  ).pipe(
+    Effect.catchCause((cause) =>
+      logRedactedCause(
+        cause,
+        LogRedactedCauseOptions.make({
+          message: "professional desktop vault sync force probe failed",
+          level: "Warn",
+          attributes: {
+            "documents.vault_sync.command": "force-probe",
+            subsystem: "vault_sync",
+          },
+        })
+        // Invalidate anyway: the status query owns failure presentation, so a
+        // failed forced probe still re-runs it instead of leaving a retry
+        // that visibly did nothing.
+      ).pipe(Effect.andThen(reactivity.invalidate([vaultSyncStatusKey(workspaceId)])))
+    )
+  );
+});
+
+/**
+ * Per-workspace forced probe retry for the vault sync connection.
+ *
+ * **Details**
+ *
+ * The passive status atom is served from the sidecar's short probe cache, so a
+ * plain refresh inside the failure TTL replays the cached failed probe. This
+ * fn sends `forceProbe: true`, which makes the sidecar discard the cached
+ * answer and ask the provider now, then invalidates the workspace status key
+ * so {@link vaultSyncStatusAtom} re-reads the freshly cached result.
+ *
+ * **Example** (Retry atoms function check)
+ *
+ * ```ts
+ * import { vaultSyncRetryConnectionAtoms } from "@/sync/Sync.atoms"
+ *
+ * console.log(typeof vaultSyncRetryConnectionAtoms === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const vaultSyncRetryConnectionAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  DesktopSyncClient.runtime.fn<void>()(
+    Effect.fnUntraced(function* () {
+      const client = yield* DesktopSyncClient;
+      yield* forceVaultSyncProbe(workspaceId, client);
+    })
+  )
 );
 
 /**

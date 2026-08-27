@@ -19,7 +19,8 @@ import { documentSafetyIssues } from "@beep/md/Md.safe";
 import { toast } from "@beep/ui/components/sonner";
 import { A, O } from "@beep/utils";
 import { Duration, Effect } from "effect";
-import { Atom } from "effect/unstable/reactivity";
+import { dual } from "effect/Function";
+import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import {
   ComposerNotice,
@@ -34,7 +35,6 @@ import type { SerializedEditorState } from "@beep/lexical-schema";
 import type * as Md from "@beep/md/Md.model";
 import type { SafeDocument } from "@beep/md/Md.safe";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import type { AtomRegistry } from "effect/unstable/reactivity";
 
 /**
  * Classifies a persisted general document before it is projected into Lexical.
@@ -176,44 +176,85 @@ const submitComposerAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =
 // fires only when the dispatch chain never ran at all.
 const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
 
-// Confirms that an accepted send actually started a turn, and restores the
-// draft when it provably never did. QA 2026-08-26 P0: the Lexical send binding
-// holds the handler closure as a plain function, so it keeps running after the
-// registry's idle sweep disposes the handler's own atom node — every ctx-bound
-// write inside it is then silently dropped while the editor still clears
-// itself. This helper therefore leans only on primitives that outlive nodes:
-// the registry handle and a raw timer. The subscriptions double as keep-alive
-// for the dispatch window so the freshly ensured fn nodes cannot be swept
-// mid-flight.
-const confirmTurnDispatch = <A>(
-  registry: AtomRegistry.AtomRegistry,
-  threadId: WorkspaceIdentity.ThreadId,
-  content: SafeDocument,
-  submit: Atom.Atom<A>
-): void => {
-  let sawTurnTransition = false;
-  const unsubscribeTurn = registry.subscribe(
-    runTurnAtom,
-    () => {
-      sawTurnTransition = true;
-    },
-    { immediate: false }
-  );
-  const unsubscribeSubmit = registry.subscribe(submit, () => void 0, { immediate: false });
-  Effect.runFork(
-    Effect.andThen(
-      Effect.sleep(TURN_DISPATCH_CONFIRM_TIMEOUT),
-      Effect.sync(() => {
-        unsubscribeTurn();
-        unsubscribeSubmit();
-        if (sawTurnTransition || registry.get(turnActiveAtom)) return;
-        registry.set(draftAtoms(threadId), O.some(content));
-        registry.set(draftRevisionAtoms(threadId), registry.get(draftRevisionAtoms(threadId)) + 1);
-        toast.error("The message could not be sent. Your draft was restored — try again.");
-      })
-    )
-  );
-};
+/**
+ * Dispatches a send through the registry and confirms a turn actually
+ * started, restoring the draft when it provably never did.
+ *
+ * **Details**
+ *
+ * QA 2026-08-26 P0: the Lexical send binding holds the handler closure as a
+ * plain function, so it keeps running after the registry's idle sweep
+ * disposes the handler's own atom node — every ctx-bound write inside it is
+ * then silently dropped while the editor still clears itself. This helper
+ * therefore leans only on primitives that outlive nodes: the registry handle
+ * and a detached timer fiber. The turn subscription is armed BEFORE the
+ * submit write so a synchronous turn start cannot be missed, and both
+ * subscriptions double as keep-alive for the dispatch window so the freshly
+ * ensured fn nodes cannot be swept mid-flight.
+ *
+ * **Example** (Verify dispatch helper type)
+ *
+ * ```ts
+ * import { dispatchTurnWithConfirm } from "@/chat/ui/Composer.atoms"
+ *
+ * console.log(typeof dispatchTurnWithConfirm === "function") // true
+ * ```
+ *
+ * @category actions
+ * @since 0.0.0
+ */
+export const dispatchTurnWithConfirm: {
+  <A>(
+    threadId: WorkspaceIdentity.ThreadId,
+    content: SafeDocument,
+    submit: Atom.Writable<A, SafeDocument>,
+    timeout?: Duration.Input
+  ): (registry: AtomRegistry.AtomRegistry) => void;
+  <A>(
+    registry: AtomRegistry.AtomRegistry,
+    threadId: WorkspaceIdentity.ThreadId,
+    content: SafeDocument,
+    submit: Atom.Writable<A, SafeDocument>,
+    timeout?: Duration.Input
+  ): void;
+} = dual(
+  (args) => AtomRegistry.isAtomRegistry(args[0]),
+  <A>(
+    registry: AtomRegistry.AtomRegistry,
+    threadId: WorkspaceIdentity.ThreadId,
+    content: SafeDocument,
+    submit: Atom.Writable<A, SafeDocument>,
+    timeout: Duration.Input = TURN_DISPATCH_CONFIRM_TIMEOUT
+  ): void => {
+    let sawTurnTransition = false;
+    const unsubscribeTurn = registry.subscribe(
+      runTurnAtom,
+      (result) => {
+        // A freshly created node can notify once with its Initial value; only a
+        // real state transition counts as the turn starting.
+        if (!AsyncResult.isInitial(result)) {
+          sawTurnTransition = true;
+        }
+      },
+      { immediate: false }
+    );
+    const unsubscribeSubmit = registry.subscribe(submit, () => void 0, { immediate: false });
+    registry.set(submit, content);
+    Effect.runFork(
+      Effect.andThen(
+        Effect.sleep(timeout),
+        Effect.sync(() => {
+          unsubscribeTurn();
+          unsubscribeSubmit();
+          if (sawTurnTransition || registry.get(turnActiveAtom)) return;
+          registry.set(draftAtoms(threadId), O.some(content));
+          registry.set(draftRevisionAtoms(threadId), registry.get(draftRevisionAtoms(threadId)) + 1);
+          toast.error("The message could not be sent. Your draft was restored. Try again.");
+        })
+      )
+    );
+  }
+);
 
 const stopComposerAtom = professionalBrowserRuntime.fn<void>()(
   Effect.fnUntraced(function* (_, ctx) {
@@ -290,8 +331,7 @@ const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
           },
           send: ({ content }) => {
             registry.set(composerSafetyRefusalAtoms(threadId), O.none());
-            registry.set(submit, content);
-            confirmTurnDispatch(registry, threadId, content, submit);
+            dispatchTurnWithConfirm(registry, threadId, content, submit);
             return true;
           },
         });

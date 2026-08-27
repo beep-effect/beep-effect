@@ -230,6 +230,11 @@ export class SyncOnceInput extends S.Class<SyncOnceInput>($I`SyncOnceInput`)(
  */
 export class VaultSyncStatusInput extends S.Class<VaultSyncStatusInput>($I`VaultSyncStatusInput`)(
   {
+    // Default-false and missing-key tolerant so pre-forceProbe callers stay
+    // wire-compatible and keep the cached read path.
+    forceProbe: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "When true, the status read bypasses the cached mirror probe and asks the provider now.",
+    }),
     workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
       description: "Workspace whose vault sync status is read.",
     }),

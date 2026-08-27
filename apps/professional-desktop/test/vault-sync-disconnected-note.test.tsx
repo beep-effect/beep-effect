@@ -52,12 +52,13 @@ const renderWithStatus = (
 describe("vault sync panel", () => {
   afterEach(cleanup);
 
-  it("tells the operator to set the token only when credentials are missing", () => {
+  it("lists both supported credential modes when credentials are missing", () => {
     const { container } = renderWithStatus(statusWith(false, O.some("credentials-missing")));
     const screen = within(container);
 
     expect(screen.getByTestId("vault-sync-connection")).toHaveTextContent("disconnected");
-    expect(screen.getByTestId("vault-sync-setup-note")).toHaveTextContent("Set CLOUD_BOX_TOKEN");
+    expect(screen.getByTestId("vault-sync-setup-note")).toHaveTextContent("DMS_BOX_CLIENT_ID");
+    expect(screen.getByTestId("vault-sync-setup-note")).toHaveTextContent("CLOUD_BOX_TOKEN");
     expect(screen.queryByTestId("vault-sync-reconnect")).not.toBeInTheDocument();
     expect(screen.getByTestId("vault-sync-trigger")).toBeDisabled();
   });
@@ -73,13 +74,16 @@ describe("vault sync panel", () => {
     expect(screen.getByTestId("vault-sync-trigger")).toBeDisabled();
   });
 
-  it("blames the token when Box rejected the credentials", () => {
+  it("splits the auth-failed fix by auth mode instead of blaming expiry under CCG", () => {
     const { container } = renderWithStatus(statusWith(false, O.some("auth-failed")));
     const screen = within(container);
 
     const note = screen.getByTestId("vault-sync-setup-note");
-    expect(note).toHaveTextContent("Box rejected the stored credentials");
-    expect(note).not.toHaveTextContent("Set CLOUD_BOX_TOKEN");
+    expect(note).toHaveTextContent("Box rejected the credentials");
+    // CCG self-refreshes, so "the token expired" would be the wrong diagnosis
+    // there; the copy must name the CCG fix too.
+    expect(note).toHaveTextContent("CCG refreshes automatically");
+    expect(note).not.toHaveTextContent("Set CLOUD_BOX_TOKEN and restart the app");
     expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
   });
 
@@ -89,6 +93,7 @@ describe("vault sync panel", () => {
 
     const note = screen.getByTestId("vault-sync-setup-note");
     expect(note).toHaveTextContent("mirror root folder could not be listed or created");
+    expect(note).toHaveTextContent("configured Box application's folder access");
     expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
   });
 

@@ -1543,7 +1543,9 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         workspaceId: input.workspaceId,
       })
     );
-    const probe = yield* availability.probe;
+    // forceProbe carries an operator's explicit retry: bypass the cached
+    // probe answer and ask the provider now; passive reads stay cached.
+    const probe = yield* input.forceProbe ? availability.refresh : availability.probe;
     const countItemsIn = (guard: (state: DomainSyncItem.SyncItemState) => boolean) =>
       NonNegativeInt.make(A.length(A.filter(items, (item) => guard(item.syncState))));
 

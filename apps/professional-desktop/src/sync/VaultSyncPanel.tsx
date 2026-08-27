@@ -20,6 +20,7 @@ import {
   vaultSyncCommandAtoms,
   vaultSyncConflictsAtom,
   vaultSyncPanelStateAtoms,
+  vaultSyncRetryConnectionAtoms,
   vaultSyncStatusAtom,
 } from "./Sync.atoms.ts";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
@@ -102,7 +103,7 @@ const VaultSyncStatusView = ({
 // generic note for every probe failure hid whether the fix was a fresh token,
 // the mirror root folder, or simply waiting Box out.
 const probeFailedCopy =
-  "Box credentials are configured, but the provider probe failed — the token may be expired or the mirror root " +
+  "Box credentials are configured, but the provider probe failed. The token may be expired or the mirror root " +
   "folder is unreachable. Sync stays paused until Box answers.";
 
 const DisconnectedNote = ({
@@ -160,22 +161,27 @@ const DisconnectedNote = ({
             className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
             data-testid="vault-sync-setup-note"
           >
-            Set CLOUD_BOX_TOKEN and restart the app to connect Box. OAuth setup ships when the Box test tenant is
-            provisioned.
+            Configure CCG with DMS_BOX_CLIENT_ID, DMS_BOX_CLIENT_SECRET, and an enterprise or user subject, or set
+            CLOUD_BOX_TOKEN. Restart the app after changing credentials.
           </p>
         ),
+        // The renderer cannot see which auth mode the sidecar selected, so the
+        // copy names the fix for each: only developer tokens expire on their
+        // own; CCG self-refreshes, so an auth failure there means the client
+        // credentials or subject are wrong.
         "auth-failed": () =>
           probeNote(
-            "Box rejected the stored credentials — the token has likely expired (Box developer and CCG tokens last " +
-              "about an hour). Restart the app with a fresh token."
+            "Box rejected the credentials. A developer token (CLOUD_BOX_TOKEN) lasts about 60 minutes. Restart the " +
+              "app with a fresh token. CCG refreshes automatically, so check DMS_BOX_CLIENT_ID, " +
+              "DMS_BOX_CLIENT_SECRET, and the enterprise or user subject."
           ),
         "root-unreachable": () =>
           probeNote(
             "The Box mirror root folder could not be listed or created. Check the mirror root folder name and the " +
-              "token's permissions."
+              "configured Box application's folder access."
           ),
         transient: () =>
-          probeNote("Box is unreachable or rate limiting. Retry shortly — sync resumes once Box answers."),
+          probeNote("Box is unreachable or rate limiting. Retry shortly. Sync resumes once Box answers."),
         "probe-failed": () => probeNote(probeFailedCopy),
       }),
   });
@@ -289,6 +295,9 @@ const VaultSyncConflictsList = ({
 export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
   const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  // A plain refresh inside the sidecar's 3s failure cache replays the cached
+  // failed probe; the explicit retry forces a fresh probe instead.
+  const retryConnection = useAtomSet(vaultSyncRetryConnectionAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const panelState = useAtomValue(vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
@@ -322,7 +331,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
           probedAt={status.value.probedAt}
           reason={status.value.disconnectReason}
           waiting={status.waiting}
-          onRetry={refreshStatus}
+          onRetry={() => retryConnection()}
         />
       ) : null}
       <div className="mt-3 flex items-center gap-2">

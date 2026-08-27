@@ -605,6 +605,13 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  * DMS mirror availability shape; the probe never fails so the app decides how
  * to treat connectivity.
  *
+ * **Details**
+ *
+ * `probe` may answer from an adapter-side cache; `refresh` discards any cached
+ * answer and asks the provider now — an operator's explicit "retry connection"
+ * must actually re-ask the provider instead of replaying a cached failure.
+ * Adapters without caching implement both members as the same effect.
+ *
  * **Example** (Build availability shape)
  *
  * ```ts
@@ -612,11 +619,10 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * const availability: DmsMirrorAvailabilityShape = {
- *   probe: Effect.succeed(
- *     DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("probe-failed"), provider: "box" })
- *   )
- * }
+ * const probe = Effect.succeed(
+ *   DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("probe-failed"), provider: "box" })
+ * )
+ * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
  * console.log(Effect.runSync(availability.probe).connected)
  * ```
  *
@@ -625,6 +631,7 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  */
 export interface DmsMirrorAvailabilityShape {
   readonly probe: Effect.Effect<DmsMirrorProbe>;
+  readonly refresh: Effect.Effect<DmsMirrorProbe>;
 }
 
 /**
@@ -640,9 +647,8 @@ export interface DmsMirrorAvailabilityShape {
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import { Effect } from "effect"
  *
- * const availability: DmsMirrorAvailabilityShape = {
- *   probe: Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }))
- * }
+ * const probe = Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }))
+ * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
  *
  * const program = Effect.gen(function* () {
  *   const service = yield* DmsMirrorAvailability

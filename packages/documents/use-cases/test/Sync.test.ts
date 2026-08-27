@@ -25,6 +25,7 @@ import {
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { SyncItemRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
+  GetVaultSyncStatusPayload,
   GetVaultSyncStatusRpc,
   ListVaultSyncConflictsRpc,
   MarkVaultSyncConflictReviewedPayload,
@@ -125,12 +126,14 @@ describe("DmsMirror port models", () => {
       }).pipe(Effect.provideService(DmsMirror, mirror));
       expect(page.nextStreamPosition).toBe("now");
 
+      const connectedProbe = Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }));
       const probe = yield* Effect.gen(function* () {
         const service = yield* DmsMirrorAvailability;
         return yield* service.probe;
       }).pipe(
         Effect.provideService(DmsMirrorAvailability, {
-          probe: Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" })),
+          probe: connectedProbe,
+          refresh: connectedProbe,
         })
       );
       expect(probe.connected).toBe(true);
@@ -213,11 +216,21 @@ describe("VaultSyncEngine port", () => {
     })
   );
 
+  it("defaults forceProbe to the cached read path", () => {
+    // Both construction and missing-key decoding must stay wire-compatible
+    // with pre-forceProbe callers, which never bypass the probe cache.
+    expect(VaultSyncStatusInput.make({ workspaceId }).forceProbe).toBe(false);
+    expect(S.decodeSync(VaultSyncStatusInput)({ workspaceId: 1 }).forceProbe).toBe(false);
+    expect(S.decodeSync(GetVaultSyncStatusPayload)({ workspaceId: 1 }).forceProbe).toBe(false);
+    expect(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe).toBe(true);
+  });
+
   it("round-trips schema-derived engine inputs", () => {
     assertSchemaArbitraryRoundTrip(SyncOnceInput);
     assertSchemaArbitraryRoundTrip(VaultSyncStatusInput);
     assertSchemaArbitraryRoundTrip(ListOpenConflictsInput);
     assertSchemaArbitraryRoundTrip(MarkConflictReviewedInput);
+    assertSchemaArbitraryRoundTrip(GetVaultSyncStatusPayload);
   });
 });
 

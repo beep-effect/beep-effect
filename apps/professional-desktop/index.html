@@ -26,7 +26,6 @@
             mode === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
           document.documentElement.classList.remove("light", "dark");
           document.documentElement.classList.add(scheme);
-          document.documentElement.style.colorScheme = scheme;
         } catch {
           /* leave the default paint alone */
         }
