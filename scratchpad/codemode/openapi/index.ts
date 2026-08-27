@@ -5,14 +5,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { A, O, R, Str, Struct, pipe } from "@beep/utils";
-import {
-    Effect,
-    HashSet,
-    JsonSchema as JsonSchemaDocument,
-    Result,
-    SchemaRepresentation
-} from "effect";
+import { A, O, pipe, R, Str, Struct } from "@beep/utils";
+import { Effect, HashSet, JsonSchema as JsonSchemaDocument, Result, SchemaRepresentation } from "effect";
 import * as S from "effect/Schema";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
@@ -20,86 +14,84 @@ import { HttpClient } from "effect/unstable/http";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { invoke } from "./OpenAPI.runtime.ts";
 import {
-    componentDefinitions,
-    hasDirectionalSchemas,
-    inputSchema,
-    isRecord,
-    nonEmptyString,
-    operationInput,
-    operationOutput,
-    operationPath,
-    operationSecurityRequirements,
-    own,
-    securityRequirements,
-    securitySchemes,
-    specServerUrl,
-    validateBaseUrl,
+  componentDefinitions,
+  hasDirectionalSchemas,
+  inputSchema,
+  isRecord,
+  nonEmptyString,
+  operationInput,
+  operationOutput,
+  operationPath,
+  operationSecurityRequirements,
+  own,
+  securityRequirements,
+  securitySchemes,
+  specServerUrl,
+  validateBaseUrl,
 } from "./OpenAPI.specification.ts";
 import {
-    ApiPath,
-    FromSpecResult,
-    HttpMethod,
-    InvalidOpenApiOptions,
-    Operation,
-    OperationId,
-    Options,
-    Plan,
-    Skipped,
-    type Document,
-    type GeneratedHandlersLayer,
-    type GeneratedToolkit,
-    type JsonSchema,
+  ApiPath,
+  type Document,
+  FromSpecResult,
+  type GeneratedHandlersLayer,
+  type GeneratedToolkit,
+  HttpMethod,
+  InvalidOpenApiOptions,
+  type JsonSchema,
+  Operation,
+  OperationId,
+  Options,
+  Plan,
+  Skipped,
 } from "./OpenAPI.types.ts";
 
-export {
-    ApiKeyCarrier,
-    ApiKeyCookie,
-    ApiKeyHeader,
-    ApiKeyQuery,
-    AppliedAuth,
-    AuthConfig,
-    AuthContext,
-    Body,
-    BodyMode,
-    Credential,
-    CredentialApiKey,
-    CredentialBasic,
-    CredentialBearer,
-    CredentialHeader,
-    Document,
-    FromSpecResult,
-    HttpMethod,
-    InputField,
-    InputLocation,
-    InputStyle,
-    InvalidOpenApiOptions,
-    JsonSchema,
-    Operation,
-    OperationId,
-    OperationInput,
-    Options,
-    Plan,
-    SecurityRequirement,
-    SecurityScheme,
-    SecuritySchemeApiKey,
-    SecuritySchemeHttp,
-    SecuritySchemeOAuth2,
-    SecuritySchemeOpenIdConnect,
-    Skipped
-} from "./OpenAPI.types.ts";
 export type {
-    AuthResolver,
-    GeneratedHandlersLayer,
-    GeneratedToolkit
+  AuthResolver,
+  GeneratedHandlersLayer,
+  GeneratedToolkit,
+} from "./OpenAPI.types.ts";
+export {
+  ApiKeyCarrier,
+  ApiKeyCookie,
+  ApiKeyHeader,
+  ApiKeyQuery,
+  AppliedAuth,
+  AuthConfig,
+  AuthContext,
+  Body,
+  BodyMode,
+  Credential,
+  CredentialApiKey,
+  CredentialBasic,
+  CredentialBearer,
+  CredentialHeader,
+  Document,
+  FromSpecResult,
+  HttpMethod,
+  InputField,
+  InputLocation,
+  InputStyle,
+  InvalidOpenApiOptions,
+  JsonSchema,
+  Operation,
+  OperationId,
+  OperationInput,
+  Options,
+  Plan,
+  SecurityRequirement,
+  SecurityScheme,
+  SecuritySchemeApiKey,
+  SecuritySchemeHttp,
+  SecuritySchemeOAuth2,
+  SecuritySchemeOpenIdConnect,
+  Skipped,
 } from "./OpenAPI.types.ts";
 
 const $I = $ScratchpadId.create("codemode/openapi");
 
 const UnknownRecord = S.Record(S.String, S.Unknown);
 
-class OperationCandidate extends S.Class<OperationCandidate>(
-  $I`OperationCandidate`
-)(
+class OperationCandidate extends S.Class<OperationCandidate>($I`OperationCandidate`)(
   {
     sourceMethod: HttpMethod.To,
     method: HttpMethod,
@@ -127,13 +119,9 @@ class OperationCandidate extends S.Class<OperationCandidate>(
     });
 }
 
-const ToolSchema = S.declare(
-  (value: unknown): value is Tool.Any => Tool.isDynamic(value)
-);
+const ToolSchema = S.declare((value: unknown): value is Tool.Any => Tool.isDynamic(value));
 
-class GeneratedOperation extends S.Class<GeneratedOperation>(
-  $I`GeneratedOperation`
-)(
+class GeneratedOperation extends S.Class<GeneratedOperation>($I`GeneratedOperation`)(
   {
     tool: ToolSchema,
     plan: Plan,
@@ -142,15 +130,10 @@ class GeneratedOperation extends S.Class<GeneratedOperation>(
     description: "One generated Effect AI tool paired with its HTTP plan.",
   })
 ) {
-  static readonly new = (
-    tool: Tool.Any,
-    plan: Plan
-  ): GeneratedOperation => GeneratedOperation.make({ tool, plan });
+  static readonly new = (tool: Tool.Any, plan: Plan): GeneratedOperation => GeneratedOperation.make({ tool, plan });
 }
 
-class CompilationState extends S.Class<CompilationState>(
-  $I`CompilationState`
-)(
+class CompilationState extends S.Class<CompilationState>($I`CompilationState`)(
   {
     used: S.HashSet(S.String),
     namespaces: S.HashSet(S.String),
@@ -169,17 +152,10 @@ class CompilationState extends S.Class<CompilationState>(
       skipped: A.empty(),
     });
 
-  static readonly skip = (
-    state: CompilationState,
-    candidate: OperationCandidate,
-    reason: string
-  ): CompilationState =>
+  static readonly skip = (state: CompilationState, candidate: OperationCandidate, reason: string): CompilationState =>
     CompilationState.make({
       ...state,
-      skipped: A.append(
-        state.skipped,
-        Skipped.new(candidate.method, candidate.path, reason)
-      ),
+      skipped: A.append(state.skipped, Skipped.new(candidate.method, candidate.path, reason)),
     });
 
   static readonly append = (
@@ -190,9 +166,7 @@ class CompilationState extends S.Class<CompilationState>(
     const name = pipe(segments, A.join("."));
     const namespaces = pipe(
       A.dropRight(segments, 1),
-      A.map((_, index) =>
-        pipe(segments, A.take(index + 1), A.join("."))
-      ),
+      A.map((_, index) => pipe(segments, A.take(index + 1), A.join("."))),
       HashSet.fromIterable
     );
     return CompilationState.make({
@@ -204,9 +178,7 @@ class CompilationState extends S.Class<CompilationState>(
   };
 }
 
-const candidates = (
-  document: Document
-): ReadonlyArray<OperationCandidate> => {
+const candidates = (document: Document): ReadonlyArray<OperationCandidate> => {
   const rawPaths = own(document, "paths");
   if (O.isNone(rawPaths) || !isRecord(rawPaths.value)) {
     return A.empty();
@@ -223,13 +195,7 @@ const candidates = (
           const method = HttpMethod.decodeOption(sourceMethod);
           return O.isSome(method) && isRecord(operationValue)
             ? O.some(
-                OperationCandidate.new(
-                  HttpMethod.To.Enum[method.value],
-                  method.value,
-                  path,
-                  pathValue,
-                  operationValue
-                )
+                OperationCandidate.new(HttpMethod.To.Enum[method.value], method.value, path, pathValue, operationValue)
               )
             : O.none<OperationCandidate>();
         }),
@@ -239,35 +205,21 @@ const candidates = (
   );
 };
 
-const operationFrom = (
-  candidate: OperationCandidate
-): O.Option<Operation> =>
+const operationFrom = (candidate: OperationCandidate): O.Option<Operation> =>
   pipe(
     ApiPath.decodeOption(candidate.path),
     O.map((path) =>
       Operation.new(
-        pipe(
-          own(candidate.operation, "operationId"),
-          O.flatMap(OperationId.decodeOption)
-        ),
+        pipe(own(candidate.operation, "operationId"), O.flatMap(OperationId.decodeOption)),
         candidate.method,
         path,
-        pipe(
-          own(candidate.operation, "summary"),
-          O.flatMap(nonEmptyString)
-        ),
-        pipe(
-          own(candidate.operation, "description"),
-          O.flatMap(nonEmptyString)
-        )
+        pipe(own(candidate.operation, "summary"), O.flatMap(nonEmptyString)),
+        pipe(own(candidate.operation, "description"), O.flatMap(nonEmptyString))
       )
     )
   );
 
-const baseUrl = (
-  options: Options,
-  candidate: OperationCandidate
-): Result.Result<string, string> =>
+const baseUrl = (options: Options, candidate: OperationCandidate): Result.Result<string, string> =>
   pipe(
     options.baseUrl,
     O.match({
@@ -285,22 +237,15 @@ const operationDescription = (operation: Operation): string =>
   pipe(
     operation.description,
     O.orElse(() => operation.summary),
-    O.getOrElse(
-      () => `${operation.method} ${operation.path}`
-    )
+    O.getOrElse(() => `${operation.method} ${operation.path}`)
   );
 
-const compileOutputSchema = (
-  output: O.Option<JsonSchema>,
-): Result.Result<S.Top, string> =>
+const compileOutputSchema = (output: O.Option<JsonSchema>): Result.Result<S.Top, string> =>
   O.match(output, {
     onNone: () => Result.succeed(S.Unknown),
     onSome: (schema) =>
       Result.try({
-        try: () =>
-          SchemaRepresentation.fromJsonSchemaDocument(
-            JsonSchemaDocument.fromSchemaDraft2020_12(schema)
-          ),
+        try: () => SchemaRepresentation.fromJsonSchemaDocument(JsonSchemaDocument.fromSchemaDraft2020_12(schema)),
         catch: () => "response schema could not be imported",
       }),
   });
@@ -308,112 +253,70 @@ const compileOutputSchema = (
 const compile = (options: Options): CompilationState => {
   const document = options.spec;
   const schemes = securitySchemes(document);
-  const defaultSecurity = securityRequirements(
-    pipe(own(document, "security"), O.getOrUndefined)
-  );
-  const requestDefinitions = componentDefinitions(
-    document,
-    "request"
-  );
+  const defaultSecurity = securityRequirements(pipe(own(document, "security"), O.getOrUndefined));
+  const requestDefinitions = componentDefinitions(document, "request");
   const responseDefinitions = hasDirectionalSchemas(document)
     ? componentDefinitions(document, "response")
     : requestDefinitions;
 
-  return A.reduce(
-    candidates(document),
-    CompilationState.empty(),
-    (state, candidate) => {
-      const operation = operationFrom(candidate);
-      if (O.isNone(operation)) {
-        return CompilationState.skip(
-          state,
-          candidate,
-          `path '${candidate.path}' is not a valid OpenAPI path template`
-        );
-      }
-
-      const segments = operationPath(
-        candidate.sourceMethod,
-        candidate.path,
-        candidate.operation,
-        state.used,
-        state.namespaces
-      );
-      const planned = pipe(
-        Result.all({
-          baseUrl: baseUrl(options, candidate),
-          input: operationInput(
-            document,
-            candidate.pathItem,
-            candidate.operation
-          ),
-          output: pipe(
-            responseDefinitions,
-            Result.flatMap((definitions) =>
-              operationOutput(
-                document,
-                candidate.operation,
-                definitions
-              )
-            ),
-            Result.flatMap(compileOutputSchema)
-          ),
-          requestDefinitions,
-          security: operationSecurityRequirements(
-            pipe(
-              own(candidate.operation, "security"),
-              O.getOrUndefined
-            ),
-            defaultSecurity,
-            schemes
-          ),
-        }),
-        Result.map(
-          ({
-            baseUrl: resolvedBaseUrl,
-            input,
-            output,
-            requestDefinitions: definitions,
-            security,
-          }) => {
-            const parameters = inputSchema(
-              input.fields,
-              definitions
-            );
-            const plan = Plan.new(
-              operation.value,
-              `${pipe(
-                resolvedBaseUrl,
-                Str.replace(/\/+$/u, "")
-              )}${candidate.path}`,
-              input.fields,
-              input.body,
-              security,
-              schemes,
-              options.auth,
-              options.headers
-            );
-            const name = pipe(segments, A.join("."));
-            const tool = Tool.dynamic(name, {
-              description: operationDescription(operation.value),
-              parameters,
-              success: output,
-              failure: ToolError,
-              failureMode: "return",
-            });
-            return GeneratedOperation.new(tool, plan);
-          }
-        )
-      );
-
-      return Result.match(planned, {
-        onFailure: (reason) =>
-          CompilationState.skip(state, candidate, reason),
-        onSuccess: (generated) =>
-          CompilationState.append(state, segments, generated),
-      });
+  return A.reduce(candidates(document), CompilationState.empty(), (state, candidate) => {
+    const operation = operationFrom(candidate);
+    if (O.isNone(operation)) {
+      return CompilationState.skip(state, candidate, `path '${candidate.path}' is not a valid OpenAPI path template`);
     }
-  );
+
+    const segments = operationPath(
+      candidate.sourceMethod,
+      candidate.path,
+      candidate.operation,
+      state.used,
+      state.namespaces
+    );
+    const planned = pipe(
+      Result.all({
+        baseUrl: baseUrl(options, candidate),
+        input: operationInput(document, candidate.pathItem, candidate.operation),
+        output: pipe(
+          responseDefinitions,
+          Result.flatMap((definitions) => operationOutput(document, candidate.operation, definitions)),
+          Result.flatMap(compileOutputSchema)
+        ),
+        requestDefinitions,
+        security: operationSecurityRequirements(
+          pipe(own(candidate.operation, "security"), O.getOrUndefined),
+          defaultSecurity,
+          schemes
+        ),
+      }),
+      Result.map(({ baseUrl: resolvedBaseUrl, input, output, requestDefinitions: definitions, security }) => {
+        const parameters = inputSchema(input.fields, definitions);
+        const plan = Plan.new(
+          operation.value,
+          `${pipe(resolvedBaseUrl, Str.replace(/\/+$/u, ""))}${candidate.path}`,
+          input.fields,
+          input.body,
+          security,
+          schemes,
+          options.auth,
+          options.headers
+        );
+        const name = pipe(segments, A.join("."));
+        const tool = Tool.dynamic(name, {
+          description: operationDescription(operation.value),
+          parameters,
+          success: output,
+          failure: ToolError,
+          failureMode: "return",
+        });
+        return GeneratedOperation.new(tool, plan);
+      })
+    );
+
+    return Result.match(planned, {
+      onFailure: (reason) => CompilationState.skip(state, candidate, reason),
+      onSuccess: (generated) => CompilationState.append(state, segments, generated),
+    });
+  });
 };
 
 const makeHandlersLayer = (
@@ -425,13 +328,13 @@ const makeHandlersLayer = (
       const client = yield* HttpClient.HttpClient;
       return pipe(
         generated,
-        A.map(({ plan, tool }) => [
-          tool.name,
-          (input: unknown) =>
-            invoke(plan, input).pipe(
-              Effect.provideService(HttpClient.HttpClient, client)
-            ),
-        ] as const),
+        A.map(
+          ({ plan, tool }) =>
+            [
+              tool.name,
+              (input: unknown) => invoke(plan, input).pipe(Effect.provideService(HttpClient.HttpClient, client)),
+            ] as const
+        ),
         Struct.fromEntries
       );
     })
@@ -506,9 +409,7 @@ const makeHandlersLayer = (
  * @category constructors
  * @since 0.0.0
  */
-export const fromSpec = (
-  options: unknown
-): Effect.Effect<FromSpecResult, InvalidOpenApiOptions> =>
+export const fromSpec = (options: unknown): Effect.Effect<FromSpecResult, InvalidOpenApiOptions> =>
   pipe(
     Options.decodeEffect(options),
     Effect.mapError(InvalidOpenApiOptions.new),
@@ -520,10 +421,6 @@ export const fromSpec = (
           A.map((generated) => generated.tool)
         )
       );
-      return FromSpecResult.new(
-        toolkit,
-        makeHandlersLayer(toolkit, compiled.generated),
-        compiled.skipped
-      );
+      return FromSpecResult.new(toolkit, makeHandlersLayer(toolkit, compiled.generated), compiled.skipped);
     })
   );

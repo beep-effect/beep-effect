@@ -55,6 +55,11 @@ const SimilaritySearchResultOrder = Order.mapInput(
 );
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Nlp");
+const NlpIndexKind = LiteralKit(["bm25", "semantic"]).pipe(
+  $I.annoteSchema("NlpIndexKind", {
+    description: "Opaque ontology index implementations accepted by the NLP search service.",
+  })
+);
 
 /**
  * Tokenization result
@@ -250,8 +255,12 @@ export const ChunkOptions = ChunkOptionsInput.pipe(
 export type ChunkOptions = typeof ChunkOptions.Type;
 
 /**
- * Opaque BM25 index for ontology search
+ * Opaque BM25 index handle for ontology search.
  *
+ * **Details**
+ *
+ * This remains a type-level handle because it owns live mutable hash maps and
+ * an in-memory ontology reference; it is not serializable boundary data.
  *
  * @category type-level
  * @since 0.0.0
@@ -265,8 +274,12 @@ export interface OntologyBM25Index {
 }
 
 /**
- * Opaque semantic index for ontology search
+ * Opaque semantic index handle for ontology search.
  *
+ * **Details**
+ *
+ * This remains a type-level handle because it owns mutable embedding and
+ * domain-model maps plus an in-memory ontology reference.
  *
  * @category type-level
  * @since 0.0.0
@@ -302,7 +315,7 @@ export interface OntologySemanticIndex {
 export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError`)(
   "NlpIndexError",
   {
-    indexKind: S.Literals(["bm25", "semantic"]),
+    indexKind: NlpIndexKind,
     message: S.String,
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
   },
@@ -316,7 +329,11 @@ const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
     Effect.mapError((cause) => WinkTokenizationError.fromCause(cause, operation, { text }))
   );
 
-const OntologySearchResultKind = LiteralKit(["class", "property"]);
+const OntologySearchResultKind = LiteralKit(["class", "property"]).pipe(
+  $I.annoteSchema("OntologySearchResultKind", {
+    description: "Ontology definition kinds returned by text and semantic search.",
+  })
+);
 
 class OntologySearchResultBase extends S.Class<OntologySearchResultBase>($I`OntologySearchResultBase`)(
   {
@@ -856,12 +873,11 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         };
         return index;
       }),
-      searchOntologyIndex: (
+      searchOntologyIndex: Effect.fn("NlpService.searchOntologyIndex")(function* (
         index: OntologyBM25Index,
         query: string,
         limit: PosInt = PosInt.make(10)
-      ): Effect.Effect<ReadonlyArray<OntologySearchResult>, NlpIndexError> =>
-        Effect.gen(function* () {
+      ): Effect.fn.Return<ReadonlyArray<OntologySearchResult>, NlpIndexError> {
           const corpusId = index._corpusId;
           const domainModelMap = index._domainModelMap;
           const ontology = index._ontology;
@@ -890,8 +906,8 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
               results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
             }
           }
-          return results;
-        }),
+        return results;
+      }),
       createOntologySemanticIndex: Effect.fn("NlpService.createOntologySemanticIndex")(function* (
         ontology: OntologyContext
       ) {
@@ -931,11 +947,11 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         };
         return index;
       }),
-      createOntologySemanticIndexFromPrecomputed: (
+      createOntologySemanticIndexFromPrecomputed: Effect.fn("NlpService.createOntologySemanticIndexFromPrecomputed")(
+        function* (
         ontology: OntologyContext,
         embeddings: OntologyEmbeddings
-      ): Effect.Effect<OntologySemanticIndex> =>
-        Effect.gen(function* () {
+        ): Effect.fn.Return<OntologySemanticIndex> {
           const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>();
           const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
           for (const classEmb of embeddings.classes) {
@@ -965,7 +981,8 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             _ontology: ontology,
           };
           return index;
-        }),
+        }
+      ),
       searchOntologySemanticIndex: Effect.fn("NlpService.searchOntologySemanticIndex")(function* (
         index: OntologySemanticIndex,
         query: string,

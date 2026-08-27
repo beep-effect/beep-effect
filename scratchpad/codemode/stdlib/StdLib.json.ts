@@ -5,9 +5,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {DateTime, Effect, MutableHashSet, Result} from "effect";
-import type {CallbackRunner} from "../interpreter/Interpreter.methods.ts";
-import {applyCollectionCallback} from "../interpreter/Interpreter.methods.ts";
+
+import type { SafeObject } from "@beep/schema";
+import { A, P, pipe, R } from "@beep/utils";
+import { DateTime, Effect, MutableHashSet, Result } from "effect";
+import * as S from "effect/Schema";
+import { copyIn, copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
+import { CodeModeDate, CodeModeURL, isCodeModeValue, makeEmptySafeObject } from "../Codemode.values.ts";
+import type { CallbackRunner } from "../interpreter/Interpreter.methods.ts";
+import { applyCollectionCallback } from "../interpreter/Interpreter.methods.ts";
 import {
   type AstNode,
   type InterpreterFailure,
@@ -15,21 +21,7 @@ import {
   JsonMethodName,
   JsonMethodReference,
 } from "../interpreter/Interpreter.model.ts";
-import {typeofValue} from "../interpreter/Interpreter.references.ts";
-import {
-  copyIn,
-  copyOut,
-  ToolRuntimeError,
-} from "../Codemode.tool-runtime.ts";
-import {SafeObject} from "@beep/schema";
-import {P, A, R, pipe} from "@beep/utils";
-import * as S from "effect/Schema";
-import {
-  CodeModeDate,
-  CodeModeURL,
-  makeEmptySafeObject,
-  isCodeModeValue,
-} from "../Codemode.values.ts";
+import { typeofValue } from "../interpreter/Interpreter.references.ts";
 
 /**
  * Guest JSON.parse/stringify adapter with reviver and replacer callbacks.
@@ -80,11 +72,9 @@ export const invokeJsonMethod = <R>(
   runner: CallbackRunner<R>,
   ref: JsonMethodReference | JsonMethodName,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
-  const reference = P.isString(ref)
-    ? JsonMethodReference.new(ref)
-    : ref;
+  const reference = P.isString(ref) ? JsonMethodReference.new(ref) : ref;
 
   return JsonMethodName.$match(reference.name, {
     parse: () => parse(runner, args, node),
@@ -95,7 +85,7 @@ export const invokeJsonMethod = <R>(
 const parse = <R>(
   runner: CallbackRunner<R>,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> =>
   Effect.gen(function* () {
     const text = args[0];
@@ -109,7 +99,7 @@ const parse = <R>(
         catch: (error) =>
           InterpreterRuntimeError.new(
             `JSON.parse received invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
-            node,
+            node
           ).as("SyntaxError"),
       })
     );
@@ -119,10 +109,7 @@ const parse = <R>(
     const apply = applyCollectionCallback(runner, args[1], "JSON.parse", node);
     const root = makeEmptySafeObject();
     Reflect.set(root, "", copied);
-    const visit = (
-      holder: SafeObject | Array<unknown>,
-      key: string
-    ): Effect.Effect<unknown, InterpreterFailure, R> =>
+    const visit = (holder: SafeObject | Array<unknown>, key: string): Effect.Effect<unknown, InterpreterFailure, R> =>
       Effect.gen(function* () {
         const value = Reflect.get(holder, key);
         if (A.isArray(value)) {
@@ -147,7 +134,7 @@ const parse = <R>(
 const stringify = <R>(
   runner: CallbackRunner<R>,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> =>
   Effect.gen(function* () {
     const space = args[2];
@@ -175,10 +162,7 @@ const stringify = <R>(
     const root = makeEmptySafeObject();
     Reflect.set(root, "", input);
     const stack = MutableHashSet.empty<object>();
-    const visit = (
-      holder: SafeObject | Array<unknown>,
-      key: string
-    ): Effect.Effect<unknown, InterpreterFailure, R> =>
+    const visit = (holder: SafeObject | Array<unknown>, key: string): Effect.Effect<unknown, InterpreterFailure, R> =>
       Effect.gen(function* () {
         const value = yield* apply([key, toJSONValue(Reflect.get(holder, key))]);
         if (P.isUndefined(value) || typeofValue(value) === "function") return undefined;
@@ -187,10 +171,7 @@ const stringify = <R>(
         if (P.isNull(value) || P.isString(value) || P.isBoolean(value)) return value;
         if (A.isArray(value)) {
           if (MutableHashSet.has(stack, value)) {
-            return yield* InterpreterRuntimeError.new(
-              "Converting circular structure to JSON.",
-              node
-            ).as("TypeError");
+            return yield* InterpreterRuntimeError.new("Converting circular structure to JSON.", node).as("TypeError");
           }
           MutableHashSet.add(stack, value);
           const result = A.empty<unknown>();
@@ -202,10 +183,7 @@ const stringify = <R>(
         }
         if (!isPlainObject(value)) return {};
         if (MutableHashSet.has(stack, value)) {
-          return yield* InterpreterRuntimeError.new(
-            "Converting circular structure to JSON.",
-            node
-          ).as("TypeError");
+          return yield* InterpreterRuntimeError.new("Converting circular structure to JSON.", node).as("TypeError");
         }
         MutableHashSet.add(stack, value);
         const result = makeEmptySafeObject();
@@ -232,26 +210,18 @@ const copyFromBoundary = (
       catch: (error) =>
         ToolRuntimeError.is(error)
           ? error
-          : ToolRuntimeError.new(
-              "InvalidDataValue",
-              `${label} could not be copied into CodeMode.`
-            ),
+          : ToolRuntimeError.new("InvalidDataValue", `${label} could not be copied into CodeMode.`),
     })
   );
 
-const copyToBoundary = (
-  value: unknown
-): Effect.Effect<unknown, ToolRuntimeError> =>
+const copyToBoundary = (value: unknown): Effect.Effect<unknown, ToolRuntimeError> =>
   Effect.fromResult(
     Result.try({
       try: () => copyOut(value, "json"),
       catch: (error) =>
         ToolRuntimeError.is(error)
           ? error
-          : ToolRuntimeError.new(
-              "InvalidDataValue",
-              "JSON.stringify value could not be copied out of CodeMode."
-            ),
+          : ToolRuntimeError.new("InvalidDataValue", "JSON.stringify value could not be copied out of CodeMode."),
     })
   );
 
@@ -267,21 +237,18 @@ const stringifyResult = (
       catch: (error) =>
         InterpreterRuntimeError.new(
           `JSON.stringify failed: ${error instanceof Error ? error.message : String(error)}`,
-          node,
+          node
         ).as("TypeError"),
     })
   );
 
 const toJSONValue = (value: unknown): unknown => {
   if (CodeModeDate.is(value)) {
-    return S.is(S.Finite)(value.time)
-      ? DateTime.makeUnsafe(value.time).pipe(DateTime.formatIso)
-      : null;
+    return S.is(S.Finite)(value.time) ? DateTime.makeUnsafe(value.time).pipe(DateTime.formatIso) : null;
   }
   if (CodeModeURL.is(value)) return value.url.href;
   return value;
 };
 
-const isPlainObject = (value: unknown): value is SafeObject => P.isNotNull(value) &&
-  P.isObjectKeyword(value) &&
-  !isCodeModeValue(value);
+const isPlainObject = (value: unknown): value is SafeObject =>
+  P.isNotNull(value) && P.isObjectKeyword(value) && !isCodeModeValue(value);

@@ -50,7 +50,7 @@ export {
 	YamlLintRuleSetting,
 	YamlStyleConflictError,
 } from "./YamlLint.ts";
-export { LintContext, LintLine, type StyleObservation, type YamlRule } from "./YamlLintRule.ts";
+export { LintContext, LintLine, StyleObservation, type YamlRule } from "./YamlLintRule.ts";
 export { StyleFloor, StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "./YamlLintRule.ts";
 export type { YamlAliasEncoded, YamlMapEncoded, YamlScalarEncoded, YamlSeqEncoded } from "./YamlNode.ts";
 export {

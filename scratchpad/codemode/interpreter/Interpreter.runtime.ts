@@ -8,10 +8,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
 import { Unknown } from "@beep/schema/Unknown";
+import { A, O, P, pipe, R, thunkFalse } from "@beep/utils";
 import {
   Cause,
-  Context,
+  type Context,
   DateTime,
   Deferred,
   Effect,
@@ -24,132 +28,6 @@ import {
   Result,
 } from "effect";
 import * as S from "effect/Schema";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import {
-  SafeObject as SafeObjectSchema,
-  type SafeObject
-} from "@beep/schema/SafeObject";
-import {A, O, P, R, pipe, thunkFalse} from "@beep/utils";
-import {
-  isBlockedMember,
-  ToolReference,
-} from "../Codemode.tool-runtime.ts";
-import {
-  asNode,
-  AstNode,
-  AsyncIteratorSymbol,
-  Binding,
-  CodeModeFunction,
-  CodeModeGenerator,
-  CoercionFunction,
-  CoercionFunctionName,
-  ComputedValue,
-  ErrorConstructorName,
-  ErrorConstructorReference,
-  GeneratorMethodKind,
-  GeneratorMethodReference,
-  GeneratorRequestKind,
-  GeneratorReturn,
-  getArray,
-  getBoolean,
-  getNode,
-  getOptionalNode,
-  getString,
-  GlobalMethod,
-  GlobalMethodReference,
-  GlobalNamespace,
-  GlobalNamespaceName,
-  InterpreterFailure,
-  InterpreterRuntimeError,
-  IntrinsicMethod,
-  IntrinsicReference,
-  isRecord,
-  IteratorSymbol,
-  IteratorSymbols,
-  JsonMethodReference,
-  JsonMethodName,
-  MemberReference,
-  OptionalShortCircuit,
-  type ProgramNode,
-  ProgramThrow,
-  PromiseInstanceMethodReference,
-  PromiseMethodName,
-  PromiseMethodReference,
-  PromiseNamespace,
-  RuntimeReference,
-  SearchFunction,
-  StatementBreak,
-  StatementContinue,
-  StatementNone,
-  StatementResult,
-  StatementReturn,
-  SymbolNamespace,
-  tryInterpreter,
-  unsupportedSyntax,
-  UriFunction,
-} from "./Interpreter.model.ts";
-import {
-  caughtErrorValue,
-  constructAggregateErrorValue,
-  constructErrorValue
-} from "./Interpreter.errors.ts";
-import {
-  type CallbackRunner,
-  invokeArrayFrom,
-  invokeGlobalMethod,
-  invokeGroupBy,
-  invokeIntrinsic,
-} from "./Interpreter.methods.ts";
-import {
-  preserveConsumerError,
-  type SyncIteratorRunner
-} from "./Interpreter.iterator.ts";
-import {
-  constructPromise,
-  invokePromiseInstanceMethod,
-  invokePromiseMethod,
-  PromiseRuntime,
-  resolvePromise,
-  resolvePromiseValue,
-} from "./Interpreter.promises.ts";
-import {
-  containsOpaqueReference,
-  isRuntimeReference,
-  rejectCircularInsertion,
-  typeofValue
-} from "./Interpreter.references.ts";
-import {ScopeStack} from "./Interpreter.scope.ts";
-import {
-  AssignmentOperator,
-  AppliedBinaryOperator,
-  boundedData,
-  BinaryOperator,
-  coerceToNumber,
-  coerceToString,
-  CompoundOperator,
-  errorBrandName,
-  escapeRegexHint,
-  formatConsoleMessage,
-  invokeCoercion,
-  invokeJsonMethod,
-  invokeMathSumPrecise,
-  invokeObjectFromEntries,
-  invokeUriFunction,
-  LogicalAssignmentOperator,
-  LogicalOperator,
-  mathConstants,
-  numberConstants,
-  objectMethodsPreservingIdentity,
-  regexFailureReason,
-  regexpProperties,
-  UnaryOperator,
-  uriArgument,
-  urlArgument,
-  urlProperties,
-  urlWritableProperties,
-  UpdateOperator,
-  valueConstructors
-} from "../stdlib/index.ts";
 import {
   arrayMethods,
   arrayStatics,
@@ -171,6 +49,7 @@ import {
   UrlSearchParamsMethod,
   UrlStatic,
 } from "../Codemode.method-names.ts";
+import { isBlockedMember, ToolReference } from "../Codemode.tool-runtime.ts";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -179,9 +58,118 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
-  makeEmptySafeObject,
   isCodeModeValue,
+  makeEmptySafeObject,
 } from "../Codemode.values.ts";
+import {
+  AppliedBinaryOperator,
+  AssignmentOperator,
+  BinaryOperator,
+  boundedData,
+  CompoundOperator,
+  coerceToNumber,
+  coerceToString,
+  errorBrandName,
+  escapeRegexHint,
+  formatConsoleMessage,
+  invokeCoercion,
+  invokeJsonMethod,
+  invokeMathSumPrecise,
+  invokeObjectFromEntries,
+  invokeUriFunction,
+  LogicalAssignmentOperator,
+  LogicalOperator,
+  mathConstants,
+  numberConstants,
+  objectMethodsPreservingIdentity,
+  regexFailureReason,
+  regexpProperties,
+  UnaryOperator,
+  UpdateOperator,
+  uriArgument,
+  urlArgument,
+  urlProperties,
+  urlWritableProperties,
+  valueConstructors,
+} from "../stdlib/index.ts";
+import { caughtErrorValue, constructAggregateErrorValue, constructErrorValue } from "./Interpreter.errors.ts";
+import { preserveConsumerError, type SyncIteratorRunner } from "./Interpreter.iterator.ts";
+import {
+  type CallbackRunner,
+  invokeArrayFrom,
+  invokeGlobalMethod,
+  invokeGroupBy,
+  invokeIntrinsic,
+} from "./Interpreter.methods.ts";
+import {
+  AstNode,
+  AsyncIteratorSymbol,
+  asNode,
+  Binding,
+  CodeModeFunction,
+  CodeModeGenerator,
+  CoercionFunction,
+  CoercionFunctionName,
+  ComputedValue,
+  ErrorConstructorName,
+  ErrorConstructorReference,
+  GeneratorMethodKind,
+  GeneratorMethodReference,
+  GeneratorRequestKind,
+  GeneratorReturn,
+  GlobalMethod,
+  GlobalMethodReference,
+  GlobalNamespace,
+  GlobalNamespaceName,
+  getArray,
+  getBoolean,
+  getNode,
+  getOptionalNode,
+  getString,
+  InterpreterFailure,
+  InterpreterRuntimeError,
+  IntrinsicMethod,
+  IntrinsicReference,
+  IteratorSymbol,
+  IteratorSymbols,
+  isRecord,
+  JsonMethodName,
+  JsonMethodReference,
+  MemberReference,
+  OptionalShortCircuit,
+  type ProgramNode,
+  ProgramThrow,
+  PromiseInstanceMethodReference,
+  PromiseMethodName,
+  PromiseMethodReference,
+  PromiseNamespace,
+  RuntimeReference,
+  SearchFunction,
+  StatementBreak,
+  StatementContinue,
+  StatementNone,
+  StatementResult,
+  StatementReturn,
+  SymbolNamespace,
+  tryInterpreter,
+  UriFunction,
+  unsupportedSyntax,
+} from "./Interpreter.model.ts";
+import {
+  constructPromise,
+  invokePromiseInstanceMethod,
+  invokePromiseMethod,
+  type PromiseRuntime,
+  resolvePromise,
+  resolvePromiseValue,
+} from "./Interpreter.promises.ts";
+import {
+  containsOpaqueReference,
+  isRuntimeReference,
+  rejectCircularInsertion,
+  typeofValue,
+} from "./Interpreter.references.ts";
+import { ScopeStack } from "./Interpreter.scope.ts";
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
@@ -257,7 +245,7 @@ const instanceofValue = (lhs: unknown, rhs: unknown, node: AstNode): boolean => 
   const unsupported = (): never => {
     throw InterpreterRuntimeError.new(
       "The right-hand side of 'instanceof' must be a supported constructor: Error (or a specific error type like TypeError), Date, RegExp, Map, Set, URL, URLSearchParams, Array, Object, or Promise.",
-      node,
+      node
     );
   };
 
@@ -310,23 +298,20 @@ const collectPatternNames = (pattern: AstNode): Array<string> =>
     Match.when("AssignmentPattern", () => collectPatternNames(getNode(pattern, "left"))),
     Match.when("RestElement", () => collectPatternNames(getNode(pattern, "argument"))),
     Match.when("ArrayPattern", () =>
-      A.flatMap(
-        getArray(pattern, "elements"),
-        (element) => P.isNull(element) ? A.empty() : collectPatternNames(asNode(element, "elements")),
-      )),
+      A.flatMap(getArray(pattern, "elements"), (element) =>
+        P.isNull(element) ? A.empty() : collectPatternNames(asNode(element, "elements"))
+      )
+    ),
     Match.when("ObjectPattern", () =>
       A.flatMap(getArray(pattern, "properties"), (property) => {
         const prop = asNode(property, "properties");
-        return collectPatternNames(
-          prop.type === "RestElement" ? getNode(prop, "argument") : getNode(prop, "value"),
-        );
-      })),
-    Match.orElse(() => []),
+        return collectPatternNames(prop.type === "RestElement" ? getNode(prop, "argument") : getNode(prop, "value"));
+      })
+    ),
+    Match.orElse(() => [])
   );
 
-const collectHoistedVariables = (
-  value: unknown,
-): Array<readonly [name: string, node: AstNode]> => {
+const collectHoistedVariables = (value: unknown): Array<readonly [name: string, node: AstNode]> => {
   if (A.isArray(value)) return A.flatMap(value, collectHoistedVariables);
   if (
     !AstNode.is(value) ||
@@ -341,10 +326,7 @@ const collectHoistedVariables = (
   if (value.type === "VariableDeclaration" && getString(value, "kind") === "var") {
     return A.flatMap(getArray(value, "declarations"), (declarationValue) => {
       const declaration = asNode(declarationValue, "declarations");
-      return A.map(
-        collectPatternNames(getNode(declaration, "id")),
-        (name) => [name, declaration] as const,
-      );
+      return A.map(collectPatternNames(getNode(declaration, "id")), (name) => [name, declaration] as const);
     });
   }
   return A.flatMap(R.values(value), collectHoistedVariables);
@@ -378,10 +360,7 @@ const OpaqueMemberReference = S.Union([
   GlobalMethodReference,
   JsonMethodReference,
   GeneratorMethodReference,
-]).pipe(
-  S.toTaggedUnion("_tag"),
-  SchemaUtils.withCodecStatics
-);
+]).pipe(S.toTaggedUnion("_tag"), SchemaUtils.withCodecStatics);
 
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
 
@@ -391,7 +370,7 @@ const isDestructurableObject = (value: unknown): value is SafeObject | Array<unk
 const copyIteratorSymbols = (
   source: object,
   target: object,
-  consumed: O.Option<MutableHashSet.MutableHashSet<PropertyKey>> = O.none(),
+  consumed: O.Option<MutableHashSet.MutableHashSet<PropertyKey>> = O.none()
 ): void => {
   for (const symbol of IteratorSymbols) {
     if (!O.exists(consumed, (keys) => MutableHashSet.has(keys, symbol)) && P.hasProperty(source, symbol))
@@ -401,10 +380,7 @@ const copyIteratorSymbols = (
 
 type LoopLabels = MutableHashSet.MutableHashSet<string>;
 
-const escapesLoopLabels = (
-  label: O.Option<string>,
-  labels: O.Option<LoopLabels>,
-): boolean =>
+const escapesLoopLabels = (label: O.Option<string>, labels: O.Option<LoopLabels>): boolean =>
   O.exists(label, (name) => !O.exists(labels, (names) => MutableHashSet.has(names, name)));
 
 type GeneratorRequest = {
@@ -423,7 +399,7 @@ type GeneratorState = {
   available: O.Option<Deferred.Deferred<void>>;
 };
 
-const promiseResolutionNode: AstNode = {type: "PromiseResolution"};
+const promiseResolutionNode: AstNode = { type: "PromiseResolution" };
 
 /**
  * Evaluates a {@link ProgramNode} against a fresh lexical frame and Promise runtime.
@@ -486,7 +462,7 @@ export class Interpreter<R> {
   private scopes: ScopeStack;
   private readonly executeTool: (
     path: ReadonlyArray<string>,
-    args: Array<unknown>,
+    args: Array<unknown>
   ) => Effect.Effect<unknown, InterpreterFailure, R>;
   private readonly invokeSearch: (args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>;
   private readonly toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>;
@@ -506,7 +482,7 @@ export class Interpreter<R> {
     invokeSearch: (args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>,
     toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>,
     promises: PromiseRuntime<R>,
-    logs = A.empty<string>(),
+    logs = A.empty<string>()
   ) {
     const globalScope = MutableHashMap.empty<string, Binding>();
     this.scopes = ScopeStack.new([globalScope]);
@@ -550,11 +526,7 @@ export class Interpreter<R> {
       MutableHashMap.set(globalScope, name, Binding.new(false, value));
     }
     for (const name of ErrorConstructorName.Options) {
-      MutableHashMap.set(
-        globalScope,
-        name,
-        Binding.new(false, ErrorConstructorReference.new(name))
-      );
+      MutableHashMap.set(globalScope, name, Binding.new(false, ErrorConstructorReference.new(name)));
     }
   }
 
@@ -599,7 +571,7 @@ export class Interpreter<R> {
       self.predeclareLexical(program.body);
       self.hoistFunctions(program.body);
       self.hoistVariables(program.body);
-      let value: unknown = undefined;
+      let value: unknown;
       for (const [index, statement] of program.body.entries()) {
         if (index === program.body.length - 1 && statement.type === "ExpressionStatement") {
           value = yield* self.evaluateExpression(getNode(statement, "expression"));
@@ -612,13 +584,8 @@ export class Interpreter<R> {
           break;
         }
 
-        if (
-          StatementResult.isAnyOf(["Break", "Continue"])(result)
-        ) {
-          throw InterpreterRuntimeError.new(
-            `Unexpected '${result._tag.toLowerCase()}' outside of a loop.`,
-            statement
-          );
+        if (StatementResult.isAnyOf(["Break", "Continue"])(result)) {
+          throw InterpreterRuntimeError.new(`Unexpected '${result._tag.toLowerCase()}' outside of a loop.`, statement);
         }
       }
 
@@ -652,7 +619,7 @@ export class Interpreter<R> {
   // Fork at the call site so admission and hooks occur when the call is made.
   private createToolCallPromise(
     path: ReadonlyArray<string>,
-    args: Array<unknown>,
+    args: Array<unknown>
   ): Effect.Effect<CodeModePromise, never, R> {
     return this.createPromise(Effect.suspend(() => this.executeTool(path, args)));
   }
@@ -678,7 +645,9 @@ export class Interpreter<R> {
    *
    * @since 0.0.0
    */
-  private createPromise(effect: Effect.Effect<unknown, InterpreterFailure, R>): Effect.Effect<CodeModePromise, never, R> {
+  private createPromise(
+    effect: Effect.Effect<unknown, InterpreterFailure, R>
+  ): Effect.Effect<CodeModePromise, never, R> {
     return this.promises.create(effect);
   }
 
@@ -739,12 +708,9 @@ export class Interpreter<R> {
     }
     return Match.value(node.type).pipe(
       Match.when("ExpressionStatement", () =>
-        Effect.as(
-          this.evaluateExpression(getNode(node, "expression")),
-          StatementNone.new()
-        )),
-      Match.when("VariableDeclaration", () =>
-        Effect.as(this.evaluateVariableDeclaration(node), StatementNone.new())),
+        Effect.as(this.evaluateExpression(getNode(node, "expression")), StatementNone.new())
+      ),
+      Match.when("VariableDeclaration", () => Effect.as(this.evaluateVariableDeclaration(node), StatementNone.new())),
       Match.when("ReturnStatement", () => {
         const argumentNode = getOptionalNode(node, "argument");
         return P.isNotUndefined(argumentNode)
@@ -766,7 +732,7 @@ export class Interpreter<R> {
       Match.when("TryStatement", () => this.evaluateTryStatement(node)),
       Match.when("EmptyStatement", () => Effect.succeed(StatementNone.new())),
       Match.when("FunctionDeclaration", () => Effect.succeed(StatementNone.new())),
-      Match.exhaustive,
+      Match.exhaustive
     );
   }
 
@@ -839,7 +805,7 @@ export class Interpreter<R> {
       getNode(node, "body"),
       this.scopes.capture(),
       node.async === true,
-      node.generator === true,
+      node.generator === true
     );
   }
 
@@ -994,7 +960,7 @@ export class Interpreter<R> {
         ? this.evaluateStatement(consequentNode)
         : P.isNotNullish(alternateNode)
           ? this.evaluateStatement(alternateNode)
-          : Effect.succeed(StatementNone.new()),
+          : Effect.succeed(StatementNone.new())
     );
   }
 
@@ -1052,10 +1018,7 @@ export class Interpreter<R> {
         for (let index = start; index < cases.length; index += 1) {
           const matchedCase = cases[index];
           if (P.isUndefined(matchedCase)) {
-            return yield* InterpreterRuntimeError.new(
-              "Switch case index is outside the decoded case list.",
-              node
-            );
+            return yield* InterpreterRuntimeError.new("Switch case index is outside the decoded case list.", node);
           }
           for (const statementValue of getArray(matchedCase, "consequent")) {
             const result = yield* self.evaluateStatement(asNode(statementValue, "consequent"));
@@ -1063,9 +1026,7 @@ export class Interpreter<R> {
               if (O.isNone(result.label)) return StatementNone.new();
               return result;
             }
-            if (
-              StatementResult.isAnyOf(["Return", "Continue"])(result)
-            ) return result;
+            if (StatementResult.isAnyOf(["Return", "Continue"])(result)) return result;
           }
         }
         return StatementNone.new();
@@ -1096,7 +1057,7 @@ export class Interpreter<R> {
    */
   private evaluateWhileStatement(
     node: AstNode,
-    labels: O.Option<LoopLabels> = O.none(),
+    labels: O.Option<LoopLabels> = O.none()
   ): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const testNode = getNode(node, "test");
     const bodyNode = getNode(node, "body");
@@ -1148,7 +1109,7 @@ export class Interpreter<R> {
    */
   private evaluateDoWhileStatement(
     node: AstNode,
-    labels: O.Option<LoopLabels> = O.none(),
+    labels: O.Option<LoopLabels> = O.none()
   ): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const bodyNode = getNode(node, "body");
     const testNode = getNode(node, "test");
@@ -1200,7 +1161,7 @@ export class Interpreter<R> {
    */
   private evaluateForStatement(
     node: AstNode,
-    labels: O.Option<LoopLabels> = O.none(),
+    labels: O.Option<LoopLabels> = O.none()
   ): Effect.Effect<StatementResult, InterpreterFailure, R> {
     this.scopes.push();
     const self = this;
@@ -1224,10 +1185,7 @@ export class Interpreter<R> {
 
       const perIterationBindings =
         initNode?.type === "VariableDeclaration" && getString(initNode, "kind") !== "var"
-          ? pipe(
-            MutableHashMap.keys(self.scopes.current()),
-            A.fromIterable
-          )
+          ? pipe(MutableHashMap.keys(self.scopes.current()), A.fromIterable)
           : A.empty<string>();
 
       const nextIteration = () => {
@@ -1262,10 +1220,7 @@ export class Interpreter<R> {
           return StatementNone.new();
         }
 
-        if (
-          StatementResult.guards.Continue(result) &&
-          escapesLoopLabels(result.label, labels)
-        ) return result;
+        if (StatementResult.guards.Continue(result) && escapesLoopLabels(result.label, labels)) return result;
 
         nextIteration();
         if (P.isNotNullish(updateNode)) {
@@ -1273,7 +1228,6 @@ export class Interpreter<R> {
         }
 
         if (StatementResult.guards.Continue(result)) {
-          continue;
         }
       }
 
@@ -1304,7 +1258,7 @@ export class Interpreter<R> {
    */
   private evaluateForOfStatement(
     node: AstNode,
-    labels: O.Option<LoopLabels> = O.none(),
+    labels: O.Option<LoopLabels> = O.none()
   ): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const awaiting = getBoolean(node, "await");
     const left = getNode(node, "left");
@@ -1324,15 +1278,13 @@ export class Interpreter<R> {
       if (O.isNone(iteratorOption) && P.isUndefined(cursor)) {
         throw InterpreterRuntimeError.new(
           `${awaiting ? "for await...of" : "for...of"} requires an array, string, Map, Set, or URLSearchParams, or custom iterator value.`,
-          node,
+          node
         ).as("TypeError");
       }
       const close = () =>
         O.match(iteratorOption, {
           onNone: () =>
-            awaiting
-              ? Effect.andThen(cursor?.close ?? Effect.void, Effect.yieldNow)
-              : (cursor?.close ?? Effect.void),
+            awaiting ? Effect.andThen(cursor?.close ?? Effect.void, Effect.yieldNow) : (cursor?.close ?? Effect.void),
           onSome: (iterator) => self.closeIterator(iterator, node, awaiting),
         });
 
@@ -1350,8 +1302,8 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new("Unsupported for...of binding.", left);
       }
 
-      const evaluateBody =
-        Effect.fnUntraced(function* (value: unknown) {
+      const evaluateBody = Effect.fnUntraced(
+        function* (value: unknown) {
           if (P.isNotNullish(declared) && declared.lexical) {
             self.scopes.push();
             self.predeclarePattern(declared.pattern, declared.mutable, left);
@@ -1362,20 +1314,24 @@ export class Interpreter<R> {
             yield* self.assignPattern(assignment, value, left);
           }
           return yield* self.evaluateStatement(body);
-        }, Effect.ensuring(
+        },
+        Effect.ensuring(
           Effect.sync(() => {
             if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
-          }),
-        ));
+          })
+        )
+      );
 
       while (true) {
         const current = O.isSome(iteratorOption)
           ? yield* self.nextIteratorResult(iteratorOption.value, node, awaiting)
           : yield* cursor?.next ?? Effect.fail(InterpreterRuntimeError.new("Iterator is unavailable.", node));
-        const step = P.isTruthy(cursor && awaiting) ? {
-          done: current.done,
-          value: yield* self.awaitValue(current.value)
-        } : current;
+        const step = P.isTruthy(cursor && awaiting)
+          ? {
+              done: current.done,
+              value: yield* self.awaitValue(current.value),
+            }
+          : current;
         if (step.done) return StatementNone.new();
         const bodyExit = yield* Effect.exit(evaluateBody(step.value));
         if (!Exit.isSuccess(bodyExit)) {
@@ -1398,10 +1354,7 @@ export class Interpreter<R> {
           return StatementNone.new();
         }
 
-        if (
-          StatementResult.guards.Continue(result) &&
-          escapesLoopLabels(result.label, labels)
-        ) {
+        if (StatementResult.guards.Continue(result) && escapesLoopLabels(result.label, labels)) {
           yield* close();
           return result;
         }
@@ -1410,8 +1363,8 @@ export class Interpreter<R> {
       Effect.ensuring(
         Effect.sync(() => {
           if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
-        }),
-      ),
+        })
+      )
     );
   }
 
@@ -1436,9 +1389,12 @@ export class Interpreter<R> {
    *
    * @since 0.0.0
    */
-  private awaitValue(value: unknown, node: AstNode = promiseResolutionNode): Effect.Effect<unknown, InterpreterFailure, R> {
+  private awaitValue(
+    value: unknown,
+    node: AstNode = promiseResolutionNode
+  ): Effect.Effect<unknown, InterpreterFailure, R> {
     return Effect.flatMap(resolvePromise(this.runner, this.promises, value, node), (promise) =>
-      this.settlePromise(promise),
+      this.settlePromise(promise)
     );
   }
 
@@ -1467,7 +1423,7 @@ export class Interpreter<R> {
     iterator: CustomIterator,
     value: unknown,
     node: AstNode,
-    closeOnRejection: boolean,
+    closeOnRejection: boolean
   ): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -1517,21 +1473,20 @@ export class Interpreter<R> {
       return Effect.succeed({
         next: Effect.sync(() => {
           const step = iterator.next();
-          return {done: Boolean(step.done), value: step.value};
+          return { done: Boolean(step.done), value: step.value };
         }),
         close: Effect.void,
       });
     }
-    const self = this;
     return Effect.map(
       this.customIterator(value, node, false),
       O.match({
         onNone: () => undefined,
         onSome: (iterator) => ({
-          next: self.nextIteratorResult(iterator, node, false),
-          close: Effect.suspend(() => self.closeIterator(iterator, node, false)),
+          next: this.nextIteratorResult(iterator, node, false),
+          close: Effect.suspend(() => this.closeIterator(iterator, node, false)),
         }),
-      }),
+      })
     );
   }
 
@@ -1559,34 +1514,34 @@ export class Interpreter<R> {
   private customIterator(
     value: unknown,
     node: AstNode,
-    allowAsync = true,
+    allowAsync = true
   ): Effect.Effect<O.Option<CustomIterator>, InterpreterFailure, R> {
     if (CodeModeGenerator.is(value)) {
       if (value.asynchronous && !allowAsync) return Effect.succeed(O.none());
-      return Effect.succeed(O.some({
-        iterator: value,
-        next: GeneratorMethodReference.new(value, "next"),
-        asynchronous: value.asynchronous,
-      }));
+      return Effect.succeed(
+        O.some({
+          iterator: value,
+          next: GeneratorMethodReference.new(value, "next"),
+          asynchronous: value.asynchronous,
+        })
+      );
     }
     if (!isRecord(value) || isRuntimeReference(value)) return Effect.succeed(O.none());
     const asyncMethod = allowAsync ? Reflect.get(value, AsyncIteratorSymbol) : undefined;
     const method = asyncMethod ?? Reflect.get(value, IteratorSymbol);
     if (P.isUndefined(method) || P.isNull(method)) return Effect.succeed(O.none());
-    const self = this;
     return Effect.map(
       this.invokeCallable(this.requireIteratorMethod(method, "Iterator method", node), [], node),
       (iterator) => {
-        const object = self.requireIterator(iterator, node);
+        const object = this.requireIterator(iterator, node);
         return O.some({
           iterator: object,
-          next:
-            CodeModeGenerator.is(object)
-              ? GeneratorMethodReference.new(object, "next")
-              : self.requireIteratorMethod(object.next, "Iterator next", node),
+          next: CodeModeGenerator.is(object)
+            ? GeneratorMethodReference.new(object, "next")
+            : this.requireIteratorMethod(object.next, "Iterator next", node),
           asynchronous: asyncMethod !== undefined && asyncMethod !== null,
         });
-      },
+      }
     );
   }
 
@@ -1617,9 +1572,9 @@ export class Interpreter<R> {
         const object = self.requireIteratorObject(
           yield* self.awaitValue(yield* self.invokeCallable(iterator.next, [], node)),
           "Iterator next() result",
-          node,
+          node
         );
-        return {done: Boolean(object.done), value: object.value};
+        return { done: Boolean(object.done), value: object.value };
       }
 
       const called = yield* Effect.exit(self.invokeCallable(iterator.next, [], node));
@@ -1630,8 +1585,8 @@ export class Interpreter<R> {
       const captured = yield* Effect.exit(
         Effect.sync(() => {
           const object = self.requireIteratorObject(called.value, "Iterator next() result", node);
-          return {done: Boolean(object.done), value: object.value};
-        }),
+          return { done: Boolean(object.done), value: object.value };
+        })
       );
       if (!Exit.isSuccess(captured)) {
         if (awaiting) yield* Effect.yieldNow;
@@ -1667,12 +1622,16 @@ export class Interpreter<R> {
    *
    * @since 0.0.0
    */
-  private closeIterator(iterator: CustomIterator, node: AstNode, awaiting = true): Effect.Effect<void, InterpreterFailure, R> {
-    const close =
-      CodeModeGenerator.is(iterator.iterator)
-        ? GeneratorMethodReference.new(iterator.iterator, "return")
-        : iterator.iterator.return;
-    if (close === undefined || close === null) return iterator.asynchronous || !awaiting ? Effect.void : Effect.yieldNow;
+  private closeIterator(
+    iterator: CustomIterator,
+    node: AstNode,
+    awaiting = true
+  ): Effect.Effect<void, InterpreterFailure, R> {
+    const close = CodeModeGenerator.is(iterator.iterator)
+      ? GeneratorMethodReference.new(iterator.iterator, "return")
+      : iterator.iterator.return;
+    if (close === undefined || close === null)
+      return iterator.asynchronous || !awaiting ? Effect.void : Effect.yieldNow;
     const self = this;
     return Effect.gen(function* () {
       const method = self.requireIteratorMethod(close, "Iterator return", node);
@@ -1680,7 +1639,7 @@ export class Interpreter<R> {
         self.requireIteratorObject(
           yield* self.awaitValue(yield* self.invokeCallable(method, [], node)),
           "Iterator return() result",
-          node,
+          node
         );
         return;
       }
@@ -1691,7 +1650,7 @@ export class Interpreter<R> {
         return yield* Effect.failCause(called.cause);
       }
       const captured = yield* Effect.exit(
-        Effect.sync(() => self.requireIteratorObject(called.value, "Iterator return() result", node).value),
+        Effect.sync(() => self.requireIteratorObject(called.value, "Iterator return() result", node).value)
       );
       if (!Exit.isSuccess(captured)) {
         if (awaiting) yield* Effect.yieldNow;
@@ -1749,9 +1708,7 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private requireIterator(value: unknown, node: AstNode): SafeObject | CodeModeGenerator {
-    return CodeModeGenerator.is(value)
-      ? value
-      : this.requireIteratorObject(value, "Iterator method result", node);
+    return CodeModeGenerator.is(value) ? value : this.requireIteratorObject(value, "Iterator method result", node);
   }
 
   /**
@@ -1838,7 +1795,7 @@ export class Interpreter<R> {
    */
   private evaluateForInStatement(
     node: AstNode,
-    labels: O.Option<LoopLabels> = O.none(),
+    labels: O.Option<LoopLabels> = O.none()
   ): Effect.Effect<StatementResult, InterpreterFailure, R> {
     const left = getNode(node, "left");
     const declared = loopDeclaration(left, "for...in");
@@ -1856,7 +1813,7 @@ export class Interpreter<R> {
       if (keys === undefined) {
         throw InterpreterRuntimeError.new(
           "for...in requires a plain object, array, or tools reference. Use for...of for arrays/strings/Maps/Sets, or Object.keys(value) for a key list.",
-          node,
+          node
         );
       }
 
@@ -1884,8 +1841,8 @@ export class Interpreter<R> {
           Effect.ensuring(
             Effect.sync(() => {
               if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
-            }),
-          ),
+            })
+          )
         );
 
         if (StatementResult.guards.Return(result)) {
@@ -1909,8 +1866,8 @@ export class Interpreter<R> {
       Effect.ensuring(
         Effect.sync(() => {
           if (P.isNotNullish(declared) && declared.lexical) self.scopes.pop();
-        }),
-      ),
+        })
+      )
     );
   }
 
@@ -1937,11 +1894,7 @@ export class Interpreter<R> {
    */
   private evaluateBreakStatement(node: AstNode): StatementResult {
     const labelNode = getOptionalNode(node, "label");
-    return StatementBreak.new(
-      P.isNotNullish(labelNode)
-        ? getString(labelNode, "name")
-        : undefined
-    );
+    return StatementBreak.new(P.isNotNullish(labelNode) ? getString(labelNode, "name") : undefined);
   }
 
   /**
@@ -1967,11 +1920,7 @@ export class Interpreter<R> {
    */
   private evaluateContinueStatement(node: AstNode): StatementResult {
     const labelNode = getOptionalNode(node, "label");
-    return StatementContinue.new(
-      P.isNotNullish(labelNode)
-        ? getString(labelNode, "name")
-        : undefined
-    );
+    return StatementContinue.new(P.isNotNullish(labelNode) ? getString(labelNode, "name") : undefined);
   }
 
   /**
@@ -2014,10 +1963,9 @@ export class Interpreter<R> {
     })();
 
     return Effect.map(evaluated, (result) =>
-      StatementResult.guards.Break(result) &&
-      O.exists(result.label, (label) => MutableHashSet.has(labels, label))
+      StatementResult.guards.Break(result) && O.exists(result.label, (label) => MutableHashSet.has(labels, label))
         ? StatementNone.new()
-        : result,
+        : result
     );
   }
 
@@ -2081,11 +2029,7 @@ export class Interpreter<R> {
           Result.try(() => InterpreterFailure.guards.GeneratorReturn(failure)),
           Result.getOrElse(thunkFalse)
         );
-        if (
-          cause.reasons.some(Cause.isInterruptReason) ||
-          isGeneratorReturn ||
-          P.isUndefined(handler)
-        ) {
+        if (cause.reasons.some(Cause.isInterruptReason) || isGeneratorReturn || P.isUndefined(handler)) {
           return yield* Effect.failCause(cause);
         }
 
@@ -2102,22 +2046,18 @@ export class Interpreter<R> {
 
     if (P.isNullish(finalizer)) return attempted;
 
-    const isAbrupt = StatementResult.isAnyOf([
-      "Return",
-      "Break",
-      "Continue",
-    ]);
+    const isAbrupt = StatementResult.isAnyOf(["Return", "Break", "Continue"]);
 
     return Effect.matchCauseEffect(attempted, {
       onFailure: (cause) =>
         cause.reasons.some(Cause.isInterruptReason)
           ? Effect.failCause(cause)
           : Effect.flatMap(this.evaluateStatement(finalizer), (final) =>
-            isAbrupt(final) ? Effect.succeed(final) : Effect.failCause(cause),
-          ),
+              isAbrupt(final) ? Effect.succeed(final) : Effect.failCause(cause)
+            ),
       onSuccess: (result) =>
         Effect.flatMap(this.evaluateStatement(finalizer), (final) =>
-          isAbrupt(final) ? Effect.succeed(final) : Effect.succeed(result),
+          isAbrupt(final) ? Effect.succeed(final) : Effect.succeed(result)
         ),
     });
   }
@@ -2195,7 +2135,7 @@ export class Interpreter<R> {
     value: unknown,
     mutable: boolean,
     node: AstNode,
-    initialize = false,
+    initialize = false
   ): Effect.Effect<void, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -2217,7 +2157,7 @@ export class Interpreter<R> {
           throw InterpreterRuntimeError.new(
             "Object destructuring requires a data object or array value.",
             pattern,
-            "InvalidDataValue",
+            "InvalidDataValue"
           );
         }
 
@@ -2227,9 +2167,7 @@ export class Interpreter<R> {
 
           if (property.type === "RestElement") {
             const rest = makeEmptySafeObject();
-            for (const [key, item] of R.toEntries(
-              value as unknown as Readonly<Record<string, unknown>>
-            )) {
+            for (const [key, item] of R.toEntries(value as unknown as Readonly<Record<string, unknown>>)) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
             copyIteratorSymbols(value, rest, O.some(consumed));
@@ -2247,7 +2185,7 @@ export class Interpreter<R> {
             self.destructuringPropertyValue(value, key),
             mutable,
             property,
-            initialize,
+            initialize
           );
         }
         return;
@@ -2255,7 +2193,7 @@ export class Interpreter<R> {
 
       if (pattern.type === "ArrayPattern") {
         return yield* self.destructureArrayPattern(pattern, value, (target, item, context) =>
-          self.declarePattern(target, item, mutable, context, initialize),
+          self.declarePattern(target, item, mutable, context, initialize)
         );
       }
 
@@ -2308,7 +2246,7 @@ export class Interpreter<R> {
           throw InterpreterRuntimeError.new(
             "Object destructuring requires a data object or array value.",
             pattern,
-            "InvalidDataValue",
+            "InvalidDataValue"
           );
         }
 
@@ -2318,9 +2256,7 @@ export class Interpreter<R> {
           const property = asNode(propertyValue, "properties");
           if (property.type === "RestElement") {
             const rest = makeEmptySafeObject();
-            for (const [key, item] of R.toEntries(
-              source as unknown as Readonly<Record<string, unknown>>
-            )) {
+            for (const [key, item] of R.toEntries(source as unknown as Readonly<Record<string, unknown>>)) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
             copyIteratorSymbols(source, rest, O.some(consumed));
@@ -2339,7 +2275,7 @@ export class Interpreter<R> {
 
       if (pattern.type === "ArrayPattern") {
         return yield* self.destructureArrayPattern(pattern, value, (target, item, context) =>
-          self.assignPattern(target, item, context),
+          self.assignPattern(target, item, context)
         );
       }
 
@@ -2370,14 +2306,14 @@ export class Interpreter<R> {
   private destructureArrayPattern(
     pattern: AstNode,
     value: unknown,
-    consume: (target: AstNode, value: unknown, context: AstNode) => Effect.Effect<void, InterpreterFailure, R>,
+    consume: (target: AstNode, value: unknown, context: AstNode) => Effect.Effect<void, InterpreterFailure, R>
   ): Effect.Effect<void, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
       const cursor = yield* self.syncIterator(value, pattern);
       if (P.isUndefined(cursor)) {
         throw InterpreterRuntimeError.new("Array destructuring requires a supported iterable value.", pattern).as(
-          "TypeError",
+          "TypeError"
         );
       }
       let done = false;
@@ -2388,7 +2324,7 @@ export class Interpreter<R> {
           yield* consume(
             element.type === "RestElement" ? getNode(element, "argument") : element,
             element.type === "RestElement" ? [] : undefined,
-            element,
+            element
           );
           if (element.type === "RestElement") return;
           continue;
@@ -2474,9 +2410,7 @@ export class Interpreter<R> {
     if (P.isNumber(key)) return source[key];
     if (R.has(source as unknown as Readonly<Record<string | symbol, unknown>>, key)) return Reflect.get(source, key);
     if (P.isString(key) && S.is(arrayMethods)(key)) {
-      return IntrinsicReference.new(
-        IntrinsicMethod.cases.Array.make({ receiver: source, name: key })
-      );
+      return IntrinsicReference.new(IntrinsicMethod.cases.Array.make({ receiver: source, name: key }));
     }
     return undefined;
   }
@@ -2516,22 +2450,16 @@ export class Interpreter<R> {
         if (isRecord(regex) && P.isString(regex.pattern)) {
           return Effect.fromResult(
             tryInterpreter(
-              () => this.constructRegExp(
-                [regex.pattern, P.isString(regex.flags) ? regex.flags : ""],
-                node
-              ),
+              () => this.constructRegExp([regex.pattern, P.isString(regex.flags) ? regex.flags : ""], node),
               node
             )
           );
         }
-        return Effect.fromResult(
-          tryInterpreter(() => boundedData(node.value, "Literal"), node)
-        );
+        return Effect.fromResult(tryInterpreter(() => boundedData(node.value, "Literal"), node));
       }),
       Match.when("Identifier", () =>
-        Effect.fromResult(
-          tryInterpreter(() => this.scopes.get(getString(node, "name"), node), node)
-        )),
+        Effect.fromResult(tryInterpreter(() => this.scopes.get(getString(node, "name"), node), node))
+      ),
       Match.when("BinaryExpression", () => this.evaluateBinaryExpression(node)),
       Match.when("LogicalExpression", () => this.evaluateLogicalExpression(node)),
       Match.when("UnaryExpression", () => this.evaluateUnaryExpression(node)),
@@ -2550,8 +2478,9 @@ export class Interpreter<R> {
       Match.when("MemberExpression", () => this.readMember(node)),
       Match.when("ChainExpression", () =>
         Effect.map(this.evaluateExpression(getNode(node, "expression")), (value) =>
-          value === OptionalShortCircuit ? undefined : value,
-        )),
+          value === OptionalShortCircuit ? undefined : value
+        )
+      ),
       Match.when("ObjectExpression", () => this.evaluateObjectExpression(node)),
       Match.when("ArrayExpression", () => this.evaluateArrayExpression(node)),
       Match.when("TemplateLiteral", () => this.evaluateTemplateLiteral(node)),
@@ -2559,12 +2488,11 @@ export class Interpreter<R> {
       Match.when("UpdateExpression", () => this.evaluateUpdateExpression(node)),
       Match.when("AwaitExpression", () =>
         // Await always suspends, including for plain values.
-        Effect.flatMap(this.evaluateExpression(getNode(node, "argument")), (value) =>
-          this.awaitValue(value, node),
-        )),
+        Effect.flatMap(this.evaluateExpression(getNode(node, "argument")), (value) => this.awaitValue(value, node))
+      ),
       Match.when("YieldExpression", () => this.evaluateYieldExpression(node)),
       Match.when("NewExpression", () => this.evaluateNewExpression(node)),
-      Match.exhaustive,
+      Match.exhaustive
     );
   }
 
@@ -2599,14 +2527,14 @@ export class Interpreter<R> {
     const self = this;
     if (name === "Promise") {
       return Effect.flatMap(this.evaluateCallArguments(argNodes), (args) =>
-        constructPromise(self.runner, self.promises, args[0], node),
+        constructPromise(self.runner, self.promises, args[0], node)
       );
     }
     if (S.is(ErrorConstructorName)(name)) {
       return Effect.flatMap(this.evaluateCallArguments(argNodes), (args) =>
         name === "AggregateError"
           ? constructAggregateErrorValue(self.runner, args, node)
-          : Effect.succeed(constructErrorValue(name, args)),
+          : Effect.succeed(constructErrorValue(name, args))
       );
     }
     // Array and Object construct identically with or without new, like JS.
@@ -2621,16 +2549,10 @@ export class Interpreter<R> {
         const args = yield* self.evaluateCallArguments(argNodes);
         return yield* valueConstructors.$match(name, {
           Date: () => self.constructDate(args, node),
-          RegExp: () =>
-            Effect.fromResult(
-              tryInterpreter(() => self.constructRegExp(args, node), node)
-            ),
+          RegExp: () => Effect.fromResult(tryInterpreter(() => self.constructRegExp(args, node), node)),
           Map: () => self.constructMap(args[0], node),
           Set: () => self.constructSet(args[0], node),
-          URL: () =>
-            Effect.fromResult(
-              tryInterpreter(() => self.constructURL(args, node), node)
-            ),
+          URL: () => Effect.fromResult(tryInterpreter(() => self.constructURL(args, node), node)),
           URLSearchParams: () => self.constructURLSearchParams(args[0], node),
         });
       });
@@ -2697,7 +2619,7 @@ export class Interpreter<R> {
     if (P.isObjectKeyword(first)) return first;
     throw InterpreterRuntimeError.new(
       `Object(${typeof first}) wrapper objects are not supported; use the primitive value directly.`,
-      node,
+      node
     );
   }
 
@@ -2724,9 +2646,7 @@ export class Interpreter<R> {
    */
   private constructDate(args: Array<unknown>, node: AstNode): Effect.Effect<CodeModeDate, InterpreterFailure, R> {
     if (A.isArrayEmpty(args)) {
-      return DateTime.now.pipe(
-        Effect.map((now) => CodeModeDate.new(DateTime.toEpochMillis(now))),
-      );
+      return DateTime.now.pipe(Effect.map((now) => CodeModeDate.new(DateTime.toEpochMillis(now))));
     }
     if (args.length === 1) {
       const arg = args[0];
@@ -2743,14 +2663,14 @@ export class Interpreter<R> {
               )
             )
           : CodeModeDate.new(
-            pipe(
-              DateTime.make(coerceToNumber(value)),
-              O.match({
-                onNone: () => Number.NaN,
-                onSome: DateTime.toEpochMillis,
-              }),
-            ),
-          ),
+              pipe(
+                DateTime.make(coerceToNumber(value)),
+                O.match({
+                  onNone: () => Number.NaN,
+                  onSome: DateTime.toEpochMillis,
+                })
+              )
+            )
       );
     }
     const parts = args.map((arg) => coerceToNumber(arg));
@@ -2770,12 +2690,12 @@ export class Interpreter<R> {
         {
           timeZone: DateTime.zoneMakeLocal(),
           adjustForTimeZone: true,
-        },
+        }
       ),
       O.match({
         onNone: () => Number.NaN,
         onSome: DateTime.toEpochMillis,
-      }),
+      })
     );
     return Effect.succeed(CodeModeDate.new(time));
   }
@@ -2805,15 +2725,15 @@ export class Interpreter<R> {
     if (P.isNull(value) || (!P.isObjectKeyword(value) && !P.isFunction(value))) return Effect.succeed(value);
     const self = this;
     return Effect.gen(function* () {
-      const valueOf = Reflect.get(value, "valueOf");
-      if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOf) === "function") {
-        const result = yield* self.runner.invokeCallable(valueOf, [], node);
+      const valueOfMethod = Reflect.get(value, "valueOf");
+      if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOfMethod) === "function") {
+        const result = yield* self.runner.invokeCallable(valueOfMethod, [], node);
         if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) return result;
       }
       if (!R.has(value as Readonly<Record<string, unknown>>, "toString")) return coerceToString(value);
-      const toString = Reflect.get(value, "toString");
-      if (typeofValue(toString) === "function") {
-        const result = yield* self.runner.invokeCallable(toString, [], node);
+      const toStringMethod = Reflect.get(value, "toString");
+      if (typeofValue(toStringMethod) === "function") {
+        const result = yield* self.runner.invokeCallable(toStringMethod, [], node);
         if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) return result;
       }
       throw InterpreterRuntimeError.new("Cannot convert object to primitive value.", node).as("TypeError");
@@ -2843,13 +2763,12 @@ export class Interpreter<R> {
    */
   private constructRegExp(args: Array<unknown>, node: AstNode): CodeModeRegExp {
     const first = args[0];
-    const pattern =
-      CodeModeRegExp.is(first) ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
+    const pattern = CodeModeRegExp.is(first) ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
     const flagsArg = args[1];
     if (P.isNotUndefined(flagsArg) && !P.isString(flagsArg)) {
       throw InterpreterRuntimeError.new(
         `RegExp flags must be a string of flag characters (e.g. "g", "gi"), not ${P.isNull(flagsArg) ? "null" : typeofValue(flagsArg)}.`,
-        node,
+        node
       ).as("SyntaxError");
     }
     const flags = flagsArg ?? (CodeModeRegExp.is(first) ? first.regex.flags : "");
@@ -2861,7 +2780,7 @@ export class Interpreter<R> {
         /flag/i.test(reason)
           ? `new RegExp(...) received invalid flags ${encodeJson(flags)} (${reason}). Valid flags are d, g, i, m, s, u, v, and y.`
           : `new RegExp(...) received ${encodeJson(pattern)}, which is not a valid regular expression pattern (${reason}). ${escapeRegexHint}`,
-        node,
+        node
       ).as("SyntaxError");
     }
   }
@@ -2896,7 +2815,7 @@ export class Interpreter<R> {
       if (P.isUndefined(cursor)) {
         throw InterpreterRuntimeError.new(
           "new Map(...) expects an iterable of [key, value] pairs or no argument.",
-          node,
+          node
         ).as("TypeError");
       }
       while (true) {
@@ -2907,11 +2826,11 @@ export class Interpreter<R> {
           Effect.sync(() => {
             if ((!A.isArray(step.value) && !isRecord(step.value)) || isRuntimeReference(step.value)) {
               throw InterpreterRuntimeError.new("new Map(...) expects [key, value] pairs as entry objects.", node).as(
-                "TypeError",
+                "TypeError"
               );
             }
             target.map.set(Reflect.get(step.value, 0), Reflect.get(step.value, 1));
-          }),
+          })
         );
       }
     });
@@ -2946,7 +2865,7 @@ export class Interpreter<R> {
       const cursor = yield* self.syncIterator(init, node);
       if (P.isUndefined(cursor)) {
         throw InterpreterRuntimeError.new("new Set(...) expects a synchronous iterable or no argument.", node).as(
-          "TypeError",
+          "TypeError"
         );
       }
       while (true) {
@@ -2981,7 +2900,7 @@ export class Interpreter<R> {
   private constructURL(args: Array<unknown>, node: AstNode): CodeModeURL {
     if (A.isArrayEmpty(args)) {
       throw InterpreterRuntimeError.new("new URL(...) requires a URL string and an optional base URL.", node).as(
-        "TypeError",
+        "TypeError"
       );
     }
     const input = urlArgument(args[0], "new URL input");
@@ -2991,7 +2910,7 @@ export class Interpreter<R> {
     } catch {
       throw InterpreterRuntimeError.new(
         `new URL(...) received an invalid URL${base === undefined ? "" : " or base URL"}.`,
-        node,
+        node
       ).as("TypeError");
     }
   }
@@ -3017,7 +2936,10 @@ export class Interpreter<R> {
    *
    * @since 0.0.0
    */
-  private constructURLSearchParams(init: unknown, node: AstNode): Effect.Effect<CodeModeURLSearchParams, InterpreterFailure, R> {
+  private constructURLSearchParams(
+    init: unknown,
+    node: AstNode
+  ): Effect.Effect<CodeModeURLSearchParams, InterpreterFailure, R> {
     if (P.isUndefined(init)) return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams()));
     if (CodeModeURLSearchParams.is(init)) {
       return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init.params)));
@@ -3037,11 +2959,11 @@ export class Interpreter<R> {
             if (entries.some((entry) => entry.length !== 2)) {
               throw InterpreterRuntimeError.new(
                 "new URLSearchParams(...) expects iterable [name, value] pairs.",
-                node,
+                node
               ).as("TypeError");
             }
             return CodeModeURLSearchParams.new(
-              new URLSearchParams(entries.map((entry): [string, string] => [entry[0] ?? "", entry[1] ?? ""])),
+              new URLSearchParams(entries.map((entry): [string, string] => [entry[0] ?? "", entry[1] ?? ""]))
             );
           }
           entries.push(yield* preserveConsumerError(cursor, self.readURLSearchParamsPair(step.value, node)));
@@ -3050,7 +2972,7 @@ export class Interpreter<R> {
       if (isRuntimeReference(init)) {
         throw InterpreterRuntimeError.new(
           "new URLSearchParams(...) expects a query string, data object, or synchronous iterable pairs.",
-          node,
+          node
         ).as("TypeError");
       }
       if (isCodeModeValue(init)) return CodeModeURLSearchParams.new(new URLSearchParams());
@@ -3058,13 +2980,11 @@ export class Interpreter<R> {
       if (!P.isObjectKeyword(data)) {
         throw InterpreterRuntimeError.new(
           "new URLSearchParams(...) expects a query string, data object, iterable pairs, or URLSearchParams.",
-          node,
+          node
         ).as("TypeError");
       }
       return CodeModeURLSearchParams.new(
-        new URLSearchParams(
-          R.fromEntries(A.map(R.toEntries(data), ([key, value]) => [key, coerceToString(value)])),
-        ),
+        new URLSearchParams(R.fromEntries(A.map(R.toEntries(data), ([key, value]) => [key, coerceToString(value)])))
       );
     });
   }
@@ -3096,7 +3016,7 @@ export class Interpreter<R> {
       const cursor = yield* self.syncIterator(value, node);
       if (P.isUndefined(cursor)) {
         throw InterpreterRuntimeError.new("new URLSearchParams(...) expects iterable [name, value] pairs.", node).as(
-          "TypeError",
+          "TypeError"
         );
       }
       const items: Array<string> = [];
@@ -3106,8 +3026,8 @@ export class Interpreter<R> {
         items.push(
           yield* preserveConsumerError(
             cursor,
-            Effect.sync(() => uriArgument(step.value, "URLSearchParams pair value")),
-          ),
+            Effect.sync(() => uriArgument(step.value, "URLSearchParams pair value"))
+          )
         );
       }
     });
@@ -3137,9 +3057,7 @@ export class Interpreter<R> {
   private evaluateBinaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     if (!S.is(BinaryOperator)(operator)) {
-      return Effect.fail(
-        InterpreterRuntimeError.new(`Unsupported binary operator '${operator}'.`, node)
-      );
+      return Effect.fail(InterpreterRuntimeError.new(`Unsupported binary operator '${operator}'.`, node));
     }
     const self = this;
     return Effect.gen(function* () {
@@ -3171,12 +3089,7 @@ export class Interpreter<R> {
    *
    * @since 0.0.0
    */
-  private applyBinaryOperator(
-    operator: AppliedBinaryOperator,
-    lhs: unknown,
-    rhs: unknown,
-    node: AstNode
-  ): unknown {
+  private applyBinaryOperator(operator: AppliedBinaryOperator, lhs: unknown, rhs: unknown, node: AstNode): unknown {
     if (operator === "===") return lhs === rhs;
     if (operator === "!==") return lhs !== rhs;
     if (containsOpaqueReference(lhs) || containsOpaqueReference(rhs)) {
@@ -3198,35 +3111,48 @@ export class Interpreter<R> {
     const compare = (
       strings: (left: string, right: string) => boolean,
       numbers: (left: number, right: number) => boolean
-    ): boolean =>
-      P.isString(l) && P.isString(r)
-        ? strings(l, r)
-        : numbers(numericLeft(), numericRight());
+    ): boolean => (P.isString(l) && P.isString(r) ? strings(l, r) : numbers(numericLeft(), numericRight()));
     return AppliedBinaryOperator.$match(operator, {
       "+": () =>
-        P.isString(l) || P.isString(r)
-          ? `${coerceToString(l)}${coerceToString(r)}`
-          : numericLeft() + numericRight(),
+        P.isString(l) || P.isString(r) ? `${coerceToString(l)}${coerceToString(r)}` : numericLeft() + numericRight(),
       "-": () => numericLeft() - numericRight(),
       "*": () => numericLeft() * numericRight(),
       "/": () => numericLeft() / numericRight(),
       "%": () => numericLeft() % numericRight(),
       "**": () => numericLeft() ** numericRight(),
-      "==": () => bothObjects ? lhs === rhs : l == r,
-      "!=": () => bothObjects ? lhs !== rhs : l != r,
+      // biome-ignore lint/suspicious/noDoubleEquals: This interpreter must preserve guest JavaScript abstract equality semantics.
+      "==": () => (bothObjects ? lhs === rhs : l == r),
+      // biome-ignore lint/suspicious/noDoubleEquals: This interpreter must preserve guest JavaScript abstract inequality semantics.
+      "!=": () => (bothObjects ? lhs !== rhs : l != r),
       "===": () => lhs === rhs,
       "!==": () => lhs !== rhs,
-      "<": () => compare((left, right) => left < right, (left, right) => left < right),
-      "<=": () => compare((left, right) => left <= right, (left, right) => left <= right),
-      ">": () => compare((left, right) => left > right, (left, right) => left > right),
-      ">=": () => compare((left, right) => left >= right, (left, right) => left >= right),
+      "<": () =>
+        compare(
+          (left, right) => left < right,
+          (left, right) => left < right
+        ),
+      "<=": () =>
+        compare(
+          (left, right) => left <= right,
+          (left, right) => left <= right
+        ),
+      ">": () =>
+        compare(
+          (left, right) => left > right,
+          (left, right) => left > right
+        ),
+      ">=": () =>
+        compare(
+          (left, right) => left >= right,
+          (left, right) => left >= right
+        ),
       "&": () => numericLeft() & numericRight(),
       "|": () => numericLeft() | numericRight(),
       "^": () => numericLeft() ^ numericRight(),
       "<<": () => numericLeft() << numericRight(),
       ">>": () => numericLeft() >> numericRight(),
       ">>>": () => numericLeft() >>> numericRight(),
-      "in": () => {
+      in: () => {
         if (!P.isObjectKeyword(rhs)) {
           throw InterpreterRuntimeError.new("The 'in' operator requires a data object on the right-hand side.", node);
         }
@@ -3261,19 +3187,14 @@ export class Interpreter<R> {
   private evaluateLogicalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     if (!S.is(LogicalOperator)(operator)) {
-      return Effect.fail(
-        InterpreterRuntimeError.new(`Unsupported logical operator '${operator}'.`, node)
-      );
+      return Effect.fail(InterpreterRuntimeError.new(`Unsupported logical operator '${operator}'.`, node));
     }
     return Effect.flatMap(this.evaluateExpression(getNode(node, "left")), (left) => {
       const right = () => this.evaluateExpression(getNode(node, "right"));
       return LogicalOperator.$match(operator, {
-        "&&": () => P.isTruthy(left) ? right() : Effect.succeed(left),
-        "||": () => P.isTruthy(left) ? Effect.succeed(left) : right(),
-        "??": () =>
-          P.isNotNull(left) && P.isNotUndefined(left)
-            ? Effect.succeed(left)
-            : right(),
+        "&&": () => (P.isTruthy(left) ? right() : Effect.succeed(left)),
+        "||": () => (P.isTruthy(left) ? Effect.succeed(left) : right()),
+        "??": () => (P.isNotNull(left) && P.isNotUndefined(left) ? Effect.succeed(left) : right()),
       });
     });
   }
@@ -3303,17 +3224,14 @@ export class Interpreter<R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
     if (!S.is(UnaryOperator)(operator)) {
-      return Effect.fail(
-        InterpreterRuntimeError.new(`Unsupported unary operator '${operator}'.`, node)
-      );
+      return Effect.fail(InterpreterRuntimeError.new(`Unsupported unary operator '${operator}'.`, node));
     }
     const numeric = (apply: (operand: number) => number): Effect.Effect<unknown, InterpreterFailure, R> =>
       Effect.map(this.evaluateExpression(argument), (value) => {
-      if (containsOpaqueReference(value)) {
-        throw InterpreterRuntimeError.new("Unary operators require data values.", node, "InvalidDataValue");
-      }
-      const operand =
-        CodeModeDate.is(value)
+        if (containsOpaqueReference(value)) {
+          throw InterpreterRuntimeError.new("Unary operators require data values.", node, "InvalidDataValue");
+        }
+        const operand = CodeModeDate.is(value)
           ? value.time
           : P.isNotNull(value) && P.isObjectKeyword(value)
             ? coerceToString(value)
@@ -3324,8 +3242,7 @@ export class Interpreter<R> {
       delete: () => this.evaluateDeleteExpression(argument),
       typeof: () =>
         // Undeclared names short-circuit, but declared TDZ bindings must still throw.
-        argument.type === "Identifier" &&
-        O.isNone(this.scopes.resolve(getString(argument, "name")))
+        argument.type === "Identifier" && O.isNone(this.scopes.resolve(getString(argument, "name")))
           ? Effect.succeed("undefined")
           : Effect.map(this.evaluateExpression(argument), typeofValue),
       "!": () => Effect.map(this.evaluateExpression(argument), (value) => !P.isTruthy(value)),
@@ -3361,9 +3278,7 @@ export class Interpreter<R> {
     const left = getNode(node, "left");
     const operator = getString(node, "operator");
     if (!S.is(AssignmentOperator)(operator)) {
-      return Effect.fail(
-        InterpreterRuntimeError.new(`Unsupported assignment operator '${operator}'.`, node)
-      );
+      return Effect.fail(InterpreterRuntimeError.new(`Unsupported assignment operator '${operator}'.`, node));
     }
     const self = this;
     return Effect.gen(function* () {
@@ -3382,7 +3297,7 @@ export class Interpreter<R> {
           const rightValue = yield* self.evaluateExpression(getNode(node, "right"));
           const next = boundedData(
             self.applyCompoundAssignment(operator, current, rightValue, node),
-            "Assignment result",
+            "Assignment result"
           );
           return self.scopes.set(name, next, left);
         }
@@ -3392,17 +3307,18 @@ export class Interpreter<R> {
       if (left.type === "MemberExpression") {
         return yield* self.modifyMember(left, (current) =>
           Effect.map(self.evaluateExpression(getNode(node, "right")), (rightValue) => {
-            if (operator === "=") return {
-              write: true,
-              next: rightValue,
-              result: rightValue
-            };
+            if (operator === "=")
+              return {
+                write: true,
+                next: rightValue,
+                result: rightValue,
+              };
             const next = boundedData(
               self.applyCompoundAssignment(operator, current, rightValue, node),
-              "Assignment result",
+              "Assignment result"
             );
-            return {write: true, next, result: next};
-          }),
+            return { write: true, next, result: next };
+          })
         );
       }
       throw InterpreterRuntimeError.new("Assignment target must be an Identifier or MemberExpression.", left);
@@ -3433,7 +3349,7 @@ export class Interpreter<R> {
   private evaluateLogicalAssignment(
     node: AstNode,
     left: AstNode,
-    operator: LogicalAssignmentOperator,
+    operator: LogicalAssignmentOperator
   ): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     const shouldAssign = (current: unknown): boolean =>
@@ -3455,11 +3371,11 @@ export class Interpreter<R> {
       return self.modifyMember(left, (current) =>
         shouldAssign(current)
           ? Effect.map(self.evaluateExpression(getNode(node, "right")), (rightValue) => ({
-            write: true,
-            next: rightValue,
-            result: rightValue,
-          }))
-          : Effect.succeed({write: false, next: current, result: current}),
+              write: true,
+              next: rightValue,
+              result: rightValue,
+            }))
+          : Effect.succeed({ write: false, next: current, result: current })
       );
     }
     throw InterpreterRuntimeError.new("Assignment target must be an Identifier or MemberExpression.", left);
@@ -3491,9 +3407,7 @@ export class Interpreter<R> {
     const argument = getNode(node, "argument");
     const prefix = getBoolean(node, "prefix");
     if (!S.is(UpdateOperator.To)(operator)) {
-      return Effect.fail(
-        InterpreterRuntimeError.new(`Unsupported update operator '${operator}'.`, node)
-      );
+      return Effect.fail(InterpreterRuntimeError.new(`Unsupported update operator '${operator}'.`, node));
     }
     const increment = UpdateOperator.Enum[operator];
 
@@ -3523,7 +3437,7 @@ export class Interpreter<R> {
         return Effect.succeed({
           write: true,
           next,
-          result: prefix ? next : value
+          result: prefix ? next : value,
         });
       });
     }
@@ -3593,7 +3507,7 @@ export class Interpreter<R> {
     callable: unknown,
     args: Array<unknown>,
     node: AstNode,
-    callee: AstNode = node,
+    callee: AstNode = node
   ): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -3613,12 +3527,10 @@ export class Interpreter<R> {
       if (RuntimeReference.guards.GeneratorMethodReference(callable)) {
         const request = (
           generator: CodeModeGenerator,
-          kind: GeneratorRequestKind,
+          kind: GeneratorRequestKind
         ): Effect.Effect<unknown, InterpreterFailure, R> => {
           const requested = generator.request(kind, args[0], node);
-          return generator.asynchronous
-            ? self.createPromise(requested)
-            : requested;
+          return generator.asynchronous ? self.createPromise(requested) : requested;
         };
 
         return yield* GeneratorMethodKind.$match(callable.kind, {
@@ -3632,68 +3544,48 @@ export class Interpreter<R> {
         return yield* invokeIntrinsic(self.runner, callable, args, node);
       }
       if (RuntimeReference.guards.GlobalMethodReference(callable)) {
-        const invokeBounded = (
-          reference: GlobalMethodReference,
-        ): Effect.Effect<unknown, InterpreterFailure> =>
+        const invokeBounded = (reference: GlobalMethodReference): Effect.Effect<unknown, InterpreterFailure> =>
           Effect.fromResult(
             tryInterpreter(
               () =>
                 boundedData(
                   invokeGlobalMethod(reference, args, node),
-                  `${reference.method.namespace}.${reference.method.name} result`,
+                  `${reference.method.namespace}.${reference.method.name} result`
                 ),
               node
             )
           );
 
         return yield* GlobalMethod.match(callable.method, {
-          console: ({ name }) =>
-            Effect.fromResult(
-              tryInterpreter(() => self.invokeConsole(name, args, node), node)
-            ),
+          console: ({ name }) => Effect.fromResult(tryInterpreter(() => self.invokeConsole(name, args, node), node)),
           Object: ({ name }) => {
             if (ToolReference.is(args[0])) {
               const reference = args[0];
               return Effect.fromResult(
-                tryInterpreter(
-                  () => self.invokeObjectMethodOnTools(name, reference, node),
-                  node
-                )
+                tryInterpreter(() => self.invokeObjectMethodOnTools(name, reference, node), node)
               );
             }
             if (S.is(objectMethodsPreservingIdentity)(name)) {
               return name === "fromEntries"
                 ? invokeObjectFromEntries(self.runner, args[0], node)
-                : Effect.fromResult(
-                    tryInterpreter(() => invokeGlobalMethod(callable, args, node), node)
-                  );
+                : Effect.fromResult(tryInterpreter(() => invokeGlobalMethod(callable, args, node), node));
             }
-            return name === "groupBy"
-              ? invokeGroupBy(self.runner, "Object", args, node)
-              : invokeBounded(callable);
+            return name === "groupBy" ? invokeGroupBy(self.runner, "Object", args, node) : invokeBounded(callable);
           },
           Math: ({ name }) => {
             if (name === "random") return Random.next;
-            return name === "sumPrecise"
-              ? invokeMathSumPrecise(self.runner, args[0], node)
-              : invokeBounded(callable);
+            return name === "sumPrecise" ? invokeMathSumPrecise(self.runner, args[0], node) : invokeBounded(callable);
           },
           Array: ({ name }) => {
             if (name === "from") return invokeArrayFrom(self.runner, args, node);
             return name === "of"
-              ? Effect.fromResult(
-                  tryInterpreter(() => invokeGlobalMethod(callable, args, node), node)
-                )
+              ? Effect.fromResult(tryInterpreter(() => invokeGlobalMethod(callable, args, node), node))
               : invokeBounded(callable);
           },
           Map: ({ name }) =>
-            name === "groupBy"
-              ? invokeGroupBy(self.runner, "Map", args, node)
-              : invokeBounded(callable),
+            name === "groupBy" ? invokeGroupBy(self.runner, "Map", args, node) : invokeBounded(callable),
           Date: ({ name }) =>
-            name === "now"
-              ? Effect.map(DateTime.now, DateTime.toEpochMillis)
-              : invokeBounded(callable),
+            name === "now" ? Effect.map(DateTime.now, DateTime.toEpochMillis) : invokeBounded(callable),
           RegExp: () => invokeBounded(callable),
           URL: () => invokeBounded(callable),
           Number: () => invokeBounded(callable),
@@ -3713,8 +3605,7 @@ export class Interpreter<R> {
         return yield* self.invokeSearch(args);
       }
       if (RuntimeReference.guards.ErrorConstructorReference(callable)) {
-        const construct = () =>
-          Effect.succeed(constructErrorValue(callable.name, args));
+        const construct = () => Effect.succeed(constructErrorValue(callable.name, args));
 
         return yield* ErrorConstructorName.$match(callable.name, {
           Error: construct,
@@ -3729,13 +3620,9 @@ export class Interpreter<R> {
       }
       if (RuntimeReference.guards.GlobalNamespace(callable)) {
         const requiresNew = (name: string): Effect.Effect<never, InterpreterFailure> =>
-          Effect.fail(
-            InterpreterRuntimeError.new(`Constructor ${name} requires 'new'.`, node).as("TypeError"),
-          );
+          Effect.fail(InterpreterRuntimeError.new(`Constructor ${name} requires 'new'.`, node).as("TypeError"));
         const notFunction = (name: string): Effect.Effect<never, InterpreterFailure> =>
-          Effect.fail(
-            InterpreterRuntimeError.new(`${name} is not a function.`, node).as("TypeError"),
-          );
+          Effect.fail(InterpreterRuntimeError.new(`${name} is not a function.`, node).as("TypeError"));
 
         return yield* GlobalNamespaceName.$match(callable.name, {
           // Real JS permits calling Array, Object, Date, and RegExp without new.
@@ -3744,10 +3631,7 @@ export class Interpreter<R> {
           // ISO instead of the host's locale string: CodeMode date strings are
           // deterministic and must not leak the host timezone.
           Date: () => Effect.map(DateTime.now, DateTime.formatIso),
-          RegExp: () =>
-            Effect.fromResult(
-              tryInterpreter(() => self.constructRegExp(args, node), node)
-            ),
+          RegExp: () => Effect.fromResult(tryInterpreter(() => self.constructRegExp(args, node), node)),
           Map: () => requiresNew(callable.name),
           Set: () => requiresNew(callable.name),
           URL: () => requiresNew(callable.name),
@@ -3763,7 +3647,7 @@ export class Interpreter<R> {
       if (RuntimeReference.guards.SymbolNamespace(callable)) {
         throw InterpreterRuntimeError.new(
           "Symbol is not callable; only Symbol.asyncIterator and Symbol.iterator are available.",
-          node,
+          node
         ).as("TypeError");
       }
       if (RuntimeReference.guards.PromiseCapabilityFunction(callable)) {
@@ -3813,7 +3697,7 @@ export class Interpreter<R> {
     throw InterpreterRuntimeError.new(
       `Object.${name}(...) cannot read tool references: they are not plain data. Use Object.keys(tools) for names, or search({ query }) for signatures.`,
       node,
-      "InvalidDataValue",
+      "InvalidDataValue"
     );
   }
 
@@ -3874,7 +3758,7 @@ export class Interpreter<R> {
           const cursor = yield* self.syncIterator(spread, argNode);
           if (P.isUndefined(cursor))
             throw InterpreterRuntimeError.new("Spread arguments require a synchronous iterable.", argNode).as(
-              "TypeError",
+              "TypeError"
             );
           while (true) {
             const step = yield* cursor.next;
@@ -3912,19 +3796,13 @@ export class Interpreter<R> {
    */
   private invokeFunction(fn: CodeModeFunction, args: Array<unknown>): Effect.Effect<unknown, InterpreterFailure, R> {
     const invocation = new Interpreter(this.executeTool, this.invokeSearch, this.toolKeys, this.promises, this.logs);
-    invocation.scopes = ScopeStack.new(
-      A.append(fn.capturedScopes, MutableHashMap.empty())
-    );
+    invocation.scopes = ScopeStack.new(A.append(fn.capturedScopes, MutableHashMap.empty()));
     const run = Effect.gen(function* () {
       // Seed all parameters first so defaults cannot fall through to same-named outer bindings.
       const paramScope = invocation.scopes.current();
       for (const parameter of fn.parameters) {
         for (const name of collectPatternNames(parameter)) {
-          MutableHashMap.set(
-            paramScope,
-            name,
-            Binding.new(true, undefined, false)
-          );
+          MutableHashMap.set(paramScope, name, Binding.new(true, undefined, false));
         }
       }
       for (const [index, parameter] of fn.parameters.entries()) {
@@ -3938,33 +3816,25 @@ export class Interpreter<R> {
       if (fn.body.type === "BlockStatement") {
         invocation.hoistVariables(getArray(fn.body, "body"));
         const result = yield* invocation.evaluateStatement(fn.body);
-        return StatementResult.guards.Return(result)
-          ? result.value
-          : undefined;
+        return StatementResult.guards.Return(result) ? result.value : undefined;
       }
 
       return yield* invocation.evaluateExpression(fn.body);
     });
     if (fn.generator) {
-      return Effect.map(
-        Effect.context<R>(),
-        (context) => this.createGenerator(invocation, run, fn.async, context),
-      );
+      return Effect.map(Effect.context<R>(), (context) => this.createGenerator(invocation, run, fn.async, context));
     }
     if (!fn.async) return run;
     // The initial yield assigns the promise before the body can self-resolve.
     const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none());
     return Effect.map(
       this.createPromise(
-        Effect.flatMap(
-          run,
-          (value) => resolvePromiseValue(invocation.runner, value, fn.body, O.some(identity)),
-        ),
+        Effect.flatMap(run, (value) => resolvePromiseValue(invocation.runner, value, fn.body, O.some(identity)))
       ),
       (promise) => {
         MutableRef.set(identity, O.some(promise));
         return promise;
-      },
+      }
     );
   }
 
@@ -3993,7 +3863,7 @@ export class Interpreter<R> {
     invocation: Interpreter<R>,
     run: Effect.Effect<unknown, InterpreterFailure, R>,
     asynchronous: boolean,
-    context: Context.Context<R>,
+    context: Context.Context<R>
   ): CodeModeGenerator {
     const state: GeneratorState = {
       started: false,
@@ -4009,12 +3879,12 @@ export class Interpreter<R> {
     const requestGenerator = (
       kind: GeneratorRequestKind,
       value: unknown,
-      node: AstNode,
+      node: AstNode
     ): Effect.Effect<unknown, InterpreterFailure, R> => {
       const request = {
         kind,
         value,
-        response: Deferred.makeUnsafe<unknown, InterpreterFailure>()
+        response: Deferred.makeUnsafe<unknown, InterpreterFailure>(),
       };
       if (!asynchronous && O.isSome(state.active)) {
         return Effect.fail(InterpreterRuntimeError.new("Generator is already running.", node).as("TypeError"));
@@ -4029,22 +3899,22 @@ export class Interpreter<R> {
           this.promises.fork(
             invocation
               .completeGeneratorRequests(state, true)
-              .pipe(Effect.ensuring(Effect.sync(() => (state.draining = false)))),
+              .pipe(Effect.ensuring(Effect.sync(() => (state.draining = false))))
           ),
-          Deferred.await(request.response),
+          Deferred.await(request.response)
         );
       }
       if (state.completed) {
         if (kind === "throw") return Effect.fail(ProgramThrow.new(value));
         return Effect.succeed({
           value: kind === "return" ? value : undefined,
-          done: true
+          done: true,
         });
       }
       if (!state.started && kind !== "next") {
         state.completed = true;
         if (kind === "throw") return Effect.fail(ProgramThrow.new(value));
-        return Effect.succeed({value, done: true});
+        return Effect.succeed({ value, done: true });
       }
 
       state.pending.push(request);
@@ -4065,19 +3935,21 @@ export class Interpreter<R> {
                   ? asynchronous
                     ? invocation.awaitValue(error.value)
                     : Effect.succeed(error.value)
-                  : Effect.fail(error),
-              ),
-            ),
+                  : Effect.fail(error)
+              )
+            )
           );
           const active = state.active;
           state.active = O.none();
           if (O.isSome(active)) {
             Deferred.doneUnsafe(
               active.value.response,
-              Exit.isSuccess(exit) ? Exit.succeed({
-                value: exit.value,
-                done: true
-              }) : exit,
+              Exit.isSuccess(exit)
+                ? Exit.succeed({
+                    value: exit.value,
+                    done: true,
+                  })
+                : exit
             );
           }
           yield* invocation.completeGeneratorRequests(state, asynchronous);
@@ -4087,9 +3959,8 @@ export class Interpreter<R> {
       }
       return Deferred.await(request.response);
     };
-    return CodeModeGenerator.new(
-      asynchronous,
-      (kind, value, node) => Effect.provide(requestGenerator(kind, value, node), context),
+    return CodeModeGenerator.new(asynchronous, (kind, value, node) =>
+      Effect.provide(requestGenerator(kind, value, node), context)
     );
   }
 
@@ -4128,10 +3999,12 @@ export class Interpreter<R> {
           const resolved = yield* Effect.exit(self.awaitValue(pending.value));
           Deferred.doneUnsafe(
             pending.response,
-            Exit.isSuccess(resolved) ? Exit.succeed({
-              value: resolved.value,
-              done: true
-            }) : resolved,
+            Exit.isSuccess(resolved)
+              ? Exit.succeed({
+                  value: resolved.value,
+                  done: true,
+                })
+              : resolved
           );
           continue;
         }
@@ -4139,8 +4012,8 @@ export class Interpreter<R> {
           pending.response,
           Exit.succeed({
             value: GeneratorRequestKind.is.return(pending.kind) ? pending.value : undefined,
-            done: true
-          }),
+            done: true,
+          })
         );
       }
     });
@@ -4177,11 +4050,9 @@ export class Interpreter<R> {
       Effect.suspend(() => {
         const request = this.dequeueGeneratorRequest(state);
         return P.isUndefined(request)
-          ? Effect.die(
-              InterpreterRuntimeError.new("CodeMode generator queue resumed without a pending request.")
-            )
+          ? Effect.die(InterpreterRuntimeError.new("CodeMode generator queue resumed without a pending request."))
           : Effect.succeed(request);
-      }),
+      })
     );
   }
 
@@ -4281,10 +4152,13 @@ export class Interpreter<R> {
     if (O.isNone(state) || O.isNone(state.value.active)) {
       throw InterpreterRuntimeError.new("Generator has no active request.", node);
     }
-    Deferred.doneUnsafe(state.value.active.value.response, Exit.succeed({
-      value,
-      done: false
-    }));
+    Deferred.doneUnsafe(
+      state.value.active.value.response,
+      Exit.succeed({
+        value,
+        done: false,
+      })
+    );
     state.value.active = O.none();
     return Effect.flatMap(this.takeGeneratorRequest(state.value), (request) => {
       state.value.active = O.some(request);
@@ -4333,7 +4207,7 @@ export class Interpreter<R> {
           const step = yield* cursor.next;
           if (step.done) return undefined;
           const resumed = yield* Effect.exit(
-            self.suspendGenerator(self.generatorAsync ? yield* self.awaitValue(step.value) : step.value, node),
+            self.suspendGenerator(self.generatorAsync ? yield* self.awaitValue(step.value) : step.value, node)
           );
           if (Exit.isSuccess(resumed)) continue;
           const error = Cause.squash(resumed.cause);
@@ -4344,7 +4218,7 @@ export class Interpreter<R> {
           if (InterpreterFailure.guards.ProgramThrow(error)) {
             yield* cursor.close;
             throw InterpreterRuntimeError.new("The delegated iterator does not provide a throw() method.", node).as(
-              "TypeError",
+              "TypeError"
             );
           }
           return yield* Effect.failCause(resumed.cause);
@@ -4356,7 +4230,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new("yield* requires a compatible iterable value.", node).as("TypeError");
       const iterator = iteratorOption.value;
       let kind: GeneratorRequestKind = "next";
-      let input: unknown = undefined;
+      let input: unknown;
       while (true) {
         const method =
           kind === "next"
@@ -4368,18 +4242,18 @@ export class Interpreter<R> {
           if (kind === "return") return yield* Effect.fail(GeneratorReturn.new(input));
           yield* self.closeIterator(iterator, node, self.generatorAsync);
           throw InterpreterRuntimeError.new("The delegated iterator does not provide a throw() method.", node).as(
-            "TypeError",
+            "TypeError"
           );
         }
         const called = yield* self.invokeCallable(
           self.requireIteratorMethod(method, `Iterator ${kind}`, node),
           [input],
-          node,
+          node
         );
         const result = self.requireIteratorObject(
           iterator.asynchronous ? yield* self.awaitValue(called) : called,
           `Iterator ${kind}() result`,
-          node,
+          node
         );
         const done = Boolean(result.done);
         const resultValue: unknown =
@@ -4391,17 +4265,16 @@ export class Interpreter<R> {
           return resultValue;
         }
 
-        const resumed: Exit.Exit<unknown, InterpreterFailure> = yield* Effect.exit(self.suspendGenerator(resultValue, node));
+        const resumed: Exit.Exit<unknown, InterpreterFailure> = yield* Effect.exit(
+          self.suspendGenerator(resultValue, node)
+        );
         if (Exit.isSuccess(resumed)) {
           kind = "next";
           input = resumed.value;
           continue;
         }
         const error: unknown = Cause.squash(resumed.cause);
-        if (
-          !InterpreterFailure.guards.GeneratorReturn(error) &&
-          !InterpreterFailure.guards.ProgramThrow(error)
-        ) {
+        if (!InterpreterFailure.guards.GeneratorReturn(error) && !InterpreterFailure.guards.ProgramThrow(error)) {
           return yield* Effect.failCause(resumed.cause);
         }
         kind = InterpreterFailure.guards.GeneratorReturn(error) ? "return" : "throw";
@@ -4445,7 +4318,8 @@ export class Interpreter<R> {
             throw InterpreterRuntimeError.new("Object spread requires a data object.", property, "InvalidDataValue");
           }
           for (const [key, value] of R.toEntries(spread)) {
-            if (isBlockedMember(key)) throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, property);
+            if (isBlockedMember(key))
+              throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, property);
             objectValue[key] = value;
           }
           copyIteratorSymbols(spread, objectValue);
@@ -4610,7 +4484,7 @@ export class Interpreter<R> {
    */
   private evaluateConditionalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     return Effect.flatMap(this.evaluateExpression(getNode(node, "test")), (test) =>
-      this.evaluateExpression(getNode(node, P.isTruthy(test) ? "consequent" : "alternate")),
+      this.evaluateExpression(getNode(node, P.isTruthy(test) ? "consequent" : "alternate"))
     );
   }
 
@@ -4667,7 +4541,7 @@ export class Interpreter<R> {
    */
   private getMemberReference(
     node: AstNode,
-    operation: "read" | "delete" = "read",
+    operation: "read" | "delete" = "read"
   ): Effect.Effect<
     | MemberReference
     | ToolReference
@@ -4712,7 +4586,7 @@ export class Interpreter<R> {
         }
         throw InterpreterRuntimeError.new(
           `Promise.${String(key)} is not available. Available: Promise.all, Promise.allSettled, Promise.race, Promise.any, Promise.resolve, and Promise.reject; consume promises with await.`,
-          propertyNode,
+          propertyNode
         );
       }
 
@@ -4731,15 +4605,12 @@ export class Interpreter<R> {
 
         return GlobalNamespaceName.$match(objectValue.name, {
           Math: () =>
-          S.is(mathConstants)(key)
+            S.is(mathConstants)(key)
               ? ComputedValue.new(Reflect.get(Math, key))
               : S.is(mathMethods)(key)
                 ? GlobalMethodReference.new(GlobalMethod.cases.Math.make({ name: key }))
                 : missing(),
-          JSON: () =>
-            S.is(JsonMethodName)(key)
-              ? JsonMethodReference.new(key)
-              : missing(),
+          JSON: () => (S.is(JsonMethodName)(key) ? JsonMethodReference.new(key) : missing()),
           Object: () =>
             S.is(objectStatics)(key)
               ? GlobalMethodReference.new(GlobalMethod.cases.Object.make({ name: key }))
@@ -4753,22 +4624,16 @@ export class Interpreter<R> {
               ? GlobalMethodReference.new(GlobalMethod.cases.console.make({ name: key }))
               : missing(),
           Date: () =>
-            S.is(dateStatics)(key)
-              ? GlobalMethodReference.new(GlobalMethod.cases.Date.make({ name: key }))
-              : missing(),
+            S.is(dateStatics)(key) ? GlobalMethodReference.new(GlobalMethod.cases.Date.make({ name: key })) : missing(),
           RegExp: () =>
             S.is(regexpStatics)(key)
               ? GlobalMethodReference.new(GlobalMethod.cases.RegExp.make({ name: key }))
               : missing(),
           Map: () =>
-            S.is(mapStatics)(key)
-              ? GlobalMethodReference.new(GlobalMethod.cases.Map.make({ name: key }))
-              : missing(),
+            S.is(mapStatics)(key) ? GlobalMethodReference.new(GlobalMethod.cases.Map.make({ name: key })) : missing(),
           Set: missing,
           URL: () =>
-            S.is(UrlStatic)(key)
-              ? GlobalMethodReference.new(GlobalMethod.cases.URL.make({ name: key }))
-              : missing(),
+            S.is(UrlStatic)(key) ? GlobalMethodReference.new(GlobalMethod.cases.URL.make({ name: key })) : missing(),
           URLSearchParams: missing,
         });
       }
@@ -4778,18 +4643,14 @@ export class Interpreter<R> {
         const index = P.isSymbol(key) ? undefined : parseArrayIndex(key);
         if (P.isNotUndefined(index)) return ComputedValue.new(objectValue[index]);
         if (P.isString(key) && S.is(stringMethods)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.String.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.String.make({ receiver: objectValue, name: key }));
         }
         return ComputedValue.new(undefined);
       }
 
       if (P.isNumber(objectValue)) {
         if (P.isString(key) && S.is(numberMethods)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.Number.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.Number.make({ receiver: objectValue, name: key }));
         }
         return ComputedValue.new(undefined);
       }
@@ -4823,9 +4684,7 @@ export class Interpreter<R> {
 
       if (CodeModeDate.is(objectValue)) {
         if (P.isString(key) && S.is(dateMethods)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.Date.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.Date.make({ receiver: objectValue, name: key }));
         }
         return ComputedValue.new(undefined);
       }
@@ -4835,27 +4694,21 @@ export class Interpreter<R> {
           return ComputedValue.new(Reflect.get(objectValue.regex, key));
         }
         if (P.isString(key) && S.is(regexpMethods)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.RegExp.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.RegExp.make({ receiver: objectValue, name: key }));
         }
         return ComputedValue.new(undefined);
       }
       if (CodeModeMap.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.map.size);
         if (P.isString(key) && S.is(mapMethods)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.Map.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.Map.make({ receiver: objectValue, name: key }));
         }
         return ComputedValue.new(undefined);
       }
       if (CodeModeSet.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.set.size);
         if (P.isString(key) && S.is(setMethods)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.Set.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.Set.make({ receiver: objectValue, name: key }));
         }
         return ComputedValue.new(undefined);
       }
@@ -4864,9 +4717,7 @@ export class Interpreter<R> {
           return ComputedValue.new(objectValue.searchParams);
         }
         if (P.isString(key) && S.is(UrlMethod)(key)) {
-          return IntrinsicReference.new(
-            IntrinsicMethod.cases.URL.make({ receiver: objectValue, name: key })
-          );
+          return IntrinsicReference.new(IntrinsicMethod.cases.URL.make({ receiver: objectValue, name: key }));
         }
         if (P.isString(key) && S.is(urlProperties)(key)) {
           return MemberReference.new(objectValue, key);
@@ -4891,7 +4742,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new(
           "This value is an un-awaited Promise; await it first - e.g. `const result = await tools.ns.tool(...)`.",
           objectNode,
-          "InvalidDataValue",
+          "InvalidDataValue"
         );
       }
 
@@ -4912,7 +4763,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new(
           "Runtime references are opaque and do not expose properties.",
           objectNode,
-          "InvalidDataValue",
+          "InvalidDataValue"
         );
       }
 
@@ -5010,11 +4861,13 @@ export class Interpreter<R> {
    * @since 0.0.0
    */
   private writeMember(node: AstNode, value: unknown): Effect.Effect<unknown, InterpreterFailure, R> {
-    return this.modifyMember(node, () => Effect.succeed({
-      write: true,
-      next: value,
-      result: value
-    }));
+    return this.modifyMember(node, () =>
+      Effect.succeed({
+        write: true,
+        next: value,
+        result: value,
+      })
+    );
   }
 
   /**
@@ -5084,11 +4937,15 @@ export class Interpreter<R> {
    */
   private modifyMember(
     node: AstNode,
-    compute: (current: unknown) => Effect.Effect<{
-      write: boolean;
-      next: unknown;
-      result: unknown
-    }, InterpreterFailure, R>,
+    compute: (current: unknown) => Effect.Effect<
+      {
+        write: boolean;
+        next: unknown;
+        result: unknown;
+      },
+      InterpreterFailure,
+      R
+    >
   ): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
@@ -5108,11 +4965,7 @@ export class Interpreter<R> {
         }
       }
       const key = reference.key;
-      const {
-        write,
-        next,
-        result
-      } = yield* compute(self.readReferenceValue(reference, key));
+      const { write, next, result } = yield* compute(self.readReferenceValue(reference, key));
       if (write) self.assignToReference(reference, key, next, node);
       return result;
     });
@@ -5175,7 +5028,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new(
           "Array assignment index must be a valid array index.",
           node,
-          "InvalidDataValue",
+          "InvalidDataValue"
         );
       }
       rejectCircularInsertion(target, next, "Array assignment result", node);
@@ -5193,7 +5046,8 @@ export class Interpreter<R> {
         if (
           InterpreterFailure.guards.InterpreterRuntimeError(error) ||
           InterpreterFailure.guards.ToolRuntimeError(error)
-        ) throw error;
+        )
+          throw error;
         throw InterpreterRuntimeError.new(`URL.${key} received an invalid value.`, node).as("TypeError");
       }
     }
@@ -5238,7 +5092,7 @@ export class Interpreter<R> {
 
     throw InterpreterRuntimeError.new(
       "Property key must be a string or number, or Symbol.asyncIterator/Symbol.iterator.",
-      node,
+      node
     );
   }
 }

@@ -185,6 +185,10 @@ export type ExtractRelevantOptionsInput = (typeof ExtractRelevantOptions)["~type
 /**
  * Subgraph extraction service contract.
  *
+ * **Details**
+ *
+ * This remains an interface because both members are dual executable
+ * operations over an in-memory knowledge graph, not serializable data.
  *
  * @category services
  * @since 0.0.0

@@ -200,8 +200,12 @@ export class GenerationMismatchError extends S.TaggedError<GenerationMismatchErr
  * StorageService interface extending KeyValueStore
  * Adds `list` capability and optimistic locking for concurrent writes
  *
+ * **Details**
  *
- * @category type-level
+ * This extends Effect's live `KeyValueStore` protocol with executable storage
+ * operations, so it cannot be represented as a data schema.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {

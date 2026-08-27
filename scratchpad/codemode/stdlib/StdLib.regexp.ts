@@ -6,36 +6,31 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit, type SafeObject } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
-import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
-import { SafeObject } from "@beep/schema"
-import { isBlockedMember } from "../Codemode.tool-runtime.ts"
-import { CodeModeRegExp, makeEmptySafeObject } from "../Codemode.values.ts"
-import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
-import { LiteralKit } from "@beep/schema"
-import { A, P , R, pipe} from "@beep/utils";
-import {
-  type RegExpMethod,
-  type RegExpStatic,
-  regexpMethods,
-} from "../Codemode.method-names.ts"
+import { A, P, pipe, R } from "@beep/utils";
+import { type RegExpMethod, type RegExpStatic, regexpMethods } from "../Codemode.method-names.ts";
+import { isBlockedMember } from "../Codemode.tool-runtime.ts";
+import { CodeModeRegExp, makeEmptySafeObject } from "../Codemode.values.ts";
+import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
+import { coerceToNumber, coerceToString } from "./StdLib.value.ts";
 
 export {
   regexpMethods,
   regexpStatics,
-} from "../Codemode.method-names.ts"
+} from "../Codemode.method-names.ts";
 
 const $I = $ScratchpadId.create("codemode/stdlib/StdLib.regexp");
 
 type MatchValue = Array<unknown> & {
-  index?: number
-  groups?: SafeObject
-  indices?: IndicesValue
-}
+  index?: number;
+  groups?: SafeObject;
+  indices?: IndicesValue;
+};
 
 type IndicesValue = Array<unknown> & {
-  groups?: SafeObject
-}
+  groups?: SafeObject;
+};
 
 /**
  * Closed kit of guest-visible `RegExp` instance properties including flags and
@@ -71,7 +66,7 @@ export const regexpProperties = LiteralKit([
   $I.annoteSchema("regexpProperties", {
     description: "Guest-visible RegExp instance property names.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link regexpProperties}.
@@ -82,7 +77,7 @@ export const regexpProperties = LiteralKit([
  */
 export type regexpProperties = typeof regexpProperties.Type;
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 /**
  * Strips the host `Invalid regular expression:` prefix from a thrown pattern
@@ -102,7 +97,7 @@ const encodeJson = Unknown.encodeUnknownSyncFromJsonString
  * @since 0.0.0
  */
 export const regexFailureReason = (error: unknown): string =>
-  (error instanceof Error ? error.message : String(error)).replace(/^Invalid regular expression:\s*/i, "")
+  (error instanceof Error ? error.message : String(error)).replace(/^Invalid regular expression:\s*/i, "");
 
 /**
  * Hint appended when a string pattern is not a valid regular expression.
@@ -121,7 +116,7 @@ export const regexFailureReason = (error: unknown): string =>
  * @since 0.0.0
  */
 export const escapeRegexHint =
-  'To match special characters like ( ) [ ] { } + * ? . literally, escape them with a backslash (e.g. "\\\\(") or test for them with String.includes instead.'
+  'To match special characters like ( ) [ ] { } + * ? . literally, escape them with a backslash (e.g. "\\\\(") or test for them with String.includes instead.';
 
 /**
  * Converts a guest pattern argument into a host `RegExp`.
@@ -152,23 +147,23 @@ export const escapeRegexHint =
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
   // Native parity: an undefined pattern behaves as an empty pattern.
-  if (P.isUndefined(arg)) return new RegExp("", extraFlags)
-  if (CodeModeRegExp.is(arg)) return arg.regex
+  if (P.isUndefined(arg)) return new RegExp("", extraFlags);
+  if (CodeModeRegExp.is(arg)) return arg.regex;
   if (P.isString(arg)) {
     try {
-      return new RegExp(arg, extraFlags)
+      return new RegExp(arg, extraFlags);
     } catch (error) {
       throw InterpreterRuntimeError.new(
         `String.${method} received the string ${encodeJson(arg)}, which is not a valid regular expression pattern (${regexFailureReason(error)}). ${escapeRegexHint}`,
-        node,
-      ).as("SyntaxError")
+        node
+      ).as("SyntaxError");
     }
   }
   throw InterpreterRuntimeError.new(
     `String.${method} expects a regular expression (a /pattern/flags literal or new RegExp(...)) or a string pattern, not ${arg === null ? "null" : typeof arg}.`,
-    node,
-  )
-}
+    node
+  );
+};
 
 /**
  * Copies a native `RegExpMatchArray` into a guest array, dropping blocked
@@ -195,18 +190,22 @@ export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFl
  * @since 0.0.0
  */
 export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
-  const result: MatchValue = pipe(match, A.fromIterable, A.map((group) => group))
-  if (P.isNotUndefined(match.index)) result.index = match.index
+  const result: MatchValue = pipe(
+    match,
+    A.fromIterable,
+    A.map((group) => group)
+  );
+  if (P.isNotUndefined(match.index)) result.index = match.index;
   if (P.isNotUndefined(match.groups)) {
-    const groups = makeEmptySafeObject()
+    const groups = makeEmptySafeObject();
     for (const [key, group] of R.toEntries(match.groups)) {
-      if (!isBlockedMember(key)) Reflect.set(groups, key, group)
+      if (!isBlockedMember(key)) Reflect.set(groups, key, group);
     }
-    result.groups = groups
+    result.groups = groups;
   }
-  if (P.isNotUndefined(match.indices)) result.indices = indicesToValue(match.indices)
-  return result
-}
+  if (P.isNotUndefined(match.indices)) result.indices = indicesToValue(match.indices);
+  return result;
+};
 
 /**
  * Implements guest `RegExp.escape` only; the name argument is ignored.
@@ -233,10 +232,10 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
   if (!P.isString(args[0])) {
-    throw InterpreterRuntimeError.new("RegExp.escape expects a string.", node).as("TypeError")
+    throw InterpreterRuntimeError.new("RegExp.escape expects a string.", node).as("TypeError");
   }
-  return RegExp.escape(args[0])
-}
+  return RegExp.escape(args[0]);
+};
 
 /**
  * Dispatches guest `RegExp.prototype` `test`, `exec`, and `toString`.
@@ -269,51 +268,51 @@ export const invokeRegExpMethod = (
   value: CodeModeRegExp,
   name: RegExpMethod,
   args: Array<unknown>,
-  _node: AstNode,
+  _node: AstNode
 ): unknown => {
   const execute = (returnBoolean: boolean): unknown => {
-    const input = coerceToString(args[0])
-    const lastIndex = value.lastIndex
-    const stateful = value.regex.global || value.regex.sticky
-    value.regex.lastIndex = toLength(lastIndex)
+    const input = coerceToString(args[0]);
+    const lastIndex = value.lastIndex;
+    const stateful = value.regex.global || value.regex.sticky;
+    value.regex.lastIndex = toLength(lastIndex);
     if (returnBoolean) {
-      const matched = value.regex.test(input)
-      if (!stateful) value.lastIndex = lastIndex
-      return matched
+      const matched = value.regex.test(input);
+      if (!stateful) value.lastIndex = lastIndex;
+      return matched;
     }
-    const matched = value.regex.exec(input)
-    if (!stateful) value.lastIndex = lastIndex
-    return P.isNull(matched) ? null : matchToValue(matched)
-  }
+    const matched = value.regex.exec(input);
+    if (!stateful) value.lastIndex = lastIndex;
+    return P.isNull(matched) ? null : matchToValue(matched);
+  };
   return regexpMethods.$match(name, {
     test: () => execute(true),
     exec: () => execute(false),
     toString: () => coerceToString(value),
-  })
-}
+  });
+};
 
 const toLength = (value: unknown): number => {
-  const number = coerceToNumber(value)
-  if (Number.isNaN(number) || number <= 0) return 0
-  return Math.min(Math.floor(number), Number.MAX_SAFE_INTEGER)
-}
+  const number = coerceToNumber(value);
+  if (Number.isNaN(number) || number <= 0) return 0;
+  return Math.min(Math.floor(number), Number.MAX_SAFE_INTEGER);
+};
 
 const indicesToValue = (indices: RegExpIndicesArray): IndicesValue => {
   const result: IndicesValue = pipe(
     indices,
     A.fromIterable,
     A.map((range) => (P.isUndefined(range) ? undefined : [...range]))
-  )
+  );
   if (P.isNotUndefined(indices.groups)) {
-    const groups = makeEmptySafeObject()
+    const groups = makeEmptySafeObject();
     for (const [key, range] of R.toEntries(indices.groups)) {
       if (!isBlockedMember(key)) {
-        Reflect.set(groups, key, P.isUndefined(range) ? undefined : [...range])
+        Reflect.set(groups, key, P.isUndefined(range) ? undefined : [...range]);
       }
     }
-    result.groups = groups
-    return result
+    result.groups = groups;
+    return result;
   }
-  Reflect.set(result, "groups", undefined)
-  return result
-}
+  Reflect.set(result, "groups", undefined);
+  return result;
+};

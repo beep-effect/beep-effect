@@ -7,7 +7,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { SafeObject as SafeObjectSchema, type SafeObject } from "@beep/schema/SafeObject";
+import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
 import { Equal, Fiber } from "effect";
 import * as S from "effect/Schema";
 import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
@@ -38,9 +38,7 @@ const $I = $ScratchpadId.create("codemode/Codemode.values");
  */
 export const makeEmptySafeObject = (): SafeObject => SafeObjectSchema.make(Object.create(null));
 
-const CodeModeFiber = S.declare(
-  (u: unknown): u is Fiber.Fiber<unknown, InterpreterFailure> => Fiber.isFiber(u)
-).pipe(
+const CodeModeFiber = S.declare((u: unknown): u is Fiber.Fiber<unknown, InterpreterFailure> => Fiber.isFiber(u)).pipe(
   $I.annoteSchema("CodeModeFiber", {
     description: "Fiber backing one pending CodeMode promise.",
   })
@@ -101,7 +99,8 @@ const NativeURL = S.instanceOf(URL).pipe(
  * @category models
  * @since 0.0.0
  */
-export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModePromise`)("CodeModePromise",
+export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModePromise`)(
+  "CodeModePromise",
   { fiber: CodeModeFiber },
   $I.annote("CodeModePromise", {
     description: "Promise handle owned by one CodeMode execution.",
@@ -109,9 +108,7 @@ export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModeP
 ) {
   static readonly is = S.is(CodeModePromise);
 
-  static readonly new = (
-    fiber: Fiber.Fiber<unknown, InterpreterFailure>
-  ): CodeModePromise =>
+  static readonly new = (fiber: Fiber.Fiber<unknown, InterpreterFailure>): CodeModePromise =>
     // Promise handles are mutable runtime identities. Effect hash collections
     // must not structurally traverse the Fiber stored inside them.
     Equal.byReferenceUnsafe(CodeModePromise.make({ fiber }));
@@ -140,7 +137,8 @@ export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModeP
  * @category models
  * @since 0.0.0
  */
-export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)("CodeModeDate",
+export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)(
+  "CodeModeDate",
   // Invalid JavaScript dates carry NaN and must remain representable.
   // @effect-diagnostics-next-line schemaNumber:off
   { time: S.Number.pipe(S.mutableKey) },
@@ -171,7 +169,8 @@ export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)(
  * @category models
  * @since 0.0.0
  */
-export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeRegExp`)("CodeModeRegExp",
+export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeRegExp`)(
+  "CodeModeRegExp",
   { regex: NativeRegExp },
   $I.annote("CodeModeRegExp", {
     description: "Mutable JavaScript RegExp value.",
@@ -233,7 +232,8 @@ export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeReg
  * @category models
  * @since 0.0.0
  */
-export class CodeModeMap extends S.TaggedClass<CodeModeMap>($I`CodeModeMap`)("CodeModeMap",
+export class CodeModeMap extends S.TaggedClass<CodeModeMap>($I`CodeModeMap`)(
+  "CodeModeMap",
   { map: NativeMap },
   $I.annote("CodeModeMap", {
     description: "Mutable JavaScript Map value.",
@@ -271,7 +271,8 @@ export class CodeModeMap extends S.TaggedClass<CodeModeMap>($I`CodeModeMap`)("Co
  * @category models
  * @since 0.0.0
  */
-export class CodeModeSet extends S.TaggedClass<CodeModeSet>($I`CodeModeSet`)("CodeModeSet",
+export class CodeModeSet extends S.TaggedClass<CodeModeSet>($I`CodeModeSet`)(
+  "CodeModeSet",
   { set: NativeSet },
   $I.annote("CodeModeSet", {
     description: "Mutable JavaScript Set value.",
@@ -303,7 +304,8 @@ export class CodeModeSet extends S.TaggedClass<CodeModeSet>($I`CodeModeSet`)("Co
  * @category models
  * @since 0.0.0
  */
-export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchParams>($I`CodeModeURLSearchParams`)("CodeModeURLSearchParams",
+export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchParams>($I`CodeModeURLSearchParams`)(
+  "CodeModeURLSearchParams",
   { params: NativeURLSearchParams },
   $I.annote("CodeModeURLSearchParams", {
     description: "Mutable JavaScript URLSearchParams value.",
@@ -311,8 +313,7 @@ export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchPara
 ) {
   static readonly is = S.is(CodeModeURLSearchParams);
 
-  static readonly new = (params: URLSearchParams): CodeModeURLSearchParams =>
-    CodeModeURLSearchParams.make({ params });
+  static readonly new = (params: URLSearchParams): CodeModeURLSearchParams => CodeModeURLSearchParams.make({ params });
 }
 
 /**
@@ -334,7 +335,8 @@ export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchPara
  * @category models
  * @since 0.0.0
  */
-export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)("CodeModeURL",
+export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)(
+  "CodeModeURL",
   {
     searchParams: CodeModeURLSearchParams,
     url: NativeURL,

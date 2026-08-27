@@ -173,8 +173,13 @@ class RdfStoreHandle {
 }
 
 /**
- * Describes the rdf store data exposed by this module.
+ * Opaque mutable RDF workflow-store handle.
  *
+ * **Details**
+ *
+ * The handle intentionally remains nominal and type-level because it wraps a
+ * live N3 store with private mutable state; canonical external RDF data uses
+ * the schema-backed `@beep/rdf` dataset model.
  *
  * @category type-level
  * @since 0.0.0
@@ -721,10 +726,14 @@ const MentionOptions = S.Struct({
 type MentionOptions = typeof MentionOptions.Type;
 
 /**
- * Describes the rdf builder shape data exposed by this module.
+ * Behavioral contract implemented by the mutable RDF builder service.
  *
+ * **Details**
  *
- * @category type-level
+ * Every member is an executable store operation over the opaque
+ * {@link RdfStore}; request payloads are modeled by the schemas above.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface RdfBuilderShape {
@@ -1319,7 +1328,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        */
       addTripleWithConfidence: (
         store: RdfStore,
-        triple: { subject: string; predicate: string; object: string | number | boolean },
+        triple: ConfidenceTriple,
         confidence: Confidence,
         graphUri?: string
       ) =>
@@ -1405,8 +1414,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       generateMentionTriples: (
         store: RdfStore,
         entityUri: string,
-        mention: { text: string; startChar: number; endChar: number; confidence?: Confidence },
-        options?: { mentionUri?: string; sourceUri?: string; graphUri?: string }
+        mention: MentionInput,
+        options?: MentionOptions
       ) =>
         Effect.try({
           try: () => {

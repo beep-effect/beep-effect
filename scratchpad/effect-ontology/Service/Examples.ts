@@ -13,24 +13,35 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer, Match } from "effect";
 import type * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type {
   CreateExampleInputInput,
   ExampleRetrievalOptionsInput,
   ExampleType,
-  ScoredExample,
 } from "../Repository/Examples.ts";
-import { ExampleRetrievalOptions, ExamplesRepository } from "../Repository/Examples.ts";
+import { ExampleRetrievalOptions, ExamplesRepository, ScoredExample } from "../Repository/Examples.ts";
 import type { LlmExampleRow } from "../Repository/schema.ts";
 import { EmbeddingService } from "./Embedding.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
+
+const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveInt", {
+    description: "Positive integer used for example-retrieval limits.",
+  })
+);
+
+const SimilarityThreshold = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(
+  $I.annoteSchema("SimilarityThreshold", {
+    description: "Example similarity or success-rate value in the closed unit interval.",
+  })
+);
 
 // =============================================================================
 // Types
@@ -46,18 +57,40 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
 export type ExamplesServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError;
 
 /**
- * Extraction stage for context-aware example retrieval
+ * Extraction stage for context-aware example retrieval.
  *
+ * **Example** (Guard a validation stage)
  *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ExtractionStage } from "@effect-ontology/Service/Examples"
+ *
+ * console.log(S.is(ExtractionStage)("validation")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ExtractionStage = LiteralKit([
+  "entity_extraction",
+  "relation_extraction",
+  "entity_linking",
+  "validation",
+  "correction",
+]).pipe(
+  $I.annoteSchema("ExtractionStage", {
+    description: "Pipeline stages that support context-aware example retrieval.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link ExtractionStage}.
+ *
+ * @see {@link ExtractionStage} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type ExtractionStage =
-  | "entity_extraction"
-  | "relation_extraction"
-  | "entity_linking"
-  | "validation"
-  | "correction";
+export type ExtractionStage = typeof ExtractionStage.Type;
 
 /**
  * Options for stage-based retrieval
@@ -66,27 +99,31 @@ export type ExtractionStage =
  * **Example** (Use the StageRetrievalOptions contract)
  *
  * ```ts
- * import type { StageRetrievalOptions } from "@effect-ontology/Service/Examples"
+ * import { StageRetrievalOptions } from "@effect-ontology/Service/Examples"
  *
- * const options: StageRetrievalOptions = { k: 5, minSimilarity: 0.7 }
+ * const options = StageRetrievalOptions.make({ k: 5, minSimilarity: 0.7 })
  * console.log(options.k) // 5
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface StageRetrievalOptions {
-  /** Maximum number of positive examples */
-  readonly k?: number;
-  /** Maximum number of negative examples */
-  readonly negativeK?: number;
-  /** Minimum similarity threshold */
-  readonly minSimilarity?: number;
-  /** Target class for filtering */
-  readonly targetClass?: string;
-  /** Target predicate for filtering */
-  readonly targetPredicate?: string;
-}
+export class StageRetrievalOptions extends S.Class<StageRetrievalOptions>($I`StageRetrievalOptions`)(
+  {
+    k: PositiveInt.pipe(S.optionalKey).annotateKey({ description: "Maximum positive-example count." }),
+    negativeK: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Maximum negative-example count." }),
+    minSimilarity: SimilarityThreshold.pipe(S.optionalKey).annotateKey({
+      description: "Minimum accepted similarity score.",
+    }),
+    targetClass: S.NonEmptyString.pipe(S.optionalKey).annotateKey({ description: "Optional target class filter." }),
+    targetPredicate: S.NonEmptyString.pipe(S.optionalKey).annotateKey({
+      description: "Optional target predicate filter.",
+    }),
+  },
+  $I.annote("StageRetrievalOptions", {
+    description: "Limits, similarity threshold, and ontology filters for stage-aware example retrieval.",
+  })
+) {}
 
 /**
  * Retrieved examples for a stage
@@ -95,19 +132,24 @@ export interface StageRetrievalOptions {
  * **Example** (Use the StageExamples contract)
  *
  * ```ts
- * import type { StageExamples } from "@effect-ontology/Service/Examples"
+ * import { StageExamples } from "@effect-ontology/Service/Examples"
  *
- * const examples: StageExamples = { positives: [], negatives: [] }
+ * const examples = StageExamples.make({ positives: [], negatives: [] })
  * console.log(examples.positives.length) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface StageExamples {
-  readonly positives: ReadonlyArray<ScoredExample>;
-  readonly negatives: ReadonlyArray<ScoredExample>;
-}
+export class StageExamples extends S.Class<StageExamples>($I`StageExamples`)(
+  {
+    positives: S.Array(ScoredExample),
+    negatives: S.Array(ScoredExample),
+  },
+  $I.annote("StageExamples", {
+    description: "Positive and negative few-shot examples selected for one pipeline stage.",
+  })
+) {}
 
 /**
  * Example statistics
@@ -116,21 +158,26 @@ export interface StageExamples {
  * **Example** (Use the ExampleStats contract)
  *
  * ```ts
- * import type { ExampleStats } from "@effect-ontology/Service/Examples"
+ * import { ExampleStats } from "@effect-ontology/Service/Examples"
  *
- * const stats: ExampleStats = { total: 12, byType: { entity: 8 }, negativeCount: 4, avgSuccessRate: 0.8 }
+ * const stats = ExampleStats.make({ total: 12, byType: { entity: 8 }, negativeCount: 4, avgSuccessRate: 0.8 })
  * console.log(stats.total) // 12
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface ExampleStats {
-  readonly total: number;
-  readonly byType: Record<string, number>;
-  readonly negativeCount: number;
-  readonly avgSuccessRate: number | null;
-}
+export class ExampleStats extends S.Class<ExampleStats>($I`ExampleStats`)(
+  {
+    total: S.Natural,
+    byType: S.Record(S.String, S.Natural),
+    negativeCount: S.Natural,
+    avgSuccessRate: S.NullOr(SimilarityThreshold),
+  },
+  $I.annote("ExampleStats", {
+    description: "Example totals, type counts, negative count, and nullable average success rate.",
+  })
+) {}
 
 // =============================================================================
 // Service
@@ -246,10 +293,10 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
         const negatives =
           stage === "entity_extraction" ? yield* repository.findNegatives(ontologyId, contextText, negativeK) : [];
 
-        return {
+        return StageExamples.make({
           positives: filteredPositives.slice(0, k),
           negatives,
-        };
+        });
       });
 
     /**
@@ -304,7 +351,8 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
      *
      * @param ontologyId - Ontology scope
      */
-    const stats = (ontologyId: string): Effect.Effect<ExampleStats, DrizzleError> => repository.getStats(ontologyId);
+    const stats = (ontologyId: string): Effect.Effect<ExampleStats, DrizzleError> =>
+      repository.getStats(ontologyId).pipe(Effect.map((value) => ExampleStats.make(value)));
 
     /**
      * Deactivate an example (soft delete)

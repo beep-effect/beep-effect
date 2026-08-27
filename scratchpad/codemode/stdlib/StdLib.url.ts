@@ -6,29 +6,26 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import { A, P } from "@beep/utils";
+import { Result } from "effect";
+import { dual } from "effect/Function";
+import { type UrlMethod, UrlStatic } from "../Codemode.method-names.ts";
+import { CodeModeURL } from "../Codemode.values.ts";
 import {
   type AstNode,
   InterpreterFailure,
   InterpreterRuntimeError,
-  UriFunction,
+  type UriFunction,
   UriFunctionName,
-} from "../interpreter/Interpreter.model.ts"
-import { CodeModeURL } from "../Codemode.values.ts"
-import { boundedData, coerceToString } from "./StdLib.value.ts"
-import { Result } from "effect"
-import { dual } from "effect/Function";
-import { LiteralKit } from "@beep/schema"
-import { P, A } from "@beep/utils";
-import {
-  type UrlMethod,
-  UrlStatic,
-} from "../Codemode.method-names.ts"
+} from "../interpreter/Interpreter.model.ts";
+import { boundedData, coerceToString } from "./StdLib.value.ts";
 
 export {
   UrlMethod,
   UrlSearchParamsMethod,
   UrlStatic,
-} from "../Codemode.method-names.ts"
+} from "../Codemode.method-names.ts";
 
 const $I = $ScratchpadId.create("codemode/stdlib/StdLib.url");
 
@@ -65,7 +62,7 @@ export const urlProperties = LiteralKit([
   $I.annoteSchema("urlProperties", {
     description: "Guest-visible URL instance property names.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link urlProperties}.
@@ -93,13 +90,11 @@ export type urlProperties = typeof urlProperties.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const urlWritableProperties = LiteralKit(
-  urlProperties.omitOptions(["origin"])
-).pipe(
+export const urlWritableProperties = LiteralKit(urlProperties.omitOptions(["origin"])).pipe(
   $I.annoteSchema("urlWritableProperties", {
     description: "Writable URL instance property names; origin is computed.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link urlWritableProperties}.
@@ -130,7 +125,7 @@ export type urlWritableProperties = typeof urlWritableProperties.Type;
 export const uriArgument: {
   (label: string): (value: unknown) => string;
   (value: unknown, label: string): string;
-} = dual(2, (value: unknown, label: string): string => coerceToString(boundedData(value, label)))
+} = dual(2, (value: unknown, label: string): string => coerceToString(boundedData(value, label)));
 
 /**
  * Dispatches guest `encodeURI`, `encodeURIComponent`, `decodeURI`, and
@@ -168,11 +163,8 @@ export const invokeUriFunction = (
     catch: (error) =>
       InterpreterFailure.is(error)
         ? error
-        : InterpreterRuntimeError.new(
-            `${ref.name} input could not be converted to data.`,
-            node
-          ),
-  })
+        : InterpreterRuntimeError.new(`${ref.name} input could not be converted to data.`, node),
+  });
   return Result.flatMap(value, (input) =>
     Result.try({
       try: () =>
@@ -185,11 +177,11 @@ export const invokeUriFunction = (
       catch: (error) =>
         InterpreterRuntimeError.new(
           `${ref.name} received malformed URI data: ${error instanceof Error ? error.message : String(error)}`,
-          node,
+          node
         ).as("URIError"),
     })
-  )
-}
+  );
+};
 
 /**
  * Accepts a {@link CodeModeURL} by `href` or otherwise stringifies through
@@ -215,7 +207,8 @@ export const urlArgument: {
   (label: string): (value: unknown) => string;
   (value: unknown, label: string): string;
 } = dual(2, (value: unknown, label: string): string =>
-  CodeModeURL.is(value) ? value.url.href : uriArgument(value, label))
+  CodeModeURL.is(value) ? value.url.href : uriArgument(value, label)
+);
 
 /**
  * Dispatches guest `URL.canParse` and `URL.parse`.
@@ -248,16 +241,17 @@ export const urlArgument: {
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown => {
-  if (A.isArrayEmpty(args)) throw InterpreterRuntimeError.new(`URL.${name} requires a URL argument.`, node).as("TypeError")
-  const input = urlArgument(args[0], `URL.${name} input`)
-  const base =  P.isUndefined(args[1]) ? undefined : urlArgument(args[1], `URL.${name} base`)
+  if (A.isArrayEmpty(args))
+    throw InterpreterRuntimeError.new(`URL.${name} requires a URL argument.`, node).as("TypeError");
+  const input = urlArgument(args[0], `URL.${name} input`);
+  const base = P.isUndefined(args[1]) ? undefined : urlArgument(args[1], `URL.${name} base`);
   try {
-    const url = new URL(input, base)
-    return UrlStatic.is.canParse(name) ? true : CodeModeURL.new(url)
+    const url = new URL(input, base);
+    return UrlStatic.is.canParse(name) ? true : CodeModeURL.new(url);
   } catch {
-    return UrlStatic.is.canParse(name) ? false : null
+    return UrlStatic.is.canParse(name) ? false : null;
   }
-}
+};
 
 /**
  * Returns `value.url.href` for both `toString` and `toJSON`.
@@ -286,5 +280,4 @@ export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: Ast
  * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeURLMethod = (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string =>
-  value.url.href;
+export const invokeURLMethod = (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string => value.url.href;

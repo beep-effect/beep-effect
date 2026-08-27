@@ -307,13 +307,29 @@ export class StyleFloor extends Schema.TaggedClass<StyleFloor>()(
  * Discriminate on `_tag`. Do not use `instanceof` — custom rules may yield
  * plain objects shaped like a vote or floor.
  *
+ * **Example** (Guard either observation kind)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { StyleObservation, StyleVote } from "@beep/scratchpad/yaml"
+ *
+ * const vote = StyleVote.make({ dimension: "quoteType", value: "double", offset: 0, length: 3 })
+ * console.log(S.is(StyleObservation)(vote)) // true
+ * ```
+ *
  * @see {@link StyleVote} for categorical observations.
  * @see {@link StyleFloor} for measured floors that never become config options.
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type StyleObservation = StyleVote | StyleFloor;
+export const StyleObservation = Schema.Union([StyleVote, StyleFloor]).pipe(
+	$I.annoteSchema("StyleObservation", {
+		description: "Discriminated union of categorical style votes and measured style floors.",
+	}),
+);
+
+export type StyleObservation = typeof StyleObservation.Type;
 
 /**
  * The public rule interface — built-ins and custom rules are the same

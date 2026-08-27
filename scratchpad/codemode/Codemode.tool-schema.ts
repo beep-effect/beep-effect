@@ -4,10 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+
 import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
-import { A, O, P, R, Str, thunkFalse, pipe } from "@beep/utils";
+import { Unknown } from "@beep/schema/Unknown";
+import { A, O, P, pipe, R, Str, thunkFalse } from "@beep/utils";
 import { flow, HashSet, JsonPointer, Result } from "effect";
 import { dual } from "effect/Function";
 import type { JsonSchema } from "effect/JsonSchema";
@@ -45,9 +46,7 @@ const renderLiteral = (value: unknown): string =>
  * @category schemas
  * @since 0.0.0
  */
-export const IdentifierSegment = S.String.check(
-  S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u)
-).pipe(
+export const IdentifierSegment = S.String.check(S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u)).pipe(
   SchemaUtils.withCodecStatics,
   $I.annoteSchema("IdentifierSegment", {
     description: "An ECMAScript identifier segment safe to render after a dot.",
@@ -81,17 +80,12 @@ export type IdentifierSegment = typeof IdentifierSegment.Type;
  */
 export const identifierSegment = IdentifierSegment.is;
 
-const renderKey = (name: string): string =>
-  identifierSegment(name) ? name : renderLiteral(name);
+const renderKey = (name: string): string => (identifierSegment(name) ? name : renderLiteral(name));
 
 const hasType = (node: Node, expected: JSONSchema.TypeName): boolean =>
   pipe(
     node.type,
-    O.exists((value) =>
-      P.isString(value)
-        ? value === expected
-        : A.some(value, (candidate) => candidate === expected)
-    )
+    O.exists((value) => (P.isString(value) ? value === expected : A.some(value, (candidate) => candidate === expected)))
   );
 
 const effectNumberSentinel = (schema: SubSchema): boolean =>
@@ -102,9 +96,7 @@ const effectNumberSentinel = (schema: SubSchema): boolean =>
     O.exists(
       (values) =>
         A.length(values) === 1 &&
-        A.some(values, (value) =>
-          value === "NaN" || value === "Infinity" || value === "-Infinity"
-        )
+        A.some(values, (value) => value === "NaN" || value === "Infinity" || value === "-Infinity")
     )
   );
 
@@ -117,9 +109,7 @@ const intersection = (members: ReadonlyArray<string>): string => {
         ? head
         : pipe(
             concrete,
-            A.map((member) =>
-              pipe(member, Str.includes(" | ")) ? `(${member})` : member
-            ),
+            A.map((member) => (pipe(member, Str.includes(" | ")) ? `(${member})` : member)),
             A.join(" & ")
           ),
   });
@@ -138,9 +128,7 @@ const definitionName = (ref: string): O.Option<string> =>
     localRefPrefixes,
     A.findFirst((prefix) => Str.startsWith(ref, prefix)),
     O.map((prefix) => pipe(ref, Str.slice(Str.length(prefix)))),
-    O.filter((segment) =>
-      Str.isNonEmpty(segment) && !pipe(segment, Str.includes("/"))
-    ),
+    O.filter((segment) => Str.isNonEmpty(segment) && !pipe(segment, Str.includes("/"))),
     O.map(JsonPointer.unescapeToken)
   );
 
@@ -151,11 +139,7 @@ const nestedContext = (node: Node, context: RenderContext): RenderContext =>
       onNone: () => context,
       onSome: (definitions) => ({
         ...context,
-        definitions: R.union(
-          context.definitions,
-          definitions,
-          (_left, right) => right
-        ),
+        definitions: R.union(context.definitions, definitions, (_left, right) => right),
       }),
     })
   );
@@ -192,15 +176,7 @@ const hasUnresolvedRef = (
             ? O.none()
             : pipe(
                 R.get(definitions, name),
-                O.filter(
-                  (target) =>
-                    !hasUnresolvedRef(
-                      target,
-                      definitions,
-                      HashSet.add(seen, name),
-                      nextVisited
-                    )
-                )
+                O.filter((target) => !hasUnresolvedRef(target, definitions, HashSet.add(seen, name), nextVisited))
               )
         ),
         O.isNone
@@ -208,10 +184,7 @@ const hasUnresolvedRef = (
     )
   );
   return (
-    unresolvedSelf ||
-    A.some(schemaChildren(schema), (child) =>
-      hasUnresolvedRef(child, definitions, seen, nextVisited)
-    )
+    unresolvedSelf || A.some(schemaChildren(schema), (child) => hasUnresolvedRef(child, definitions, seen, nextVisited))
   );
 };
 
@@ -236,9 +209,18 @@ const docTags = (schema: Node): ReadonlyArray<string> =>
         schema.default,
         O.map((value) => `@default ${renderLiteral(value)}`)
       ),
-      pipe(schema.format, O.map((format) => `@format ${format}`)),
-      pipe(schema.minItems, O.map((value) => `@minItems ${value}`)),
-      pipe(schema.maxItems, O.map((value) => `@maxItems ${value}`))
+      pipe(
+        schema.format,
+        O.map((format) => `@format ${format}`)
+      ),
+      pipe(
+        schema.minItems,
+        O.map((value) => `@minItems ${value}`)
+      ),
+      pipe(
+        schema.maxItems,
+        O.map((value) => `@maxItems ${value}`)
+      )
     ),
     A.getSomes
   );
@@ -246,11 +228,7 @@ const docTags = (schema: Node): ReadonlyArray<string> =>
 const isBlank = (line: string): boolean => Str.isEmpty(Str.trim(line));
 
 // Neutralize `*\/` so schema-provided text cannot terminate generated docs.
-const jsdoc = (
-  description: O.Option<string>,
-  tags: ReadonlyArray<string>,
-  pad: string
-): string => {
+const jsdoc = (description: O.Option<string>, tags: ReadonlyArray<string>, pad: string): string => {
   const lines = pipe(
     description,
     O.map(Str.split("\n")),
@@ -295,18 +273,8 @@ const renderSchema = (
     if (O.isNone(name) || O.isNone(target)) return "unknown";
     return intersection(
       A.make(
-        renderSchema(
-          target.value,
-          nested,
-          depth,
-          HashSet.add(seen, name.value)
-        ),
-        renderSchema(
-          { ...schema, $ref: O.none() },
-          nested,
-          depth + 1,
-          seen
-        )
+        renderSchema(target.value, nested, depth, HashSet.add(seen, name.value)),
+        renderSchema({ ...schema, $ref: O.none() }, nested, depth + 1, seen)
       )
     );
   }
@@ -324,12 +292,7 @@ const renderSchema = (
     const members = alternatives.value;
     if (
       A.some(members, (item) => !P.isBoolean(item) && hasType(item, "number")) &&
-      A.every(
-        members,
-        (item) =>
-          (!P.isBoolean(item) && hasType(item, "number")) ||
-          effectNumberSentinel(item)
-      )
+      A.every(members, (item) => (!P.isBoolean(item) && hasType(item, "number")) || effectNumberSentinel(item))
     ) {
       return "number";
     }
@@ -344,86 +307,43 @@ const renderSchema = (
     ) {
       return "{}";
     }
-    const rendered = A.map(members, (item) =>
-      renderSchema(item, nested, depth + 1, seen)
-    );
+    const rendered = A.map(members, (item) => renderSchema(item, nested, depth + 1, seen));
     if (A.some(rendered, (member) => member === "unknown")) return "unknown";
     return intersection(
       A.make(
         pipe(rendered, A.join(" | ")),
-        renderSchema(
-          { ...schema, anyOf: O.none(), oneOf: O.none() },
-          nested,
-          depth + 1,
-          seen
-        )
+        renderSchema({ ...schema, anyOf: O.none(), oneOf: O.none() }, nested, depth + 1, seen)
       )
     );
   }
 
   if (O.isSome(schema.allOf)) {
-    const members = A.map(schema.allOf.value, (item) =>
-      renderSchema(item, nested, depth + 1, seen)
-    );
-    if (
-      A.some(schema.allOf.value, (item) =>
-        hasUnresolvedRef(item, nested.definitions)
-      )
-    ) {
+    const members = A.map(schema.allOf.value, (item) => renderSchema(item, nested, depth + 1, seen));
+    if (A.some(schema.allOf.value, (item) => hasUnresolvedRef(item, nested.definitions))) {
       return "unknown";
     }
-    return intersection([
-      renderSchema(
-        { ...schema, allOf: O.none() },
-        nested,
-        depth + 1,
-        seen
-      ),
-      ...members,
-    ]);
+    return intersection([renderSchema({ ...schema, allOf: O.none() }, nested, depth + 1, seen), ...members]);
   }
 
   if (
     pipe(
       schema.not,
-      O.exists((negated) =>
-        P.isBoolean(negated) ? negated : isEmptyNode(negated)
-      )
+      O.exists((negated) => (P.isBoolean(negated) ? negated : isEmptyNode(negated)))
     )
   ) {
     return "never";
   }
 
-  if (
-    O.isSome(schema.type) &&
-    !P.isString(schema.type.value)
-  ) {
+  if (O.isSome(schema.type) && !P.isString(schema.type.value)) {
     return pipe(
       schema.type.value,
-      A.map((type) =>
-        renderSchema(
-          { ...schema, type: O.some(type) },
-          nested,
-          depth + 1,
-          seen
-        )
-      ),
+      A.map((type) => renderSchema({ ...schema, type: O.some(type) }, nested, depth + 1, seen)),
       A.join(" | ")
     );
   }
 
-  const type = pipe(
-    schema.type,
-    O.filter(P.isString),
-    O.getOrUndefined
-  );
-  if (
-    type === "string" ||
-    type === "number" ||
-    type === "integer" ||
-    type === "boolean" ||
-    type === "null"
-  ) {
+  const type = pipe(schema.type, O.filter(P.isString), O.getOrUndefined);
+  if (type === "string" || type === "number" || type === "integer" || type === "boolean" || type === "null") {
     return JSONSchema.TypeName.$match(type, {
       array: () => "unknown",
       boolean: () => "boolean",
@@ -437,7 +357,10 @@ const renderSchema = (
 
   if (type === "array") {
     return `Array<${renderSchema(
-      pipe(schema.items, O.getOrElse((): SubSchema => true)),
+      pipe(
+        schema.items,
+        O.getOrElse((): SubSchema => true)
+      ),
       nested,
       depth + 1,
       seen
@@ -445,30 +368,15 @@ const renderSchema = (
   }
 
   if (type === "object" || O.isSome(schema.properties)) {
-    const required = pipe(
-      schema.required,
-      O.map(HashSet.fromIterable),
-      O.getOrElse(HashSet.empty<string>)
-    );
-    const properties = pipe(
-      schema.properties,
-      O.map(R.toEntries),
-      O.getOrElse(A.empty)
-    );
+    const required = pipe(schema.required, O.map(HashSet.fromIterable), O.getOrElse(HashSet.empty<string>));
+    const properties = pipe(schema.properties, O.map(R.toEntries), O.getOrElse(A.empty));
     const indexType = pipe(
       schema.additionalProperties,
       O.filter((additional) => additional !== false),
-      O.map((additional) =>
-        renderSchema(additional, nested, depth + 1, seen)
-      )
+      O.map((additional) => renderSchema(additional, nested, depth + 1, seen))
     );
     const field = ([name, value]: readonly [string, SubSchema]): string =>
-      `${renderKey(name)}${HashSet.has(required, name) ? "" : "?"}: ${renderSchema(
-        value,
-        nested,
-        depth + 1,
-        seen
-      )}`;
+      `${renderKey(name)}${HashSet.has(required, name) ? "" : "?"}: ${renderSchema(value, nested, depth + 1, seen)}`;
 
     if (!context.pretty) {
       const fields = pipe(properties, A.map(field));
@@ -479,9 +387,7 @@ const renderSchema = (
           onSome: (value) => A.append(fields, `[key: string]: ${value}`),
         })
       );
-      return A.isReadonlyArrayEmpty(members)
-        ? "{}"
-        : `{ ${pipe(members, A.join("; "))} }`;
+      return A.isReadonlyArrayEmpty(members) ? "{}" : `{ ${pipe(members, A.join("; "))} }`;
     }
 
     if (A.isReadonlyArrayEmpty(properties) && O.isNone(indexType)) return "{}";
@@ -499,14 +405,10 @@ const renderSchema = (
       indexType,
       O.match({
         onNone: () => lines,
-        onSome: (value) =>
-          A.append(lines, `${pad}[key: string]: ${value},`),
+        onSome: (value) => A.append(lines, `${pad}[key: string]: ${value},`),
       })
     );
-    return `{\n${pipe(rendered, A.join("\n"))}\n${pipe(
-      "  ",
-      Str.repeat(depth)
-    )}}`;
+    return `{\n${pipe(rendered, A.join("\n"))}\n${pipe("  ", Str.repeat(depth))}}`;
   }
 
   return "unknown";
@@ -541,26 +443,25 @@ const renderSchema = (
 export const toTypeScript: {
   (decoded?: boolean, pretty?: boolean): (schema: S.Top) => string;
   (schema: S.Top, decoded?: boolean, pretty?: boolean): string;
-} = dual((args) => S.isSchema(args[0]), (
-  schema: S.Top,
-  decoded = false,
-  pretty = false
-): string =>
-  pipe(
-    Result.try({
-      try: () => S.toJsonSchemaDocument(decoded === true ? S.toType(schema) : schema),
-      catch: (cause) => cause,
-    }),
-    Result.flatMap(S.decodeUnknownResult(JSONSchema.Document)),
-    Result.match({
-      onFailure: () => "unknown",
-      onSuccess: (document) =>
-        renderSchema(document.schema, {
-          definitions: document.definitions,
-          pretty,
-        }),
-    })
-  ));
+} = dual(
+  (args) => S.isSchema(args[0]),
+  (schema: S.Top, decoded = false, pretty = false): string =>
+    pipe(
+      Result.try({
+        try: () => S.toJsonSchemaDocument(decoded === true ? S.toType(schema) : schema),
+        catch: (cause) => cause,
+      }),
+      Result.flatMap(S.decodeUnknownResult(JSONSchema.Document)),
+      Result.match({
+        onFailure: () => "unknown",
+        onSuccess: (document) =>
+          renderSchema(document.schema, {
+            definitions: document.definitions,
+            pretty,
+          }),
+      })
+    )
+);
 
 /**
  * Renders a raw JSON Schema document after schema-first decoding.
@@ -586,21 +487,21 @@ export const toTypeScript: {
 export const jsonSchemaToTypeScript: {
   (pretty?: boolean): (schema: JsonSchema) => string;
   (schema: JsonSchema, pretty?: boolean): string;
-} = dual((args) => P.isObject(args[0]), (
-  schema: JsonSchema,
-  pretty = false
-): string =>
-  pipe(
-    decodeNode(schema),
-    Result.match({
-      onFailure: () => "unknown",
-      onSuccess: (node) =>
-        renderSchema(node, {
-          definitions: pipe(node.$defs, O.getOrElse(R.emptyReadonly)),
-          pretty,
-        }),
-    })
-  ));
+} = dual(
+  (args) => P.isObject(args[0]),
+  (schema: JsonSchema, pretty = false): string =>
+    pipe(
+      decodeNode(schema),
+      Result.match({
+        onFailure: () => "unknown",
+        onSuccess: (node) =>
+          renderSchema(node, {
+            definitions: pipe(node.$defs, O.getOrElse(R.emptyReadonly)),
+            pretty,
+          }),
+      })
+    )
+);
 
 /**
  * One discoverable input property decoded from a tool input JSON Schema.
@@ -623,29 +524,22 @@ export const jsonSchemaToTypeScript: {
 export class InputProperty extends S.Class<InputProperty>($I`InputProperty`)(
   {
     name: S.String,
-    description: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     required: S.Boolean,
   },
   $I.annote("InputProperty", {
     description: "One property decoded from a tool input JSON Schema.",
   })
 ) {
-  static readonly new = (
-    name: string,
-    description: O.Option<string>,
-    required: boolean
-  ): InputProperty => InputProperty.make({ name, description, required });
+  static readonly new = (name: string, description: O.Option<string>, required: boolean): InputProperty =>
+    InputProperty.make({ name, description, required });
 }
 type ToolInputDocument = {
   readonly schema: Node;
   readonly definitions: Definitions;
 };
 
-const toolInputDocument = (
-  tool: Tool.Any
-): Result.Result<ToolInputDocument, unknown> =>
+const toolInputDocument = (tool: Tool.Any): Result.Result<ToolInputDocument, unknown> =>
   pipe(
     Result.try({
       try: () => Tool.getJsonSchema(tool),
@@ -692,21 +586,13 @@ export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
         O.filter(JSONSchema.Node.is),
         O.getOrElse(() => root)
       );
-      const required = pipe(
-        schema.required,
-        O.map(HashSet.fromIterable),
-        O.getOrElse(HashSet.empty<string>)
-      );
+      const required = pipe(schema.required, O.map(HashSet.fromIterable), O.getOrElse(HashSet.empty<string>));
       return pipe(
         schema.properties,
         O.map(R.toEntries),
         O.getOrElse(A.empty),
         A.map(([name, value]) =>
-          InputProperty.new(
-            name,
-            P.isBoolean(value) ? O.none() : value.description,
-            HashSet.has(required, name)
-          )
+          InputProperty.new(name, P.isBoolean(value) ? O.none() : value.description, HashSet.has(required, name))
         )
       );
     }),
@@ -738,8 +624,10 @@ export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
 export const inputTypeScript: {
   (pretty?: boolean): (tool: Tool.Any) => string;
   (tool: Tool.Any, pretty?: boolean): string;
-} = dual((args) => P.isObject(args[0]), (tool: Tool.Any, pretty = false): string =>
-  jsonSchemaToTypeScript(Tool.getJsonSchema(tool), pretty));
+} = dual(
+  (args) => P.isObject(args[0]),
+  (tool: Tool.Any, pretty = false): string => jsonSchemaToTypeScript(Tool.getJsonSchema(tool), pretty)
+);
 
 /**
  * Renders one tool's success and returned-failure schemas as TypeScript.
@@ -774,9 +662,12 @@ export const inputTypeScript: {
 export const outputTypeScript: {
   (pretty?: boolean): (tool: Tool.Any) => string;
   (tool: Tool.Any, pretty?: boolean): string;
-} = dual((args) => P.isObject(args[0]), (tool: Tool.Any, pretty = false): string => {
-  const success = toTypeScript(tool.successSchema, true, pretty);
-  if (tool.failureMode !== "return") return success;
-  const failure = toTypeScript(tool.failureSchema, true, pretty);
-  return failure === "never" ? success : `${success} | ${failure}`;
-});
+} = dual(
+  (args) => P.isObject(args[0]),
+  (tool: Tool.Any, pretty = false): string => {
+    const success = toTypeScript(tool.successSchema, true, pretty);
+    if (tool.failureMode !== "return") return success;
+    const failure = toTypeScript(tool.failureSchema, true, pretty);
+    return failure === "never" ? success : `${success} | ${failure}`;
+  }
+);

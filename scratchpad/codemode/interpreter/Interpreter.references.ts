@@ -14,17 +14,8 @@ import { A, P, R } from "@beep/utils";
 import { MutableHashSet } from "effect";
 import * as S from "effect/Schema";
 import { ToolReference } from "../Codemode.tool-runtime.ts";
-import {
-  CodeModePromise,
-  CodeModeValue,
-  isCodeModeValue,
-} from "../Codemode.values.ts";
-import {
-  type AstNode,
-  GlobalNamespaceName,
-  InterpreterRuntimeError,
-  RuntimeReference,
-} from "./Interpreter.model.ts";
+import { CodeModePromise, CodeModeValue, isCodeModeValue } from "../Codemode.values.ts";
+import { type AstNode, GlobalNamespaceName, InterpreterRuntimeError, RuntimeReference } from "./Interpreter.model.ts";
 
 const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
 
@@ -50,12 +41,7 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
  * @category schemas
  * @since 0.0.0
  */
-export const RuntimeReferenceValue = S.Union([
-  RuntimeReference,
-  ToolReference,
-  CodeModePromise,
-  CodeModeValue,
-]).pipe(
+export const RuntimeReferenceValue = S.Union([RuntimeReference, ToolReference, CodeModePromise, CodeModeValue]).pipe(
   $I.annoteSchema("RuntimeReferenceValue", {
     description: "Every schema-owned runtime reference and mutable guest value.",
   }),
@@ -107,15 +93,15 @@ const isFunctionRuntimeReference = RuntimeReference.isAnyOf([
   "SymbolNamespace",
   "UriFunction",
   "SearchFunction",
-])
+]);
 
 function* childValues(value: object): Generator<unknown> {
   if (A.isArray(value)) {
-    const length = A.length(value)
-    for (let index = 0; index < length; index++) yield value[index]
-    return
+    const length = A.length(value);
+    for (let index = 0; index < length; index++) yield value[index];
+    return;
   }
-  yield* R.values(value)
+  yield* R.values(value);
 }
 
 /**
@@ -144,24 +130,24 @@ function* childValues(value: object): Generator<unknown> {
  * @since 0.0.0
  */
 export const containsRuntimeReference = (value: unknown): boolean => {
-  const pending: Array<Iterator<unknown>> = [[value].values()]
-  const seen = MutableHashSet.empty<object>()
+  const pending: Array<Iterator<unknown>> = [[value].values()];
+  const seen = MutableHashSet.empty<object>();
   while (pending.length > 0) {
-    const iterator = pending.at(-1)
-    if (P.isUndefined(iterator)) break
-    const next = iterator.next()
+    const iterator = pending.at(-1);
+    if (P.isUndefined(iterator)) break;
+    const next = iterator.next();
     if (next.done === true) {
-      pending.pop()
-      continue
+      pending.pop();
+      continue;
     }
-    const current = next.value
-    if (isRuntimeReference(current)) return true
-    if (P.isNull(current) || !P.isObject(current) || MutableHashSet.has(seen, current)) continue
-    MutableHashSet.add(seen, current)
-    pending.push(childValues(current))
+    const current = next.value;
+    if (isRuntimeReference(current)) return true;
+    if (P.isNull(current) || !P.isObject(current) || MutableHashSet.has(seen, current)) continue;
+    MutableHashSet.add(seen, current);
+    pending.push(childValues(current));
   }
-  return false
-}
+  return false;
+};
 
 /**
  * Returns whether `value` contains an opaque interpreter reference, skipping
@@ -197,25 +183,25 @@ export const containsRuntimeReference = (value: unknown): boolean => {
  * @since 0.0.0
  */
 export const containsOpaqueReference = (value: unknown): boolean => {
-  const pending: Array<Iterator<unknown>> = [[value].values()]
-  const seen = MutableHashSet.empty<object>()
+  const pending: Array<Iterator<unknown>> = [[value].values()];
+  const seen = MutableHashSet.empty<object>();
   while (pending.length > 0) {
-    const iterator = pending.at(-1)
-    if (P.isUndefined(iterator)) break
-    const next = iterator.next()
+    const iterator = pending.at(-1);
+    if (P.isUndefined(iterator)) break;
+    const next = iterator.next();
     if (next.done === true) {
-      pending.pop()
-      continue
+      pending.pop();
+      continue;
     }
-    const current = next.value
-    if (isCodeModeValue(current)) continue
-    if (isRuntimeReference(current)) return true
-    if (P.isNull(current) || !P.isObject(current) || MutableHashSet.has(seen, current)) continue
-    MutableHashSet.add(seen, current)
-    pending.push(childValues(current))
+    const current = next.value;
+    if (isCodeModeValue(current)) continue;
+    if (isRuntimeReference(current)) return true;
+    if (P.isNull(current) || !P.isObject(current) || MutableHashSet.has(seen, current)) continue;
+    MutableHashSet.add(seen, current);
+    pending.push(childValues(current));
   }
-  return false
-}
+  return false;
+};
 
 /**
  * Throws if inserting `value` into `container` would create a cycle.
@@ -252,29 +238,25 @@ export const containsOpaqueReference = (value: unknown): boolean => {
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Container, candidate value, diagnostic label, and AST node are co-primary invariant-check inputs.
 export const rejectCircularInsertion = (container: object, value: unknown, label: string, node: AstNode): void => {
-  const pending: Array<Iterator<unknown>> = [[value].values()]
-  const seen = MutableHashSet.empty<object>()
+  const pending: Array<Iterator<unknown>> = [[value].values()];
+  const seen = MutableHashSet.empty<object>();
   while (pending.length > 0) {
-    const iterator = pending.at(-1)
-    if (P.isUndefined(iterator)) break
-    const next = iterator.next()
+    const iterator = pending.at(-1);
+    if (P.isUndefined(iterator)) break;
+    const next = iterator.next();
     if (next.done === true) {
-      pending.pop()
-      continue
+      pending.pop();
+      continue;
     }
-    const current = next.value
+    const current = next.value;
     if (current === container)
-      throw InterpreterRuntimeError.new(`${label} contains a circular value.`, node, "InvalidDataValue")
-    if (
-      P.isNull(current) ||
-      !P.isObject(current) ||
-      isRuntimeReference(current) ||
-      MutableHashSet.has(seen, current)
-    ) continue
-    MutableHashSet.add(seen, current)
-    pending.push(A.isArray(current) ? current[Symbol.iterator]() : childValues(current))
+      throw InterpreterRuntimeError.new(`${label} contains a circular value.`, node, "InvalidDataValue");
+    if (P.isNull(current) || !P.isObject(current) || isRuntimeReference(current) || MutableHashSet.has(seen, current))
+      continue;
+    MutableHashSet.add(seen, current);
+    pending.push(A.isArray(current) ? current[Symbol.iterator]() : childValues(current));
   }
-}
+};
 
 /**
  * Guest `typeof` that lies like JavaScript for namespaces and function handles.
@@ -310,8 +292,8 @@ export const rejectCircularInsertion = (container: object, value: unknown, label
  * @since 0.0.0
  */
 export const typeofValue = (value: unknown): string => {
-  if (RuntimeReference.is(value) && isFunctionRuntimeReference(value)) return "function"
-  if (ToolReference.is(value)) return A.isReadonlyArrayNonEmpty(value.path) ? "function" : "object"
+  if (RuntimeReference.is(value) && isFunctionRuntimeReference(value)) return "function";
+  if (ToolReference.is(value)) return A.isReadonlyArrayNonEmpty(value.path) ? "function" : "object";
   if (RuntimeReference.guards.GlobalNamespace(value)) {
     return GlobalNamespaceName.$match(value.name, {
       Object: () => "function",
@@ -325,7 +307,7 @@ export const typeofValue = (value: unknown): string => {
       Math: () => "object",
       JSON: () => "object",
       console: () => "object",
-    })
+    });
   }
-  return typeof value
-}
+  return typeof value;
+};

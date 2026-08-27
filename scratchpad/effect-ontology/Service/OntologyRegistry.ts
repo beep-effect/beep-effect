@@ -16,6 +16,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -27,6 +28,11 @@ import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyRegistry");
+const OntologyIdentifierType = LiteralKit(["id", "iri"]).pipe(
+  $I.annoteSchema("OntologyIdentifierType", {
+    description: "Registry fields that can identify an ontology lookup target.",
+  })
+);
 
 /**
  * Error types for registry operations
@@ -116,7 +122,7 @@ export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError>(
     identifier: S.String.annotateKey({
       description: "Ontology identifier or IRI that could not be resolved.",
     }),
-    type: S.Literals(["id", "iri"]).annotateKey({
+    type: OntologyIdentifierType.annotateKey({
       description: "Registry field used for the failed lookup.",
     }),
   },

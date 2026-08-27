@@ -13,6 +13,7 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import type { Stream } from "effect";
 import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
@@ -24,11 +25,11 @@ import { ContentHash } from "../Domain/Identity.ts";
 import type {
   AddAliasAction,
   CorrectTripleAction,
-  CurationAction,
   LinkToWikidataAction,
   MarkAsWrongAction,
   PromoteToPreferredAction,
 } from "../Domain/Schema/CurationAction.ts";
+import { CurationAction } from "../Domain/Schema/CurationAction.ts";
 import { BackgroundJobId, EmbeddingJob, PromptCacheJob } from "../Domain/Schema/JobSchema.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
@@ -40,6 +41,18 @@ import type { EventEntry } from "./EventBus.ts";
 import { EventBusService } from "./EventBus.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
+
+const CurationActionTag = LiteralKit([
+  "CorrectTripleAction",
+  "MarkAsWrongAction",
+  "AddAliasAction",
+  "PromoteToPreferredAction",
+  "LinkToWikidataAction",
+]).pipe(
+  $I.annoteSchema("CurationActionTag", {
+    description: "Discriminator of the curation action that produced a result.",
+  })
+);
 
 // =============================================================================
 // Types
@@ -60,24 +73,29 @@ export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingEr
  * **Example** (Record a successful correction)
  *
  * ```ts
- * import type { CurationResult } from "@effect-ontology/Service/Curation"
+ * import { CurationResult } from "@effect-ontology/Service/Curation"
  *
- * const result: CurationResult = {
+ * const result = CurationResult.make({
  *   action: "CorrectTripleAction",
  *   success: true,
  *   details: { claimId: "claim-ada-founded" }
- * }
+ * })
  * console.log(result.success) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface CurationResult {
-  readonly action: CurationAction["_tag"];
-  readonly success: boolean;
-  readonly details?: Record<string, unknown>;
-}
+export class CurationResult extends S.Class<CurationResult>($I`CurationResult`)(
+  {
+    action: CurationActionTag,
+    success: S.Boolean,
+    details: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
+  },
+  $I.annote("CurationResult", {
+    description: "Success flag and optional details for one tagged curation action.",
+  })
+) {}
 
 // =============================================================================
 // Service
@@ -149,11 +167,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* Effect.logWarning("Claim not found for correction", {
           claimId: action.originalClaimId,
         });
-        return {
+        return CurationResult.make({
           action: "CorrectTripleAction",
           success: false,
           details: { reason: "claim_not_found" },
-        };
+        });
       }
 
       const original = originalOpt.value;
@@ -218,11 +236,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "CorrectTripleAction",
         success: true,
         details: { newClaimId: newClaim.id, correctionId: correction.id },
-      };
+      });
     });
 
     /**
@@ -238,11 +256,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* Effect.logWarning("Claim not found for deprecation", {
           claimId: action.claimId,
         });
-        return {
+        return CurationResult.make({
           action: "MarkAsWrongAction",
           success: false,
           details: { reason: "claim_not_found" },
-        };
+        });
       }
 
       const claim = claimOpt.value;
@@ -293,11 +311,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "MarkAsWrongAction",
         success: true,
         details: { negativeExampleId },
-      };
+      });
     });
 
     /**
@@ -316,11 +334,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* Effect.logWarning("Canonical entity not found for alias", {
           iri: action.canonicalEntity,
         });
-        return {
+        return CurationResult.make({
           action: "AddAliasAction",
           success: false,
           details: { reason: "entity_not_found" },
-        };
+        });
       }
 
       const canonical = canonicalOpt.value;
@@ -371,11 +389,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "AddAliasAction",
         success: true,
         details: { aliasId: alias.id },
-      };
+      });
     });
 
     /**
@@ -395,11 +413,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "PromoteToPreferredAction",
         success: true,
         details: { claimId: action.claimId },
-      };
+      });
     });
 
     /**
@@ -426,11 +444,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "LinkToWikidataAction",
         success: true,
         details: { wikidataQid: action.wikidataQid },
-      };
+      });
     });
 
     // -------------------------------------------------------------------------

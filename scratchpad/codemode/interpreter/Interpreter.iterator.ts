@@ -8,9 +8,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, Exit } from "effect"
+import { Effect, Exit } from "effect";
 import { dual } from "effect/Function";
-import type { AstNode, InterpreterFailure } from "./Interpreter.model.ts"
+import type { AstNode, InterpreterFailure } from "./Interpreter.model.ts";
 
 /**
  * Pull-based cursor over a guest synchronous iterable.
@@ -24,9 +24,9 @@ import type { AstNode, InterpreterFailure } from "./Interpreter.model.ts"
  * @since 0.0.0
  */
 export type IteratorCursor<R> = {
-  readonly next: Effect.Effect<{ readonly done: boolean; readonly value: unknown }, InterpreterFailure, R>
-  readonly close: Effect.Effect<void, InterpreterFailure, R>
-}
+  readonly next: Effect.Effect<{ readonly done: boolean; readonly value: unknown }, InterpreterFailure, R>;
+  readonly close: Effect.Effect<void, InterpreterFailure, R>;
+};
 
 /**
  * Capability that opens a synchronous iterator cursor for a guest value.
@@ -40,8 +40,11 @@ export type IteratorCursor<R> = {
  * @since 0.0.0
  */
 export type SyncIteratorRunner<R> = {
-  readonly syncIterator: (value: unknown, node: AstNode) => Effect.Effect<IteratorCursor<R> | undefined, InterpreterFailure, R>
-}
+  readonly syncIterator: (
+    value: unknown,
+    node: AstNode
+  ) => Effect.Effect<IteratorCursor<R> | undefined, InterpreterFailure, R>;
+};
 
 /**
  * Runs a consumer effect against a cursor and keeps the consumer `Cause` if it fails.
@@ -90,19 +93,22 @@ export type SyncIteratorRunner<R> = {
  * @since 0.0.0
  */
 export const preserveConsumerError: {
-  <A, R>(effect: Effect.Effect<A, InterpreterFailure, R>): (
-    cursor: IteratorCursor<R>
-  ) => Effect.Effect<A, InterpreterFailure, R>;
+  <A, R>(
+    effect: Effect.Effect<A, InterpreterFailure, R>
+  ): (cursor: IteratorCursor<R>) => Effect.Effect<A, InterpreterFailure, R>;
   <A, R>(
     cursor: IteratorCursor<R>,
     effect: Effect.Effect<A, InterpreterFailure, R>
   ): Effect.Effect<A, InterpreterFailure, R>;
-} = dual(2, <A, R>(
-  cursor: IteratorCursor<R>,
-  effect: Effect.Effect<A, InterpreterFailure, R>,
-): Effect.Effect<A, InterpreterFailure, R> =>
-  Effect.flatMap(Effect.exit(effect), (exit) =>
-    Exit.isSuccess(exit)
-      ? Effect.succeed(exit.value)
-      : Effect.andThen(Effect.exit(cursor.close), Effect.failCause(exit.cause)),
-  ))
+} = dual(
+  2,
+  <A, R>(
+    cursor: IteratorCursor<R>,
+    effect: Effect.Effect<A, InterpreterFailure, R>
+  ): Effect.Effect<A, InterpreterFailure, R> =>
+    Effect.flatMap(Effect.exit(effect), (exit) =>
+      Exit.isSuccess(exit)
+        ? Effect.succeed(exit.value)
+        : Effect.andThen(Effect.exit(cursor.close), Effect.failCause(exit.cause))
+    )
+);

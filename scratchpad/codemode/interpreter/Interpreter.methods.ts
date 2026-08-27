@@ -7,92 +7,69 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { LiteralKit, SafeObject } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
-import {Effect} from "effect";
+import { A, O, P, pipe, R } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import {O, P, A, R, pipe} from "@beep/utils";
 import {
-  type AstNode,
-  CodeModeFunction,
-  CodeModeGenerator,
-  CoercionFunction,
-  ErrorConstructorReference,
-  GlobalMethod,
-  GlobalMethodReference,
-  GlobalNamespace,
-  IntrinsicMethod,
-  IntrinsicReference,
-  type InterpreterFailure,
-  InterpreterRuntimeError,
-  JsonMethodReference,
-  PromiseCapabilityFunction,
-  PromiseNamespace,
-  RuntimeReference,
-  tryInterpreter,
-  UriFunction,
-} from "./Interpreter.model.ts";
-import {
-  containsOpaqueReference,
-  isRuntimeReference,
-  rejectCircularInsertion,
-  typeofValue
-} from "./Interpreter.references.ts";
-import {isBlockedMember,} from "../Codemode.tool-runtime.ts";
-import {LiteralKit, SafeObject} from "@beep/schema";
+  type ArrayMethod,
+  type ArrayStatic,
+  arrayMethods,
+  arrayStatics,
+  type MapMethod,
+  mapMethods,
+  type SetMethod,
+  type StringMethod,
+  setMethods,
+  stringMethods,
+  UrlSearchParamsMethod,
+} from "../Codemode.method-names.ts";
+import { isBlockedMember } from "../Codemode.tool-runtime.ts";
 import {
   CodeModeMap,
   CodeModePromise,
   CodeModeRegExp,
   CodeModeSet,
-  CodeModeURLSearchParams,
+  type CodeModeURLSearchParams,
   isCodeModeValue,
 } from "../Codemode.values.ts";
+import { dateSetterArgumentCount, invokeDateMethod, invokeDateStatic } from "../stdlib/StdLib.date.ts";
+import { invokeMathMethod } from "../stdlib/StdLib.math.ts";
+import { invokeNumberMethod, invokeNumberStatic } from "../stdlib/StdLib.number.ts";
+import { invokeObjectMethod } from "../stdlib/StdLib.object.ts";
+import { invokeRegExpMethod, invokeRegExpStatic, matchToValue, toHostRegex } from "../stdlib/StdLib.regexp.ts";
+import { invokeStringStatic } from "../stdlib/StdLib.string.ts";
+import { invokeURLMethod, invokeURLStatic, uriArgument } from "../stdlib/StdLib.url.ts";
+import { boundedData, coerceToNumber, coerceToString, errorBrandName } from "../stdlib/StdLib.value.ts";
+import { preserveConsumerError, type SyncIteratorRunner } from "./Interpreter.iterator.ts";
 import {
-  type ArrayMethod,
-  type ArrayStatic,
-  type MapMethod,
-  type SetMethod,
-  type StringMethod,
-  arrayStatics,
-  arrayMethods,
-  mapMethods,
-  setMethods,
-  stringMethods,
-  UrlSearchParamsMethod,
-} from "../Codemode.method-names.ts";
+  type AstNode,
+  type CodeModeFunction,
+  CodeModeGenerator,
+  type CoercionFunction,
+  type ErrorConstructorReference,
+  GlobalMethod,
+  type GlobalMethodReference,
+  type GlobalNamespace,
+  type InterpreterFailure,
+  InterpreterRuntimeError,
+  IntrinsicMethod,
+  type IntrinsicReference,
+  type JsonMethodReference,
+  type PromiseCapabilityFunction,
+  type PromiseNamespace,
+  RuntimeReference,
+  tryInterpreter,
+  type UriFunction,
+} from "./Interpreter.model.ts";
 import {
-  dateSetterArgumentCount,
-  invokeDateMethod,
-  invokeDateStatic
-} from "../stdlib/StdLib.date.ts";
-import {invokeMathMethod} from "../stdlib/StdLib.math.ts";
-import {
-  invokeNumberMethod,
-  invokeNumberStatic
-} from "../stdlib/StdLib.number.ts";
-import {invokeObjectMethod} from "../stdlib/StdLib.object.ts";
-import {
-  invokeRegExpMethod,
-  invokeRegExpStatic,
-  matchToValue,
-  toHostRegex
-} from "../stdlib/StdLib.regexp.ts";
-import {invokeStringStatic} from "../stdlib/StdLib.string.ts";
-import {
-  invokeURLMethod,
-  invokeURLStatic,
-  uriArgument
-} from "../stdlib/StdLib.url.ts";
-import {
-  boundedData,
-  coerceToNumber,
-  coerceToString,
-  errorBrandName
-} from "../stdlib/StdLib.value.ts";
-import {
-  preserveConsumerError,
-  type SyncIteratorRunner
-} from "./Interpreter.iterator.ts";
+  containsOpaqueReference,
+  isRuntimeReference,
+  rejectCircularInsertion,
+  typeofValue,
+} from "./Interpreter.references.ts";
 
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
@@ -108,14 +85,17 @@ const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
  * @since 0.0.0
  */
 export type CallbackRunner<R> = {
-  readonly invokeFunction: (fn: CodeModeFunction, args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>
+  readonly invokeFunction: (
+    fn: CodeModeFunction,
+    args: Array<unknown>
+  ) => Effect.Effect<unknown, InterpreterFailure, R>;
   readonly invokeCallable: (
     callable: unknown,
     args: Array<unknown>,
-    node: AstNode,
-  ) => Effect.Effect<unknown, InterpreterFailure, R>
-  readonly settlePromise: (promise: CodeModePromise) => Effect.Effect<unknown, InterpreterFailure>
-}
+    node: AstNode
+  ) => Effect.Effect<unknown, InterpreterFailure, R>;
+  readonly settlePromise: (promise: CodeModePromise) => Effect.Effect<unknown, InterpreterFailure>;
+};
 
 /**
  * Closed set of callables admitted as collection, sort, replacer, or reaction callbacks.
@@ -138,7 +118,7 @@ export type SupportedCallback =
   | IntrinsicReference
   | ErrorConstructorReference
   | GlobalNamespace
-  | PromiseNamespace
+  | PromiseNamespace;
 
 const isSupportedRuntimeCallback = RuntimeReference.isAnyOf([
   "CodeModeFunction",
@@ -151,7 +131,7 @@ const isSupportedRuntimeCallback = RuntimeReference.isAnyOf([
   "ErrorConstructorReference",
   "GlobalNamespace",
   "PromiseNamespace",
-])
+]);
 
 /**
  * Guards whether a value is an admitted collection or reaction callback.
@@ -234,34 +214,30 @@ export const invokeIntrinsic = <R>(
   runner: CallbackRunner<R>,
   ref: IntrinsicReference,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> =>
   IntrinsicMethod.match(ref.method, {
     String: ({ receiver, name }) => {
       if (name === "replace" || name === "replaceAll") {
         if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, receiver, name, args, node);
         if (typeofValue(args[1]) === "function") {
-          return Effect.fail(InterpreterRuntimeError.new(
-            `String.${name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
-            node,
-          ));
+          return Effect.fail(
+            InterpreterRuntimeError.new(
+              `String.${name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
+              node
+            )
+          );
         }
       }
-      return Effect.fromResult(
-        tryInterpreter(() => invokeStringMethod(receiver, name, args, node), node)
-      );
+      return Effect.fromResult(tryInterpreter(() => invokeStringMethod(receiver, name, args, node), node));
     },
     Number: ({ receiver, name }) =>
-      Effect.fromResult(
-        tryInterpreter(() => invokeNumberMethod(receiver, name, args, node), node)
-      ),
+      Effect.fromResult(tryInterpreter(() => invokeNumberMethod(receiver, name, args, node), node)),
     Array: ({ receiver, name }) => invokeArrayMethod(runner, receiver, name, args, node),
     Date: ({ receiver, name }) => {
       const argumentCount = dateSetterArgumentCount(name);
       if (O.isNone(argumentCount)) {
-        return Effect.fromResult(
-          tryInterpreter(() => invokeDateMethod(receiver, name, [], node), node)
-        );
+        return Effect.fromResult(tryInterpreter(() => invokeDateMethod(receiver, name, [], node), node));
       }
       // Native setters read the current time before argument coercion, whose callbacks may mutate the Date.
       const initialTime = receiver.time;
@@ -270,48 +246,37 @@ export const invokeIntrinsic = <R>(
           concurrency: 1,
         }),
         (values) =>
-          Effect.fromResult(
-            tryInterpreter(
-              () => invokeDateMethod(receiver, name, values, node, initialTime),
-              node
-            )
-          ),
+          Effect.fromResult(tryInterpreter(() => invokeDateMethod(receiver, name, values, node, initialTime), node))
       );
     },
     RegExp: ({ receiver, name }) =>
-      Effect.fromResult(
-        tryInterpreter(() => invokeRegExpMethod(receiver, name, args, node), node)
-      ),
+      Effect.fromResult(tryInterpreter(() => invokeRegExpMethod(receiver, name, args, node), node)),
     Map: ({ receiver, name }) => invokeMapMethod(runner, receiver, name, args, node),
     Set: ({ receiver, name }) => invokeSetMethod(runner, receiver, name, args, node),
-    URL: ({ receiver, name }) =>
-      Effect.fromResult(
-        tryInterpreter(() => invokeURLMethod(receiver, name, node), node)
-      ),
-    URLSearchParams: ({ receiver, name }) =>
-      invokeURLSearchParamsMethod(runner, receiver, name, args, node),
+    URL: ({ receiver, name }) => Effect.fromResult(tryInterpreter(() => invokeURLMethod(receiver, name, node), node)),
+    URLSearchParams: ({ receiver, name }) => invokeURLSearchParamsMethod(runner, receiver, name, args, node),
   });
 
 const coerceNumericArgument = <R>(
   runner: CallbackRunner<R>,
   value: unknown,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<number, InterpreterFailure, R> => {
   if (!P.isObjectKeyword(value) || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToNumber(value));
   }
   return Effect.gen(function* () {
-    const valueOf = Reflect.get(value, "valueOf");
-    if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOf) === "function") {
-      const result = yield* runner.invokeCallable(valueOf, [], node);
+    const valueOfMethod = Reflect.get(value, "valueOf");
+    if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOfMethod) === "function") {
+      const result = yield* runner.invokeCallable(valueOfMethod, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToNumber(result);
       }
     }
     if (!R.has(value as Readonly<Record<string, unknown>>, "toString")) return coerceToNumber(value);
-    const toString = Reflect.get(value, "toString");
-    if (typeofValue(toString) === "function") {
-      const result = yield* runner.invokeCallable(toString, [], node);
+    const toStringMethod = Reflect.get(value, "toString");
+    if (typeofValue(toStringMethod) === "function") {
+      const result = yield* runner.invokeCallable(toStringMethod, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToNumber(result);
       }
@@ -380,24 +345,14 @@ export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unkno
 
   return GlobalMethod.match(ref.method, {
     Object: ({ name }) =>
-      name === "fromEntries" || name === "groupBy"
-        ? unavailable("Object", name)
-        : invokeObjectMethod(name, args, node),
+      name === "fromEntries" || name === "groupBy" ? unavailable("Object", name) : invokeObjectMethod(name, args, node),
     Math: ({ name }) =>
-      name === "random" || name === "sumPrecise"
-        ? unavailable("Math", name)
-        : invokeMathMethod(name, args, node),
-    Array: ({ name }) =>
-      name === "from"
-        ? unavailable("Array", name)
-        : invokeArrayStatic(name, args, node),
+      name === "random" || name === "sumPrecise" ? unavailable("Math", name) : invokeMathMethod(name, args, node),
+    Array: ({ name }) => (name === "from" ? unavailable("Array", name) : invokeArrayStatic(name, args, node)),
     Number: ({ name }) => invokeNumberStatic(name, args, node),
     String: ({ name }) => invokeStringStatic(name, args, node),
     URL: ({ name }) => invokeURLStatic(name, args, node),
-    Date: ({ name }) =>
-      name === "now"
-        ? unavailable("Date", name)
-        : invokeDateStatic(name, args, node),
+    Date: ({ name }) => (name === "now" ? unavailable("Date", name) : invokeDateStatic(name, args, node)),
     RegExp: ({ name }) => invokeRegExpStatic(name, args, node),
     console: ({ name }) => unavailable("console", name),
     Map: ({ name }) => unavailable("Map", name),
@@ -409,7 +364,7 @@ const requireDataArgument = (name: StringMethod, index: number, arg: unknown, no
     throw InterpreterRuntimeError.new(
       `String.${name} expects argument ${index + 1} to be a data value.`,
       node,
-      "InvalidDataValue",
+      "InvalidDataValue"
     );
   }
   return arg;
@@ -430,13 +385,9 @@ const CallbackArrayMethodOptions = [
   "reduceRight",
   "flatMap",
   "forEach",
- ] as const;
-const CallbackArrayMethod = LiteralKit(
-  arrayMethods.pickOptions(CallbackArrayMethodOptions)
-);
-const DirectArrayMethod = LiteralKit(
-  arrayMethods.omitOptions(CallbackArrayMethodOptions)
-);
+] as const;
+const CallbackArrayMethod = LiteralKit(arrayMethods.pickOptions(CallbackArrayMethodOptions));
+const DirectArrayMethod = LiteralKit(arrayMethods.omitOptions(CallbackArrayMethodOptions));
 type DirectArrayStatic = Exclude<ArrayStatic, "from">;
 
 const invokeStringMethod = (value: string, name: StringMethod, args: Array<unknown>, node: AstNode): unknown => {
@@ -449,7 +400,7 @@ const invokeStringMethod = (value: string, name: StringMethod, args: Array<unkno
     if (CodeModeRegExp.is(args[0])) {
       throw InterpreterRuntimeError.new(
         `String.${name} cannot take a regular expression; use regex.test(string) or String.search instead.`,
-        node,
+        node
       ).as("TypeError");
     }
   };
@@ -467,66 +418,66 @@ const invokeStringMethod = (value: string, name: StringMethod, args: Array<unkno
     if (!pattern.global) {
       throw InterpreterRuntimeError.new(
         `String.matchAll requires a regular expression with the global (g) flag: write /${pattern.source}/${pattern.flags}g, or use String.match for a single match.`,
-        node,
+        node
       );
     }
     return pipe(value.matchAll(pattern), A.fromIterable, A.map(matchToValue));
   }
   const normalize = (): string => {
-      const form = optStr(0);
-      try {
-        return value.normalize(form);
-      } catch {
-        throw InterpreterRuntimeError.new(
-          `String.normalize expects the form "NFC", "NFD", "NFKC", or "NFKD" (got ${encodeJson(form)}).`,
-          node,
-        ).as("RangeError");
-      }
+    const form = optStr(0);
+    try {
+      return value.normalize(form);
+    } catch {
+      throw InterpreterRuntimeError.new(
+        `String.normalize expects the form "NFC", "NFD", "NFKC", or "NFKD" (got ${encodeJson(form)}).`,
+        node
+      ).as("RangeError");
+    }
   };
   const split = (): Array<string> => {
-      // Native: an undefined separator returns the whole string, not a split on "undefined",
-      // unless the limit truncates to zero.
-      if (args[0] === undefined) {
-        const requestedLimit = optNum(1);
-        return requestedLimit !== undefined && requestedLimit >>> 0 === 0 ? [] : [value];
-      }
-      if (CodeModeRegExp.is(args[0])) {
-        return value.split(args[0].regex, optNum(1));
-      }
+    // Native: an undefined separator returns the whole string, not a split on "undefined",
+    // unless the limit truncates to zero.
+    if (args[0] === undefined) {
       const requestedLimit = optNum(1);
-      return value.split(str(0), requestedLimit === undefined ? undefined : requestedLimit >>> 0);
+      return requestedLimit !== undefined && requestedLimit >>> 0 === 0 ? [] : [value];
+    }
+    if (CodeModeRegExp.is(args[0])) {
+      return value.split(args[0].regex, optNum(1));
+    }
+    const requestedLimit = optNum(1);
+    return value.split(str(0), requestedLimit === undefined ? undefined : requestedLimit >>> 0);
   };
   const includes = (): boolean => {
-      rejectRegex();
-      return value.includes(str(0), optNum(1));
+    rejectRegex();
+    return value.includes(str(0), optNum(1));
   };
   const startsWith = (): boolean => {
-      rejectRegex();
-      return value.startsWith(str(0), optNum(1));
+    rejectRegex();
+    return value.startsWith(str(0), optNum(1));
   };
   const endsWith = (): boolean => {
-      rejectRegex();
-      return value.endsWith(str(0), optNum(1));
+    rejectRegex();
+    return value.endsWith(str(0), optNum(1));
   };
   const replace = (all: boolean): string => {
-      if (CodeModeRegExp.is(args[0])) {
-        const pattern = args[0].regex;
-        const replacement = str(1);
-        if (all && !pattern.global) {
-          throw InterpreterRuntimeError.new(
-            `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.source}/${pattern.flags}g, or use String.replace to replace only the first match.`,
-            node,
-          );
-        }
-        return all ? value.replaceAll(pattern, replacement) : value.replace(pattern, replacement);
+    if (CodeModeRegExp.is(args[0])) {
+      const pattern = args[0].regex;
+      const replacement = str(1);
+      if (all && !pattern.global) {
+        throw InterpreterRuntimeError.new(
+          `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.source}/${pattern.flags}g, or use String.replace to replace only the first match.`,
+          node
+        );
       }
-      return all ? value.replaceAll(str(0), str(1)) : value.replace(str(0), str(1));
+      return all ? value.replaceAll(pattern, replacement) : value.replace(pattern, replacement);
+    }
+    return all ? value.replaceAll(str(0), str(1)) : value.replace(str(0), str(1));
   };
   const repeat = (): string => {
-      const count = num(0);
-      if (!Number.isFinite(count) || count < 0)
-        throw InterpreterRuntimeError.new("String.repeat expects a finite non-negative count.", node).as("RangeError");
-      return value.repeat(count);
+    const count = num(0);
+    if (!Number.isFinite(count) || count < 0)
+      throw InterpreterRuntimeError.new("String.repeat expects a finite non-negative count.", node).as("RangeError");
+    return value.repeat(count);
   };
   const result = DirectStringMethod.$match(name, {
     toLowerCase: () => value.toLowerCase(),
@@ -561,6 +512,7 @@ const invokeStringMethod = (value: string, name: StringMethod, args: Array<unkno
 };
 
 export { arrayStatics } from "../Codemode.method-names.ts";
+
 const DirectArrayStatic = LiteralKit(arrayStatics.omitOptions(["from"]));
 
 const invokeArrayStatic = (name: DirectArrayStatic, args: Array<unknown>, _node: AstNode): unknown =>
@@ -569,15 +521,18 @@ const invokeArrayStatic = (name: DirectArrayStatic, args: Array<unknown>, _node:
     of: () => [...args],
   });
 
-const arrayLikeSource = (source: unknown, node: AstNode): {
+const arrayLikeSource = (
+  source: unknown,
+  node: AstNode
+): {
   readonly length: number;
-  readonly source: object
+  readonly source: object;
 } => {
   if (CodeModePromise.is(source)) {
     throw InterpreterRuntimeError.new(
       "Array.from received an un-awaited Promise; await it before creating the array.",
       node,
-      "InvalidDataValue",
+      "InvalidDataValue"
     );
   }
   if (
@@ -589,19 +544,19 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
       throw InterpreterRuntimeError.new(
         "Array.from expects an array, string, Map, Set, or array-like value.",
         node,
-        "InvalidDataValue",
+        "InvalidDataValue"
       );
     }
     const normalized = Number.isNaN(length) || length <= 0 ? 0 : Math.trunc(length);
     if (normalized > 4_294_967_295) {
       throw InterpreterRuntimeError.new("Invalid array length.", node).as("RangeError");
     }
-    return {length: normalized, source};
+    return { length: normalized, source };
   }
   throw InterpreterRuntimeError.new(
     "Array.from expects an array, string, Map, Set, or array-like value.",
     node,
-    "InvalidDataValue",
+    "InvalidDataValue"
   );
 };
 
@@ -641,7 +596,7 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
 export const invokeArrayFrom = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const source = args[0];
   const apply =
@@ -651,18 +606,18 @@ export const invokeArrayFrom = <R>(
     if (P.isUndefined(cursor)) {
       if (CodeModeGenerator.is(source)) {
         throw InterpreterRuntimeError.new("Array.from expects a synchronous iterable or array-like value.", node).as(
-          "TypeError",
+          "TypeError"
         );
       }
       const arrayLike = arrayLikeSource(source, node);
-      const values = A.empty<unknown>();;
+      const values = A.empty<unknown>();
       for (let index = 0; index < arrayLike.length; index += 1) {
         const item = Reflect.get(arrayLike.source, index);
         values.push(apply === undefined ? item : yield* apply([item, index]));
       }
       return values;
     }
-    const values = A.empty<unknown>();;
+    const values = A.empty<unknown>();
     let index = 0;
     while (true) {
       const step = yield* cursor.next;
@@ -725,7 +680,7 @@ export const invokeGroupBy = <R>(
   runner: CallbackRunner<R> & SyncIteratorRunner<R>,
   namespace: "Map" | "Object",
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const source = args[0];
   if (source === null || source === undefined) {
@@ -748,9 +703,10 @@ export const invokeGroupBy = <R>(
         const group = result.map.get(key);
         if (group === undefined) result.map.set(key, [item]);
         else if (A.isArray(group)) group.push(item);
-        else return yield* Effect.die(
-          InterpreterRuntimeError.new("CodeMode Map.groupBy stored a non-array group.", node, "InvalidDataValue")
-        );
+        else
+          return yield* Effect.die(
+            InterpreterRuntimeError.new("CodeMode Map.groupBy stored a non-array group.", node, "InvalidDataValue")
+          );
         index += 1;
       }
     }
@@ -763,20 +719,21 @@ export const invokeGroupBy = <R>(
       const item = step.value;
       const key = yield* preserveConsumerError(
         cursor,
-        Effect.flatMap(apply([item, index]), (value) => coerceGroupByPropertyKey(runner, value, node)),
+        Effect.flatMap(apply([item, index]), (value) => coerceGroupByPropertyKey(runner, value, node))
       );
       if (isBlockedMember(key)) {
         return yield* preserveConsumerError(
           cursor,
-          Effect.fail(InterpreterRuntimeError.new(`Property '${key}' is not available.`, node)),
+          Effect.fail(InterpreterRuntimeError.new(`Property '${key}' is not available.`, node))
         );
       }
       const group = result[key];
       if (group === undefined) Reflect.set(result, key, [item]);
       else if (A.isArray(group)) group.push(item);
-      else return yield* Effect.die(
-        InterpreterRuntimeError.new("CodeMode Object.groupBy stored a non-array group.", node, "InvalidDataValue")
-      );
+      else
+        return yield* Effect.die(
+          InterpreterRuntimeError.new("CodeMode Object.groupBy stored a non-array group.", node, "InvalidDataValue")
+        );
       index += 1;
     }
   });
@@ -785,7 +742,7 @@ export const invokeGroupBy = <R>(
 const coerceGroupByPropertyKey = <R>(
   runner: CallbackRunner<R>,
   value: unknown,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<string, InterpreterFailure, R> => {
   if (!P.isObjectKeyword(value) || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToString(value));
@@ -796,16 +753,16 @@ const coerceGroupByPropertyKey = <R>(
   }
   if (!R.has(value as Readonly<Record<string, unknown>>, "toString")) return Effect.succeed(coerceToString(value));
   return Effect.gen(function* () {
-    const toString = Reflect.get(value, "toString");
-    if (typeofValue(toString) === "function") {
-      const result = yield* runner.invokeCallable(toString, [], node);
+    const toStringMethod = Reflect.get(value, "toString");
+    if (typeofValue(toStringMethod) === "function") {
+      const result = yield* runner.invokeCallable(toStringMethod, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToString(result);
       }
     }
-    const valueOf = Reflect.get(value, "valueOf");
-    if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOf) === "function") {
-      const result = yield* runner.invokeCallable(valueOf, [], node);
+    const valueOfMethod = Reflect.get(value, "valueOf");
+    if (R.has(value as Readonly<Record<string, unknown>>, "valueOf") && typeofValue(valueOfMethod) === "function") {
+      const result = yield* runner.invokeCallable(valueOfMethod, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToString(result);
       }
@@ -819,13 +776,13 @@ const invokeStringReplacer = <R>(
   value: string,
   name: "replace" | "replaceAll",
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const apply = applyCollectionCallback(runner, args[1], `String.${name}`, node);
   const matches: Array<{
     readonly match: string;
     readonly offset: number;
-    readonly args: Array<unknown>
+    readonly args: Array<unknown>;
   }> = [];
   const collect = (...callbackArgs: Array<unknown>): string => {
     const match = callbackArgs[0];
@@ -842,7 +799,7 @@ const invokeStringReplacer = <R>(
       }
       callbackArgs[callbackArgs.length - 1] = safeGroups;
     }
-    matches.push({match, offset, args: callbackArgs});
+    matches.push({ match, offset, args: callbackArgs });
     return match;
   };
 
@@ -851,7 +808,7 @@ const invokeStringReplacer = <R>(
     if (name === "replaceAll" && !pattern.regex.global) {
       throw InterpreterRuntimeError.new(
         `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.regex.source}/${pattern.regex.flags}g, or use String.replace to replace only the first match.`,
-        node,
+        node
       );
     }
     if (name === "replace") value.replace(pattern.regex, collect);
@@ -874,7 +831,7 @@ const invokeStringReplacer = <R>(
           ? "[object Promise]"
           : P.isNotUndefined(errorBrandName(replacement))
             ? coerceToString(replacement)
-            : coerceToString(boundedData(replacement, `String.${name} replacer result`)),
+            : coerceToString(boundedData(replacement, `String.${name} replacer result`))
       );
       end = match.offset + match.match.length;
     }
@@ -927,13 +884,13 @@ export const applyCollectionCallback = <R>(
   runner: CallbackRunner<R>,
   callback: unknown,
   name: string,
-  node: AstNode,
+  node: AstNode
 ): ((args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>) => {
   if (!isSupportedCallback(callback)) {
     if (typeofValue(callback) === "function") {
       throw InterpreterRuntimeError.new(
         `${name} cannot use this callable as a callback; wrap it in an arrow function, e.g. (value) => tools.ns.tool(value).`,
-        node,
+        node
       );
     }
     throw InterpreterRuntimeError.new(`${name} expects a function callback.`, node).as("TypeError");
@@ -946,7 +903,7 @@ const invokeMapMethod = <R>(
   target: CodeModeMap,
   name: MapMethod,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> =>
   mapMethods.$match(name, {
     get: () => Effect.succeed(target.map.get(args[0])),
@@ -965,7 +922,13 @@ const invokeMapMethod = <R>(
     keys: () => Effect.sync(() => A.fromIterable(target.map.keys())),
     values: () => Effect.sync(() => A.fromIterable(target.map.values())),
     entries: () =>
-      Effect.sync(() => pipe(target.map.entries(), A.fromIterable, A.map(([key, item]): Array<unknown> => [key, item]))),
+      Effect.sync(() =>
+        pipe(
+          target.map.entries(),
+          A.fromIterable,
+          A.map(([key, item]): Array<unknown> => [key, item])
+        )
+      ),
     forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Map.forEach", node);
       return Effect.gen(function* () {
@@ -980,7 +943,7 @@ const invokeSetMethod = <R>(
   target: CodeModeSet,
   name: SetMethod,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const operation = (operationName: SetOperationMethod) =>
     invokeSetOperation(runner, target, operationName, args[0], node);
@@ -1000,7 +963,13 @@ const invokeSetMethod = <R>(
     keys: () => Effect.sync(() => A.fromIterable(target.set.values())),
     values: () => Effect.sync(() => A.fromIterable(target.set.values())),
     entries: () =>
-      Effect.sync(() => pipe(target.set.values(), A.fromIterable, A.map((item): Array<unknown> => [item, item]))),
+      Effect.sync(() =>
+        pipe(
+          target.set.values(),
+          A.fromIterable,
+          A.map((item): Array<unknown> => [item, item])
+        )
+      ),
     forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Set.forEach", node);
       return Effect.gen(function* () {
@@ -1036,7 +1005,7 @@ const invokeSetOperation = <R>(
   target: CodeModeSet,
   name: SetOperationMethod,
   source: unknown,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> =>
   Effect.gen(function* () {
     const other = yield* loadSetRecord(runner, source, name, node);
@@ -1135,7 +1104,7 @@ const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: SetO
     const size = yield* coerceNumericArgument(runner, Reflect.get(source, "size"), node);
     if (Number.isNaN(size)) {
       throw InterpreterRuntimeError.new(`Set.${name} received a Set-like object with an invalid size.`, node).as(
-        "TypeError",
+        "TypeError"
       );
     }
     const has = Reflect.get(source, "has");
@@ -1160,14 +1129,14 @@ const invokeURLSearchParamsMethod = <R>(
   target: CodeModeURLSearchParams,
   name: UrlSearchParamsMethod,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const arg = (index: number): string => uriArgument(args[index], `URLSearchParams.${name} argument ${index + 1}`);
   const requireArgs = (count: number): void => {
     if (args.length < count) {
       throw InterpreterRuntimeError.new(
         `URLSearchParams.${name} requires ${count} argument${count === 1 ? "" : "s"}.`,
-        node,
+        node
       ).as("TypeError");
     }
   };
@@ -1214,7 +1183,13 @@ const invokeURLSearchParamsMethod = <R>(
     keys: () => Effect.sync(() => A.fromIterable(target.params.keys())),
     values: () => Effect.sync(() => A.fromIterable(target.params.values())),
     entries: () =>
-      Effect.sync(() => pipe(target.params.entries(), A.fromIterable, A.map(([key, value]): Array<unknown> => [key, value]))),
+      Effect.sync(() =>
+        pipe(
+          target.params.entries(),
+          A.fromIterable,
+          A.map(([key, value]): Array<unknown> => [key, value])
+        )
+      ),
     toString: () => Effect.sync(() => target.params.toString()),
     forEach: () => {
       requireArgs(1);
@@ -1232,12 +1207,11 @@ const invokeArrayMethod = <R>(
   target: Array<unknown>,
   name: ArrayMethod,
   args: Array<unknown>,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   const optNumber = (value: unknown, label: string): number | undefined => {
     if (value === undefined) return undefined;
-    if (!P.isNumber(value))
-      throw InterpreterRuntimeError.new(`Array.${name} expects ${label} to be a number.`, node);
+    if (!P.isNumber(value)) throw InterpreterRuntimeError.new(`Array.${name} expects ${label} to be a number.`, node);
     return value;
   };
   if (S.is(DirectArrayMethod)(name)) {
@@ -1248,7 +1222,7 @@ const invokeArrayMethod = <R>(
       }
       boundedData(target, "Array.join input");
       return Effect.succeed(
-        target.map((item) => coerceToString(item ?? "")).join(P.isUndefined(separator) ? "," : separator),
+        target.map((item) => coerceToString(item ?? "")).join(P.isUndefined(separator) ? "," : separator)
       );
     };
     const includes = (): Effect.Effect<boolean> => {
@@ -1259,9 +1233,7 @@ const invokeArrayMethod = <R>(
     const sort = (): Effect.Effect<Array<unknown>, InterpreterFailure, R> => {
       const length = target.length;
       const holeCount = pipe(
-        A.makeBy(length, (index) =>
-          R.has(target as unknown as Readonly<Record<string, unknown>>, String(index))
-        ),
+        A.makeBy(length, (index) => R.has(target as unknown as Readonly<Record<string, unknown>>, String(index))),
         A.filter((own) => !own),
         A.length
       );
@@ -1270,9 +1242,12 @@ const invokeArrayMethod = <R>(
         sorted.slice(0, itemCount).forEach((item, index) => {
           target[index] = item;
         });
-        A.forEach(A.makeBy(holeCount, (index) => itemCount + index), (index) => {
-          Reflect.deleteProperty(target, index);
-        });
+        A.forEach(
+          A.makeBy(holeCount, (index) => itemCount + index),
+          (index) => {
+            Reflect.deleteProperty(target, index);
+          }
+        );
         return target;
       });
     };
@@ -1331,7 +1306,7 @@ const invokeArrayMethod = <R>(
         Effect.succeed(
           args[1] === undefined
             ? target.lastIndexOf(args[0])
-            : target.lastIndexOf(args[0], optNumber(args[1], "start index")),
+            : target.lastIndexOf(args[0], optNumber(args[1], "start index"))
         ),
       at: () => Effect.succeed(target.at(optNumber(args[0], "index") ?? 0)),
       slice: () => Effect.succeed(target.slice(optNumber(args[0], "start"), optNumber(args[1], "end"))),
@@ -1354,13 +1329,19 @@ const invokeArrayMethod = <R>(
           target.copyWithin(
             optNumber(args[0], "target index") ?? 0,
             optNumber(args[1], "start") ?? 0,
-            optNumber(args[2], "end"),
-          ),
+            optNumber(args[2], "end")
+          )
         ),
       keys: () => Effect.succeed(A.fromIterable(target.keys())),
       values: () => Effect.succeed([...target]),
       entries: () =>
-        Effect.succeed(pipe(target.entries(), A.fromIterable, A.map(([index, item]): Array<unknown> => [index, item]))),
+        Effect.succeed(
+          pipe(
+            target.entries(),
+            A.fromIterable,
+            A.map(([index, item]): Array<unknown> => [index, item])
+          )
+        ),
     });
   }
 
@@ -1369,120 +1350,115 @@ const invokeArrayMethod = <R>(
   const length = target.length;
   return CallbackArrayMethod.$match(name, {
     map: Effect.fnUntraced(function* () {
-        const values = A.empty<unknown>();;
-        values.length = length;
-        for (let index = 0; index < length; index += 1) {
-          if (!(index in target)) continue;
-          values[index] = yield* apply([target[index], index, target]);
-        }
-        return values;
-      }),
-    flatMap:
-      Effect.fnUntraced(function* () {
-        const values = A.empty<unknown>();;
-        for (let index = 0; index < length; index += 1) {
-          if (!(index in target)) continue;
-          const mapped = yield* apply([target[index], index, target]);
-          if (A.isArray(mapped)) values.push(...mapped);
-          else values.push(mapped);
-        }
-        return values;
-      }),
-    filter:
-      Effect.fnUntraced(function* () {
-        const values = A.empty<unknown>();;
-        for (let index = 0; index < length; index += 1) {
-          if (!(index in target)) continue;
-          const item = target[index];
-          if (P.isTruthy(yield* apply([item, index, target]))) values.push(item);
-        }
-        return values;
-      }),
-    find:
-      Effect.fnUntraced(function* () {
-        for (let index = 0; index < length; index += 1) {
-          const item = target[index];
-          if (P.isTruthy(yield* apply([item, index, target]))) return item;
-        }
-        return undefined;
-      }),
-    findIndex:
-      Effect.fnUntraced(function* () {
-        for (let index = 0; index < length; index += 1) {
-          if (P.isTruthy(yield* apply([target[index], index, target]))) return index;
-        }
-        return -1;
-      }),
-    some:
-      Effect.fnUntraced(function* () {
-        for (let index = 0; index < length; index += 1) {
-          if (!(index in target)) continue;
-          if (P.isTruthy(yield* apply([target[index], index, target]))) return true;
-        }
-        return false;
-      }),
+      const values = A.empty<unknown>();
+      values.length = length;
+      for (let index = 0; index < length; index += 1) {
+        if (!(index in target)) continue;
+        values[index] = yield* apply([target[index], index, target]);
+      }
+      return values;
+    }),
+    flatMap: Effect.fnUntraced(function* () {
+      const values = A.empty<unknown>();
+      for (let index = 0; index < length; index += 1) {
+        if (!(index in target)) continue;
+        const mapped = yield* apply([target[index], index, target]);
+        if (A.isArray(mapped)) values.push(...mapped);
+        else values.push(mapped);
+      }
+      return values;
+    }),
+    filter: Effect.fnUntraced(function* () {
+      const values = A.empty<unknown>();
+      for (let index = 0; index < length; index += 1) {
+        if (!(index in target)) continue;
+        const item = target[index];
+        if (P.isTruthy(yield* apply([item, index, target]))) values.push(item);
+      }
+      return values;
+    }),
+    find: Effect.fnUntraced(function* () {
+      for (let index = 0; index < length; index += 1) {
+        const item = target[index];
+        if (P.isTruthy(yield* apply([item, index, target]))) return item;
+      }
+      return undefined;
+    }),
+    findIndex: Effect.fnUntraced(function* () {
+      for (let index = 0; index < length; index += 1) {
+        if (P.isTruthy(yield* apply([target[index], index, target]))) return index;
+      }
+      return -1;
+    }),
+    some: Effect.fnUntraced(function* () {
+      for (let index = 0; index < length; index += 1) {
+        if (!(index in target)) continue;
+        if (P.isTruthy(yield* apply([target[index], index, target]))) return true;
+      }
+      return false;
+    }),
     every: Effect.fnUntraced(function* () {
-        for (let index = 0; index < length; index += 1) {
-          if (!(index in target)) continue;
-          if (!P.isTruthy(yield* apply([target[index], index, target]))) return false;
-        }
-        return true;
-      }),
+      for (let index = 0; index < length; index += 1) {
+        if (!(index in target)) continue;
+        if (!P.isTruthy(yield* apply([target[index], index, target]))) return false;
+      }
+      return true;
+    }),
     forEach: Effect.fnUntraced(function* () {
-        for (let index = 0; index < length; index += 1) {
-          if (index in target) yield* apply([target[index], index, target]);
-        }
-        return undefined;
-      }),
+      for (let index = 0; index < length; index += 1) {
+        if (index in target) yield* apply([target[index], index, target]);
+      }
+      return undefined;
+    }),
     reduce: Effect.fnUntraced(function* () {
-        let start = 0;
-        let accumulator = args[1];
-        if (args.length < 2) {
-          while (start < length && !(start in target)) start += 1;
-          if (start === length)
-            throw InterpreterRuntimeError.new("Array.reduce of an empty array with no initial value.", node).as(
-              "TypeError",
-            );
-          accumulator = target[start];
-          start += 1;
-        }
-        for (let index = start; index < length; index += 1) {
-          if (!(index in target)) continue;
-          accumulator = yield* apply([accumulator, target[index], index, target]);
-        }
-        return accumulator;
-      }),
+      let start = 0;
+      let accumulator = args[1];
+      if (args.length < 2) {
+        while (start < length && !(start in target)) start += 1;
+        if (start === length)
+          throw InterpreterRuntimeError.new("Array.reduce of an empty array with no initial value.", node).as(
+            "TypeError"
+          );
+        accumulator = target[start];
+        start += 1;
+      }
+      for (let index = start; index < length; index += 1) {
+        if (!(index in target)) continue;
+        accumulator = yield* apply([accumulator, target[index], index, target]);
+      }
+      return accumulator;
+    }),
     reduceRight: Effect.fnUntraced(function* () {
-        let start = length - 1;
-        let accumulator = args[1];
-        if (args.length < 2) {
-          while (start >= 0 && !(start in target)) start -= 1;
-          if (start < 0)
-            throw InterpreterRuntimeError.new("Array.reduceRight of an empty array with no initial value.", node).as(
-              "TypeError",
-            );
-          accumulator = target[start];
-          start -= 1;
-        }
-        for (let index = start; index >= 0; index -= 1) {
-          if (!(index in target)) continue;
-          accumulator = yield* apply([accumulator, target[index], index, target]);
-        }
-        return accumulator;
-      }),
+      let start = length - 1;
+      let accumulator = args[1];
+      if (args.length < 2) {
+        while (start >= 0 && !(start in target)) start -= 1;
+        if (start < 0)
+          throw InterpreterRuntimeError.new("Array.reduceRight of an empty array with no initial value.", node).as(
+            "TypeError"
+          );
+        accumulator = target[start];
+        start -= 1;
+      }
+      for (let index = start; index >= 0; index -= 1) {
+        if (!(index in target)) continue;
+        accumulator = yield* apply([accumulator, target[index], index, target]);
+      }
+      return accumulator;
+    }),
     findLast: Effect.fnUntraced(function* () {
-        for (let index = length - 1; index >= 0; index -= 1) {
-          const item = target[index];
-          if (P.isTruthy(yield* apply([item, index, target]))) return item;
-        }
-        return undefined;
-      }),
+      for (let index = length - 1; index >= 0; index -= 1) {
+        const item = target[index];
+        if (P.isTruthy(yield* apply([item, index, target]))) return item;
+      }
+      return undefined;
+    }),
     findLastIndex: Effect.fnUntraced(function* () {
-        for (let index = length - 1; index >= 0; index -= 1) {
-          if (P.isTruthy(yield* apply([target[index], index, target]))) return index;
-        }
-        return -1;
-      }),
+      for (let index = length - 1; index >= 0; index -= 1) {
+        if (P.isTruthy(yield* apply([target[index], index, target]))) return index;
+      }
+      return -1;
+    }),
   });
 };
 
@@ -1491,7 +1467,7 @@ const sortArray = <R>(
   target: Array<unknown>,
   comparator: unknown,
   name: string,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<Array<unknown>, InterpreterFailure, R> => {
   if (comparator === undefined) {
     return Effect.sync(() =>
@@ -1499,7 +1475,7 @@ const sortArray = <R>(
         const left = coerceToString(a);
         const right = coerceToString(b);
         return left < right ? -1 : left > right ? 1 : 0;
-      }),
+      })
     );
   }
   const apply = applyCollectionCallback(runner, comparator, name, node);
@@ -1509,7 +1485,7 @@ const sortArray = <R>(
     return Effect.gen(function* () {
       const left = yield* mergeSort(items.slice(0, midpoint));
       const right = yield* mergeSort(items.slice(midpoint));
-      const merged = A.empty<unknown>();;
+      const merged = A.empty<unknown>();
       let leftIndex = 0;
       let rightIndex = 0;
       while (leftIndex < left.length && rightIndex < right.length) {

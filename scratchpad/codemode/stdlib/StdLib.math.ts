@@ -6,21 +6,15 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import {LiteralKit} from "@beep/schema";
-import {Effect} from "effect";
-import {A, P} from "@beep/utils";
-import {
-  preserveConsumerError,
-  type SyncIteratorRunner
-} from "../interpreter/Interpreter.iterator.ts";
-import {
-  type AstNode,
-  type InterpreterFailure,
-  InterpreterRuntimeError,
-} from "../interpreter/Interpreter.model.ts";
+import { LiteralKit } from "@beep/schema";
+import { A, P } from "@beep/utils";
+import { Effect } from "effect";
 import { type MathMethod, mathMethods } from "../Codemode.method-names.ts";
+import { preserveConsumerError, type SyncIteratorRunner } from "../interpreter/Interpreter.iterator.ts";
+import { type AstNode, type InterpreterFailure, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 
 export { mathMethods } from "../Codemode.method-names.ts";
+
 const $I = $ScratchpadId.create("codemode/stdlib/StdLib.math");
 // Bun exposes ES2026 Math.sumPrecise before TypeScript's standard library types.
 declare global {
@@ -61,9 +55,7 @@ export const mathConstants = LiteralKit(["PI", "E", "LN2", "LN10", "LOG2E", "LOG
  */
 export type mathConstants = typeof mathConstants.Type;
 
-const DirectMathMethod = LiteralKit(
-  mathMethods.omitOptions(["random", "sumPrecise"])
-);
+const DirectMathMethod = LiteralKit(mathMethods.omitOptions(["random", "sumPrecise"]));
 type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
 
 /**
@@ -126,7 +118,7 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
     sign: () => Math.sign(a),
     sqrt: () => Math.sqrt(a),
     cbrt: () => Math.cbrt(a),
-    pow: () => Math.pow(a, b()),
+    pow: () => a ** b(),
     hypot: () => Math.hypot(...nums()),
     cos: () => Math.cos(a),
     cosh: () => Math.cosh(a),
@@ -190,7 +182,7 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
 export const invokeMathSumPrecise = <R>(
   runner: SyncIteratorRunner<R>,
   source: unknown,
-  node: AstNode,
+  node: AstNode
 ): Effect.Effect<number, InterpreterFailure, R> =>
   Effect.gen(function* () {
     const cursor = yield* runner.syncIterator(source, node);
@@ -208,7 +200,7 @@ export const invokeMathSumPrecise = <R>(
             throw InterpreterRuntimeError.new("Math.sumPrecise expects an iterable of numbers.", node).as("TypeError");
           }
           numbers.push(step.value);
-        }),
+        })
       );
     }
   });

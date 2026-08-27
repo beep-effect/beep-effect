@@ -97,10 +97,14 @@ export const NomicTaskType = LiteralKit([
 export type NomicTaskType = typeof NomicTaskType.Type;
 
 /**
- * Nomic NLP Service Interface
+ * Behavioral contract implemented by the Nomic NLP service.
  *
+ * **Details**
  *
- * @category type-level
+ * Its members are executable embedding and similarity operations, so this is
+ * a service protocol rather than decodable data.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface NomicNlpServiceMethods {

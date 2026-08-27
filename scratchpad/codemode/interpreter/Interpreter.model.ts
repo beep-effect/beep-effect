@@ -4,20 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {$ScratchpadId} from "@beep/identity";
-import {
-  LiteralKit,
-  MutableHashMapFromSelf,
-  NonNegativeInt,
-  SchemaUtils,
-} from "@beep/schema";
-import {A, N, O, P} from "@beep/utils";
-import {Effect, MutableHashMap, Result} from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit, MutableHashMapFromSelf, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import type { SafeObject } from "@beep/schema/SafeObject";
+import { A, N, O, P } from "@beep/utils";
+import { type Effect, MutableHashMap, Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type {SafeObject} from "@beep/schema/SafeObject";
-import {ToolError} from "../Codemode.tool-error.ts";
-import {ToolRuntimeError} from "../Codemode.tool-runtime.ts";
 import {
   arrayMethods,
   arrayStatics,
@@ -39,6 +32,8 @@ import {
   UrlSearchParamsMethod,
   UrlStatic,
 } from "../Codemode.method-names.ts";
+import { ToolError } from "../Codemode.tool-error.ts";
+import { ToolRuntimeError } from "../Codemode.tool-runtime.ts";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -114,7 +109,7 @@ export class SourceLocation extends S.Class<SourceLocation>($I`SourceLocation`)(
   })
 ) {
   static readonly new = (start: SourcePosition, end: SourcePosition): SourceLocation =>
-    SourceLocation.make({start, end});
+    SourceLocation.make({ start, end });
 }
 
 const AstNodeType = S.NonEmptyString.check(S.isTrimmed()).pipe(
@@ -260,11 +255,8 @@ export class Binding extends S.Class<Binding>($I`Binding`)(
     description: "One guest lexical binding; scope updates replace this immutable value.",
   })
 ) {
-  static readonly new = (
-    mutable: boolean,
-    value: unknown,
-    initialized = true
-  ): Binding => Binding.make({ mutable, value, initialized });
+  static readonly new = (mutable: boolean, value: unknown, initialized = true): Binding =>
+    Binding.make({ mutable, value, initialized });
 }
 
 /**
@@ -361,8 +353,7 @@ export class StatementReturn extends S.TaggedClass<StatementReturn>($I`Statement
     description: "A guest return statement completed with a value.",
   })
 ) {
-  static readonly new = (value: unknown): StatementReturn =>
-    StatementReturn.make({ value });
+  static readonly new = (value: unknown): StatementReturn => StatementReturn.make({ value });
 }
 
 /**
@@ -386,16 +377,13 @@ export class StatementReturn extends S.TaggedClass<StatementReturn>($I`Statement
 export class StatementBreak extends S.TaggedClass<StatementBreak>($I`StatementBreak`)(
   "Break",
   {
-    label: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("StatementBreak", {
     description: "A guest break statement transfers control, optionally to a label.",
   })
 ) {
-  static readonly new = (label?: string): StatementBreak =>
-    StatementBreak.make({ label: O.fromNullishOr(label) });
+  static readonly new = (label?: string): StatementBreak => StatementBreak.make({ label: O.fromNullishOr(label) });
 }
 
 /**
@@ -419,9 +407,7 @@ export class StatementBreak extends S.TaggedClass<StatementBreak>($I`StatementBr
 export class StatementContinue extends S.TaggedClass<StatementContinue>($I`StatementContinue`)(
   "Continue",
   {
-    label: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("StatementContinue", {
     description: "A guest continue statement transfers control, optionally to a label.",
@@ -448,12 +434,7 @@ export class StatementContinue extends S.TaggedClass<StatementContinue>($I`State
  * @category models
  * @since 0.0.0
  */
-export const StatementResult = S.Union([
-  StatementNone,
-  StatementReturn,
-  StatementBreak,
-  StatementContinue,
-]).pipe(
+export const StatementResult = S.Union([StatementNone, StatementReturn, StatementBreak, StatementContinue]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("StatementResult", {
     description: "All normal and abrupt guest statement completions.",
@@ -469,15 +450,10 @@ export const StatementResult = S.Union([
  */
 export type StatementResult = typeof StatementResult.Type;
 
-type MemberReferenceTarget =
-  | SafeObject
-  | Array<unknown>
-  | CodeModeRegExp
-  | CodeModeURL;
+type MemberReferenceTarget = SafeObject | Array<unknown> | CodeModeRegExp | CodeModeURL;
 
 const MemberReferenceTarget = S.declare<MemberReferenceTarget>(
-  (value: unknown): value is MemberReferenceTarget =>
-    A.isArray(value) || P.isObject(value)
+  (value: unknown): value is MemberReferenceTarget => A.isArray(value) || P.isObject(value)
 );
 
 /**
@@ -506,36 +482,31 @@ export class MemberReference extends S.Class<MemberReference>($I`MemberReference
     description: "Identity-preserving reference to a mutable guest property.",
   })
 ) {
-  static readonly new = (
-    target: MemberReferenceTarget,
-    key: PropertyKey
-  ): MemberReference => MemberReference.make({ target, key });
+  static readonly new = (target: MemberReferenceTarget, key: PropertyKey): MemberReference =>
+    MemberReference.make({ target, key });
 }
 
 /**
  * Captured scopes are runtime references, not serialized data. Validate the
  * collection kind without rebuilding it so closures retain map identity.
  */
-const CapturedScope = S.declare<Scope>(
-  (value: unknown): value is Scope =>
-    MutableHashMap.isMutableHashMap(value)
-);
+const CapturedScope = S.declare<Scope>((value: unknown): value is Scope => MutableHashMap.isMutableHashMap(value));
 const CapturedScopes = S.Array(CapturedScope);
 
 const GeneratorRequest = S.declare<
+  (kind: GeneratorRequestKind, value: unknown, node: AstNode) => Effect.Effect<unknown, InterpreterFailure>
+>(
   (
+    value: unknown
+  ): value is (
     kind: GeneratorRequestKind,
     value: unknown,
     node: AstNode
-  ) => Effect.Effect<unknown, InterpreterFailure>
->((value: unknown): value is (
-  kind: GeneratorRequestKind,
-  value: unknown,
-  node: AstNode
-) => Effect.Effect<unknown, InterpreterFailure> => P.isFunction(value));
+  ) => Effect.Effect<unknown, InterpreterFailure> => P.isFunction(value)
+);
 
-const SettlePromise = S.declare<(value: unknown) => void>(
-  (value: unknown): value is (value: unknown) => void => P.isFunction(value)
+const SettlePromise = S.declare<(value: unknown) => void>((value: unknown): value is (value: unknown) => void =>
+  P.isFunction(value)
 );
 
 /**
@@ -592,13 +563,14 @@ export class CodeModeFunction extends S.TaggedClass<CodeModeFunction>($I`CodeMod
     capturedScopes: ReadonlyArray<MutableHashMap.MutableHashMap<string, Binding>>,
     async: boolean,
     generator: boolean
-  ): CodeModeFunction => CodeModeFunction.make({
-    parameters,
-    body,
-    capturedScopes,
-    async,
-    generator
-  });
+  ): CodeModeFunction =>
+    CodeModeFunction.make({
+      parameters,
+      body,
+      capturedScopes,
+      async,
+      generator,
+    });
 }
 
 /**
@@ -668,12 +640,8 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
 
   static readonly new = (
     asynchronous: boolean,
-    request: (
-      kind: GeneratorRequestKind,
-      value: unknown,
-      node: AstNode
-    ) => Effect.Effect<unknown, InterpreterFailure>
-  ): CodeModeGenerator => CodeModeGenerator.make({asynchronous, request});
+    request: (kind: GeneratorRequestKind, value: unknown, node: AstNode) => Effect.Effect<unknown, InterpreterFailure>
+  ): CodeModeGenerator => CodeModeGenerator.make({ asynchronous, request });
 }
 
 /**
@@ -694,10 +662,7 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
  * @category models
  * @since 0.0.0
  */
-export const GeneratorMethodKind = LiteralKit([
-  ...GeneratorRequestKind.Options,
-  "iterator",
-]).pipe(
+export const GeneratorMethodKind = LiteralKit([...GeneratorRequestKind.Options, "iterator"]).pipe(
   $I.annoteSchema("GeneratorMethodKind", {
     description: "Operation exposed by a bound guest generator method.",
   })
@@ -746,32 +711,18 @@ export class GeneratorMethodReference extends S.TaggedClass<GeneratorMethodRefer
     description: "A method reference bound to a guest generator.",
   })
 ) {
-  static readonly new = (
-    generator: CodeModeGenerator,
-    kind: GeneratorMethodKind
-  ): GeneratorMethodReference => GeneratorMethodReference.make({generator, kind});
+  static readonly new = (generator: CodeModeGenerator, kind: GeneratorMethodKind): GeneratorMethodReference =>
+    GeneratorMethodReference.make({ generator, kind });
 }
 
-const MutableArray = S.declare(
-  (value: unknown): value is Array<unknown> => A.isArray(value)
-);
-const MutableDate = S.declare(
-  (value: unknown): value is CodeModeDate => CodeModeDate.is(value)
-);
-const MutableRegExp = S.declare(
-  (value: unknown): value is CodeModeRegExp => CodeModeRegExp.is(value)
-);
-const MutableMap = S.declare(
-  (value: unknown): value is CodeModeMap => CodeModeMap.is(value)
-);
-const MutableSet = S.declare(
-  (value: unknown): value is CodeModeSet => CodeModeSet.is(value)
-);
-const MutableURL = S.declare(
-  (value: unknown): value is CodeModeURL => CodeModeURL.is(value)
-);
-const MutableURLSearchParams = S.declare(
-  (value: unknown): value is CodeModeURLSearchParams => CodeModeURLSearchParams.is(value)
+const MutableArray = S.declare((value: unknown): value is Array<unknown> => A.isArray(value));
+const MutableDate = S.declare((value: unknown): value is CodeModeDate => CodeModeDate.is(value));
+const MutableRegExp = S.declare((value: unknown): value is CodeModeRegExp => CodeModeRegExp.is(value));
+const MutableMap = S.declare((value: unknown): value is CodeModeMap => CodeModeMap.is(value));
+const MutableSet = S.declare((value: unknown): value is CodeModeSet => CodeModeSet.is(value));
+const MutableURL = S.declare((value: unknown): value is CodeModeURL => CodeModeURL.is(value));
+const MutableURLSearchParams = S.declare((value: unknown): value is CodeModeURLSearchParams =>
+  CodeModeURLSearchParams.is(value)
 );
 
 /**
@@ -890,8 +841,7 @@ export class IntrinsicReference extends S.TaggedClass<IntrinsicReference>($I`Int
     description: "An intrinsic method bound to its guest receiver.",
   })
 ) {
-  static readonly new = (method: IntrinsicMethod): IntrinsicReference =>
-    IntrinsicReference.make({ method });
+  static readonly new = (method: IntrinsicMethod): IntrinsicReference => IntrinsicReference.make({ method });
 }
 
 /**
@@ -921,7 +871,7 @@ export class ComputedValue extends S.TaggedClass<ComputedValue>($I`ComputedValue
 ) {
   static readonly is = S.is(ComputedValue);
 
-  static readonly new = (value: unknown): ComputedValue => ComputedValue.make({value});
+  static readonly new = (value: unknown): ComputedValue => ComputedValue.make({ value });
 }
 
 /**
@@ -1087,13 +1037,12 @@ export type PromiseMethodName = typeof PromiseMethodName.Type;
  */
 export class PromiseMethodReference extends S.TaggedClass<PromiseMethodReference>($I`PromiseMethodReference`)(
   "PromiseMethodReference",
-  {name: PromiseMethodName},
+  { name: PromiseMethodName },
   $I.annote("PromiseMethodReference", {
     description: "A static Promise method exposed to a guest program.",
   })
 ) {
-  static readonly new = (name: PromiseMethodName): PromiseMethodReference =>
-    PromiseMethodReference.make({name});
+  static readonly new = (name: PromiseMethodName): PromiseMethodReference => PromiseMethodReference.make({ name });
 }
 
 /**
@@ -1162,10 +1111,8 @@ export class PromiseInstanceMethodReference extends S.TaggedClass<PromiseInstanc
     description: "A Promise instance method bound to its guest promise.",
   })
 ) {
-  static readonly new = (
-    promise: CodeModePromise,
-    name: PromiseInstanceMethodName
-  ): PromiseInstanceMethodReference => PromiseInstanceMethodReference.make({promise, name});
+  static readonly new = (promise: CodeModePromise, name: PromiseInstanceMethodName): PromiseInstanceMethodReference =>
+    PromiseInstanceMethodReference.make({ promise, name });
 }
 
 /**
@@ -1199,7 +1146,7 @@ export class PromiseCapabilityFunction extends S.TaggedClass<PromiseCapabilityFu
   })
 ) {
   static readonly new = (settle: (value: unknown) => void): PromiseCapabilityFunction =>
-    PromiseCapabilityFunction.make({settle});
+    PromiseCapabilityFunction.make({ settle });
 }
 
 /**
@@ -1267,13 +1214,12 @@ export type GlobalNamespaceName = typeof GlobalNamespaceName.Type;
  */
 export class GlobalNamespace extends S.TaggedClass<GlobalNamespace>($I`GlobalNamespace`)(
   "GlobalNamespace",
-  {name: GlobalNamespaceName},
+  { name: GlobalNamespaceName },
   $I.annote("GlobalNamespace", {
     description: "A constructor or namespace exposed to guest programs.",
   })
 ) {
-  static readonly new = (name: GlobalNamespaceName): GlobalNamespace =>
-    GlobalNamespace.make({name});
+  static readonly new = (name: GlobalNamespaceName): GlobalNamespace => GlobalNamespace.make({ name });
 }
 
 /**
@@ -1352,8 +1298,7 @@ export class GlobalMethodReference extends S.TaggedClass<GlobalMethodReference>(
     description: "A global method bound to its namespace.",
   })
 ) {
-  static readonly new = (method: GlobalMethod): GlobalMethodReference =>
-    GlobalMethodReference.make({ method });
+  static readonly new = (method: GlobalMethod): GlobalMethodReference => GlobalMethodReference.make({ method });
 }
 
 /**
@@ -1406,13 +1351,12 @@ export type JsonMethodName = typeof JsonMethodName.Type;
  */
 export class JsonMethodReference extends S.TaggedClass<JsonMethodReference>($I`JsonMethodReference`)(
   "JsonMethodReference",
-  {name: JsonMethodName},
+  { name: JsonMethodName },
   $I.annote("JsonMethodReference", {
     description: "A JSON method reference exposed to a guest program.",
   })
 ) {
-  static readonly new = (name: JsonMethodName): JsonMethodReference =>
-    JsonMethodReference.make({name});
+  static readonly new = (name: JsonMethodName): JsonMethodReference => JsonMethodReference.make({ name });
 }
 
 /**
@@ -1473,13 +1417,12 @@ export type CoercionFunctionName = typeof CoercionFunctionName.Type;
  */
 export class CoercionFunction extends S.TaggedClass<CoercionFunction>($I`CoercionFunction`)(
   "CoercionFunction",
-  {name: CoercionFunctionName},
+  { name: CoercionFunctionName },
   $I.annote("CoercionFunction", {
     description: "A guest primitive coercion function.",
   })
 ) {
-  static readonly new = (name: CoercionFunctionName): CoercionFunction =>
-    CoercionFunction.make({name});
+  static readonly new = (name: CoercionFunctionName): CoercionFunction => CoercionFunction.make({ name });
 }
 
 /**
@@ -1498,12 +1441,7 @@ export class CoercionFunction extends S.TaggedClass<CoercionFunction>($I`Coercio
  * @category models
  * @since 0.0.0
  */
-export const UriFunctionName = LiteralKit([
-  "encodeURI",
-  "encodeURIComponent",
-  "decodeURI",
-  "decodeURIComponent",
-]).pipe(
+export const UriFunctionName = LiteralKit(["encodeURI", "encodeURIComponent", "decodeURI", "decodeURIComponent"]).pipe(
   $I.annoteSchema("UriFunctionName", {
     description: "A URI codec function exposed to guest programs.",
   })
@@ -1537,13 +1475,12 @@ export type UriFunctionName = typeof UriFunctionName.Type;
  */
 export class UriFunction extends S.TaggedClass<UriFunction>($I`UriFunction`)(
   "UriFunction",
-  {name: UriFunctionName},
+  { name: UriFunctionName },
   $I.annote("UriFunction", {
     description: "A guest URI codec function.",
   })
 ) {
-  static readonly new = (name: UriFunctionName): UriFunction =>
-    UriFunction.make({name});
+  static readonly new = (name: UriFunctionName): UriFunction => UriFunction.make({ name });
 }
 
 /**
@@ -1598,7 +1535,7 @@ export class ProgramThrow extends S.TaggedClass<ProgramThrow>($I`ProgramThrow`)(
     description: "A guest-thrown value propagated through the interpreter.",
   })
 ) {
-  static readonly new = (value: unknown): ProgramThrow => ProgramThrow.make({value});
+  static readonly new = (value: unknown): ProgramThrow => ProgramThrow.make({ value });
 }
 
 /**
@@ -1627,7 +1564,7 @@ export class GeneratorReturn extends S.TaggedClass<GeneratorReturn>($I`Generator
     description: "The return value that completes a guest generator.",
   })
 ) {
-  static readonly new = (value: unknown): GeneratorReturn => GeneratorReturn.make({value});
+  static readonly new = (value: unknown): GeneratorReturn => GeneratorReturn.make({ value });
 }
 
 /**
@@ -1688,17 +1625,15 @@ export type ErrorConstructorName = typeof ErrorConstructorName.Type;
  * @category models
  * @since 0.0.0
  */
-export class ErrorConstructorReference extends S.TaggedClass<ErrorConstructorReference>(
-  $I`ErrorConstructorReference`
-)(
+export class ErrorConstructorReference extends S.TaggedClass<ErrorConstructorReference>($I`ErrorConstructorReference`)(
   "ErrorConstructorReference",
-  {name: ErrorConstructorName},
+  { name: ErrorConstructorName },
   $I.annote("ErrorConstructorReference", {
     description: "A guest Error constructor reference.",
   })
 ) {
   static readonly new = (name: ErrorConstructorName): ErrorConstructorReference =>
-    ErrorConstructorReference.make({name});
+    ErrorConstructorReference.make({ name });
 }
 
 /**
@@ -1871,9 +1806,7 @@ export class InterpreterRuntimeError extends S.TaggedError<InterpreterRuntimeErr
     node: S.OptionFromOptionalKey(AstNode).pipe(SchemaUtils.withNoneDefault),
     kind: DiagnosticKind.pipe(SchemaUtils.withKeyDefaults(DiagnosticKind.Enum.ExecutionFailure)),
     suggestions: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    errorName: ErrorConstructorName.pipe(
-      SchemaUtils.withKeyDefaults(ErrorConstructorName.Enum.Error)
-    ),
+    errorName: ErrorConstructorName.pipe(SchemaUtils.withKeyDefaults(ErrorConstructorName.Enum.Error)),
   },
   $I.annote("InterpreterRuntimeError", {
     description: "Typed failure raised while evaluating a guest program.",
@@ -2008,10 +1941,7 @@ export const tryInterpreter = <Value>(
     catch: (error) =>
       InterpreterFailure.is(error)
         ? error
-        : InterpreterRuntimeError.new(
-            P.isError(error) ? error.message : globalThis.String(error),
-            node
-          ),
+        : InterpreterRuntimeError.new(P.isError(error) ? error.message : globalThis.String(error), node),
   });
 
 /**
@@ -2259,9 +2189,11 @@ export const getNode: {
  * @category formatting
  * @since 0.0.0
  */
-export const sourceLocation = (node: AstNode): {
+export const sourceLocation = (
+  node: AstNode
+): {
   readonly line: number;
-  readonly column: number
+  readonly column: number;
 } => ({
   line: N.max(1, (node.loc?.start.line ?? 2) - 1),
   column: N.max(1, (node.loc?.start.column ?? 4) - 3),

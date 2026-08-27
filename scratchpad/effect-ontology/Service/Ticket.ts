@@ -36,7 +36,11 @@ import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
 
-const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"]);
+const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"]).pipe(
+  $I.annoteSchema("TicketStorageOperation", {
+    description: "Ticket persistence operations that can fail with TicketStorageError.",
+  })
+);
 
 /**
  * Reports an infrastructure failure while storing or consuming a one-time ticket.

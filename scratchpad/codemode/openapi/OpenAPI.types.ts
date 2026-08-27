@@ -5,26 +5,14 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import {
-  LiteralKit,
-  MappedLiteralKit,
-  NonEmptyTrimmedStr,
-  SchemaUtils,
-} from "@beep/schema";
-import { O, P, R, pipe } from "@beep/utils";
-import {
-  flow,
-  HashMap,
-  Layer,
-  Redacted,
-  SchemaGetter,
-  type Effect,
-} from "effect";
+import { LiteralKit, MappedLiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { O, P, pipe, R } from "@beep/utils";
+import { type Effect, flow, HashMap, Layer, Redacted, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import type * as Tool from "effect/unstable/ai/Tool";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 import type * as HttpClient from "effect/unstable/http/HttpClient";
-import { ToolError } from "../Codemode.tool-error.ts";
+import type { ToolError } from "../Codemode.tool-error.ts";
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.types");
 
@@ -202,9 +190,7 @@ export type HttpMethod = typeof HttpMethod.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ApiPath = S.String.check(
-  S.isPattern(/^\/.*$/u)
-).pipe(
+export const ApiPath = S.String.check(S.isPattern(/^\/.*$/u)).pipe(
   SchemaUtils.withCodecStatics,
   $I.annoteSchema("ApiPath", {
     description: "An absolute OpenAPI path template.",
@@ -247,17 +233,11 @@ export type ApiPath = typeof ApiPath.Type;
  */
 export class Operation extends S.Class<Operation>($I`Operation`)(
   {
-    operationId: S.OptionFromOptionalKey(OperationId).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    operationId: S.OptionFromOptionalKey(OperationId).pipe(SchemaUtils.withNoneDefault),
     method: HttpMethod,
     path: ApiPath,
-    summary: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault
-    ),
-    description: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Operation", {
     description: "The operation identity handed to authentication and errors.",
@@ -269,8 +249,7 @@ export class Operation extends S.Class<Operation>($I`Operation`)(
     path: ApiPath,
     summary: O.Option<string>,
     description: O.Option<string>
-  ): Operation =>
-    Operation.make({ operationId, method, path, summary, description });
+  ): Operation => Operation.make({ operationId, method, path, summary, description });
 }
 
 /**
@@ -299,8 +278,7 @@ export class ApiKeyHeader extends S.TaggedClass<ApiKeyHeader>($I`ApiKeyHeader`)(
     description: "An API key carried in an HTTP header.",
   })
 ) {
-  static readonly new = (name: string): ApiKeyHeader =>
-    ApiKeyHeader.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ApiKeyHeader => ApiKeyHeader.make({ name: NonEmptyTrimmedStr.make(name) });
 }
 
 /**
@@ -329,8 +307,7 @@ export class ApiKeyQuery extends S.TaggedClass<ApiKeyQuery>($I`ApiKeyQuery`)(
     description: "An API key carried in a query parameter.",
   })
 ) {
-  static readonly new = (name: string): ApiKeyQuery =>
-    ApiKeyQuery.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ApiKeyQuery => ApiKeyQuery.make({ name: NonEmptyTrimmedStr.make(name) });
 }
 
 /**
@@ -367,8 +344,7 @@ export class ApiKeyCookie extends S.TaggedClass<ApiKeyCookie>($I`ApiKeyCookie`)(
     description: "An unsupported cookie-carried API key retained for diagnostics.",
   })
 ) {
-  static readonly new = (name: string): ApiKeyCookie =>
-    ApiKeyCookie.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ApiKeyCookie => ApiKeyCookie.make({ name: NonEmptyTrimmedStr.make(name) });
 }
 
 /**
@@ -390,11 +366,7 @@ export class ApiKeyCookie extends S.TaggedClass<ApiKeyCookie>($I`ApiKeyCookie`)(
  * @category schemas
  * @since 0.0.0
  */
-export const ApiKeyCarrier = S.Union([
-  ApiKeyHeader,
-  ApiKeyQuery,
-  ApiKeyCookie,
-]).pipe(
+export const ApiKeyCarrier = S.Union([ApiKeyHeader, ApiKeyQuery, ApiKeyCookie]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ApiKeyCarrier", {
     description: "All OpenAPI apiKey carriers.",
@@ -428,17 +400,14 @@ export type ApiKeyCarrier = typeof ApiKeyCarrier.Type;
  * @category models
  * @since 0.0.0
  */
-export class SecuritySchemeApiKey extends S.TaggedClass<SecuritySchemeApiKey>(
-  $I`SecuritySchemeApiKey`
-)(
+export class SecuritySchemeApiKey extends S.TaggedClass<SecuritySchemeApiKey>($I`SecuritySchemeApiKey`)(
   "apiKey",
   { carrier: ApiKeyCarrier },
   $I.annote("SecuritySchemeApiKey", {
     description: "An OpenAPI apiKey security scheme.",
   })
 ) {
-  static readonly new = (carrier: ApiKeyCarrier): SecuritySchemeApiKey =>
-    SecuritySchemeApiKey.make({ carrier });
+  static readonly new = (carrier: ApiKeyCarrier): SecuritySchemeApiKey => SecuritySchemeApiKey.make({ carrier });
 }
 
 /**
@@ -459,9 +428,7 @@ export class SecuritySchemeApiKey extends S.TaggedClass<SecuritySchemeApiKey>(
  * @category models
  * @since 0.0.0
  */
-export class SecuritySchemeHttp extends S.TaggedClass<SecuritySchemeHttp>(
-  $I`SecuritySchemeHttp`
-)(
+export class SecuritySchemeHttp extends S.TaggedClass<SecuritySchemeHttp>($I`SecuritySchemeHttp`)(
   "http",
   { scheme: NonEmptyTrimmedStr },
   $I.annote("SecuritySchemeHttp", {
@@ -490,17 +457,14 @@ export class SecuritySchemeHttp extends S.TaggedClass<SecuritySchemeHttp>(
  * @category models
  * @since 0.0.0
  */
-export class SecuritySchemeOAuth2 extends S.TaggedClass<SecuritySchemeOAuth2>(
-  $I`SecuritySchemeOAuth2`
-)(
+export class SecuritySchemeOAuth2 extends S.TaggedClass<SecuritySchemeOAuth2>($I`SecuritySchemeOAuth2`)(
   "oauth2",
   {},
   $I.annote("SecuritySchemeOAuth2", {
     description: "An OpenAPI OAuth 2 security scheme.",
   })
 ) {
-  static readonly new = (): SecuritySchemeOAuth2 =>
-    SecuritySchemeOAuth2.make({});
+  static readonly new = (): SecuritySchemeOAuth2 => SecuritySchemeOAuth2.make({});
 }
 
 /**
@@ -530,8 +494,7 @@ export class SecuritySchemeOpenIdConnect extends S.TaggedClass<SecuritySchemeOpe
     description: "An OpenAPI OpenID Connect security scheme.",
   })
 ) {
-  static readonly new = (): SecuritySchemeOpenIdConnect =>
-    SecuritySchemeOpenIdConnect.make({});
+  static readonly new = (): SecuritySchemeOpenIdConnect => SecuritySchemeOpenIdConnect.make({});
 }
 
 /**
@@ -593,17 +556,14 @@ export type SecurityScheme = typeof SecurityScheme.Type;
  * @category models
  * @since 0.0.0
  */
-export class CredentialBearer extends S.TaggedClass<CredentialBearer>(
-  $I`CredentialBearer`
-)(
+export class CredentialBearer extends S.TaggedClass<CredentialBearer>($I`CredentialBearer`)(
   "bearer",
   { token: S.Redacted(S.String) },
   $I.annote("CredentialBearer", {
     description: "A bearer token credential.",
   })
 ) {
-  static readonly new = (token: string): CredentialBearer =>
-    CredentialBearer.make({ token: Redacted.make(token) });
+  static readonly new = (token: string): CredentialBearer => CredentialBearer.make({ token: Redacted.make(token) });
 }
 
 /**
@@ -625,9 +585,7 @@ export class CredentialBearer extends S.TaggedClass<CredentialBearer>(
  * @category models
  * @since 0.0.0
  */
-export class CredentialBasic extends S.TaggedClass<CredentialBasic>(
-  $I`CredentialBasic`
-)(
+export class CredentialBasic extends S.TaggedClass<CredentialBasic>($I`CredentialBasic`)(
   "basic",
   {
     username: S.Redacted(S.String),
@@ -665,17 +623,14 @@ export class CredentialBasic extends S.TaggedClass<CredentialBasic>(
  * @category models
  * @since 0.0.0
  */
-export class CredentialApiKey extends S.TaggedClass<CredentialApiKey>(
-  $I`CredentialApiKey`
-)(
+export class CredentialApiKey extends S.TaggedClass<CredentialApiKey>($I`CredentialApiKey`)(
   "apiKey",
   { value: S.Redacted(S.String) },
   $I.annote("CredentialApiKey", {
     description: "An API key credential.",
   })
 ) {
-  static readonly new = (value: string): CredentialApiKey =>
-    CredentialApiKey.make({ value: Redacted.make(value) });
+  static readonly new = (value: string): CredentialApiKey => CredentialApiKey.make({ value: Redacted.make(value) });
 }
 
 /**
@@ -699,9 +654,7 @@ export class CredentialApiKey extends S.TaggedClass<CredentialApiKey>(
  * @category models
  * @since 0.0.0
  */
-export class CredentialHeader extends S.TaggedClass<CredentialHeader>(
-  $I`CredentialHeader`
-)(
+export class CredentialHeader extends S.TaggedClass<CredentialHeader>($I`CredentialHeader`)(
   "header",
   {
     name: NonEmptyTrimmedStr,
@@ -736,12 +689,7 @@ export class CredentialHeader extends S.TaggedClass<CredentialHeader>(
  * @category schemas
  * @since 0.0.0
  */
-export const Credential = S.Union([
-  CredentialBearer,
-  CredentialBasic,
-  CredentialApiKey,
-  CredentialHeader,
-]).pipe(
+export const Credential = S.Union([CredentialBearer, CredentialBasic, CredentialApiKey, CredentialHeader]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("Credential", {
     description: "Credential material returned by the host auth resolver.",
@@ -824,13 +772,9 @@ export class AuthContext extends S.Class<AuthContext>($I`AuthContext`)(
  * @category type-level
  * @since 0.0.0
  */
-export type AuthResolver = (
-  context: AuthContext
-) => Effect.Effect<O.Option<Credential>, ToolError>;
+export type AuthResolver = (context: AuthContext) => Effect.Effect<O.Option<Credential>, ToolError>;
 
-const AuthResolverSchema = S.declare(
-  (value: unknown): value is AuthResolver => P.isFunction(value)
-);
+const AuthResolverSchema = S.declare((value: unknown): value is AuthResolver => P.isFunction(value));
 
 /**
  * Host-owned credential resolution stored on {@link Options} and {@link Plan}.
@@ -857,8 +801,7 @@ export class AuthConfig extends S.Class<AuthConfig>($I`AuthConfig`)(
     description: "Host-owned credential resolution.",
   })
 ) {
-  static readonly new = (resolve: AuthResolver): AuthConfig =>
-    AuthConfig.make({ resolve });
+  static readonly new = (resolve: AuthResolver): AuthConfig => AuthConfig.make({ resolve });
 }
 
 const StringMap = S.Record(S.String, S.String).pipe(
@@ -897,15 +840,9 @@ const StringMap = S.Record(S.String, S.String).pipe(
 export class Options extends S.Class<Options>($I`Options`)(
   {
     spec: Document,
-    baseUrl: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault
-    ),
-    auth: S.OptionFromOptionalKey(AuthConfig).pipe(
-      SchemaUtils.withNoneDefault
-    ),
-    headers: StringMap.pipe(
-      SchemaUtils.withKeyDefaults(HashMap.empty<string, string>())
-    ),
+    baseUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    auth: S.OptionFromOptionalKey(AuthConfig).pipe(SchemaUtils.withNoneDefault),
+    headers: StringMap.pipe(SchemaUtils.withKeyDefaults(HashMap.empty<string, string>())),
   },
   $I.annote("Options", {
     description: "Decoded OpenAPI adapter options with Option and HashMap core values.",
@@ -956,11 +893,8 @@ export class Skipped extends S.Class<Skipped>($I`Skipped`)(
     description: "An operation that could not be represented as a tool.",
   })
 ) {
-  static readonly new = (
-    method: HttpMethod,
-    path: string,
-    reason: string
-  ): Skipped => Skipped.make({ method, path, reason });
+  static readonly new = (method: HttpMethod, path: string, reason: string): Skipped =>
+    Skipped.make({ method, path, reason });
 }
 
 /**
@@ -982,12 +916,7 @@ export class Skipped extends S.Class<Skipped>($I`Skipped`)(
  * @category schemas
  * @since 0.0.0
  */
-export const InputLocation = LiteralKit([
-  "path",
-  "query",
-  "header",
-  "body",
-]).pipe(
+export const InputLocation = LiteralKit(["path", "query", "header", "body"]).pipe(
   $I.annoteSchema("InputLocation", {
     description: "Where one operation input is serialized.",
   })
@@ -1081,12 +1010,8 @@ export class InputField extends S.Class<InputField>($I`InputField`)(
     location: InputLocation,
     required: S.Boolean,
     schema: JsonSchema,
-    style: S.OptionFromOptionalKey(InputStyle).pipe(
-      SchemaUtils.withNoneDefault
-    ),
-    explode: S.OptionFromOptionalKey(S.Boolean).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    style: S.OptionFromOptionalKey(InputStyle).pipe(SchemaUtils.withNoneDefault),
+    explode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("InputField", {
     description: "One normalized parameter or request-body field.",
@@ -1175,11 +1100,7 @@ export class Body extends S.Class<Body>($I`Body`)(
     description: "How an operation's JSON request body is assembled.",
   })
 ) {
-  static readonly new = (
-    required: boolean,
-    mode: BodyMode,
-    mediaType: string
-  ): Body =>
+  static readonly new = (required: boolean, mode: BodyMode, mediaType: string): Body =>
     Body.make({
       required,
       mode,
@@ -1216,9 +1137,7 @@ export class Body extends S.Class<Body>($I`Body`)(
  * @category models
  * @since 0.0.0
  */
-export class OperationInput extends S.Class<OperationInput>(
-  $I`OperationInput`
-)(
+export class OperationInput extends S.Class<OperationInput>($I`OperationInput`)(
   {
     fields: S.Array(InputField),
     body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
@@ -1227,10 +1146,8 @@ export class OperationInput extends S.Class<OperationInput>(
     description: "The normalized model-visible input for one operation.",
   })
 ) {
-  static readonly new = (
-    fields: ReadonlyArray<InputField>,
-    body: O.Option<Body>
-  ): OperationInput => OperationInput.make({ fields, body });
+  static readonly new = (fields: ReadonlyArray<InputField>, body: O.Option<Body>): OperationInput =>
+    OperationInput.make({ fields, body });
 }
 
 const SecurityScopesMap = S.HashMap(S.String, S.Array(S.String));
@@ -1253,17 +1170,14 @@ const SecurityScopesMap = S.HashMap(S.String, S.Array(S.String));
  * @category models
  * @since 0.0.0
  */
-export class SecurityRequirement extends S.Class<SecurityRequirement>(
-  $I`SecurityRequirement`
-)(
+export class SecurityRequirement extends S.Class<SecurityRequirement>($I`SecurityRequirement`)(
   { schemes: SecurityScopesMap },
   $I.annote("SecurityRequirement", {
     description: "One AND group inside OpenAPI's OR security alternatives.",
   })
 ) {
-  static readonly new = (
-    schemes: HashMap.HashMap<string, ReadonlyArray<string>>
-  ): SecurityRequirement => SecurityRequirement.make({ schemes });
+  static readonly new = (schemes: HashMap.HashMap<string, ReadonlyArray<string>>): SecurityRequirement =>
+    SecurityRequirement.make({ schemes });
 }
 
 const SecuritySchemeMap = S.HashMap(S.String, SecurityScheme);
@@ -1307,9 +1221,7 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
     body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
     security: S.Array(SecurityRequirement),
     schemes: SecuritySchemeMap,
-    auth: S.OptionFromOptionalKey(AuthConfig).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    auth: S.OptionFromOptionalKey(AuthConfig).pipe(SchemaUtils.withNoneDefault),
     headers: S.HashMap(S.String, S.String),
   },
   $I.annote("Plan", {
@@ -1392,15 +1304,11 @@ export class AppliedAuth extends S.Class<AppliedAuth>($I`AppliedAuth`)(
  * @category errors
  * @since 0.0.0
  */
-export class InvalidOpenApiOptions extends S.TaggedError<InvalidOpenApiOptions>(
-  $I`InvalidOpenApiOptions`
-)(
+export class InvalidOpenApiOptions extends S.TaggedError<InvalidOpenApiOptions>($I`InvalidOpenApiOptions`)(
   "InvalidOpenApiOptions",
   {
     message: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect()).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("InvalidOpenApiOptions", {
     description: "The OpenAPI adapter options failed schema decoding.",
@@ -1441,12 +1349,11 @@ export type GeneratedHandlersLayer = Layer.Layer<
 >;
 
 const GeneratedToolkitSchema = S.declare(
-  (value: unknown): value is GeneratedToolkit =>
-    P.isObjectKeyword(value) && P.hasProperty(value, "tools")
+  (value: unknown): value is GeneratedToolkit => P.isObjectKeyword(value) && P.hasProperty(value, "tools")
 );
 
-const GeneratedHandlersLayerSchema = S.declare(
-  (value: unknown): value is GeneratedHandlersLayer => Layer.isLayer(value)
+const GeneratedHandlersLayerSchema = S.declare((value: unknown): value is GeneratedHandlersLayer =>
+  Layer.isLayer(value)
 );
 
 /**
@@ -1481,9 +1388,7 @@ const GeneratedHandlersLayerSchema = S.declare(
  * @category models
  * @since 0.0.0
  */
-export class FromSpecResult extends S.Class<FromSpecResult>(
-  $I`FromSpecResult`
-)(
+export class FromSpecResult extends S.Class<FromSpecResult>($I`FromSpecResult`)(
   {
     toolkit: GeneratedToolkitSchema,
     handlersLayer: GeneratedHandlersLayerSchema,
@@ -1497,6 +1402,5 @@ export class FromSpecResult extends S.Class<FromSpecResult>(
     toolkit: GeneratedToolkit,
     handlersLayer: GeneratedHandlersLayer,
     skipped: ReadonlyArray<Skipped>
-  ): FromSpecResult =>
-    FromSpecResult.make({ toolkit, handlersLayer, skipped });
+  ): FromSpecResult => FromSpecResult.make({ toolkit, handlersLayer, skipped });
 }

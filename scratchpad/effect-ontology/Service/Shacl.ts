@@ -82,10 +82,14 @@ const ShapesCacheStats = S.Struct({
 type ShapesCacheStats = typeof ShapesCacheStats.Type;
 
 /**
- * Describes the shacl workflow service methods data exposed by this module.
+ * Behavioral contract implemented by the SHACL workflow service.
  *
+ * **Details**
  *
- * @category type-level
+ * Its members load shapes, mutate a cache, and execute validation effects;
+ * boundary configuration and returned domain values are schema-backed.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface ShaclWorkflowServiceMethods {

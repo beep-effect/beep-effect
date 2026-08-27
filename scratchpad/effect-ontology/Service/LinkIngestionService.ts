@@ -32,7 +32,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
-import type { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
+import { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
 import type {
     IngestedLinkInsertRow,
     IngestedLinkRow
@@ -101,29 +101,32 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
  * **Example** (Use the IngestOptions contract)
  *
  * ```ts
- * import type { IngestOptions } from "@effect-ontology/Service/LinkIngestionService"
+ * import { IngestOptions } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const options: IngestOptions = { ontologyId: "core", enrich: true }
+ * const options = IngestOptions.make({ ontologyId: "core", enrich: true })
  * console.log(options.ontologyId) // "core"
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface IngestOptions {
-  /** Ontology ID for namespace scoping (required) */
-  readonly ontologyId: string;
-  /** Whether to run AI enrichment (default: true) */
-  readonly enrich?: boolean;
-  /** Whether to extract and store images (default: true) */
-  readonly extractImages?: boolean;
-  /** Source type override (auto-detected if not provided) */
-  readonly sourceType?: string;
-  /** Additional metadata to store */
-  readonly metadata?: Record<string, unknown>;
-  /** Skip if content hash already exists */
-  readonly skipDuplicates?: boolean;
-}
+export class IngestOptions extends S.Class<IngestOptions>($I`IngestOptions`)(
+  {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology identifier used for namespace scoping." }),
+    enrich: S.Boolean.pipe(S.optionalKey).annotateKey({ description: "Whether to run AI enrichment." }),
+    extractImages: S.Boolean.pipe(S.optionalKey).annotateKey({ description: "Whether to extract and store images." }),
+    sourceType: S.NonEmptyString.pipe(S.optionalKey).annotateKey({ description: "Optional source-type override." }),
+    metadata: S.Record(S.String, S.Unknown).pipe(S.optionalKey).annotateKey({
+      description: "Additional metadata persisted with the ingested link.",
+    }),
+    skipDuplicates: S.Boolean.pipe(S.optionalKey).annotateKey({
+      description: "Whether content hashes already present in the ontology are skipped.",
+    }),
+  },
+  $I.annote("IngestOptions", {
+    description: "Ontology scope, enrichment, image extraction, metadata, and duplicate handling for URL ingestion.",
+  })
+) {}
 
 /**
  * Result of ingesting a URL
@@ -132,36 +135,34 @@ export interface IngestOptions {
  * **Example** (Use the IngestResult contract)
  *
  * ```ts
- * import type { IngestResult } from "@effect-ontology/Service/LinkIngestionService"
+ * import { IngestResult } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const result: IngestResult = {
+ * const result = IngestResult.make({
  *   id: "link-1",
  *   contentHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
  *   storageUri: "documents/aaa/content.md",
  *   duplicate: false
- * }
+ * })
  * console.log(result.duplicate) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface IngestResult {
-  /** Database ID of ingested link */
-  readonly id: string;
-  /** SHA-256 hash of content */
-  readonly contentHash: string;
-  /** Storage URI for content */
-  readonly storageUri: string;
-  /** Enriched headline (if enrichment ran) */
-  readonly headline?: string;
-  /** Whether this was a duplicate (skipped) */
-  readonly duplicate: boolean;
-  /** Word count */
-  readonly wordCount?: number;
-  /** Number of images extracted and stored */
-  readonly imageCount?: number;
-}
+export class IngestResult extends S.Class<IngestResult>($I`IngestResult`)(
+  {
+    id: S.NonEmptyString.annotateKey({ description: "Database identifier of the ingested link." }),
+    contentHash: S.NonEmptyString.annotateKey({ description: "SHA-256 content hash." }),
+    storageUri: S.NonEmptyString.annotateKey({ description: "Storage URI of the persisted content." }),
+    headline: S.String.pipe(S.optionalKey).annotateKey({ description: "Headline produced by optional enrichment." }),
+    duplicate: S.Boolean.annotateKey({ description: "Whether ingestion skipped an existing content hash." }),
+    wordCount: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Content word count when available." }),
+    imageCount: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Number of extracted images stored." }),
+  },
+  $I.annote("IngestResult", {
+    description: "Stored link identity, content location, enrichment metadata, and duplicate outcome.",
+  })
+) {}
 
 /**
  * Options for bulk ingestion
@@ -170,21 +171,29 @@ export interface IngestResult {
  * **Example** (Use the BulkIngestOptions contract)
  *
  * ```ts
- * import type { BulkIngestOptions } from "@effect-ontology/Service/LinkIngestionService"
+ * import { BulkIngestOptions } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const options: BulkIngestOptions = { ontologyId: "core", concurrency: 3 }
+ * const options = BulkIngestOptions.make({ ontologyId: "core", concurrency: 3 })
  * console.log(options.concurrency) // 3
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface BulkIngestOptions extends IngestOptions {
-  /** Concurrency limit (default: 5) */
-  readonly concurrency?: number;
-  /** Continue on individual failures */
-  readonly continueOnError?: boolean;
-}
+export class BulkIngestOptions extends S.Class<BulkIngestOptions>($I`BulkIngestOptions`)(
+  {
+    ...IngestOptions.fields,
+    concurrency: S.Int.check(S.isGreaterThan(0)).pipe(S.optionalKey).annotateKey({
+      description: "Maximum concurrent URL ingestions.",
+    }),
+    continueOnError: S.Boolean.pipe(S.optionalKey).annotateKey({
+      description: "Whether individual failures are retained while remaining URLs continue.",
+    }),
+  },
+  $I.annote("BulkIngestOptions", {
+    description: "URL-ingestion options extended with concurrency and failure-continuation controls.",
+  })
+) {}
 
 /**
  * Filter for listing ingested links
@@ -193,23 +202,28 @@ export interface BulkIngestOptions extends IngestOptions {
  * **Example** (Use the IngestedLinkFilter contract)
  *
  * ```ts
- * import type { IngestedLinkFilter } from "@effect-ontology/Service/LinkIngestionService"
+ * import { IngestedLinkFilter } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const filter: IngestedLinkFilter = { ontologyId: "core", limit: 20 }
+ * const filter = IngestedLinkFilter.make({ ontologyId: "core", limit: 20 })
  * console.log(filter.limit) // 20
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface IngestedLinkFilter {
-  readonly ontologyId?: string;
-  readonly status?: LinkStatus;
-  readonly sourceType?: string;
-  readonly organization?: string;
-  readonly limit?: number;
-  readonly offset?: number;
-}
+export class IngestedLinkFilter extends S.Class<IngestedLinkFilter>($I`IngestedLinkFilter`)(
+  {
+    ontologyId: S.NonEmptyString.pipe(S.optionalKey),
+    status: LinkStatus.pipe(S.optionalKey),
+    sourceType: S.NonEmptyString.pipe(S.optionalKey),
+    organization: S.NonEmptyString.pipe(S.optionalKey),
+    limit: S.Natural.pipe(S.optionalKey),
+    offset: S.Natural.pipe(S.optionalKey),
+  },
+  $I.annote("IngestedLinkFilter", {
+    description: "Ontology, lifecycle, source, organization, limit, and offset filters for ingested links.",
+  })
+) {}
 
 // =============================================================================
 // Helpers
@@ -344,14 +358,14 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       if (skipDuplicates) {
         const existing = yield* getByContentHash(ontologyId, contentHash);
         if (O.isSome(existing)) {
-          return {
+          return IngestResult.make({
             id: existing.value.id,
             contentHash,
             storageUri: existing.value.storageUri,
             duplicate: true,
             ...(P.isNotNull(existing.value.headline) ? { headline: existing.value.headline } : {}),
             ...(P.isNotNull(existing.value.wordCount) ? { wordCount: existing.value.wordCount } : {}),
-          };
+          });
         }
       }
 
@@ -477,7 +491,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         )
       );
 
-      return {
+      return IngestResult.make({
         id: inserted.id,
         contentHash,
         storageUri: storagePath,
@@ -485,7 +499,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         ...(P.isNotUndefined(enrichedContent?.headline) ? { headline: enrichedContent.headline } : {}),
         ...(P.isNotNullish(wordCount) ? { wordCount } : {}),
         ...(imageCount > 0 ? { imageCount } : {}),
-      };
+      });
     });
 
     /**

@@ -5,25 +5,15 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import {
-  NonNegativeInt,
-  PosInt,
-  SchemaUtils,
-} from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
-import { executeWithLimits } from "./interpreter/Interpreter.execute.ts";
-import {
-  type Services,
-  type ToolDescription,
-} from "./Codemode.tool-runtime.ts";
+import { encodeResultModel, type Result } from "./Codemode.result.ts";
+import type { Services, ToolDescription } from "./Codemode.tool-runtime.ts";
 import * as ToolRuntime from "./Codemode.tool-runtime.ts";
-import {
-  encodeResultModel,
-  type Result,
-} from "./Codemode.result.ts";
+import { executeWithLimits } from "./interpreter/Interpreter.execute.ts";
 
 export { DataValue } from "./Codemode.data.ts";
 export {
@@ -125,6 +115,7 @@ export class InvalidExecutionLimits extends S.TaggedError<InvalidExecutionLimits
  * @category type-level
  * @since 0.0.0
  */
+// biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
 export type ExecuteOptions<
   ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty,
 > = {
@@ -142,12 +133,9 @@ export type ExecuteOptions<
  * @category type-level
  * @since 0.0.0
  */
-export type Options<
-  ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty,
-> = Omit<
-  ExecuteOptions<ToolkitType>,
-  "code"
->;
+// biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
+export type Options<ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty> =
+  Omit<ExecuteOptions<ToolkitType>, "code">;
 
 /**
  * Reusable confined runtime over one Effect AI Toolkit.
@@ -186,12 +174,8 @@ export type Runtime<R = never> = {
  * @category decoding
  * @since 0.0.0
  */
-export const resolveExecutionLimits = (
-  limits?: unknown
-): Effect.Effect<ExecutionLimits, InvalidExecutionLimits> =>
-  ExecutionLimits.decodeEffect(limits ?? {}).pipe(
-    Effect.mapError(InvalidExecutionLimits.new)
-  );
+export const resolveExecutionLimits = (limits?: unknown): Effect.Effect<ExecutionLimits, InvalidExecutionLimits> =>
+  ExecutionLimits.decodeEffect(limits ?? {}).pipe(Effect.mapError(InvalidExecutionLimits.new));
 
 /**
  * Executes one Effect-native CodeMode program, preparing the toolkit per call.
@@ -218,9 +202,8 @@ export const resolveExecutionLimits = (
  * @category factories
  * @since 0.0.0
  */
-export const execute = <
-  ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty,
->(
+// biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
+export const execute = <ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty>(
   options: ExecuteOptions<ToolkitType>
 ): Effect.Effect<Result, InvalidExecutionLimits, Services<ToolkitType>> =>
   Effect.flatMap(resolveExecutionLimits(options.limits), (limits) =>
@@ -260,9 +243,8 @@ export const execute = <
  * @category factories
  * @since 0.0.0
  */
-export const make = <
-  ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty,
->(
+// biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
+export const make = <ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty>(
   options: Options<ToolkitType>
 ): Effect.Effect<Runtime<Services<ToolkitType>>, InvalidExecutionLimits | ToolRuntime.ToolRuntimeError> =>
   Effect.gen(function* () {

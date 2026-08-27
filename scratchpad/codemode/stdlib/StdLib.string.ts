@@ -5,17 +5,15 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
-import {
-  type StringStatic,
-  stringStatics,
-} from "../Codemode.method-names.ts"
+
 import * as P from "effect/Predicate";
+import { type StringStatic, stringStatics } from "../Codemode.method-names.ts";
+import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 
 export {
   stringMethods,
   stringStatics,
-} from "../Codemode.method-names.ts"
+} from "../Codemode.method-names.ts";
 
 /**
  * Dispatches guest `String.fromCharCode` and `String.fromCodePoint`.
@@ -40,11 +38,11 @@ export {
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeStringStatic = (name: StringStatic, args: Array<unknown>, node: AstNode): unknown => {
   const codes = args.map((arg) => {
-    if (!P.isNumber(arg)) throw InterpreterRuntimeError.new(`String.${name} expects number arguments.`, node)
-    return arg
-  })
+    if (!P.isNumber(arg)) throw InterpreterRuntimeError.new(`String.${name} expects number arguments.`, node);
+    return arg;
+  });
   return stringStatics.$match(name, {
     fromCharCode: () => String.fromCharCode(...codes),
     fromCodePoint: () => String.fromCodePoint(...codes),
-  })
-}
+  });
+};

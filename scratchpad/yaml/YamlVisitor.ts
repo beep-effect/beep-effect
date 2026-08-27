@@ -12,16 +12,143 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { O as OU } from "@beep/utils";
-import { Data, Stream } from "effect";
+import { Schema, Stream } from "effect";
 import * as P from "effect/Predicate";
 import { composeAllDocuments } from "./internal/composer/document.ts";
 import type { RawYamlDocument } from "./internal/raw-document.ts";
 import type { YamlParseOptions } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
-import type { YamlPath } from "./YamlEdit.ts";
-import type { CollectionStyle, ScalarStyle, YamlNode, YamlPair } from "./YamlNode.ts";
-import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
+import { YamlPath } from "./YamlEdit.ts";
+import type { YamlNode, YamlPair } from "./YamlNode.ts";
+import { CollectionStyle, ScalarStyle, YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
+
+const $I = $ScratchpadId.create("yaml/YamlVisitor");
+
+const VisitorDirective = Schema.Struct({
+	name: Schema.String,
+	parameters: Schema.Array(Schema.String),
+}).pipe(
+	$I.annoteSchema("VisitorDirective", {
+		description: "YAML directive snapshot carried by a visitor document-start event.",
+	}),
+);
+
+class VisitorDocumentStart extends Schema.TaggedClass<VisitorDocumentStart>($I`VisitorDocumentStart`)(
+	"DocumentStart",
+	{ path: YamlPath, depth: Schema.Finite, directives: Schema.Array(VisitorDirective) },
+	$I.annote("VisitorDocumentStart", { description: "Visitor event emitted on document entry." }),
+) {}
+
+class VisitorDocumentEnd extends Schema.TaggedClass<VisitorDocumentEnd>($I`VisitorDocumentEnd`)(
+	"DocumentEnd",
+	{ path: YamlPath, depth: Schema.Finite },
+	$I.annote("VisitorDocumentEnd", { description: "Visitor event emitted on document exit." }),
+) {}
+
+class VisitorMapStart extends Schema.TaggedClass<VisitorMapStart>($I`VisitorMapStart`)(
+	"MapStart",
+	{
+		path: YamlPath,
+		depth: Schema.Finite,
+		style: CollectionStyle,
+		tag: Schema.optionalKey(Schema.String),
+		anchor: Schema.optionalKey(Schema.String),
+	},
+	$I.annote("VisitorMapStart", { description: "Visitor event emitted on mapping entry." }),
+) {}
+
+class VisitorMapEnd extends Schema.TaggedClass<VisitorMapEnd>($I`VisitorMapEnd`)(
+	"MapEnd",
+	{ path: YamlPath, depth: Schema.Finite },
+	$I.annote("VisitorMapEnd", { description: "Visitor event emitted on mapping exit." }),
+) {}
+
+class VisitorSeqStart extends Schema.TaggedClass<VisitorSeqStart>($I`VisitorSeqStart`)(
+	"SeqStart",
+	{
+		path: YamlPath,
+		depth: Schema.Finite,
+		style: CollectionStyle,
+		tag: Schema.optionalKey(Schema.String),
+		anchor: Schema.optionalKey(Schema.String),
+	},
+	$I.annote("VisitorSeqStart", { description: "Visitor event emitted on sequence entry." }),
+) {}
+
+class VisitorSeqEnd extends Schema.TaggedClass<VisitorSeqEnd>($I`VisitorSeqEnd`)(
+	"SeqEnd",
+	{ path: YamlPath, depth: Schema.Finite },
+	$I.annote("VisitorSeqEnd", { description: "Visitor event emitted on sequence exit." }),
+) {}
+
+class VisitorPair extends Schema.TaggedClass<VisitorPair>($I`VisitorPair`)(
+	"Pair",
+	{ path: YamlPath, depth: Schema.Finite, key: Schema.Unknown, value: Schema.Unknown },
+	$I.annote("VisitorPair", { description: "Visitor event emitted for a mapping pair." }),
+) {}
+
+class VisitorScalar extends Schema.TaggedClass<VisitorScalar>($I`VisitorScalar`)(
+	"Scalar",
+	{
+		path: YamlPath,
+		depth: Schema.Finite,
+		value: Schema.Unknown,
+		style: ScalarStyle,
+		tag: Schema.optionalKey(Schema.String),
+		anchor: Schema.optionalKey(Schema.String),
+	},
+	$I.annote("VisitorScalar", { description: "Visitor event emitted for a scalar value." }),
+) {}
+
+class VisitorAlias extends Schema.TaggedClass<VisitorAlias>($I`VisitorAlias`)(
+	"Alias",
+	{ path: YamlPath, depth: Schema.Finite, name: Schema.String },
+	$I.annote("VisitorAlias", { description: "Visitor event emitted for an alias reference." }),
+) {}
+
+class VisitorComment extends Schema.TaggedClass<VisitorComment>($I`VisitorComment`)(
+	"Comment",
+	{
+		path: YamlPath,
+		depth: Schema.Finite,
+		text: Schema.String,
+		placement: Schema.Literals(["leading", "trailing"]),
+	},
+	$I.annote("VisitorComment", { description: "Visitor event emitted for a leading or trailing comment." }),
+) {}
+
+class VisitorDirectiveEvent extends Schema.TaggedClass<VisitorDirectiveEvent>($I`VisitorDirectiveEvent`)(
+	"Directive",
+	{ path: YamlPath, depth: Schema.Finite, name: Schema.String, parameters: Schema.String },
+	$I.annote("VisitorDirectiveEvent", { description: "Visitor event emitted for a YAML directive." }),
+) {}
+
+class VisitorError extends Schema.TaggedClass<VisitorError>($I`VisitorError`)(
+	"Error",
+	{ path: YamlPath, depth: Schema.Finite, diagnostic: YamlDiagnostic },
+	$I.annote("VisitorError", { description: "Visitor event carrying an in-band YAML diagnostic." }),
+) {}
+
+const YamlVisitorEventModel = Schema.Union([
+	VisitorDocumentStart,
+	VisitorDocumentEnd,
+	VisitorMapStart,
+	VisitorMapEnd,
+	VisitorSeqStart,
+	VisitorSeqEnd,
+	VisitorPair,
+	VisitorScalar,
+	VisitorAlias,
+	VisitorComment,
+	VisitorDirectiveEvent,
+	VisitorError,
+]).pipe(
+	$I.annoteSchema("YamlVisitorEvent", {
+		description: "Schema-owned discriminated union of demand-driven YAML AST visitor events.",
+	}),
+);
 
 /**
  * The discriminated union of YAML AST visitor events. Every variant carries
@@ -36,64 +163,29 @@ import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
  * @category type-level
  * @since 0.0.0
  */
-export type YamlVisitorEvent = Data.TaggedEnum<{
-	DocumentStart: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly directives: ReadonlyArray<{ readonly name: string; readonly parameters: ReadonlyArray<string> }>;
-	};
-	DocumentEnd: { readonly path: YamlPath; readonly depth: number };
-	MapStart: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly style: CollectionStyle;
-		readonly tag?: string;
-		readonly anchor?: string;
-	};
-	MapEnd: { readonly path: YamlPath; readonly depth: number };
-	SeqStart: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly style: CollectionStyle;
-		readonly tag?: string;
-		readonly anchor?: string;
-	};
-	SeqEnd: { readonly path: YamlPath; readonly depth: number };
-	Pair: { readonly path: YamlPath; readonly depth: number; readonly key: unknown; readonly value: unknown };
-	Scalar: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly value: unknown;
-		readonly style: ScalarStyle;
-		readonly tag?: string;
-		readonly anchor?: string;
-	};
-	Alias: { readonly path: YamlPath; readonly depth: number; readonly name: string };
-	Comment: {
-		readonly path: YamlPath;
-		readonly depth: number;
-		readonly text: string;
-		/** Where the comment sits relative to its construct: own-line above (`"leading"`) or same-line after (`"trailing"`). */
-		readonly placement: "leading" | "trailing";
-	};
-	Directive: { readonly path: YamlPath; readonly depth: number; readonly name: string; readonly parameters: string };
-	Error: { readonly path: YamlPath; readonly depth: number; readonly diagnostic: YamlDiagnostic };
-}>;
+export type YamlVisitorEvent = typeof YamlVisitorEventModel.Type;
+
+type YamlVisitorEventTag = YamlVisitorEvent["_tag"];
+
+const isVisitorEventTag = <Tag extends YamlVisitorEventTag>(tag: Tag) =>
+	(event: YamlVisitorEvent): event is Extract<YamlVisitorEvent, { readonly _tag: Tag }> => event._tag === tag;
 
 /**
- * Constructors and matchers for the `YamlVisitorEvent` union (e.g.
+ * Schema, constructors and matchers for the `YamlVisitorEvent` union (e.g.
  * `YamlVisitorEvent.Scalar({ path, depth, value, style })`,
  * `YamlVisitorEvent.$is("MapStart")`).
  *
  * **Example** (Construct and narrow an event)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { YamlVisitorEvent } from "@beep/scratchpad/yaml"
  *
  * const start = YamlVisitorEvent.DocumentStart({ path: [], depth: 0, directives: [] })
  *
  * console.log(start._tag) // "DocumentStart"
  * console.log(YamlVisitorEvent.$is("DocumentStart")(start)) // true
+ * console.log(S.is(YamlVisitorEvent.schema)(start)) // true
  * ```
  *
  * @see {@link (YamlVisitorEvent:type)} for the discriminated union these constructors inhabit.
@@ -101,7 +193,22 @@ export type YamlVisitorEvent = Data.TaggedEnum<{
  * @category constructors
  * @since 0.0.0
  */
-export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
+export const YamlVisitorEvent = {
+	schema: YamlVisitorEventModel,
+	DocumentStart: VisitorDocumentStart.make,
+	DocumentEnd: VisitorDocumentEnd.make,
+	MapStart: VisitorMapStart.make,
+	MapEnd: VisitorMapEnd.make,
+	SeqStart: VisitorSeqStart.make,
+	SeqEnd: VisitorSeqEnd.make,
+	Pair: VisitorPair.make,
+	Scalar: VisitorScalar.make,
+	Alias: VisitorAlias.make,
+	Comment: VisitorComment.make,
+	Directive: VisitorDirectiveEvent.make,
+	Error: VisitorError.make,
+	$is: isVisitorEventTag,
+} as const;
 
 /**
  * Walk a YAML document as a demand-driven stream of SAX-style AST events.

@@ -6,20 +6,12 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import {
-  type AstNode,
-  InterpreterRuntimeError
-} from "../interpreter/Interpreter.model.ts";
-import {LiteralKit} from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { N, P } from "@beep/utils";
 import * as S from "effect/Schema";
-import {boundedData, coerceToString} from "./StdLib.value.ts";
-import {P, N} from "@beep/utils";
-import {
-  type NumberMethod,
-  type NumberStatic,
-  numberMethods,
-  numberStatics,
-} from "../Codemode.method-names.ts";
+import { type NumberMethod, type NumberStatic, numberMethods, numberStatics } from "../Codemode.method-names.ts";
+import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
+import { boundedData, coerceToString } from "./StdLib.value.ts";
 
 export {
   numberMethods,

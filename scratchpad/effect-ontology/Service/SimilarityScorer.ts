@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Cache, Context, Duration, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
@@ -21,6 +22,11 @@ import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } 
 import { NomicNlpService, NomicNlpServiceDefault } from "./NomicNlp.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
+const SimilarityMethod = LiteralKit(["exact", "similarity", "containment", "neighbor"]).pipe(
+  $I.annoteSchema("SimilarityMethod", {
+    description: "Resolution strategies that can produce an entity similarity decision.",
+  })
+);
 
 /**
  * Similarity score plus the method that produced the merge decision.
@@ -45,7 +51,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
 export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityResult`)(
   {
     score: UnitInterval,
-    method: S.Literals(["exact", "similarity", "containment", "neighbor"]),
+    method: SimilarityMethod,
     shouldMerge: S.Boolean,
   },
   $I.annote("SimilarityResult", { description: "Validated entity similarity score and resolution decision." })

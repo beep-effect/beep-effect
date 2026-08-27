@@ -6,30 +6,30 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit, MappedLiteralKit, type SafeObject } from "@beep/schema";
+import { A, P } from "@beep/utils";
+import { DateTime } from "effect";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+import { copyIn } from "../Codemode.tool-runtime.ts";
 import {
-  type AstNode,
-  CoercionFunction,
-  CoercionFunctionName,
-  ErrorConstructorName,
-  GlobalNamespaceName,
-  InterpreterRuntimeError,
-} from "../interpreter/Interpreter.model.ts"
-import { copyIn } from "../Codemode.tool-runtime.ts"
-import { LiteralKit, MappedLiteralKit, SafeObject } from "@beep/schema"
-import {
-  isCodeModeValue,
   CodeModeDate,
   CodeModeMap,
   CodeModeRegExp,
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  isCodeModeValue,
   makeEmptySafeObject,
-} from "../Codemode.values.ts"
-import { DateTime } from "effect";
-import { dual } from "effect/Function";
-import * as S from "effect/Schema";
-import { A, P } from "@beep/utils";
+} from "../Codemode.values.ts";
+import {
+  type AstNode,
+  type CoercionFunction,
+  CoercionFunctionName,
+  ErrorConstructorName,
+  GlobalNamespaceName,
+  InterpreterRuntimeError,
+} from "../interpreter/Interpreter.model.ts";
 
 const $I = $ScratchpadId.create("codemode/stdlib/StdLib.value");
 
@@ -52,19 +52,12 @@ const $I = $ScratchpadId.create("codemode/stdlib/StdLib.value");
  * @since 0.0.0
  */
 export const valueConstructors = LiteralKit(
-  GlobalNamespaceName.pickOptions([
-    "Date",
-    "RegExp",
-    "Map",
-    "Set",
-    "URL",
-    "URLSearchParams",
-  ])
+  GlobalNamespaceName.pickOptions(["Date", "RegExp", "Map", "Set", "URL", "URLSearchParams"])
 ).pipe(
   $I.annoteSchema("valueConstructors", {
     description: "Guest constructor names allocated as CodeMode values.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link valueConstructors}.
@@ -120,7 +113,7 @@ export const BinaryOperator = LiteralKit([
   $I.annoteSchema("BinaryOperator", {
     description: "Guest binary operators including in and instanceof.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link BinaryOperator}.
@@ -129,7 +122,7 @@ export const BinaryOperator = LiteralKit([
  * @category type-level
  * @since 0.0.0
  */
-export type BinaryOperator = typeof BinaryOperator.Type
+export type BinaryOperator = typeof BinaryOperator.Type;
 
 /**
  * Binary operators applied after the interpreter has already resolved
@@ -149,13 +142,11 @@ export type BinaryOperator = typeof BinaryOperator.Type
  * @category schemas
  * @since 0.0.0
  */
-export const AppliedBinaryOperator = LiteralKit(
-  BinaryOperator.omitOptions(["instanceof"])
-).pipe(
+export const AppliedBinaryOperator = LiteralKit(BinaryOperator.omitOptions(["instanceof"])).pipe(
   $I.annoteSchema("AppliedBinaryOperator", {
     description: "Binary operators applied after instanceof is handled separately.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link AppliedBinaryOperator}.
@@ -164,7 +155,7 @@ export const AppliedBinaryOperator = LiteralKit(
  * @category type-level
  * @since 0.0.0
  */
-export type AppliedBinaryOperator = typeof AppliedBinaryOperator.Type
+export type AppliedBinaryOperator = typeof AppliedBinaryOperator.Type;
 
 /**
  * Compound assignment operators mapped to the binary operator they apply.
@@ -201,7 +192,7 @@ export const CompoundOperator = MappedLiteralKit([
   $I.annoteSchema("CompoundOperator", {
     description: "Compound assignment operators decoded to the binary operator they apply.",
   })
-)
+);
 
 /**
  * Decoded value produced by {@link CompoundOperator}.
@@ -398,7 +389,7 @@ export type UpdateOperator = typeof UpdateOperator.Type;
  */
 export type UpdateOperatorEncoded = typeof UpdateOperator.Encoded;
 
-const ErrorBrand: unique symbol = Symbol("codemode.error")
+const ErrorBrand: unique symbol = Symbol("codemode.error");
 
 /**
  * Allocates a guest Error as a branded SafeObject with `name` and `message`.
@@ -426,12 +417,12 @@ const ErrorBrand: unique symbol = Symbol("codemode.error")
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Error constructor name and message are co-primary inputs for a newly allocated guest value.
 export const createErrorValue = (name: ErrorConstructorName, message: string): SafeObject => {
-  const value = makeEmptySafeObject()
-  Reflect.set(value, "name", name)
-  Reflect.set(value, "message", message)
-  Object.defineProperty(value, ErrorBrand, { value: name })
-  return value
-}
+  const value = makeEmptySafeObject();
+  Reflect.set(value, "name", name);
+  Reflect.set(value, "message", message);
+  Object.defineProperty(value, ErrorBrand, { value: name });
+  return value;
+};
 
 /**
  * Allocates a guest AggregateError as a branded error with an `errors` array.
@@ -451,10 +442,10 @@ export const createErrorValue = (name: ErrorConstructorName, message: string): S
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Aggregate members and message are co-primary inputs for a newly allocated guest error.
 export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject => {
-  const value = createErrorValue("AggregateError", message)
-  Reflect.set(value, "errors", errors)
-  return value
-}
+  const value = createErrorValue("AggregateError", message);
+  Reflect.set(value, "errors", errors);
+  return value;
+};
 
 /**
  * Reads the guest Error constructor name stored on an error brand, if present.
@@ -501,7 +492,7 @@ export const errorBrandName = (value: unknown): ErrorConstructorName | undefined
 export const boundedData: {
   (label: string): (value: unknown) => unknown;
   (value: unknown, label: string): unknown;
-} = dual(2, (value: unknown, label: string): unknown => copyIn(value, label, true))
+} = dual(2, (value: unknown, label: string): unknown => copyIn(value, label, true));
 
 /**
  * Coerces a guest value to a string using CodeMode Date/RegExp/URL and Error
@@ -531,32 +522,34 @@ export const boundedData: {
  * @since 0.0.0
  */
 export const coerceToString = (value: unknown): string => {
-  if (P.isNull(value)) return "null"
-  if (P.isUndefined(value)) return "undefined"
+  if (P.isNull(value)) return "null";
+  if (P.isUndefined(value)) return "undefined";
   if (CodeModeDate.is(value))
-    return Number.isFinite(value.time) ? DateTime.makeUnsafe(value.time).pipe(DateTime.toDate, (d) => d.toISOString()) : "Invalid Date"
-  if (CodeModeRegExp.is(value)) return `/${value.regex.source}/${value.regex.flags}`
-  if (CodeModeMap.is(value)) return "[object Map]"
-  if (CodeModeSet.is(value)) return "[object Set]"
-  if (CodeModeURL.is(value)) return value.url.href
-  if (CodeModeURLSearchParams.is(value)) return value.params.toString()
+    return Number.isFinite(value.time)
+      ? DateTime.makeUnsafe(value.time).pipe(DateTime.toDate, (d) => d.toISOString())
+      : "Invalid Date";
+  if (CodeModeRegExp.is(value)) return `/${value.regex.source}/${value.regex.flags}`;
+  if (CodeModeMap.is(value)) return "[object Map]";
+  if (CodeModeSet.is(value)) return "[object Set]";
+  if (CodeModeURL.is(value)) return value.url.href;
+  if (CodeModeURLSearchParams.is(value)) return value.params.toString();
   if (P.isNotUndefined(errorBrandName(value)) && P.isNotNull(value) && P.isObjectKeyword(value)) {
     // Match Error.prototype.toString: "name: message", or just one when the other is empty.
     const rawName = Reflect.get(value, "name");
     const rawMessage = Reflect.get(value, "message");
-    const name = P.isString(rawName) ? rawName : "Error"
-    const message = P.isString(rawMessage) ? rawMessage : ""
-    if (message === "") return name
-    if (name === "") return message
-    return `${name}: ${message}`
+    const name = P.isString(rawName) ? rawName : "Error";
+    const message = P.isString(rawMessage) ? rawMessage : "";
+    if (message === "") return name;
+    if (name === "") return message;
+    return `${name}: ${message}`;
   }
   if (P.isObjectKeyword(value)) {
     return A.isArray(value)
       ? value.map((item) => (item === null || item === undefined ? "" : coerceToString(item))).join(",")
-      : "[object Object]"
+      : "[object Object]";
   }
-  return String(value)
-}
+  return String(value);
+};
 
 /**
  * Coerces a guest value to a number using CodeMode Date time and string
@@ -585,13 +578,13 @@ export const coerceToString = (value: unknown): string => {
  * @since 0.0.0
  */
 export const coerceToNumber = (value: unknown): number => {
-  if (CodeModeDate.is(value)) return value.time
-  if (isCodeModeValue(value)) return Number.NaN
+  if (CodeModeDate.is(value)) return value.time;
+  if (isCodeModeValue(value)) return Number.NaN;
   // Arrays coerce through our own string coercion: host Number(array) joins with host
   // ToPrimitive, which throws on the null-prototype objects the interpreter produces.
-  if (A.isArray(value)) return Number(coerceToString(value))
-  return P.isNotNull(value) && P.isObjectKeyword(value) ? Number.NaN : Number(value)
-}
+  if (A.isArray(value)) return Number(coerceToString(value));
+  return P.isNotNull(value) && P.isObjectKeyword(value) ? Number.NaN : Number(value);
+};
 
 /**
  * Dispatches guest `Boolean`, `Number`, `String`, `isFinite`, `isNaN`,
@@ -624,32 +617,26 @@ export const coerceToNumber = (value: unknown): number => {
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
 export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown => {
-  const withoutArguments = A.isArrayEmpty(args)
-  const raw = args[0]
+  const withoutArguments = A.isArrayEmpty(args);
+  const raw = args[0];
 
-  const value = (): unknown =>
-    isCodeModeValue(raw)
-      ? raw
-      : boundedData(raw, `${ref.name} input`)
+  const value = (): unknown => (isCodeModeValue(raw) ? raw : boundedData(raw, `${ref.name} input`));
 
   return CoercionFunctionName.$match(ref.name, {
     Boolean: () => P.isTruthy(value()),
     // Native Number() is 0, unlike Number(undefined).
-    Number: () => withoutArguments ? 0 : coerceToNumber(value()),
+    Number: () => (withoutArguments ? 0 : coerceToNumber(value())),
     // Error values are plain SafeObjects; boundedData would strip their guest brand.
-    String: () =>
-      withoutArguments
-        ? ""
-        : coerceToString(P.isNotUndefined(errorBrandName(raw)) ? raw : value()),
+    String: () => (withoutArguments ? "" : coerceToString(P.isNotUndefined(errorBrandName(raw)) ? raw : value())),
     isFinite: () => Number.isFinite(coerceToNumber(value())),
     isNaN: () => Number.isNaN(coerceToNumber(value())),
     parseInt: () => {
-      const radix = args[1]
+      const radix = args[1];
       if (P.isNotUndefined(radix) && !P.isNumber(radix)) {
-        throw InterpreterRuntimeError.new("parseInt expects a numeric radix.", node)
+        throw InterpreterRuntimeError.new("parseInt expects a numeric radix.", node);
       }
-      return parseInt(coerceToString(value()), radix)
+      return parseInt(coerceToString(value()), radix);
     },
     parseFloat: () => parseFloat(coerceToString(value())),
-  })
-}
+  });
+};

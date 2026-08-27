@@ -15,6 +15,7 @@ import type { DrizzleError } from "@beep/drizzle";
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { SparqlQueryProfile, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
@@ -66,6 +67,11 @@ import { SparqlGenerator } from "./SparqlGenerator.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyAgent");
+const OntologyAgentOperation = LiteralKit(["loadOntology", "parseOntology", "decodeResult", "formatAnswer"]).pipe(
+  $I.annoteSchema("OntologyAgentOperation", {
+    description: "Ontology-agent operations that can fail with OntologyAgentError.",
+  })
+);
 
 type OntologyExtractionError = ExtractionError | RdfError | SerializationFailed | OntologyAgentError;
 type OntologyClaimExtractionError = OntologyExtractionError | DrizzleError;
@@ -108,7 +114,7 @@ type OntologyQueryError =
 export class OntologyAgentError extends S.TaggedError<OntologyAgentError>($I`OntologyAgentError`)(
   "OntologyAgentError",
   {
-    operation: S.Literals(["loadOntology", "parseOntology", "decodeResult", "formatAnswer"]).annotateKey({
+    operation: OntologyAgentOperation.annotateKey({
       description: "Ontology-agent operation that failed.",
     }),
     message: ErrorMessage.annotateKey({

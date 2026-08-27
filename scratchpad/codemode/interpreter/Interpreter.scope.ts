@@ -10,12 +10,7 @@
  */
 import { A, O, pipe } from "@beep/utils";
 import { MutableHashMap } from "effect";
-import {
-  type AstNode,
-  Binding,
-  InterpreterRuntimeError,
-  type Scope,
-} from "./Interpreter.model.ts";
+import { type AstNode, Binding, InterpreterRuntimeError, type Scope } from "./Interpreter.model.ts";
 
 type ResolvedBinding = readonly [scope: Scope, binding: Binding];
 
@@ -111,8 +106,7 @@ export class ScopeStack {
    *
    * @since 0.0.0
    */
-  static readonly new = (scopes: ReadonlyArray<Scope>): ScopeStack =>
-    new ScopeStack(scopes);
+  static readonly new = (scopes: ReadonlyArray<Scope>): ScopeStack => new ScopeStack(scopes);
 
   /**
    * Inserts an uninitialized slot in the current frame so later TDZ reads of that name fail.
@@ -141,10 +135,7 @@ export class ScopeStack {
   reserve(name: string, mutable: boolean, node: AstNode): void {
     const scope = this.current();
     if (MutableHashMap.has(scope, name)) {
-      throw InterpreterRuntimeError.new(
-        `Identifier '${name}' has already been declared.`,
-        node
-      );
+      throw InterpreterRuntimeError.new(`Identifier '${name}' has already been declared.`, node);
     }
     MutableHashMap.set(scope, name, Binding.new(mutable, undefined, false));
   }
@@ -176,16 +167,9 @@ export class ScopeStack {
     const scope = this.current();
     const binding = MutableHashMap.get(scope, name);
     if (O.isNone(binding) || binding.value.initialized) {
-      throw InterpreterRuntimeError.new(
-        `Identifier '${name}' has not been reserved for initialization.`,
-        node
-      );
+      throw InterpreterRuntimeError.new(`Identifier '${name}' has not been reserved for initialization.`, node);
     }
-    MutableHashMap.set(
-      scope,
-      name,
-      Binding.new(binding.value.mutable, value)
-    );
+    MutableHashMap.set(scope, name, Binding.new(binding.value.mutable, value));
   }
 
   /**
@@ -212,10 +196,7 @@ export class ScopeStack {
   declare(name: string, value: unknown, mutable: boolean, node: AstNode): void {
     const scope = this.current();
     if (MutableHashMap.has(scope, name)) {
-      throw InterpreterRuntimeError.new(
-        `Identifier '${name}' has already been declared.`,
-        node
-      );
+      throw InterpreterRuntimeError.new(`Identifier '${name}' has already been declared.`, node);
     }
     MutableHashMap.set(scope, name, Binding.new(mutable, value));
   }
@@ -244,16 +225,10 @@ export class ScopeStack {
   get(name: string, node: AstNode): unknown {
     const binding = this.resolve(name);
     if (O.isNone(binding)) {
-      throw InterpreterRuntimeError.new(
-        `Unknown identifier '${name}'.`,
-        node
-      ).as("ReferenceError");
+      throw InterpreterRuntimeError.new(`Unknown identifier '${name}'.`, node).as("ReferenceError");
     }
     if (!binding.value.initialized) {
-      throw InterpreterRuntimeError.new(
-        `Cannot access '${name}' before initialization.`,
-        node
-      ).as("ReferenceError");
+      throw InterpreterRuntimeError.new(`Cannot access '${name}' before initialization.`, node).as("ReferenceError");
     }
     return binding.value.value;
   }
@@ -283,23 +258,14 @@ export class ScopeStack {
   set(name: string, value: unknown, node: AstNode): unknown {
     const resolved = this.resolveBinding(name);
     if (O.isNone(resolved)) {
-      throw InterpreterRuntimeError.new(
-        `Unknown identifier '${name}'.`,
-        node
-      ).as("ReferenceError");
+      throw InterpreterRuntimeError.new(`Unknown identifier '${name}'.`, node).as("ReferenceError");
     }
     const [scope, binding] = resolved.value;
     if (!binding.initialized) {
-      throw InterpreterRuntimeError.new(
-        `Cannot access '${name}' before initialization.`,
-        node
-      ).as("ReferenceError");
+      throw InterpreterRuntimeError.new(`Cannot access '${name}' before initialization.`, node).as("ReferenceError");
     }
     if (!binding.mutable) {
-      throw InterpreterRuntimeError.new(
-        `Cannot assign to constant '${name}'.`,
-        node
-      ).as("TypeError");
+      throw InterpreterRuntimeError.new(`Cannot assign to constant '${name}'.`, node).as("TypeError");
     }
     MutableHashMap.set(scope, name, Binding.new(true, value));
     return value;
@@ -360,9 +326,7 @@ export class ScopeStack {
     return pipe(
       A.last(this.scopes),
       O.getOrElse(() => {
-        throw InterpreterRuntimeError.new(
-          "Interpreter scope stack is empty."
-        );
+        throw InterpreterRuntimeError.new("Interpreter scope stack is empty.");
       })
     );
   }

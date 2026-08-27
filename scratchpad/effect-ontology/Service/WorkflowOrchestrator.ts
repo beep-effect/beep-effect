@@ -17,6 +17,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
@@ -150,7 +151,19 @@ const validateOntologyConsistency = Effect.fn("validateOntologyConsistency")(fun
 });
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
-type PipelineStage = "pending" | "preprocessing" | "extracting" | "resolving" | "validating" | "ingesting";
+const PipelineStage = LiteralKit([
+  "pending",
+  "preprocessing",
+  "extracting",
+  "resolving",
+  "validating",
+  "ingesting",
+]).pipe(
+  $I.annoteSchema("PipelineStage", {
+    description: "Durable batch extraction stages reported while polling a workflow.",
+  })
+);
+type PipelineStage = typeof PipelineStage.Type;
 
 // -----------------------------------------------------------------------------
 // Workflow Definition
@@ -1008,10 +1021,12 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
  *
  * **Details**
  *
- * High-level API for batch workflow operations.
+ * High-level API for batch workflow operations. This remains a behavioral
+ * interface because every member starts, polls, interrupts, or resumes live
+ * durable workflow effects; payload and state data are schema-backed upstream.
  *
  *
- * @category type-level
+ * @category services
  * @since 0.0.0
  */
 export interface WorkflowOrchestratorMethods {

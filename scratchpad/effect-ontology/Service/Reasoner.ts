@@ -122,8 +122,8 @@ export class RuleParseError extends S.TaggedError<RuleParseError>($I`RuleParseEr
  * @category schemas
  * @since 0.0.0
  */
-export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]).annotate(
-  $I.annote("ReasoningProfile", {
+export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]).pipe(
+  $I.annoteSchema("ReasoningProfile", {
     description: "Closed set of RDFS/OWL reasoning profiles applied to an RDF store.",
   })
 );

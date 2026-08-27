@@ -605,13 +605,7 @@ export type ObjectStatic = typeof objectStatics.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const numberMethods = LiteralKit([
-  "toFixed",
-  "toPrecision",
-  "toExponential",
-  "toString",
-  "valueOf",
-]).annotate(
+export const numberMethods = LiteralKit(["toFixed", "toPrecision", "toExponential", "toString", "valueOf"]).annotate(
   $I.annote("numberMethods", {
     description: "Finite Number.prototype method names the interpreter may dispatch.",
   })
@@ -746,15 +740,7 @@ export type MathMethod = typeof mathMethods.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ConsoleMethod = LiteralKit([
-  "log",
-  "info",
-  "debug",
-  "warn",
-  "error",
-  "dir",
-  "table",
-]).annotate(
+export const ConsoleMethod = LiteralKit(["log", "info", "debug", "warn", "error", "dir", "table"]).annotate(
   $I.annote("ConsoleMethod", {
     description: "Finite console method names captured into CodeMode logs.",
   })

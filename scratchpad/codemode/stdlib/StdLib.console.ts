@@ -6,17 +6,12 @@
  * @since 0.0.0
  */
 import { Unknown } from "@beep/schema/Unknown";
-import {
-  containsOpaqueReference,
-  containsRuntimeReference,
-  isRuntimeReference,
-} from "../interpreter/Interpreter.references.ts";
-import {MutableHashSet, pipe} from "effect";
+import { A, O, P, R } from "@beep/utils";
+import { MutableHashSet, pipe } from "effect";
 import { dual } from "effect/Function";
-import {A, O, P, R} from "@beep/utils";
-import {copyIn, copyOut} from "../Codemode.tool-runtime.ts";
+import { ConsoleMethod } from "../Codemode.method-names.ts";
+import { copyIn, copyOut } from "../Codemode.tool-runtime.ts";
 import {
-  isCodeModeValue,
   CodeModeDate,
   CodeModeMap,
   CodeModePromise,
@@ -24,9 +19,14 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  isCodeModeValue,
 } from "../Codemode.values.ts";
-import {boundedData, coerceToString} from "./StdLib.value.ts";
-import { ConsoleMethod } from "../Codemode.method-names.ts";
+import {
+  containsOpaqueReference,
+  containsRuntimeReference,
+  isRuntimeReference,
+} from "../interpreter/Interpreter.references.ts";
+import { boundedData, coerceToString } from "./StdLib.value.ts";
 
 export { ConsoleMethod } from "../Codemode.method-names.ts";
 
@@ -65,7 +65,13 @@ export const formatConsoleMessage: {
 } = dual(2, (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);
   if (ConsoleMethod.is.table(name)) return formatConsoleTable(args[0], args[1]);
-  const prefix = ConsoleMethod.is.warn(name) ? "[warn] " : ConsoleMethod.is.error(name) ? "[error] " : name === "debug" ? "[debug] " : "";
+  const prefix = ConsoleMethod.is.warn(name)
+    ? "[warn] "
+    : ConsoleMethod.is.error(name)
+      ? "[error] "
+      : name === "debug"
+        ? "[debug] "
+        : "";
   return `${prefix}${pipe(args, A.map(formatConsoleArgument), A.join(" "))}`;
 });
 
@@ -75,11 +81,7 @@ const formatConsoleArgument = (value: unknown): string => {
   return formatConsoleValue(value, MutableHashSet.empty(), 0);
 };
 
-const formatConsoleValue = (
-  value: unknown,
-  seen: MutableHashSet.MutableHashSet<object>,
-  depth: number,
-): string => {
+const formatConsoleValue = (value: unknown, seen: MutableHashSet.MutableHashSet<object>, depth: number): string => {
   if (P.isNull(value) || P.isUndefined(value)) return "null";
   if (P.isString(value)) return encodeJson(value);
   if (P.isNumber(value) || P.isBoolean(value)) return String(value);
@@ -97,7 +99,7 @@ const formatConsoleValue = (
       const entries = pipe(
         value.map.entries(),
         A.fromIterable,
-        A.map(([key, item]): Array<unknown> => [key, item]),
+        A.map(([key, item]): Array<unknown> => [key, item])
       );
       return `Map(${value.map.size}) ${formatConsoleValue(entries, seen, depth + 1)}`;
     } finally {
@@ -116,12 +118,16 @@ const formatConsoleValue = (
   MutableHashSet.add(seen, value);
   try {
     if (A.isArray(value)) {
-      return `[${pipe(value, A.map((item) => formatConsoleValue(item, seen, depth + 1)), A.join(","))}]`;
+      return `[${pipe(
+        value,
+        A.map((item) => formatConsoleValue(item, seen, depth + 1)),
+        A.join(",")
+      )}]`;
     }
     return `{${pipe(
       R.toEntries(value),
       A.map(([key, item]) => `${encodeJson(key)}:${formatConsoleValue(item, seen, depth + 1)}`),
-      A.join(","),
+      A.join(",")
     )}}`;
   } finally {
     MutableHashSet.remove(seen, value);
@@ -134,67 +140,58 @@ const formatConsoleTable = (value: unknown, columnsArgument: unknown): string =>
   const data = boundedData(value, "console.table argument");
   const columns = consoleTableColumns(columnsArgument);
   const rows = consoleTableRows(data, columns);
-  const keys = O.getOrElse(
-    columns,
-    () => pipe(rows, A.flatMap((row) => R.keys(row.values)), A.dedupe),
+  const keys = O.getOrElse(columns, () =>
+    pipe(
+      rows,
+      A.flatMap((row) => R.keys(row.values)),
+      A.dedupe
+    )
   );
   const header = pipe(["(index)", ...keys], A.join("\t"));
   return pipe(
     [
       header,
-      ...A.map(
-        rows,
-        (row) => pipe(
-          [row.index, ...A.map(keys, (key) => formatConsoleTableCell(row.values[key]))],
-          A.join("\t"),
-        ),
+      ...A.map(rows, (row) =>
+        pipe([row.index, ...A.map(keys, (key) => formatConsoleTableCell(row.values[key]))], A.join("\t"))
       ),
     ],
-    A.join("\n"),
+    A.join("\n")
   );
 };
 
 const consoleTableColumns = (value: unknown): O.Option<ReadonlyArray<string>> => {
   if (P.isUndefined(value) || containsRuntimeReference(value)) return O.none();
   const columns = copyOut(copyIn(value, "console.table columns"), "nullify");
-  return A.isArray(columns)
-    ? O.some(A.map(columns, (column) => String(column)))
-    : O.none();
+  return A.isArray(columns) ? O.some(A.map(columns, (column) => String(column))) : O.none();
 };
 
 const consoleTableRows = (
   data: unknown,
-  columns: O.Option<ReadonlyArray<string>>,
+  columns: O.Option<ReadonlyArray<string>>
 ): Array<{
   readonly index: string;
-  readonly values: Record<string, unknown>
+  readonly values: Record<string, unknown>;
 }> => {
   if (A.isArray(data)) {
     return A.map(data, (item, index) => ({
       index: String(index),
-      values: consoleTableValues(item, columns)
+      values: consoleTableValues(item, columns),
     }));
   }
   if (P.isNotNull(data) && P.isObjectKeyword(data) && !isCodeModeValue(data)) {
-    return A.map(
-      R.toEntries(data),
-      ([index, item]) => ({index, values: consoleTableValues(item, columns)}),
-    );
+    return A.map(R.toEntries(data), ([index, item]) => ({ index, values: consoleTableValues(item, columns) }));
   }
-  return [{index: "0", values: {Value: data}}];
+  return [{ index: "0", values: { Value: data } }];
 };
 
-const consoleTableValues = (
-  value: unknown,
-  columns: O.Option<ReadonlyArray<string>>,
-): Record<string, unknown> => {
+const consoleTableValues = (value: unknown, columns: O.Option<ReadonlyArray<string>>): Record<string, unknown> => {
   if (P.isNotNull(value) && P.isObjectKeyword(value) && !A.isArray(value) && !isCodeModeValue(value)) {
     return O.match(columns, {
       onNone: () => R.fromEntries(R.toEntries(value)),
       onSome: (names) => R.fromEntries(A.map(names, (column) => [column, Reflect.get(value, column)])),
     });
   }
-  return {Value: value};
+  return { Value: value };
 };
 
 const formatConsoleTableCell = (value: unknown): string => {

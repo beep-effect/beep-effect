@@ -12,7 +12,7 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { UUID } from "@beep/schema/String";
@@ -44,6 +44,11 @@ import { ExtractionRunId } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
+const ProgressStreamingFailureReason = LiteralKit(["BackpressureTimeout", "QueueOverflow"]).pipe(
+  $I.annoteSchema("ProgressStreamingFailureReason", {
+    description: "Backpressure policy outcomes that stop progress delivery.",
+  })
+);
 
 // =============================================================================
 // Types
@@ -73,7 +78,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
 export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError>($I`ProgressStreamingError`)(
   "ProgressStreamingError",
   {
-    reason: S.Literals(["BackpressureTimeout", "QueueOverflow"]).annotateKey({
+    reason: ProgressStreamingFailureReason.annotateKey({
       description: "Backpressure policy outcome that stopped progress delivery.",
     }),
     message: S.NonEmptyString.annotateKey({

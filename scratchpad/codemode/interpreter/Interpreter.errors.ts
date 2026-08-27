@@ -8,47 +8,32 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Unknown } from "@beep/schema/Unknown";
-import type { SafeObject } from "@beep/schema/SafeObject";
+
 import { PosInt } from "@beep/schema";
-import { A, O, P, Str, pipe } from "@beep/utils";
+import type { SafeObject } from "@beep/schema/SafeObject";
+import { Unknown } from "@beep/schema/Unknown";
+import { A, O, P, pipe, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
+import { DiagnosticLocation, DiagnosticModel } from "../Codemode.result.ts";
+import { ToolError } from "../Codemode.tool-error.ts";
+import { copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
+import { coerceToString, createAggregateErrorValue, createErrorValue } from "../stdlib/index.ts";
+import type { SyncIteratorRunner } from "./Interpreter.iterator.ts";
 import {
-  ErrorConstructorName,
   type AstNode,
+  ErrorConstructorName,
   formatLocation,
   InterpreterFailure,
   InterpreterRuntimeError,
   sourceLocation,
 } from "./Interpreter.model.ts";
-import {
-  DiagnosticLocation,
-  DiagnosticModel,
-} from "../Codemode.result.ts";
-import { ToolError } from "../Codemode.tool-error.ts";
-import { copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
-import { type SyncIteratorRunner } from "./Interpreter.iterator.ts";
 import { containsRuntimeReference } from "./Interpreter.references.ts";
-import {
-  coerceToString,
-  createAggregateErrorValue,
-  createErrorValue,
-} from "../stdlib/index.ts";
 
-const renderUnknown = (
-  value: unknown,
-  property?: "name" | "message"
-): string =>
+const renderUnknown = (value: unknown, property?: "name" | "message"): string =>
   pipe(
     Result.try(() =>
-      globalThis.String(
-        P.isUndefined(property)
-          ? value
-          : P.isObject(value)
-            ? Reflect.get(value, property)
-            : undefined
-      )
+      globalThis.String(P.isUndefined(property) ? value : P.isObject(value) ? Reflect.get(value, property) : undefined)
     ),
     Result.getOrElse(() => "<unprintable>")
   );
@@ -278,10 +263,7 @@ export const constructAggregateErrorValue = <R>(
     while (true) {
       const step = yield* cursor.next;
       if (step.done) {
-        return createAggregateErrorValue(
-          errors,
-          P.isUndefined(args[1]) ? "" : coerceToString(args[1])
-        );
+        return createAggregateErrorValue(errors, P.isUndefined(args[1]) ? "" : coerceToString(args[1]));
       }
       errors.push(step.value);
     }

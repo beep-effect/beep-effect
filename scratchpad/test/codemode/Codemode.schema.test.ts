@@ -1,5 +1,5 @@
-import { A, N, O, Str } from "@beep/utils";
 import { fcRuns } from "@beep/test-utils";
+import { A, N, O, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, pipe, Result as Rs } from "effect";
 import * as S from "effect/Schema";
@@ -8,13 +8,13 @@ import {
   DiagnosticLocation,
   DiagnosticModel,
   ExecutionLimits,
-  Result,
-  ResultModel,
   execute,
   make,
+  Result,
+  ResultModel,
 } from "../../codemode/Codemode.service.ts";
+import { CopyOutMode, copyOut, SearchInput, ToolCallEnded } from "../../codemode/Codemode.tool-runtime.ts";
 import { IdentifierSegment, identifierSegment } from "../../codemode/Codemode.tool-schema.ts";
-import { copyOut, CopyOutMode, SearchInput, ToolCallEnded } from "../../codemode/Codemode.tool-runtime.ts";
 import {
   Binding,
   CodeModeGenerator,
@@ -32,8 +32,8 @@ import {
   JsonMethodName,
   JsonMethodReference,
   MemberReference,
-  PromiseMethodReference,
   PromiseMethodName,
+  PromiseMethodReference,
   Scope,
   StatementBreak,
   StatementResult,
@@ -53,22 +53,14 @@ import {
   SecuritySchemeApiKey,
 } from "../../codemode/openapi/OpenAPI.types.ts";
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
-  schema: Schema,
-  numRuns = 40
-): void => {
+const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, numRuns = 40): void => {
   const derived = S.toArbitrary(schema)(fc);
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
   fc.assert(
-    fc.property(derived, (value) =>
-      equivalent(
-        Rs.getOrThrow(decode(Rs.getOrThrow(encode(value)))),
-        value
-      )
-    ),
+    fc.property(derived, (value) => equivalent(Rs.getOrThrow(decode(Rs.getOrThrow(encode(value)))), value)),
     fcRuns(numRuns)
   );
 };
@@ -134,15 +126,14 @@ describe("CodeMode schema laws", () => {
     const decodeOperationId = S.decodeUnknownResult(OperationId);
 
     fc.assert(
-      fc.property(fc.string(), (candidate) =>
-        isIdentifier(candidate) === /^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate)
+      fc.property(
+        fc.string(),
+        (candidate) => isIdentifier(candidate) === /^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate)
       ),
       fcRuns(200)
     );
     fc.assert(
-      fc.property(fc.string(), (candidate) =>
-        isApiPath(candidate) === /^\/.*$/u.test(candidate)
-      ),
+      fc.property(fc.string(), (candidate) => isApiPath(candidate) === /^\/.*$/u.test(candidate)),
       fcRuns(200)
     );
     fc.assert(
@@ -150,9 +141,7 @@ describe("CodeMode schema laws", () => {
         const trimmed = Str.trim(candidate);
         const decoded = decodeOperationId(candidate);
 
-        return Str.isEmpty(trimmed)
-          ? Rs.isFailure(decoded)
-          : Rs.isSuccess(decoded) && decoded.success === trimmed;
+        return Str.isEmpty(trimmed) ? Rs.isFailure(decoded) : Rs.isSuccess(decoded) && decoded.success === trimmed;
       }),
       fcRuns(200)
     );
@@ -282,16 +271,17 @@ describe("CodeMode schema laws", () => {
     const numeric = fc.double({ noDefaultInfinity: false, noNaN: false });
 
     fc.assert(
-      fc.property(numeric, (value) =>
-        Rs.isSuccess(decode({ timeoutMs: value })) ===
-          (S.is(S.Int)(value) && N.isGreaterThan(0)(value))
+      fc.property(
+        numeric,
+        (value) => Rs.isSuccess(decode({ timeoutMs: value })) === (S.is(S.Int)(value) && N.isGreaterThan(0)(value))
       ),
       fcRuns(200)
     );
     fc.assert(
-      fc.property(numeric, (value) =>
-        Rs.isSuccess(decode({ maxToolCalls: value })) ===
-          (S.is(S.Int)(value) && N.isGreaterThanOrEqualTo(0)(value))
+      fc.property(
+        numeric,
+        (value) =>
+          Rs.isSuccess(decode({ maxToolCalls: value })) === (S.is(S.Int)(value) && N.isGreaterThanOrEqualTo(0)(value))
       ),
       fcRuns(200)
     );
@@ -301,9 +291,7 @@ describe("CodeMode schema laws", () => {
     const coercion = CoercionFunction.new("parseInt");
     const promiseMethod = PromiseMethodReference.new("allSettled");
     const globalNamespace = GlobalNamespace.new("JSON");
-    const globalMethod = GlobalMethodReference.new(
-      GlobalMethod.cases.String.make({ name: "fromCodePoint" })
-    );
+    const globalMethod = GlobalMethodReference.new(GlobalMethod.cases.String.make({ name: "fromCodePoint" }));
     const jsonMethod = JsonMethodReference.new("stringify");
     const uriFunction = UriFunction.new("decodeURIComponent");
     const errorConstructor = ErrorConstructorReference.new("AggregateError");
@@ -372,10 +360,7 @@ describe("CodeMode schema laws", () => {
 
     assert.strictEqual(rendered, "query:api_key");
     assert.strictEqual(ApiKeyCarrier.guards.header(ApiKeyHeader.new("X-API-Key")), true);
-    assert.strictEqual(
-      ApiKeyCarrier.isAnyOf(A.make("query", "cookie"))(ApiKeyHeader.new("X-API-Key")),
-      false
-    );
+    assert.strictEqual(ApiKeyCarrier.isAnyOf(A.make("query", "cookie"))(ApiKeyHeader.new("X-API-Key")), false);
   });
 
   it("encodes diagnostic defaults as a wire-compatible tagged object", () => {

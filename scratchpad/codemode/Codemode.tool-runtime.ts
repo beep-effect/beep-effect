@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Unknown } from "@beep/schema/Unknown";
-import {$ScratchpadId} from "@beep/identity";
+
+import { $ScratchpadId } from "@beep/identity";
 import {
   LiteralKit,
   NonEmptyTrimmedStr,
@@ -14,33 +14,16 @@ import {
   SafeObject as SafeObjectSchema,
   SchemaUtils,
 } from "@beep/schema";
-import {A, O, P, pipe, R, Str, Struct, thunkNull} from "@beep/utils";
-import {
-  Cause,
-  Clock,
-  DateTime,
-  Effect,
-  Exit,
-  flow,
-  HashMap,
-  HashSet,
-  Order,
-  Ref,
-  Result,
-  Stream,
-} from "effect";
+import { Unknown } from "@beep/schema/Unknown";
+import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
+import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as AiError from "effect/unstable/ai/AiError";
+import type * as AiError from "effect/unstable/ai/AiError";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
-import {ToolError} from "./Codemode.tool-error.ts";
-import {
-  identifierSegment,
-  inputProperties,
-  inputTypeScript,
-  outputTypeScript
-} from "./Codemode.tool-schema.ts";
+import { ToolError } from "./Codemode.tool-error.ts";
+import { identifierSegment, inputProperties, inputTypeScript, outputTypeScript } from "./Codemode.tool-schema.ts";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -54,7 +37,7 @@ import {
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 
-export type {SafeObject} from "@beep/schema/SafeObject";
+export type { SafeObject } from "@beep/schema/SafeObject";
 
 /**
  * Services required to obtain Toolkit handlers and run their streams.
@@ -98,7 +81,7 @@ export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription
   })
 ) {
   static readonly new = (path: string, description: string, signature: string): ToolDescription =>
-    ToolDescription.make({path, description, signature});
+    ToolDescription.make({ path, description, signature });
 }
 
 /**
@@ -118,13 +101,12 @@ export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription
  * @since 0.0.0
  */
 export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
-  {name: NonEmptyTrimmedStr},
+  { name: NonEmptyTrimmedStr },
   $I.annote("ToolCall", {
     description: "Canonical name of one admitted tool call.",
   })
 ) {
-  static readonly new = (name: string): ToolCall =>
-    ToolCall.make({name: NonEmptyTrimmedStr.make(name)});
+  static readonly new = (name: string): ToolCall => ToolCall.make({ name: NonEmptyTrimmedStr.make(name) });
 }
 
 /**
@@ -203,10 +185,7 @@ export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolC
     description: "An admitted tool call completed successfully.",
   })
 ) {
-  static readonly new = (
-    call: ToolCallStarted,
-    durationMs: number
-  ): ToolCallSucceeded =>
+  static readonly new = (call: ToolCallStarted, durationMs: number): ToolCallSucceeded =>
     ToolCallSucceeded.make({
       index: call.index,
       name: call.name,
@@ -249,10 +228,7 @@ export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`T
     description: "An admitted tool call was interrupted.",
   })
 ) {
-  static readonly new = (
-    call: ToolCallStarted,
-    durationMs: number
-  ): ToolCallInterrupted =>
+  static readonly new = (call: ToolCallStarted, durationMs: number): ToolCallInterrupted =>
     ToolCallInterrupted.make({
       index: call.index,
       name: call.name,
@@ -291,11 +267,7 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
     description: "An admitted tool call failed with a hook-safe message.",
   })
 ) {
-  static readonly new = (
-    call: ToolCallStarted,
-    durationMs: number,
-    message: string
-  ): ToolCallFailed =>
+  static readonly new = (call: ToolCallStarted, durationMs: number, message: string): ToolCallFailed =>
     ToolCallFailed.make({
       index: call.index,
       name: call.name,
@@ -324,11 +296,7 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
  * @category models
  * @since 0.0.0
  */
-export const ToolCallEnded = S.Union([
-  ToolCallSucceeded,
-  ToolCallInterrupted,
-  ToolCallFailed,
-]).pipe(
+export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, ToolCallFailed]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
@@ -393,12 +361,7 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
     description: "Search query and pagination controls for the built-in discovery function.",
   })
 ) {
-  static readonly new = (
-    query?: string,
-    namespace?: string,
-    limit: number = 10,
-    offset: number = 0
-  ): SearchInput =>
+  static readonly new = (query?: string, namespace?: string, limit: number = 10, offset: number = 0): SearchInput =>
     SearchInput.make({
       query: O.fromNullishOr(query),
       namespace: O.fromNullishOr(namespace),
@@ -438,7 +401,7 @@ export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
   })
 ) {
   static readonly new = (path: string, description: string, signature: string): SearchItem =>
-    SearchItem.make({path, description, signature});
+    SearchItem.make({ path, description, signature });
 }
 
 /**
@@ -466,23 +429,19 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   {
     items: S.Array(SearchItem),
     remaining: NonNegativeInt,
-    next: S.OptionFromNullOr(S.Struct({offset: NonNegativeInt})).pipe(SchemaUtils.withNoneDefault),
+    next: S.OptionFromNullOr(S.Struct({ offset: NonNegativeInt })).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SearchOutput", {
     description: "Paginated tool-discovery results.",
   })
 ) {
-  static readonly new = (
-    items: ReadonlyArray<SearchItem>,
-    remaining: number,
-    nextOffset?: number
-  ): SearchOutput =>
+  static readonly new = (items: ReadonlyArray<SearchItem>, remaining: number, nextOffset?: number): SearchOutput =>
     SearchOutput.make({
       items,
       remaining: NonNegativeInt.make(remaining),
       next: pipe(
         O.fromNullishOr(nextOffset),
-        O.map((offset) => ({offset: NonNegativeInt.make(offset)}))
+        O.map((offset) => ({ offset: NonNegativeInt.make(offset) }))
       ),
     });
 }
@@ -514,11 +473,8 @@ export class SearchEntry extends S.Class<SearchEntry>($I`SearchEntry`)(
     description: "Pre-tokenized catalog entry used by the discovery function.",
   })
 ) {
-  static readonly new = (
-    description: ToolDescription,
-    namespace: string,
-    searchText: string
-  ): SearchEntry => SearchEntry.make({description, namespace, searchText});
+  static readonly new = (description: ToolDescription, namespace: string, searchText: string): SearchEntry =>
+    SearchEntry.make({ description, namespace, searchText });
 }
 
 /**
@@ -551,7 +507,7 @@ export class DiscoveryPlan extends S.Class<DiscoveryPlan>($I`DiscoveryPlan`)(
   static readonly new = (
     catalog: ReadonlyArray<ToolDescription>,
     searchIndex: ReadonlyArray<SearchEntry>
-  ): DiscoveryPlan => DiscoveryPlan.make({catalog, searchIndex});
+  ): DiscoveryPlan => DiscoveryPlan.make({ catalog, searchIndex });
 }
 
 /**
@@ -611,13 +567,13 @@ export type CopyOutMode = typeof CopyOutMode.Type;
  */
 export class ToolReference extends S.TaggedClass<ToolReference>($I`ToolReference`)(
   "ToolReference",
-  {path: S.Array(S.String)},
+  { path: S.Array(S.String) },
   $I.annote("ToolReference", {
     description: "A path into the current Toolkit namespace tree.",
   })
 ) {
   static readonly is = S.is(ToolReference);
-  static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({path});
+  static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({ path });
 }
 
 /**
@@ -691,7 +647,7 @@ export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRun
     kind: ToolRuntimeErrorKind,
     message: string,
     suggestions: ReadonlyArray<string> = A.empty()
-  ): ToolRuntimeError => ToolRuntimeError.make({kind, message, suggestions});
+  ): ToolRuntimeError => ToolRuntimeError.make({ kind, message, suggestions });
 }
 
 const MAX_VALUE_DEPTH = 32;
@@ -780,10 +736,7 @@ const copyBounded = (
   preserveCodeModeValues: boolean
 ): unknown => {
   if (depth > MAX_VALUE_DEPTH) {
-    throw ToolRuntimeError.new(
-      "InvalidDataValue",
-      `${label} exceeds the maximum value depth of ${MAX_VALUE_DEPTH}.`
-    );
+    throw ToolRuntimeError.new("InvalidDataValue", `${label} exceeds the maximum value depth of ${MAX_VALUE_DEPTH}.`);
   }
   if (P.isNullish(value) || P.isString(value) || P.isBoolean(value) || P.isNumber(value)) return value;
   if (A.isArray(value)) {
@@ -791,9 +744,7 @@ const copyBounded = (
       throw ToolRuntimeError.new("InvalidDataValue", `${label} contains a circular value.`);
     }
     const nextSeen = HashSet.add(seen, value);
-    const copied = A.map(value, (item) =>
-      copyBounded(item, label, depth + 1, nextSeen, preserveCodeModeValues)
-    );
+    const copied = A.map(value, (item) => copyBounded(item, label, depth + 1, nextSeen, preserveCodeModeValues));
     if (preserveCodeModeValues) {
       // Guest arrays may carry enumerable named properties. Reflect mutation
       // remains isolated to this ECMAScript checkpoint adapter.
@@ -845,10 +796,14 @@ const copyBounded = (
   }
 
   if (CodeModeDate.is(value)) return isoFromEpochMillis(value.time);
-  if (value instanceof Date) return pipe(DateTime.make(value), O.match({
-    onNone: thunkNull,
-    onSome: DateTime.formatIso
-  }));
+  if (value instanceof Date)
+    return pipe(
+      DateTime.make(value),
+      O.match({
+        onNone: thunkNull,
+        onSome: DateTime.formatIso,
+      })
+    );
   if (CodeModeURL.is(value)) return value.url.href;
   if (value instanceof URL) return value.href;
   if (
@@ -928,10 +883,13 @@ export const copyOut: {
     }
     // Index construction densifies holes, matching JSON-compatible boundary semantics.
     if (A.isArrayEmpty(value)) return A.empty();
-    return A.map(A.makeBy(A.length(value), (index) => value[index]), (item) => {
-      const copied = copyOut(item, mode);
-      return P.isUndefined(copied) && CopyOutMode.is.json(mode) ? null : copied;
-    });
+    return A.map(
+      A.makeBy(A.length(value), (index) => value[index]),
+      (item) => {
+        const copied = copyOut(item, mode);
+        return P.isUndefined(copied) && CopyOutMode.is.json(mode) ? null : copied;
+      }
+    );
   }
   if (P.isObject(value) && !P.isNull(value) && !ToolReference.is(value)) {
     return pipe(
@@ -954,12 +912,11 @@ const emptyToolNode = (): ToolNode => ({
   children: HashMap.empty(),
 });
 
-const canonicalSegments = (path: ReadonlyArray<string>): ReadonlyArray<string> =>
-  A.flatMap(path, Str.split("."));
+const canonicalSegments = (path: ReadonlyArray<string>): ReadonlyArray<string> => A.flatMap(path, Str.split("."));
 
 const insertTool = (node: ToolNode, segments: ReadonlyArray<string>, tool: Tool.Any): ToolNode => {
   const [head, ...tail] = segments;
-  if (P.isUndefined(head)) return {...node, tool: O.some(tool)};
+  if (P.isUndefined(head)) return { ...node, tool: O.some(tool) };
   if (Str.isEmpty(head)) {
     throw ToolRuntimeError.new("InvalidDataValue", `Tool name '${tool.name}' contains an empty segment.`);
   }
@@ -973,20 +930,21 @@ const insertTool = (node: ToolNode, segments: ReadonlyArray<string>, tool: Tool.
 const toolTrie = (toolkit: Toolkit.Any): Result.Result<ToolNode, ToolRuntimeError> =>
   Result.try({
     try: () =>
-      A.reduce(
-        R.values(toolkit.tools),
-        emptyToolNode(),
-        (root, tool) => insertTool(root, Str.split(tool.name, "."), tool)
+      A.reduce(R.values(toolkit.tools), emptyToolNode(), (root, tool) =>
+        insertTool(root, Str.split(tool.name, "."), tool)
       ),
     catch: (cause) =>
       ToolRuntimeError.is(cause)
         ? cause
-        : ToolRuntimeError.new("InvalidDataValue", "Toolkit names could not be indexed.")
+        : ToolRuntimeError.new("InvalidDataValue", "Toolkit names could not be indexed."),
   });
 
 const lookup = (root: ToolNode, path: ReadonlyArray<string>): O.Option<ToolNode> =>
   A.reduce(canonicalSegments(path), O.some(root), (node, segment) =>
-    pipe(node, O.flatMap((current) => HashMap.get(current.children, segment)))
+    pipe(
+      node,
+      O.flatMap((current) => HashMap.get(current.children, segment))
+    )
   );
 
 const resolve = (root: ToolNode, path: ReadonlyArray<string>): Result.Result<Tool.Any, ToolRuntimeError> => {
@@ -1015,10 +973,7 @@ const namespaceKeys = (
     O.match({
       onNone: () =>
         Result.fail(
-          ToolRuntimeError.new(
-            "UnknownTool",
-            `Unknown tool namespace '${pipe(canonicalSegments(path), A.join("."))}'.`
-          )
+          ToolRuntimeError.new("UnknownTool", `Unknown tool namespace '${pipe(canonicalSegments(path), A.join("."))}'.`)
         ),
       onSome: (node) => Result.succeed(A.fromIterable(HashMap.keys(node.children))),
     })
@@ -1030,7 +985,7 @@ const flattenTools = (
 ): ReadonlyArray<{ readonly path: string; readonly tool: Tool.Any }> => [
   ...pipe(
     node.tool,
-    O.map((tool) => [{path: A.join(path, "."), tool}]),
+    O.map((tool) => [{ path: A.join(path, "."), tool }]),
     O.getOrElse(A.empty)
   ),
   ...pipe(
@@ -1041,11 +996,8 @@ const flattenTools = (
 ];
 
 const compareText = (left: string, right: string): -1 | 0 | 1 => (left < right ? -1 : left > right ? 1 : 0);
-const byPath = Order.make(
-  (
-    left: { readonly path: string },
-    right: { readonly path: string }
-  ): -1 | 0 | 1 => compareText(left.path, right.path)
+const byPath = Order.make((left: { readonly path: string }, right: { readonly path: string }): -1 | 0 | 1 =>
+  compareText(left.path, right.path)
 );
 
 /**
@@ -1067,9 +1019,7 @@ export const toolExpression = (path: string): string =>
   `tools${pipe(
     Str.split(path, "."),
     A.map((segment) =>
-      identifierSegment(segment)
-        ? `.${segment}`
-        : `[${Unknown.encodeUnknownSyncFromJsonString(segment)}]`
+      identifierSegment(segment) ? `.${segment}` : `[${Unknown.encodeUnknownSyncFromJsonString(segment)}]`
     ),
     A.join("")
   )}`;
@@ -1085,10 +1035,10 @@ const visibleTools = (root: ToolNode) =>
   pipe(
     flattenTools(root),
     A.sort(byPath),
-    A.map(({path, tool}) => ({
+    A.map(({ path, tool }) => ({
       path,
       tool,
-      description: describeTool(path, tool)
+      description: describeTool(path, tool),
     }))
   );
 
@@ -1105,19 +1055,19 @@ const termForms = (term: string): ReadonlyArray<string> => [
   ...(Str.endsWith(term, "s") && Str.length(term) > 2 ? [pipe(term, Str.slice(0, -1))] : []),
 ];
 
-const toSearchEntry = (
-  path: string,
-  tool: Tool.Any,
-  description: ToolDescription
-): SearchEntry =>
+const toSearchEntry = (path: string, tool: Tool.Any, description: ToolDescription): SearchEntry =>
   SearchEntry.new(
     description,
-    pipe(Str.split(path, "."), A.head, O.getOrElse(() => "")),
+    pipe(
+      Str.split(path, "."),
+      A.head,
+      O.getOrElse(() => "")
+    ),
     pipe(
       [
         path,
         Tool.getDescription(tool) ?? "",
-        ...A.flatMap(inputProperties(tool), ({name, description}) =>
+        ...A.flatMap(inputProperties(tool), ({ name, description }) =>
           pipe(
             description,
             O.match({
@@ -1152,20 +1102,14 @@ const toSearchEntry = (
  * @category factories
  * @since 0.0.0
  */
-export const prepare = (
-  toolkit: Toolkit.Any
-): Result.Result<DiscoveryPlan, ToolRuntimeError> =>
+export const prepare = (toolkit: Toolkit.Any): Result.Result<DiscoveryPlan, ToolRuntimeError> =>
   pipe(
     toolTrie(toolkit),
     Result.map((root) => {
       const visible = visibleTools(root);
       return DiscoveryPlan.new(
-        A.map(visible, ({description}) => description),
-        A.map(visible, ({
-                          path,
-                          tool,
-                          description
-                        }) => toSearchEntry(path, tool, description))
+        A.map(visible, ({ description }) => description),
+        A.map(visible, ({ path, tool, description }) => toSearchEntry(path, tool, description))
       );
     })
   );
@@ -1193,15 +1137,13 @@ export const prepare = (
  * @category factories
  * @since 0.0.0
  */
-export const searchIndex = (
-  toolkit: Toolkit.Any
-): Result.Result<ReadonlyArray<SearchEntry>, ToolRuntimeError> =>
-  pipe(prepare(toolkit), Result.map((plan) => plan.searchIndex));
+export const searchIndex = (toolkit: Toolkit.Any): Result.Result<ReadonlyArray<SearchEntry>, ToolRuntimeError> =>
+  pipe(
+    prepare(toolkit),
+    Result.map((plan) => plan.searchIndex)
+  );
 
-const search = (
-  index: ReadonlyArray<SearchEntry>,
-  input: SearchInput
-): SearchOutput => {
+const search = (index: ReadonlyArray<SearchEntry>, input: SearchInput): SearchOutput => {
   const scoped = pipe(
     input.namespace,
     O.match({
@@ -1211,17 +1153,13 @@ const search = (
   );
   const query = O.getOrElse(input.query, () => "");
   const trimmed = Str.trim(query);
-  const pathQuery = Str.startsWith(trimmed, "tools.")
-    ? pipe(trimmed, Str.slice(Str.length("tools.")))
-    : trimmed;
+  const pathQuery = Str.startsWith(trimmed, "tools.") ? pipe(trimmed, Str.slice(Str.length("tools."))) : trimmed;
   const exact = Str.isEmpty(pathQuery)
     ? O.none<SearchEntry>()
     : A.findFirst(
-      scoped,
-      (entry) =>
-        entry.description.path === pathQuery ||
-        toolExpression(entry.description.path) === trimmed
-    );
+        scoped,
+        (entry) => entry.description.path === pathQuery || toolExpression(entry.description.path) === trimmed
+      );
   const terms = A.map(tokenize(query), termForms);
   const ranked = pipe(
     exact,
@@ -1233,40 +1171,38 @@ const search = (
           A.map((entry) => {
             const path = Str.toLowerCase(entry.description.path);
             const description = Str.toLowerCase(entry.description.description);
-            const score = A.reduce(terms, 0, (total, forms) =>
-              total +
-              (A.some(forms, (form) => path === form || Str.endsWith(path, `.${form}`)) ? 20 : 0) +
-              (A.some(forms, (form) => pipe(path, Str.includes(form))) ? 8 : 0) +
-              (A.some(forms, (form) => pipe(description, Str.includes(form))) ? 4 : 0) +
-              (A.some(forms, (form) => pipe(entry.searchText, Str.includes(form))) ? 2 : 0)
+            const score = A.reduce(
+              terms,
+              0,
+              (total, forms) =>
+                total +
+                (A.some(forms, (form) => path === form || Str.endsWith(path, `.${form}`)) ? 20 : 0) +
+                (A.some(forms, (form) => pipe(path, Str.includes(form))) ? 8 : 0) +
+                (A.some(forms, (form) => pipe(description, Str.includes(form))) ? 4 : 0) +
+                (A.some(forms, (form) => pipe(entry.searchText, Str.includes(form))) ? 2 : 0)
             );
-            return {entry, score};
+            return { entry, score };
           }),
-          A.filter(({score}) => A.isReadonlyArrayEmpty(terms) || score > 0),
+          A.filter(({ score }) => A.isReadonlyArrayEmpty(terms) || score > 0),
           A.sort(
-            Order.make<{ readonly entry: SearchEntry; readonly score: number }>(
-              (left, right): -1 | 0 | 1 =>
-                left.score === right.score
-                  ? compareText(left.entry.description.path, right.entry.description.path)
-                  : left.score > right.score
-                    ? -1
-                    : 1
+            Order.make<{ readonly entry: SearchEntry; readonly score: number }>((left, right): -1 | 0 | 1 =>
+              left.score === right.score
+                ? compareText(left.entry.description.path, right.entry.description.path)
+                : left.score > right.score
+                  ? -1
+                  : 1
             )
           ),
-          A.map(({entry}) => entry)
+          A.map(({ entry }) => entry)
         ),
     })
   );
   const page = A.take(A.drop(ranked, input.offset), input.limit);
-  const items = A.map(page, ({description}) =>
+  const items = A.map(page, ({ description }) =>
     SearchItem.new(toolExpression(description.path), description.description, description.signature)
   );
   const remaining = Math.max(0, A.length(ranked) - input.offset - A.length(items));
-  return SearchOutput.new(
-    items,
-    remaining,
-    remaining > 0 ? input.offset + A.length(items) : undefined
-  );
+  return SearchOutput.new(items, remaining, remaining > 0 ? input.offset + A.length(items) : undefined);
 };
 
 /**
@@ -1286,16 +1222,13 @@ const search = (
 export const searchSignature =
   "search(input: { query?: string; namespace?: string; limit?: number; offset?: number }): { items: Array<{ path: string; description: string; signature: string }>; remaining: number; next: { offset: number } | null }";
 
-type AnyWithHandler = Toolkit.WithHandler<any>;
+type AnyWithHandler = Toolkit.WithHandler<Record<string, Tool.Any>>;
 
 const handleDynamic = <R>(
   handlers: AnyWithHandler,
   name: string,
   input: unknown
-): Effect.Effect<
-  Stream.Stream<Tool.HandlerResult<Tool.Any>, unknown, R>,
-  AiError.AiError
-> =>
+): Effect.Effect<Stream.Stream<Tool.HandlerResult<Tool.Any>, unknown, R>, AiError.AiError> =>
   // The name/tool pairing is proven by the trie immediately before this call.
   handlers.handle(name as never, input as never) as unknown as Effect.Effect<
     Stream.Stream<Tool.HandlerResult<Tool.Any>, unknown, R>,
@@ -1308,9 +1241,7 @@ const normalizeAiError = (name: string, error: AiError.AiError): ToolRuntimeErro
   return ToolRuntimeError.new(
     kind,
     `${invalidInput ? "Invalid input for" : "Invalid output from"} tool '${name}': ${error.reason.message}`,
-    invalidInput
-      ? ["The signature may have changed. Use search to get the current signature."]
-      : A.empty()
+    invalidInput ? ["The signature may have changed. Use search to get the current signature."] : A.empty()
   );
 };
 
@@ -1336,9 +1267,7 @@ export type ToolRuntime<R = never> = {
     path: ReadonlyArray<string>,
     args: ReadonlyArray<unknown>
   ) => Effect.Effect<unknown, ToolRuntimeError | ToolError, R>;
-  readonly search: (
-    args: ReadonlyArray<unknown>
-  ) => Effect.Effect<unknown, ToolRuntimeError | ToolError, R>;
+  readonly search: (args: ReadonlyArray<unknown>) => Effect.Effect<unknown, ToolRuntimeError | ToolError, R>;
   readonly keys: (path: ReadonlyArray<string>) => ReadonlyArray<string>;
 };
 
@@ -1396,31 +1325,21 @@ export const make = <R>(
     const root = yield* Effect.fromResult(toolTrie(toolkit));
     const calls = yield* Ref.make<ReadonlyArray<ToolCall>>(A.empty());
 
-    const admitCall = (
-      name: string,
-      input: unknown
-    ): Effect.Effect<ToolCallStarted, ToolRuntimeError> =>
+    const admitCall = (name: string, input: unknown): Effect.Effect<ToolCallStarted, ToolRuntimeError> =>
       Ref.modify(
         calls,
-        (
-          current
-        ): readonly [
-          Result.Result<ToolCallStarted, ToolRuntimeError>,
-          ReadonlyArray<ToolCall>,
-        ] =>
+        (current): readonly [Result.Result<ToolCallStarted, ToolRuntimeError>, ReadonlyArray<ToolCall>] =>
           pipe(
             maxToolCalls,
             O.filter((limit) => A.length(current) >= limit),
             O.match({
-              onSome: (limit) => [
-                Result.fail(
-                  ToolRuntimeError.new(
-                    "ToolCallLimitExceeded",
-                    `Execution exceeded its tool-call limit of ${limit}.`
-                  )
-                ),
-                current,
-              ] as const,
+              onSome: (limit) =>
+                [
+                  Result.fail(
+                    ToolRuntimeError.new("ToolCallLimitExceeded", `Execution exceeded its tool-call limit of ${limit}.`)
+                  ),
+                  current,
+                ] as const,
               onNone: () => {
                 const call = ToolCall.new(name);
                 return [
@@ -1451,19 +1370,14 @@ export const make = <R>(
               }
               const error = Cause.squash(exit.cause);
               const message =
-                ToolRuntimeError.is(error) || ToolError.is(error)
-                  ? error.message
-                  : "Tool execution failed";
+                ToolRuntimeError.is(error) || ToolError.is(error) ? error.message : "Tool execution failed";
               return yield* hooks.onToolCallEnd(ToolCallFailed.new(call, durationMs, message));
             })
           )
         );
       });
 
-    const executeTool = (
-      name: string,
-      input: unknown
-    ): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
+    const executeTool = (name: string, input: unknown): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
       Effect.gen(function* () {
         const started = yield* admitCall(name, input);
         return yield* observeEnd(
@@ -1473,49 +1387,36 @@ export const make = <R>(
               Effect.mapError((error) => normalizeAiError(name, error))
             );
             const last = yield* stream.pipe(
-              Stream.mapError((cause) =>
-                ToolError.new(`Tool '${name}' failed.`, cause)
-              ),
-              Stream.runLast,
+              Stream.mapError((cause) => ToolError.new(`Tool '${name}' failed.`, cause)),
+              Stream.runLast
             );
             const result = yield* O.match(last, {
               onNone: () =>
-                Effect.fail(
-                  ToolRuntimeError.new("InvalidToolOutput", `Tool '${name}' produced no final result.`)
-                ),
+                Effect.fail(ToolRuntimeError.new("InvalidToolOutput", `Tool '${name}' produced no final result.`)),
               // failureMode "return" intentionally returns encoded failures
               // to the guest; failureMode "error" reaches the Stream error path.
               onSome: (output) => Effect.succeed(output.encodedResult),
             });
             return yield* Effect.try({
               try: () => copyIn(result, `Result from tool '${name}'`),
-              catch: () =>
-                ToolRuntimeError.new("InvalidToolOutput", `Invalid output from tool '${name}'.`),
+              catch: () => ToolRuntimeError.new("InvalidToolOutput", `Invalid output from tool '${name}'.`),
             });
           }),
           started
         );
       });
 
-    const executeSearch = (
-      args: ReadonlyArray<unknown>
-    ): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
+    const executeSearch = (args: ReadonlyArray<unknown>): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
       Effect.gen(function* () {
         if (A.length(args) !== 1) {
-          return yield* ToolRuntimeError.new(
-            "InvalidToolInput",
-            "Tool 'search' expects exactly one input object."
-          );
+          return yield* ToolRuntimeError.new("InvalidToolInput", "Tool 'search' expects exactly one input object.");
         }
         const external = yield* Effect.try({
           try: () => copyOut(copyIn(args[0], "Arguments for tool 'search'"), "json"),
           catch: (error) =>
             ToolRuntimeError.is(error)
               ? error
-              : ToolRuntimeError.new(
-                  "InvalidToolInput",
-                  "Arguments for tool 'search' could not be copied."
-                ),
+              : ToolRuntimeError.new("InvalidToolInput", "Arguments for tool 'search' could not be copied."),
         });
         const input = yield* S.decodeUnknownEffect(SearchInput)(external).pipe(
           Effect.mapError((cause) =>
@@ -1547,28 +1448,21 @@ export const make = <R>(
           })
         ),
       search: executeSearch,
-      execute:
-        Effect.fnUntraced(function* (path, args) {
-          const name = pipe(canonicalSegments(path), A.join("."));
-          if (A.length(args) !== 1) {
-            return yield* ToolRuntimeError.new(
-              "InvalidToolInput",
-              `Tool '${name}' expects exactly one input object.`
-            );
-          }
-          const input = yield* Effect.try({
-            try: () => copyOut(copyIn(args[0], `Arguments for tool '${name}'`), "json"),
-            catch: (error) =>
-              ToolRuntimeError.is(error)
-                ? error
-                : ToolRuntimeError.new(
-                    "InvalidToolInput",
-                    `Arguments for tool '${name}' could not be copied.`
-                  ),
-          });
-          yield* Effect.fromResult(resolve(root, path));
-          return yield* executeTool(name, input);
-        }),
+      execute: Effect.fnUntraced(function* (path, args) {
+        const name = pipe(canonicalSegments(path), A.join("."));
+        if (A.length(args) !== 1) {
+          return yield* ToolRuntimeError.new("InvalidToolInput", `Tool '${name}' expects exactly one input object.`);
+        }
+        const input = yield* Effect.try({
+          try: () => copyOut(copyIn(args[0], `Arguments for tool '${name}'`), "json"),
+          catch: (error) =>
+            ToolRuntimeError.is(error)
+              ? error
+              : ToolRuntimeError.new("InvalidToolInput", `Arguments for tool '${name}' could not be copied.`),
+        });
+        yield* Effect.fromResult(resolve(root, path));
+        return yield* executeTool(name, input);
+      }),
     };
   });
 

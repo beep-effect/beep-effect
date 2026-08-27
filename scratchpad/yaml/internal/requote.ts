@@ -75,7 +75,13 @@ export type RequoteScalarInput = typeof RequoteScalarInput.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type RequoteMode = "conservative" | "escaping";
+export const RequoteMode = Schema.Literals(["conservative", "escaping"]).pipe(
+	$I.annoteSchema("RequoteMode", {
+		description: "YAML scalar re-quoting modes: byte-conservative lint fixes or escaping format transforms.",
+	}),
+);
+
+export type RequoteMode = typeof RequoteMode.Type;
 
 /**
  * True when `value` can be carried by a single-quoted flow scalar on one

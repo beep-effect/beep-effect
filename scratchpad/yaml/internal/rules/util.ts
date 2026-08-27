@@ -2,19 +2,22 @@
  * Shared lint-rule helpers: span queries over the eager token array, the
  * scalar walk the style rules share, and the bounded numeric option schemas.
  *
- * There is no package `$I` identity composer in this scratchpad, so these
- * schemas are documented without `$I.annoteSchema`.
+ * Schemas use the YAML scratchpad identity composer so diagnostics and
+ * generated documentation retain stable identifiers.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { Schema } from "effect";
 import { dual } from "effect/Function";
 import type { LintLine } from "../../YamlLintRule.ts";
 import type { YamlNode, YamlScalar } from "../../YamlNode.ts";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
 import type { YamlToken } from "../../YamlToken.ts";
+
+const $I = $ScratchpadId.create("yaml/internal/rules/util");
 
 type LintPosition = { readonly line: number; readonly character: number };
 
@@ -43,6 +46,10 @@ type LintPosition = { readonly line: number; readonly character: number };
  */
 export const nonNegativeIntegerOption = Schema.Finite.check(
 	Schema.makeFilter((n) => (Number.isInteger(n) && n >= 0 ? undefined : "Expected a non-negative integer")),
+).pipe(
+	$I.annoteSchema("nonNegativeIntegerOption", {
+		description: "Finite non-negative integer accepted by numeric YAML lint-rule options.",
+	}),
 );
 
 /**
@@ -79,17 +86,36 @@ export const positiveIntegerOption = Schema.Finite.check(
 	Schema.makeFilter((n) =>
 		Number.isInteger(n) && n >= 1 ? undefined : "Expected an integer greater than or equal to 1",
 	),
+).pipe(
+	$I.annoteSchema("positiveIntegerOption", {
+		description: "Finite positive integer accepted by YAML spacing-rule option budgets.",
+	}),
 );
 
 /**
  * Where a scalar sits in its parent construct.
+ *
+ * **Example** (Guard a scalar role)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ScalarRole } from "@beep/scratchpad/yaml/internal/rules/util"
+ *
+ * console.log(S.is(ScalarRole)("key")) // true
+ * ```
  *
  * @see {@link walkScalars} for the walk that yields this role.
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export type ScalarRole = "key" | "value" | "item" | "root";
+export const ScalarRole = Schema.Literals(["key", "value", "item", "root"]).pipe(
+	$I.annoteSchema("ScalarRole", {
+		description: "Structural role occupied by a scalar while a YAML lint rule walks the AST.",
+	}),
+);
+
+export type ScalarRole = typeof ScalarRole.Type;
 
 /**
  * Depth-first walk over every scalar node with its structural role.

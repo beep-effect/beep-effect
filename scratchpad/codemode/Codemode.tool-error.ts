@@ -37,10 +37,7 @@ export class ToolError extends S.TaggedError<ToolError>($I`ToolError`)(
   "ToolError",
   {
     message: S.String,
-    cause: S.Defect().pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault
-    ),
+    cause: S.Defect().pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ToolError", {
     description: "A host tool failure safe to surface through CodeMode.",
