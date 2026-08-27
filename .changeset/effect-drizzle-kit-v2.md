@@ -6,6 +6,7 @@
 "@beep/documents-domain": patch
 "@beep/epistemic-domain": patch
 "@beep/law-practice-domain": patch
+"@beep/repo-configs": patch
 "@beep/workspace-domain": patch
 ---
 
