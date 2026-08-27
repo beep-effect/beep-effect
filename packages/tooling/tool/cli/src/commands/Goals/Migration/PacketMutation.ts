@@ -287,8 +287,34 @@ export const PacketForkRepairApplierLive: Layer.Layer<
   PacketEventStore | FileSystem.FileSystem | Path.Path
 > = Layer.effect(PacketForkRepairApplier, makePacketForkRepairApplier());
 
+const ownsGenesisEvent = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* fs
+    .readDirectory(seed.eventsDirectory)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis recovery scan failed: ${error.message}`)));
+  if (A.length(entries) !== 1 || entries[0] !== seed.eventFileName) return false;
+  const existingEvent = yield* fs
+    .readFileString(path.join(seed.eventsDirectory, seed.eventFileName))
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis recovery read failed: ${error.message}`)));
+  return existingEvent === seed.eventText;
+});
+
+const readGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+  const fs = yield* FileSystem.FileSystem;
+  const tracePresent = yield* fs
+    .exists(seed.tracePath)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace inspection failed: ${error.message}`)));
+  if (!tracePresent) return O.none<string>();
+  return O.some(
+    yield* fs
+      .readFileString(seed.tracePath)
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace read failed: ${error.message}`)))
+  );
+});
+
 /**
- * Whether a seed describes the exact owned event of a trace-less stream.
+ * Whether a seed describes the exact owned event of an incomplete stream.
  *
  * **Example** (Build a recovery check)
  *
@@ -314,20 +340,9 @@ export const PacketForkRepairApplierLive: Layer.Layer<
 export const isRecoverableGenesisSeed = Effect.fn("Goals.isRecoverableGenesisSeed")(function* (
   seed: PacketGenesisSeed
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const tracePresent = yield* fs
-    .exists(seed.tracePath)
-    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace inspection failed: ${error.message}`)));
-  if (tracePresent) return false;
-  const entries = yield* fs
-    .readDirectory(seed.eventsDirectory)
-    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis recovery scan failed: ${error.message}`)));
-  if (A.length(entries) !== 1 || entries[0] !== seed.eventFileName) return false;
-  const existingEvent = yield* fs
-    .readFileString(path.join(seed.eventsDirectory, seed.eventFileName))
-    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis recovery read failed: ${error.message}`)));
-  return existingEvent === seed.eventText;
+  if (!(yield* ownsGenesisEvent(seed))) return false;
+  const trace = yield* readGenesisTrace(seed);
+  return O.isNone(trace) || trace.value !== seed.traceText;
 });
 
 const decodeGenesisManifest = Effect.fnUntraced(function* (record: GoalPacketRecord, manifestText: string) {
@@ -396,12 +411,7 @@ const planExistingGenesisRecovery = Effect.fnUntraced(function* (
   eventsDirectory: string,
   tracePath: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const store = yield* PacketEventStore;
-  const tracePresent = yield* fs
-    .exists(tracePath)
-    .pipe(Effect.mapError((error) => streamError(record.slug, `genesis trace inspection failed: ${error.message}`)));
-  if (tracePresent) return O.none<PacketGenesisSeed>();
   const listing = yield* store.list(
     PacketStreamLocator.make({ packet: record.slug, root: "goals", packetPath: record.packetPath })
   );
@@ -424,7 +434,7 @@ const planExistingGenesisRecovery = Effect.fnUntraced(function* (
 
 /**
  * Plan trace recovery for an already translated packet carrying an owned
- * genesis event but no trace projection.
+ * genesis event but a missing or incomplete trace projection.
  *
  * **Example** (Build a recovery plan)
  *
@@ -473,8 +483,8 @@ export const planPacketGenesisRecovery = Effect.fn("Goals.planPacketGenesisRecov
  *
  * Only the current lifecycle and optional declared phase snapshot enter the
  * event. No pre-adoption actor, timestamp, or transition is synthesized. An
- * exact owned genesis event without its trace is planned again so a failed
- * rollback remains recoverable.
+ * exact owned genesis event with a missing or incomplete trace is planned
+ * again so an interrupted write remains recoverable.
  *
  * **Example** (Build a genesis seed effect)
  *
@@ -618,6 +628,100 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event remove failed: ${error.message}`)));
 });
 
+const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tracePath = path.resolve(seed.tracePath);
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const stagingRoot = yield* fs
+        .makeTempDirectoryScoped({ directory: path.dirname(tracePath), prefix: ".genesis-trace-publish-" })
+        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`)));
+      const stagedTracePath = path.join(stagingRoot, "trace.json");
+      yield* fs
+        .writeFileString(stagedTracePath, seed.traceText)
+        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`)));
+      yield* fs
+        .link(stagedTracePath, tracePath)
+        .pipe(
+          Effect.catch((error) =>
+            readGenesisTrace(seed).pipe(
+              Effect.flatMap((trace) =>
+                O.isSome(trace) && trace.value === seed.traceText
+                  ? Effect.void
+                  : Effect.fail(streamError(seed.slug, `genesis trace write failed: ${error.message}`))
+              )
+            )
+          )
+        );
+    })
+  );
+});
+
+const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, observed: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tracePath = path.resolve(seed.tracePath);
+  const recoveryRoot = yield* fs
+    .makeTempDirectory({ directory: path.dirname(tracePath), prefix: ".genesis-trace-recovery-" })
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine failed: ${error.message}`)));
+  const quarantinedTracePath = path.join(recoveryRoot, "trace.json");
+  const discardRecoveryRoot = fs
+    .remove(recoveryRoot, { recursive: true })
+    .pipe(
+      Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine remove failed: ${error.message}`))
+    );
+  const quarantined = yield* fs.rename(tracePath, quarantinedTracePath).pipe(
+    Effect.matchEffect({
+      onFailure: (error) =>
+        readGenesisTrace(seed).pipe(
+          Effect.flatMap((trace) => {
+            if (O.isSome(trace) && trace.value === seed.traceText) {
+              return discardRecoveryRoot.pipe(Effect.as(false));
+            }
+            if (O.isNone(trace)) {
+              return discardRecoveryRoot.pipe(Effect.andThen(publishGenesisTrace(seed)), Effect.as(false));
+            }
+            return Effect.fail(streamError(seed.slug, `genesis trace quarantine failed: ${error.message}`));
+          })
+        ),
+      onSuccess: () => Effect.succeed(true),
+    })
+  );
+  if (!quarantined) return;
+  const isolated = yield* fs
+    .readFileString(quarantinedTracePath)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine read failed: ${error.message}`)));
+  if (isolated !== observed && isolated !== seed.traceText) {
+    return yield* streamError(
+      seed.slug,
+      `genesis trace quarantine conflict: changed bytes preserved at ${quarantinedTracePath}`
+    );
+  }
+  yield* publishGenesisTrace(seed).pipe(
+    Effect.mapError((error) =>
+      streamError(seed.slug, `${error.message}; incomplete trace preserved at ${quarantinedTracePath}`)
+    )
+  );
+  const preserved = yield* fs
+    .readFileString(quarantinedTracePath)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine read failed: ${error.message}`)));
+  if (preserved !== isolated) {
+    return yield* streamError(
+      seed.slug,
+      `genesis trace quarantine conflict: changed bytes preserved at ${quarantinedTracePath}`
+    );
+  }
+  yield* discardRecoveryRoot;
+});
+
+const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+  const trace = yield* readGenesisTrace(seed);
+  if (O.isNone(trace)) return yield* publishGenesisTrace(seed);
+  if (trace.value === seed.traceText) return;
+  yield* recoverMismatchedGenesisTrace(seed, trace.value);
+});
+
 /**
  * Apply one precomputed genesis seed.
  *
@@ -650,11 +754,12 @@ export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(
   const present = yield* fs
     .exists(seed.eventsDirectory)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis stream inspection failed: ${error.message}`)));
-  const packetRoot = path.dirname(path.dirname(seed.eventsDirectory));
   const eventPath = path.join(seed.eventsDirectory, seed.eventFileName);
-  const recoveringTrace = present && (yield* isRecoverableGenesisSeed(seed));
-  if (present && !recoveringTrace) {
-    return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
+  if (present) {
+    if (!(yield* ownsGenesisEvent(seed))) {
+      return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
+    }
+    return yield* recoverGenesisTrace(seed);
   }
   let createdEventsDirectory = false;
   const rollback = Effect.fnUntraced(function* () {
@@ -662,24 +767,14 @@ export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(
     yield* quarantineOwnedGenesisEvents(seed, "genesis rollback");
   });
   const mutation = Effect.gen(function* () {
-    if (!recoveringTrace) {
-      yield* fs
-        .makeDirectory(seed.eventsDirectory)
-        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`)));
-      createdEventsDirectory = true;
-      yield* writeContainedFileString(path.resolve(seed.eventsDirectory), path.resolve(eventPath), seed.eventText).pipe(
-        Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`))
-      );
-    }
-    if (recoveringTrace) {
-      yield* fs
-        .writeFileString(path.resolve(seed.tracePath), seed.traceText, { flag: "wx" })
-        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`)));
-    } else {
-      yield* writeContainedFileString(path.resolve(packetRoot), path.resolve(seed.tracePath), seed.traceText).pipe(
-        Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`))
-      );
-    }
+    yield* fs
+      .makeDirectory(seed.eventsDirectory)
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`)));
+    createdEventsDirectory = true;
+    yield* writeContainedFileString(path.resolve(seed.eventsDirectory), path.resolve(eventPath), seed.eventText).pipe(
+      Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`))
+    );
+    yield* publishGenesisTrace(seed);
   });
   yield* mutation.pipe(
     Effect.matchEffect({

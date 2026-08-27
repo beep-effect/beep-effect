@@ -1066,6 +1066,76 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   );
 
   it.effect(
+    "keeps interrupted trace writes off the canonical path and repairs legacy partial traces",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-partial-trace-" });
+      const packetPath = `${root}/demo`;
+      yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
+      const packet = GoalPacketRecord.make({
+        slug: "demo",
+        packetPath,
+        manifestPath: `${packetPath}/ops/manifest.json`,
+        readmePath: `${packetPath}/README.md`,
+      });
+      const manifest = encodeJson({
+        schemaVersion: "initiative-manifest/v2",
+        initiative: { id: "demo", status: "active" },
+        lifecycle: "active",
+        packetPath: "goals/demo",
+        completionGate,
+      });
+      const planned = yield* planPacketGenesisSeed(packet, manifest, "2026-08-25T00:00:00.000Z");
+      expect(O.isSome(planned)).toBe(true);
+      if (O.isNone(planned)) return;
+      yield* fs.makeDirectory(planned.value.eventsDirectory);
+      yield* fs.writeFileString(
+        `${planned.value.eventsDirectory}/${planned.value.eventFileName}`,
+        planned.value.eventText
+      );
+
+      const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
+      expect(O.isSome(recovery)).toBe(true);
+      if (O.isNone(recovery)) return;
+      let interrupted = false;
+      const interruptedExit = yield* Effect.exit(
+        applyPacketGenesisSeed(recovery.value).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            writeFileString: (target, content, options) => {
+              if (!interrupted && content === recovery.value.traceText) {
+                interrupted = true;
+                return fs
+                  .writeFileString(target, "partial trace\n", options)
+                  .pipe(Effect.andThen(Effect.fail(injectedFileSystemError("writeFileString", target))));
+              }
+              return fs.writeFileString(target, content, options);
+            },
+          })
+        )
+      );
+      expect(Exit.isFailure(interruptedExit)).toBe(true);
+      expect(yield* fs.exists(recovery.value.tracePath)).toBe(false);
+
+      yield* fs.writeFileString(recovery.value.tracePath, "partial trace\n");
+      const retry = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
+      expect(O.isSome(retry)).toBe(true);
+      if (O.isNone(retry)) return;
+      yield* applyPacketGenesisSeed(retry.value).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: (source, target) =>
+            source === retry.value.tracePath
+              ? fs.rename(source, target).pipe(Effect.andThen(fs.writeFileString(source, retry.value.traceText)))
+              : fs.rename(source, target),
+        })
+      );
+      expect(yield* fs.readFileString(retry.value.tracePath)).toBe(retry.value.traceText);
+      expect(O.isNone(yield* planPacketGenesisSeed(packet, manifest, "2026-08-28T00:00:00.000Z"))).toBe(true);
+    })
+  );
+
+  it.effect(
     "rolls back a newly created genesis stream when the trace write fails",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1854,14 +1924,12 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           let traceWrites = 0;
           return {
             ...fs,
-            rename: (source, target) => {
+            link: (source, target) => {
               if (path.resolve(target) !== path.resolve("goals/demo/ops/trace.json")) {
-                return fs.rename(source, target);
+                return fs.link(source, target);
               }
               traceWrites += 1;
-              return traceWrites === 2
-                ? Effect.fail(injectedFileSystemError("rename", target))
-                : fs.rename(source, target);
+              return traceWrites === 2 ? Effect.fail(injectedFileSystemError("link", target)) : fs.link(source, target);
             },
           };
         }, true)
