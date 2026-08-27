@@ -93,9 +93,10 @@ machinery and bounds stream opt-in.
 
 ## Queued amendment candidates (2026-08-25)
 
-Proposed, not ratified. Queued for the Session B grill that charters the
-fleet convention-migration campaign; they enter the amendment record above
-only if the operator ratifies them there. Three amendments are queued: H and
+Proposed 2026-08-25; **ruled at the Session B grill 2026-08-26**. The binding
+dispositions live in "Session B amendments (2026-08-26)" below — H and J
+ratified in reshaped form, I rejected (D20–D22) — and this section is
+preserved as the record of what was proposed. Three amendments were queued: H and
 I draw their mapping evidence from
 [`research/2026-08-25-agento-ontology-mapping.md`](./research/2026-08-25-agento-ontology-mapping.md)
 (AgentO, ESWC 2026, CC BY 4.0, reference-only), and J draws its certificate
@@ -166,6 +167,103 @@ candidates; none opens a packet.
   Amendment E the translation of a completed-retained packet yields a
   genesis event plus a translation report, never synthesized history.
 
+## Session B amendments (2026-08-26)
+
+Ratified at the Session B grill, which also chartered the fleet
+convention-migration campaign as candidate 6 (D17–D19) and scoped the in-toto
+deferral (D23). Evidence: seven lanes under
+[`research/2026-08-26-session-b/`](./research/2026-08-26-session-b/) — three
+repo audits and three web prior-art sweeps, plus the rung-4 implementation
+lane. The three candidates queued on 2026-08-25 were H, I, and J; two are
+ratified in reshaped form and one is rejected.
+
+- **Amendment H (candidate 3) — typed `PacketWorkPlan`, hand-authored
+  launcher.** The manifest gains a schema-first work plan: each phase step
+  binds a responsible agent kind, the tools and skills it may use, its
+  constraints (today's `stopConditions[]`), the resources it requires (today's
+  `currentSourceOfTruth[]` / `researchReports[]`), and the human approver. The
+  plan is doctor-checkable — a phase that claims browser QA while its allowed
+  tools carry no browser skill is a finding. Two things the 2026-08-25 proposal
+  asked for are **not** ratified. `GOAL.md` stays hand-authored: a 14-launcher
+  census found no irreplaceable prose but 57.1% of launcher characters
+  depending on fields the manifest does not carry, so "fully determined by the
+  others" is false, and every shipped analog that types agent and tools per
+  step still authors its prompt. Model and effort stay out of the plan; they
+  are run facts belonging on events and receipts, or in a fleet routing table
+  the plan may override. The contract stays private to the Goals command tree
+  with a Goals-local renderer for a generated sidecar (paths, stop conditions,
+  allowed tools) that `GOAL.md` may include. Migration is advisory
+  render-and-diff with human approval; terminal legacy launchers freeze rather
+  than being rewritten. Adds `PacketWorkPlan`, `WorkPlanStep`,
+  `ResponsibleAgent`, and `WorkPlanSidecar` to candidate 3's
+  significant-symbol ledger; `LauncherRender` is not introduced. Evidence:
+  [`C3-amendment-H.md`](./research/2026-08-26-session-b/C3-amendment-H.md),
+  [`G3-amendment-H-prior-art.md`](./research/2026-08-26-session-b/G3-amendment-H-prior-art.md).
+  Decision: D20.
+
+- **Amendment I — rejected; requeued narrower and gated.** The proposed JSON-LD
+  projection anchored on PROV-O and P-Plan and mapped to AgentO is rejected.
+  CWLProv shipped that exact design and its own authors replaced the
+  interchange with schema.org JSON-LD because PROV did not carry the join;
+  Nextflow deleted its first-party legacy provenance format in 2025 for a
+  native JSON lineage store; P-Plan is unmaintained; AgentO remains
+  `owl:versionInfo 0.2` with no adopters. As worded it would also carry
+  addressing on `SemanticSchemaMetadata`, whose `canonicalIri` and
+  `preferredPrefix` are annotated `deprecated: true` in favor of
+  composer-derived `iri`/`curie` — the layering identity-as-IRI ratified on
+  2026-07-02. The surviving idea is requeued as a **named-consumer-gated
+  schema.org/RO-Crate projection**: one read-only document carrying packet
+  slug, git SHA, content hashes, and report identifiers, queryable without a
+  triple store. Its gate is a named external consumer, not a demonstration.
+  No packet opens and no ledger changes until that gate fires. Evidence:
+  [`C4-amendment-I.md`](./research/2026-08-26-session-b/C4-amendment-I.md),
+  [`G1-amendment-I-prior-art.md`](./research/2026-08-26-session-b/G1-amendment-I-prior-art.md).
+  Decision: D21.
+
+- **Amendment J — gate certificates, reshaped and pulled forward out of this
+  MAP.** J no longer waits for candidates 2 and 4, and it is no longer a
+  packet-local type. It lands as the next version of the existing
+  `@beep/skill-contract` kernel, whose `EvidenceReceipt.ts` already declares
+  itself "Unsigned, in-toto Statement-aligned" and carries digest-bound
+  `EvidenceSubject` values. The gap is exact: `GateOutcome` is
+  `LiteralKit(["allowed", "denied"])`, so the envelope and the digests exist
+  and the honest outcome vocabulary does not. The verdict vocabulary is
+  EARL/ACT's five outcomes — passed, failed, cantTell, untested, inapplicable —
+  with untested outranking passed, replacing the proposed three-way. Reach is
+  an explicit complete/incomplete/unknown aggregate, never a nullable
+  `conforms` (`sh:conforms` is a boolean in SHACL; reusing the name for a
+  nullable is a trap). Inconclusive checks are excluded from the aggregate **in
+  the producer**, because three-valued producers are documented being collapsed
+  to binary by their consumers. The envelope is an in-toto Statement
+  (`_type`, `predicateType`, `subject[].digest`) carrying an internal
+  predicate; see D23 for why that does not breach the signing deferral.
+  Apply-by-id splits into its own plan artifact with Terraform stale-plan
+  semantics — unknown digest is an error, known-but-stale against current state
+  is an error, never latest. First slice: one certificate-producing QA judge
+  settlement, which already imports the kernel. Candidate 2's ledger therefore
+  does **not** gain `GateCertificate`/`GateVerdict`/`GateAssumption`/
+  `GateReach`; candidate 4's `EvidenceReceipt` consumes the kernel's
+  certificate rather than defining one. Evidence:
+  [`C2-amendment-J.md`](./research/2026-08-26-session-b/C2-amendment-J.md),
+  [`G2-amendment-J-prior-art.md`](./research/2026-08-26-session-b/G2-amendment-J-prior-art.md).
+  Decision: D22.
+
+- **Campaign method notes (adopted unchanged, not amendments).** The fleet
+  convention-migration campaign — now candidate 6 — adopts: (a) the AgentO
+  paper's Sect. 4 recipe, translating each non-v2 manifest with a mandatory
+  "Issues / Assumptions" header, hand-reviewing a stratified sample, extending
+  the v2 schema from the recurring issues, then re-running and diffing;
+  (b) probe-actual-shape migration, where the translator inspects which fields
+  a manifest has rather than trusting a declared version, with real
+  half-migrated packets in the fixtures; (c) a Violation / Warning severity
+  split in which references to not-yet-migrated packets warn rather than fail,
+  so packets land in any order; (d) a diff report classifying each change as
+  breaking, additive, or cosmetic and naming the affected packets; (e) a
+  fleet-wide lint pass (cycles, duplicate slugs, unreachable packets) separate
+  from per-packet shape checks. Under Amendment E the translation of a
+  completed-retained packet yields a genesis event plus a translation report,
+  never synthesized history.
+
 ## Candidate Goal Packets
 
 | Order | Proposed slug | Mission | Dependencies | Live capability composition |
@@ -175,6 +273,7 @@ candidates; none opens a packet.
 | 3 | `packet-projection-migration` (not yet created) | Migrate packet control state onto the event fold and generated projections: ATLAS wholesale, README status blocks, by-state tree, guarded status writes, and fleet adoption with this campaign as the D9 self-hosting pilot. | `packet-control-plane-core`; design-gate fields from `packet-design-approval-gate` where tier requires them; KSA Workstream D projection contract. | Reuse `packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts`, `Inventory.ts`, `Doctor.ts`, and `goals/knowledge-surface-automation/SPEC.md` Workstream D’s deterministic single-projector/JSON/Mermaid/static-HTML contract. NET-NEW: exploration projection/migration, generated ATLAS and README regions, by-state tree, golden event streams, upcasters, fork-repair flow, and advisory-to-blocking ratchet. |
 | 4 | `packet-evidence-closure` (not yet created) | Make landed-versus-closed derivable: schema-valid digest-bound evidence receipts, proof-cache keys, systemic OPPORTUNITIES receipts/roll-up, and the four observational flow metrics. | `packet-control-plane-core`; projection consumers from `packet-projection-migration`; lands after the initial self-hosting slice exposes real friction. | Reuse docgen proof-manifest verification/memoization in `packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts` and `Local.ts`, the existing reflection/Yeet evidence surfaces, and per-packet `research/OPPORTUNITIES.md`. NET-NEW: canonical receipt schema, merged-commit subject sealing, landed/closed derivation, opportunity schema/roll-up/mechanical drafts, and approval-wait/parked-age/gate-wall-cache/amendment-rate projections. |
 | 5 | `packets-app-react-v2` (not yet created) | If daily use of KSA’s static v1 proves an interaction gap, ship a read-only React packets viewer over the same projector: pulse first, then kanban/DAG/roadmap/markdown drill-in, with scoped reproject push and ETag-poll fallback. | KSA Workstream D static self-contained HTML v1 must ship and daily-use evidence must identify a concrete interaction gap; `packet-projection-migration` supplies the shared projector and `sourceTip`. | Reuse the KSA projector contract and existing app Vite/portless conventions. NET-NEW: a packets app workspace, read-only React views, custom `packets:projection` HMR invalidation, ETag fallback, and visible source-tip/version/age staleness chrome. No write endpoint, drag-and-drop, or client-side frontier derivation. |
+| 6 | `packet-convention-migration` (not yet created) | Ship the single-packet fork-repair applier (Amendment G rung 0), then migrate every non-v2 packet manifest onto the canonical v2 convention through a translate-review-amend-rerun loop, lifting the `ops/events/` opt-in freeze that currently holds the fleet at one stream. | `packet-control-plane-core` (closed); Amendment G's applier staging; Amendment E's genesis seeder and no-backfill law. | Reuse the shipped `planForkRepair` derivation, the `PacketCore` fold/store/writer, and `beep explore --check` as the mechanical acceptance rubric; extend `Goals.schemas.ts` toward the v2 translation target. NET-NEW: the `repair-fork --preview\|--apply` applier proved against the committed fork fixture in CI, a manifest translator that probes actual field shape rather than trusting a declared version, a Violation/Warning severity split so forward references to unmigrated packets warn, a breaking/additive/cosmetic drift report naming affected packets, a fleet-wide lint for cycles/duplicate slugs/unreachable packets, and the genesis seeder. |
 
 ## D5 Design-Gate Inventory
 
@@ -189,6 +288,7 @@ seeds; implementation may amend them only through the ratified amendment path.
 | `packet-projection-migration` (not yet created) | Extend the packet-core projector and Goals/Explore doctor/index surfaces; add generated-region support for `explorations/ATLAS.md` and packet README status blocks; add migration/upcaster/golden-stream fixtures and the generated by-state tree. | `PacketProjector`, `PacketProjection`, `sourceTip`, `projectorVersion`, `PacketUpcaster`, `ForkRepairPlan`, `AtlasProjection`, `ReadmeStatusProjection`, `PacketByStateTree`, adoption/migration plan. |
 | `packet-evidence-closure` (not yet created) | Add receipt/closure/opportunity/metric modules under packet-core; extend Yeet/reflection evidence adapters and packet doctor projections; add per-packet opportunity-schema and fleet-roll-up fixtures. | `EvidenceSubject`, `EvidenceReceipt`, `ProofCacheKey`, `LandedState`, `ClosedState`, `OpportunityReceipt`, `FlowMetricSnapshot`, merged-commit seal verifier. |
 | `packets-app-react-v2` (not yet created) | Create the `packets` app under `apps/` (not yet created) through `bun run beep create-package` only after the gate fires; consume the shared projection JSON/API adapter; add pulse, secondary views, staleness chrome, scoped watch/HMR, ETag poll, and browser-QA fixtures. | `PacketProjectionClient`, `PacketPulseView`, `OperatorQueueView`, `PacketStaleness`, `packets:projection` event contract, scoped reproject service, ETag poll fallback. |
+| `packet-convention-migration` (not yet created) | Add a `Migration/` module beside the existing packet-core inside the Goals command tree (not yet created); extend the `Explore/` check with fleet-wide lint results; extend `Goals.schemas.ts` with the v2 translation target and half-migrated fixtures; add applier, translator, and fleet-lint tests. No packet docs change outside the migration's own output. | `PacketForkRepairApplier`, `ManifestTranslation`, `TranslationReport`, `TranslationAssumption`, `ManifestShapeProbe`, `MigrationSeverity`, `DriftClassification`, `FleetLintFinding`, `PacketGenesisSeed`. |
 
 The React candidate’s exact home is the future `packets` app under `apps/` (not yet created), resolving D12’s deferred
 home question. That path is a proposal only: the app and goal do not yet exist,

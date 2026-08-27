@@ -5,16 +5,14 @@
 Stage: `decompose`
 Status: `active`
 
-Graduated 2026-08-17; **reopened at `decompose` 2026-08-26** by the packet's
-own ratified convention: the candidate-2/3 gate condition (fold contract
-stabilizing) was satisfied on main evidence, and
-[`goals/packet-control-plane-core`](../../goals/packet-control-plane-core/README.md)
-closed `completed-retained` through its own guarded writer. That firing
-releases candidates 2 and 3 for this decompose pass — the Next Open Question
-weighs them against the fleet convention-migration campaign. Candidate 4
-still gates on observed self-hosting friction, and the React viewer stays
-gated on KSA static-v1 daily-use evidence. The Session B rulings on the
-queued amendments and the fleet-campaign charter land as their own docs PR.
+Graduated 2026-08-17 with `goals/packet-control-plane-core` as the sole
+promised-now candidate. **Reopened at `decompose` 2026-08-26** on the ratified
+convention: the candidate-2/3 gate condition was satisfied on main evidence and
+`packet-control-plane-core` reached its close train, so the Session B grill
+chartered the fleet convention-migration campaign as candidate 6 and ruled on
+the three amendment candidates queued 2026-08-25 (D17–D23). Candidates 2–4
+remain gated re-entry candidates; the React viewer stays gated on KSA static-v1
+daily-use evidence.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -29,13 +27,18 @@ BDUF ceremony.
 
 ## Next Open Question
 
-The candidate-2/3 gate condition ("fold contract stabilizing: first slice
-proven, advisory self-hosting running") is satisfied on main evidence, and
-closing `packet-control-plane-core` frees the Machinery lane slot. Which
-reopener executes first at `decompose`: the fleet convention-migration
-campaign (named in the goal's PLAN P5, rubric `beep explore --check`, still
-unchartered) or candidate 2 — and does that campaign live as its own goal
-packet or fold into candidate 3?
+Two, both created by the Session B rulings.
+
+Amendment J (D22) now lands in the existing `@beep/skill-contract` kernel
+rather than in any candidate of this MAP, so no packet owns it. Does the
+completed `skill-contract-kernel` packet reopen for a v2, does candidate 6
+carry it as a rung — its migration needs honest gate verdicts on every wave
+anyway — or does it open as its own goal packet?
+
+And what is candidate 6's first vertical slice: the fork-repair applier alone,
+proving Amendment G's rung 0 against the committed fork fixture and lifting the
+opt-in freeze, or the applier plus the first migration wave so the translator's
+shape is proven against real half-migrated manifests before the fleet sees it?
 
 ## Read This First
 
@@ -46,10 +49,27 @@ packet or fold into candidate 3?
 5. [`RESEARCH.md`](./RESEARCH.md) - synthesis of imports + six Grok lanes (stage 1).
 6. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2).
 7. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped pitch.
-8. [`MAP.md`](./MAP.md) - ratified decomposition + amendment record (A–G).
+8. [`MAP.md`](./MAP.md) - ratified decomposition + amendment record (A–G, Session B).
+9. [`research/2026-08-26-session-b/README.md`](./research/2026-08-26-session-b/README.md) - Session B lane index (evidence for D17–D23).
 
 ## Trail
 
+- 2026-08-26 (Session B grill, reopened at decompose): seven research lanes ran
+  before the grill — three repo audits on GPT-5.6 Sol at xhigh, three web
+  prior-art sweeps on Grok, and the rung-4 implementation lane — with reports
+  under `research/2026-08-26-session-b/`. The grill chartered the fleet
+  convention-migration campaign as **candidate 6**, its own goal packet and the
+  first decompose reopener, because Amendment G makes the repair applier its
+  rung 0 and freezes fleet `ops/events/` opt-in until that ships (census: 1 of
+  226 packets carries a stream). Of the three queued amendments, **H** is
+  ratified reshaped — the typed `PacketWorkPlan` lands, the `GOAL.md` render
+  does not, and model/effort stay out of the plan; **I** is **rejected**, its
+  PROV-O/P-Plan/AgentO spine refuted by the projects that shipped it, with a
+  named-consumer-gated schema.org/RO-Crate successor requeued; **J** is ratified
+  reshaped and pulled forward out of this MAP entirely, onto the
+  `@beep/skill-contract` kernel with EARL/ACT outcomes and a reach aggregate.
+  The in-toto deferral is scoped to signing and verification (D23). Decisions
+  D17–D23.
 - 2026-08-26 (close + reopen): `packet-control-plane-core` closed
   `completed-retained` — rung-4 pre-close hardening merged as #848, the flip
   executed through the guarded writer as stream event 4, closeout reflection
