@@ -10,7 +10,6 @@ import {
   reapAdmissionState,
   withQualityAdmission,
   YeetAdmissionLease,
-  YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -36,7 +35,6 @@ const fastConfig = AdmissionConfig.make({
 });
 
 const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
-const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 
 const request = (overrides: Partial<Parameters<typeof AdmissionRequest.make>[0]> = {}) =>
   AdmissionRequest.make({
@@ -66,12 +64,12 @@ interface AdmissionTempRoot {
   readonly root: string;
 }
 
-const withAdmissionTempRoot = <Result, Error2, Requirements>(
-  gibRef: Ref.Ref<number>,
-  use: (tempRoot: AdmissionTempRoot) => Effect.Effect<Result, Error2, Requirements>,
-  totalGib = 128
-) =>
-  Effect.gen(function* () {
+const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
+  function* <Result, Error2, Requirements>(
+    gibRef: Ref.Ref<number>,
+    use: (tempRoot: AdmissionTempRoot) => Effect.Effect<Result, Error2, Requirements>,
+    totalGib = 128
+  ) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const runtimeDir = yield* fs.makeTempDirectory();
@@ -87,7 +85,9 @@ const withAdmissionTempRoot = <Result, Error2, Requirements>(
       provideScopedLayer(memoryLayer(gibRef, totalGib)),
       Effect.onExit(() => fs.remove(runtimeDir, { recursive: true, force: true }).pipe(Effect.ignore))
     );
-  }).pipe(provideScopedLayer(PlatformLayer), Effect.scoped);
+  },
+  (effect) => effect.pipe(provideScopedLayer(PlatformLayer), Effect.scoped)
+);
 
 const writeFakeLease = Effect.fnUntraced(function* (
   tempRoot: AdmissionTempRoot,
@@ -150,7 +150,7 @@ describe("quality-scheduler", () => {
             expect(capacity).toBe(0);
           }
         }),
-        { numRuns: fcRuns }
+        fcRuns()
       );
     });
   });
