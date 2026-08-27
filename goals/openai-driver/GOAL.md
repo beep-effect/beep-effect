@@ -5,7 +5,7 @@ running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
 Outcome: a new packages/drivers/openai workspace named `@beep/openai` that
-composes `@effect/ai-openai` 4.0.0-rc.111 behind typed config and errors and
+composes `@effect/ai-openai` 4.0.0-rc.112 behind typed config and errors and
 exposes Layer factories for `OpenAiLanguageModel` and `OpenAiEmbeddingModel`;
 no engine code.
 
@@ -69,7 +69,7 @@ Verification:
 test "$(wc -m < goals/openai-driver/GOAL.md)" -le 4000
 jq . goals/openai-driver/ops/manifest.json
 git diff --check -- goals/openai-driver
-bun run docgen:local
+bun run docgen:local -- --full
 bun run beep yeet verify
 ```
 

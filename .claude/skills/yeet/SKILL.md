@@ -434,20 +434,34 @@ turbo work, so they are cheap to run mid-loop.
   afterward, and still runs full local proof after pushing.
 - If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
   paths and decide whether they belong in the reviewed publish intent.
-- Yeet serializes each clean-HEAD install preflight and full local proof across
-  sibling checkouts with an opaque lock under the machine temporary directory.
-  The lock key hashes a canonical host/repository identity, so equivalent SCP,
-  SSH, HTTPS, and Git origin URLs share one coordinator even when `.git`,
-  trailing slashes, user info, or default ports differ. Unparseable origins use
-  their trimmed raw text. The path never contains the remote URL.
-  `verify --tier review-fix` remains the cheaper loop lane while a full proof is
-  already active. Current v3 locks whose recorded pid is no longer running are
-  reclaimed on the next acquire. Dead observation claims are recovered through
-  an observation-bound tombstone; dead or unreadable tombstones are never
-  auto-reclaimed and name the exact path to remove only after confirming every
-  sibling checkout is idle. V3 clients refuse legacy v2 and unreadable lock
-  files; remove either only after confirming every sibling checkout is idle and
-  running the current Yeet version.
+- Full proofs run under two layers of coordination. The per-origin v3 lock is
+  unchanged: it hashes a canonical host/repository identity into an opaque path
+  under the machine temporary directory, so equivalent SCP, SSH, HTTPS, and Git
+  origin URLs share one coordinator even when `.git`, trailing slashes, user
+  info, or default ports differ; unparseable origins use their trimmed raw
+  text, and the path never contains the remote URL. Current v3 locks whose
+  recorded pid is no longer running are reclaimed on the next acquire; dead
+  observation claims are recovered through an observation-bound tombstone;
+  dead or unreadable tombstones are never auto-reclaimed and name the exact
+  path to remove only after confirming every sibling checkout is idle. V3
+  clients refuse legacy v2 and unreadable lock files.
+- Above the origin lock sits machine-wide weighted admission (ship-velocity
+  D1). A contender no longer fails fast against a busy coordinator: it
+  enqueues a durable ticket under `$XDG_RUNTIME_DIR/beep/admit/` and waits
+  with a visible progress line (position, tokens active/capacity, holders,
+  MemAvailable watermark). One token is ~5 GiB; capacity is
+  `min(10, floor((MemAvailable − 10) / 5))` with a hard admission floor at
+  15 GiB free. Weights: full proof 3, merged preview 5, review-fix 1 (at most
+  3 concurrent). Publish proofs queue with priority; a waiting verify ages up
+  to equal priority after 2 minutes, and running work is never preempted.
+  Leases record pid plus `/proc` start time and heartbeat every 5 seconds;
+  dead or pid-reused state is reaped automatically, and malformed state is
+  quarantined visibly. Inspect with `bun run beep quality scheduler status`
+  and repair with `bun run beep quality scheduler reap [--apply]` (dry-run by
+  default). `Ctrl-C` while queued removes the ticket.
+  `verify --tier review-fix` remains the cheaper loop lane while a full proof
+  is active (one token, never the origin lock); `--tier cheap-gates` takes
+  neither admission nor the lock.
 - The cheap tier always collects every lane failure. The later full proof
   collects all sibling failures in its active wave, then stops before the next
   wave under the default fail-fast policy. `--collect-all` tells the full proof
