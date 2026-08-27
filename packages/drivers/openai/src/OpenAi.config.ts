@@ -18,9 +18,10 @@ const $I = $OpenaiId.create("OpenAi.config");
  *
  * **Details**
  *
- * Local configuration may hold a 1Password secret reference such as
- * `op://BEEP_SECRETS/OpenAI/API Key`; the driver reads the resolved value as
- * `Redacted` and never logs it.
+ * A 1Password Developer Environment or another process-injection layer may
+ * hold a reference such as `op://BEEP_SECRETS/OpenAI/API Key`. It must resolve
+ * that reference before this driver reads the injected value as `Redacted`;
+ * the driver does not resolve `op://` references and never logs the value.
  *
  * **Example** (Configure a secret reference)
  *
@@ -28,11 +29,11 @@ const $I = $OpenaiId.create("OpenAi.config");
  * import { strictEqual } from "node:assert"
  * import { OPENAI_API_KEY_ENV } from "@beep/openai"
  *
- * const localEnv = {
+ * const developerEnvironment = {
  *   [OPENAI_API_KEY_ENV]: "op://BEEP_SECRETS/OpenAI/API Key"
  * }
  *
- * strictEqual(localEnv.AI_OPENAI_API_KEY, "op://BEEP_SECRETS/OpenAI/API Key")
+ * strictEqual(developerEnvironment.AI_OPENAI_API_KEY, "op://BEEP_SECRETS/OpenAI/API Key")
  * ```
  *
  * @category configuration
@@ -136,7 +137,7 @@ export const OPENAI_DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small" satisfies
  */
 export class OpenAiLanguageModelOptions extends S.Class<OpenAiLanguageModelOptions>($I`OpenAiLanguageModelOptions`)(
   {
-    model: SchemaUtils.withKeyDefaults(S.String, OPENAI_DEFAULT_MODEL).annotateKey({
+    model: SchemaUtils.withKeyDefaults(S.NonEmptyString, OPENAI_DEFAULT_MODEL).annotateKey({
       description: "OpenAI Responses API model identifier used by the language-model Layer.",
     }),
   },
@@ -174,7 +175,7 @@ export class OpenAiEmbeddingModelOptions extends S.Class<OpenAiEmbeddingModelOpt
     dimensions: PosInt.annotateKey({
       description: "Positive embedding vector size provided as `EmbeddingModel.Dimensions`.",
     }),
-    model: SchemaUtils.withKeyDefaults(S.String, OPENAI_DEFAULT_EMBEDDING_MODEL).annotateKey({
+    model: SchemaUtils.withKeyDefaults(S.NonEmptyString, OPENAI_DEFAULT_EMBEDDING_MODEL).annotateKey({
       description: "OpenAI embeddings API model identifier used by the embedding-model Layer.",
     }),
   },

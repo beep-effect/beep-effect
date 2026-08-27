@@ -22,17 +22,20 @@ import type { PosInt } from "@beep/schema";
 /**
  * Live OpenAI client Layer backed by a redacted Effect Config value and Fetch.
  *
- * **Example** (Check the live client Layer type)
+ * **Example** (Provide the live client to a language model)
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { OpenAiLive } from "@beep/openai"
- * import type { OpenAiClient } from "@effect/ai-openai"
- * import type { Config, Layer } from "effect"
+ * import { makeOpenAiLanguageModelLayer, OpenAiLanguageModelOptions, OpenAiLive } from "@beep/openai"
+ * import { Effect } from "effect"
+ * import * as LanguageModel from "effect/unstable/ai/LanguageModel"
  *
- * const layer: Layer.Layer<OpenAiClient.OpenAiClient, Config.ConfigError, never> = OpenAiLive
+ * const program = LanguageModel.LanguageModel.pipe(
+ *   Effect.provide(makeOpenAiLanguageModelLayer(OpenAiLanguageModelOptions.make({}))),
+ *   Effect.provide(OpenAiLive)
+ * )
  *
- * strictEqual(typeof layer, "object")
+ * strictEqual(typeof program, "object")
  * ```
  *
  * @effects Reads `AI_OPENAI_API_KEY` when the Layer is acquired and provides a Fetch HTTP client.
@@ -104,13 +107,17 @@ export const makeOpenAiEmbeddingModelLayer = (options: OpenAiEmbeddingModelOptio
  * `OpenAiClient` through {@link OpenAiLive} and also carries Effect AI model
  * metadata.
  *
- * **Example** (Use the live language-model Layer)
+ * **Example** (Provide the live language-model Layer)
  *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { OpenAiLanguageModelLive } from "@beep/openai"
+ * import { Effect } from "effect"
+ * import * as LanguageModel from "effect/unstable/ai/LanguageModel"
  *
- * strictEqual(typeof OpenAiLanguageModelLive, "object")
+ * const program = LanguageModel.LanguageModel.pipe(Effect.provide(OpenAiLanguageModelLive))
+ *
+ * strictEqual(typeof program, "object")
  * ```
  *
  * @effects Reads `AI_OPENAI_MODEL` and `AI_OPENAI_API_KEY` when the Layer is acquired.
@@ -133,16 +140,22 @@ export const OpenAiLanguageModelLive = Layer.unwrap(
  * {@link OPENAI_DEFAULT_EMBEDDING_MODEL}; vector dimensions never come from the
  * environment.
  *
- * **Example** (Build the live embedding-model Layer)
+ * **Example** (Provide the live embedding-model Layer)
  *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { makeOpenAiEmbeddingModelLive } from "@beep/openai"
  * import { PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ * import * as EmbeddingModel from "effect/unstable/ai/EmbeddingModel"
  *
  * const layer = makeOpenAiEmbeddingModelLive(PosInt.make(1536))
+ * const program = Effect.all({
+ *   dimensions: EmbeddingModel.Dimensions,
+ *   model: EmbeddingModel.EmbeddingModel
+ * }).pipe(Effect.provide(layer))
  *
- * strictEqual(typeof layer, "object")
+ * strictEqual(typeof program, "object")
  * ```
  *
  * @effects Reads `AI_OPENAI_EMBEDDING_MODEL` and `AI_OPENAI_API_KEY` when the Layer is acquired.

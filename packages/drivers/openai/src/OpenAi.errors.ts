@@ -17,15 +17,20 @@ import type { AiError } from "effect/unstable/ai";
  * response failures remain Effect AI's `AiError`. The driver introduces no
  * extra failure mode, so it does not wrap either error in a package-local tag.
  *
- * **Example** (Read the error tag)
+ * **Example** (Narrow an Effect AI failure)
  *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { OpenAiError } from "@beep/openai"
+ * import { AiError } from "effect/unstable/ai"
  *
- * const errorTag = (error: OpenAiError) => error._tag
+ * const error: OpenAiError = AiError.make({
+ *   method: "createEmbedding",
+ *   module: "OpenAiClient",
+ *   reason: AiError.UnknownError.make({ description: "provider unavailable" })
+ * })
  *
- * strictEqual(typeof errorTag, "function")
+ * strictEqual(error._tag, "AiError")
  * ```
  *
  * @category errors

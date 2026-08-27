@@ -47,3 +47,26 @@
   preceding `bun run beep yeet repair` had succeeded.
 - Prevention: the package generator or Yeet repair should run the Fallow
   boundary writer whenever a workspace package is added.
+
+## 2026-08-27: reviewer guidance conflicted with TSGo Layer policy
+
+- Work: apply the Effect reviewer's suggestion to replace a scoped test Layer
+  helper with direct `Effect.provide(layer)` calls.
+- Evidence: `bun run --cwd packages/drivers/openai check` rejected every such
+  call with `effect(strictEffectProvide)` and rejected chained configuration
+  provision with `effect(multipleEffectProvide)`.
+- Prevention: Effect reviewer prompts should require a focused package
+  typecheck before recommending Layer-valued `Effect.provide` inside test
+  bodies, and should distinguish application entry points from test-local
+  acquisition helpers.
+
+## 2026-08-27: Yeet review-fix tier invocation
+
+- Work: transition from the confirmation reviewer round to the bounded Yeet
+  proof for review fixes.
+- Evidence: `bun run beep yeet review-fix` exited with `Unknown subcommand
+  "review-fix"`; the command help instead lists `review-fix` as a `--tier`
+  choice for `yeet verify`.
+- Prevention: quality-loop instructions should spell out
+  `bun run beep yeet verify --tier review-fix` rather than referring to the
+  tier name without its operator syntax.

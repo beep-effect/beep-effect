@@ -28,6 +28,7 @@ describe("@beep/openai", () => {
 
   it("keeps encoded OpenAI option wire shapes byte-identical", () => {
     const defaultLanguageOptions = OpenAiLanguageModelOptions.make({});
+    const explicitLanguageOptions = OpenAiLanguageModelOptions.make({ model: "gpt-4.1-mini" });
     const defaultEmbeddingOptions = OpenAiEmbeddingModelOptions.make({ dimensions: PosInt.make(1536) });
     const explicitEmbeddingOptions = OpenAiEmbeddingModelOptions.make({
       dimensions: PosInt.make(3072),
@@ -37,6 +38,9 @@ describe("@beep/openai", () => {
     expect(Result.getOrThrow(encodeLanguageModelOptions(defaultLanguageOptions))).toEqual({
       model: OPENAI_DEFAULT_MODEL,
     });
+    expect(Result.getOrThrow(encodeLanguageModelOptions(explicitLanguageOptions))).toEqual({
+      model: "gpt-4.1-mini",
+    });
     expect(Result.getOrThrow(encodeEmbeddingModelOptions(defaultEmbeddingOptions))).toEqual({
       dimensions: 1536,
       model: OPENAI_DEFAULT_EMBEDDING_MODEL,
@@ -45,6 +49,13 @@ describe("@beep/openai", () => {
       dimensions: 3072,
       model: "text-embedding-3-large",
     });
+  });
+
+  it("rejects empty model identifiers and non-positive embedding dimensions", () => {
+    expect(Result.isFailure(decodeLanguageModelOptions({ model: "" }))).toBe(true);
+    expect(Result.isFailure(decodeEmbeddingModelOptions({ dimensions: 1536, model: "" }))).toBe(true);
+    expect(Result.isFailure(decodeEmbeddingModelOptions({ dimensions: 0 }))).toBe(true);
+    expect(Result.isFailure(decodeEmbeddingModelOptions({ dimensions: -1 }))).toBe(true);
     expect(Result.isFailure(decodeEmbeddingModelOptions({}))).toBe(true);
   });
 
