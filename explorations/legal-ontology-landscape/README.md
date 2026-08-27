@@ -15,8 +15,8 @@ docketing to a premature graph store or domain-entity model.
 
 ## Next Open Question
 
-None — M1 execution lives in goals/semantic-foundation; trademark stub paused
-behind M3.
+None — semantic-foundation M1 is closed. M2-M4 remain product-gated, with any
+future trademark packet still gated behind M3 vocabulary readiness.
 
 ## Read This First
 

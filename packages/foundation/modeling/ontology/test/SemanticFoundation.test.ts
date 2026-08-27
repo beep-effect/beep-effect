@@ -1,18 +1,21 @@
 import {
+  ConceptAlignment,
   DocumentClass,
   FilingSegment,
-  FolioConceptSlice,
   isFilingSegment,
   LibrarianInput,
   runLibrarianLoop,
   SemanticFoundationSeed,
+  TaxonomyConcept,
   TaxonomyLoader,
   TaxonomyManifestParseError,
   TaxonomyManifestReadError,
   TaxonomySeed,
   VendorAlignmentManifestEntry,
   VendorAlignmentTargetNotFound,
+  VendorConceptSlice,
   VendorManifestEntry,
+  VendorSliceAlignmentNotAdmitted,
   VendorSliceConceptMismatch,
   VendorSliceParseError,
   VendorSlicePathEscape,
@@ -40,7 +43,7 @@ const folioEmailCommunicationSourceIri = IRIReference.make(
 );
 const encodeEntry = S.encodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
 const encodeAlignmentEntry = S.encodeUnknownEffect(S.fromJsonString(VendorAlignmentManifestEntry));
-const encodeFolioSlice = S.encodeUnknownEffect(S.fromJsonString(FolioConceptSlice));
+const encodeVendorConceptSlice = S.encodeUnknownEffect(S.fromJsonString(VendorConceptSlice));
 const encodeSeed = S.encodeUnknownEffect(S.fromJsonString(TaxonomySeed));
 
 const loadWith = Effect.fnUntraced(function* (readFileString: FileSystem.FileSystem["readFileString"]) {
@@ -62,6 +65,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "fixture-legal-intake",
           loadStatus: "VETTED",
           path: "fixture-slice.jsonld",
+          verified: true,
         })
       );
       const slice = yield* encodeSeed(
@@ -90,7 +94,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   );
 
   it.effect(
-    "ignores reference-only asset rows and validates a vetted FOLIO alignment slice",
+    "ignores reference-only asset rows and validates a vetted external alignment slice",
     Effect.fnUntraced(function* () {
       const entry = yield* encodeAlignmentEntry(
         VendorAlignmentManifestEntry.make({
@@ -101,13 +105,14 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           loadStatus: "VETTED",
           localConceptIri: emailMessageIri,
           mappingKind: "closeMatch",
+          namespaceIri: IRIReference.make("https://folio.openlegalstandard.org/"),
           path: "folio-email-communication.jsonld",
           verified: true,
         })
       );
       const manifest = ['{"format":"owl","id":"folio","verified":true}', entry].join("\n");
-      const slice = yield* encodeFolioSlice(
-        FolioConceptSlice.make({
+      const slice = yield* encodeVendorConceptSlice(
+        VendorConceptSlice.make({
           "@id": folioEmailCommunicationIri,
           "@type": "owl:Class",
           "rdfs:label": "Email Communication",
@@ -136,7 +141,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   );
 
   it.effect(
-    "fails closed when a FOLIO slice identifier differs from its manifest concept IRI",
+    "fails closed when an external slice identifier differs from its manifest concept IRI",
     Effect.fnUntraced(function* () {
       const entry = yield* encodeAlignmentEntry(
         VendorAlignmentManifestEntry.make({
@@ -147,12 +152,13 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           loadStatus: "VETTED",
           localConceptIri: emailMessageIri,
           mappingKind: "closeMatch",
+          namespaceIri: IRIReference.make("https://folio.openlegalstandard.org/"),
           path: "folio-email-communication.jsonld",
           verified: true,
         })
       );
-      const slice = yield* encodeFolioSlice(
-        FolioConceptSlice.make({
+      const slice = yield* encodeVendorConceptSlice(
+        VendorConceptSlice.make({
           "@id": IRIReference.make("https://folio.openlegalstandard.org/not-email"),
           "@type": "owl:Class",
           "rdfs:label": "Other Concept",
@@ -166,7 +172,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   );
 
   it.effect(
-    "fails closed for an unparsable FOLIO alignment slice",
+    "fails closed for an unparsable external alignment slice",
     Effect.fnUntraced(function* () {
       const entry = yield* encodeAlignmentEntry(
         VendorAlignmentManifestEntry.make({
@@ -177,6 +183,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           loadStatus: "VETTED",
           localConceptIri: emailMessageIri,
           mappingKind: "closeMatch",
+          namespaceIri: IRIReference.make("https://folio.openlegalstandard.org/"),
           path: "folio-email-communication.jsonld",
           verified: true,
         })
@@ -190,7 +197,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   );
 
   it.effect(
-    "fails closed when a FOLIO alignment names no repo-owned concept",
+    "fails closed when an external alignment names no repo-owned concept",
     Effect.fnUntraced(function* () {
       const entry = yield* encodeAlignmentEntry(
         VendorAlignmentManifestEntry.make({
@@ -201,12 +208,13 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           loadStatus: "VETTED",
           localConceptIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/missing"),
           mappingKind: "closeMatch",
+          namespaceIri: IRIReference.make("https://folio.openlegalstandard.org/"),
           path: "folio-email-communication.jsonld",
           verified: true,
         })
       );
-      const slice = yield* encodeFolioSlice(
-        FolioConceptSlice.make({
+      const slice = yield* encodeVendorConceptSlice(
+        VendorConceptSlice.make({
           "@id": folioEmailCommunicationIri,
           "@type": "owl:Class",
           "rdfs:label": "Email Communication",
@@ -222,7 +230,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   it.effect(
     "rejects an asset row that opts into loading without a load status",
     Effect.fnUntraced(function* () {
-      const manifest = `{"format":"jsonld","id":"folio-email-communication","loadKind":"folio-alignment"}`;
+      const manifest = `{"format":"jsonld","id":"folio-email-communication","loadKind":"concept-alignment"}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
 
       expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
@@ -232,10 +240,71 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   it.effect(
     "rejects an unverified asset row even when its load status is VETTED",
     Effect.fnUntraced(function* () {
-      const manifest = `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"${folioEmailCommunicationSourceIri}","format":"jsonld","id":"folio-email-communication","loadKind":"folio-alignment","loadStatus":"VETTED","localConceptIri":"${emailMessageIri}","mappingKind":"closeMatch","path":"folio-email-communication.jsonld","verified":false}`;
+      const manifest = `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"${folioEmailCommunicationSourceIri}","format":"jsonld","id":"folio-email-communication","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"${emailMessageIri}","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":false}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
 
       expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "rejects alignment identities outside their manifested authorities",
+    Effect.fnUntraced(function* () {
+      const manifests = [
+        `{"conceptIri":"https://example.com/email","fetchUrl":"${folioEmailCommunicationSourceIri}","format":"jsonld","id":"wrong-concept-authority","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"${emailMessageIri}","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":true}`,
+        `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"https://example.com/email.jsonld","format":"jsonld","id":"wrong-source-authority","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"${emailMessageIri}","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":true}`,
+        `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"${folioEmailCommunicationSourceIri}","format":"jsonld","id":"wrong-local-authority","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"https://example.com/email","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":true}`,
+      ];
+      const errors = yield* Effect.forEach(manifests, (manifest) =>
+        loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip)
+      );
+
+      expect(A.every(errors, S.is(TaxonomyManifestParseError))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "rejects alignments carried by a legacy taxonomy slice",
+    Effect.fnUntraced(function* () {
+      const manifest = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "legacy-alignment",
+          loadStatus: "VETTED",
+          path: "fixture-slice.jsonld",
+          verified: true,
+        })
+      );
+      const slice = yield* encodeSeed(
+        TaxonomySeed.make({
+          concepts: [
+            TaxonomyConcept.make({
+              alignments: [
+                ConceptAlignment.make({
+                  conceptIri: folioEmailCommunicationIri,
+                  kind: "closeMatch",
+                  sourceIri: folioEmailCommunicationSourceIri,
+                }),
+              ],
+              broader: [],
+              definition: "A legacy slice attempting to bypass manifested alignment admission.",
+              documentClasses: ["received"],
+              filingSegment: "legacy-alignment",
+              iri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/legacy-alignment"),
+              prefLabel: "Legacy alignment",
+            }),
+          ],
+          filingRoots: [],
+          pathTemplateSegments: ["root", "client", "matter", "taxonomy-concept", "document-class", "file-name"],
+          schemeIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/taxonomy/legacy"),
+          title: "Legacy alignment slice",
+        })
+      );
+      const error = yield* loadWith((path) => Effect.succeed(path === manifestPath ? manifest : slice)).pipe(
+        Effect.flip
+      );
+
+      expect(S.is(VendorSliceAlignmentNotAdmitted)(error)).toBe(true);
     })
   );
 
@@ -258,7 +327,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   it.effect(
     "fails closed for a manifest row whose path escapes the vendor root",
     Effect.fnUntraced(function* () {
-      const manifest = `{"format":"jsonld","id":"escape","loadStatus":"VETTED","path":"../secrets.jsonld"}`;
+      const manifest = `{"format":"jsonld","id":"escape","loadStatus":"VETTED","path":"../secrets.jsonld","verified":true}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
       expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
     })
@@ -273,6 +342,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "fixture-legal-intake",
           loadStatus: "UNVETTED",
           path: "fixture-slice.jsonld",
+          verified: true,
         })
       );
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
@@ -289,6 +359,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "fixture-legal-intake",
           loadStatus: "VETTED",
           path: "fixture-slice.jsonld",
+          verified: true,
         })
       );
       const missing = FileSystem.makeNoop({});
@@ -311,6 +382,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "fixture-legal-intake",
           loadStatus: "VETTED",
           path: "fixture-slice.jsonld",
+          verified: true,
         })
       );
       const error = yield* loadWith((path) =>
@@ -339,6 +411,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "linked-slice",
           loadStatus: "VETTED",
           path: "linked.jsonld",
+          verified: true,
         })
       );
       const slice = yield* encodeSeed(
@@ -371,6 +444,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "windows-slice",
           loadStatus: "VETTED",
           path: "fixture-slice.jsonld",
+          verified: true,
         })
       );
       const slice = yield* encodeSeed(
@@ -410,6 +484,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "missing-root",
           loadStatus: "VETTED",
           path: "slice.jsonld",
+          verified: true,
         })
       );
       yield* fs.writeFileString(manifest, entry);
@@ -433,6 +508,7 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           id: "missing-slice",
           loadStatus: "VETTED",
           path: "missing.jsonld",
+          verified: true,
         })
       );
       yield* fs.writeFileString(manifest, entry);
@@ -455,12 +531,13 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
           loadStatus: "VETTED",
           localConceptIri: emailMessageIri,
           mappingKind: "closeMatch",
+          namespaceIri: IRIReference.make("https://folio.openlegalstandard.org/"),
           path: "folio-email-communication.jsonld",
           verified: true,
         })
       );
-      const slice = yield* encodeFolioSlice(
-        FolioConceptSlice.make({
+      const slice = yield* encodeVendorConceptSlice(
+        VendorConceptSlice.make({
           "@id": folioEmailCommunicationIri,
           "@type": "owl:Class",
           "rdfs:label": "Email Communication",

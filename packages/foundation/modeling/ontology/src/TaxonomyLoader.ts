@@ -75,6 +75,24 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
   $I.annoteSchema("VendorLoadStatus", { description: "Explicit implementation-loading verdict for a vendor slice." })
 );
 
+const HttpsIriReference = IRIReference.check(
+  S.makeFilter(Str.startsWith("https://"), {
+    identifier: $I`HttpsIriReferenceCheck`,
+    title: "HTTPS IRI Reference",
+    description: "An absolute IRI reference constrained to the HTTPS scheme.",
+    message: "Expected an absolute HTTPS IRI",
+  })
+);
+
+const RepoConceptIri = HttpsIriReference.check(
+  S.makeFilter(Str.startsWith("https://ns.beep.sh/"), {
+    identifier: $I`RepoConceptIriCheck`,
+    title: "Repository Concept IRI",
+    description: "An absolute concept IRI under the repository-owned ns.beep.sh authority.",
+    message: "Expected a repository concept IRI under https://ns.beep.sh/",
+  })
+);
+
 /**
  *  Runtime type for {@link VendorLoadStatus}.
  *
@@ -92,13 +110,13 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
 export type VendorLoadStatus = typeof VendorLoadStatus.Type;
 
 /**
- * Legacy load directive for one complete `TaxonomySeed` JSON-LD slice.
+ * Legacy load directive for one verified, alignment-free `TaxonomySeed` JSON-LD slice.
  *
  * **Example** (Make manifest entry)
  *
  * ```ts
  * import { VendorManifestEntry } from "@beep/ontology/TaxonomyLoader"
- * console.log(VendorManifestEntry.make({ format: "jsonld", id: "fixture", loadStatus: "VETTED", path: "fixture.jsonld" }).id)
+ * console.log(VendorManifestEntry.make({ format: "jsonld", id: "fixture", loadStatus: "VETTED", path: "fixture.jsonld", verified: true }).id)
  * ```
  *
  * @category models
@@ -111,14 +129,17 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
     id: S.NonEmptyString,
     loadStatus: VendorLoadStatus,
     path: VendorSlicePath,
+    verified: S.Literal(true),
   },
-  $I.annote("VendorManifestEntry", { description: "Manifest row for one explicitly vetted JSON-LD taxonomy slice." })
+  $I.annote("VendorManifestEntry", {
+    description: "Manifest row for one verified, explicitly vetted, alignment-free JSON-LD taxonomy slice.",
+  })
 ) {
   static readonly decodeUnknownJsonStringEffect = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
 }
 
 /**
- * Manifest load directive for one vetted FOLIO class exposed as JSON-LD.
+ * Manifest load directive for one vetted external concept exposed as JSON-LD.
  *
  * **Details**
  *
@@ -126,7 +147,7 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
  * The loader verifies the downloaded JSON-LD identifier before admitting the
  * mapping, so labels alone can never create concept identity.
  *
- * **Example** (Describe a FOLIO alignment slice)
+ * **Example** (Describe an external alignment slice)
  *
  * ```ts
  * import { VendorAlignmentManifestEntry } from "@beep/ontology/TaxonomyLoader"
@@ -140,6 +161,7 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
  *   loadStatus: "VETTED",
  *   localConceptIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/example"),
  *   mappingKind: "closeMatch",
+ *   namespaceIri: IRIReference.make("https://folio.openlegalstandard.org/"),
  *   path: "folio-example.jsonld",
  *   verified: true
  * })
@@ -153,33 +175,50 @@ export class VendorAlignmentManifestEntry extends S.Class<VendorAlignmentManifes
   $I`VendorAlignmentManifestEntry`
 )(
   {
-    _tag: S.tagDefaultOmit("VendorFolioAlignmentSlice"),
-    conceptIri: IRIReference,
-    fetchUrl: IRIReference,
+    _tag: S.tagDefaultOmit("VendorConceptAlignmentSlice"),
+    conceptIri: HttpsIriReference,
+    fetchUrl: HttpsIriReference,
     format: S.Literal("jsonld"),
     id: S.NonEmptyString,
-    loadKind: S.tag("folio-alignment"),
+    loadKind: S.tag("concept-alignment"),
     loadStatus: VendorLoadStatus,
-    localConceptIri: IRIReference,
+    localConceptIri: RepoConceptIri,
     mappingKind: SkosMappingKind,
+    namespaceIri: HttpsIriReference,
     path: VendorSlicePath,
     verified: S.Literal(true),
   },
   $I.annote("VendorAlignmentManifestEntry", {
-    description: "Asset-pack manifest directive for one vetted FOLIO alignment slice.",
+    description: "Asset-pack manifest directive for one vetted external concept alignment.",
   })
 ) {}
 
+const VendorAlignmentManifestEntryBoundary = VendorAlignmentManifestEntry.check(
+  S.makeFilter(
+    (entry) =>
+      Bool.and(
+        Str.startsWith(entry.namespaceIri)(entry.conceptIri),
+        Str.startsWith(entry.namespaceIri)(entry.fetchUrl)
+      ),
+    {
+      identifier: $I`VendorAlignmentAuthorityCheck`,
+      title: "Vendor Alignment Authority",
+      description: "A vendor alignment whose concept and source IRIs remain under its manifested namespace.",
+      message: "Vendor concept and source IRIs must remain under the manifested namespace",
+    }
+  )
+);
+
 /**
- * Boundary shape decoded from an individual FOLIO JSON-LD class response.
+ * Boundary shape decoded from an individual external JSON-LD class response.
  *
- * **Example** (Construct a FOLIO concept slice)
+ * **Example** (Construct an external concept slice)
  *
  * ```ts
- * import { FolioConceptSlice } from "@beep/ontology/TaxonomyLoader"
+ * import { VendorConceptSlice } from "@beep/ontology/TaxonomyLoader"
  * import { IRIReference } from "@beep/rdf"
  *
- * const slice = FolioConceptSlice.make({
+ * const slice = VendorConceptSlice.make({
  *   "@id": IRIReference.make("https://folio.openlegalstandard.org/example"),
  *   "@type": "owl:Class",
  *   "rdfs:label": "Example concept",
@@ -191,15 +230,15 @@ export class VendorAlignmentManifestEntry extends S.Class<VendorAlignmentManifes
  * @category models
  * @since 0.0.0
  */
-export class FolioConceptSlice extends S.Class<FolioConceptSlice>($I`FolioConceptSlice`)(
+export class VendorConceptSlice extends S.Class<VendorConceptSlice>($I`VendorConceptSlice`)(
   {
-    "@id": IRIReference,
+    "@id": HttpsIriReference,
     "@type": S.Literal("owl:Class"),
     "rdfs:label": S.NonEmptyString,
     "skos:definition": S.NonEmptyString,
   },
-  $I.annote("FolioConceptSlice", {
-    description: "Minimal FOLIO JSON-LD class fields required to verify a manifested alignment.",
+  $I.annote("VendorConceptSlice", {
+    description: "Minimal external JSON-LD class fields required to verify a manifested alignment.",
   })
 ) {}
 
@@ -311,6 +350,31 @@ export class VendorSliceParseError extends S.TaggedError<VendorSliceParseError>(
 ) {}
 
 /**
+ * Raised when a legacy taxonomy slice attempts to carry an external alignment.
+ *
+ * **Example** (Make an alignment admission error)
+ *
+ * ```ts
+ * import { VendorSliceAlignmentNotAdmitted } from "@beep/ontology/TaxonomyLoader"
+ *
+ * const error = VendorSliceAlignmentNotAdmitted.make({ id: "legacy", path: "legacy.jsonld" })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VendorSliceAlignmentNotAdmitted extends S.TaggedError<VendorSliceAlignmentNotAdmitted>(
+  $I`VendorSliceAlignmentNotAdmitted`
+)(
+  "VendorSliceAlignmentNotAdmitted",
+  { id: S.NonEmptyString, path: S.NonEmptyString },
+  $I.annoteError<VendorSliceAlignmentNotAdmitted>("VendorSliceAlignmentNotAdmitted", {
+    description: "A legacy taxonomy seed carried an alignment outside the explicit manifested-alignment protocol.",
+  })
+) {}
+
+/**
  * Raised when a vetted vendor slice resolves outside its canonical vendor root.
  *
  * **Example** (Make path escape error)
@@ -342,7 +406,7 @@ export class VendorSlicePathEscape extends S.TaggedError<VendorSlicePathEscape>(
 ) {}
 
 /**
- * Raised when a FOLIO slice identifier differs from its manifested concept IRI.
+ * Raised when an external slice identifier differs from its manifested concept IRI.
  *
  * **Example** (Make a concept mismatch error)
  *
@@ -373,7 +437,7 @@ export class VendorSliceConceptMismatch extends S.TaggedError<VendorSliceConcept
     path: S.NonEmptyString,
   },
   $I.annoteError<VendorSliceConceptMismatch>("VendorSliceConceptMismatch", {
-    description: "A FOLIO JSON-LD slice did not carry the exact concept IRI named by its manifest row.",
+    description: "An external JSON-LD slice did not carry the exact concept IRI named by its manifest row.",
   })
 ) {}
 
@@ -413,7 +477,7 @@ class VendorAssetManifestRow extends S.Class<VendorAssetManifestRow>($I`VendorAs
   {
     format: S.NonEmptyString,
     id: S.NonEmptyString,
-    loadKind: S.OptionFromOptionalKey(S.Literal("folio-alignment")),
+    loadKind: S.OptionFromOptionalKey(S.Literal("concept-alignment")),
     loadStatus: S.OptionFromOptionalKey(VendorLoadStatus),
   },
   $I.annote("VendorAssetManifestRow", {
@@ -431,25 +495,25 @@ class LoadedTaxonomySeedSlice extends S.Class<LoadedTaxonomySeedSlice>($I`Loaded
   })
 ) {}
 
-class LoadedFolioAlignmentSlice extends S.Class<LoadedFolioAlignmentSlice>($I`LoadedFolioAlignmentSlice`)(
+class LoadedAlignmentSlice extends S.Class<LoadedAlignmentSlice>($I`LoadedAlignmentSlice`)(
   {
-    _tag: S.tag("LoadedFolioAlignmentSlice"),
+    _tag: S.tag("LoadedAlignmentSlice"),
     alignment: ConceptAlignment,
     id: S.NonEmptyString,
     localConceptIri: IRIReference,
   },
-  $I.annote("LoadedFolioAlignmentSlice", {
-    description: "A verified FOLIO alignment awaiting merge into its repo-owned concept.",
+  $I.annote("LoadedAlignmentSlice", {
+    description: "A verified external alignment awaiting merge into its repo-owned concept.",
   })
 ) {}
 
 type VendorLoadManifestEntry = VendorAlignmentManifestEntry | VendorManifestEntry;
-type LoadedVendorSlice = LoadedFolioAlignmentSlice | LoadedTaxonomySeedSlice;
+type LoadedVendorSlice = LoadedAlignmentSlice | LoadedTaxonomySeedSlice;
 
 const decodeAssetManifestRow = S.decodeUnknownEffect(S.fromJsonString(VendorAssetManifestRow));
 const decodeManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
-const decodeAlignmentManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorAlignmentManifestEntry));
-const decodeFolioConceptSlice = S.decodeUnknownEffect(S.fromJsonString(FolioConceptSlice));
+const decodeAlignmentManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorAlignmentManifestEntryBoundary));
+const decodeVendorConceptSlice = S.decodeUnknownEffect(S.fromJsonString(VendorConceptSlice));
 const alignmentEquivalence = S.toEquivalence(ConceptAlignment);
 
 const manifestParseError = (path: string, line: number) => TaxonomyManifestParseError.make({ line, path });
@@ -540,15 +604,20 @@ const readTaxonomySeedSlice = Effect.fn("TaxonomyLoader.readTaxonomySeedSlice")(
   const seed = yield* TaxonomySeed.fromUnknownJsonStringEffect(content).pipe(
     Effect.mapError(() => VendorSliceParseError.make({ id: entry.id, path: entry.path }))
   );
+  yield* Effect.filterOrFail(
+    Effect.succeed(seed),
+    (seed) => A.every(seed.concepts, ({ alignments }) => A.isReadonlyArrayEmpty(alignments)),
+    () => VendorSliceAlignmentNotAdmitted.make({ id: entry.id, path: entry.path })
+  );
   return LoadedTaxonomySeedSlice.make({ seed });
 });
 
-const readFolioAlignmentSlice = Effect.fn("TaxonomyLoader.readFolioAlignmentSlice")(function* (
+const readAlignmentSlice = Effect.fn("TaxonomyLoader.readAlignmentSlice")(function* (
   entry: VendorAlignmentManifestEntry,
   vendorRoot: string
 ) {
   const content = yield* readVendorContent(entry.id, entry.path, vendorRoot);
-  const slice = yield* decodeFolioConceptSlice(content).pipe(
+  const slice = yield* decodeVendorConceptSlice(content).pipe(
     Effect.mapError(() => VendorSliceParseError.make({ id: entry.id, path: entry.path }))
   );
   yield* Effect.filterOrFail(
@@ -562,14 +631,14 @@ const readFolioAlignmentSlice = Effect.fn("TaxonomyLoader.readFolioAlignmentSlic
         path: entry.path,
       })
   );
-  return LoadedFolioAlignmentSlice.make({
+  return LoadedAlignmentSlice.make({
     alignment: ConceptAlignment.make({
-      conceptIri: slice["@id"],
+      conceptIri: IRIReference.make(slice["@id"]),
       kind: entry.mappingKind,
-      sourceIri: entry.fetchUrl,
+      sourceIri: IRIReference.make(entry.fetchUrl),
     }),
     id: entry.id,
-    localConceptIri: entry.localConceptIri,
+    localConceptIri: IRIReference.make(entry.localConceptIri),
   });
 });
 
@@ -579,7 +648,7 @@ const readVettedSlice = Effect.fn("TaxonomyLoader.readVettedSlice")(function* (
 ) {
   return yield* Match.type<VendorLoadManifestEntry>().pipe(
     Match.tagsExhaustive({
-      VendorFolioAlignmentSlice: (entry) => readFolioAlignmentSlice(entry, vendorRoot),
+      VendorConceptAlignmentSlice: (entry) => readAlignmentSlice(entry, vendorRoot),
       VendorTaxonomySeedSlice: (entry) => readTaxonomySeedSlice(entry, vendorRoot),
     })
   )(entry);
@@ -591,6 +660,7 @@ const readSlice: {
     vendorRoot: string
   ): Effect.Effect<
     LoadedVendorSlice,
+    | VendorSliceAlignmentNotAdmitted
     | VendorSliceConceptMismatch
     | VendorSliceParseError
     | VendorSlicePathEscape
@@ -604,6 +674,7 @@ const readSlice: {
     entry: VendorLoadManifestEntry
   ) => Effect.Effect<
     LoadedVendorSlice,
+    | VendorSliceAlignmentNotAdmitted
     | VendorSliceConceptMismatch
     | VendorSliceParseError
     | VendorSlicePathEscape
@@ -623,19 +694,19 @@ const readSlice: {
 
 const toTaxonomySeed = Match.type<LoadedVendorSlice>().pipe(
   Match.tagsExhaustive({
-    LoadedFolioAlignmentSlice: () => O.none(),
+    LoadedAlignmentSlice: () => O.none(),
     LoadedTaxonomySeedSlice: ({ seed }) => O.some(seed),
   })
 );
 
-const toFolioAlignment = Match.type<LoadedVendorSlice>().pipe(
+const toAlignment = Match.type<LoadedVendorSlice>().pipe(
   Match.tagsExhaustive({
-    LoadedFolioAlignmentSlice: (slice) => O.some(slice),
+    LoadedAlignmentSlice: (slice) => O.some(slice),
     LoadedTaxonomySeedSlice: () => O.none(),
   })
 );
 
-const appendAlignment = (concept: TaxonomyConcept, loaded: LoadedFolioAlignmentSlice): TaxonomyConcept =>
+const appendAlignment = (concept: TaxonomyConcept, loaded: LoadedAlignmentSlice): TaxonomyConcept =>
   Bool.match(
     Bool.and(
       IRIReference.equivalence(loaded.localConceptIri)(concept.iri),
@@ -658,7 +729,7 @@ const appendAlignment = (concept: TaxonomyConcept, loaded: LoadedFolioAlignmentS
 
 const mergeAlignment = Effect.fn("TaxonomyLoader.mergeAlignment")(function* (
   seed: TaxonomySeed,
-  loaded: LoadedFolioAlignmentSlice
+  loaded: LoadedAlignmentSlice
 ) {
   yield* Effect.filterOrFail(
     Effect.succeed(seed),
@@ -676,7 +747,7 @@ const mergeAlignment = Effect.fn("TaxonomyLoader.mergeAlignment")(function* (
 
 const mergeSlices = Effect.fn("TaxonomyLoader.mergeSlices")(function* (slices: ReadonlyArray<LoadedVendorSlice>) {
   const seeds = A.getSomes(A.map(slices, toTaxonomySeed));
-  const alignments = A.getSomes(A.map(slices, toFolioAlignment));
+  const alignments = A.getSomes(A.map(slices, toAlignment));
   const seed = TaxonomySeed.make({
     concepts: A.appendAll(
       SemanticFoundationSeed.concepts,
@@ -718,6 +789,7 @@ export class TaxonomyLoader extends Context.Service<
         | TaxonomyManifestReadError
         | TaxonomyManifestParseError
         | VendorAlignmentTargetNotFound
+        | VendorSliceAlignmentNotAdmitted
         | VendorSliceConceptMismatch
         | VendorSliceUnvetted
         | VendorSliceReadError
@@ -734,6 +806,7 @@ export class TaxonomyLoader extends Context.Service<
         | TaxonomyManifestReadError
         | TaxonomyManifestParseError
         | VendorAlignmentTargetNotFound
+        | VendorSliceAlignmentNotAdmitted
         | VendorSliceConceptMismatch
         | VendorSliceUnvetted
         | VendorSliceReadError

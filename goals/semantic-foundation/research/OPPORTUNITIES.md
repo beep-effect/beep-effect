@@ -10,7 +10,7 @@
   checkout could claim the lock.
 - **Evidence:** `bun run beep yeet verify` reported `Another Yeet full proof for
   this repository is active` and identified the live owner checkout as
-  `~/YeeBois/projects/beep-effect18`. The owner process was still running, so
+  a sibling beep-effect checkout. The owner process was still running, so
   deleting the shared lock would have been unsafe.
 - **What would have prevented it:** a supported Yeet queue or `--wait` mode that
   retains the requesting command, emits periodic owner heartbeats, and starts

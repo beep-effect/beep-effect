@@ -30,12 +30,12 @@ Vetted, license-checked ontology artifacts for the IP-practice DMS/KG.
   "verdictRationale": "one or two sentences",
   "phase": "P1 | P2 | P3 | P4",
   "verified": false,
-  "loadKind": "folio-alignment (optional; opts the row into the package loader)",
+  "loadKind": "concept-alignment (optional; opts the row into the package loader)",
   "loadStatus": "VETTED | UNVETTED (required with loadKind)",
   "path": "vendor-root-relative fetched filename (required with loadKind)",
-  "localConceptIri": "https://ns.beep.sh/... (required with folio-alignment)",
-  "conceptIri": "exact FOLIO class IRI (required with folio-alignment)",
-  "mappingKind": "exactMatch | closeMatch (required with folio-alignment)",
+  "localConceptIri": "https://ns.beep.sh/... (required with concept-alignment)",
+  "conceptIri": "exact external class IRI under namespaceIri (required with concept-alignment)",
+  "mappingKind": "exactMatch | closeMatch (required with concept-alignment)",
   "notes": ""
 }
 ```
@@ -45,7 +45,11 @@ license, IRI resolution, and checksum.
 
 Most rows are research references and are not loaded. An asset-pack row opts
 into alignment loading by declaring `loadKind`; the loader then requires
-`verified:true`, `loadStatus`, and all kind-specific fields. For compatibility
-with the original loader API, a `loadStatus`-only row still denotes a complete
-`TaxonomySeed` JSON-LD slice. `VETTED` is an implementation admission decision
-in addition to `verified`, not a synonym for it.
+`verified:true`, `loadStatus`, and all kind-specific fields. Concept-alignment
+rows must keep `conceptIri` and `fetchUrl` under their declared `namespaceIri`,
+and `localConceptIri` must use the repository-owned `https://ns.beep.sh/`
+authority. A `loadStatus`-only row still denotes a complete, verified
+`TaxonomySeed` JSON-LD slice, but legacy slices carrying alignments are rejected;
+all external mappings use the explicit concept-alignment path. `VETTED` is an
+implementation admission decision in addition to `verified`, not a synonym for
+it. `fetch.sh` writes loadable rows to their manifested vendor-relative `path`.
