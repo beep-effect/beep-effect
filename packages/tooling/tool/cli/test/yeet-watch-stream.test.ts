@@ -5,6 +5,7 @@ import {
   renderYeetWatchEventLine,
   YEET_WATCH_SCHEMA_VERSION,
   YeetCheckSignal,
+  YeetMergeReadyCriteria,
   YeetWatchCheck,
   YeetWatchDiffInput,
   YeetWatchEnded,
@@ -39,6 +40,19 @@ const check = (name: string, outcome: "pending" | "pass" | "fail" | "skip"): Yee
   YeetWatchCheck.make({ name, outcome });
 
 const thread = (id: string, isResolved: boolean): YeetWatchThread => YeetWatchThread.make({ id, isResolved });
+
+const criteria = (value: boolean) =>
+  YeetMergeReadyCriteria.make({
+    prOpen: value,
+    notDraft: value,
+    closeoutRun: value,
+    requiredChecksGreen: value,
+    threadsResolved: value,
+    mergeable: value,
+    mergeStateAcceptable: value,
+    reviewDecisionAcceptable: value,
+    greptileScore: O.none(),
+  });
 
 describe("classifyYeetCheckOutcome", () => {
   it("classifies every failing bucket and failing state as fail", () => {
@@ -160,6 +174,28 @@ describe("diffYeetWatchSnapshots", () => {
       prev: snapshot({ checks: [check("Check", "pending")] }),
     });
     expect(A.map(events, (event) => event.kind)).toEqual(["check-transition", "mergeability-changed"]);
+  });
+
+  it("emits one typed event for every merge-readiness criterion flip", () => {
+    const events = diff({
+      at: AT,
+      next: snapshot({ criteria: criteria(true) }),
+      prev: snapshot({ criteria: criteria(false) }),
+    });
+
+    expect(A.map(events, (event) => event.kind)).toEqual(A.replicate("merge-ready-criterion-changed", 8));
+    expect(
+      A.map(events, (event) => (event.kind === "merge-ready-criterion-changed" ? event.criterion : "unexpected"))
+    ).toEqual([
+      "pr-open",
+      "not-draft",
+      "closeout-run",
+      "required-checks-green",
+      "threads-resolved",
+      "mergeable",
+      "merge-state-acceptable",
+      "review-decision-acceptable",
+    ]);
   });
 });
 

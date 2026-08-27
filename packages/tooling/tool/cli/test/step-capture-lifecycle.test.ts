@@ -1,11 +1,12 @@
-import { CaptureCommandTimedOutError, runCaptured } from "@beep/repo-cli/test/Process";
+import { CaptureCommandTimedOutError, runCaptured, withAdmissionWorkloadBinding } from "@beep/repo-cli/test/Process";
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { PosInt } from "@beep/schema/Int";
 import { provideScopedLayer } from "@beep/test-utils";
+import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Ref, Sink, Stream } from "effect";
+import { Cause, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
@@ -13,6 +14,28 @@ import { ChildProcessSpawner } from "effect/unstable/process";
 import type { ChildProcess } from "effect/unstable/process";
 
 const encoder = new TextEncoder();
+
+const ActiveAdmissionWorkload = S.fromJsonString(
+  S.Struct({
+    schemaVersion: S.Literal("yeet-admission-workload/v1"),
+    leaseId: S.String,
+    status: S.Literal("active"),
+    processGroupId: PosInt,
+    procStart: S.String,
+  })
+);
+
+const processGroupFromStat = (text: string): number | undefined => {
+  const commandEnd = text.lastIndexOf(") ");
+  if (commandEnd < 0) return undefined;
+  const processGroup = Number(
+    text
+      .slice(commandEnd + 2)
+      .trim()
+      .split(/\s+/u)[2]
+  );
+  return Number.isInteger(processGroup) && processGroup > 0 ? processGroup : undefined;
+};
 
 // A spawner whose child "exits" immediately but whose output pipe stays open until kill is called
 // (killEndsStream: true — the straggler dies with the group reap and the kernel delivers EOF), or
@@ -90,6 +113,110 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
 });
 
 describe("StepExec capture pipe lifecycle", () => {
+  it.live("inherits a scoped admission workload and lets an explicit nested binding override it", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      return yield* Effect.acquireUseRelease(
+        fs.makeTempDirectory({ prefix: "step-exec-admission-" }),
+        (root) =>
+          Effect.gen(function* () {
+            const outerPath = `${root}/outer.workload`;
+            const nestedPath = `${root}/nested.workload`;
+            const { closed, spawner } = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+            yield* Deferred.succeed(closed, void 0);
+
+            yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+              withAdmissionWorkloadBinding(outerPath, "outer-lease"),
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            );
+            const outer = yield* fs.readFileString(outerPath);
+            expect(outer).toContain('"leaseId":"outer-lease"');
+            expect(outer).toContain('"status":"active"');
+
+            yield* runCaptured({
+              command: "fake-step",
+              args: [],
+              env: {
+                BEEP_YEET_ADMISSION_WORKLOAD_PATH: nestedPath,
+                BEEP_YEET_ADMISSION_LEASE_ID: "nested-lease",
+              },
+            }).pipe(
+              withAdmissionWorkloadBinding(outerPath, "outer-lease"),
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            );
+            const nested = yield* fs.readFileString(nestedPath);
+            expect(nested).toContain('"leaseId":"nested-lease"');
+            expect(yield* fs.readFileString(outerPath)).toBe(outer);
+          }),
+        (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
+      );
+    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+  );
+
+  it.live(
+    "keeps a cross-process nested StepExec child in the registered outer process group",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        return yield* Effect.acquireUseRelease(
+          fs.makeTempDirectory({ prefix: "step-exec-admission-group-" }),
+          (root) =>
+            Effect.gen(function* () {
+              const workloadPath = `${root}/outer.workload`;
+              const readyPath = `${root}/nested-ready`;
+              const nestedSource = `
+import { runCaptured } from "@beep/repo-cli/test/Process";
+import { BunRuntime, BunServices } from "@effect/platform-bun";
+import { Effect } from "effect";
+
+BunRuntime.runMain(
+  runCaptured({
+    command: "sh",
+    args: ["-c", 'printf "%s" "$$" > "$ADMISSION_NESTED_READY"; exec sleep 30'],
+    extendEnv: true,
+    source: "all"
+  }).pipe(Effect.provide(BunServices.layer))
+);
+`;
+              const outer = yield* Effect.forkChild(
+                runCaptured({
+                  command: "bun",
+                  args: ["-e", nestedSource],
+                  cwd: process.cwd(),
+                  env: { ADMISSION_NESTED_READY: readyPath },
+                  extendEnv: true,
+                  forceKillAfter: "1 second",
+                }).pipe(withAdmissionWorkloadBinding(workloadPath, "outer-group-lease"))
+              );
+
+              let ready = false;
+              for (let attempt = 0; attempt < 300 && !ready; attempt += 1) {
+                ready = yield* fs.exists(readyPath);
+                if (!ready) yield* Effect.sleep("10 millis");
+              }
+              expect(ready).toBe(true);
+
+              const workload = yield* S.decodeUnknownEffect(ActiveAdmissionWorkload)(
+                yield* fs.readFileString(workloadPath)
+              );
+              const nestedPid = Number(yield* fs.readFileString(readyPath));
+              const nestedGroup = processGroupFromStat(yield* fs.readFileString(`/proc/${nestedPid}/stat`));
+              expect(nestedGroup).toBe(workload.processGroupId);
+
+              yield* Fiber.interrupt(outer);
+              let nestedAlive = true;
+              for (let attempt = 0; attempt < 300 && nestedAlive; attempt += 1) {
+                nestedAlive = yield* fs.exists(`/proc/${nestedPid}`);
+                if (nestedAlive) yield* Effect.sleep("10 millis");
+              }
+              expect(nestedAlive).toBe(false);
+            }),
+          (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
+        );
+      }).pipe(provideScopedLayer(NodeServices.layer)),
+    15_000
+  );
+
   it.effect(
     "maps a bounded quality-step timeout to exit code 124",
     Effect.fnUntraced(function* () {

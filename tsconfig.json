@@ -1969,6 +1969,9 @@
       ],
       "@beep/shared-domain/entity/OrgEntity": [
         "./packages/shared/domain/src/entity/OrgEntity.ts"
+      ],
+      "@beep/repo-cli/commands/Cache": [
+        "./packages/tooling/tool/cli/src/commands/Cache/index.ts"
       ]
     }
   }

@@ -17,6 +17,7 @@ import {
   YeetAckFixResolution,
   YeetAckReceipt,
   YeetAckState,
+  YeetAckWaiveResolution,
   YeetAckWontfixResolution,
   YeetCheckFailedRow,
   YeetFailureCapsule,
@@ -67,7 +68,16 @@ const entry = (subject: YeetCheckFailedRow, acked = false): YeetInboxEntry =>
     row: subject,
   });
 
-const noResolutionFlags = { fixSha: "", reason: "", threadUrl: "", wontfix: false };
+const noResolutionFlags = {
+  actor: "",
+  expiresAt: "",
+  fixSha: "",
+  reason: "",
+  shard: "",
+  threadUrl: "",
+  waive: false,
+  wontfix: false,
+};
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -178,7 +188,13 @@ describe("renderYeetInboxListOutput", () => {
       const decoded = yield* YeetInboxViewJson.decode(output);
 
       expect(decoded.schemaVersion).toBe("yeet-inbox-view/v1");
-      expect(A.map(decoded.entries, (candidate) => candidate.row.capsule.lane)).toStrictEqual(["Check / Lint"]);
+      expect(
+        A.getSomes(
+          A.map(decoded.entries, ({ row }) =>
+            row.kind === "check-failed" ? O.some(row.capsule.lane) : O.none<string>()
+          )
+        )
+      ).toStrictEqual(["Check / Lint"]);
       expect(decoded.skippedLines).toBe(2);
     })
   );
@@ -190,10 +206,26 @@ describe("parseYeetAckResolution", () => {
       const fix = yield* parseYeetAckResolution({ ...noResolutionFlags, fixSha: "2817f28" });
       const wontfix = yield* parseYeetAckResolution({ ...noResolutionFlags, reason: "flaky", wontfix: true });
       const thread = yield* parseYeetAckResolution({ ...noResolutionFlags, threadUrl: "https://example.test/t/1" });
+      const waive = yield* parseYeetAckResolution({
+        ...noResolutionFlags,
+        actor: "operator",
+        expiresAt: "2099-01-01T00:00:00Z",
+        reason: "dependency service unavailable",
+        shard: "Security",
+        waive: true,
+      });
 
       expect(fix.kind).toBe("fix-sha");
       expect(wontfix.kind).toBe("wontfix");
       expect(thread.kind).toBe("thread-url");
+      expect(waive).toStrictEqual(
+        YeetAckWaiveResolution.make({
+          actor: "operator",
+          expiresAt: "2099-01-01T00:00:00Z",
+          reason: "dependency service unavailable",
+          shard: "Security",
+        })
+      );
     })
   );
 
@@ -268,6 +300,32 @@ describe("ackYeetInboxRow", () => {
         expect(report.replacedPrior).toBe(true);
         const state = yield* readYeetAckState(root, subject.id);
         expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("re-arms a row after an attributed waiver expires", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const subject = row(capsule());
+        yield* appendYeetInboxRow(root, subject);
+        yield* writeYeetAckReceipt(
+          root,
+          YeetAckReceipt.make({
+            ackedAt: "2000-01-01T00:00:00Z",
+            id: subject.id,
+            resolution: YeetAckWaiveResolution.make({
+              actor: "operator",
+              expiresAt: "2000-01-01T01:00:00Z",
+              reason: "temporary outage",
+              shard: "Coverage",
+            }),
+          })
+        );
+
+        const state = yield* readYeetAckState(root, subject.id);
+        expect(state.acked).toBe(false);
+        expect(state.receipt?.resolution.kind).toBe("waive");
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -370,11 +428,11 @@ describe("yeet inbox runners", () => {
         const subject = row(capsule());
         yield* appendYeetInboxRow(root, subject);
 
-        yield* runYeetInboxAck({ fixSha: "2817f28", id: subject.id, reason: "", threadUrl: "", wontfix: false });
+        yield* runYeetInboxAck({ ...noResolutionFlags, fixSha: "2817f28", id: subject.id });
         const state = yield* readYeetAckState(root, subject.id);
         expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
 
-        yield* runYeetInboxAck({ fixSha: "", id: subject.id, reason: "actually flaky", threadUrl: "", wontfix: true });
+        yield* runYeetInboxAck({ ...noResolutionFlags, id: subject.id, reason: "actually flaky", wontfix: true });
 
         const lines = A.map(yield* TestConsole.logLines, String);
         expect(A.some(lines, (line) => Str.includes("acked")(line))).toBe(true);

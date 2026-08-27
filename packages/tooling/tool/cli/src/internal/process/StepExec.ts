@@ -22,17 +22,19 @@
  * @since 0.0.0
  */
 
+import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, PosInt } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Duration, Effect, pipe, Stream } from "effect";
+import { Context, Duration, Effect, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
+import { JsonStringCodec } from "../schema/JsonCodec.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -440,11 +442,261 @@ type SpawnFields = {
   readonly stdin?: StepStdio | undefined;
 };
 
-const spawnFields = (options: SpawnFields) =>
+/**
+ * Reports that a spawned process group could not be bound to its admission lease generation.
+ *
+ * **Example** (Handle a registration failure)
+ *
+ * ```ts
+ * import { AdmissionWorkloadRegistrationError } from "@beep/repo-cli/internal/process"
+ *
+ * const error = AdmissionWorkloadRegistrationError.make({
+ *   message: "Could not observe the child process generation.",
+ * })
+ *
+ * console.log(error._tag) // "AdmissionWorkloadRegistrationError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AdmissionWorkloadRegistrationError extends S.TaggedError<AdmissionWorkloadRegistrationError>(
+  $I`AdmissionWorkloadRegistrationError`
+)(
+  "AdmissionWorkloadRegistrationError",
+  { message: S.String },
+  $I.annoteError<AdmissionWorkloadRegistrationError>("AdmissionWorkloadRegistrationError", {
+    description: "A detached subprocess could not be registered for admission-owner reaping.",
+  })
+) {}
+
+const AdmissionWorkloadState = S.Union([
+  S.Struct({
+    schemaVersion: S.Literal("yeet-admission-workload/v1"),
+    leaseId: S.String,
+    status: S.Literal("pending"),
+  }),
+  S.Struct({
+    schemaVersion: S.Literal("yeet-admission-workload/v1"),
+    leaseId: S.String,
+    status: S.Literal("active"),
+    processGroupId: PosInt,
+    procStart: S.String,
+  }),
+]);
+
+const AdmissionWorkloadJson = JsonStringCodec(AdmissionWorkloadState);
+
+class AdmissionWorkloadBinding extends S.Class<AdmissionWorkloadBinding>($I`AdmissionWorkloadBinding`)(
+  {
+    workloadPath: S.String,
+    leaseId: S.String,
+  },
+  $I.annote("AdmissionWorkloadBinding", {
+    description: "Fiber-local admission generation inherited by every subprocess spawn in one governed operation.",
+  })
+) {}
+
+const AdmissionWorkloadOwnership = LiteralKit(["owned", "inherited"]);
+
+class ResolvedAdmissionWorkload extends S.Class<ResolvedAdmissionWorkload>($I`ResolvedAdmissionWorkload`)(
+  {
+    workloadPath: S.String,
+    leaseId: S.String,
+    ownership: AdmissionWorkloadOwnership,
+  },
+  $I.annote("ResolvedAdmissionWorkload", {
+    description: "Admission workload binding plus whether this process owns its detached process-group registration.",
+  })
+) {}
+
+const CurrentAdmissionWorkload = Context.Reference<O.Option<AdmissionWorkloadBinding>>($I`CurrentAdmissionWorkload`, {
+  defaultValue: O.none,
+});
+
+/**
+ * Run an effect with one admission workload generation inherited by every
+ * subprocess it spawns.
+ *
+ * **Details**
+ *
+ * Explicit workload fields on an individual spawn take precedence, allowing a
+ * narrower nested lease to replace the surrounding publication generation.
+ *
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const withAdmissionWorkloadBinding: {
+  <A, E, R>(workloadPath: string, leaseId: string): (self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  <A, E, R>(self: Effect.Effect<A, E, R>, workloadPath: string, leaseId: string): Effect.Effect<A, E, R>;
+} = dual(
+  3,
+  <A, E, R>(self: Effect.Effect<A, E, R>, workloadPath: string, leaseId: string): Effect.Effect<A, E, R> =>
+    self.pipe(
+      Effect.provideService(CurrentAdmissionWorkload, O.some(AdmissionWorkloadBinding.make({ workloadPath, leaseId })))
+    )
+);
+
+const causeMessage = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
+
+const writeAdmissionWorkload = Effect.fn("StepExec.writeAdmissionWorkload")(function* (
+  workloadPath: string,
+  leaseId: string,
+  workload: typeof AdmissionWorkloadState.Type
+) {
+  const text = yield* AdmissionWorkloadJson.encode(workload).pipe(
+    Effect.mapError((cause) =>
+      AdmissionWorkloadRegistrationError.make({
+        message: `Failed to encode admission workload ${leaseId}: ${cause.message}`,
+      })
+    )
+  );
+  const temporary = `${workloadPath}.${randomUUID()}.tmp`;
+  const script = `
+set -eu
+umask 077
+temporary="$1"
+destination="$2"
+cleanup() { rm -f -- "$temporary"; }
+trap cleanup EXIT HUP INT TERM
+set -C
+cat > "$temporary"
+set +C
+chmod 600 "$temporary"
+mv -f -- "$temporary" "$destination"
+trap - EXIT HUP INT TERM
+`;
+  const result = yield* Effect.try({
+    try: () =>
+      Bun.spawnSync({
+        cmd: ["sh", "-c", script, "yeet-admission-workload", temporary, workloadPath],
+        stdin: new TextEncoder().encode(`${text}\n`),
+        stdout: "ignore",
+        stderr: "pipe",
+      }),
+    catch: (cause) =>
+      AdmissionWorkloadRegistrationError.make({
+        message: `Failed to write admission workload ${leaseId}: ${causeMessage(cause)}`,
+      }),
+  });
+  if (result.exitCode !== 0) {
+    return yield* AdmissionWorkloadRegistrationError.make({
+      message: `Failed to write admission workload ${leaseId}: ${Str.trim(result.stderr.toString()) || "atomic write failed"}`,
+    });
+  }
+});
+
+const admissionWorkloadFields = (
+  workloadPath: string | undefined,
+  leaseId: string | undefined
+): O.Option<AdmissionWorkloadBinding> =>
+  workloadPath === undefined || leaseId === undefined
+    ? O.none()
+    : O.some(AdmissionWorkloadBinding.make({ leaseId, workloadPath }));
+
+const sameAdmissionBinding = (left: AdmissionWorkloadBinding, right: AdmissionWorkloadBinding): boolean =>
+  Str.Equivalence(left.workloadPath, right.workloadPath) && Str.Equivalence(left.leaseId, right.leaseId);
+
+const resolveAdmissionWorkload = Effect.fn("StepExec.resolveAdmissionWorkload")(function* (
+  options: SpawnFields
+): Effect.fn.Return<O.Option<ResolvedAdmissionWorkload>, AdmissionWorkloadRegistrationError> {
+  const explicitWorkloadPath = options.env?.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+  const explicitLeaseId = options.env?.BEEP_YEET_ADMISSION_LEASE_ID;
+  if ((explicitWorkloadPath === undefined) !== (explicitLeaseId === undefined)) {
+    return yield* AdmissionWorkloadRegistrationError.make({
+      message: "Admission workload path and lease id must be provided together.",
+    });
+  }
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Publication subprocesses intentionally inherit this admission binding.
+  const inheritedWorkloadPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Publication subprocesses intentionally inherit this admission binding.
+  const inheritedLeaseId = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+  if ((inheritedWorkloadPath === undefined) !== (inheritedLeaseId === undefined)) {
+    return yield* AdmissionWorkloadRegistrationError.make({
+      message: "Inherited admission workload path and lease id must be provided together.",
+    });
+  }
+  const explicit = admissionWorkloadFields(explicitWorkloadPath, explicitLeaseId);
+  const inherited = admissionWorkloadFields(inheritedWorkloadPath, inheritedLeaseId);
+  const scoped = yield* CurrentAdmissionWorkload;
+  const selected = O.isSome(explicit) ? explicit : scoped;
+  if (O.isSome(selected)) {
+    const ownership =
+      O.isNone(scoped) && O.isSome(inherited) && sameAdmissionBinding(selected.value, inherited.value)
+        ? "inherited"
+        : "owned";
+    return O.some(ResolvedAdmissionWorkload.make({ ...selected.value, ownership }));
+  }
+  return O.map(inherited, (binding) => ResolvedAdmissionWorkload.make({ ...binding, ownership: "inherited" }));
+});
+
+const prepareAdmissionWorkload = Effect.fn("StepExec.prepareAdmissionWorkload")(function* (
+  configured: O.Option<ResolvedAdmissionWorkload>
+): Effect.fn.Return<void, AdmissionWorkloadRegistrationError> {
+  if (O.isNone(configured) || configured.value.ownership === "inherited") return;
+  yield* writeAdmissionWorkload(configured.value.workloadPath, configured.value.leaseId, {
+    schemaVersion: "yeet-admission-workload/v1",
+    leaseId: configured.value.leaseId,
+    status: "pending",
+  });
+});
+
+const procStartFromStat = (text: string): string | undefined => {
+  const commandEnd = text.lastIndexOf(") ");
+  if (commandEnd < 0) return undefined;
+  return text
+    .slice(commandEnd + 2)
+    .trim()
+    .split(/\s+/u)[19];
+};
+
+const registerAdmissionWorkload = Effect.fn("StepExec.registerAdmissionWorkload")(function* (
+  configured: O.Option<ResolvedAdmissionWorkload>,
+  pid: ChildProcessSpawner.ProcessId
+): Effect.fn.Return<void, AdmissionWorkloadRegistrationError> {
+  if (O.isNone(configured) || configured.value.ownership === "inherited") return;
+  const processGroupId = PosInt.make(Number(pid));
+  const stat = yield* Effect.tryPromise({
+    try: () => Bun.file(`/proc/${processGroupId}/stat`).text(),
+    catch: (cause) =>
+      AdmissionWorkloadRegistrationError.make({
+        message: `Failed to read process generation for ${processGroupId}: ${causeMessage(cause)}`,
+      }),
+  });
+  const procStart = procStartFromStat(stat);
+  if (procStart === undefined) {
+    return yield* AdmissionWorkloadRegistrationError.make({
+      message: `Could not read process generation for ${processGroupId}.`,
+    });
+  }
+  yield* writeAdmissionWorkload(configured.value.workloadPath, configured.value.leaseId, {
+    schemaVersion: "yeet-admission-workload/v1",
+    leaseId: configured.value.leaseId,
+    status: "active",
+    processGroupId,
+    procStart,
+  });
+});
+
+const admissionEnvironment = (
+  options: SpawnFields,
+  configured: O.Option<ResolvedAdmissionWorkload>
+): Record<string, string | undefined> | undefined =>
+  O.match(configured, {
+    onNone: () => options.env,
+    onSome: (binding) => ({
+      ...options.env,
+      BEEP_YEET_ADMISSION_WORKLOAD_PATH: binding.workloadPath,
+      BEEP_YEET_ADMISSION_LEASE_ID: binding.leaseId,
+    }),
+  });
+
+const spawnFields = (options: SpawnFields, configured: O.Option<ResolvedAdmissionWorkload>) =>
   O.getSomesStruct({
     cwd: O.fromUndefinedOr(options.cwd),
-    env: O.fromUndefinedOr(options.env),
-    extendEnv: O.fromUndefinedOr(options.extendEnv),
+    env: O.fromUndefinedOr(admissionEnvironment(options, configured)),
+    extendEnv: O.fromUndefinedOr(O.isSome(configured) && options.env === undefined ? true : options.extendEnv),
+    detached: O.fromUndefinedOr(O.isSome(configured) && configured.value.ownership === "inherited" ? false : undefined),
     forceKillAfter: O.fromUndefinedOr(options.forceKillAfter),
   });
 
@@ -651,7 +903,7 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
   options: RunCapturedOptions
 ): Effect.fn.Return<
   CapturedStep,
-  PlatformError.PlatformError | CaptureCommandTimedOutError,
+  PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
   const source = options.source ?? "all";
@@ -659,12 +911,15 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
   const timeout = options.timeout;
   const operation = Effect.scoped(
     Effect.gen(function* () {
+      const admission = yield* resolveAdmissionWorkload(options);
+      yield* prepareAdmissionWorkload(admission);
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
-        ...spawnFields(options),
+        ...spawnFields(options, admission),
         stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: source === "stdout" ? "ignore" : "pipe",
       });
+      yield* registerAdmissionWorkload(admission, handle.pid);
       const deadline = capturePipeDeadline(handle, commandLine);
       const forceKillAfter = options.forceKillAfter ?? "1 second";
       const capture = Effect.all(
@@ -752,15 +1007,22 @@ export type RunCapturedStreamsOptions = SpawnFields & {
  */
 export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(function* (
   options: RunCapturedStreamsOptions
-): Effect.fn.Return<CapturedStreams, PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  CapturedStreams,
+  PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
   return yield* Effect.scoped(
     Effect.gen(function* () {
+      const admission = yield* resolveAdmissionWorkload(options);
+      yield* prepareAdmissionWorkload(admission);
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
-        ...spawnFields(options),
+        ...spawnFields(options, admission),
         stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: "pipe",
       });
+      yield* registerAdmissionWorkload(admission, handle.pid);
       const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
       const [stdout, stderr, exitCode] = yield* Effect.all(
         [
@@ -832,15 +1094,22 @@ export type RunToExitOptions = SpawnFields & {
  */
 export const runToExit = Effect.fn("StepExec.runToExit")(function* (
   options: RunToExitOptions
-): Effect.fn.Return<number, PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  number,
+  PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
   return yield* Effect.scoped(
     Effect.gen(function* () {
+      const admission = yield* resolveAdmissionWorkload(options);
+      yield* prepareAdmissionWorkload(admission);
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
-        ...spawnFields(options),
+        ...spawnFields(options, admission),
         stdin: options.stdin ?? options.stdio,
         stdout: options.stdio,
         stderr: options.stdio,
       });
+      yield* registerAdmissionWorkload(admission, handle.pid);
       return yield* handle.exitCode;
     })
   );

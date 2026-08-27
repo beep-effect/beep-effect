@@ -173,6 +173,20 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
     });
   }
 
+  if (options.ciParity && options.mode !== "verify") {
+    return yield* YeetCommandError.make({
+      message: "yeet --ci-parity is only valid for verify; ordinary publish runs CI parity automatically.",
+      exitCode: 1,
+    });
+  }
+
+  if (options.ciParity && (options.tier !== "full" || options.merged)) {
+    return yield* YeetCommandError.make({
+      message: "yeet verify --ci-parity requires the full tier and cannot be combined with --merged.",
+      exitCode: 1,
+    });
+  }
+
   if (options.startPrEarly && options.mode !== "publish") {
     return yield* YeetCommandError.make({
       message: "yeet --start-pr-early is only valid for publish.",

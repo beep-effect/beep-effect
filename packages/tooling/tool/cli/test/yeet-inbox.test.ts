@@ -34,12 +34,12 @@ const capsule = (overrides: Partial<Parameters<typeof YeetFailureCapsule.make>[0
     ...overrides,
   });
 
-const row = (subject: YeetFailureCapsule): YeetCheckFailedRow =>
+const row = (subject: YeetFailureCapsule, severity: "P0" | "P1" = "P0"): YeetCheckFailedRow =>
   YeetCheckFailedRow.make({
     capsule: subject,
     checkout: "/repo",
     id: yeetInboxRowId(subject),
-    severity: "P0",
+    severity,
     ts: AT,
   });
 
@@ -88,6 +88,7 @@ describe("yeetInboxPaths", () => {
       const paths = yield* yeetInboxPaths("/repo");
 
       expect(paths.dir).toBe("/repo/.beep/inbox");
+      expect(paths.activePath).toBe("/repo/.beep/inbox/active.ndjson");
       expect(paths.failuresPath).toBe("/repo/.beep/inbox/failures.ndjson");
       expect(paths.acksDir).toBe("/repo/.beep/inbox/acks");
     }).pipe(provideScopedLayer(NodePath.layer))
@@ -139,7 +140,44 @@ describe("appendYeetInboxRow", () => {
         expect(A.length(lines)).toBe(2);
 
         const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
-        expect(A.map(decoded, (entry) => entry.capsule.lane)).toEqual(["Check / Coverage", "Check / Lint"]);
+        expect(
+          A.getSomes(
+            A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
+          )
+        ).toEqual(["Check / Coverage", "Check / Lint"]);
+
+        const activeText = yield* fs.readFileString(paths.activePath);
+        const activeRows = yield* Effect.forEach(A.filter(Str.split(activeText, "\n"), Str.isNonEmpty), (line) =>
+          YeetInboxRowJson.decode(line)
+        );
+        expect(A.map(activeRows, (entry) => entry.id)).toEqual(expect.arrayContaining([first.id, second.id]));
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("keeps every unresolved P0 while bounding lower-severity history", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* yeetInboxPaths(root);
+        yield* fs.makeDirectory(paths.dir, { recursive: true });
+        const protectedP0 = row(capsule({ lane: "Check / Protected P0" }));
+        const historical = [
+          protectedP0,
+          ...A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1")),
+        ];
+        const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine);
+        yield* fs.writeFileString(paths.failuresPath, `${A.join(lines, "\n")}\n`);
+        yield* fs.writeFileString(paths.activePath, `${lines.at(-1) ?? ""}\n`);
+
+        const current = row(capsule({ lane: "Check / Current" }));
+        yield* appendYeetInboxRow(root, current);
+
+        const activeText = yield* fs.readFileString(paths.activePath);
+        const activeLines = A.filter(Str.split(activeText, "\n"), Str.isNonEmpty);
+        expect(activeLines).toHaveLength(2_048);
+        expect(A.some(activeLines, Str.includes(current.id))).toBe(true);
+        expect(A.some(activeLines, Str.includes(protectedP0.id))).toBe(true);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -175,7 +213,11 @@ describe("appendYeetInboxRow", () => {
         expect(A.length(lines)).toBe(2);
 
         const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
-        expect(A.map(decoded, (entry) => entry.capsule.lane)).toEqual(["Check / Coverage", "Check / Lint"]);
+        expect(
+          A.getSomes(
+            A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
+          )
+        ).toEqual(["Check / Coverage", "Check / Lint"]);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );

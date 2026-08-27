@@ -1632,6 +1632,43 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
   });
 });
 
+const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBaseline")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  CoverageRegressionBaseline,
+  CoverageRegressionError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
+  return yield* O.match(configuredBase, {
+    onNone: () => readBaseline(repoRoot),
+    onSome: (base) =>
+      runGitRawOutput(repoRoot, ["show", `${base}:${coverageRegressionBaselinePath}`], coverageBaselineGitAdapter).pipe(
+        Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
+        Effect.mapError((cause) =>
+          coverageConfigurationError(`Failed to read the coverage comparison baseline from ${base}`, cause)
+        )
+      ),
+  });
+});
+
+/**
+ * Read the base-pinned baseline used by a coverage comparison.
+ *
+ * **Example** (Build the comparison read)
+ *
+ * ```ts
+ * import { readCoverageComparisonBaselineForTesting } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(readCoverageComparisonBaselineForTesting("/repo"))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const readCoverageComparisonBaselineForTesting = readComparisonBaseline;
+
 /**
  * Read the committed baseline, distinguishing "not there yet" from "unreadable".
  *
@@ -2524,8 +2561,12 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
     repoRoot: string,
     scoped: boolean,
     expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
-  ): Effect.fn.Return<void, CoverageRegressionError | QualityTaskFailed, FileSystem.FileSystem | Path.Path> {
-    const baseline = yield* readBaseline(repoRoot);
+  ): Effect.fn.Return<
+    void,
+    CoverageRegressionError | QualityTaskFailed,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  > {
+    const baseline = yield* readComparisonBaseline(repoRoot);
     const actuals = yield* collectCoverageSnapshot(repoRoot);
     const result = compareCoverage(baseline, actuals, scoped, expectedPackageNames);
     const path = yield* Path.Path;

@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `decompose`
 Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Graduated 2026-08-17 with `goals/packet-control-plane-core` as the sole
 promised-now candidate. **Reopened at `decompose` 2026-08-26** on the ratified
@@ -57,6 +59,12 @@ shape is proven against real half-migrated manifests before the fleet sees it?
 
 ## Trail
 
+- 2026-08-27 (D6 navigation migration): ship-velocity P5 landed the ignored
+  whole-file Atlas and marked README status projections. No exploration
+  streams were fabricated: manifests are explicit adoption snapshots until
+  Amendment G's freeze lifts, and any opted-in stream is fail-closed
+  PacketCore authority. Candidate 3 retains fleet adoption and the by-state
+  projection.
 - 2026-08-26 (Session B grill, reopened at decompose): seven research lanes ran
   before the grill — three repo audits on GPT-5.6 Sol at xhigh, three web
   prior-art sweeps on Grok, and the rung-4 implementation lane — with reports

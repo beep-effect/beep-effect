@@ -438,6 +438,7 @@ describe("yeet planner", () => {
       "commit:git:commit",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "publish:head-install-preflight",
       "publish:git:push",
     ]);
@@ -495,7 +496,10 @@ describe("yeet planner", () => {
           "quality:check:tsgo-smoke",
         ],
       }),
-      expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
+      expect.objectContaining({
+        id: "test",
+        laneIds: ["quality:coverage", "quality:desktop-ipc", "quality:test-unit", "quality:test-integration"],
+      }),
       expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
     ]);
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
@@ -517,6 +521,23 @@ describe("yeet planner", () => {
       "pre-push",
       "--collect-all",
     ]);
+  });
+
+  it("builds explicit CI parity as the installed merge-preview CI battery", () => {
+    const plan = buildYeetRunPlanForTesting({ ciParity: true, context, message: O.none(), mode: "verify" });
+
+    expect(A.map(plan.steps, (step) => step.label)).toEqual(["fallow-advisory-feedback", "full:ci-parity"]);
+    const parity = findStep(plan.steps, "full:ci-parity");
+    expect(parity.args).toEqual(["run", "beep", "ci", "local", "--affected", "--base", "origin/main"]);
+    expect(parity.verification).toBe("installed-merge-preview-pr-posture");
+    expect(parity.env).toMatchObject({
+      BEEP_TEST_DATABASE_DRIVER: undefined,
+      BEEP_TEST_DATABASE_URL: undefined,
+      CI: "true",
+      DATABASE_URL: undefined,
+      GITHUB_ACTIONS: "true",
+      TURBO_CACHE: "local:rw",
+    });
   });
 
   it("builds review-fix verify as the targeted review proof", () => {
@@ -708,6 +729,7 @@ describe("yeet planner", () => {
       "early-publish:git:push",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
     ]);
@@ -857,6 +879,7 @@ describe("yeet planner", () => {
       "commit:git:commit",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "publish:head-install-preflight",
       "publish:git:push",
       "monitor:pr-context",
@@ -2185,6 +2208,7 @@ describe("yeet publish scope helpers", () => {
       "commit:git:commit",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
@@ -2212,6 +2236,7 @@ describe("yeet publish scope helpers", () => {
       "publish:pr-create",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
     ]);

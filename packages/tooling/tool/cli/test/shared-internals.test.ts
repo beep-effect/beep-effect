@@ -16,6 +16,7 @@ import {
   applyJsoncModification,
   booleanEnvValue,
   canUseTurboCacheSecretSession,
+  clearTurboCacheSecretSessionVerdictsForTesting,
   configStringEqualsSync,
   configStringOption,
   configStringOptionSync,
@@ -495,11 +496,14 @@ describe("canUseTurboCacheSecretSession", () => {
 
   const sessionWith = Effect.fn("sessionWith")(function* (
     env: Record<string, string>,
-    spawn: Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>
+    spawns: ReadonlyArray<Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>>
   ) {
+    clearTurboCacheSecretSessionVerdictsForTesting();
     const spawned = yield* Ref.make(0);
     const spawner = ChildProcessSpawner.make(() =>
-      Ref.update(spawned, (count) => count + 1).pipe(Effect.andThen(spawn))
+      Ref.getAndUpdate(spawned, (count) => count + 1).pipe(
+        Effect.flatMap((index) => spawns[index] ?? spawns[spawns.length - 1] ?? Effect.succeed(stubHandle(1)))
+      )
     );
     const usable = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(
       canUseTurboCacheSecretSession("/repo")
@@ -508,9 +512,26 @@ describe("canUseTurboCacheSecretSession", () => {
   });
 
   it.effect(
+    "caches the resolvability verdict once per CLI run",
+    Effect.fnUntraced(function* () {
+      clearTurboCacheSecretSessionVerdictsForTesting();
+      const spawned = yield* Ref.make(0);
+      const spawner = ChildProcessSpawner.make(() =>
+        Ref.updateAndGet(spawned, (count) => count + 1).pipe(Effect.as(stubHandle(0)))
+      );
+      const probe = provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
+        canUseTurboCacheSecretSession("/repo/cache-once")
+      ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+      expect(yield* probe).toBe(true);
+      expect(yield* probe).toBe(true);
+      expect(yield* Ref.get(spawned)).toBe(2);
+    })
+  );
+
+  it.effect(
     "refuses a session under CI without probing the op CLI",
     Effect.fnUntraced(function* () {
-      expect(yield* sessionWith({ CI: "true" }, Effect.succeed(stubHandle(0)))).toEqual({
+      expect(yield* sessionWith({ CI: "true" }, [Effect.succeed(stubHandle(0))])).toEqual({
         usable: false,
         spawned: 0,
       });
@@ -518,10 +539,17 @@ describe("canUseTurboCacheSecretSession", () => {
   );
 
   it.effect(
-    "accepts a session when op whoami exits zero and refuses otherwise",
+    "requires both a live session and resolvable secret references",
     Effect.fnUntraced(function* () {
-      expect(yield* sessionWith({}, Effect.succeed(stubHandle(0)))).toEqual({ usable: true, spawned: 1 });
-      expect(yield* sessionWith({ CI: "false" }, Effect.succeed(stubHandle(1)))).toEqual({
+      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0)), Effect.succeed(stubHandle(0))])).toEqual({
+        usable: true,
+        spawned: 2,
+      });
+      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0)), Effect.succeed(stubHandle(1))])).toEqual({
+        usable: false,
+        spawned: 2,
+      });
+      expect(yield* sessionWith({ CI: "false" }, [Effect.succeed(stubHandle(1))])).toEqual({
         usable: false,
         spawned: 1,
       });
@@ -532,7 +560,7 @@ describe("canUseTurboCacheSecretSession", () => {
     "treats a spawn failure as an unavailable op CLI",
     Effect.fnUntraced(function* () {
       const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
-      expect(yield* sessionWith({}, Effect.fail(failure))).toEqual({ usable: false, spawned: 1 });
+      expect(yield* sessionWith({}, [Effect.fail(failure)])).toEqual({ usable: false, spawned: 1 });
     })
   );
 });

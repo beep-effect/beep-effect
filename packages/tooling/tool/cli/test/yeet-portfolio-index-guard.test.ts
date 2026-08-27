@@ -142,30 +142,64 @@ describe("yeet publish derived goals index", () => {
         present: false,
         regenerated: "# Goals Index\n",
         staged: true,
+        stagedDeletion: false,
       })
     ).toBe("absent");
   });
 
-  it("accepts a committed index that already equals the projection", () => {
+  it("accepts an unstaged current projection and refuses a staged copy", () => {
     const regenerated = "# Goals Index\n\n1 packets\n";
     expect(
-      portfolioIndexPublishDisposition({ committed: O.some(regenerated), present: true, regenerated, staged: false })
+      portfolioIndexPublishDisposition({
+        committed: O.some(regenerated),
+        present: true,
+        regenerated,
+        staged: false,
+        stagedDeletion: false,
+      })
     ).toBe("current");
     expect(
-      portfolioIndexPublishDisposition({ committed: O.some(regenerated), present: true, regenerated, staged: true })
-    ).toBe("current");
+      portfolioIndexPublishDisposition({
+        committed: O.some(regenerated),
+        present: true,
+        regenerated,
+        staged: true,
+        stagedDeletion: false,
+      })
+    ).toBe("drifted");
   });
 
   it("regenerates an unstaged stale index and refuses a hand-staged one", () => {
     const regenerated = "# Goals Index\n\n2 packets\n";
     const committed = O.some("# Goals Index\n\nhand written\n");
-    expect(portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: false })).toBe(
-      "regenerated"
-    );
-    expect(portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: true })).toBe("drifted");
-    expect(portfolioIndexPublishDisposition({ committed: O.none(), present: true, regenerated, staged: false })).toBe(
-      "regenerated"
-    );
+    expect(
+      portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: false, stagedDeletion: false })
+    ).toBe("regenerated");
+    expect(
+      portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: true, stagedDeletion: false })
+    ).toBe("drifted");
+    expect(
+      portfolioIndexPublishDisposition({
+        committed: O.none(),
+        present: true,
+        regenerated,
+        staged: false,
+        stagedDeletion: false,
+      })
+    ).toBe("regenerated");
+  });
+
+  it("accepts a staged deletion that retires a legacy tracked projection", () => {
+    const regenerated = "# Goals Index\n\n2 packets\n";
+    expect(
+      portfolioIndexPublishDisposition({
+        committed: O.some(regenerated),
+        present: true,
+        regenerated,
+        staged: true,
+        stagedDeletion: true,
+      })
+    ).toBe("removed");
   });
 
   it("leaves a repo without goals/ untouched", () =>
@@ -197,7 +231,7 @@ describe("yeet publish derived goals index", () => {
       )
     ));
 
-  it("regenerates a missing index and stages it into the commit", () =>
+  it("regenerates a missing index without staging it", () =>
     Effect.runPromise(
       withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
@@ -210,12 +244,12 @@ describe("yeet publish derived goals index", () => {
 
           expect(disposition).toBe("regenerated");
           expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
-          expect(yield* runGitStatus(tmpDir)).toBe(`A  ${PORTFOLIO_INDEX_PATH}`);
+          expect(yield* runGitStatus(tmpDir)).toBe(`?? ${PORTFOLIO_INDEX_PATH}`);
         })
       )
     ));
 
-  it("overwrites a stale unstaged index instead of committing the drift", () =>
+  it("overwrites a stale unstaged index without staging the refresh", () =>
     Effect.runPromise(
       withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
@@ -231,7 +265,8 @@ describe("yeet publish derived goals index", () => {
 
           expect(disposition).toBe("regenerated");
           expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
-          expect(yield* runGitStatus(tmpDir)).toBe(`M  ${PORTFOLIO_INDEX_PATH}`);
+          expect(yield* runGitStatus(tmpDir)).toBe(`M ${PORTFOLIO_INDEX_PATH}`);
+          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
         })
       )
     ));
@@ -285,7 +320,7 @@ describe("yeet publish derived goals index", () => {
       )
     ));
 
-  it("proceeds when the staged index already equals the regenerated projection", () =>
+  it("refuses a staged index even when it equals the regenerated projection", () =>
     Effect.runPromise(
       withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
@@ -293,13 +328,38 @@ describe("yeet publish derived goals index", () => {
           yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
           yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
 
+          const failure = yield* enforcePortfolioIndexPublishIntent(
+            tempContext,
+            YeetStagedPublishIntent.make({ paths: [PORTFOLIO_INDEX_PATH] })
+          ).pipe(Effect.flip);
+
+          expect(failure.message).toContain("must never enter a commit");
+          expect(yield* runGitStatus(tmpDir)).toContain(`A  ${PORTFOLIO_INDEX_PATH}`);
+        })
+      )
+    ));
+
+  it("preserves a staged deletion while regenerating the ignored local projection", () =>
+    Effect.runPromise(
+      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
+          yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
+          yield* runGit(tmpDir, ["commit", "-m", "track legacy index"]);
+          yield* fs.remove(indexPath);
+          yield* runGit(tmpDir, ["add", "-u", "--", PORTFOLIO_INDEX_PATH]);
+
           const disposition = yield* enforcePortfolioIndexPublishIntent(
             tempContext,
             YeetStagedPublishIntent.make({ paths: [PORTFOLIO_INDEX_PATH] })
           );
 
-          expect(disposition).toBe("current");
-          expect(yield* runGitStatus(tmpDir)).toBe(`A  ${PORTFOLIO_INDEX_PATH}`);
+          expect(disposition).toBe("regenerated");
+          expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
+          expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--diff-filter=D", "--name-only"]))).toBe(
+            PORTFOLIO_INDEX_PATH
+          );
         })
       )
     ));

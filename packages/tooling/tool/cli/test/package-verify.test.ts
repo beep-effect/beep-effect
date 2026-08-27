@@ -4,9 +4,11 @@ import {
   PackageVerifyStepResult,
   PackageVerifyWorkspace,
   packageVerifyStepSpecsForTesting,
+  recordPackageVerifyInboxForTesting,
   renderPackageVerifyReportForTesting,
   selectPackageVerifyTargetForTesting,
 } from "@beep/repo-cli/test/Quality";
+import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -71,7 +73,7 @@ const withTempDirectory = <Result, Error, Requirements>(
 describe("package verify", () => {
   it("builds quick and default step specs", () => {
     expect(A.map(packageVerifyStepSpecsForTesting(true), (spec) => spec.step)).toEqual(["lint", "check"]);
-    expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["lint", "check", "test"]);
+    expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
   });
 
   it("selects an explicit workspace package", () =>
@@ -137,9 +139,11 @@ describe("package verify", () => {
   it("renders compact summaries and failed step output", () => {
     const lines = renderPackageVerifyReportForTesting(
       PackageVerifyReport.make({
+        headSha: "abc123",
         packageName: "@beep/demo",
         packageDir: "/repo/packages/demo",
         quick: true,
+        repoRoot: "/repo",
         results: [
           PackageVerifyStepResult.make({
             step: "lint",
@@ -170,4 +174,41 @@ describe("package verify", () => {
     expect(rendered).toContain("-------- check (failed) --------");
     expect(Str.endsWith("type error\n")(rendered)).toBe(true);
   });
+
+  it("writes package failures to the shared inbox and clears them on success", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const result = (ok: boolean) =>
+            PackageVerifyStepResult.make({
+              step: "check",
+              script: "beep:check",
+              skipped: false,
+              ok,
+              durationMillis: 20,
+              exitCode: O.some(ok ? 0 : 1),
+              output: ok ? "" : "type error",
+            });
+          const report = (ok: boolean) =>
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick: true,
+              repoRoot: tmpDir,
+              results: [result(ok)],
+            });
+
+          yield* recordPackageVerifyInboxForTesting(report(false));
+          const failed = yield* loadYeetInboxView(tmpDir);
+          expect(failed.entries).toHaveLength(1);
+          expect(failed.entries[0]?.row.kind).toBe("local-shard-failed");
+          expect(failed.entries[0]?.ack.acked).toBe(false);
+
+          yield* recordPackageVerifyInboxForTesting(report(true));
+          const repaired = yield* loadYeetInboxView(tmpDir);
+          expect(repaired.entries[0]?.ack.acked).toBe(true);
+        })
+      )
+    ));
 });

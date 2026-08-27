@@ -34,6 +34,7 @@ const verdict = YeetVerdict.make({
       status: "passed",
       exitCode: 0,
       durationMs: 4200,
+      peakRssKb: 262144,
     }),
   ],
   message: "yeet publish proof passed.",
@@ -73,6 +74,7 @@ describe("YeetVerdictJson", () => {
       const text = yield* YeetVerdictJson.encode(verdict);
       expect(text).toContain(`"attemptId":"${ATTEMPT_ID_TEXT}"`);
       expect(text).toContain('"elapsedMs":5000');
+      expect(text).toContain('"peakRssKb":262144');
       expect(text).not.toContain('"_id":"Option"');
       expect(text).not.toContain('"_tag":"Some"');
     })
@@ -94,9 +96,14 @@ describe("YeetVerdictJson", () => {
             ready: false,
             failing: O.some("threads-resolved"),
             criteria: YeetMergeReadyCriteria.make({
+              prOpen: true,
+              notDraft: true,
               closeoutRun: true,
-              checksGreen: true,
+              requiredChecksGreen: true,
               threadsResolved: false,
+              mergeable: true,
+              mergeStateAcceptable: true,
+              reviewDecisionAcceptable: true,
               greptileScore: O.some("5/5"),
             }),
           })
@@ -120,6 +127,15 @@ describe("YeetVerdictJson", () => {
   );
 
   it("keeps the Greptile score out of the hard criterion domain", () => {
-    expect(YeetMergeReadyCriterion.Options).toEqual(["closeout-run", "checks-green", "threads-resolved"]);
+    expect(YeetMergeReadyCriterion.Options).toEqual([
+      "pr-open",
+      "not-draft",
+      "closeout-run",
+      "required-checks-green",
+      "threads-resolved",
+      "mergeable",
+      "merge-state-acceptable",
+      "review-decision-acceptable",
+    ]);
   });
 });

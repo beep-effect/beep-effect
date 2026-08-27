@@ -1,0 +1,62 @@
+{
+  "description": "Checkout-local Yeet inbox backpressure.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/packet-projections.sh",
+            "timeout": 30,
+            "statusMessage": "Refreshing packet projections"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Reading Yeet inbox"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Checking Yeet inbox"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Reading Yeet inbox"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "timeout": 2,
+            "statusMessage": "Checking Yeet inbox"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -35,7 +35,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { readYeetAckState, YeetAckState } from "./Ack.ts";
-import { YeetInboxRow, YeetInboxRowJson, yeetInboxPaths, yeetInboxRowId } from "./Inbox.ts";
+import { YeetInboxRow, YeetInboxRowJson, yeetInboxExpectedRowId, yeetInboxPaths } from "./Inbox.ts";
 import { loadYeetRemediationWave } from "./Remediation.ts";
 import type { Path } from "effect";
 import type { YeetRemediationWave } from "./Remediation.ts";
@@ -139,17 +139,18 @@ export type YeetInboxLiveness = typeof YeetInboxLiveness.Type;
 export const yeetInboxRowLiveness: {
   (wave: O.Option<YeetRemediationWave>): (row: YeetInboxRow) => YeetInboxLiveness;
   (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness;
-} = dual(
-  2,
-  (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness =>
-    O.match(wave, {
-      onNone: () => "unknown" as const,
-      onSome: (current) =>
-        current.headSha === row.capsule.headSha && current.prNumber === row.capsule.prNumber
-          ? ("live" as const)
-          : ("superseded" as const),
-    })
-);
+} = dual(2, (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness => {
+  if (row.kind === "sibling-collision" || row.kind === "local-shard-failed") {
+    return "live";
+  }
+  return O.match(wave, {
+    onNone: () => "unknown" as const,
+    onSome: (current) =>
+      current.headSha === row.capsule.headSha && current.prNumber === row.capsule.prNumber
+        ? ("live" as const)
+        : ("superseded" as const),
+  });
+});
 
 /**
  * One inbox row joined with everything a consumer decides on.
@@ -326,7 +327,7 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   }
   const lines = A.filter(Str.split(terminatedPortion(text.value), "\n"), Str.isNonEmpty);
   const rows = A.getSomes(A.map(lines, YeetInboxRowJson.decodeOption));
-  const wellFormed = A.filter(rows, (row) => row.id === yeetInboxRowId(row.capsule));
+  const wellFormed = A.filter(rows, (row) => row.id === yeetInboxExpectedRowId(row));
   const deduped = dedupeRowsById(wellFormed);
   const wave = yield* loadYeetRemediationWave(repoRoot);
   const entries = yield* Effect.forEach(deduped, (row) =>

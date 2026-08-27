@@ -3,8 +3,8 @@
  *
  * Every `.github/workflows/check.yml` lane body lives here as
  * {@link QualityTaskStep} plans so hosted CI and local replays execute the
- * same commands. GitHub-context orchestration (docgen lane-gate modes, the
- * desktop-IPC path filter, commitlint range computation, fallow envelope
+ * same commands. GitHub-context orchestration (the desktop-IPC path filter,
+ * commitlint range computation, fallow envelope
  * validation and artifact upload) stays in the workflow and arrives as flags.
  *
  * @packageDocumentation
@@ -226,7 +226,7 @@ export type CiLaneId = typeof CiLaneId.Type;
 const isCiLaneId = S.is(CiLaneId);
 
 /**
- * Docgen lane execution modes (computed by the workflow lane-gate).
+ * Docgen lane execution modes.
  *
  * **Example** (Configure a CI lane)
  *
@@ -239,7 +239,7 @@ const isCiLaneId = S.is(CiLaneId);
  * @category models
  * @since 0.0.0
  */
-export const DOCGEN_LANE_MODE_VALUES = ["none", "affected", "full"] as const;
+export const DOCGEN_LANE_MODE_VALUES = ["auto", "none", "affected", "full"] as const;
 
 /**
  * Docgen lane execution mode.
@@ -257,7 +257,7 @@ export const DOCGEN_LANE_MODE_VALUES = ["none", "affected", "full"] as const;
  */
 export const DocgenLaneMode = LiteralKit(DOCGEN_LANE_MODE_VALUES).pipe(
   $I.annoteSchema("DocgenLaneMode", {
-    description: "Docgen lane execution mode computed by the workflow lane-gate.",
+    description: "Docgen lane execution mode, including CLI-owned automatic scope selection.",
   })
 );
 
@@ -355,7 +355,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "lint-policy",
-    contextName: "Lint Policy",
+    contextName: "Heavy / Lint Policy",
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -372,7 +372,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "check",
-    contextName: "Check",
+    contextName: "Heavy / Check",
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -388,7 +388,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
-    contextName: "Test Integration",
+    contextName: "Heavy / Test Integration",
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -396,7 +396,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "coverage",
-    contextName: "Coverage Regression",
+    contextName: "Heavy / Coverage Regression",
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -404,16 +404,16 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "docgen",
-    contextName: "Docgen",
+    contextName: "Heavy / Docgen",
     required: true,
     laneClass: "workflow-gated",
     replay: "exact",
     flags: ["--mode", "--base", "--head"],
-    notes: "Lane-gate mode computation stays in the workflow and arrives as --mode.",
+    notes: "The CLI computes none/affected/full from the base-to-head diff when --mode auto is selected.",
   }),
   CiLaneDescriptor.make({
     id: "doctest",
-    contextName: "Doctest",
+    contextName: "Heavy / Doctest",
     required: true,
     laneClass: "workflow-gated",
     replay: "exact",
@@ -687,6 +687,15 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
 // not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+const QualityCheckConcurrency = LiteralKit(["2", "3"]);
+
+const qualityCheckConcurrencyArg = (): string =>
+  `--concurrency=${pipe(
+    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+    S.decodeUnknownOption(QualityCheckConcurrency)(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
+    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+    O.getOrElse(() => (Bun.env.GITHUB_ACTIONS === "true" ? "2" : "3"))
+  )}`;
 
 const turboRootLaneStep = (
   repoRoot: string,
@@ -720,6 +729,9 @@ const turboTaskLaneStep = (
 
 const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
   DocgenLaneMode.$match(options.mode, {
+    auto: () => [
+      rootScriptStep(repoRoot, "ci:docgen", "docgen:local", ["--base", options.base, "--head", options.head]),
+    ],
     none: A.empty<QualityTaskStep>,
     affected: () => [
       rootScriptStep(repoRoot, "ci:docgen", "docgen:local", ["--base", options.base, "--head", options.head]),
@@ -770,6 +782,7 @@ export const doctestStepForTesting: {
 
 const doctestLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
   DocgenLaneMode.$match(options.mode, {
+    auto: A.empty<QualityTaskStep>,
     none: A.empty<QualityTaskStep>,
     affected: A.empty<QualityTaskStep>,
     full: () => doctestStepForTesting(repoRoot, undefined),
@@ -901,9 +914,10 @@ export const ciLaneStepsForTesting: {
       build: () => [
         rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
       ],
-      // Fresh Check graphs can overlap the largest tsgo processes and OOM even
-      // on 32GB fleet workers, so this lane stays serial.
-      check: () => [turboRootLaneStep(repoRoot, "check", "check", ["--concurrency=1"], options)],
+      // D2 admission profile: a solo proof uses measured-safe c3; any active
+      // sibling lease lowers it to c2. Hosted CI has no local admission lease
+      // and therefore takes the conservative c2 default.
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", [qualityCheckConcurrencyArg()], options)],
       codegen: () => [
         ...codegenDriverSteps(repoRoot),
         // The desktop migration bundle is generated from
@@ -1160,12 +1174,83 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
   }
 });
 
+const isDocgenGlobalInput = (file: string): boolean =>
+  Str.startsWith("packages/tooling/tool/docgen/")(file) ||
+  Str.startsWith("packages/tooling/tool/cli/src/commands/Docgen/")(file) ||
+  file === ".bun-version" ||
+  file === "bun.lock" ||
+  file === "package.json" ||
+  file === "turbo.json" ||
+  O.isSome(Str.match(/^tsconfig(?:\..*)?\.json$/u)(file));
+
+const isDocgenRelevantInput = (file: string): boolean =>
+  Str.startsWith("apps/")(file) ||
+  Str.startsWith("packages/")(file) ||
+  Str.startsWith("infra/")(file) ||
+  Str.endsWith("/docgen.json")(file) ||
+  O.isSome(Str.match(/\.(?:ts|tsx|mts|cts|md)$/u)(file));
+
+/**
+ * Select the canonical Docgen lane mode from changed repository paths.
+ *
+ * **Example** (Escalate a global Docgen input)
+ *
+ * ```ts
+ * import { docgenLaneModeForChangedPaths } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(docgenLaneModeForChangedPaths(["bun.lock"])) // "full"
+ * ```
+ *
+ * @param changedPaths - Normalized base-to-head repository paths.
+ * @returns `none` for inert changes, `full` for global inputs, otherwise `affected`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const docgenLaneModeForChangedPaths = (changedPaths: ReadonlyArray<string>): DocgenLaneMode =>
+  A.some(changedPaths, isDocgenGlobalInput)
+    ? "full"
+    : A.some(changedPaths, isDocgenRelevantInput)
+      ? "affected"
+      : "none";
+
+const normalizedOutputPaths = (output: string): ReadonlyArray<string> =>
+  pipe(Str.split(/\r?\n/u)(output), A.map(normalizeSlashes), A.filter(Str.isNonEmpty), A.dedupe, A.sort(Order.String));
+
+const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(function* (
+  repoRoot: string,
+  base: string,
+  head: string
+): Effect.fn.Return<DocgenLaneMode, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["diff", "--name-only", `${base}...${head}`],
+    cwd: repoRoot,
+    source: "stdout",
+  }).pipe(CiCommandError.mapError("Failed to resolve automatic Docgen scope."));
+  if (result.exitCode !== 0) {
+    return yield* CiCommandError.make({
+      message: `git diff for automatic Docgen scope failed with exit code ${result.exitCode}.`,
+    });
+  }
+  const changedPaths = normalizedOutputPaths(result.output);
+  const mode = docgenLaneModeForChangedPaths(changedPaths);
+  yield* Console.log(`[ci] docgen: auto-selected ${mode} from ${A.length(changedPaths)} changed path(s)`);
+  return mode;
+});
+
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   repoRoot: string,
   laneId: CiLaneId,
   options: CiLaneRunOptions
-): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
-  const steps = ciLaneStepsForTesting(repoRoot, laneId, options);
+): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
+  const resolvedOptions =
+    laneId === "docgen" && options.mode === "auto"
+      ? CiLaneRunOptions.make({
+          ...options,
+          mode: yield* resolveAutoDocgenLaneMode(repoRoot, options.base, options.head),
+        })
+      : options;
+  const steps = ciLaneStepsForTesting(repoRoot, laneId, resolvedOptions);
   if (A.isReadonlyArrayEmpty(steps)) {
     yield* Console.log(`[ci] ${laneId}: no steps for this configuration (skipped)`);
     return;
@@ -1265,13 +1350,7 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
   }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const changedPaths = pipe(
-    Str.split(/\r?\n/)(result.output),
-    A.map(normalizeSlashes),
-    A.filter(Str.isNonEmpty),
-    A.dedupe,
-    A.sort(Order.String)
-  );
+  const changedPaths = normalizedOutputPaths(result.output);
   if (A.isReadonlyArrayEmpty(changedPaths)) return A.empty<string>();
 
   const trackedResult = yield* runCaptured({
@@ -1285,13 +1364,7 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
       message: `git ls-files for Doctest failed with exit code ${trackedResult.exitCode}.`,
     });
   }
-  const trackedPaths = pipe(
-    Str.split(/\r?\n/)(trackedResult.output),
-    A.map(normalizeSlashes),
-    A.filter(Str.isNonEmpty),
-    A.dedupe,
-    A.sort(Order.String)
-  );
+  const trackedPaths = normalizedOutputPaths(trackedResult.output);
   const manifestPaths = A.filter(trackedPaths, Str.endsWith("/package.json"));
   const workspaces = yield* Effect.forEach(manifestPaths, (manifestPath) =>
     readPackageJsonFile(path.join(repoRoot, manifestPath)).pipe(
@@ -1396,6 +1469,7 @@ const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (
   options: CiLaneRunOptions
 ): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
   const files = yield* DocgenLaneMode.$match(options.mode, {
+    auto: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
     none: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
     affected: () => Effect.map(resolveAffectedDoctestFiles(repoRoot, options.base, options.head), O.some),
     full: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
@@ -1506,8 +1580,8 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Pass --summarize to the turbo-backed lane (CI always does)")
     ),
     mode: Flag.choiceWithValue("mode", docgenModeFlagChoices).pipe(
-      Flag.withDefault("affected"),
-      Flag.withDescription("Docgen lane mode (computed by the workflow lane-gate in CI)")
+      Flag.withDefault("auto"),
+      Flag.withDescription("Docgen lane mode; auto derives none/affected/full from --base...--head")
     ),
     from: Flag.string("from").pipe(Flag.withDescription("Commitlint range start (defaults to --base)"), Flag.optional),
     to: Flag.string("to").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Commitlint range end")),
@@ -1709,7 +1783,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     commitlint: () => ["--from", plan.base],
     coverage: () => turboShapeFlags,
     "desktop-ipc": A.empty<string>,
-    docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    docgen: () => ["--mode", plan.affected ? "auto" : "full", "--base", plan.base],
     doctest: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],

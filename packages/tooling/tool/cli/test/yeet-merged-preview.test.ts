@@ -183,4 +183,28 @@ describe("yeet merged tier guards", () => {
       expect(Exit.isSuccess(exit)).toBe(true);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
+
+  it.effect("accepts --ci-parity on a full verify", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, mode: "verify", tier: "full" }))
+      );
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("refuses --ci-parity outside full verify", () =>
+    Effect.gen(function* () {
+      const publishExit = yield* Effect.exit(
+        validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, mode: "publish" }))
+      );
+      const mergedExit = yield* Effect.exit(
+        validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, merged: true, mode: "verify" }))
+      );
+
+      expect(Exit.isFailure(publishExit)).toBe(true);
+      expect(Exit.isFailure(mergedExit)).toBe(true);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
 });

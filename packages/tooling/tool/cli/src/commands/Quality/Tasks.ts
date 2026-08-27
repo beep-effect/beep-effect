@@ -57,7 +57,7 @@ import {
   runCaptured,
   runToExit,
 } from "../../internal/process/index.ts";
-import { collectChangedFiles } from "../../internal/repo-run/ChangedFiles.ts";
+import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import {
   cleanCoverageRegressionOutputs,
@@ -82,6 +82,7 @@ import {
   MAX_QUARANTINED_TASKS_PER_LANE,
   standaloneQuarantineRerunStep,
 } from "./internal/FlakeQuarantine.ts";
+import { hasReusableLaneProof, persistLaneProofs, prepareLaneProofSession } from "./internal/LaneProofReuse.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
@@ -944,48 +945,17 @@ const turboCoverageEnv = (
   // fallow-ignore-next-line code-duplication -- only Turbo coverage runs receive the hosted coverage environment
   includesTurboCoverageTask(tasks, args) ? coverageEnvironment() : undefined;
 
-const linesFromText = (text: string): ReadonlyArray<string> =>
-  pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
-
-const runGitLines = Effect.fn("QualityTasks.runGitLines")(function* (repoRoot: string, args: ReadonlyArray<string>) {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn git ${A.join(args, " ")}`));
-  if (result.exitCode !== 0) {
-    return yield* QualityTaskConfigurationError.new(
-      `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`
-    );
-  }
-  return linesFromText(result.output);
-});
-
-const collectWorkingTreeChangedFiles = Effect.fn("QualityTasks.collectWorkingTreeChangedFiles")(function* (
-  repoRoot: string
-) {
-  const gitArgs: ReadonlyArray<ReadonlyArray<string>> = [
-    ["diff", "--name-only", `--diff-filter=${CHANGED_PATH_DIFF_FILTER}`, "HEAD", "--"],
-    ["diff", "--cached", "--name-only", `--diff-filter=${CHANGED_PATH_DIFF_FILTER}`, "--"],
-    ["ls-files", "--others", "--exclude-standard"],
-  ];
-  const files = yield* Effect.forEach(
-    gitArgs,
-    (args) => runGitLines(repoRoot, args).pipe(Effect.option, Effect.map(O.getOrElse(A.empty<string>))),
-    { concurrency: 3 }
-  );
-
-  return pipe(A.flatten(files), A.dedupe, A.sort(Order.String));
-});
-
 const collectExistingWorkingTreeChangedFiles = Effect.fn("QualityTasks.collectExistingWorkingTreeChangedFiles")(
   function* (repoRoot: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const changedFiles = yield* collectWorkingTreeChangedFiles(repoRoot);
+    const changedFiles = yield* collectDirtyWorktreeFiles(repoRoot, {
+      diffArgs: [`--diff-filter=${CHANGED_PATH_DIFF_FILTER}`],
+      pathspecs: A.empty(),
+      onProbeFailure: "ignore",
+    }).pipe(Effect.orElseSucceed(A.empty<string>));
 
-    return yield* Effect.filter(changedFiles, (file) =>
+    return yield* Effect.filter(pipe(changedFiles, A.dedupe, A.sort(Order.String)), (file) =>
       fs.exists(path.join(repoRoot, file)).pipe(Effect.orElseSucceed(thunkFalse))
     );
   }
@@ -1479,6 +1449,46 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
   return A.getSomes(failures);
 });
 
+const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function* (
+  label: string,
+  wave: GithubCheckLaneWaveSpec
+) {
+  const activeReusableIds: Array<string> = [];
+  const failures: Array<QualityTaskFailed> = [];
+  for (const lane of wave.lanes) {
+    const session = yield* prepareLaneProofSession([lane]);
+    const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
+    const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
+    if (reusable) {
+      yield* Console.log(`[lane-proof] ${activeReuse ? "reusing" : "shadow hit for"} exact lane proof: ${lane.id}`);
+    }
+    if (activeReuse) {
+      activeReusableIds.push(lane.id);
+      continue;
+    }
+
+    yield* Console.log(`[beep-cli] ${label}: running lane ${lane.id}`);
+    const [elapsed, laneFailures] = yield* collectStreamingStepFailures(`${label}:${lane.id}`, [lane.step]).pipe(
+      Effect.timed
+    );
+    const durationMs = Duration.toMillis(elapsed);
+    if (A.isReadonlyArrayNonEmpty(laneFailures)) {
+      failures.push(...laneFailures);
+    } else {
+      yield* O.match(session, {
+        onNone: () => Effect.void,
+        onSome: (prepared) =>
+          persistLaneProofs(prepared, [[lane, durationMs]]).pipe(
+            Effect.catch((error) =>
+              Console.error(`[lane-proof] could not persist lane proof: ${Inspectable.toStringUnknown(error)}`)
+            )
+          ),
+      });
+    }
+  }
+  return { activeReusableIds, failures };
+});
+
 const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
@@ -1531,10 +1541,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       continue;
     }
 
-    const waveFailures = yield* collectStreamingStepFailures(
-      `${label}:${wave.wave}`,
-      A.map(wave.lanes, (lane) => lane.step)
-    );
+    const { activeReusableIds, failures: waveFailures } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave);
     const failedLabels = A.map(waveFailures, (failure) => failure.label);
     laneRuns = A.appendAll(
       laneRuns,
@@ -1542,7 +1549,11 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
         GithubCheckLaneRun.make({
           id: lane.id,
           stage: lane.stage,
-          status: A.contains(failedLabels, lane.step.label) ? "failed" : "passed",
+          status: A.contains(activeReusableIds, lane.id)
+            ? "reused"
+            : A.contains(failedLabels, lane.step.label)
+              ? "failed"
+              : "passed",
           wave: lane.wave,
         })
       )

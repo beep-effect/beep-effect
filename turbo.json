@@ -17,8 +17,22 @@
     ],
     "env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],
     "passThroughEnv": [
+      "BEEP_AGENT_SESSION_ID",
+      "BEEP_NODE_BIN",
+      "BEEP_DOCGEN_CONCURRENCY",
+      "BEEP_QUALITY_CHECK_CONCURRENCY",
+      "BEEP_YEET_LANE_PROOF_MODE",
+      "BEEP_YEET_PROOF_BASE",
+      "CLAUDE_SESSION_ID",
+      "CODEX_SESSION_ID",
+      "CODEX_THREAD_ID",
+      "GITHUB_ACTIONS",
+      "REGEN_GOLDENS",
+      "TURBO_CACHE",
+      "TURBO_FORCE",
       "TURBO_TOKEN",
       "TURBO_TEAM",
+      "XDG_RUNTIME_DIR",
       "NODE_TLS_REJECT_UNAUTHORIZED",
       "CHAT_TRANSPORT",
       "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST",
@@ -35,7 +49,7 @@
       "persistent": false,
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.env*", "!.beep/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
       "env": [
         "APP_ADMINS_EMAILS",
         "ALLOWED_EMAILS",
@@ -73,7 +87,6 @@
         "$TURBO_ROOT$/biome.jsonc",
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
         "!$TURBO_ROOT$/tsconfig*.json",
         "!.beep/**"
       ]
@@ -90,11 +103,7 @@
     },
     "check": {
       "dependsOn": ["^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
-        "!.beep/**"
-      ],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
       "outputs": []
     },
     "test": {
@@ -105,6 +114,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
         "!.beep/**"
       ]
     },
@@ -130,6 +140,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
         "!.beep/**"
       ]
     },
@@ -146,6 +157,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
         "!.beep/**"
       ]
     },
@@ -156,6 +168,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
         "!.beep/**"
       ]
     },
@@ -171,6 +184,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
         "!.beep/**"
       ],
       "outputs": ["coverage/**"]
@@ -187,8 +201,6 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
         "$TURBO_ROOT$/vitest.shared.ts",
-        "$TURBO_ROOT$/.env*",
-        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
         "!.beep/**"
       ],
       "env": [

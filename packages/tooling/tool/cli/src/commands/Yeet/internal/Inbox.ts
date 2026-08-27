@@ -39,16 +39,18 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Path } from "effect";
+import { Effect, FileSystem, Match, Order, Path } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { appendContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { safeArtifactName } from "./ArtifactPaths.ts";
-import type { FileSystem } from "effect";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Inbox");
 
@@ -216,20 +218,288 @@ export class YeetCheckFailedRow extends S.Class<YeetCheckFailedRow>($I`YeetCheck
 ) {}
 
 /**
+ * Paths simultaneously claimed by this checkout and a sibling checkout.
+ *
+ * **Example** (Describe a collision)
+ *
+ * ```ts
+ * import { YeetSiblingCollisionCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetSiblingCollisionCapsule.make({
+ *   contendedPaths: ["goals/INDEX.md"],
+ *   ownerCheckout: "/fleet/a",
+ *   siblingCheckout: "/fleet/b"
+ * })
+ * console.log(capsule.contendedPaths.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetSiblingCollisionCapsule extends S.Class<YeetSiblingCollisionCapsule>($I`YeetSiblingCollisionCapsule`)(
+  {
+    contendedPaths: S.Array(S.NonEmptyString),
+    ownerCheckout: S.NonEmptyString,
+    siblingCheckout: S.NonEmptyString,
+  },
+  $I.annote("YeetSiblingCollisionCapsule", {
+    description: "Paths simultaneously claimed by an owning checkout and one sibling checkout.",
+  })
+) {}
+
+/**
+ * One P0 sibling-checkout collision delivered to the owning checkout.
+ *
+ * **Example** (Build a collision row)
+ *
+ * ```ts
+ * import { YeetSiblingCollisionCapsule, YeetSiblingCollisionRow } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetSiblingCollisionRow.make({
+ *   capsule: YeetSiblingCollisionCapsule.make({
+ *     contendedPaths: ["goals/INDEX.md"], ownerCheckout: "/fleet/a", siblingCheckout: "/fleet/b"
+ *   }),
+ *   checkout: "/fleet/a",
+ *   id: "sibling-collision-abc",
+ *   severity: "P0",
+ *   ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(row.severity) // "P0"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetSiblingCollisionRow extends S.Class<YeetSiblingCollisionRow>($I`YeetSiblingCollisionRow`)(
+  {
+    kind: S.tag("sibling-collision"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P0"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetSiblingCollisionCapsule,
+  },
+  $I.annote("YeetSiblingCollisionRow", {
+    description: "One P0 sibling-checkout collision delivered to the owning checkout.",
+  })
+) {}
+
+/**
+ * One unresolved review thread observed on the current pull request head.
+ *
+ * **Example** (Describe a review thread)
+ *
+ * ```ts
+ * import { YeetReviewThreadCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetReviewThreadCapsule.make({
+ *   headSha: "abc123", link: null, prNumber: 900, threadId: "PRRT_abc"
+ * })
+ * console.log(capsule.threadId) // "PRRT_abc"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetReviewThreadCapsule extends S.Class<YeetReviewThreadCapsule>($I`YeetReviewThreadCapsule`)(
+  {
+    headSha: S.NonEmptyString,
+    link: S.NullOr(S.String),
+    prNumber: S.Finite,
+    threadId: S.NonEmptyString,
+  },
+  $I.annote("YeetReviewThreadCapsule", {
+    description: "One unresolved review thread observed on the current pull request head.",
+  })
+) {}
+
+/**
+ * One P1 review-thread row injected as repair context without denying tools.
+ *
+ * **Example** (Build a review-thread row)
+ *
+ * ```ts
+ * import { YeetReviewThreadCapsule, YeetReviewThreadRow } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetReviewThreadRow.make({
+ *   capsule: YeetReviewThreadCapsule.make({ headSha: "abc123", link: null, prNumber: 900, threadId: "PRRT_abc" }),
+ *   checkout: "/repo", id: "review-thread-abc", severity: "P1", ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(row.kind) // "review-thread"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetReviewThreadRow extends S.Class<YeetReviewThreadRow>($I`YeetReviewThreadRow`)(
+  {
+    kind: S.tag("review-thread"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P1"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetReviewThreadCapsule,
+  },
+  $I.annote("YeetReviewThreadRow", {
+    description: "One P1 review-thread row injected as repair context without denying tools.",
+  })
+) {}
+
+/**
+ * Base drift observed for the current pull request head.
+ *
+ * **Example** (Describe base drift)
+ *
+ * ```ts
+ * import { YeetBaseDriftCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetBaseDriftCapsule.make({ base: "origin/main", headSha: "abc123", prNumber: 900 })
+ * console.log(capsule.base) // "origin/main"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseDriftCapsule extends S.Class<YeetBaseDriftCapsule>($I`YeetBaseDriftCapsule`)(
+  {
+    base: S.NonEmptyString,
+    headSha: S.NonEmptyString,
+    prNumber: S.Finite,
+  },
+  $I.annote("YeetBaseDriftCapsule", {
+    description: "Base drift observed for the current pull request head.",
+  })
+) {}
+
+/**
+ * One P2 base-drift row surfaced only at session start.
+ *
+ * **Example** (Build a base-drift row)
+ *
+ * ```ts
+ * import { YeetBaseDriftCapsule, YeetBaseDriftRow } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetBaseDriftRow.make({
+ *   capsule: YeetBaseDriftCapsule.make({ base: "origin/main", headSha: "abc123", prNumber: 900 }),
+ *   checkout: "/repo", id: "base-drift-abc", severity: "P2", ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(row.severity) // "P2"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseDriftRow extends S.Class<YeetBaseDriftRow>($I`YeetBaseDriftRow`)(
+  {
+    kind: S.tag("base-drift"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P2"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetBaseDriftCapsule,
+  },
+  $I.annote("YeetBaseDriftRow", {
+    description: "One P2 base-drift row surfaced only at session start.",
+  })
+) {}
+
+/**
+ * One named local proof shard that exited unsuccessfully.
+ *
+ * **Example** (Describe a local shard failure)
+ *
+ * ```ts
+ * import { YeetLocalShardFailureCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetLocalShardFailureCapsule.make({
+ *   command: "bun run beep ci lane check", exitCode: 1, headSha: "abc123", shard: "Check"
+ * })
+ * console.log(capsule.exitCode) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetLocalShardFailureCapsule extends S.Class<YeetLocalShardFailureCapsule>(
+  $I`YeetLocalShardFailureCapsule`
+)(
+  {
+    command: S.NonEmptyString,
+    exitCode: S.Finite,
+    headSha: S.NonEmptyString,
+    shard: S.NonEmptyString,
+  },
+  $I.annote("YeetLocalShardFailureCapsule", {
+    description: "One named local proof shard that exited unsuccessfully on a repository head.",
+  })
+) {}
+
+/**
+ * One P0 local-shard poison pill inherited by every session in the checkout.
+ *
+ * **Example** (Build a local poison row)
+ *
+ * ```ts
+ * import { YeetLocalShardFailedRow, YeetLocalShardFailureCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetLocalShardFailedRow.make({
+ *   capsule: YeetLocalShardFailureCapsule.make({
+ *     command: "bun run beep ci lane check", exitCode: 1, headSha: "abc123", shard: "Check"
+ *   }),
+ *   checkout: "/repo", id: "local-shard-abc", severity: "P0", ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(row.kind) // "local-shard-failed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetLocalShardFailedRow extends S.Class<YeetLocalShardFailedRow>($I`YeetLocalShardFailedRow`)(
+  {
+    kind: S.tag("local-shard-failed"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P0"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetLocalShardFailureCapsule,
+  },
+  $I.annote("YeetLocalShardFailedRow", {
+    description: "One P0 local-shard poison pill inherited by every session in the checkout.",
+  })
+) {}
+
+/**
  * One row of the checkout inbox.
  *
  * **Details**
  *
  * Every member carries `schemaVersion`, a discriminating `kind`, a
  * deterministic `id`, and a `severity`, so a consumer can decode line-by-line
- * without context and gate enforcement on the tier. `check-failed` is the only
- * member today; A2's additional writers (sibling collision, review thread,
- * base drift) extend the union without a version bump.
+ * without context and gate enforcement on the tier. Required-check failures,
+ * sibling collisions, review threads, and base drift share this contract.
  *
  * @category models
  * @since 0.0.0
  */
-export const YeetInboxRow = S.Union([YeetCheckFailedRow]).pipe(
+export const YeetInboxRow = S.Union([
+  YeetCheckFailedRow,
+  YeetSiblingCollisionRow,
+  YeetReviewThreadRow,
+  YeetBaseDriftRow,
+  YeetLocalShardFailedRow,
+]).pipe(
   $I.annoteSchema("YeetInboxRow", {
     title: "Yeet Inbox Row",
     description: "One typed NDJSON row of the checkout failure inbox.",
@@ -243,6 +513,11 @@ export const YeetInboxRow = S.Union([YeetCheckFailedRow]).pipe(
  * @since 0.0.0
  */
 export type YeetInboxRow = typeof YeetInboxRow.Type;
+
+const yeetInboxIdentityId = (label: string, parts: ReadonlyArray<string>): string => {
+  const digest = createHash("sha256").update(A.join(parts, ":")).digest("hex").slice(0, 12);
+  return `${safeArtifactName(label)}-${digest}`;
+};
 
 /**
  * Derive the deterministic inbox row id for one failure.
@@ -278,13 +553,171 @@ export type YeetInboxRow = typeof YeetInboxRow.Type;
  * @category utilities
  * @since 0.0.0
  */
-export const yeetInboxRowId = (capsule: Pick<YeetFailureCapsule, "headSha" | "lane" | "prNumber">): string => {
-  const digest = createHash("sha256")
-    .update(`${capsule.prNumber}:${capsule.headSha}:${capsule.lane}`)
-    .digest("hex")
-    .slice(0, 12);
-  return `${safeArtifactName(capsule.lane)}-${digest}`;
-};
+export const yeetInboxRowId = (capsule: Pick<YeetFailureCapsule, "headSha" | "lane" | "prNumber">): string =>
+  yeetInboxIdentityId(capsule.lane, [`${capsule.prNumber}`, capsule.headSha, capsule.lane]);
+
+/**
+ * Derive a stable receipt id for one sibling-checkout collision.
+ *
+ * **Example** (Ignore path observation order)
+ *
+ * ```ts
+ * import { yeetSiblingCollisionRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * const a = yeetSiblingCollisionRowId({
+ *   contendedPaths: ["b.ts", "a.ts"], ownerCheckout: "/fleet/a", siblingCheckout: "/fleet/b"
+ * })
+ * const b = yeetSiblingCollisionRowId({
+ *   contendedPaths: ["a.ts", "b.ts"], ownerCheckout: "/fleet/a", siblingCheckout: "/fleet/b"
+ * })
+ * console.log(a === b) // true
+ * ```
+ *
+ * @param capsule - Sibling-collision coordinates used for stable identity.
+ * @returns A stable collision receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetSiblingCollisionRowId = (capsule: YeetSiblingCollisionCapsule): string =>
+  yeetInboxIdentityId("sibling-collision", [
+    capsule.ownerCheckout,
+    capsule.siblingCheckout,
+    ...A.sort(capsule.contendedPaths, Order.String),
+  ]);
+
+/**
+ * Derive a stable receipt id for one review thread on one pull request head.
+ *
+ * **Example** (Build a thread id)
+ *
+ * ```ts
+ * import { yeetReviewThreadRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetReviewThreadRowId({ headSha: "abc123", prNumber: 900, threadId: "PRRT_abc" }))
+ * ```
+ *
+ * @param capsule - Review-thread coordinates used for stable identity.
+ * @returns A stable review-thread receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetReviewThreadRowId = (
+  capsule: Pick<YeetReviewThreadCapsule, "headSha" | "prNumber" | "threadId">
+): string => yeetInboxIdentityId("review-thread", [`${capsule.prNumber}`, capsule.headSha, capsule.threadId]);
+
+/**
+ * Derive a stable receipt id for base drift on one pull request head.
+ *
+ * **Example** (Build a drift id)
+ *
+ * ```ts
+ * import { yeetBaseDriftRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetBaseDriftRowId({ base: "origin/main", headSha: "abc123", prNumber: 900 }))
+ * ```
+ *
+ * @param capsule - Base-drift coordinates used for stable identity.
+ * @returns A stable base-drift receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetBaseDriftRowId = (capsule: Pick<YeetBaseDriftCapsule, "base" | "headSha" | "prNumber">): string =>
+  yeetInboxIdentityId("base-drift", [`${capsule.prNumber}`, capsule.headSha, capsule.base]);
+
+/**
+ * Derive a stable poison-pill id for one local shard on one head.
+ *
+ * **Example** (Build a local shard id)
+ *
+ * ```ts
+ * import { yeetLocalShardFailedRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetLocalShardFailedRowId({ command: "bun run check", headSha: "abc123", shard: "Check" }))
+ * ```
+ *
+ * @param capsule - Local-shard failure coordinates used for stable identity.
+ * @returns A stable local-shard receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetLocalShardFailedRowId = (
+  capsule: Pick<YeetLocalShardFailureCapsule, "command" | "headSha" | "shard">
+): string => yeetInboxIdentityId("local-shard", [capsule.headSha, capsule.shard, capsule.command]);
+
+/**
+ * Recompute the deterministic receipt id for any inbox row variant.
+ *
+ * **Example** (Validate a check row id)
+ *
+ * ```ts
+ * import { yeetInboxExpectedRowId, YeetCheckFailedRow, YeetFailureCapsule, yeetInboxRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail", headSha: "abc123", lane: "Check", link: null,
+ *   observedAt: "2026-08-27T00:00:00Z", prNumber: 900, state: "FAILURE", workflow: null
+ * })
+ * const row = YeetCheckFailedRow.make({
+ *   capsule, checkout: "/repo", id: yeetInboxRowId(capsule), severity: "P0", ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(yeetInboxExpectedRowId(row) === row.id) // true
+ * ```
+ *
+ * @param row - Inbox row whose deterministic id should be recomputed.
+ * @returns The stable expected id for the row variant.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
+  Match.value(row).pipe(
+    Match.discriminators("kind")({
+      "check-failed": (subject) => yeetInboxRowId(subject.capsule),
+      "sibling-collision": (subject) => yeetSiblingCollisionRowId(subject.capsule),
+      "review-thread": (subject) => yeetReviewThreadRowId(subject.capsule),
+      "base-drift": (subject) => yeetBaseDriftRowId(subject.capsule),
+      "local-shard-failed": (subject) => yeetLocalShardFailedRowId(subject.capsule),
+    }),
+    Match.exhaustive
+  );
+
+/**
+ * Render the stable operator label and coordinates of any inbox row.
+ *
+ * **Example** (Describe a check failure)
+ *
+ * ```ts
+ * import { describeYeetInboxRow, YeetCheckFailedRow, YeetFailureCapsule, yeetInboxRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail", headSha: "abc123", lane: "Check", link: null,
+ *   observedAt: "2026-08-27T00:00:00Z", prNumber: 900, state: "FAILURE", workflow: null
+ * })
+ * const row = YeetCheckFailedRow.make({
+ *   capsule, checkout: "/repo", id: yeetInboxRowId(capsule), severity: "P0", ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(describeYeetInboxRow(row).includes("Check")) // true
+ * ```
+ *
+ * @param row - Inbox row to describe.
+ * @returns A stable operator-facing label for the row.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const describeYeetInboxRow = (row: YeetInboxRow): string =>
+  Match.value(row).pipe(
+    Match.discriminators("kind")({
+      "check-failed": ({ capsule }) =>
+        `${capsule.lane} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`,
+      "sibling-collision": ({ capsule }) =>
+        `sibling collision with ${capsule.siblingCheckout} (${capsule.contendedPaths.length} path(s))`,
+      "review-thread": ({ capsule }) =>
+        `review thread ${capsule.threadId} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`,
+      "base-drift": ({ capsule }) =>
+        `base drift from ${capsule.base} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`,
+      "local-shard-failed": ({ capsule }) =>
+        `local shard ${capsule.shard} exited ${capsule.exitCode} @ ${Str.slice(0, 7)(capsule.headSha)}`,
+    }),
+    Match.exhaustive
+  );
 
 /**
  * The inbox file layout under one checkout.
@@ -295,6 +728,7 @@ export const yeetInboxRowId = (capsule: Pick<YeetFailureCapsule, "headSha" | "la
  * import { YeetInboxPaths } from "@beep/repo-cli/test/Yeet"
  *
  * const paths = YeetInboxPaths.make({
+ *   activePath: "/repo/.beep/inbox/active.ndjson",
  *   acksDir: "/repo/.beep/inbox/acks",
  *   dir: "/repo/.beep/inbox",
  *   failuresPath: "/repo/.beep/inbox/failures.ndjson"
@@ -308,12 +742,13 @@ export const yeetInboxRowId = (capsule: Pick<YeetFailureCapsule, "headSha" | "la
  */
 export class YeetInboxPaths extends S.Class<YeetInboxPaths>($I`YeetInboxPaths`)(
   {
+    activePath: S.NonEmptyString,
     acksDir: S.NonEmptyString,
     dir: S.NonEmptyString,
     failuresPath: S.NonEmptyString,
   },
   $I.annote("YeetInboxPaths", {
-    description: "Resolved inbox locations for one checkout: the inbox dir, the failures file, and the acks dir.",
+    description: "Resolved inbox locations for one checkout: bounded active index, history, acknowledgments, and root.",
   })
 ) {}
 
@@ -340,10 +775,110 @@ export const yeetInboxPaths = Effect.fn("Yeet.yeetInboxPaths")(function* (
   const path = yield* Path.Path;
   const dir = path.join(repoRoot, ".beep", "inbox");
   return YeetInboxPaths.make({
+    activePath: path.join(dir, "active.ndjson"),
     acksDir: path.join(dir, "acks"),
     dir,
     failuresPath: path.join(dir, "failures.ndjson"),
   });
+});
+
+const YEET_INBOX_ACTIVE_ROW_LIMIT = 2_048;
+
+const updateYeetInboxActiveIndex = Effect.fn("Yeet.updateInboxActiveIndex")(function* (
+  repoRoot: string,
+  paths: YeetInboxPaths,
+  line: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const inboxDir = path.dirname(paths.activePath);
+  const inputPath = path.join(inboxDir, `.active-row-${randomUUID()}.tmp`);
+  const outputPath = path.join(inboxDir, `.active-index-${randomUUID()}.tmp`);
+  const versionPath = path.join(inboxDir, "active-p0-safe-v1");
+  yield* fs.writeFileString(inputPath, `${line}\n`, { flag: "wx", mode: 0o600 });
+  const script = `
+set -eu
+active="$1"
+history="$2"
+incoming="$3"
+output="$4"
+acks="$5"
+limit="$6"
+version="$7"
+if [ -L "$active" ]; then exit 70; fi
+source="$active"
+if [ ! -f "$active" ] || [ ! -f "$version" ]; then source="$history"; fi
+rm -f -- "$version"
+ack_ids='[]'
+if [ -d "$acks" ]; then
+  for ack_path in "$acks"/*; do
+    [ -e "$ack_path" ] || continue
+    [ -f "$ack_path" ] && [ ! -L "$ack_path" ] || continue
+    waive_expiry="$(jq -r 'select(.resolution.kind == "waive") | .resolution.expiresAt // empty' "$ack_path" 2>/dev/null || true)"
+    if [ -n "$waive_expiry" ]; then
+      expiry_epoch="$(date -d "$waive_expiry" +%s 2>/dev/null || true)"
+      now_epoch="$(date +%s)"
+      if [ -z "$expiry_epoch" ] || [ "$expiry_epoch" -le "$now_epoch" ]; then continue; fi
+    fi
+    ack_id="\${ack_path##*/}"
+    ack_ids="$(printf '%s' "$ack_ids" | jq -c --arg id "$ack_id" '. + [$id]')"
+  done
+fi
+{
+  if [ -f "$source" ]; then cat "$source"; fi
+  cat "$incoming"
+} | jq -Rrsc --argjson acks "$ack_ids" --argjson limit "$limit" '
+  split("\\n")
+  | map(select(length > 0) | fromjson)
+  | unique_by(.id)
+  | map(. as $row | select(($acks | index($row.id)) == null))
+  | [ .[] | select(.severity == "P0") ] as $p0
+  | [ .[] | select(.severity != "P0") ] as $lower
+  | ($limit - ($p0 | length)) as $remaining
+  | ($p0 + (if $remaining > 0 then $lower[(-$remaining):] else [] end))
+  | .[]
+  | tojson
+' >"$output"
+chmod 600 "$output"
+mv -f -- "$output" "$active"
+printf 'yeet-inbox-active-p0-safe/v1\n' >"$version"
+chmod 600 "$version"
+rm -f -- "$incoming"
+`;
+  const result = Bun.spawnSync(
+    [
+      "flock",
+      "-w",
+      "2",
+      path.join(inboxDir, "active-mutex.lock"),
+      "sh",
+      "-c",
+      script,
+      "yeet-inbox-active",
+      paths.activePath,
+      paths.failuresPath,
+      inputPath,
+      outputPath,
+      paths.acksDir,
+      String(YEET_INBOX_ACTIVE_ROW_LIMIT),
+      versionPath,
+    ],
+    { cwd: repoRoot, stderr: "pipe", stdout: "ignore" }
+  );
+  if (result.exitCode !== 0) {
+    yield* Effect.all(
+      [
+        fs.remove(inputPath).pipe(Effect.ignore),
+        fs.remove(outputPath).pipe(Effect.ignore),
+        fs.remove(versionPath).pipe(Effect.ignore),
+      ],
+      { discard: true }
+    );
+    return yield* YeetCommandError.make({
+      message: `Failed to update the bounded active inbox index "${paths.activePath}": ${Str.trim(result.stderr.toString())}`,
+      exitCode: result.exitCode,
+    });
+  }
 });
 
 /**
@@ -494,4 +1029,54 @@ export const appendYeetInboxRow = Effect.fn("Yeet.appendYeetInboxRow")(function*
   yield* appendContainedFileString(repoRoot, paths.failuresPath, `${line}\n`).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to append to the failure inbox "${paths.failuresPath}".`))
   );
+  yield* updateYeetInboxActiveIndex(repoRoot, paths, line).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to update the active inbox index "${paths.activePath}".`))
+  );
+});
+
+/**
+ * Append a row only when its deterministic id is not already in the inbox.
+ *
+ * **Details**
+ *
+ * Snapshot-converging writers call this on every poll for state that remains
+ * true, such as an unresolved thread. The check is an optimization rather than
+ * the identity boundary: concurrent writers can still race, and consumers
+ * continue to deduplicate by id.
+ *
+ * **Example** (Build an idempotent append effect)
+ *
+ * ```ts
+ * import { appendYeetInboxRowOnce, YeetBaseDriftCapsule, YeetBaseDriftRow, yeetBaseDriftRowId } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const capsule = YeetBaseDriftCapsule.make({ base: "origin/main", headSha: "abc123", prNumber: 900 })
+ * const row = YeetBaseDriftRow.make({
+ *   capsule, checkout: "/repo", id: yeetBaseDriftRowId(capsule), severity: "P2", ts: "2026-08-27T00:00:00Z"
+ * })
+ * console.log(Effect.isEffect(appendYeetInboxRowOnce("/repo", row))) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const appendYeetInboxRowOnce = Effect.fn("Yeet.appendYeetInboxRowOnce")(function* (
+  repoRoot: string,
+  row: YeetInboxRow
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const paths = yield* yeetInboxPaths(repoRoot);
+  const activeVersionPath = path.join(paths.dir, "active-p0-safe-v1");
+  const activeIndexCurrent = yield* fs.exists(activeVersionPath).pipe(Effect.orElseSucceed(() => false));
+  const sourcePath = activeIndexCurrent ? paths.activePath : paths.failuresPath;
+  const text = yield* fs.readFileString(sourcePath).pipe(Effect.orElseSucceed(() => ""));
+  const present = A.some(Str.split(text, "\n"), (line) =>
+    O.exists(YeetInboxRowJson.decodeOption(line), (decoded) => decoded.id === row.id)
+  );
+  if (present) {
+    return false;
+  }
+  yield* appendYeetInboxRow(repoRoot, row);
+  return true;
 });

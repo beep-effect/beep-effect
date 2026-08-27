@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
 
 const contextFor = (repoRoot: string): RepoRunContext =>
   RepoRunContext.make({
@@ -60,7 +61,16 @@ interface PollScript {
 }
 
 const viewJson = (state: string, headSha: string): string =>
-  JSON.stringify({ headRefOid: headSha, id: "PR_watch", mergeable: "MERGEABLE", number: 751, state });
+  JSON.stringify({
+    headRefOid: headSha,
+    id: "PR_watch",
+    isDraft: false,
+    mergeable: "MERGEABLE",
+    mergeStateStatus: "CLEAN",
+    number: 751,
+    reviewDecision: null,
+    state,
+  });
 
 interface CheckRowFixture {
   readonly bucket: string;
@@ -81,35 +91,43 @@ const checksJson = (rows: ReadonlyArray<CheckRowFixture>) =>
     }))
   );
 
-const threadsJson = (nodes: ReadonlyArray<{ readonly id: string; readonly isResolved: boolean }>) =>
-  JSON.stringify({ data: { node: { reviewThreads: { nodes } } } });
+const threadsJson = (
+  nodes: ReadonlyArray<{ readonly id: string; readonly isResolved: boolean }>,
+  pageInfo: { readonly endCursor: string | null; readonly hasNextPage: boolean } = {
+    endCursor: null,
+    hasNextPage: false,
+  }
+) => JSON.stringify({ data: { node: { reviewThreads: { nodes, pageInfo } } } });
 
 // One scripted answer set per poll; `gh api graphql` — the last read of each
 // collection — advances the cursor to the next poll's script.
 const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.gen(function* () {
-      const cursor = yield* Ref.make(0);
-      return ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("the watch never spawns a piped command");
-        }
-        const line = A.join([command.command, ...command.args], " ");
-        return Effect.gen(function* () {
-          const index = Math.min(yield* Ref.get(cursor), A.length(scripts) - 1);
-          const script = scripts[index] as PollScript;
-          if (Str.includes("pr view")(line)) {
-            return stubHandle(script.view.exitCode, script.view.output);
+  Layer.mergeAll(
+    PlatformLayer,
+    Layer.effect(
+      ChildProcessSpawner.ChildProcessSpawner,
+      Effect.gen(function* () {
+        const cursor = yield* Ref.make(0);
+        return ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) {
+            return Effect.die("the watch never spawns a piped command");
           }
-          if (Str.includes("pr checks")(line)) {
-            return stubHandle(script.checks.exitCode, script.checks.output);
-          }
-          yield* Ref.update(cursor, (value) => value + 1);
-          return stubHandle(script.threads.exitCode, script.threads.output);
+          const line = A.join([command.command, ...command.args], " ");
+          return Effect.gen(function* () {
+            const index = Math.min(yield* Ref.get(cursor), A.length(scripts) - 1);
+            const script = scripts[index] as PollScript;
+            if (Str.includes("pr view")(line)) {
+              return stubHandle(script.view.exitCode, script.view.output);
+            }
+            if (Str.includes("pr checks")(line)) {
+              return stubHandle(script.checks.exitCode, script.checks.output);
+            }
+            yield* Ref.update(cursor, (value) => value + 1);
+            return stubHandle(script.threads.exitCode, script.threads.output);
+          });
         });
-      });
-    })
+      })
+    )
   );
 
 const greenScript = (headSha: string): PollScript => ({
@@ -181,6 +199,37 @@ describe("collectYeetWatchSnapshot", () => {
               ]),
             },
             threads: { exitCode: 0, output: threadsJson([{ id: "T1", isResolved: false }]) },
+          },
+        ])
+      )
+    )
+  );
+
+  it.effect("paginates past 100 review threads before computing resolution", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* collectYeetWatchSnapshot(context);
+
+      expect(snapshot.threads).toHaveLength(101);
+      expect(snapshot.criteria.threadsResolved).toBe(false);
+      expect(snapshot.threads[100]).toMatchObject({ id: "T101", isResolved: false });
+    }).pipe(
+      provideScopedLayer(
+        scriptedSpawnerLayer([
+          {
+            view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+            checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+            threads: {
+              exitCode: 0,
+              output: threadsJson(
+                A.makeBy(100, (index) => ({ id: `T${index + 1}`, isResolved: true })),
+                { endCursor: "cursor-100", hasNextPage: true }
+              ),
+            },
+          },
+          {
+            view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+            checks: { exitCode: 0, output: checksJson([]) },
+            threads: { exitCode: 0, output: threadsJson([{ id: "T101", isResolved: false }]) },
           },
         ])
       )
@@ -284,8 +333,11 @@ describe("collectYeetWatchSnapshot", () => {
               output: JSON.stringify({
                 headRefOid: "aaa111",
                 id: "PR_watch",
+                isDraft: false,
                 mergeable: null,
+                mergeStateStatus: null,
                 number: 751,
+                reviewDecision: null,
                 state: "OPEN",
               }),
             },
@@ -405,24 +457,28 @@ describe("remediation dispatch through the watch", () => {
         expect(ended.failing).toBe(1);
 
         const rows = yield* readInboxRows(root);
-        expect(A.length(rows)).toBe(1);
-        const row = rows[0];
-        expect(row?.kind).toBe("check-failed");
-        expect(row?.severity).toBe("P0");
-        expect(row?.checkout).toBe(root);
-        expect(row?.capsule.lane).toBe("Coverage");
-        expect(row?.capsule.headSha).toBe("aaa111");
-        expect(row?.capsule.prNumber).toBe(751);
-        expect(row?.capsule.link).toBe("https://github.com/beep/beep/actions/runs/3/job/4");
-        expect(row?.capsule.workflow).toBe("Check");
-        expect(row?.capsule.state).toBe("FAILURE");
+        expect(A.length(rows)).toBe(2);
+        const row = O.getOrThrow(
+          A.findFirst(rows, (subject): subject is YeetCheckFailedRow => subject.kind === "check-failed")
+        );
+        expect(row.severity).toBe("P0");
+        expect(row.checkout).toBe(root);
+        expect(row.capsule.lane).toBe("Coverage");
+        expect(row.capsule.headSha).toBe("aaa111");
+        expect(row.capsule.prNumber).toBe(751);
+        expect(row.capsule.link).toBe("https://github.com/beep/beep/actions/runs/3/job/4");
+        expect(row.capsule.workflow).toBe("Check");
+        expect(row.capsule.state).toBe("FAILURE");
+        expect(A.some(rows, (subject) => subject.kind === "review-thread" && subject.capsule.threadId === "T1")).toBe(
+          true
+        );
 
         const wave = yield* loadYeetRemediationWave(root);
         expect(O.isSome(wave)).toBe(true);
         if (O.isSome(wave)) {
           expect(wave.value.headSha).toBe("aaa111");
           expect(wave.value.sessionStartedAt).not.toBeNull();
-          expect(wave.value.capsuleIds).toEqual([row?.id]);
+          expect(wave.value.capsuleIds).toEqual([row.id]);
         }
 
         const errors = A.map(yield* TestConsole.errorLines, String);
@@ -472,7 +528,9 @@ describe("remediation dispatch through the watch", () => {
 
         const rows = yield* readInboxRows(root);
         expect(A.length(rows)).toBe(3);
-        expect(A.map(rows, (row) => row.capsule.lane)).toEqual(["Check", "Coverage", "Lint"]);
+        expect(
+          A.getSomes(A.map(rows, (row) => (row.kind === "check-failed" ? O.some(row.capsule.lane) : O.none<string>())))
+        ).toEqual(["Check", "Coverage", "Lint"]);
 
         const wave = yield* loadYeetRemediationWave(root);
         expect(O.isSome(wave)).toBe(true);
@@ -605,7 +663,13 @@ describe("remediation dispatch through the watch", () => {
         expect(ended.reason).toBe("all-terminal");
 
         const rows = yield* readInboxRows(root);
-        expect(A.map(rows, (row) => [row.capsule.lane, row.capsule.headSha])).toEqual([
+        expect(
+          A.getSomes(
+            A.map(rows, (row) =>
+              row.kind === "check-failed" ? O.some([row.capsule.lane, row.capsule.headSha]) : O.none()
+            )
+          )
+        ).toEqual([
           ["Coverage", "aaa111"],
           ["Coverage", "bbb222"],
         ]);
@@ -823,7 +887,13 @@ describe("registration patience", () => {
         expect(ended.failing).toBe(1);
 
         const rows = yield* readInboxRows(root);
-        expect(A.map(rows, (row) => [row.capsule.lane, row.capsule.headSha])).toEqual([
+        expect(
+          A.getSomes(
+            A.map(rows, (row) =>
+              row.kind === "check-failed" ? O.some([row.capsule.lane, row.capsule.headSha]) : O.none()
+            )
+          )
+        ).toEqual([
           ["Coverage", "aaa111"],
           ["Coverage", "bbb222"],
         ]);

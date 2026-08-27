@@ -14,9 +14,9 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -80,17 +80,32 @@ const openRemote = (fields: {
   readonly unresolvedReviewThreadCount?: number;
   readonly unresolvedThreads?: O.Option<ReadonlyArray<YeetStatusReviewThread>>;
   readonly headSha?: O.Option<string>;
+  readonly isDraft?: boolean;
+  readonly mergeable?: string;
+  readonly mergeStateStatus?: string;
+  readonly reviewDecision?: string;
+  readonly state?: string;
 }) =>
   YeetStatusRemote.make({
     available: true,
     checked: true,
     detail: "PR #560 OPEN",
+    state: fields.state ?? "OPEN",
+    isDraft: fields.isDraft ?? false,
+    mergeable: fields.mergeable ?? "MERGEABLE",
+    mergeStateStatus: fields.mergeStateStatus ?? "CLEAN",
     headSha: fields.headSha ?? O.some(HEAD_A),
     unresolvedReviewThreadCount: fields.unresolvedReviewThreadCount ?? 0,
     unresolvedThreads: fields.unresolvedThreads ?? O.some(A.empty<YeetStatusReviewThread>()),
-    ...(fields.checkCount === undefined ? {} : { checkCount: fields.checkCount }),
-    ...(fields.failingCheckCount === undefined ? {} : { failingCheckCount: fields.failingCheckCount }),
-    ...(fields.pendingCheckCount === undefined ? {} : { pendingCheckCount: fields.pendingCheckCount }),
+    ...O.getSomesStruct({
+      reviewDecision: O.fromUndefinedOr(fields.reviewDecision),
+      checkCount: O.fromUndefinedOr(fields.checkCount),
+      failingCheckCount: O.fromUndefinedOr(fields.failingCheckCount),
+      pendingCheckCount: O.fromUndefinedOr(fields.pendingCheckCount),
+      requiredCheckCount: O.fromUndefinedOr(fields.checkCount),
+      failingRequiredCheckCount: O.fromUndefinedOr(fields.failingCheckCount),
+      pendingRequiredCheckCount: O.fromUndefinedOr(fields.pendingCheckCount),
+    }),
   });
 
 describe("yeet review-thread excerpts", () => {
@@ -159,14 +174,14 @@ describe("yeet merge readiness", () => {
     ).toStrictEqual(O.none());
   });
 
-  it("names checks-green first when the pipeline is red and threads are also open", () => {
+  it("names required-checks-green first when the pipeline is red and threads are also open", () => {
     const mergeReady = deriveYeetMergeReady(
       closeoutArtifact(1, O.some("4/5")),
       openRemote({ checkCount: 24, failingCheckCount: 1, unresolvedReviewThreadCount: 2 })
     );
 
     expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
   });
 
   it("treats a still-pending pipeline as not green", () => {
@@ -175,7 +190,7 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 3 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
   });
 
   it("names threads-resolved once the pipeline is green", () => {
@@ -303,6 +318,40 @@ describe("yeet merge readiness", () => {
     expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
     expect(O.flatMap(mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("4/5"));
+  });
+
+  it("does not let an optional red block required-check readiness", () => {
+    const remote = YeetStatusRemote.make({
+      ...openRemote({ checkCount: 17, failingCheckCount: 0, pendingCheckCount: 0 }),
+      checkCount: 18,
+      failingCheckCount: 1,
+      optionalCheckCount: 1,
+      failingOptionalCheckCount: 1,
+    });
+    const mergeReady = deriveYeetMergeReady(closeoutArtifact(0, O.some("5/5")), remote);
+
+    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+  });
+
+  it.each([
+    ["pr-open", { state: "CLOSED" }],
+    ["not-draft", { isDraft: true }],
+    ["mergeable", { mergeable: "CONFLICTING" }],
+    ["merge-state-acceptable", { mergeStateStatus: "BLOCKED" }],
+    ["review-decision-acceptable", { reviewDecision: "CHANGES_REQUESTED" }],
+  ] as const)("blocks on %s when that live pull request surface is unsatisfied", (criterion, fields) => {
+    const mergeReady = deriveYeetMergeReady(
+      closeoutArtifact(0, O.some("5/5")),
+      openRemote({
+        checkCount: 17,
+        failingCheckCount: 0,
+        pendingCheckCount: 0,
+        unresolvedReviewThreadCount: 0,
+        ...fields,
+      })
+    );
+
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some(criterion));
   });
 });
 

@@ -15,6 +15,8 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { runCaptured } from "../../../internal/process/index.ts";
+import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
+import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "../../Yeet/internal/LocalShardPoison.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -23,7 +25,7 @@ const $I = $RepoCliId.create("commands/Quality/internal/PackageVerify");
 
 const PACKAGE_TARGET_DIFF_FILTER = ["A", "C", "D", "M", "R", "T", "U", "X", "B"].join("");
 const PACKAGE_VERIFY_STEP_CONCURRENCY = 3;
-const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;
+const VERIFY_STEP_NAMES = ["audit", "docgen", "lint", "check"] as const;
 
 /**
  * Verification step names run by `quality package-verify`.
@@ -182,9 +184,11 @@ export class PackageVerifyStepResult extends S.Class<PackageVerifyStepResult>($I
  */
 export class PackageVerifyReport extends S.Class<PackageVerifyReport>($I`PackageVerifyReport`)(
   {
+    headSha: S.NonEmptyString,
     packageName: S.String,
     packageDir: S.String,
     quick: S.Boolean,
+    repoRoot: S.NonEmptyString,
     results: S.Array(PackageVerifyStepResult),
   },
   $I.annote("PackageVerifyReport", {
@@ -272,18 +276,12 @@ const runGitLines = Effect.fn("PackageVerify.runGitLines")(function* (
 const collectPackageVerifyChangedFiles = Effect.fn("PackageVerify.collectPackageVerifyChangedFiles")(function* (
   repoRoot: string
 ) {
-  const gitArgs: ReadonlyArray<ReadonlyArray<string>> = [
-    ["diff", "--name-only", `--diff-filter=${PACKAGE_TARGET_DIFF_FILTER}`, "HEAD", "--"],
-    ["diff", "--cached", "--name-only", `--diff-filter=${PACKAGE_TARGET_DIFF_FILTER}`, "--"],
-    ["ls-files", "--others", "--exclude-standard"],
-  ];
-  const files = yield* Effect.forEach(
-    gitArgs,
-    (args) => runGitLines(repoRoot, args).pipe(Effect.option, Effect.map(O.getOrElse(A.empty<string>))),
-    { concurrency: 3 }
-  );
-
-  return pipe(A.flatten(files), A.dedupe, A.sort(Order.String));
+  const files = yield* collectDirtyWorktreeFiles(repoRoot, {
+    diffArgs: [`--diff-filter=${PACKAGE_TARGET_DIFF_FILTER}`],
+    pathspecs: A.empty(),
+    onProbeFailure: "ignore",
+  }).pipe(QualityScriptCommandError.mapError("Failed to resolve package-verify dirty worktree files."));
+  return pipe(files, A.dedupe, A.sort(Order.String));
 });
 
 const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStepSpec> =>
@@ -293,9 +291,8 @@ const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStep
         PackageVerifyStepSpec.make({ step: "check", script: "beep:check" }),
       ]
     : [
-        PackageVerifyStepSpec.make({ step: "lint", script: "beep:lint" }),
-        PackageVerifyStepSpec.make({ step: "check", script: "beep:check" }),
-        PackageVerifyStepSpec.make({ step: "test", script: "beep:test" }),
+        PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" }),
+        PackageVerifyStepSpec.make({ step: "docgen", script: "docgen" }),
       ];
 
 /**
@@ -513,16 +510,61 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
     packageVerifyStepSpecs(quick),
     (spec) => runPackageVerifyStep(workspace, spec),
     {
-      concurrency: PACKAGE_VERIFY_STEP_CONCURRENCY,
+      concurrency: quick ? PACKAGE_VERIFY_STEP_CONCURRENCY : 1,
     }
   );
+  const headLines = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]);
+  const headSha = yield* O.match(A.head(headLines), {
+    onNone: () => fail("pkg-verify: git rev-parse HEAD returned no commit SHA."),
+    onSome: Effect.succeed,
+  });
 
   return PackageVerifyReport.make({
+    headSha,
     packageName: workspace.name,
     packageDir: workspace.dir,
     quick,
+    repoRoot,
     results,
   });
+});
+
+/**
+ * Project package verification results into the checkout's local-shard inbox.
+ *
+ * **Example** (Build a package poison update)
+ *
+ * ```ts
+ * import { PackageVerifyReport, recordPackageVerifyInboxForTesting } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * const update = recordPackageVerifyInboxForTesting(PackageVerifyReport.make({
+ *   headSha: "abc123", packageDir: "/repo/packages/demo", packageName: "@beep/demo",
+ *   quick: true, repoRoot: "/repo", results: []
+ * }))
+ * console.log(Effect.isEffect(update)) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recordInbox")(function* (
+  report: PackageVerifyReport
+) {
+  yield* Effect.forEach(
+    A.filter(report.results, (result) => !result.skipped),
+    (result) =>
+      recordYeetLocalShardOutcome(
+        report.repoRoot,
+        YeetLocalShardOutcome.make({
+          command: `bun run ${result.script}`,
+          exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
+          headSha: report.headSha,
+          shard: `package:${report.packageName}:${result.step}`,
+        })
+      ),
+    { concurrency: 1, discard: true }
+  );
 });
 
 const fmtSecs = (ms: number): string => `${(ms / 1000).toFixed(1)}s`;
@@ -612,6 +654,10 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
     packageName: pipe(A.head(packageArgs), O.map(Str.trim), O.filter(Str.isNonEmpty)),
     quick,
   });
+
+  yield* recordPackageVerifyInboxForTesting(report).pipe(
+    Effect.catch((error) => Console.error(`[pkg-verify] failed to update the checkout inbox: ${error.message}`))
+  );
 
   yield* Effect.forEach(renderPackageVerifyReportForTesting(report), (line) => Console.log(line), { discard: true });
 

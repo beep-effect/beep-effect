@@ -54,6 +54,11 @@ workflows in skills.
   answer and resolve every one via `bun run beep yeet reply` (drafts in
   `.beep/yeet/reply-drafts.json`); never leave threads standing or ask the
   operator to relay them.
+- Package handoff: any agent or sub-agent that edits a workspace package runs
+  `bun run beep quality package-verify <@beep/package>` before handing the work
+  back. Use `--quick` only when the touched surface justifies the lint+check
+  subset. The default runs the package audit and docgen; failures arm the same
+  checkout P0 inbox used by Yeet.
 
 ## Touch → Skill / Command
 

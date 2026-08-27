@@ -88,8 +88,9 @@ Honest status, not a launch deck.
 
 The north star is **Prose-to-Proof in front of Tom**: a real attorney doing
 real work in a shipped surface. Priority lives in
-[`docs/ROADMAP.md`](docs/ROADMAP.md). Packet lifecycle lives in
-[`goals/INDEX.md`](goals/INDEX.md).
+[`docs/ROADMAP.md`](docs/ROADMAP.md). Packet lifecycle lives in each tracked
+`goals/<slug>/ops/manifest.json`; `bun run beep goals index` renders the local,
+untracked portfolio view.
 
 ---
 

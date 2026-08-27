@@ -25,12 +25,14 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as fc from "effect/testing/FastCheck";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import type { Path } from "effect";
 
 const FIXTURES_ROOT = new URL("./fixtures/goals-plan", import.meta.url).pathname;
+// biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
 const REGEN = Bun.env.REGEN_GOLDENS === "1";
 const PILOT_SLUG = "knowledge-surface-automation";
 
@@ -81,6 +83,15 @@ const run = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path
   Effect.runPromise(effect.pipe(provideScopedLayer(NodeServices.layer)));
 
 describe("goals bootstrap --plan golden fixtures", () => {
+  it("round-trips arbitrary goal slugs through the schema codec", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(GoalSlug)(fc), (slug) => {
+        expect(S.decodeSync(GoalSlug)(S.encodeSync(GoalSlug)(slug))).toBe(slug);
+      }),
+      { numRuns: 32 }
+    );
+  });
+
   it("pins the minimal standard-delivery plan byte-for-byte", () =>
     run(expectGolden("bootstrap-minimal", compileMaterializationPlan(minimalInput, []))));
 

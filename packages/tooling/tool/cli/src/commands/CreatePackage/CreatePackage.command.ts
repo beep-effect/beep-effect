@@ -1947,23 +1947,25 @@ const packageCheckScript = (withStoriesTsconfig: boolean): string =>
     : "tsgo -p tsconfig.check.json && bun run beep:check:tests";
 
 // Script table for library/tool package manifests.
-const packageScripts = (rootRelative: string, withStoriesTsconfig: boolean) => ({
+const packageScripts = (rootRelative: string, packagePath: string, withStoriesTsconfig: boolean) => ({
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:audit":
-    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
   "beep:build": "tsc -p tsconfig.json && bun run babel",
   "beep:check": packageCheckScript(withStoriesTsconfig),
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+  "beep:docgen": `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
   ...(withStoriesTsconfig ? { "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit" } : {}),
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
+  "beep:policy": `bun --cwd ${rootRelative} run beep lint package-test-imports --include-root ${packagePath}`,
   "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
   "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
   build: "bun run beep:build",
   check: "bun run beep:check",
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-  docgen: `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
+  docgen: "bun run beep:docgen",
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
   test: "bun run beep:test",
@@ -2018,7 +2020,7 @@ const generatePackageJson: (
       return yield* encodeManifestJson(appManifest.value);
     }
 
-    const scripts = packageScripts(toRootRelative(packagePath), withStoriesTsconfig);
+    const scripts = packageScripts(toRootRelative(packagePath), packagePath, withStoriesTsconfig);
 
     const ecosystemMetadata = pipe(
       packageMetadata,

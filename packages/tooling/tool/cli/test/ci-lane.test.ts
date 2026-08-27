@@ -5,6 +5,7 @@ import {
   CiLocalStepPlan,
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
+  docgenLaneModeForChangedPaths,
   doctestStepForTesting,
   runCiLane,
 } from "@beep/repo-cli/commands/Ci";
@@ -14,6 +15,7 @@ import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Sink, Stream
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -136,26 +138,22 @@ const prShapeOptions = CiLaneRunOptions.make({
   summarize: true,
 });
 
-// The 16 required-check context names read from ruleset 10240248 on 2026-08-13.
-const REQUIRED_CONTEXT_NAMES = [
-  "Check",
-  "Codegen Drift",
-  "Commitlint",
-  "Coverage Regression",
-  "Docgen",
-  "Doctest",
-  "Knip",
-  "Lint",
-  "Lint Policy",
-  "Nix Shell",
-  "Professional Desktop IPC Stdio",
-  "Repo Sanity",
-  "SAST",
-  "Secret Scanning",
-  "Security",
-  "Test Integration",
-  "Test Unit",
-];
+const BranchProtectionContextSnapshot = S.Struct({
+  schemaVersion: S.Literal("branch-protection-contexts/v1"),
+  capturedAt: S.String,
+  repository: S.Literal("beep-effect/beep-effect"),
+  branch: S.Literal("main"),
+  rulesetId: S.Literal(10240248),
+  rulesetName: S.String,
+  enforcement: S.Literal("active"),
+  strictRequiredStatusChecksPolicy: S.Literal(false),
+  requiredStatusChecks: S.Array(S.String),
+});
+const decodeBranchProtectionContextSnapshot = S.decodeUnknownEffect(S.fromJsonString(BranchProtectionContextSnapshot));
+const branchProtectionContextSnapshotUrl = new URL(
+  "../../../../../goals/ship-velocity/research/branch-protection-contexts.json",
+  import.meta.url
+);
 
 describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
@@ -170,16 +168,21 @@ describe("CI lane descriptors", () => {
     expect(missing).toEqual([]);
   });
 
-  it("matches the frozen required-check context set", () => {
-    const requiredContexts = pipe(
-      CI_LANE_DESCRIPTORS,
-      A.filter((descriptor) => descriptor.required),
-      A.map((descriptor) => descriptor.contextName),
-      A.dedupe,
-      A.sort(Order.String)
-    );
-    expect(requiredContexts).toEqual(REQUIRED_CONTEXT_NAMES);
-  });
+  it.effect("matches the exact captured required-check context set", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* Effect.tryPromise(() => Bun.file(branchProtectionContextSnapshotUrl).text()).pipe(
+        Effect.flatMap(decodeBranchProtectionContextSnapshot)
+      );
+      const requiredContexts = pipe(
+        CI_LANE_DESCRIPTORS,
+        A.filter((descriptor) => descriptor.required),
+        A.map((descriptor) => descriptor.contextName),
+        A.dedupe,
+        A.sort(Order.String)
+      );
+      expect(requiredContexts).toEqual(A.sort(snapshot.requiredStatusChecks, Order.String));
+    })
+  );
 
   it("keeps the ecosystem contracts context visible but non-required", () => {
     const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "ecosystem"));
@@ -200,7 +203,6 @@ describe("CI lane descriptors", () => {
     expect(descriptor.contextName).toBe("Labs");
     expect(descriptor.required).toBe(false);
     expect(descriptor.laneClass).toBe("workflow-gated");
-    expect(A.contains(REQUIRED_CONTEXT_NAMES, descriptor.contextName)).toBe(false);
   });
 
   it("marks the CI-only residue as unreplayable", () => {
@@ -217,8 +219,22 @@ describe("CI lane descriptors", () => {
 describe("ciLaneStepsForTesting", () => {
   it("serializes the PR-shape check lane on fleet workers", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
-    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=1", "--affected", "--summarize"]);
+    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=3", "--affected", "--summarize"]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
+  });
+
+  it("lowers Check to c2 under a contended admission profile", () => {
+    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+    const previous = Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY;
+    Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY = "2";
+    try {
+      const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
+      expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=2", "--affected", "--summarize"]);
+    } finally {
+      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+      if (previous === undefined) delete Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY;
+      else Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY = previous;
+    }
   });
 
   it("builds the PR-shape package lint graph with TURBO_SCM_BASE", () => {
@@ -396,6 +412,16 @@ describe("ciLaneStepsForTesting", () => {
     expect([...full.args]).toEqual(["run", "docgen"]);
   });
 
+  it("selects Docgen none, affected, and full modes from one CLI predicate", () => {
+    expect(docgenLaneModeForChangedPaths([])).toBe("none");
+    expect(docgenLaneModeForChangedPaths(["goals/ship-velocity/PLAN.md"])).toBe("affected");
+    expect(docgenLaneModeForChangedPaths(["standards/architecture/DECISIONS.md"])).toBe("affected");
+    expect(docgenLaneModeForChangedPaths(["scripts/release.sh"])).toBe("none");
+    expect(docgenLaneModeForChangedPaths(["packages/example/src/index.ts"])).toBe("affected");
+    expect(docgenLaneModeForChangedPaths(["packages/tooling/tool/docgen/src/index.ts"])).toBe("full");
+    expect(docgenLaneModeForChangedPaths(["tsconfig.base.json"])).toBe("full");
+  });
+
   it("builds exact full and affected Doctest argv", () => {
     const full = firstOf(doctestStepForTesting(REPO_ROOT, undefined));
     expect(full.command).toBe("bunx");
@@ -550,7 +576,7 @@ describe("ciLocalStepsForTesting", () => {
       "lane",
       "docgen",
       "--mode",
-      "affected",
+      "auto",
       "--base",
       "origin/main",
     ]);

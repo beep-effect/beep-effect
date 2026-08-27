@@ -46,6 +46,13 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
 export const DEFAULT_YEET_PACKET_DIR = ".beep/yeet" as const;
 
 /**
+ * Stable step id for the merged-tree CI parity battery.
+ *
+ * @category configuration
+ */
+export const CI_PARITY_STEP_ID = "full:02-ci-parity" as const;
+
+/**
  * Turbo tasks used by the Yeet feedback phase.
  *
  * @category configuration
@@ -148,6 +155,10 @@ export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`Y
   {
     amend: S.Boolean,
     collectAll: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    ciParity: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
@@ -419,6 +430,12 @@ const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boo
   const lanes = proofLanesForTier(context, tier);
   return RepoPlanStep.make({
     ...step,
+    env: {
+      ...(step.env ?? {}),
+      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+      BEEP_YEET_LANE_PROOF_MODE: Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "active",
+      BEEP_YEET_PROOF_BASE: context.base,
+    },
     waves: A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) =>
       RepoPlanWave.make({ id: wave.wave, laneIds: A.map(wave.lanes, (lane) => lane.id) })
     ),
@@ -429,6 +446,39 @@ const fullProofSteps = (context: RepoRunContext, collectAll: boolean): ReadonlyA
   proofStep(context, "cheap-gates", true),
   proofStep(context, "full", collectAll),
 ];
+
+const ciParityStep = (context: RepoRunContext): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: CI_PARITY_STEP_ID,
+    label: "full:ci-parity",
+    phase: "full",
+    command: "bun",
+    args: ["run", "beep", "ci", "local", "--affected", "--base", context.base],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "readonly",
+    resume: "never",
+    verification: "installed-merge-preview-pr-posture",
+    env: {
+      AUTH_SECRET: undefined,
+      BEEP_TEST_DATABASE_DRIVER: undefined,
+      BEEP_TEST_DATABASE_URL: undefined,
+      BETTER_AUTH_SECRET: undefined,
+      BETTER_AUTH_URL: undefined,
+      CI: "true",
+      DATABASE_URL: undefined,
+      DATABASE_URL_UNPOOLED: undefined,
+      EMAIL_RESEND_API_KEY: undefined,
+      GITHUB_ACTIONS: "true",
+      LIVEBLOCKS_SECRET_KEY: undefined,
+      SECURITY_TRUSTED_ORIGINS: undefined,
+      TURBO_API: undefined,
+      TURBO_CACHE: "local:rw",
+      TURBO_LOG_ORDER: "stream",
+      TURBO_TEAM: undefined,
+      TURBO_TOKEN: undefined,
+    },
+  });
 
 const repairCheapGateStep = (context: RepoRunContext): RepoPlanStep => {
   const step = proofStep(context, "cheap-gates", true);
@@ -659,12 +709,15 @@ const publishSteps = (
           earlyPushStep(context),
           ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
           ...fullProofSteps(context, options.collectAll),
+          ciParityStep(context),
           ...(options.monitor ? monitorSteps(context) : []),
         ]
       : [
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
-          ...(options.fast && options.monitor ? [] : fullProofSteps(context, options.collectAll)),
+          ...(options.fast && options.monitor
+            ? []
+            : [...fullProofSteps(context, options.collectAll), ciParityStep(context)]),
           headInstallPreflightStep(context, "publish"),
           pushStep(context),
           ...(options.pr ? [prCreateStep(context)] : []),
@@ -680,10 +733,12 @@ const stepsForMode = (
     repair: () => [...repairSteps(context), repairCheapGateStep(context), ...feedbackSteps(context)],
     verify: () => [
       fallowAdvisoryFeedbackStep(context),
-      ...(options.tier === "full"
-        ? fullProofSteps(context, options.collectAll)
-        : [proofStep(context, options.tier, options.collectAll)]),
-      ...(options.tier === "full" ? [headInstallPreflightStep(context, "prepare")] : []),
+      ...(options.ciParity
+        ? [ciParityStep(context)]
+        : options.tier === "full"
+          ? fullProofSteps(context, options.collectAll)
+          : [proofStep(context, options.tier, options.collectAll)]),
+      ...(!options.ciParity && options.tier === "full" ? [headInstallPreflightStep(context, "prepare")] : []),
     ],
     publish: () => publishSteps(context, message, options),
     monitor: () => monitorSteps(context),

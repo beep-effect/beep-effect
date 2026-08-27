@@ -13,6 +13,16 @@
 set -euo pipefail
 
 REPO_ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Pure generated files use a fail-loud custom merge driver. Install it before
+# the rest of machine-local agent state so fresh clones cannot silently merge
+# projection conflicts as ordinary text.
+bash "${SCRIPT_ROOT}/setup-regenerate-merge-driver.sh" "${REPO_ROOT}"
+if [[ "${BEEP_SETUP_SKIP_USER_SERVICES:-0}" != "1" ]]; then
+  bash "${SCRIPT_ROOT}/setup-yeet-pr-lease-watcher.sh" "${REPO_ROOT}"
+fi
+
 STORE_DIR="${BEEP_SHARED_STORE:-${HOME}/YeeBois/memory/beep-shared}"
 BASIC_MEMORY_PKG="${BASIC_MEMORY_PKG:-basic-memory@0.22.1}"
 

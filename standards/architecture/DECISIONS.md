@@ -1569,6 +1569,136 @@ B10 purely by path.
 This supersedes the unconditional global-input treatment of the baseline file
 in the pull-request planner.
 
+## 2026-08-27: Same-Repository Pull Requests May Read the Turbo Remote Cache
+
+- **Status:** Active
+
+Decision:
+
+Pull-request jobs whose head repository is this repository receive the read-only Turbo token and
+`TURBO_CACHE=local:rw,remote:r`. Fork pull requests remain tokenless and local-only. Pull-request
+jobs never receive write capability, never use `pull_request_target`, and the Lambda authorizer's
+GET/HEAD-only token policy remains the server-side boundary. Main pushes retain `remote:rw`.
+
+Rationale:
+
+The cache service and its read token were designed for untrusted downloads; the read token cannot
+poison artifacts. Keeping same-repository work cold discarded main's warmed graph and made every
+required lane repay identical work. Fork isolation bounds token disclosure and download-abuse risk,
+while server-side method enforcement and existing throttles remain defense in depth.
+
+This supersedes the temporary policy that made every pull request local-only.
+
+## 2026-08-27: The Goal Portfolio Index Is an Untracked Projection
+
+- **Status:** Active
+
+Decision:
+
+`goals/INDEX.md` is removed from version control and ignored. Goal manifest state is authoritative;
+the CLI generates the index on read, during repair, and at session bootstrap. CI regenerates and
+validates the projection but never expects a committed copy. GitHub browsability of the derived
+table does not outweigh its demonstrated merge contention.
+
+Rationale:
+
+Eighteen concurrent branches contested a file whose content is wholly derivable. A tracked
+projection turns independent manifest edits into artificial conflicts and repeated merge-main
+commits. Removing the projection deletes that serialization point without deleting authored goal
+state; local readers still receive the familiar index.
+
+## 2026-08-27: The Exploration Atlas Is an Untracked D3 Projection
+
+- **Status:** Active
+
+Decision:
+
+`explorations/ATLAS.md` is removed from version control and ignored. The Atlas is generated
+wholesale from normalized D3 state and may contain no authored doctrine. For a packet carrying
+`ops/events/`, status, `furthestStage`, and `resumeStage` come only from the PacketCore fold; an
+invalid or forked opted-in stream fails closed and never falls back to its manifest. While the
+ratified Amendment G stream freeze remains in force, a packet without a stream uses its manifest
+status and stage as an explicit adoption snapshot, with both D3 stages initialized to that stage.
+Stream opt-in permanently retires that transitional authority for the packet.
+
+The same projector owns the marked `Stage:` and `Status:` region in every exploration README.
+Authored Trail, Next Open Question, and surrounding packet prose remain tracked. `--check` rejects
+underivable packets, README-region drift, and any present local Atlas whose bytes differ from the
+whole-file projection; absence of the ignored Atlas is valid.
+
+Rationale:
+
+The former tracked Atlas mixed navigation with authored summaries and created merge contention.
+Making the whole file derivable removes that serialization point, while generated README regions
+close the second drift surface ratified by packet-system-redesign D6. The explicit adoption
+boundary completes D6 without fabricating event history or violating the fleet opt-in freeze;
+candidate `packet-convention-migration` still owns the honest stream-adoption campaign.
+The retired Outcomes links remain canonical in the root product narrative and
+`goals/agentic-professional-runtime/docs/product-vision-law-practice.md`; capability discovery
+remains a live-source rule in `AGENTS.md`, and per-packet summaries remain in tracked READMEs.
+
+## 2026-08-27: Required Contexts Report Success When a Goals-Only Change Skips Heavy Work
+
+- **Status:** Active
+
+Decision:
+
+For pull requests whose complete changed-path set is under `goals/**`, every required GitHub context
+still starts and reports a terminal success, but heavyweight setup and lane bodies are skipped. The
+same pattern may extend to `explorations/**` only after its generated ATLAS contract is complete.
+Path filters must not suppress an entire required workflow, because an absent status would block
+the branch rule or silently weaken it if the rule were removed.
+
+Rationale:
+
+Packet lifecycle flips are documentation and manifest changes, yet they currently buy the entire
+heavy suite and its coverage tail. The existing lane-gate success path preserves the required-
+context contract while avoiding irrelevant compute. Central changed-path classification prevents
+different jobs from inventing different definitions of a goals-only change.
+
+## 2026-08-27: Stacked Pull Requests Remain a Manual Preview Workflow
+
+- **Status:** Active
+
+Decision:
+
+Do not add `yeet publish --stack`. GitHub's official stack extension may be used manually for
+bounded experiments, but Yeet publish continues to own exactly one reviewed head, pull request,
+lease, closeout report, and merge-ready verdict. Revisit native integration only after the GitHub
+feature is stable and Yeet can represent an exact-head proof for every layer without making each
+code layer repay the full required suite.
+
+Rationale:
+
+The live two-layer trial created stack #861 with draft PRs #859 and #860, preserved the chained
+base relationship through `gh stack sync`, and registered the required checks independently on
+both layers. GitHub also rejected a direct base edit while the top pull request belonged to the
+stack. The workflow is real, but mapping a multi-head unit onto Yeet's single-head artifacts would
+either weaken proof or multiply CI cost. Both trial pull requests were closed and their branches
+deleted without merging; the detailed receipt is in
+`goals/ship-velocity/research/stacked-pr-trial.md`.
+
+## 2026-08-27: Merge Queue Stays Off Until the Recorded Reliability Gate
+
+- **Status:** Active
+
+Decision:
+
+Keep the `main` merge queue disabled and retain
+`strict_required_status_checks_policy: false`. Re-evaluate only after a trailing 14-day
+`check.yml` push window reaches at least 80% successful non-cancelled terminal runs. Before any
+queue activation, add and prove `merge_group` parity for all required contexts, then evaluate the
+strict-status-check flip first.
+
+Rationale:
+
+The live 2026-08-13 through 2026-08-27 window is 104 successes and 55 failures among 159
+non-cancelled terminal runs, or 65.4%; another 25 runs were cancelled. The active ruleset requires
+17 contexts, does not require strict up-to-date checks, and no current workflow handles
+`merge_group`. GitHub documents that a queue without that trigger waits for required contexts
+that never report. The packet's explicit reliability gate is therefore unmet, and enabling the
+queue now would add synthetic-SHA CI cost before the underlying suite is reliable enough.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

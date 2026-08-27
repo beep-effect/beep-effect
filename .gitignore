@@ -112,6 +112,10 @@ sst-env.d.ts
 .beep/*
 **/.beep/*
 
+# Deterministic packet navigation projections; manifests are authoritative.
+/goals/INDEX.md
+/explorations/ATLAS.md
+
 # subtrees
 .repos/*
 

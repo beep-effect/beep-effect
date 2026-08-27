@@ -7,6 +7,7 @@
 
 export * from "@beep/repo-cli/commands/Yeet/index";
 export * from "../commands/Yeet/internal/Ack.ts";
+export * from "../commands/Yeet/internal/Admission.ts";
 export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";
@@ -38,6 +39,7 @@ export * from "../commands/Yeet/internal/InboxView.ts";
 export * from "../commands/Yeet/internal/IssueArtifacts.ts";
 export * from "../commands/Yeet/internal/IssueClassification.ts";
 export * from "../commands/Yeet/internal/IssueParser.ts";
+export * from "../commands/Yeet/internal/LocalShardPoison.ts";
 export * from "../commands/Yeet/internal/Merge.ts";
 export * from "../commands/Yeet/internal/MergedPreview.ts";
 export * from "../commands/Yeet/internal/MonitorChecks.ts";
@@ -46,6 +48,7 @@ export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/Porcelain.ts";
 export * from "../commands/Yeet/internal/PortfolioIndexGuard.ts";
+export * from "../commands/Yeet/internal/PrLease.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/Provenance.ts";
 export * from "../commands/Yeet/internal/PublishScope.ts";

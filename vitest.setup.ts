@@ -105,6 +105,7 @@ type BunGlobScanOptions = {
 type BunSpawnSyncOptions = {
   readonly cwd?: string;
   readonly env?: NodeJS.ProcessEnv;
+  readonly stdin?: "ignore" | "inherit" | "pipe" | string | Uint8Array;
   readonly stderr?: "ignore" | "inherit" | "pipe";
   readonly stdout?: "ignore" | "inherit" | "pipe";
 };
@@ -200,11 +201,13 @@ const normalizeSpawnInput = (
 // fallow-ignore-next-line complexity -- Node adapter preserves Bun command, stdio, signal, and exit semantics
 const spawnSync = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>, options?: BunSpawnSyncOptions) => {
   const normalized = normalizeSpawnInput(commandOrOptions, options);
+  const stdin = normalized.options.stdin;
+  const stdinIsMode = stdin === "ignore" || stdin === "inherit" || stdin === "pipe";
   const result = nodeSpawnSync(normalized.command, [...normalized.args], {
     cwd: normalized.options.cwd,
     env: { ...process.env, ...normalized.options.env },
-    stderr: stdioMode(normalized.options.stderr),
-    stdout: stdioMode(normalized.options.stdout),
+    input: stdinIsMode ? undefined : stdin,
+    stdio: [stdinIsMode ? stdin : "pipe", stdioMode(normalized.options.stdout), stdioMode(normalized.options.stderr)],
   });
   const exitCode = result.status ?? (result.signal === null ? 0 : 1);
 
