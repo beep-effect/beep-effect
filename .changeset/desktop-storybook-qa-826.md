@@ -2,6 +2,7 @@
 "@beep/professional-desktop": patch
 "@beep/storybook": patch
 "@beep/agents-client": patch
+"@beep/cosmos": patch
 "@beep/documents-use-cases": patch
 "@beep/documents-server": patch
 "@beep/graph-3d": patch
