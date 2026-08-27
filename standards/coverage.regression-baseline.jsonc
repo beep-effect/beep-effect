@@ -22462,15 +22462,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts": {
-          "lines": 91.3,
-          "statements": 90.16,
-          "branches": 87.03,
-          "functions": 77.38,
+          "lines": 90.35,
+          "statements": 88.95,
+          "branches": 85.07,
+          "functions": 75,
           "uncovered": {
-            "lines": 24,
-            "statements": 29,
-            "branches": 14,
-            "functions": 19
+            "lines": 30,
+            "statements": 37,
+            "branches": 20,
+            "functions": 23
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.errors.ts": {
