@@ -1,0 +1,37 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 4,
+    "furthestStage": "P4",
+    "issues": [],
+    "packet": "chat-surface-parity",
+    "resumeStage": "P4",
+    "revision": 1,
+    "root": "goals",
+    "status": "completed-retained",
+    "tip": {
+      "id": "506b3fe6c74aeadec52346021b59f173f1bce9903224d8449f5a0d530be8ce4b",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "506b3fe6c74aeadec52346021b59f173f1bce9903224d8449f5a0d530be8ce4b",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "ordinal": 4,
+        "stage": "P4",
+        "status": "completed-retained",
+        "type": "packet-created"
+      },
+      "id": "506b3fe6c74aeadec52346021b59f173f1bce9903224d8449f5a0d530be8ce4b",
+      "seq": 1
+    }
+  ]
+}

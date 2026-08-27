@@ -440,6 +440,3 @@ Pick **one** downstream artefact that already exists (a research-report Markdown
 - X engagement numbers are as returned by the search API on 2026-08-26.
 
 ---
-
-
-

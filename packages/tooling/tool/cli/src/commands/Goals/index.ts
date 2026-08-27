@@ -62,6 +62,34 @@ export * from "./Goals.schemas.ts";
  */
 export * from "./Inventory.ts";
 /**
+ * Packet-convention migration command and model surfaces.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Migration/ManifestTranslation.ts";
+/**
+ * Packet-convention CLI command surfaces.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Migration/Migration.command.ts";
+/**
+ * Packet-convention migration schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Migration/Migration.schemas.ts";
+/**
+ * Packet fork-repair and genesis mutation services.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Migration/PacketMutation.ts";
+/**
  * Mechanical status-migration engine.
  *
  * @category utilities

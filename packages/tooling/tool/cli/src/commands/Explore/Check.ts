@@ -1,14 +1,15 @@
 /**
- * `beep explore --check` — read-only packet-stream check.
+ * `beep explore --check` — read-only stream-integrity and goal-fleet check.
  *
  * **Details**
  *
  * Scans both packet roots (`goals/`, `explorations/`) for packets that opted
  * into event sourcing (an `ops/events/` directory), folds each stream, and
  * reports forks, chain-integrity issues, and stale or missing trace
- * projections through the existing goals-doctor finding shape. Advisory in
- * this first slice (D8): findings are printed, the exit code stays zero, and
- * the blocking flip arrives later through the established ratchet.
+ * projections. It also scans every goal manifest for duplicate identities,
+ * dependency cycles, unreachable references, and references to packets that
+ * have not adopted the v2 convention. All findings use the goals-doctor shape
+ * and remain advisory: they are printed while the exit code stays zero.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -20,7 +21,8 @@ import { Console, Effect, FileSystem, Order, Path } from "effect";
 import { constUndefined, dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GoalDoctorFinding } from "../Goals/Doctor.ts";
-import { parseGoalManifestText, TEMPLATE_SLUG } from "../Goals/Inventory.ts";
+import { listGoalPackets, parseGoalManifestText, TEMPLATE_SLUG } from "../Goals/Inventory.ts";
+import { lintGoalFleet } from "../Goals/Migration/ManifestTranslation.ts";
 import { decodePacketTraceProjection, isPacketSlug, PacketRoot } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/PacketEventStore.ts";
 import {
@@ -268,6 +270,27 @@ type RootScan = {
   readonly findings: ReadonlyArray<GoalDoctorFinding>;
 };
 
+const fleetFindingKind = (
+  kind: "duplicate-slug" | "dependency-cycle" | "unreachable-packet" | "unmigrated-reference"
+): GoalDoctorFindingKind => {
+  if (kind === "duplicate-slug") return "packet-fleet-duplicate-slug";
+  if (kind === "dependency-cycle") return "packet-fleet-dependency-cycle";
+  return kind === "unreachable-packet" ? "packet-fleet-unreachable" : "packet-fleet-unmigrated-reference";
+};
+
+const fleetLintFindings = Effect.fn("Explore.fleetLintFindings")(function* () {
+  const records = yield* listGoalPackets();
+  return A.map(lintGoalFleet(records), (item) =>
+    GoalDoctorFinding.make({
+      slug: item.slug,
+      kind: fleetFindingKind(item.kind),
+      severity: "advisory",
+      key: `${item.slug} ${item.kind} ${A.join(item.related, ",")}`,
+      message: `${item.severity}: ${item.message}`,
+    })
+  );
+});
+
 const scanRootStreams = Effect.fn("Explore.scanRootStreams")(function* (root: PacketRoot) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -302,7 +325,7 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
     yield* Console.log(summary);
   }
   if (!A.isReadonlyArrayNonEmpty(scan.findings)) {
-    yield* Console.log("[explore:check] OK: no stream findings.");
+    yield* Console.log("[explore:check] OK: no stream-integrity or fleet-graph findings.");
     return;
   }
   yield* Console.error("[explore:check] findings (advisory):");
@@ -312,13 +335,13 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
 });
 
 /**
- * Run the read-only packet-stream check over both packet roots.
+ * Run the read-only stream-integrity and goal-fleet check.
  *
  * **Details**
  *
- * Advisory-only: findings are printed on stderr in the goals-doctor line
- * format, per-stream derived summaries on stdout, and the effect always
- * succeeds so CI stays green until the blocking ratchet flips.
+ * Advisory-only: stream and fleet-graph findings are printed on stderr in the
+ * goals-doctor line format, per-stream derived summaries on stdout, and the
+ * effect always succeeds so CI stays green until the blocking ratchet flips.
  *
  * **Example** (Verify the check returns an Effect)
  *
@@ -342,5 +365,6 @@ export const runExploreCheck = Effect.fn("Explore.runExploreCheck")(function* ()
       findings: A.appendAll(merged.findings, scan.findings),
     };
   }
+  merged = { ...merged, findings: A.appendAll(merged.findings, yield* fleetLintFindings()) };
   yield* printCheckReport(merged);
 });
