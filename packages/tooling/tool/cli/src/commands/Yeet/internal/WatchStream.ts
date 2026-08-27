@@ -32,11 +32,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, HashMap } from "effect";
+import { Effect, HashMap, Match } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import type { YeetMonitorComment } from "./MonitorComments.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
 
@@ -366,7 +369,120 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
 ) {}
 
 /**
+ * A pull request comment arrived: one row per observed comment.
+ *
+ * **Details**
+ *
+ * `source` distinguishes the two REST collections the comment poller reads —
+ * `review` rows carry `path`/`line`, `issue` rows do not. `body` is the
+ * control-stripped, length-bounded excerpt (the full text lives at `url`), so
+ * a hostile comment cannot bloat the stream or smuggle escape codes through a
+ * consumer that echoes rows verbatim.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetCommentPosted extends S.Class<YeetCommentPosted>($I`YeetCommentPosted`)(
+  {
+    kind: S.tag("comment-posted"),
+    schemaVersion: S.Literal(YEET_WATCH_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_WATCH_SCHEMA_VERSION))
+    ),
+    at: S.String,
+    headSha: S.NonEmptyString,
+    source: LiteralKit(["review", "issue"]),
+    author: S.String,
+    body: S.String,
+    commentId: S.Finite,
+    createdAt: S.String,
+    line: S.NullOr(S.Finite).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    path: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    url: S.String,
+  },
+  $I.annote("YeetCommentPosted", {
+    description: "One new PR review or conversation comment observed by the watch stream.",
+  })
+) {}
+
+// Matches the classic comment monitor's operator excerpt bound; the full body
+// is one click away at the row's URL.
+const WATCH_COMMENT_EXCERPT_LENGTH = 200;
+
+/**
+ * Map one polled comment into its watch-stream row.
+ *
+ * **Details**
+ *
+ * The data-last form exists for the batch case the watch loop actually has —
+ * one timestamp and head SHA stamped across every comment a poll returned.
+ *
+ * **Example** (Map an issue comment)
+ *
+ * ```ts
+ * import { yeetWatchCommentEvent, YeetMonitorIssueComment } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = yeetWatchCommentEvent(YeetMonitorIssueComment.make({
+ *   author: "octocat",
+ *   body: "The hosted checks are green.",
+ *   createdAt: "2026-08-27T00:00:00Z",
+ *   id: 44,
+ *   url: "https://github.com/o/r/pull/1#issuecomment-44",
+ * }), "2026-08-27T00:00:00Z", "abc123")
+ * console.log(row.source) // "issue"
+ * ```
+ *
+ * @param comment - The normalized comment from the poller.
+ * @param at - Timestamp stamped on the row.
+ * @param headSha - The head SHA the watch was on when the comment was observed.
+ * @returns The comment's watch-stream row.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const yeetWatchCommentEvent: {
+  (at: string, headSha: string): (comment: YeetMonitorComment) => YeetCommentPosted;
+  (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted;
+} = dual(
+  3,
+  (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted =>
+    Match.value(comment).pipe(
+      Match.tags({
+        review: (review) =>
+          YeetCommentPosted.make({
+            at,
+            author: review.author,
+            body: yeetCommentExcerpt(review.body, WATCH_COMMENT_EXCERPT_LENGTH),
+            commentId: review.id,
+            createdAt: review.createdAt,
+            headSha,
+            line: O.getOrNull(review.line),
+            path: review.path,
+            source: "review",
+            url: review.url,
+          }),
+        issue: (issue) =>
+          YeetCommentPosted.make({
+            at,
+            author: issue.author,
+            body: yeetCommentExcerpt(issue.body, WATCH_COMMENT_EXCERPT_LENGTH),
+            commentId: issue.id,
+            createdAt: issue.createdAt,
+            headSha,
+            source: "issue",
+            url: issue.url,
+          }),
+      }),
+      Match.exhaustive
+    )
+);
+
+/**
  * Reasons a watch stream ends.
+ *
+ * **Details**
+ *
+ * `event` is the `--until-event` contract: the stream observed an actionable
+ * event batch — a failing check or a settled comment burst — persisted its
+ * durable state, and exited to wake the supervising session.
  *
  * **Example** (Check a reason)
  *
@@ -379,7 +495,7 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
  * @category models
  * @since 0.0.0
  */
-export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-closed", "poll-error"]).pipe(
+export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-closed", "poll-error", "event"]).pipe(
   $I.annoteSchema("YeetWatchEndReason", {
     title: "Yeet Watch End Reason",
     description: "Why a yeet watch stream ended.",
@@ -434,6 +550,7 @@ export const YeetWatchEvent = S.Union([
   YeetThreadTransition,
   YeetMergeabilityChanged,
   YeetHeadChanged,
+  YeetCommentPosted,
   YeetWatchEnded,
 ]).pipe(
   $I.annoteSchema("YeetWatchEvent", {

@@ -20,6 +20,7 @@ import { YeetInboxSeverity } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
+  rejectYeetUntilEventPairing,
   runYeetMerge,
   runYeetMergeLoop,
   runYeetReplyPass,
@@ -335,9 +336,17 @@ const watchFlag = Flag.boolean("watch").pipe(
   )
 );
 
+const untilEventFlag = Flag.boolean("until-event").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "With --watch: exit on the first actionable event batch (a failing check immediately, new PR comments after a short settle window) so a supervising session is woken the moment there is something to act on"
+  )
+);
+
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
+  untilEvent: untilEventFlag,
   untilMerged: untilMergedFlag,
   watch: watchFlag,
 } as const;
@@ -457,13 +466,22 @@ const yeetPublishCommand = Command.make("publish", publishFlags, (options) => ru
   Command.withDescription("Commit reviewed staged changes, prove the commit, then push")
 );
 
-const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilMerged, watch, ...options }) =>
-  untilMerged && !options.plan
-    ? runYeetMergeLoop(options)
-    : watch && !options.plan
-      ? runYeetWatchLoop(options)
-      : runYeetMode("monitor", options)
-).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
+const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilEvent, untilMerged, watch, ...options }) => {
+  // Plan mode always routes to the classic planner, whatever else is set.
+  if (options.plan) {
+    return runYeetMode("monitor", options);
+  }
+  if (untilEvent && (!watch || untilMerged)) {
+    return rejectYeetUntilEventPairing;
+  }
+  if (untilMerged) {
+    return runYeetMergeLoop(options);
+  }
+  if (watch) {
+    return runYeetWatchLoop(options, untilEvent);
+  }
+  return runYeetMode("monitor", options);
+}).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
   Command.withDescription("Reset the clone after a merge: prune refs, fast-forward main, delete merged branches")
