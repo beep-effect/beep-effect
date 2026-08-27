@@ -1,0 +1,92 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-08-27",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-08-26T22:22:00-05:00",
+    "end": "2026-08-27T08:21:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta from last attempted window end. lastSuccessfulRun was null at start (human had merged #854 but stamp had not advanced)."
+  },
+  "claimsEmitted": 12,
+  "collisionRate": 0.0,
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 11,
+    "arxiv": 1,
+    "github": 10,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 3,
+    "standingClaims": 34,
+    "results": [
+      {
+        "id": "f-effect-05",
+        "verdict": "held",
+        "note": "drizzle-orm#6162 still open; lotap confirmed v1.0.0-rc.4 effect-core/errors.ts on 2026-08-25. Beep #852 merged, does not close upstream."
+      },
+      {
+        "id": "f-agents-03",
+        "verdict": "held",
+        "note": "SEP-2640 PR still open, updated 2026-08-25T22:57:35Z."
+      },
+      {
+        "id": "f-law-05",
+        "verdict": "inconclusive",
+        "note": "USPTO ODP live HTML is a JS app; 2026-08-18 notice text not present in the scrape. Do not lift."
+      }
+    ]
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP is connected but X API v2 search/news/credits return client-not-enrolled / Client Forbidden (developer App not attached to a Project, client_id 29986667). No x.com posts in this packet. Do not treat silence as absence of X traffic."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass."
+    },
+    {
+      "id": "github-mcp-dcr",
+      "severity": "auth",
+      "detail": "GitHub MCP unused. Publisher uses gh + cloud agent instead."
+    },
+    {
+      "id": "uspto-odp-js",
+      "severity": "source-gap",
+      "detail": "data.uspto.gov OA search page is JS-rendered; live HTML scrape cannot confirm or lift the 2026-08-18 four-field notice."
+    }
+  ],
+  "resume": {
+    "retry": [
+      "x-search"
+    ],
+    "cursor": "enroll X developer App in a Project, then re-search window 2026-08-26T22:22-05:00/2026-08-27T08:21-05:00"
+  },
+  "repoReplay": {
+    "merged": [857, 856, 851, 854, 853, 852],
+    "open": [858, 855],
+    "blockingResearchPr": null
+  },
+  "novelty": {
+    "priorClaims": 34,
+    "newClaims": 12,
+    "moved": 1,
+    "held": 2,
+    "inconclusive": 1,
+    "collisionRate": 0.0
+  }
+}
