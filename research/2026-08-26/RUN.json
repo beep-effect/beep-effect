@@ -1,0 +1,33 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-08-26",
+  "status": "partial",
+  "supervised": true,
+  "firstRun": true,
+  "window": {
+    "start": "2026-08-25T22:22:00-05:00",
+    "end": "2026-08-26T22:22:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 48,
+    "note": "First run: 48h fallback used when 24h was thin."
+  },
+  "claimsEmitted": 34,
+  "collisionRate": 0.0,
+  "selfReject": false,
+  "sourcesSeen": { "web": 9, "arxiv": 10, "github": 15 },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": { "attempted": 0, "standingClaims": 0, "note": "First run; exclusion digest empty." },
+  "frictions": [
+    { "id": "x-client-not-enrolled", "severity": "source-gap", "detail": "user-X MCP is connected but X API v2 search returns client-not-enrolled / Client Forbidden (developer App not attached to a Project). No x.com posts in this packet. Do not treat silence as absence of X traffic." },
+    { "id": "no-cross-provider-verify", "severity": "process-gap", "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass." },
+    { "id": "github-mcp-dcr", "severity": "auth", "detail": "GitHub MCP failed dynamic client registration. Publisher uses gh + cloud agent instead." }
+  ],
+  "resume": { "retry": ["x-search"], "cursor": "enroll X developer App in a Project, then re-search window 2026-08-25T22:22-05:00/2026-08-26T22:22-05:00" },
+  "repoReplay": { "merged": [849, 850, 848, 847, 846, 845, 844, 843, 842, 841, 840, 839, 838, 837, 836, 835], "open": [853, 852, 851], "blockingResearchPr": null }
+}

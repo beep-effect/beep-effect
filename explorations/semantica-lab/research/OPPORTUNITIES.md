@@ -270,3 +270,63 @@ ratifies.
   near-zero accepted/proposed ratio on a live run should read as a defect, not a result); keep
   provider responses in the content-addressed cache so diagnosis and the fixed re-derivation
   replay for free.
+
+- **2026-08-26 — The first live C0 slice crashed on a deterministic Anthropic refusal of a
+  benign fixture.** `claude-sonnet-4-5-20250929` answers the hosted LangExtract prompt for the
+  synthetic `md-structure` F1 fixture with an API-level refusal (`stop_reason` mapped to
+  `content-filter`) and zero text parts — three consecutive attempts, so it is the model's
+  deterministic response to this prompt shape (entity extraction of named people plus
+  affiliations), not a transient filter. The lab then died as a defect instead of degrading:
+  the caching adapter fed the empty success straight to `ProviderCacheEntry.make`, whose
+  non-empty-response check throws. A trivial-prompt probe against the same driver returned text
+  normally, which isolated the refusal to the extraction prompt; `claude-opus-4-6` answers the
+  identical prompt on all three attempts. Fix: the adapter now fails typed (`AiError`, naming
+  the finish reason) on any empty live generation before the cache boundary, and the extractor
+  default moved to `claude-opus-4-6` (D-C0-1 pins the family, not the id). Prevention: guard
+  every provider success against schema preconditions before content-addressed storage — an
+  "impossible" empty success is exactly what a refusal stop reason produces; keep a
+  trivial-prompt probe script beside any live lane to split driver faults from prompt faults
+  in one call.
+
+- **2026-08-26 — The slice repeated source alignment and then discarded the whole hosted batch
+  on one ambiguous candidate.** A cache-only probe spent more than ten CPU-minutes inside
+  `locateGroundedExtractions` after LangExtract had already grounded 181 candidates. The Opus
+  response contained 126 exact canonical matches and 14 relation candidates; six relation texts
+  were exact, but their endpoint set included repeated entity surfaces. The lab lost the whole
+  batch because its second locator required every candidate text to occur exactly once. Fix:
+  consume LangExtract's grounded UTF-16 span, verify every resulting `TextAnchor`, and retain
+  unaligned candidates as typed degraded claims. The batch aligner now reuses one case-folded
+  source map, rejects ambiguous exact or case-folded occurrences, and skips fuzzy work at the
+  exact-only threshold. Prevention: verify an upstream span once, but make the upstream aligner
+  withhold spans it cannot uniquely locate.
+
+- **2026-08-26 — Review invalidated two apparent C0 passes because proof was not rerun after the
+  grounding contract changed.** Directly consuming `GroundedExtraction` spans removed the slow
+  all-or-nothing locator, but the shared aligner still assigned every repeated surface to its
+  first occurrence. That let relation endpoints bind to the wrong entity claim while all
+  `TextAnchor` byte checks still passed. The historical live/replay digests were deterministic
+  but semantically unsafe. Fix: require a unique exact or case-folded occurrence, add repeated-
+  surface regressions at the shared boundary, and rerun the official slice after review changes.
+  Prevention: determinism evidence is not transferable across a grounding-contract edit; archive
+  it as superseded until the final code reproduces the stage result.
+
+- **2026-08-26 — The exact-head local proof missed a downstream coverage-only fixture failure.**
+  Hosted `Heavy / Coverage Regression` ran `packages/law-practice/server` after the shared
+  alignment contract changed and found five failures: the synthetic model emitted bare `Smith`
+  while its source fixture contained two occurrences, so the reference correctly became
+  `required-extraction-unaligned`. The affected unit lane had passed without exercising that
+  coverage selection. Fix: make the synthetic source's second reference mention generic, retain
+  one uniquely grounded `Smith`, update its content digest, and prove the package coverage lane
+  directly. Prevention: shared grounding changes need downstream coverage selection in the local
+  proof plan, not only affected unit tests.
+
+- **2026-08-26 — The third G-relation paper exhausted the Extraction probe breaker because
+  semantic relation text was not canonical evidence text.** The first Opus response contained
+  16 relation candidates and the exact-evidence retry contained 7, but neither response had one
+  relation text that exactly sliced the `@beep/doc-text` canonical string. The retry copied
+  source wording more closely, yet still normalized PDF line boundaries, punctuation, or
+  phrasing. Both runs therefore failed the typed non-zero relation gate instead of fabricating
+  spans. Evidence: `goals/semantica-canary/history/p2-c0-probe-breaker.md`. Prevention: model a
+  relation's semantic value separately from an independently selected verbatim evidence quote,
+  or prove a bounded chunk-scoped candidate at `decompose`; do not overload generated relation
+  prose as its `TextAnchor`.
