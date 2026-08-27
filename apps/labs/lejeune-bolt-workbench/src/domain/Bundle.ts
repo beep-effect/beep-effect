@@ -7,7 +7,7 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { LiteralKit, PosixPath, Sha256Hex } from "@beep/schema";
+import { LiteralKit, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity } from "effect";
 import * as A from "effect/Array";
@@ -850,6 +850,52 @@ export class RetentionAuthorization extends S.Class<RetentionAuthorization>($I`R
   })
 ) {}
 
+const MutableRetentionMetadataFields = S.Struct({
+  disposition: S.Literal("delete-or-promote"),
+  dispositionDate: IsoDate,
+  retentionAuthorization: S.OptionFromOptionalKey(RetentionAuthorization).pipe(SchemaUtils.withNoneDefault),
+  schemaVersion: S.tag("lejeune-retention-metadata/v1"),
+});
+
+const MutableRetentionMetadataAuthorityCheck = S.makeFilter(
+  (metadata: typeof MutableRetentionMetadataFields.Type) =>
+    O.match(metadata.retentionAuthorization, {
+      onNone: () => Str.Equivalence(metadata.dispositionDate, MUTABLE_CORPUS_DISPOSITION_DATE),
+      onSome: (authorization) => Str.Equivalence(metadata.dispositionDate, authorization.newDispositionDate),
+    }),
+  {
+    identifier: $I`MutableRetentionMetadataAuthorityCheck`,
+    title: "Mutable Retention Metadata Authority",
+    description: "Requires the effective disposition date to match the decoded retention authority when present.",
+    message: "Disposition date must be the fixed cutoff or the date granted by the persisted retention authority.",
+  }
+);
+
+/**
+ * Effective retention decision persisted beside the mutable review ledger.
+ *
+ * **Details**
+ *
+ * The optional authority and its effective disposition date stay outside immutable bundle identity.
+ *
+ * **Example** (Inspect the effective date field)
+ *
+ * ```ts
+ * import { MutableRetentionMetadata } from "@/domain/Bundle"
+ *
+ * console.log(MutableRetentionMetadata.fields.dispositionDate !== undefined) // true
+ * ```
+ *
+ * @category retention
+ * @since 0.0.0
+ */
+export class MutableRetentionMetadata extends S.Class<MutableRetentionMetadata>($I`MutableRetentionMetadata`)(
+  MutableRetentionMetadataFields.mapFields(identity).check(MutableRetentionMetadataAuthorityCheck),
+  $I.annote("MutableRetentionMetadata", {
+    description: "The schema-validated mutable retention authority and its effective disposition date.",
+  })
+) {}
+
 /**
  * Identity and contract revisions stored beside both durable projection engines.
  *
@@ -908,6 +954,22 @@ export const ImmutableDemoBundleFromJsonString = S.fromJsonString(ImmutableDemoB
  * @since 0.0.0
  */
 export const MutableReviewLedgerFromJsonString = S.fromJsonString(MutableReviewLedger, { space: 2 });
+
+/**
+ * JSON codec for mutable retention metadata stored outside bundle identity.
+ *
+ * **Example** (Inspect the codec schema)
+ *
+ * ```ts
+ * import { MutableRetentionMetadataFromJsonString } from "@/domain/Bundle"
+ *
+ * console.log(MutableRetentionMetadataFromJsonString.ast !== undefined) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const MutableRetentionMetadataFromJsonString = S.fromJsonString(MutableRetentionMetadata, { space: 2 });
 
 /**
  * JSON codec used to persist the golden replay receipt without native JSON helpers.

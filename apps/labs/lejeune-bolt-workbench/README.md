@@ -71,13 +71,15 @@ exactly three candidate label/text pairs. Before any recording is written or rep
 source. It retains no request envelope, authorization header, credential, usage record, or
 real data.
 
-Build into two new machine-local directories. The command refuses either existing final root
-without modifying it. It builds and validates under unique adjacent staging roots, atomically
-publishes the completed directories, and removes only staging paths it owns after failure.
+Build into two named child directories under one new machine-local publication root. The
+immutable and mutable roots must have the same parent and different names. The builder refuses
+an existing publication root without changing its contents. It validates both children in one
+adjacent staging container, then publishes the complete container with one directory rename.
+After failure, it removes only the staging container it created.
 
 ```bash
-LEJEUNE_BUNDLE_ROOT=.beep/lejeune-demo-bundle \
-LEJEUNE_MUTABLE_ROOT=.beep/lejeune-demo-review \
+LEJEUNE_BUNDLE_ROOT=.beep/lejeune-demo-publication/bundle \
+LEJEUNE_MUTABLE_ROOT=.beep/lejeune-demo-publication/review \
 bun run --cwd apps/labs/lejeune-bolt-workbench bundle:build
 ```
 
@@ -88,7 +90,7 @@ credentials, or copied standards.
 
 Mutable review data must be deleted or promoted under a new approved goal by 2026-09-30,
 unless an explicitly consented pilot grants and records a new retention term. On and after
-that date, the builder fails at the retention boundary before publishing either final root.
+that date, the builder fails at the retention boundary before publishing the publication root.
 
 The demo operator owns the disposition. Delete the exact machine-local mutable root after
 reviewing its configured path, or promote it through an approved goal. A consented extension
@@ -98,10 +100,16 @@ explicitly; the builder never infers or silently extends retention:
 
 ```bash
 LEJEUNE_RETENTION_AUTHORIZATION=.beep/lejeune-retention-authorization.json \
-LEJEUNE_BUNDLE_ROOT=.beep/lejeune-demo-bundle-extended \
-LEJEUNE_MUTABLE_ROOT=.beep/lejeune-demo-review-extended \
+LEJEUNE_BUNDLE_ROOT=.beep/lejeune-demo-publication-extended/bundle \
+LEJEUNE_MUTABLE_ROOT=.beep/lejeune-demo-publication-extended/review \
 bun run --cwd apps/labs/lejeune-bolt-workbench bundle:build
 ```
+
+The mutable root contains `review-ledger.json` and `retention-metadata.json`. The retention
+metadata records the decoded authority, when supplied, and the resulting disposition date. The
+builder reads the metadata back through its schema before publication. The authority and date do
+not participate in immutable bundle identity. A reviewed extension stops authorizing builds at
+00:00 UTC on its disposition date.
 
 The immutable receipt and the projection metadata sidecar carry their schema revision, bundle
 version, and bundle identity so future rebuild tooling can reject incompatible persisted data.

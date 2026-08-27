@@ -11,6 +11,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import {
+  MutableRetentionMetadataFromJsonString,
   ProjectionStoreMetadataFromJsonString,
   RetentionAuthorization,
   RetentionAuthorizationFromJsonString,
@@ -28,15 +29,16 @@ const inputFor = (
 ): BundleBuildInput => BundleBuildInput.make({ bundleRoot, mutableRoot, recordingPath, retentionAuthorizationPath });
 
 describe("LeJeune transactional bundle builder", () => {
-  it.effect("refuses an existing mutable root without changing its contents", () =>
+  it.effect("refuses an existing publication containing the mutable root without changing its contents", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-existing-mutable-" });
-      const bundleRoot = path.join(parent, "bundle");
-      const mutableRoot = path.join(parent, "review");
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
       const sentinel = path.join(mutableRoot, "sentinel.txt");
-      yield* fs.makeDirectory(mutableRoot);
+      yield* fs.makeDirectory(mutableRoot, { recursive: true });
       yield* fs.writeFileString(sentinel, "retain-me\n");
 
       const error = yield* buildBundle(inputFor(bundleRoot, mutableRoot, path.join(parent, "unused.json"))).pipe(
@@ -50,15 +52,16 @@ describe("LeJeune transactional bundle builder", () => {
     }).pipe(provideTestRuntime)
   );
 
-  it.effect("refuses an existing immutable root without changing its contents", () =>
+  it.effect("refuses an existing publication containing the immutable root without changing its contents", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-existing-bundle-" });
-      const bundleRoot = path.join(parent, "bundle");
-      const mutableRoot = path.join(parent, "review");
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
       const sentinel = path.join(bundleRoot, "sentinel.txt");
-      yield* fs.makeDirectory(bundleRoot);
+      yield* fs.makeDirectory(bundleRoot, { recursive: true });
       yield* fs.writeFileString(sentinel, "retain-me\n");
 
       const error = yield* buildBundle(inputFor(bundleRoot, mutableRoot, path.join(parent, "unused.json"))).pipe(
@@ -77,7 +80,7 @@ describe("LeJeune transactional bundle builder", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-same-root-" });
-      const sharedRoot = path.join(parent, "shared");
+      const sharedRoot = path.join(parent, "publication", "shared");
 
       const error = yield* buildBundle(inputFor(sharedRoot, sharedRoot, path.join(parent, "unused.json"))).pipe(
         Effect.flip
@@ -85,7 +88,7 @@ describe("LeJeune transactional bundle builder", () => {
 
       expect(error.stage).toBe("preflight");
       expect(yield* fs.exists(sharedRoot)).toBe(false);
-      expect(yield* fs.readDirectory(parent)).toEqual([]);
+      expect(yield* fs.exists(path.join(parent, "publication"))).toBe(false);
     }).pipe(provideTestRuntime)
   );
 
@@ -94,7 +97,7 @@ describe("LeJeune transactional bundle builder", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-nested-root-" });
-      const bundleRoot = path.join(parent, "bundle");
+      const bundleRoot = path.join(parent, "publication", "bundle");
       const mutableRoot = path.join(bundleRoot, "review");
 
       const error = yield* buildBundle(inputFor(bundleRoot, mutableRoot, path.join(parent, "unused.json"))).pipe(
@@ -103,25 +106,43 @@ describe("LeJeune transactional bundle builder", () => {
 
       expect(error.stage).toBe("preflight");
       expect(yield* fs.exists(bundleRoot)).toBe(false);
-      expect(yield* fs.readDirectory(parent)).toEqual([]);
+      expect(yield* fs.exists(path.join(parent, "publication"))).toBe(false);
     }).pipe(provideTestRuntime)
   );
 
-  it.effect("removes owned staging after a partial failure and leaves both final roots absent", () =>
+  it.effect("rejects final roots with different parents before creating output", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-different-parents-" });
+      const bundleRoot = path.join(parent, "immutable-publication", "bundle");
+      const mutableRoot = path.join(parent, "mutable-publication", "review");
+
+      const error = yield* buildBundle(inputFor(bundleRoot, mutableRoot, path.join(parent, "unused.json"))).pipe(
+        Effect.flip
+      );
+
+      expect(error.stage).toBe("preflight");
+      expect(yield* fs.exists(path.join(parent, "immutable-publication"))).toBe(false);
+      expect(yield* fs.exists(path.join(parent, "mutable-publication"))).toBe(false);
+    }).pipe(provideTestRuntime)
+  );
+
+  it.effect("removes owned staging after a partial failure and leaves the publication root absent", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-partial-" });
-      const bundleRoot = path.join(parent, "bundle");
-      const mutableRoot = path.join(parent, "review");
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
       const invalidRecording = path.join(parent, "invalid-recording.json");
       yield* fs.writeFileString(invalidRecording, "{not-json}\n");
 
       const error = yield* buildBundle(inputFor(bundleRoot, mutableRoot, invalidRecording)).pipe(Effect.flip);
 
       expect(error.stage).toBe("provider-recording");
-      expect(yield* fs.exists(bundleRoot)).toBe(false);
-      expect(yield* fs.exists(mutableRoot)).toBe(false);
+      expect(yield* fs.exists(publicationRoot)).toBe(false);
       expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
     }).pipe(provideTestRuntime)
   );
@@ -132,10 +153,12 @@ describe("LeJeune transactional bundle builder", () => {
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-success-" });
       const recordingPath = path.resolve("src/fixtures/provider-recording.json");
-      const firstBundleRoot = path.join(parent, "bundle-first");
-      const firstMutableRoot = path.join(parent, "review-first");
-      const secondBundleRoot = path.join(parent, "bundle-second");
-      const secondMutableRoot = path.join(parent, "review-second");
+      const firstPublicationRoot = path.join(parent, "publication-first");
+      const firstBundleRoot = path.join(firstPublicationRoot, "bundle");
+      const firstMutableRoot = path.join(firstPublicationRoot, "review");
+      const secondPublicationRoot = path.join(parent, "publication-second");
+      const secondBundleRoot = path.join(secondPublicationRoot, "bundle");
+      const secondMutableRoot = path.join(secondPublicationRoot, "review");
 
       const firstReceipt = yield* buildBundle(inputFor(firstBundleRoot, firstMutableRoot, recordingPath));
       const secondReceipt = yield* buildBundle(inputFor(secondBundleRoot, secondMutableRoot, recordingPath));
@@ -149,6 +172,9 @@ describe("LeJeune transactional bundle builder", () => {
       );
       expect(yield* fs.readFileString(path.join(secondMutableRoot, "review-ledger.json"))).toBe(
         yield* fs.readFileString(path.join(firstMutableRoot, "review-ledger.json"))
+      );
+      expect(yield* fs.readFileString(path.join(secondMutableRoot, "retention-metadata.json"))).toBe(
+        yield* fs.readFileString(path.join(firstMutableRoot, "retention-metadata.json"))
       );
       yield* Effect.forEach(
         ["rfq-a-outlook-body.txt", "rfq-a-takeoff.xlsx", "rfq-b-prose-email.txt", "rfq-b-schedule.pdf"],
@@ -167,6 +193,13 @@ describe("LeJeune transactional bundle builder", () => {
         .pipe(Effect.flatMap(S.decodeEffect(ProjectionStoreMetadataFromJsonString)));
       expect(projectionMetadata.bundleIdentity).toBe(firstReceipt.bundleIdentity);
       expect(projectionMetadata.bundleVersion).toBe("lejeune-demo-bundle/v1");
+      const retentionMetadata = yield* fs
+        .readFileString(path.join(firstMutableRoot, "retention-metadata.json"))
+        .pipe(Effect.flatMap(S.decodeEffect(MutableRetentionMetadataFromJsonString)));
+      expect(retentionMetadata.disposition).toBe("delete-or-promote");
+      expect(retentionMetadata.dispositionDate).toBe("2026-09-30");
+      expect(O.isNone(retentionMetadata.retentionAuthorization)).toBe(true);
+      expect(retentionMetadata.schemaVersion).toBe("lejeune-retention-metadata/v1");
       expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
     }).pipe(provideTestRuntime)
   );
@@ -176,8 +209,9 @@ describe("LeJeune transactional bundle builder", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-retention-refusal-" });
-      const bundleRoot = path.join(parent, "bundle");
-      const mutableRoot = path.join(parent, "review");
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
       yield* TestClock.setTime(DateTime.makeUnsafe("2026-09-30T00:00:00.000Z").epochMilliseconds);
 
       const error = yield* buildBundle(
@@ -185,8 +219,7 @@ describe("LeJeune transactional bundle builder", () => {
       ).pipe(Effect.flip);
 
       expect(error.stage).toBe("retention");
-      expect(yield* fs.exists(bundleRoot)).toBe(false);
-      expect(yield* fs.exists(mutableRoot)).toBe(false);
+      expect(yield* fs.exists(publicationRoot)).toBe(false);
       expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
     }).pipe(provideTestRuntime)
   );
@@ -196,8 +229,9 @@ describe("LeJeune transactional bundle builder", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-retention-authorized-" });
-      const bundleRoot = path.join(parent, "bundle");
-      const mutableRoot = path.join(parent, "review");
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
       const authorizationPath = path.join(parent, "retention-authorization.json");
       const authorization = RetentionAuthorization.make({
         authorization: "consented-pilot",
@@ -221,6 +255,60 @@ describe("LeJeune transactional bundle builder", () => {
 
       expect(yield* fs.exists(path.join(bundleRoot, "bundle.json"))).toBe(true);
       expect(yield* fs.exists(path.join(mutableRoot, "review-ledger.json"))).toBe(true);
+      const retentionMetadata = yield* fs
+        .readFileString(path.join(mutableRoot, "retention-metadata.json"))
+        .pipe(Effect.flatMap(S.decodeEffect(MutableRetentionMetadataFromJsonString)));
+      expect(retentionMetadata.disposition).toBe("delete-or-promote");
+      expect(retentionMetadata.dispositionDate).toBe("2026-10-31");
+      expect(retentionMetadata.schemaVersion).toBe("lejeune-retention-metadata/v1");
+      expect(O.isSome(retentionMetadata.retentionAuthorization)).toBe(true);
+      if (O.isSome(retentionMetadata.retentionAuthorization)) {
+        expect(retentionMetadata.retentionAuthorization.value.authorization).toBe("consented-pilot");
+        expect(retentionMetadata.retentionAuthorization.value.authorizedAt).toBe("2026-09-29T12:00:00.000Z");
+        expect(retentionMetadata.retentionAuthorization.value.decisionReference).toBe(
+          "approved-goal:lejeune-pilot-extension"
+        );
+        expect(retentionMetadata.retentionAuthorization.value.newDispositionDate).toBe("2026-10-31");
+        expect(retentionMetadata.retentionAuthorization.value.owner).toBe("LeJeune demo operator");
+        expect(retentionMetadata.retentionAuthorization.value.schemaVersion).toBe("lejeune-retention-authorization/v1");
+      }
+      const immutableBundle = yield* fs.readFileString(path.join(bundleRoot, "bundle.json"));
+      expect(Str.includes("retentionAuthorization")(immutableBundle)).toBe(false);
+    }).pipe(provideTestRuntime)
+  );
+
+  it.effect("rejects a reviewed extension on its effective disposition date", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lejeune-builder-retention-expired-" });
+      const publicationRoot = path.join(parent, "publication");
+      const bundleRoot = path.join(publicationRoot, "bundle");
+      const mutableRoot = path.join(publicationRoot, "review");
+      const authorizationPath = path.join(parent, "retention-authorization.json");
+      const authorization = RetentionAuthorization.make({
+        authorization: "promoted",
+        authorizedAt: IsoTimestamp.make("2026-09-29T12:00:00.000Z"),
+        decisionReference: "approved-goal:lejeune-promotion",
+        newDispositionDate: IsoDate.make("2026-10-31"),
+        owner: "LeJeune demo operator",
+      });
+      const authorizationJson = yield* S.encodeEffect(RetentionAuthorizationFromJsonString)(authorization);
+      yield* fs.writeFileString(authorizationPath, `${authorizationJson}\n`);
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00.000Z").epochMilliseconds);
+
+      const error = yield* buildBundle(
+        inputFor(
+          bundleRoot,
+          mutableRoot,
+          path.resolve("src/fixtures/provider-recording.json"),
+          O.some(authorizationPath)
+        )
+      ).pipe(Effect.flip);
+
+      expect(error.stage).toBe("retention");
+      expect(yield* fs.exists(publicationRoot)).toBe(false);
+      expect(A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry))).toBe(true);
     }).pipe(provideTestRuntime)
   );
 });

@@ -20,6 +20,8 @@ import {
   GoldenReplayReceiptFromJsonString,
   ImmutableDemoBundleFromJsonString,
   MUTABLE_CORPUS_DISPOSITION_DATE,
+  MutableRetentionMetadata,
+  MutableRetentionMetadataFromJsonString,
   MutableReviewLedgerFromJsonString,
   ProjectionStoreMetadata,
   ProjectionStoreMetadataFromJsonString,
@@ -34,6 +36,7 @@ import { replayOffline } from "@/workflows/Replay";
 const $I = $LejeuneBoltWorkbenchId.create("server/build-bundle");
 const RECORDING_PATH = "src/fixtures/provider-recording.json";
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
+const retentionMetadataEquivalent = S.toEquivalence(MutableRetentionMetadata);
 
 /**
  * Caller-selected final roots and frozen provider recording for one bundle build.
@@ -44,12 +47,12 @@ const bytesEquivalent = S.toEquivalence(S.Uint8Array);
  * import { BundleBuildInput } from "../server/build-bundle"
  *
  * const input = BundleBuildInput.make({
- *   bundleRoot: ".beep/lejeune-demo-bundle",
- *   mutableRoot: ".beep/lejeune-demo-review",
+ *   bundleRoot: ".beep/lejeune-demo-publication/bundle",
+ *   mutableRoot: ".beep/lejeune-demo-publication/review",
  *   recordingPath: "src/fixtures/provider-recording.json"
  * })
  *
- * console.log(input.bundleRoot) // .beep/lejeune-demo-bundle
+ * console.log(input.bundleRoot) // .beep/lejeune-demo-publication/bundle
  * ```
  *
  * @category models
@@ -102,9 +105,23 @@ export class BundleBuildError extends S.TaggedError<BundleBuildError>($I`BundleB
 class StagingRoots extends S.Class<StagingRoots>($I`StagingRoots`)(
   {
     bundle: S.NonEmptyString,
+    container: S.NonEmptyString,
     mutable: S.NonEmptyString,
   },
-  $I.annote("StagingRoots", { description: "Builder-owned adjacent staging roots pending atomic publication." })
+  $I.annote("StagingRoots", {
+    description: "Builder-owned publication container and child roots pending one atomic directory rename.",
+  })
+) {}
+
+class PublicationRoots extends S.Class<PublicationRoots>($I`PublicationRoots`)(
+  {
+    bundle: S.NonEmptyString,
+    mutable: S.NonEmptyString,
+    publication: S.NonEmptyString,
+  },
+  $I.annote("PublicationRoots", {
+    description: "Distinct immutable and mutable children of one dedicated publication root.",
+  })
 ) {}
 
 const bundleBuildError = (stage: string, message: string): BundleBuildError =>
@@ -120,14 +137,14 @@ const enforceRetentionPolicy = Effect.fn("LeJeuneBundle.enforceRetentionPolicy")
   currentTimeMillis: number
 ) {
   const now = DateTime.makeUnsafe(currentTimeMillis);
-  if (!Order.isGreaterThanOrEqualTo(DateTime.Order)(now, dispositionInstant)) {
-    return;
-  }
   if (O.isNone(authorizationPath)) {
-    return yield* bundleBuildError(
-      "retention",
-      `Mutable review publication is closed on or after ${MUTABLE_CORPUS_DISPOSITION_DATE} without reviewed retention authority.`
-    );
+    if (Order.isGreaterThanOrEqualTo(DateTime.Order)(now, dispositionInstant)) {
+      return yield* bundleBuildError(
+        "retention",
+        `Mutable review publication is closed on or after ${MUTABLE_CORPUS_DISPOSITION_DATE} without reviewed retention authority.`
+      );
+    }
+    return O.none();
   }
   const fs = yield* FileSystem.FileSystem;
   const authorizationText = yield* fs
@@ -153,6 +170,7 @@ const enforceRetentionPolicy = Effect.fn("LeJeuneBundle.enforceRetentionPolicy")
       "The reviewed retention authorization must grant a disposition date later than the build time."
     );
   }
+  return O.some(authorization);
 });
 
 const removeOwnedStaging = Effect.fn("LeJeuneBundle.removeOwnedStaging")(function* (stagingRoot: string) {
@@ -175,65 +193,53 @@ const removeOwnedStaging = Effect.fn("LeJeuneBundle.removeOwnedStaging")(functio
   }
 });
 
-const ensureFinalRootsAbsent = Effect.fn("LeJeuneBundle.ensureFinalRootsAbsent")(function* (
-  bundleRoot: string,
-  mutableRoot: string
+const ensurePublicationRootAbsent = Effect.fn("LeJeuneBundle.ensurePublicationRootAbsent")(function* (
+  publicationRoot: string
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const [bundleExists, mutableExists] = yield* Effect.all([fs.exists(bundleRoot), fs.exists(mutableRoot)], {
-    concurrency: 2,
-  }).pipe(
-    Effect.mapError((cause) =>
-      bundleBuildErrorWithCause("preflight", "Could not inspect the selected final roots.", cause)
-    )
-  );
-  if (bundleExists) {
-    return yield* bundleBuildError("preflight", "The immutable bundle root already exists; select a new path.");
-  }
-  if (mutableExists) {
-    return yield* bundleBuildError("preflight", "The mutable review root already exists; select a new path.");
+  const publicationExists = yield* fs
+    .exists(publicationRoot)
+    .pipe(
+      Effect.mapError((cause) =>
+        bundleBuildErrorWithCause("preflight", "Could not inspect the selected publication root.", cause)
+      )
+    );
+  if (publicationExists) {
+    return yield* bundleBuildError("preflight", "The dedicated publication root already exists; select a new path.");
   }
 });
 
-const acquireStagingRoots = Effect.fn("LeJeuneBundle.acquireStagingRoots")(function* (
-  bundleRoot: string,
-  mutableRoot: string
-) {
+const acquireStagingRoots = Effect.fn("LeJeuneBundle.acquireStagingRoots")(function* (roots: PublicationRoots) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const bundleParent = path.dirname(bundleRoot);
-  const mutableParent = path.dirname(mutableRoot);
-  yield* Effect.all(
-    [fs.makeDirectory(bundleParent, { recursive: true }), fs.makeDirectory(mutableParent, { recursive: true })],
-    { concurrency: 2, discard: true }
-  ).pipe(
-    Effect.mapError((cause) =>
-      bundleBuildErrorWithCause("staging", "Could not prepare the parent directories for staging.", cause)
-    )
-  );
-  const bundle = yield* fs
-    .makeTempDirectory({ directory: bundleParent, prefix: `.${path.basename(bundleRoot)}.staging-` })
+  const publicationParent = path.dirname(roots.publication);
+  yield* fs
+    .makeDirectory(publicationParent, { recursive: true })
     .pipe(
       Effect.mapError((cause) =>
-        bundleBuildErrorWithCause("staging", "Could not create the immutable staging root.", cause)
+        bundleBuildErrorWithCause("staging", "Could not prepare the publication parent for staging.", cause)
       )
     );
-  const mutable = yield* fs
-    .makeTempDirectory({ directory: mutableParent, prefix: `.${path.basename(mutableRoot)}.staging-` })
+  const container = yield* fs
+    .makeTempDirectory({ directory: publicationParent, prefix: `.${path.basename(roots.publication)}.staging-` })
     .pipe(
       Effect.mapError((cause) =>
-        bundleBuildErrorWithCause("staging", "Could not create the mutable staging root.", cause)
-      ),
-      Effect.tapError(() => removeOwnedStaging(bundle))
+        bundleBuildErrorWithCause("staging", "Could not create the publication staging container.", cause)
+      )
     );
-  return StagingRoots.make({ bundle, mutable });
+  const bundle = path.join(container, path.basename(roots.bundle));
+  const mutable = path.join(container, path.basename(roots.mutable));
+  yield* Effect.all([fs.makeDirectory(bundle), fs.makeDirectory(mutable)], { concurrency: 2, discard: true }).pipe(
+    Effect.mapError((cause) =>
+      bundleBuildErrorWithCause("staging", "Could not create the staged publication child roots.", cause)
+    ),
+    Effect.tapError(() => removeOwnedStaging(container))
+  );
+  return StagingRoots.make({ bundle, container, mutable });
 });
 
 const releaseStagingRoots = Effect.fn("LeJeuneBundle.releaseStagingRoots")((staging: StagingRoots) =>
-  Effect.all([removeOwnedStaging(staging.bundle), removeOwnedStaging(staging.mutable)], {
-    concurrency: 2,
-    discard: true,
-  })
+  removeOwnedStaging(staging.container)
 );
 
 const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function* (
@@ -269,18 +275,18 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
       )
     )
   );
+  const retentionAuthorization = yield* enforceRetentionPolicy(retentionAuthorizationPath, currentTimeMillis);
   const pgliteDataDir = path.join(staging.bundle, "app-review.pglite");
   const duckDbPath = path.join(staging.bundle, "corpus.duckdb");
   const replay = yield* Layer.build(
     makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath, pgliteDataDir: O.some(pgliteDataDir) }))
   ).pipe(
-    Effect.flatMap((context) => replayOffline(recording).pipe(Effect.provide(context))),
+    Effect.flatMap((context) => replayOffline(recording, retentionAuthorization).pipe(Effect.provide(context))),
     Effect.scoped,
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("replay", "The deterministic offline replay could not be built.", cause)
     )
   );
-  yield* enforceRetentionPolicy(retentionAuthorizationPath, currentTimeMillis);
   const artifacts = yield* buildFixtureArtifacts.pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("fixtures", "The deterministic synthetic fixtures could not be built.", cause)
@@ -317,14 +323,15 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
     projectionSchemaVersion: "lejeune-projection-stores/v1",
     stores: ["pglite", "duckdb"],
   });
-  const [bundleJson, receiptJson, ledgerJson, projectionMetadataJson] = yield* Effect.all(
+  const [bundleJson, receiptJson, ledgerJson, retentionMetadataJson, projectionMetadataJson] = yield* Effect.all(
     [
       S.encodeEffect(ImmutableDemoBundleFromJsonString)(replay.bundle),
       S.encodeEffect(GoldenReplayReceiptFromJsonString)(replay.receipt),
       S.encodeEffect(MutableReviewLedgerFromJsonString)(replay.mutableLedger),
+      S.encodeEffect(MutableRetentionMetadataFromJsonString)(replay.retentionMetadata),
       S.encodeEffect(ProjectionStoreMetadataFromJsonString)(projectionMetadata),
     ],
-    { concurrency: 4 }
+    { concurrency: 5 }
   ).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("serialization", "The replay outputs could not be serialized.", cause)
@@ -334,32 +341,46 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
   const receiptFile = path.join(staging.bundle, "golden-replay.json");
   const projectionMetadataFile = path.join(staging.bundle, "projection-metadata.json");
   const ledgerFile = path.join(staging.mutable, "review-ledger.json");
+  const retentionMetadataFile = path.join(staging.mutable, "retention-metadata.json");
   yield* Effect.all(
     [
       fs.writeFileString(bundleFile, `${bundleJson}\n`),
       fs.writeFileString(receiptFile, `${receiptJson}\n`),
       fs.writeFileString(projectionMetadataFile, `${projectionMetadataJson}\n`),
       fs.writeFileString(ledgerFile, `${ledgerJson}\n`),
+      fs.writeFileString(retentionMetadataFile, `${retentionMetadataJson}\n`),
     ],
-    { concurrency: 4, discard: true }
+    { concurrency: 5, discard: true }
   ).pipe(
     Effect.mapError((cause) =>
       bundleBuildErrorWithCause("serialization", "The replay outputs could not be staged.", cause)
     )
   );
-  const [persistedBundle, persistedReceipt, persistedLedger, persistedProjectionMetadata] = yield* Effect.all(
-    [
-      fs.readFileString(bundleFile),
-      fs.readFileString(receiptFile),
-      fs.readFileString(ledgerFile),
-      fs.readFileString(projectionMetadataFile),
-    ],
-    { concurrency: 4 }
+  const [persistedBundle, persistedReceipt, persistedLedger, persistedRetentionMetadata, persistedProjectionMetadata] =
+    yield* Effect.all(
+      [
+        fs.readFileString(bundleFile),
+        fs.readFileString(receiptFile),
+        fs.readFileString(ledgerFile),
+        fs.readFileString(retentionMetadataFile),
+        fs.readFileString(projectionMetadataFile),
+      ],
+      { concurrency: 5 }
+    ).pipe(
+      Effect.mapError((cause) =>
+        bundleBuildErrorWithCause("validation", "The staged replay outputs could not be read back.", cause)
+      )
+    );
+  const decodedRetentionMetadata = yield* S.decodeEffect(MutableRetentionMetadataFromJsonString)(
+    persistedRetentionMetadata
   ).pipe(
     Effect.mapError((cause) =>
-      bundleBuildErrorWithCause("validation", "The staged replay outputs could not be read back.", cause)
+      bundleBuildErrorWithCause("validation", "The staged retention metadata failed validation.", cause)
     )
   );
+  if (!retentionMetadataEquivalent(decodedRetentionMetadata, replay.retentionMetadata)) {
+    return yield* bundleBuildError("validation", "The staged retention metadata changed during persistence.");
+  }
   yield* Effect.all(
     [
       S.decodeEffect(ImmutableDemoBundleFromJsonString)(persistedBundle),
@@ -414,35 +435,21 @@ const buildStagedBundle = Effect.fn("LeJeuneBundle.buildStagedBundle")(function*
 
 const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(function* (
   staging: StagingRoots,
-  bundleRoot: string,
-  mutableRoot: string
+  publicationRoot: string
 ) {
   const fs = yield* FileSystem.FileSystem;
-  yield* ensureFinalRootsAbsent(bundleRoot, mutableRoot);
+  yield* ensurePublicationRootAbsent(publicationRoot);
   yield* fs
-    .rename(staging.mutable, mutableRoot)
+    .rename(staging.container, publicationRoot)
     .pipe(
       Effect.mapError((cause) =>
-        bundleBuildErrorWithCause("publish", "The mutable review root could not be published atomically.", cause)
+        bundleBuildErrorWithCause(
+          "publish",
+          "The complete publication container could not be published atomically.",
+          cause
+        )
       )
     );
-  yield* fs.rename(staging.bundle, bundleRoot).pipe(
-    Effect.mapError((cause) =>
-      bundleBuildErrorWithCause("publish", "The immutable bundle root could not be published atomically.", cause)
-    ),
-    Effect.catch((publishError) =>
-      fs.rename(mutableRoot, staging.mutable).pipe(
-        Effect.mapError((rollbackCause) =>
-          bundleBuildErrorWithCause(
-            "publish-rollback",
-            "Immutable publication failed and the mutable publication could not be rolled back.",
-            { publishError, rollbackCause }
-          )
-        ),
-        Effect.andThen(Effect.fail(publishError))
-      )
-    )
-  );
 });
 
 /**
@@ -450,8 +457,8 @@ const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(funct
  *
  * **Details**
  *
- * Both final roots must be absent. The operation writes only unique adjacent staging roots
- * until every persisted JSON output decodes successfully, then publishes by directory rename.
+ * Both final roots must be distinct children of one absent publication root. The operation
+ * validates both children in one adjacent staging container, then publishes them with one rename.
  *
  * **Example** (Inspect the returned Effect)
  *
@@ -460,8 +467,8 @@ const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(funct
  * import { Effect } from "effect"
  *
  * const operation = buildBundle(BundleBuildInput.make({
- *   bundleRoot: ".beep/lejeune-demo-bundle",
- *   mutableRoot: ".beep/lejeune-demo-review",
+ *   bundleRoot: ".beep/lejeune-demo-publication/bundle",
+ *   mutableRoot: ".beep/lejeune-demo-publication/review",
  *   recordingPath: "src/fixtures/provider-recording.json"
  * }))
  *
@@ -486,26 +493,22 @@ const buildBundleAt = Effect.fn("LeJeuneBundle.buildAt")(function* (
       "Immutable bundle and mutable review roots must be different directories."
     );
   }
-  const mutableRelativeToBundle = path.relative(bundleRoot, mutableRoot);
-  const bundleRelativeToMutable = path.relative(mutableRoot, bundleRoot);
-  const isNestedRoot = (relative: string): boolean =>
-    Str.isNonEmpty(relative) &&
-    !Str.Equivalence(relative, "..") &&
-    !Str.startsWith(`..${path.sep}`)(relative) &&
-    !path.isAbsolute(relative);
-  if (isNestedRoot(mutableRelativeToBundle) || isNestedRoot(bundleRelativeToMutable)) {
+  const bundleParent = path.dirname(bundleRoot);
+  const mutableParent = path.dirname(mutableRoot);
+  if (!Str.Equivalence(bundleParent, mutableParent)) {
     return yield* bundleBuildError(
       "preflight",
-      "Immutable bundle and mutable review roots must not contain one another."
+      "Immutable bundle and mutable review roots must be distinct direct children of one publication root."
     );
   }
-  yield* ensureFinalRootsAbsent(bundleRoot, mutableRoot);
+  const roots = PublicationRoots.make({ bundle: bundleRoot, mutable: mutableRoot, publication: bundleParent });
+  yield* ensurePublicationRootAbsent(roots.publication);
   yield* Effect.annotateCurrentSpan("lejeune.output_scope", "machine-local");
   const receipt = yield* Effect.acquireUseRelease(
-    acquireStagingRoots(bundleRoot, mutableRoot),
+    acquireStagingRoots(roots),
     (staging) =>
       buildStagedBundle(staging, recordingPath, retentionAuthorizationPath, currentTimeMillis).pipe(
-        Effect.tap(() => publishStagingRoots(staging, bundleRoot, mutableRoot))
+        Effect.tap(() => publishStagingRoots(staging, roots.publication))
       ),
     (staging, exit) =>
       Exit.match(exit, {
@@ -530,11 +533,11 @@ export const buildBundle = Effect.fn("LeJeuneBundle.build")(function* (input: Bu
 
 const configuredBuild = Effect.gen(function* () {
   const bundleRoot = yield* Config.nonEmptyString("LEJEUNE_BUNDLE_ROOT").pipe(
-    Config.withDefault(".beep/lejeune-demo-bundle"),
+    Config.withDefault(".beep/lejeune-demo-publication/bundle"),
     Effect.mapError((cause) => bundleBuildErrorWithCause("configuration", "The bundle root is invalid.", cause))
   );
   const mutableRoot = yield* Config.nonEmptyString("LEJEUNE_MUTABLE_ROOT").pipe(
-    Config.withDefault(".beep/lejeune-demo-review"),
+    Config.withDefault(".beep/lejeune-demo-publication/review"),
     Effect.mapError((cause) => bundleBuildErrorWithCause("configuration", "The mutable root is invalid.", cause))
   );
   const retentionAuthorizationPath = yield* Config.option(

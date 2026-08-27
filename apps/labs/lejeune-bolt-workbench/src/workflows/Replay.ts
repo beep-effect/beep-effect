@@ -8,6 +8,7 @@
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { strToU8 } from "fflate";
 import {
@@ -16,21 +17,23 @@ import {
   ImmutableDemoBundle,
   ImmutableDemoBundleFromJsonString,
   MUTABLE_CORPUS_DISPOSITION_DATE,
+  MutableRetentionMetadata,
   MutableReviewLedger,
   PROVIDER_RECORDING_SOURCE_TEXT,
 } from "@/domain/Bundle";
+import { IsoDate } from "@/domain/Ontology";
 import { buildReferenceData } from "@/domain/ReferenceData";
 import { buildFixtureArtifacts } from "@/fixtures/Sources";
 import { buildProjectionSnapshot, ProjectionInput } from "@/runtime/Projections";
 import { buildNormalizedFixtures } from "@/workflows/Normalize";
 import { verifyProviderRecording } from "@/workflows/ProviderRecording";
 import { evaluateRules } from "@/workflows/Rules";
-import type { ProviderRecording } from "@/domain/Bundle";
+import type { ProviderRecording, RetentionAuthorization } from "@/domain/Bundle";
 
 const $I = $LejeuneBoltWorkbenchId.create("workflows/Replay");
 
 /**
- * Complete immutable bundle, separate mutable ledger, and offline receipt.
+ * Complete immutable bundle, separate mutable state, and offline receipt.
  *
  * @category models
  * @since 0.0.0
@@ -39,10 +42,11 @@ class ReplayBuild extends S.Class<ReplayBuild>($I`ReplayBuild`)(
   {
     bundle: ImmutableDemoBundle,
     mutableLedger: MutableReviewLedger,
+    retentionMetadata: MutableRetentionMetadata,
     receipt: GoldenReplayReceipt,
   },
   $I.annote("ReplayBuild", {
-    description: "One deterministic offline replay result with mutable review state outside bundle identity.",
+    description: "One deterministic replay with its review ledger and effective retention metadata outside identity.",
   })
 ) {}
 
@@ -85,7 +89,7 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
  *
  * The recording is data, not an active provider. This Effect requests only local crypto and
  * projection services; it has no language-model, HTTP-client, provider, or network requirement.
- * Mutable approvals and expert claims are returned in a separate ledger and do not affect identity.
+ * Mutable approvals, expert claims, and effective retention metadata are returned outside identity.
  *
  * **Example** (Inspect the replay constructor)
  *
@@ -98,7 +102,10 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
  * @category replay
  * @since 0.0.0
  */
-export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (providerRecording: ProviderRecording) {
+export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (
+  providerRecording: ProviderRecording,
+  retentionAuthorization: O.Option<RetentionAuthorization> = O.none()
+) {
   yield* verifyProviderRecording(providerRecording, PROVIDER_RECORDING_SOURCE_TEXT);
   const artifacts = yield* buildFixtureArtifacts;
   const fixtures = yield* buildNormalizedFixtures(artifacts);
@@ -134,6 +141,14 @@ export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (prov
     dispositionDate: MUTABLE_CORPUS_DISPOSITION_DATE,
     schemaVersion: "lejeune-review-ledger/v1",
   });
+  const retentionMetadata = MutableRetentionMetadata.make({
+    disposition: "delete-or-promote",
+    dispositionDate: O.match(retentionAuthorization, {
+      onNone: () => IsoDate.make(MUTABLE_CORPUS_DISPOSITION_DATE),
+      onSome: (authorization) => authorization.newDispositionDate,
+    }),
+    retentionAuthorization,
+  });
   const receipt = GoldenReplayReceipt.make({
     bundleVersion: BUNDLE_VERSION,
     bundleIdentity,
@@ -142,5 +157,5 @@ export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (prov
     providerAvailable: false,
     replayMode: "recorded-offline",
   });
-  return ReplayBuild.make({ bundle, mutableLedger, receipt });
+  return ReplayBuild.make({ bundle, mutableLedger, receipt, retentionMetadata });
 });

@@ -83,8 +83,8 @@ deduplicated required inventory is:
 | Inventory | Source findings | Fix group | Status |
 | --- | --- | --- | --- |
 | `ARCH-001` driver-neutral app-local topology | `ARCH-R2-001` | module topology and imports | fixed; rereview pending |
-| `RETENTION-002` durable effective authority | `ARCH-R2-002`, `LEJ-SCHEMA-R2-005` | retention schema, mutable metadata, builder tests | schema fixed; builder queued |
-| `FS-002` crash-consistent two-root publication contract | `ARCH-R2-003` | publication protocol and recovery tests | queued |
+| `RETENTION-002` durable effective authority | `ARCH-R2-002`, `LEJ-SCHEMA-R2-005` | retention schema, mutable metadata, builder tests | fixed; rereview pending |
+| `FS-002` crash-consistent two-root publication contract | `ARCH-R2-003` | publication protocol and recovery tests | fixed; rereview pending |
 | `DEAD-001` introduced unused schema exports | `QG-R2-001` | schema/API cleanup | fixed; rereview pending |
 | `COMPLEXITY-001` bundle closure predicates | `QG-R2-002` | named invariant predicates and tests | fixed; rereview pending |
 | `RULE-002` exact rule-case/projection contract | `LEJ-SCHEMA-R2-001` | bundle rule contract | fixed; rereview pending |
@@ -116,3 +116,16 @@ finding reopens the loop; full proof remains an acceptance step, never a waiver.
 - The lab audit passed with 28 Biome files and the same three test files/19 tests.
 - Scans found zero driver, SQL, Layer, compression, or fixture imports under `src/domain`, and
   zero stale imports from the four former domain workflow paths.
+
+### Filesystem/retention fixer proof
+
+- Both final children are now staged beneath one builder-owned container and become visible by
+  exactly one `rename(staging.container, publicationRoot)` operation.
+- Existing publication roots are preserved; invalid roots and failed stages create no final
+  publication and leave no builder-owned staging path.
+- The mutable root persists a schema-decoded `retention-metadata.json` containing the effective
+  date and every reviewed-authority field, while the immutable bundle excludes that authority.
+- Tests reject builds on the fixed cutoff without authority and on an extension's effective
+  disposition date; the reviewed extension case validates every persisted field.
+- Focused builder tests passed 10/10. The lab audit passed with three files/21 tests and 28
+  Biome files. `git diff --check` passed.
