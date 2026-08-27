@@ -56,6 +56,11 @@ const pinHost = (canvasElement: HTMLElement, width: string, height?: string): HT
 const openOverflowMenu = (trigger: HTMLElement): Effect.Effect<void> =>
   trigger.getAttribute("aria-expanded") === "true" ? Effect.void : Effect.promise(() => userEvent.click(trigger));
 
+// Query a live handle at execution time (not construction time) so retried
+// attempts never reuse a node a strip re-measure has detached.
+const queried = (find: () => HTMLElement | null, missing: string): Effect.Effect<HTMLElement, string> =>
+  Effect.suspend(() => O.match(O.fromNullOr(find()), { onNone: () => Effect.fail(missing), onSome: Effect.succeed }));
+
 const workspace = PopulatedWorkspace.make({
   root: SplitNode.make({
     splitId: SplitId.make("story-root"),
@@ -332,32 +337,37 @@ export const TabOverflow: Story = {
       Effect.gen(function* () {
         const canvas = within(canvasElement);
         pinHost(canvasElement, "320px");
-        const trigger = yield* Effect.promise(() => canvas.findByRole("button", { name: /overflowed tabs/ }));
-        yield* Effect.promise(() => userEvent.click(trigger));
-        // The strip keeps re-measuring while the menu opens, so a menuitem
-        // handle can go stale between query and click (and CI's full chromium
-        // paints the menu later than the local headless shell). Re-query and
-        // re-click inside the retry until the activation actually lands.
+        yield* Effect.promise(() => canvas.findByRole("button", { name: /overflowed tabs/ }));
+        // The pinned strip keeps re-measuring after the trigger first
+        // appears, and each measure pass can re-mount it — so a handle
+        // captured once goes stale and its clicks dispatch into a detached
+        // node (CI's full chromium re-measures later than the local headless
+        // shell, which is why only CI saw the menu never open). Every attempt
+        // therefore re-queries both the trigger and the menu item fresh.
         const deltaActive = (): boolean =>
           canvasElement.querySelector("[data-panel-id='story-overflow-delta']")?.getAttribute("data-active") === "true";
         const activateOverflowDelta = Effect.gen(function* () {
           if (deltaActive()) return;
+          const trigger = yield* queried(
+            () => canvas.queryByRole("button", { name: /overflowed tabs/ }),
+            "overflow trigger not mounted"
+          );
           yield* openOverflowMenu(trigger);
           // The open flag is registry-backed, so the menu mounts on the next
           // render rather than inside the trigger's click turn. Give that
           // render a frame, then query a fresh item handle for this attempt.
-          yield* Effect.sleep(Duration.millis(50));
-          const item = canvas.queryByRole("menuitem", { name: "Overflow Delta" });
-          if (item === null) {
-            return yield* Effect.fail("Overflow Delta menu item did not mount");
-          }
+          yield* Effect.sleep(Duration.millis(100));
+          const item = yield* queried(
+            () => canvas.queryByRole("menuitem", { name: "Overflow Delta" }),
+            "Overflow Delta menu item did not mount"
+          );
           yield* Effect.promise(() => userEvent.click(item));
           yield* Effect.sleep(Duration.millis(50));
           if (!deltaActive()) {
             return yield* Effect.fail("Overflow Delta did not activate");
           }
         });
-        yield* activateOverflowDelta.pipe(Effect.retry({ times: 9 }));
+        yield* activateOverflowDelta.pipe(Effect.retry({ times: 14 }));
       })
     ),
 };
