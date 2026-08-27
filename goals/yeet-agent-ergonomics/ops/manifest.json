@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "yeet-agent-ergonomics",
     "title": "Yeet Agent Ergonomics",

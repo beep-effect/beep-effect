@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "agent-effectiveness-loop",
     "title": "Agent Effectiveness Loop",
@@ -86,5 +86,7 @@
     "grandfathered": false
   },
   "reflectionRequired": false,
-  "statusNote": "legacy status: phase1-complete"
+  "statusNote": "legacy status: phase1-complete",
+  "lifecycle": "completed-retained",
+  "packetPath": "goals/agent-effectiveness-loop"
 }

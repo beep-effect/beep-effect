@@ -56,5 +56,8 @@
     "status": "reference",
     "updated": "2026-07-14"
   },
-  "statusNote": "Artifact-complete research precedent; ready for the driver to set initiative.status to reference."
+  "statusNote": "Artifact-complete research precedent; ready for the driver to set initiative.status to reference.",
+  "schemaVersion": "initiative-manifest/v2",
+  "lifecycle": "reference",
+  "packetPath": "goals/trustgraph-doc-ontology"
 }
