@@ -6,7 +6,7 @@
  */
 
 import { A, O } from "@beep/utils";
-import { Equal, pipe } from "effect";
+import { Equal, Order, pipe } from "effect";
 import { dual, flow } from "effect/Function";
 import * as R from "effect/Record";
 import {
@@ -71,7 +71,8 @@ interface NormalizedRecord {
   readonly aliases: ReadonlyArray<string>;
   readonly id: string;
   readonly lineageKey: string;
-  readonly rangeCount: number;
+  readonly ranges: ReadonlyArray<string>;
+  readonly semanticContent: string;
   readonly semanticKey: string;
   readonly status: "active" | "tombstone";
   readonly successorId: O.Option<string>;
@@ -82,12 +83,43 @@ const normalizeAliases = (
   contextualAliases: ReadonlyArray<{ readonly alias: string }>
 ) => pipe(aliases, A.appendAll(A.map(contextualAliases, (entry) => entry.alias)), A.dedupe);
 
+const normalizeStringSet: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
+  A.dedupe,
+  A.sort(Order.String)
+);
+
+const normalizeContextualAliases: (
+  aliases: ReadonlyArray<{ readonly alias: string; readonly context: string }>
+) => ReadonlyArray<string> = flow(
+  A.map(({ alias, context }: { readonly alias: string; readonly context: string }) => JSON.stringify([alias, context])),
+  normalizeStringSet
+);
+
+const normalizeOption = <A>(value: O.Option<A>): A | null => O.getOrNull(value);
+
 const normalizeCourt = (record: CourtVocabularyRecord): NormalizedRecord => ({
   id: record.id,
   semanticKey: record.semanticKey,
   lineageKey: record.lineageKey,
   aliases: normalizeAliases(record.aliases, record.contextualAliases),
-  rangeCount: A.length(record.effectiveRanges),
+  ranges: pipe(
+    record.effectiveRanges,
+    A.map(({ start, end }) => JSON.stringify([normalizeOption(start), normalizeOption(end)])),
+    normalizeStringSet
+  ),
+  semanticContent: JSON.stringify([
+    record.sourceId,
+    record.name,
+    normalizeOption(record.nameAbbreviation),
+    record.citationString,
+    normalizeOption(record.sourceJurisdiction),
+    record.system,
+    normalizeOption(record.type),
+    normalizeOption(record.hierarchyLevel),
+    record.location,
+    normalizeOption(record.parentId),
+    normalizeContextualAliases(record.contextualAliases),
+  ]),
   status: record.status,
   successorId: record.successorId,
 });
@@ -97,10 +129,36 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
   semanticKey: record.semanticKey,
   lineageKey: record.lineageKey,
   aliases: normalizeAliases(record.aliases, record.contextualAliases),
-  rangeCount: A.length(record.editions),
+  ranges: pipe(
+    record.editions,
+    A.map(({ abbreviation, start, end }) =>
+      JSON.stringify([abbreviation, normalizeOption(start), normalizeOption(end)])
+    ),
+    normalizeStringSet
+  ),
+  semanticContent: JSON.stringify([
+    record.primaryAbbreviation,
+    record.name,
+    record.citeType,
+    normalizeStringSet(record.jurisdictions),
+    normalizeContextualAliases(record.contextualAliases),
+  ]),
   status: record.status,
   successorId: record.successorId,
 });
+
+const sameStringSet = (left: ReadonlyArray<string>, right: ReadonlyArray<string>) =>
+  A.length(left) === A.length(right) && A.every(left, (value) => A.contains(right, value));
+
+const isAdditiveRangeSplit = (previous: NormalizedRecord, next: NormalizedRecord) =>
+  A.length(next.ranges) > A.length(previous.ranges) &&
+  A.every(previous.ranges, (range) => A.contains(next.ranges, range));
+
+const hasSemanticDrift = (previous: NormalizedRecord, next: NormalizedRecord, additiveRangeSplit: boolean) =>
+  !Equal.equals(previous.semanticKey, next.semanticKey) ||
+  !Equal.equals(previous.lineageKey, next.lineageKey) ||
+  !Equal.equals(previous.semanticContent, next.semanticContent) ||
+  (!sameStringSet(previous.ranges, next.ranges) && !additiveRangeSplit);
 
 const changeCompatibility = (kind: ArtifactDriftChangeKind) =>
   A.contains(compatibleChanges, kind) ? ("compatible" as const) : ("incompatible" as const);
@@ -195,14 +253,15 @@ const compareFamily = (
 
   const retainedRecordChanges = (previousRecord: NormalizedRecord, nextRecord: NormalizedRecord) => {
     const changes: Array<ArtifactDriftChange> = [...compareAliases(subjectKind, previousRecord, nextRecord)];
+    const additiveRangeSplit = isAdditiveRangeSplit(previousRecord, nextRecord);
 
-    if (!Equal.equals(previousRecord.semanticKey, nextRecord.semanticKey)) {
+    if (hasSemanticDrift(previousRecord, nextRecord, additiveRangeSplit)) {
       changes.push(
         change(
           "semanticReuse",
           subjectKind,
           [previousRecord.id],
-          "A published stable ID now names a different semantic identity."
+          "A published stable ID now names different semantic content or effective-range boundaries."
         )
       );
     }
@@ -213,7 +272,7 @@ const compareFamily = (
       );
     }
 
-    if (nextRecord.rangeCount > previousRecord.rangeCount) {
+    if (additiveRangeSplit) {
       changes.push(
         change("dateSplit", subjectKind, [previousRecord.id], "The identity gained a distinct effective range.")
       );

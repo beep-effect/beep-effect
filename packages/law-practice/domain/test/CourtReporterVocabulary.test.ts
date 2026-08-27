@@ -10,12 +10,14 @@ import {
   CourtVocabularyArtifact,
   CourtVocabularyRecord,
   classifyCourtReporterArtifactCompatibility,
+  EffectiveRange,
   findCourtById,
   findCourtsByAlias,
   findReporterById,
   findReportersByAlias,
   isCurrentCourtReporterArtifactVersion,
   ReporterCiteType,
+  ReporterEdition,
   ReporterId,
   ReporterVocabulary,
   ReporterVocabularyArtifact,
@@ -73,10 +75,14 @@ const comparisonArtifact = ({
 const court = (
   base: CourtVocabularyRecord,
   fields: Partial<{
+    readonly effectiveRanges: CourtVocabularyRecord["effectiveRanges"];
+    readonly hierarchyLevel: CourtVocabularyRecord["hierarchyLevel"];
     readonly id: CourtId;
     readonly semanticKey: string;
     readonly lineageKey: string;
     readonly aliases: ReadonlyArray<string>;
+    readonly parentId: CourtVocabularyRecord["parentId"];
+    readonly sourceJurisdiction: CourtVocabularyRecord["sourceJurisdiction"];
     readonly status: "active" | "tombstone";
     readonly successorId: O.Option<CourtId>;
   }>
@@ -85,10 +91,12 @@ const court = (
 const reporter = (
   base: ReporterVocabularyRecord,
   fields: Partial<{
+    readonly editions: ReporterVocabularyRecord["editions"];
     readonly id: ReporterId;
     readonly semanticKey: string;
     readonly lineageKey: string;
     readonly aliases: ReadonlyArray<string>;
+    readonly jurisdictions: ReporterVocabularyRecord["jurisdictions"];
     readonly status: "active" | "tombstone";
     readonly successorId: O.Option<ReporterId>;
   }>
@@ -207,6 +215,90 @@ describe("CourtReporterVocabulary", () => {
 
     expect(report.compatibility).toBe("compatible");
     expect(report.changes).toStrictEqual([]);
+  });
+
+  it("rejects retained identities whose semantic fields or range boundaries drift", () => {
+    const courtWithHierarchy = O.getOrThrow(
+      A.findFirst(CourtVocabulary.records, ({ hierarchyLevel }) => O.isSome(hierarchyLevel))
+    );
+    const courtWithJurisdiction = O.getOrThrow(
+      A.findFirst(CourtVocabulary.records, ({ sourceJurisdiction }) => O.isSome(sourceJurisdiction))
+    );
+    const courtWithRange = O.getOrThrow(
+      A.findFirst(CourtVocabulary.records, ({ effectiveRanges }) => A.isReadonlyArrayNonEmpty(effectiveRanges))
+    );
+    const reporterWithEdition = O.getOrThrow(
+      A.findFirst(ReporterVocabulary.records, ({ editions }) => A.isReadonlyArrayNonEmpty(editions))
+    );
+    const courtRange = courtWithRange.effectiveRanges[0]!;
+    const reporterEdition = reporterWithEdition.editions[0]!;
+    const semanticDriftReports = [
+      classify({ courts: [courtWithHierarchy] }, { courts: [court(courtWithHierarchy, { hierarchyLevel: O.none() })] }),
+      classify(
+        { courts: [courtWithJurisdiction] },
+        { courts: [court(courtWithJurisdiction, { sourceJurisdiction: O.none() })] }
+      ),
+      classify(
+        { courts: [currentCourt] },
+        {
+          courts: [
+            court(currentCourt, {
+              parentId: O.isSome(currentCourt.parentId) ? O.none() : O.some(secondCourt.id),
+            }),
+          ],
+        }
+      ),
+      classify(
+        { courts: [courtWithRange] },
+        {
+          courts: [
+            court(courtWithRange, {
+              effectiveRanges: [
+                EffectiveRange.make({
+                  ...courtRange,
+                  start: O.isSome(courtRange.start) ? O.none() : O.some("fixture-start"),
+                }),
+                ...A.drop(courtWithRange.effectiveRanges, 1),
+              ],
+            }),
+          ],
+        }
+      ),
+      classify(
+        { reporters: [currentReporter] },
+        {
+          reporters: [
+            reporter(currentReporter, {
+              jurisdictions: [...currentReporter.jurisdictions, "fixture-jurisdiction"],
+            }),
+          ],
+        }
+      ),
+      classify(
+        { reporters: [reporterWithEdition] },
+        {
+          reporters: [
+            reporter(reporterWithEdition, {
+              editions: [
+                ReporterEdition.make({
+                  ...reporterEdition,
+                  end: O.isSome(reporterEdition.end) ? O.none() : O.some("fixture-end"),
+                }),
+                ...A.drop(reporterWithEdition.editions, 1),
+              ],
+            }),
+          ],
+        }
+      ),
+    ];
+
+    expect(
+      A.every(
+        semanticDriftReports,
+        ({ compatibility, changes }) =>
+          compatibility === "incompatible" && A.some(changes, ({ kind }) => kind === "semanticReuse")
+      )
+    ).toBe(true);
   });
 
   it("does not replay an unchanged historical successor transition", () => {

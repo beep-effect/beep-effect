@@ -35,8 +35,16 @@
     { "change": "schemaChange", "expected": "incompatible" },
     { "change": "projectionChange", "expected": "incompatible" }
   ],
+  "semanticDriftFixtures": [
+    "courtHierarchyLevel",
+    "courtJurisdiction",
+    "courtParent",
+    "courtEffectiveRangeBoundary",
+    "reporterJurisdiction",
+    "reporterEditionBoundary"
+  ],
   "proof": {
     "command": "bun run --cwd packages/law-practice/domain beep:test -- CourtReporterVocabulary.test.ts",
-    "result": "6 tests passed"
+    "result": "8 tests passed"
   }
 }

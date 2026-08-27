@@ -64,3 +64,14 @@
 - Prevention: verification should either require a clean source worktree before
   starting or fingerprint only the detached commit it actually proves; the
   stored proof identity and its reuse predicate must describe the same state.
+
+## 2026-08-27 - Compatibility fixtures covered labels but not semantic fields
+
+- Work: close the hosted review after publishing the vocabulary compatibility
+  classifier.
+- Evidence: PR review found that retained records with changed hierarchy,
+  jurisdiction, parent, or range boundaries could keep the same stable key and
+  range count and therefore produce no drift change.
+- Prevention: compatibility fixtures should mutate every public semantic field
+  family and range boundary, not only produce one example of every emitted
+  change label.
