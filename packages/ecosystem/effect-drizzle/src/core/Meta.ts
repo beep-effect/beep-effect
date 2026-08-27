@@ -229,6 +229,34 @@ export type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql"
 export type GeneratedIdentityAlways = Extract<Generated, { readonly _tag: "identityAlways" }>;
 
 /**
+ * Single-column index intent carried on a field until model construction.
+ *
+ * **Details**
+ *
+ * `name` pins an explicit index name; `undefined` derives
+ * `{table}_{column}_btree_idx` (or `{table}_{column}_unique_idx` when
+ * `unique` is set) at model construction. Harvested intents compile through
+ * the same table-extras node algebra as callback-declared indexes.
+ *
+ * **Example** (Read a colocated index intent)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { index } from "@beep/effect-drizzle/pg"
+ *
+ * const field = String.pipe(index())
+ * field.meta.indexed // => { name: undefined, unique: false }
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface IndexIntent {
+  readonly name: string | undefined;
+  readonly unique: boolean;
+}
+
+/**
  * Literal-preserving SQL intent exposed by inferred field metadata.
  *
  * @category models
@@ -242,11 +270,50 @@ export interface Meta<C extends ColumnSpec = ColumnSpec> {
   readonly generated: Generated | false;
   readonly hasDefault: boolean;
   readonly identity: IdentityMode;
+  readonly indexed: IndexIntent | false;
   readonly primaryKey: boolean;
   readonly references: References | undefined;
   readonly unique: boolean;
   readonly version: boolean;
 }
+
+/**
+ * Reports whether metadata guarantees that one column uniquely locates a row.
+ *
+ * **Details**
+ *
+ * Primary keys, inline unique constraints, and colocated single-column unique
+ * indexes all provide the same locator and foreign-key-target guarantee. A
+ * non-unique index does not.
+ *
+ * **Example** (Recognize a colocated unique index)
+ *
+ * ```ts
+ * import { isUniqueKey } from "@beep/effect-drizzle"
+ * import { String } from "effect/Schema"
+ * import { uniqueIndex } from "@beep/effect-drizzle/pg"
+ *
+ * isUniqueKey(String.pipe(uniqueIndex()).meta) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const isUniqueKey = (meta: Meta): boolean =>
+  meta.primaryKey || meta.unique || (meta.indexed !== false && meta.indexed.unique);
+
+/**
+ * Type-level counterpart of {@link isUniqueKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IsUniqueKey<M extends Meta> = M extends
+  | { readonly primaryKey: true }
+  | { readonly unique: true }
+  | { readonly indexed: { readonly unique: true } }
+  ? true
+  : false;
 
 /**
  * Exact initial metadata type inferred for a bare schema field.
@@ -262,6 +329,7 @@ export interface Empty extends Meta {
   readonly generated: false;
   readonly hasDefault: false;
   readonly identity: false;
+  readonly indexed: false;
   readonly primaryKey: false;
   readonly references: undefined;
   readonly unique: false;
@@ -284,6 +352,7 @@ export const empty: Empty = {
   hasDefault: false,
   default: undefined,
   generated: false,
+  indexed: false,
   version: false,
   columnName: undefined,
   references: undefined,
@@ -332,6 +401,7 @@ export function merge(meta: Meta, patch: Patch): Meta {
     hasDefault: isUndefined(patch.hasDefault) ? meta.hasDefault : patch.hasDefault,
     default: isUndefined(patch.default) ? meta.default : patch.default,
     generated: isUndefined(patch.generated) ? meta.generated : patch.generated,
+    indexed: isUndefined(patch.indexed) ? meta.indexed : patch.indexed,
     version: isUndefined(patch.version) ? meta.version : patch.version,
     columnName: isUndefined(patch.columnName) ? meta.columnName : patch.columnName,
     references: isUndefined(patch.references) ? meta.references : patch.references,

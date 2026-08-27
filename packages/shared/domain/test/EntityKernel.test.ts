@@ -27,7 +27,6 @@ const $I = $SharedDomainId.create("entity/test/EntityKernel");
 const makeSharedId = EntityId.factory("shared", $I);
 const DocumentId = makeSharedId("document");
 const DocumentPublicId = PublicEntityId.factory(DocumentId);
-const ProductDocumentEntity = ProductEntity.make(DocumentId);
 const CustomDocumentId = makeSharedId("document", {
   brand: "CustomDocumentId",
   description: "Custom document id.",
@@ -59,15 +58,13 @@ const systemPrincipal = {
   kind: "System",
 } as const;
 
-class ProductDocument extends ProductDocumentEntity.Entity<ProductDocument>(ProductDocumentEntity.tableName)(
+class ProductDocument extends ProductEntity.Entity<ProductDocument>()(DocumentId)(
   {
-    note: S.String.pipe(ProductDocumentEntity.pg.text()),
-    ...ProductDocumentEntity.identityFields,
+    note: S.String.pipe(ProductEntity.pg.text()),
   },
   $I.annote("ProductDocument", {
     description: "Product-entity kit test model.",
-  }),
-  ProductDocumentEntity.entityExtras
+  })
 ) {}
 
 describe("EntityId", () => {
@@ -212,6 +209,69 @@ describe("ProductEntity", () => {
   });
 });
 
+type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+type Expect<T extends true> = T;
+
+class BaseDocument extends EntityBarrel.BaseEntity.Entity<BaseDocument>()(DocumentId)(
+  {
+    note: S.String.pipe(EntityBarrel.BaseEntity.pg.text()),
+  },
+  $I.annote("BaseDocument", { description: "Base-tier test model." })
+) {}
+
+class OrgDocument extends EntityBarrel.OrgEntity.Entity<OrgDocument>()(DocumentId)(
+  {
+    note: S.String.pipe(EntityBarrel.OrgEntity.pg.text()),
+  },
+  $I.annote("OrgDocument", { description: "Org-tier test model." })
+) {}
+
+// Brand and literal preservation through the generic tier factory (spike law).
+export type _IdBrandKept = Expect<
+  IsEqual<InstanceType<typeof ProductDocument>["id"], EntityId.EntityIdValueFor<"SharedDocumentId">>
+>;
+export type _EntityTypeLiteralKept = Expect<
+  IsEqual<InstanceType<typeof ProductDocument>["entityType"], "SharedDocument">
+>;
+
+describe("entity tier family", () => {
+  it("scales column sets down the tier ladder", () => {
+    expect(Object.keys(BaseDocument.fields)).toEqual(
+      expect.arrayContaining(["createdAt", "rowVersion", "updatedAt", "note", "entityType", "id"])
+    );
+    expect(Object.keys(BaseDocument.fields)).not.toContain("orgId");
+    expect(Object.keys(BaseDocument.fields)).not.toContain("publicId");
+    expect(Object.keys(OrgDocument.fields)).toEqual(
+      expect.arrayContaining(["createdByPrincipal", "orgId", "source", "schemaVersion"])
+    );
+    expect(Object.keys(OrgDocument.fields)).not.toContain("publicId");
+  });
+
+  it("derives colocated default indexes per tier", () => {
+    const orgConfig = OrgDocument.pipe(toPgTable, getTableConfig);
+    const names = orgConfig.indexes.map((index) => index.config.name);
+    expect(names).toEqual(
+      expect.arrayContaining(["shared_document_org_id_btree_idx", "shared_document_source_btree_idx"])
+    );
+    expect(names).not.toContain("shared_document_public_id_unique_idx");
+  });
+
+  it("rejects extensions that shadow inherited kit columns", () => {
+    expect(() => EntityBarrel.BaseEntity.kit.extend(() => ({ columns: { createdAt: S.String } }) as never)).toThrow(
+      "already a kit default column"
+    );
+  });
+
+  it("rejects own fields that shadow identity columns", () => {
+    expect(() =>
+      ProductEntity.Entity<never>()(DocumentId)(
+        { publicId: S.String } as never,
+        $I.annote("ShadowedDocument", { description: "Shadowed identity test model." })
+      )
+    ).toThrow("identity column");
+  });
+});
+
 describe("EntityRef and shared entity primitives", () => {
   it.effect(
     "builds entity references and validates primitive schemas",
@@ -292,14 +352,14 @@ describe("EntityRef and shared entity primitives", () => {
       expect(system.component).toBe("Runtime");
       expect(S.is(Principal.SystemPrincipal)(principal)).toBe(true);
       expect(SourceKind.SourceKind.is.Agent("Agent")).toBe(true);
-      expect(EntityBarrel.ProductEntity.make).toBe(ProductEntity.make);
+      expect(EntityBarrel.ProductEntity.Entity).toBe(ProductEntity.Entity);
       expect(EntityBarrel.EntityId.EntityIdValue).toBe(EntityId.EntityIdValue);
       expect(EntityBarrel.EntityRef.EntityRef).toBe(EntityRef.EntityRef);
       expect(EntityBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
       expect(EntityBarrel.Principal.Principal).toBe(Principal.Principal);
       expect(EntityBarrel.primitives.VectorClock).toBe(primitives.VectorClock);
       expect(EntityBarrel.SourceKind.SourceKind).toBe(SourceKind.SourceKind);
-      expect(DomainBarrel.ProductEntity.make).toBe(ProductEntity.make);
+      expect(DomainBarrel.ProductEntity.Entity).toBe(ProductEntity.Entity);
       expect(DomainBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
     })
   );

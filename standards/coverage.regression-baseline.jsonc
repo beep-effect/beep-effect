@@ -322,8 +322,8 @@
     },
     "@beep/agents-domain": {
       "path": "packages/agents/domain",
-      "lines": 81.25,
-      "statements": 81.18,
+      "lines": 81.63,
+      "statements": 81.55,
       "branches": 80,
       "functions": 67.5,
       "uncovered": {
@@ -1660,10 +1660,10 @@
     },
     "@beep/architecture-lab-domain": {
       "path": "packages/architecture-lab/domain",
-      "lines": 80,
-      "statements": 80.48,
+      "lines": 79.74,
+      "statements": 80.24,
       "branches": 62.5,
-      "functions": 66.66,
+      "functions": 65.71,
       "uncovered": {
         "lines": 16,
         "statements": 16,
@@ -4162,10 +4162,10 @@
     },
     "@beep/documents-domain": {
       "path": "packages/documents/domain",
-      "lines": 93,
-      "statements": 93.13,
+      "lines": 92.7,
+      "statements": 92.85,
       "branches": 58.33,
-      "functions": 86.95,
+      "functions": 84.21,
       "uncovered": {
         "lines": 7,
         "statements": 7,
@@ -5986,15 +5986,15 @@
     },
     "@beep/effect-drizzle": {
       "path": "packages/ecosystem/effect-drizzle",
-      "lines": 84.68,
-      "statements": 84.21,
-      "branches": 81.93,
-      "functions": 77.42,
+      "lines": 83.83,
+      "statements": 83.28,
+      "branches": 81.44,
+      "functions": 76.68,
       "uncovered": {
-        "lines": 256,
-        "statements": 284,
-        "branches": 190,
-        "functions": 172
+        "lines": 289,
+        "statements": 322,
+        "branches": 201,
+        "functions": 194
       },
       "files": {
         "packages/ecosystem/effect-drizzle/src/core/Field.ts": {
@@ -6012,7 +6012,7 @@
         "packages/ecosystem/effect-drizzle/src/core/Meta.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 97.72,
+          "branches": 98,
           "functions": 100,
           "uncovered": {
             "lines": 0,
@@ -6108,7 +6108,7 @@
         "packages/ecosystem/effect-drizzle/src/core/repository.ts": {
           "lines": 43.63,
           "statements": 43.33,
-          "branches": 59.09,
+          "branches": 55,
           "functions": 25,
           "uncovered": {
             "lines": 31,
@@ -6178,7 +6178,7 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/kit.ts": {
-          "lines": 66.66,
+          "lines": 75,
           "statements": 80,
           "branches": 75,
           "functions": 100,
@@ -6202,15 +6202,15 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/combinators.ts": {
-          "lines": 87.95,
-          "statements": 87.74,
-          "branches": 89.04,
-          "functions": 84.31,
+          "lines": 87.19,
+          "statements": 86.23,
+          "branches": 86.07,
+          "functions": 83.33,
           "uncovered": {
-            "lines": 23,
-            "statements": 25,
-            "branches": 8,
-            "functions": 16
+            "lines": 26,
+            "statements": 30,
+            "branches": 11,
+            "functions": 18
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/derive.ts": {
@@ -6250,33 +6250,33 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/kit.ts": {
-          "lines": 95,
-          "statements": 95.45,
-          "branches": 100,
-          "functions": 90.9,
+          "lines": 65.71,
+          "statements": 65.78,
+          "branches": 80,
+          "functions": 57.89,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
+            "lines": 12,
+            "statements": 13,
+            "branches": 2,
+            "functions": 8
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/model.ts": {
-          "lines": 93,
-          "statements": 92.45,
-          "branches": 93.51,
-          "functions": 94.44,
+          "lines": 93.04,
+          "statements": 92.68,
+          "branches": 92.37,
+          "functions": 92.3,
           "uncovered": {
-            "lines": 7,
-            "statements": 8,
-            "branches": 7,
-            "functions": 1
+            "lines": 8,
+            "statements": 9,
+            "branches": 9,
+            "functions": 2
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/schema.ts": {
           "lines": 86.92,
           "statements": 85.71,
-          "branches": 79.03,
+          "branches": 78.33,
           "functions": 78.68,
           "uncovered": {
             "lines": 17,
@@ -6310,15 +6310,15 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts": {
-          "lines": 90.24,
-          "statements": 90.36,
-          "branches": 92.5,
-          "functions": 84.61,
+          "lines": 87.77,
+          "statements": 86.02,
+          "branches": 86.36,
+          "functions": 81.39,
           "uncovered": {
-            "lines": 8,
-            "statements": 8,
-            "branches": 3,
-            "functions": 6
+            "lines": 11,
+            "statements": 13,
+            "branches": 6,
+            "functions": 8
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/derive.ts": {
@@ -6334,15 +6334,15 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/extras.ts": {
-          "lines": 94.23,
-          "statements": 94.73,
-          "branches": 90,
-          "functions": 87.5,
+          "lines": 89.85,
+          "statements": 90.66,
+          "branches": 94.11,
+          "functions": 83.33,
           "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 4,
-            "functions": 3
+            "lines": 7,
+            "statements": 7,
+            "branches": 2,
+            "functions": 6
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/index.ts": {
@@ -6358,33 +6358,33 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/kit.ts": {
-          "lines": 85,
-          "statements": 86.36,
-          "branches": 62.5,
-          "functions": 81.81,
+          "lines": 60,
+          "statements": 60.52,
+          "branches": 50,
+          "functions": 52.63,
           "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 3,
-            "functions": 2
+            "lines": 14,
+            "statements": 15,
+            "branches": 5,
+            "functions": 9
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/model.ts": {
-          "lines": 82.75,
-          "statements": 82.79,
-          "branches": 84.82,
-          "functions": 89.47,
+          "lines": 84.31,
+          "statements": 84.54,
+          "branches": 84.42,
+          "functions": 88.88,
           "uncovered": {
-            "lines": 15,
-            "statements": 16,
-            "branches": 17,
-            "functions": 2
+            "lines": 16,
+            "statements": 17,
+            "branches": 19,
+            "functions": 3
           }
         },
         "packages/ecosystem/effect-drizzle/src/sqlite/schema.ts": {
           "lines": 78.7,
           "statements": 77.77,
-          "branches": 67.85,
+          "branches": 66.66,
           "functions": 67.34,
           "uncovered": {
             "lines": 23,
@@ -6595,13 +6595,13 @@
     },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
-      "lines": 93.28,
-      "statements": 91.82,
+      "lines": 93.44,
+      "statements": 91.95,
       "branches": 100,
-      "functions": 78.65,
+      "functions": 78.26,
       "uncovered": {
-        "lines": 29,
-        "statements": 38,
+        "lines": 28,
+        "statements": 37,
         "branches": 0,
         "functions": 35
       },
@@ -10444,10 +10444,10 @@
     },
     "@beep/law-practice-domain": {
       "path": "packages/law-practice/domain",
-      "lines": 78.14,
-      "statements": 77.89,
+      "lines": 79.16,
+      "statements": 78.89,
       "branches": 59.01,
-      "functions": 58.37,
+      "functions": 60.71,
       "uncovered": {
         "lines": 139,
         "statements": 145,
@@ -26317,15 +26317,15 @@
     },
     "@beep/repo-configs": {
       "path": "packages/tooling/policy-pack/repo-configs",
-      "lines": 78.53,
-      "statements": 76.84,
-      "branches": 69.76,
-      "functions": 50,
+      "lines": 80.21,
+      "statements": 78.88,
+      "branches": 71.11,
+      "functions": 53.27,
       "uncovered": {
-        "lines": 79,
-        "statements": 91,
+        "lines": 73,
+        "statements": 83,
         "branches": 13,
-        "functions": 61
+        "functions": 57
       },
       "files": {
         "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts": {
@@ -26365,15 +26365,15 @@
           }
         },
         "packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
-            "lines": 6,
-            "statements": 8,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 4
+            "functions": 0
           }
         },
         "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts": {
@@ -30829,8 +30829,8 @@
     },
     "@beep/shared-domain": {
       "path": "packages/shared/domain",
-      "lines": 99.75,
-      "statements": 99.76,
+      "lines": 99.76,
+      "statements": 99.78,
       "branches": 100,
       "functions": 100,
       "uncovered": {
@@ -31008,6 +31008,30 @@
             "functions": 0
           }
         },
+        "packages/shared/domain/src/entity/AuditEntity.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/entity/BaseEntity.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/shared/domain/src/entity/EntityId.ts": {
           "lines": 100,
           "statements": 100,
@@ -31020,7 +31044,31 @@
             "functions": 0
           }
         },
+        "packages/shared/domain/src/entity/EntityKit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/shared/domain/src/entity/EntityRef.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/entity/OrgEntity.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

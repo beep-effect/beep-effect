@@ -12,7 +12,7 @@ import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/CandidateClaim/CandidateClaim.model");
-const CandidateClaimEntity = ProductEntity.make(Epistemic.CandidateClaimId);
+const pg = ProductEntity.pg;
 
 /**
  * Candidate claim proposed by an agent and tracked through admission.
@@ -46,17 +46,15 @@ const CandidateClaimEntity = ProductEntity.make(Epistemic.CandidateClaimId);
  * @category entities
  * @since 0.0.0
  */
-export class CandidateClaim extends CandidateClaimEntity.Entity<CandidateClaim>(CandidateClaimEntity.tableName)(
+export class CandidateClaim extends ProductEntity.Entity<CandidateClaim>()(Epistemic.CandidateClaimId)(
   {
     fixtureKey: EpistemicFixtureKey.annotateKey({
       description: "Stable fixture key for the candidate claim.",
-    }).pipe(CandidateClaimEntity.pg.text(), CandidateClaimEntity.pg.columnName("fixture_key")),
-    lifecycle: ClaimLifecycle.pipe(CandidateClaimEntity.pg.text()),
-    snapshot: UnknownRecord.pipe(CandidateClaimEntity.pg.jsonb()),
-    ...CandidateClaimEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
+    lifecycle: ClaimLifecycle.pipe(pg.text()),
+    snapshot: UnknownRecord.pipe(pg.jsonb()),
   },
   $I.annote("CandidateClaim", {
     description: "Candidate claim proposed by an agent with source evidence.",
-  }),
-  CandidateClaimEntity.entityExtras
+  })
 ) {}

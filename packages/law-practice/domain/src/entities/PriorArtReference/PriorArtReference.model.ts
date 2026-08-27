@@ -10,7 +10,7 @@ import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PriorArtReference/PriorArtReference.model");
-const PriorArtReferenceEntity = ProductEntity.make(LawPractice.PriorArtReferenceId);
+const pg = ProductEntity.pg;
 
 /**
  * Prior-art reference entity cited by an office action.
@@ -50,26 +50,22 @@ const PriorArtReferenceEntity = ProductEntity.make(LawPractice.PriorArtReference
  * @category entities
  * @since 0.0.0
  */
-export class PriorArtReference extends PriorArtReferenceEntity.Entity<PriorArtReference>(
-  PriorArtReferenceEntity.tableName
-)(
+export class PriorArtReference extends ProductEntity.Entity<PriorArtReference>()(LawPractice.PriorArtReferenceId)(
   {
     documentNumber: LawPracticeText.annotateKey({
       description: "Examiner-cited prior-art document number.",
-    }).pipe(PriorArtReferenceEntity.pg.text(), PriorArtReferenceEntity.pg.columnName("document_number")),
+    }).pipe(pg.text(), pg.columnName("document_number")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the prior-art reference.",
-    }).pipe(PriorArtReferenceEntity.pg.text(), PriorArtReferenceEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the office action that cited this prior art.",
-    }).pipe(PriorArtReferenceEntity.pg.text(), PriorArtReferenceEntity.pg.columnName("office_action_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("office_action_fixture_key")),
     title: LawPracticeText.annotateKey({
       description: "Human-readable prior-art reference title.",
-    }).pipe(PriorArtReferenceEntity.pg.text()),
-    ...PriorArtReferenceEntity.identityFields,
+    }).pipe(pg.text()),
   },
   $I.annote("PriorArtReference", {
     description: "Prior-art reference entity cited by an office action.",
-  }),
-  PriorArtReferenceEntity.entityExtras
+  })
 ) {}

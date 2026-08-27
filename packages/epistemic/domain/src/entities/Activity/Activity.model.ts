@@ -12,7 +12,7 @@ import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/Activity/Activity.model");
-const ActivityEntity = ProductEntity.make(Epistemic.ActivityId);
+const pg = ProductEntity.pg;
 
 /**
  * Provenance activity captured for an epistemic runtime proof.
@@ -45,16 +45,14 @@ const ActivityEntity = ProductEntity.make(Epistemic.ActivityId);
  * @category entities
  * @since 0.0.0
  */
-export class Activity extends ActivityEntity.Entity<Activity>(ActivityEntity.tableName)(
+export class Activity extends ProductEntity.Entity<Activity>()(Epistemic.ActivityId)(
   {
     fixtureKey: EpistemicFixtureKey.annotateKey({
       description: "Stable fixture key for the provenance activity.",
-    }).pipe(ActivityEntity.pg.text(), ActivityEntity.pg.columnName("fixture_key")),
-    snapshot: UnknownRecord.pipe(ActivityEntity.pg.jsonb()),
-    ...ActivityEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
+    snapshot: UnknownRecord.pipe(pg.jsonb()),
   },
   $I.annote("Activity", {
     description: "Provenance activity produced by the runtime proof.",
-  }),
-  ActivityEntity.entityExtras
+  })
 ) {}

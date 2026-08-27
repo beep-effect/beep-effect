@@ -11,7 +11,7 @@ import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fie
 import { MatterType } from "./Matter.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Matter/Matter.model");
-const MatterEntity = ProductEntity.make(LawPractice.MatterId);
+const pg = ProductEntity.pg;
 
 /**
  * Legal matter entity grouping prosecution work for one legal client.
@@ -46,24 +46,22 @@ const MatterEntity = ProductEntity.make(LawPractice.MatterId);
  * @category entities
  * @since 0.0.0
  */
-export class Matter extends MatterEntity.Entity<Matter>(MatterEntity.tableName)(
+export class Matter extends ProductEntity.Entity<Matter>()(LawPractice.MatterId)(
   {
     displayName: LawPracticeText.annotateKey({
       description: "Human-readable matter display name.",
-    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("display_name")),
+    }).pipe(pg.text(), pg.columnName("display_name")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the matter.",
-    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the legal client this matter belongs to.",
-    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("legal_client_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("legal_client_fixture_key")),
     matterType: MatterType.annotateKey({
       description: "Matter type.",
-    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("matter_type")),
-    ...MatterEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("matter_type")),
   },
   $I.annote("Matter", {
     description: "Legal matter entity grouping prosecution work for one legal client.",
-  }),
-  MatterEntity.entityExtras
+  })
 ) {}

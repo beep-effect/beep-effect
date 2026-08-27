@@ -12,7 +12,7 @@ import { LawPracticeText } from "../LawPracticeEntity.fields.ts";
 import { PartyReference } from "./Party.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Party/Party.model");
-const PartyEntity = ProductEntity.make(LawPractice.PartyId);
+const pg = ProductEntity.pg;
 
 /**
  * One legal person a position can be held by or against.
@@ -51,21 +51,19 @@ const PartyEntity = ProductEntity.make(LawPractice.PartyId);
  * @category entities
  * @since 0.0.0
  */
-export class Party extends PartyEntity.Entity<Party>(PartyEntity.tableName)(
+export class Party extends ProductEntity.Entity<Party>()(LawPractice.PartyId)(
   {
     displayName: LawPracticeText.annotateKey({
       description: "Human-readable name for the party, recorded for display and never used as identity.",
-    }).pipe(PartyEntity.pg.text(), PartyEntity.pg.columnName("display_name")),
+    }).pipe(pg.text(), pg.columnName("display_name")),
     kind: PartyKind.annotateKey({
       description: "Whether the party is a natural person or a juristic one.",
-    }).pipe(PartyEntity.pg.text()),
+    }).pipe(pg.text()),
     reference: PartyReference.annotateKey({
       description: "Opaque text reference to the existing law-practice record this party is.",
-    }).pipe(PartyEntity.pg.jsonb()),
-    ...PartyEntity.identityFields,
+    }).pipe(pg.jsonb()),
   },
   $I.annote("Party", {
     description: "One legal person a position can be held by or against, referencing an existing record by text.",
-  }),
-  PartyEntity.entityExtras
+  })
 ) {}

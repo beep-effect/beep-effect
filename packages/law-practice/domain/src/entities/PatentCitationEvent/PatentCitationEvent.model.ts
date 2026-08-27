@@ -20,7 +20,7 @@ import {
 } from "./PatentCitationEvent.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PatentCitationEvent/PatentCitationEvent.model");
-const PatentCitationEventEntity = ProductEntity.make(LawPractice.PatentCitationEventId);
+const pg = ProductEntity.pg;
 
 /**
  * One observed occurrence of a patent reference cited against a filing.
@@ -67,49 +67,45 @@ const PatentCitationEventEntity = ProductEntity.make(LawPractice.PatentCitationE
  * @category entities
  * @since 0.0.0
  */
-export class PatentCitationEvent extends PatentCitationEventEntity.Entity<PatentCitationEvent>(
-  PatentCitationEventEntity.tableName
-)(
+export class PatentCitationEvent extends ProductEntity.Entity<PatentCitationEvent>()(LawPractice.PatentCitationEventId)(
   {
     actor: PatentCitationActor.annotateKey({
       description: "Party the observed source attributes the citation act to.",
-    }).pipe(PatentCitationEventEntity.pg.text()),
+    }).pipe(pg.text()),
     citingApplication: CitingApplicationIdentity.annotateKey({
       description: "Filing the reference is recorded as being cited against.",
-    }).pipe(PatentCitationEventEntity.pg.jsonb(), PatentCitationEventEntity.pg.columnName("citing_application")),
+    }).pipe(pg.jsonb(), pg.columnName("citing_application")),
     discovery: PatentCitationDiscovery.annotateKey({
       description: "Tagged provenance describing how this occurrence came to be recorded.",
-    }).pipe(PatentCitationEventEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     grounding: TextAnchorVerificationReceipt.annotateKey({
       description:
         "Persisted anchor and exact source identity from the observation's verification; re-verification is required before any current claim.",
-    }).pipe(PatentCitationEventEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     observedAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Time the occurrence was observed, recorded for audit and never used to establish currency.",
-    }).pipe(PatentCitationEventEntity.pg.bigint("number"), PatentCitationEventEntity.pg.columnName("observed_at")),
+    }).pipe(pg.bigint("number"), pg.columnName("observed_at")),
     possibleDuplicateOf: S.OptionFromNullOr(LawPractice.PatentCitationEventId)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Suspected duplicate of another event, recorded and never resolved; makes this event uncovered.",
       })
-      .pipe(PatentCitationEventEntity.pg.integer(), PatentCitationEventEntity.pg.columnName("possible_duplicate_of")),
+      .pipe(pg.integer(), pg.columnName("possible_duplicate_of")),
     quarantine: S.OptionFromNullOr(PatentCitationQuarantine)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Explicit quarantine marker layered beside the evidence, never rewriting it." })
-      .pipe(PatentCitationEventEntity.pg.jsonb()),
+      .pipe(pg.jsonb()),
     reference: PatentReference.annotateKey({
       description: "Parsed patent document reference this occurrence names.",
-    }).pipe(PatentCitationEventEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     supersedes: S.OptionFromNullOr(ObservationVersionRef)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Declared reference to the exact prior observation version this observation replaces.",
       })
-      .pipe(PatentCitationEventEntity.pg.jsonb()),
-    ...PatentCitationEventEntity.identityFields,
+      .pipe(pg.jsonb()),
   },
   $I.annote("PatentCitationEvent", {
     description: "One observed, source-versioned occurrence of a patent reference cited against a filing.",
-  }),
-  PatentCitationEventEntity.entityExtras
+  })
 ) {}

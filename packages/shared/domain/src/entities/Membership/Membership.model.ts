@@ -11,7 +11,7 @@ import * as Shared from "../../identity/Shared/index.ts";
 import { Role, Status } from "./Membership.values.ts";
 
 const $I = $SharedDomainId.create("entities/Membership/Membership.model");
-const MembershipEntity = ProductEntity.make(Shared.MembershipId);
+const pg = ProductEntity.pg;
 
 /**
  * Shared organization membership entity schema.
@@ -31,18 +31,13 @@ const MembershipEntity = ProductEntity.make(Shared.MembershipId);
  * @category models
  * @since 0.0.0
  */
-export class Model extends MembershipEntity.Entity<Model>(MembershipEntity.tableName)(
+export class Model extends ProductEntity.Entity<Model>()(Shared.MembershipId)(
   {
-    role: Role.pipe(MembershipEntity.pg.text()),
-    status: Status.pipe(MembershipEntity.pg.text()),
-    userId: Shared.UserId.pipe(MembershipEntity.pg.integer(), MembershipEntity.pg.columnName("user_id")),
-    ...MembershipEntity.identityFields,
+    role: Role.pipe(pg.text()),
+    status: Status.pipe(pg.text()),
+    userId: Shared.UserId.pipe(pg.integer(), pg.columnName("user_id"), pg.index()),
   },
   $I.annote("Model", {
     description: "Shared organization membership entity.",
-  }),
-  (columns) => [
-    MembershipEntity.Table.index("shared_membership_user_id_btree_idx", [columns.userId]),
-    ...MembershipEntity.entityExtras(columns),
-  ]
+  })
 ) {}

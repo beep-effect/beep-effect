@@ -144,11 +144,15 @@ describe("EpistemicTables", () => {
     expect(columns.provider.columnType).toBe("PgText");
     expect(columns.costUsdApproxMicros.name).toBe("cost_usd_approx_micros");
     expect(columns.costUsdApproxMicros.notNull).toBe(false);
-    expect(config.indexes.map((index) => index.config.name)).toEqual([
-      "epistemic_usage_record_org_id_btree_idx",
-      "epistemic_usage_record_source_btree_idx",
-      "epistemic_usage_record_public_id_unique_idx",
-    ]);
+    const indexNames = config.indexes.map((index) => index.config.name);
+    expect(indexNames).toHaveLength(3);
+    expect(indexNames).toEqual(
+      expect.arrayContaining([
+        "epistemic_usage_record_org_id_btree_idx",
+        "epistemic_usage_record_source_btree_idx",
+        "epistemic_usage_record_public_id_unique_idx",
+      ])
+    );
   });
 
   it("projects CandidateClaim onto the migrated column set", () => {

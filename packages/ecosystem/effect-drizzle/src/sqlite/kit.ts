@@ -22,6 +22,38 @@ import type { ValidateDerivedSqlName } from "../core/names.ts";
 import type { FieldsInput, MissingSelfGeneric, ModelClass, ValidateFields } from "./model.ts";
 
 /**
+ * The dialect namespace a SQLite kit closure receives.
+ *
+ * **Details**
+ *
+ * One binding carries every column combinator, the `default` alias for
+ * `default_`, and the `Table` extras namespace, so kit configuration never
+ * imports dialect modules separately.
+ *
+ * **Example** (Use the toolkit inside a kit closure)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import { make } from "@beep/effect-drizzle/sqlite"
+ *
+ * const kit = make((sqlite) => ({
+ *   defaultColumns: { version: Int.pipe(sqlite.integer(), sqlite.default(1)) }
+ * }))
+ *
+ * kit.sqlite.Table.index // => SQLite index-node constructor
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SqliteToolkit = typeof Sqlite & {
+  readonly default: typeof Sqlite.default_;
+  readonly Table: typeof Table;
+};
+
+const toolkit: SqliteToolkit = { ...Sqlite, default: Sqlite.default_, Table };
+
+/**
  * Configures invariant SQLite fields and table extras for {@link make}.
  *
  * **When to use**
@@ -30,8 +62,9 @@ import type { FieldsInput, MissingSelfGeneric, ModelClass, ValidateFields } from
  *
  * **Details**
  *
- * `defaultColumns` receives only SQLite operators, preventing PostgreSQL
- * descriptor families from entering the merged model.
+ * The whole configuration is produced inside one closure receiving the
+ * {@link SqliteToolkit}, so `defaultColumns` is a plain field record and
+ * `defaultExtras` closes over the same dialect namespace.
  *
  * **Gotchas**
  *
@@ -52,9 +85,8 @@ import type { FieldsInput, MissingSelfGeneric, ModelClass, ValidateFields } from
  * @since 0.0.0
  */
 export interface SqliteKitConfig<Defaults extends FieldsInput> {
-  readonly defaultColumns: (sqlite: typeof Sqlite) => Defaults & ValidateFields<Defaults>;
-  readonly defaultExtras?: Table.Callback<Defaults> | undefined;
-  readonly dialect: "sqlite";
+  readonly defaultColumns: Defaults & ValidateFields<Defaults>;
+  readonly defaultExtras?: Table.Callback<FieldsInput> | undefined;
 }
 
 type AnyFields = Readonly<Record<string, Field.Input>>;
@@ -68,13 +100,47 @@ function mergeFields(defaults: AnyFields, own: AnyFields): AnyFields {
   return assign(defaults, own);
 }
 
-type ValidateCollision<Defaults extends AnyFields, Own extends AnyFields> = {
+/**
+ * Rejects own-field keys that shadow an existing SQLite kit default column.
+ *
+ * **Example** (Reject a shadowed default)
+ *
+ * ```ts
+ * import { Int, String } from "effect/Schema"
+ * import type { SqliteValidateCollision } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Accepted = SqliteValidateCollision<Defaults, { readonly name: typeof String }>
+ * // => { readonly name: unknown }
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type SqliteValidateCollision<Defaults extends AnyFields, Own extends AnyFields> = {
   readonly [K in keyof Own]: K extends keyof Defaults
     ? Field.SqlTypeError<`'${K & string}' is a kit default column — remove it or use Model`>
     : unknown;
 };
 
-type ValidateMergedFields<
+/**
+ * Validates own fields against the complete merged SQLite kit field record.
+ *
+ * **Example** (Validate merged fields)
+ *
+ * ```ts
+ * import { Int, String } from "effect/Schema"
+ * import type { SqliteValidateMergedFields } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Accepted = SqliteValidateMergedFields<Defaults, { readonly name: typeof String }>
+ * // => own-field record validated against the merged model
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type SqliteValidateMergedFields<
   Defaults extends FieldsInput,
   Own extends FieldsInput,
   Effective extends FieldsInput = Merged<Defaults, Own>,
@@ -118,9 +184,31 @@ export type SqliteEntityFactory<Defaults extends FieldsInput> = <
   identifier: Identifier &
     ValidateDerivedSqlName<Identifier, "kit Entity identifier derives an invalid SQLite table name">
 ) => <const Own extends FieldsInput>(
-  ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
-  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>
+  ownFields: Own & SqliteValidateCollision<Defaults, Own> & SqliteValidateMergedFields<Defaults, Own>,
+  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, NoInfer<Own>>>
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
+
+/**
+ * Additional columns and extras layered onto an existing SQLite kit by `extend`.
+ *
+ * **Example** (Describe a SQLite kit extension)
+ *
+ * ```ts
+ * import { Int, String } from "effect/Schema"
+ * import type { SqliteKitExtension } from "@beep/effect-drizzle/sqlite"
+ *
+ * type Defaults = { readonly version: typeof Int }
+ * type Extension = SqliteKitExtension<Defaults, { readonly label: typeof String }>
+ * // => columns and optional extras accepted by extend
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export interface SqliteKitExtension<Defaults extends FieldsInput, More extends FieldsInput> {
+  readonly columns: More & SqliteValidateCollision<Defaults, More> & SqliteValidateMergedFields<Defaults, More>;
+  readonly extras?: Table.Callback<FieldsInput> | undefined;
+}
 
 /**
  * Describes the SQLite vocabulary returned by {@link make}.
@@ -145,41 +233,18 @@ export type SqliteEntityFactory<Defaults extends FieldsInput> = <
  */
 export interface SqliteKit<Defaults extends FieldsInput> {
   readonly Entity: SqliteEntityFactory<Defaults>;
+  readonly extend: <const More extends FieldsInput>(
+    build: (sqlite: SqliteToolkit) => SqliteKitExtension<Defaults, More>
+  ) => SqliteKit<Merged<Defaults, More>>;
   readonly Model: typeof Model;
   readonly Repository: typeof makeRepository;
   readonly schema: typeof schema;
-  readonly sqlite: typeof Sqlite;
+  readonly sqlite: SqliteToolkit;
   readonly Table: typeof Table;
   readonly toSqliteTable: typeof toSqliteTable;
 }
 
-/**
- * Creates a SQLite-only kit without importing the PostgreSQL implementation.
- *
- * **Example** (Create an isolated SQLite kit)
- *
- * ```ts
- * import { Int } from "effect/Schema"
- * import { make } from "@beep/effect-drizzle/sqlite"
- *
- * const kit = make({
- *   dialect: "sqlite",
- *   defaultColumns: (sqlite) => ({ version: Int.pipe(sqlite.integer()) })
- * })
- *
- * kit.sqlite.integer // => SQLite integer combinator
- * ```
- *
- * @category factories
- * @since 0.0.0
- */
-export function make<const Defaults extends FieldsInput>(config: SqliteKitConfig<Defaults>): SqliteKit<Defaults>;
-export function make(config: {
-  readonly dialect: "sqlite";
-  readonly defaultColumns: (sqlite: typeof Sqlite) => FieldsInput;
-  readonly defaultExtras?: Table.Callback<FieldsInput> | undefined;
-}): object {
-  const defaults = config.defaultColumns(Sqlite);
+const makeResolved = (defaults: FieldsInput, defaultExtras: Table.Callback<FieldsInput> | undefined): object => {
   assertUniqueSqlNames(
     Object.entries(defaults).map(([key, input]): readonly [string, string] => [
       key,
@@ -203,7 +268,7 @@ export function make(config: {
       const modelExtras = isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
       const annotations = isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
       const extras: Table.Callback<typeof fields> = (columns) => [
-        ...match(fromUndefinedOr(config.defaultExtras), {
+        ...match(fromUndefinedOr(defaultExtras), {
           onNone: () => [],
           onSome: (callback) => callback(columns),
         }),
@@ -214,6 +279,66 @@ export function make(config: {
       ];
       return makeModelClass(identifier, fields, annotations, extras);
     };
+  const extend = (build: (sqlite: SqliteToolkit) => SqliteKitExtension<FieldsInput, FieldsInput>): object => {
+    const extension = build(toolkit);
+    const collision = findFirst(Object.keys(extension.columns), (key) => contains(defaultKeys, key));
+    if (isSome(collision)) {
+      throw ModelInvariantError.make({
+        message: `'${collision.value}' is already a kit default column — extensions cannot shadow it.`,
+        fieldName: collision.value,
+      });
+    }
+    const mergedExtras: Table.Callback<FieldsInput> | undefined = match(fromUndefinedOr(extension.extras), {
+      onNone: () => defaultExtras,
+      onSome:
+        (extensionExtras): Table.Callback<FieldsInput> =>
+        (columns) => [
+          ...match(fromUndefinedOr(defaultExtras), {
+            onNone: () => [],
+            onSome: (callback) => callback(columns),
+          }),
+          ...extensionExtras(columns),
+        ],
+    });
+    return makeResolved(mergeFields(defaults, extension.columns), mergedExtras);
+  };
 
-  return { sqlite: Sqlite, Model, Entity, Table, Repository: makeRepository, schema, toSqliteTable };
+  return { sqlite: toolkit, Model, Entity, extend, Table, Repository: makeRepository, schema, toSqliteTable };
+};
+
+/**
+ * Creates a SQLite-only kit without importing the PostgreSQL implementation.
+ *
+ * **Details**
+ *
+ * The whole configuration lives in one closure receiving the
+ * {@link SqliteToolkit}. The returned kit can be layered with `extend`.
+ *
+ * **Example** (Create an isolated SQLite kit)
+ *
+ * ```ts
+ * import { Int } from "effect/Schema"
+ * import { make } from "@beep/effect-drizzle/sqlite"
+ *
+ * const kit = make((sqlite) => ({
+ *   defaultColumns: { version: Int.pipe(sqlite.integer()) }
+ * }))
+ *
+ * kit.sqlite.integer // => SQLite integer combinator
+ * ```
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export function make<const Defaults extends FieldsInput>(
+  build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>
+): SqliteKit<Defaults>;
+export function make(
+  build: (sqlite: SqliteToolkit) => {
+    readonly defaultColumns: FieldsInput;
+    readonly defaultExtras?: Table.Callback<FieldsInput> | undefined;
+  }
+): object {
+  const config = build(toolkit);
+  return makeResolved(config.defaultColumns, config.defaultExtras);
 }

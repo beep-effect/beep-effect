@@ -6,19 +6,19 @@
  * @since 0.0.0
  */
 
-import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
 import { Worker } from "./Worker.model.ts";
 import type { Principal } from "@beep/shared-domain/entity/Principal";
 import type { CreateWorkerInput } from "./Worker.values.ts";
 
-const WorkerEntity = ProductEntity.make(WorkerId);
+const WorkerPublicId = PublicEntityId.factory(WorkerId);
 const systemPrincipal: Principal = {
   component: "Runtime",
   kind: "System",
 };
 
-const publicIdFor = (id: WorkerId) => WorkerEntity.publicId.fromUnknown(`${WorkerEntity.tableName}_a${id}`);
+const publicIdFor = (id: WorkerId) => WorkerPublicId.fromUnknown(`${WorkerId.tableName}_a${id}`);
 
 /**
  * Creates a new active Worker entity.

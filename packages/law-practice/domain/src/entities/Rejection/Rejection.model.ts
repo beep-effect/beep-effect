@@ -11,7 +11,7 @@ import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { RejectionGround } from "./Rejection.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.model");
-const RejectionEntity = ProductEntity.make(LawPractice.RejectionId);
+const pg = ProductEntity.pg;
 
 /**
  * Rejection entity raised against a claim by an office action.
@@ -52,24 +52,22 @@ const RejectionEntity = ProductEntity.make(LawPractice.RejectionId);
  * @category entities
  * @since 0.0.0
  */
-export class Rejection extends RejectionEntity.Entity<Rejection>(RejectionEntity.tableName)(
+export class Rejection extends ProductEntity.Entity<Rejection>()(LawPractice.RejectionId)(
   {
     claimFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the rejected claim.",
-    }).pipe(RejectionEntity.pg.text(), RejectionEntity.pg.columnName("claim_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("claim_fixture_key")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the rejection.",
-    }).pipe(RejectionEntity.pg.text(), RejectionEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     ground: RejectionGround.annotateKey({
       description: "Statutory rejection ground.",
-    }).pipe(RejectionEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the office action that raised this rejection.",
-    }).pipe(RejectionEntity.pg.text(), RejectionEntity.pg.columnName("office_action_fixture_key")),
-    ...RejectionEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("office_action_fixture_key")),
   },
   $I.annote("Rejection", {
     description: "A statutory rejection raised against a claim by an office action.",
-  }),
-  RejectionEntity.entityExtras
+  })
 ) {}

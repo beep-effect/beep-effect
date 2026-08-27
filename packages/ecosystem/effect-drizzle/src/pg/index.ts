@@ -48,7 +48,15 @@ export type { Bigint, Custom, Integer, Jsonb, Numeric, Serial, Text, Timestamp, 
  * @category type-level
  * @since 0.0.0
  */
-export type { EntityFactory, PgKit, PgKitConfig } from "./kit.ts";
+export type {
+  EntityFactory,
+  PgKit,
+  PgKitConfig,
+  PgKitExtension,
+  PgToolkit,
+  ValidateCollision,
+  ValidateMergedFields,
+} from "./kit.ts";
 /** PostgreSQL schema assembly inference types.
  * @category type-level
  * @since 0.0.0

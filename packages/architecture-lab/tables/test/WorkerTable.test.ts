@@ -35,12 +35,16 @@ describe("Worker table", () => {
       expect(DomainWorker.Worker.sql.tableName).toBe("architecture_lab_worker");
       expect(columns.id.primary).toBe(true);
       expect(columns.displayName.name).toBe("display_name");
-      expect(config.indexes.map((index) => index.config.name)).toEqual([
-        "architecture_lab_worker_org_id_btree_idx",
-        "architecture_lab_worker_source_btree_idx",
-        "architecture_lab_worker_status_lookup_idx",
-        "architecture_lab_worker_public_id_unique_idx",
-      ]);
+      const indexNames = config.indexes.map((index) => index.config.name);
+      expect(indexNames).toHaveLength(4);
+      expect(indexNames).toEqual(
+        expect.arrayContaining([
+          "architecture_lab_worker_org_id_btree_idx",
+          "architecture_lab_worker_source_btree_idx",
+          "architecture_lab_worker_status_lookup_idx",
+          "architecture_lab_worker_public_id_unique_idx",
+        ])
+      );
       expect(
         config.indexes.find((index) => index.config.name === "architecture_lab_worker_public_id_unique_idx")?.config
           .unique
