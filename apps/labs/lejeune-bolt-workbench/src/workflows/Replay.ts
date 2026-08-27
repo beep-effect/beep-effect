@@ -18,16 +18,16 @@ import {
   MUTABLE_CORPUS_DISPOSITION_DATE,
   MutableReviewLedger,
   PROVIDER_RECORDING_SOURCE_TEXT,
-  verifyProviderRecording,
 } from "@/domain/Bundle";
-import { buildNormalizedFixtures } from "@/domain/Normalize";
-import { buildProjectionSnapshot, ProjectionInput } from "@/domain/Projections";
 import { buildReferenceData } from "@/domain/ReferenceData";
-import { evaluateRules } from "@/domain/Rules";
 import { buildFixtureArtifacts } from "@/fixtures/Sources";
+import { buildProjectionSnapshot, ProjectionInput } from "@/runtime/Projections";
+import { buildNormalizedFixtures } from "@/workflows/Normalize";
+import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import { evaluateRules } from "@/workflows/Rules";
 import type { ProviderRecording } from "@/domain/Bundle";
 
-const $I = $LejeuneBoltWorkbenchId.create("domain/Replay");
+const $I = $LejeuneBoltWorkbenchId.create("workflows/Replay");
 
 /**
  * Complete immutable bundle, separate mutable ledger, and offline receipt.
@@ -90,7 +90,7 @@ const hashBundle = Effect.fnUntraced(function* (bundle: ImmutableDemoBundle) {
  * **Example** (Inspect the replay constructor)
  *
  * ```ts
- * import { replayOffline } from "@/domain/Replay"
+ * import { replayOffline } from "@/workflows/Replay"
  *
  * console.log(typeof replayOffline === "function") // true
  * ```

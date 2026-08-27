@@ -224,7 +224,7 @@ const a490HdgResult = (fixture: NormalizedFixture, source: RuleSource): RuleResu
  * **Example** (Inspect the evaluator)
  *
  * ```ts
- * import { evaluateRules } from "@/domain/Rules"
+ * import { evaluateRules } from "@/workflows/Rules"
  *
  * console.log(typeof evaluateRules === "function") // true
  * ```

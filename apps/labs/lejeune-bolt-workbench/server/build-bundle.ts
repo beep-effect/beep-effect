@@ -25,11 +25,11 @@ import {
   ProjectionStoreMetadataFromJsonString,
   ProviderRecordingFromJsonString,
   RetentionAuthorizationFromJsonString,
-  verifyProviderRecording,
 } from "@/domain/Bundle";
-import { makeProjectionLayer, ProjectionLayerOptions } from "@/domain/Projections";
-import { replayOffline } from "@/domain/Replay";
 import { buildFixtureArtifacts, RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
+import { makeProjectionLayer, ProjectionLayerOptions } from "@/runtime/Projections";
+import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import { replayOffline } from "@/workflows/Replay";
 
 const $I = $LejeuneBoltWorkbenchId.create("server/build-bundle");
 const RECORDING_PATH = "src/fixtures/provider-recording.json";

@@ -82,7 +82,7 @@ deduplicated required inventory is:
 
 | Inventory | Source findings | Fix group | Status |
 | --- | --- | --- | --- |
-| `ARCH-001` driver-neutral app-local topology | `ARCH-R2-001` | module topology and imports | queued |
+| `ARCH-001` driver-neutral app-local topology | `ARCH-R2-001` | module topology and imports | fixed; rereview pending |
 | `RETENTION-002` durable effective authority | `ARCH-R2-002`, `LEJ-SCHEMA-R2-005` | retention schema, mutable metadata, builder tests | schema fixed; builder queued |
 | `FS-002` crash-consistent two-root publication contract | `ARCH-R2-003` | publication protocol and recovery tests | queued |
 | `DEAD-001` introduced unused schema exports | `QG-R2-001` | schema/API cleanup | fixed; rereview pending |
@@ -106,3 +106,13 @@ finding reopens the loop; full proof remains an acceptance step, never a waiver.
 - Negative tests now reject rule/source/projection swizzles, incompatible or unproven matched
   assemblies, wrong provider documents and label values, manifest identity/hash/reference
   drift, and retention records that do not extend both their authorization date and the cutoff.
+
+### Architecture fixer proof
+
+- `bun run beep architecture` passed before the new app-local role paths were created.
+- Driver-backed projections moved to `src/runtime`; normalization, rule evaluation, replay, and
+  provider-recording verification moved to `src/workflows`; domain retains schemas and pure
+  invariants.
+- The lab audit passed with 28 Biome files and the same three test files/19 tests.
+- Scans found zero driver, SQL, Layer, compression, or fixture imports under `src/domain`, and
+  zero stale imports from the four former domain workflow paths.

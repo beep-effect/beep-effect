@@ -273,7 +273,7 @@ const normalizeRfqB = Effect.fnUntraced(function* (sources: ReadonlyArray<Source
  * **Example** (Build both normalized fixtures)
  *
  * ```ts
- * import { buildNormalizedFixtures } from "@/domain/Normalize"
+ * import { buildNormalizedFixtures } from "@/workflows/Normalize"
  *
  * console.log(typeof buildNormalizedFixtures === "function") // true
  * ```

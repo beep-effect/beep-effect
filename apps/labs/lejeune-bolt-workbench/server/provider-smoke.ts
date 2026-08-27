@@ -31,10 +31,10 @@ import {
   ProviderCandidateListFromJsonString,
   ProviderRecording,
   ProviderRecordingFromJsonString,
-  verifyProviderRecording,
 } from "@/domain/Bundle";
 import { IsoTimestamp } from "@/domain/Ontology";
 import { RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
+import { verifyProviderRecording } from "@/workflows/ProviderRecording";
 
 const $I = $LejeuneBoltWorkbenchId.create("server/provider-smoke");
 const RECORDING_PATH = "src/fixtures/provider-recording.json";

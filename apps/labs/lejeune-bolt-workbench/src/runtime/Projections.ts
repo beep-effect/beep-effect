@@ -24,7 +24,7 @@ import type { DuckDbError } from "@beep/duckdb";
 import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";
 import type * as SqlError from "effect/unstable/sql/SqlError";
 
-const $I = $LejeuneBoltWorkbenchId.create("domain/Projections");
+const $I = $LejeuneBoltWorkbenchId.create("runtime/Projections");
 const LEJEUNE_ONTOLOGY_NAMESPACE = "https://beep.dev/lejeune/ontology/";
 const RDF_TYPE = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
 const OWL_CLASS = Rdf.makeNamedNode("http://www.w3.org/2002/07/owl#Class");
@@ -68,7 +68,7 @@ CROSS JOIN corpus c`,
  * **Example** (Inspect the rules field)
  *
  * ```ts
- * import { ProjectionInput } from "@/domain/Projections"
+ * import { ProjectionInput } from "@/runtime/Projections"
  *
  * console.log(ProjectionInput.fields.rules !== undefined) // true
  * ```
@@ -307,7 +307,7 @@ SELECT ?class WHERE { ?class rdf:type owl:Class } ORDER BY ?class`,
  * **Example** (Inspect the projection Effect)
  *
  * ```ts
- * import { buildProjectionSnapshot } from "@/domain/Projections"
+ * import { buildProjectionSnapshot } from "@/runtime/Projections"
  *
  * console.log(typeof buildProjectionSnapshot === "function") // true
  * ```
@@ -365,7 +365,7 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
  * **Example** (Construct an in-memory layer)
  *
  * ```ts
- * import { makeProjectionLayer } from "@/domain/Projections"
+ * import { makeProjectionLayer } from "@/runtime/Projections"
  *
  * console.log(makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" })))
  * ```

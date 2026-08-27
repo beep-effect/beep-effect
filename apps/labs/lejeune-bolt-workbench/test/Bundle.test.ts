@@ -22,23 +22,23 @@ import {
   ProviderRecordingFromJsonString,
   RetentionAuthorization,
   RuleResult,
-  verifyProviderRecording,
 } from "@/domain/Bundle";
-import { buildNormalizedFixtures } from "@/domain/Normalize";
 import { IsoDate, IsoTimestamp, OntologyClassName, ProductVariant } from "@/domain/Ontology";
+import { buildReferenceData } from "@/domain/ReferenceData";
+import { FrozenFixtureManifest, FrozenSourceHash } from "@/fixtures/FixtureManifest";
+import fixtureManifestJson from "@/fixtures/fixture-manifest.json";
+import providerRecordingJson from "@/fixtures/provider-recording.json?raw";
+import { buildFixtureArtifacts } from "@/fixtures/Sources";
 import {
   buildProjectionSnapshot,
   makeProjectionLayer,
   ProjectionInput,
   ProjectionLayerOptions,
-} from "@/domain/Projections";
-import { buildReferenceData } from "@/domain/ReferenceData";
-import { replayOffline } from "@/domain/Replay";
-import { evaluateRules } from "@/domain/Rules";
-import { FrozenFixtureManifest, FrozenSourceHash } from "@/fixtures/FixtureManifest";
-import fixtureManifestJson from "@/fixtures/fixture-manifest.json";
-import providerRecordingJson from "@/fixtures/provider-recording.json?raw";
-import { buildFixtureArtifacts } from "@/fixtures/Sources";
+} from "@/runtime/Projections";
+import { buildNormalizedFixtures } from "@/workflows/Normalize";
+import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import { replayOffline } from "@/workflows/Replay";
+import { evaluateRules } from "@/workflows/Rules";
 import type {
   IsoDate as IsoDateValue,
   IsoTimestamp as IsoTimestampValue,
