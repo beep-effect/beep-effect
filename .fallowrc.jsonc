@@ -166,6 +166,13 @@
     "**/plugins.ts"
   ],
   "ignoreDependencies": [
+    // Impeccable's static HTML detector dynamically imports these packages from
+    // vendored skill directories excluded above. They must remain installed even
+    // though Fallow intentionally does not traverse their consumers.
+    "css-select",
+    "css-tree",
+    "domutils",
+    "htmlparser2",
     // brace-expansion, fast-uri, hono, nanoid: root `dependencies` entries that exist solely to
     // back the security-pin `overrides` in package.json; nothing imports them at root.
     "brace-expansion",
