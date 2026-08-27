@@ -1958,6 +1958,18 @@
       "@beep/brand/react": [
         "./packages/foundation/ui-system/brand/src/react.tsx"
       ],
+      "@beep/shared-domain/entity/AuditEntity": [
+        "./packages/shared/domain/src/entity/AuditEntity.ts"
+      ],
+      "@beep/shared-domain/entity/BaseEntity": [
+        "./packages/shared/domain/src/entity/BaseEntity.ts"
+      ],
+      "@beep/shared-domain/entity/EntityKit": [
+        "./packages/shared/domain/src/entity/EntityKit.ts"
+      ],
+      "@beep/shared-domain/entity/OrgEntity": [
+        "./packages/shared/domain/src/entity/OrgEntity.ts"
+      ],
       "@beep/schema/ArrayBuffer": [
         "./packages/foundation/modeling/schema/src/ArrayBuffer.ts"
       ],

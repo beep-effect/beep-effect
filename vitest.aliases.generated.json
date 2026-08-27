@@ -241,11 +241,23 @@
   "@beep/workspace-domain/values/CandidateLifecycle": [
     "./packages/workspace/domain/src/values/CandidateLifecycle/index.ts"
   ],
+  "@beep/shared-domain/entity/AuditEntity": [
+    "./packages/shared/domain/src/entity/AuditEntity.ts"
+  ],
+  "@beep/shared-domain/entity/BaseEntity": [
+    "./packages/shared/domain/src/entity/BaseEntity.ts"
+  ],
   "@beep/shared-domain/entity/EntityId": [
     "./packages/shared/domain/src/entity/EntityId.ts"
   ],
+  "@beep/shared-domain/entity/EntityKit": [
+    "./packages/shared/domain/src/entity/EntityKit.ts"
+  ],
   "@beep/shared-domain/entity/EntityRef": [
     "./packages/shared/domain/src/entity/EntityRef.ts"
+  ],
+  "@beep/shared-domain/entity/OrgEntity": [
+    "./packages/shared/domain/src/entity/OrgEntity.ts"
   ],
   "@beep/shared-domain/entity/Principal": [
     "./packages/shared/domain/src/entity/Principal.ts"

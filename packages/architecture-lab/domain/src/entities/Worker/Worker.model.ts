@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
 import { WorkerStatus } from "./Worker.values.ts";
 
 const $I = $ArchitectureLabDomainId.create("entities/Worker/Worker.model");
-const WorkerEntity = ProductEntity.make(WorkerId);
+const pg = ProductEntity.pg;
 
 /**
  * Persisted Worker entity used by WorkItem assignment flows.
@@ -46,24 +46,19 @@ const WorkerEntity = ProductEntity.make(WorkerId);
  * @category entities
  * @since 0.0.0
  */
-export class Worker extends WorkerEntity.Entity<Worker>(WorkerEntity.tableName)(
+export class Worker extends ProductEntity.Entity<Worker>()(WorkerId)(
   {
     displayName: S.NonEmptyString.annotateKey({
       description: "Display name shown for the Worker in assignment flows.",
-    }).pipe(WorkerEntity.pg.text(), WorkerEntity.pg.columnName("display_name")),
+    }).pipe(pg.text(), pg.columnName("display_name")),
     status: WorkerStatus.annotateKey({
       description: "Lifecycle status for the Worker.",
-    }).pipe(WorkerEntity.pg.text()),
-    ...WorkerEntity.identityFields,
+    }).pipe(pg.text(), pg.index({ name: "architecture_lab_worker_status_lookup_idx" })),
   },
   $I.annote("Worker", {
     title: "Worker",
     description: "Canonical architecture lab persisted entity used to prove entity archetype generation.",
-  }),
-  (columns) => [
-    WorkerEntity.Table.index("architecture_lab_worker_status_lookup_idx", [columns.status]),
-    ...WorkerEntity.entityExtras(columns),
-  ]
+  })
 ) {
   static readonly fromUnknown = S.decodeUnknownSync(Worker);
 }

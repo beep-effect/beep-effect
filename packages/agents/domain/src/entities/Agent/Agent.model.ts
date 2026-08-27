@@ -13,7 +13,7 @@ import { AgentFixtureKey, AgentName, SkillFixtureKey } from "../Fixture.values.t
 import { AgentMode } from "./Agent.values.ts";
 
 const $I = $AgentsDomainId.create("entities/Agent/Agent.model");
-const AgentEntity = ProductEntity.make(Agents.AgentId);
+const pg = ProductEntity.pg;
 
 /**
  * Persisted agent record that binds a fixture key to one skill fixture and
@@ -30,18 +30,16 @@ const AgentEntity = ProductEntity.make(Agents.AgentId);
  * @category entities
  * @since 0.0.0
  */
-export class Agent extends AgentEntity.Entity<Agent>(AgentEntity.tableName)(
+export class Agent extends ProductEntity.Entity<Agent>()(Agents.AgentId)(
   {
-    fixtureKey: AgentFixtureKey.pipe(AgentEntity.pg.text(), AgentEntity.pg.columnName("fixture_key")),
-    mode: AgentMode.pipe(AgentEntity.pg.text()),
-    name: AgentName.pipe(AgentEntity.pg.text()),
-    skillFixtureKey: SkillFixtureKey.pipe(AgentEntity.pg.text(), AgentEntity.pg.columnName("skill_fixture_key")),
-    ...AgentEntity.identityFields,
+    fixtureKey: AgentFixtureKey.pipe(pg.text(), pg.columnName("fixture_key")),
+    mode: AgentMode.pipe(pg.text()),
+    name: AgentName.pipe(pg.text()),
+    skillFixtureKey: SkillFixtureKey.pipe(pg.text(), pg.columnName("skill_fixture_key")),
   },
   $I.annote("Agent", {
     description: "Persisted agent record that binds a fixture key to one skill fixture and execution mode.",
-  }),
-  AgentEntity.entityExtras
+  })
 ) {
   static readonly toTagged = () =>
     Agent.fields.mode

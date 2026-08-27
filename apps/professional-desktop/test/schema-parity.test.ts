@@ -1,5 +1,6 @@
 import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import {
+  GetVaultSyncStatusPayload,
   IntakeDroppedFilePayload,
   MarkVaultSyncConflictReviewedPayload,
   VaultSyncRpcs,
@@ -35,6 +36,8 @@ const decodeIntakeBatchId = S.decodeUnknownEffect(IntakeBatchId);
 const encodeDroppedDocumentInput = S.encodeUnknownEffect(DroppedDocumentInput);
 const encodeIntakeDroppedFilePayload = S.encodeUnknownEffect(IntakeDroppedFilePayload);
 const encodeVaultSyncWorkspacePayload = S.encodeUnknownEffect(VaultSyncWorkspacePayload);
+const decodeGetVaultSyncStatusPayload = S.decodeUnknownEffect(GetVaultSyncStatusPayload);
+const encodeGetVaultSyncStatusPayload = S.encodeUnknownEffect(GetVaultSyncStatusPayload);
 const decodeMarkVaultSyncConflictReviewedPayload = S.decodeUnknownEffect(MarkVaultSyncConflictReviewedPayload);
 const encodeMarkVaultSyncConflictReviewedPayload = S.encodeUnknownEffect(MarkVaultSyncConflictReviewedPayload);
 const decodeVaultSyncStatus = S.decodeUnknownEffect(VaultSyncStatus);
@@ -160,6 +163,15 @@ describe("@beep/professional-desktop schema parity", () => {
       const reviewed = yield* decodeMarkVaultSyncConflictReviewedPayload(reviewedWire);
       expect(yield* encodeMarkVaultSyncConflictReviewedPayload(reviewed)).toStrictEqual(reviewedWire);
 
+      const statusRequestWire = { forceProbe: true, workspaceId: 1 };
+      const statusRequest = yield* decodeGetVaultSyncStatusPayload(statusRequestWire);
+      expect(yield* encodeGetVaultSyncStatusPayload(statusRequest)).toStrictEqual(statusRequestWire);
+
+      // An older app omits forceProbe entirely; the sidecar must decode it as
+      // the cached-read default, not reject the request.
+      const legacyStatusRequest = yield* decodeGetVaultSyncStatusPayload({ workspaceId: 1 });
+      expect(legacyStatusRequest.forceProbe).toBe(false);
+
       const bootstrapStatusWire = {
         conflictItems: 0,
         connected: false,
@@ -170,6 +182,7 @@ describe("@beep/professional-desktop schema parity", () => {
         failedOperations: 0,
         openConflicts: 0,
         pendingItems: 0,
+        probedAt: null,
         provider: "box",
         queuedOperations: 0,
       };
@@ -187,17 +200,20 @@ describe("@beep/professional-desktop schema parity", () => {
         failedOperations: 2,
         openConflicts: 1,
         pendingItems: 4,
+        probedAt: "2026-08-26T12:00:00.000Z",
         provider: "box",
         queuedOperations: 5,
       };
       const activeStatus = yield* decodeVaultSyncStatus(activeStatusWire);
       expect(yield* encodeVaultSyncStatus(activeStatus)).toStrictEqual(activeStatusWire);
 
-      // An older sidecar omits disconnectReason entirely; the status must
-      // still decode (missing key -> none) instead of going unavailable.
-      const { disconnectReason: _dropped, ...legacyStatusWire } = bootstrapStatusWire;
+      // An older sidecar omits disconnectReason and probedAt entirely; the
+      // status must still decode (missing key -> none) instead of going
+      // unavailable.
+      const { disconnectReason: _dropped, probedAt: _droppedProbedAt, ...legacyStatusWire } = bootstrapStatusWire;
       const legacyStatus = yield* decodeVaultSyncStatus(legacyStatusWire);
       expect(O.isNone(legacyStatus.disconnectReason)).toBe(true);
+      expect(O.isNone(legacyStatus.probedAt)).toBe(true);
     })
   );
 
@@ -226,6 +242,7 @@ describe("@beep/professional-desktop schema parity", () => {
     assertSchemaEncodeDecodeRoundTrip(ProfessionalDesktopMigrationOptions, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(DerivedThreadTitle, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(VaultSyncWorkspacePayload, { numRuns: 25 });
+    assertSchemaEncodeDecodeRoundTrip(GetVaultSyncStatusPayload, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(MarkVaultSyncConflictReviewedPayload, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(VaultSyncStatus, { numRuns: 25 });
   });

@@ -11,7 +11,7 @@ import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fie
 import { LegalClientStatus } from "./LegalClient.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.model");
-const LegalClientEntity = ProductEntity.make(LawPractice.LegalClientId);
+const pg = ProductEntity.pg;
 
 /**
  * Legal client entity that owns law-practice contacts and matters.
@@ -45,21 +45,19 @@ const LegalClientEntity = ProductEntity.make(LawPractice.LegalClientId);
  * @category entities
  * @since 0.0.0
  */
-export class LegalClient extends LegalClientEntity.Entity<LegalClient>(LegalClientEntity.tableName)(
+export class LegalClient extends ProductEntity.Entity<LegalClient>()(LawPractice.LegalClientId)(
   {
     displayName: LawPracticeText.annotateKey({
       description: "Human-readable legal client display name.",
-    }).pipe(LegalClientEntity.pg.text(), LegalClientEntity.pg.columnName("display_name")),
+    }).pipe(pg.text(), pg.columnName("display_name")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the legal client.",
-    }).pipe(LegalClientEntity.pg.text(), LegalClientEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     status: LegalClientStatus.annotateKey({
       description: "Legal client lifecycle status.",
-    }).pipe(LegalClientEntity.pg.text()),
-    ...LegalClientEntity.identityFields,
+    }).pipe(pg.text()),
   },
   $I.annote("LegalClient", {
     description: "Legal client entity that owns law-practice contacts and matters.",
-  }),
-  LegalClientEntity.entityExtras
+  })
 ) {}

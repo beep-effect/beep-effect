@@ -1114,6 +1114,31 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           );
         })
       ),
+      // defects bypass the typed channel above entirely: without this tap a
+      // died turn clears no streaming state, sets no turnErrorAtom, and the
+      // send disappears with the composer already emptied. Mirror the failure
+      // policy: surface the error, and give the prompt back only when the
+      // server provably never persisted it.
+      Effect.tapDefect(
+        Effect.fnUntraced(function* (defect) {
+          ctx.set(streamingTurnAtom, O.none());
+          ctx.set(turnErrorAtom, O.some(ChatActionError.new("The reply failed unexpectedly before completing.")));
+          const requestStatus = yield* pollTurnRequestStatus;
+          if (O.contains(requestStatus, "not_persisted")) {
+            ctx.set(draftAtoms(turn.threadId), O.some(turn.content));
+            ctx.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
+          }
+          yield* Metric.update(Metric.withAttributes(turnFailed, { kind: turn._tag }), 1);
+          yield* logRedactedCause(
+            Cause.die(defect),
+            LogRedactedCauseOptions.make({
+              message: "assistant turn defected",
+              level: "Error",
+              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+            })
+          );
+        })
+      ),
       // user-cancelled (Atom.Interrupt write): drop the partial turn and
       // refetch — the user message persisted before the stream started. The
       // Interrupt write refreshes the fn node BEFORE this fiber unwinds, so

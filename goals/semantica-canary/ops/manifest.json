@@ -3,14 +3,14 @@
   "initiative": {
     "id": "semantica-canary",
     "title": "Semantica Canary",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-24",
-    "updated": "2026-08-25",
+    "updated": "2026-08-26",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-canary",
-  "lifecycle": "active",
-  "statusNote": "P1 Scaffold nearly complete: lab mint (PR #819) + F1 fixtures and the W1 manifest (history/p1-w1-manifest.md); gold/v1 rides its own gold-proposer PR before the first C0 slice (ids frozen from the manifest order, D-C0-9).",
+  "lifecycle": "paused",
+  "statusNote": "Paused at P2 C0 after the Extraction candidate and single retry failed the frozen relation-paper slate. Review invalidated two apparent passes that relied on ambiguous first-occurrence entity anchors; no review-safe vertical slice passed. Extraction is parked and the source exploration has returned to decompose; see history/p2-c0-probe-breaker.md.",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -53,12 +53,12 @@
     {
       "id": "P1",
       "name": "Scaffold",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "C0",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

@@ -16,14 +16,13 @@ import {
 import { Model as EffectModel } from "effect/unstable/schema";
 import type { Repository } from "@beep/effect-drizzle";
 
-const kit = make({
-  dialect: "pg",
-  defaultColumns: (pg) => ({
+const kit = make("pg", (pg) => ({
+  defaultColumns: {
     createdAt: EffectModel.DateTimeInsert.pipe(pg.timestamp()),
     updatedAt: EffectModel.DateTimeUpdate.pipe(pg.timestamp()),
     rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version()),
-  }),
-});
+  },
+}));
 
 const { Entity, Model, pg, schema, toPgTable } = kit;
 

@@ -7,6 +7,7 @@
 import { $LangExtractId } from "@beep/identity";
 import { Context } from "effect";
 import type { LangExtractError, LangExtractRequest, LangExtractResult } from "@beep/langextract/Extraction";
+import type * as Duration from "effect/Duration";
 import type * as Effect from "effect/Effect";
 
 const $I = $LangExtractId.create("Service");
@@ -146,4 +147,32 @@ export class LangExtractService extends Context.Service<LangExtractService, Lang
  */
 export class LangExtractRemotePolicy extends Context.Service<LangExtractRemotePolicy, LangExtractRemotePolicyShape>()(
   $I`LangExtractRemotePolicy`
+) {}
+
+/**
+ * Optional deadline for one language-model generation inside
+ * {@link LangExtractService}.
+ *
+ * **Details**
+ *
+ * Absence of this service keeps the package default of thirty seconds, which
+ * suits short passages. Callers extracting from full documents provide a
+ * longer deadline; the timeout still fails typed as
+ * `model-generation-timeout`.
+ *
+ * **Example** (Provide a document-scale generation deadline)
+ *
+ * ```ts
+ * import { LangExtractGenerationTimeout } from "@beep/langextract/Service"
+ * import { Duration, Layer } from "effect"
+ *
+ * const TimeoutLayer = Layer.succeed(LangExtractGenerationTimeout, Duration.minutes(15))
+ * console.log(Layer.isLayer(TimeoutLayer)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class LangExtractGenerationTimeout extends Context.Service<LangExtractGenerationTimeout, Duration.Duration>()(
+  $I`LangExtractGenerationTimeout`
 ) {}

@@ -86,25 +86,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "jsx": "react-jsx",
-    "paths": {
-      "effect-claudecode": ["../../claudecode/index.ts"],
-      "@beep/scratchpad/yaml": ["../../yaml/index.ts"],
-      "@beep/scratchpad/jsonc": ["../../jsonc/index.ts"],
-      "@beep/scratchpad/jsonl": ["../../jsonl/index.ts"],
-      "@beep/scratchpad/toml": ["../../toml/index.ts"],
-      "@beep/scratchpad/glob": ["../../glob/index.ts"],
-      "@beep/scratchpad/semver": ["../../semver/index.ts"],
-      "@beep/scratchpad/schemastore": ["../../schemastore/index.ts"],
-      "@beep/scratchpad/memfs": ["../../memfs/index.ts"],
-      "@beep/scratchpad/codemode": ["../../codemode/index.ts"],
-      "@beep/scratchpad/beep-docs": ["../../beep-docs/api-reference/index.ts"],
-      "@beep/identity": [
-        "../../../packages/foundation/modeling/identity/src/index.ts"
-      ],
-      "@beep/schema": [
-        "../../../packages/foundation/modeling/schema/src/index.ts"
-      ],
-      "@beep/utils": ["../../../packages/foundation/modeling/utils/src/index.ts"]
-    }
+    "paths": { "effect-claudecode": ["../../claudecode/index.ts"] }
   }
 }

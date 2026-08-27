@@ -286,7 +286,9 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
           viewer mounts inside arbitrary (often flex) message layouts. */}
       <div className="relative">
         <RichTextPlugin
-          contentEditable={<ContentEditable className={className ?? "relative block px-1 focus:outline-none"} />}
+          contentEditable={
+            <ContentEditable aria-label="Document" className={className ?? "relative block px-1 focus:outline-none"} />
+          }
           ErrorBoundary={LexicalErrorBoundary}
         />
       </div>

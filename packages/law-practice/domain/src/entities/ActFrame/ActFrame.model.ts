@@ -29,7 +29,7 @@ import { SourceNormRef } from "../../values/SourceNormRef/index.ts";
 import { ActFramePreconditions, ActFrameSlots, PositionDerivation, PositionTransitions } from "./ActFrame.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/ActFrame/ActFrame.model");
-const ActFrameEntity = ProductEntity.make(LawPractice.ActFrameId);
+const pg = ProductEntity.pg;
 
 /**
  * One recorded reading of a norm as an act that moves legal positions.
@@ -82,36 +82,34 @@ const ActFrameEntity = ProductEntity.make(LawPractice.ActFrameId);
  * @category entities
  * @since 0.0.0
  */
-export class ActFrame extends ActFrameEntity.Entity<ActFrame>(ActFrameEntity.tableName)(
+export class ActFrame extends ProductEntity.Entity<ActFrame>()(LawPractice.ActFrameId)(
   {
     act: LegalActContent.annotateKey({
       description: "The act this frame describes, carrying its act-or-omission polarity.",
-    }).pipe(ActFrameEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     creates: PositionTransitions.annotateKey({
       description: "Positions this act brings into being, each between two of the frame's slots.",
-    }).pipe(ActFrameEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     derivationKind: PositionDerivation.annotateKey({
       description: "Ways this act derives positions, as a set because one act may create and extinguish at once.",
-    }).pipe(ActFrameEntity.pg.jsonb(), ActFrameEntity.pg.columnName("derivation_kind")),
+    }).pipe(pg.jsonb(), pg.columnName("derivation_kind")),
     interpreter: Principal.annotateKey({
       description: "Principal whose attributed reading of the norm this frame records.",
-    }).pipe(ActFrameEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     preconditions: ActFramePreconditions.annotateKey({
       description: "Conditions the frame states, each able to require a fact's presence or its absence.",
-    }).pipe(ActFrameEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     slots: ActFrameSlots.annotateKey({
       description: "Named places a party fills when the act is exercised; one of them is the actor.",
-    }).pipe(ActFrameEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     sourceNorm: SourceNormRef.annotateKey({
       description: "Opaque reference to the norm this frame is a reading of.",
-    }).pipe(ActFrameEntity.pg.jsonb(), ActFrameEntity.pg.columnName("source_norm")),
+    }).pipe(pg.jsonb(), pg.columnName("source_norm")),
     terminates: PositionTransitions.annotateKey({
       description: "Positions this act ends, each between two of the frame's slots.",
-    }).pipe(ActFrameEntity.pg.jsonb()),
-    ...ActFrameEntity.identityFields,
+    }).pipe(pg.jsonb()),
   },
   $I.annote("ActFrame", {
     description: "One recorded reading of a norm as an act that creates, alters, or extinguishes legal positions.",
-  }),
-  ActFrameEntity.entityExtras
+  })
 ) {}

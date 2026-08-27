@@ -79,11 +79,11 @@ export const VaultSyncHandlersLive = VaultSyncRpcs.toLayer(
     const workspaceVaultStore = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
     const engine = yield* VaultSyncEngine;
     return VaultSyncRpcs.of({
-      GetVaultSyncStatus: ({ workspaceId }) =>
+      GetVaultSyncStatus: ({ forceProbe, workspaceId }) =>
         observeSyncOperation(
           "get_status",
           engine
-            .status(VaultSyncStatusInput.make({ workspaceId }))
+            .status(VaultSyncStatusInput.make({ forceProbe, workspaceId }))
             .pipe(Effect.catch(toVaultSyncActionError("GetVaultSyncStatus")))
         ),
       ListVaultSyncConflicts: ({ workspaceId }) =>

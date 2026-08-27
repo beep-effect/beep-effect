@@ -38,7 +38,7 @@
   gap: 6px;
   padding: 3px 8px;
   border-radius: calc(var(--radius, 8px) - 3px);
-  color: var(--muted-foreground);
+  color: color-mix(in oklch, var(--foreground) 86%, var(--muted));
   cursor: default;
   white-space: nowrap;
 }
@@ -296,7 +296,7 @@
 }
 
 .desktop-dock section[data-group-id] > [role="tablist"] [role="tab"] button {
-  opacity: 0.35;
+  opacity: 0.8;
 }
 
 .desktop-dock section[data-group-id] > [role="tablist"] [role="tab"]:hover button,

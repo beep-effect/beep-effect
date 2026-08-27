@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import { WorkspaceVaultRootPath } from "./Workspace.values.ts";
 
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.model");
-const WorkspaceEntity = ProductEntity.make(WorkspaceIdentity.WorkspaceId);
+const pg = ProductEntity.pg;
 
 /**
  * User or team work area.
@@ -28,32 +28,30 @@ const WorkspaceEntity = ProductEntity.make(WorkspaceIdentity.WorkspaceId);
  * @category models
  * @since 0.0.0
  */
-export class Workspace extends WorkspaceEntity.Entity<Workspace>(WorkspaceEntity.tableName)(
+export class Workspace extends ProductEntity.Entity<Workspace>()(WorkspaceIdentity.WorkspaceId)(
   {
     fixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable workspace fixture key used to seed and reference the workspace.",
-    }).pipe(WorkspaceEntity.pg.text(), WorkspaceEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     name: S.NonEmptyString.annotateKey({
       description: "Human-readable workspace display name.",
-    }).pipe(WorkspaceEntity.pg.text()),
+    }).pipe(pg.text()),
     organizationFixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the owning organization.",
-    }).pipe(WorkspaceEntity.pg.text(), WorkspaceEntity.pg.columnName("organization_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("organization_fixture_key")),
     ownerPrincipalFixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the owner principal.",
-    }).pipe(WorkspaceEntity.pg.text(), WorkspaceEntity.pg.columnName("owner_principal_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("owner_principal_fixture_key")),
     vaultRootPath: S.OptionFromNullOr(WorkspaceVaultRootPath)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Configured local filesystem vault root, absent until onboarding completes.",
       })
-      .pipe(WorkspaceEntity.pg.text(), WorkspaceEntity.pg.columnName("vault_root_path")),
-    ...WorkspaceEntity.identityFields,
+      .pipe(pg.text(), pg.columnName("vault_root_path")),
   },
   $I.annote("Workspace", {
     description: "User or team work area participating in a runtime scenario.",
-  }),
-  WorkspaceEntity.entityExtras
+  })
 ) {
   static readonly decodeSync = S.decodeSync(Workspace);
 }

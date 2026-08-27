@@ -11,7 +11,7 @@ import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/ContextPacket/ContextPacket.model");
-const ContextPacketEntity = ProductEntity.make(Workspace.ContextPacketId);
+const pg = ProductEntity.pg;
 
 /**
  * Bounded context packet returned through the SDK facade.
@@ -27,21 +27,19 @@ const ContextPacketEntity = ProductEntity.make(Workspace.ContextPacketId);
  * @category models
  * @since 0.0.0
  */
-export class ContextPacket extends ContextPacketEntity.Entity<ContextPacket>(ContextPacketEntity.tableName)(
+export class ContextPacket extends ProductEntity.Entity<ContextPacket>()(Workspace.ContextPacketId)(
   {
     fixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the context packet.",
-    }).pipe(ContextPacketEntity.pg.text(), ContextPacketEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     scenarioFixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the scenario that produced the packet.",
-    }).pipe(ContextPacketEntity.pg.text(), ContextPacketEntity.pg.columnName("scenario_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("scenario_fixture_key")),
     snapshot: UnknownRecord.annotateKey({
       description: "Opaque context snapshot returned through the SDK facade.",
-    }).pipe(ContextPacketEntity.pg.jsonb()),
-    ...ContextPacketEntity.identityFields,
+    }).pipe(pg.jsonb()),
   },
   $I.annote("ContextPacket", {
     description: "Bounded context packet returned through the SDK facade.",
-  }),
-  ContextPacketEntity.entityExtras
+  })
 ) {}

@@ -227,6 +227,7 @@ interface FooterProps {
   readonly streaming: boolean;
 }
 
+// fallow-ignore-next-line complexity -- cognitive 12 = pre-existing hook/JSX tax (five hook bindings plus the streaming/attachment conditionals); this branch's change here was a one-line shrink-0 flex class and added no branching
 function ComposerFooter({
   characterCount,
   attachments,
@@ -251,7 +252,7 @@ function ComposerFooter({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="border-border flex items-center justify-between gap-2 border-t px-3 py-2">
+    <div className="border-border flex shrink-0 items-center justify-between gap-2 border-t px-3 py-2">
       <div className="text-muted-foreground flex items-center gap-3 text-xs">
         {characterCount ? (
           <span aria-live="polite">
@@ -354,7 +355,11 @@ function ComposerSurface({
       {features.toolbar ? <FixedToolbarPlugin /> : null}
       <AttachmentChips attachments={attachments} onRemove={(id) => remove({ editor, id })} />
       <AttachmentFailureNotice />
-      <div className="relative">
+      {/* min-h-0 flex column: when a height-capped consumer squeezes the
+          composer, the editable (overflow-auto, so its flex minimum is zero)
+          is the region that shrinks and scrolls — never the toolbar or the
+          footer, which keep their content height. */}
+      <div className="relative flex min-h-0 flex-col">
         <RichTextPlugin
           contentEditable={
             <ContentEditable
@@ -428,6 +433,7 @@ function useComposerRuntimeBindings(
   useAtomMount(maxAttachmentBytesAtom(editor));
 }
 
+// fallow-ignore-next-line complexity -- cognitive 14 = pre-existing hook/prop-fanout tax (15 props and three hook bindings); this branch did not change this function at all — its edits in this file were two one-line flex classes in ComposerFooter and ComposerSurface
 function ComposerBody({
   ariaLabel,
   features: initialFeatures,

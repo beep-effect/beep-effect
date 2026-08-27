@@ -145,48 +145,50 @@ const VaultOnboarding = ({
   readonly actions: DocumentIntakeSurface["actions"];
   readonly selection: VaultSelectionStateType;
 }): JSX.Element => (
-  <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-    <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
-      <h1 className="text-lg font-semibold">Choose workspace vault</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
-      {VaultSelectionState.match(selection, {
-        idle: () => (
-          <VaultChooseRow disabled={false} label="Choose folder" onChoose={actions.chooseVault} status={O.none()} />
-        ),
-        choosing: () => (
-          <VaultChooseRow
-            disabled
-            label="Choosing folder…"
-            onChoose={actions.chooseVault}
-            status={O.some("Opening folder picker")}
-          />
-        ),
-        manual: ({ draftPath, message }) => (
-          <ManualVaultPathForm
-            draftPath={draftPath}
-            message={message}
-            onCancel={actions.cancelManualVaultPath}
-            onSubmit={actions.submitManualVaultPath}
-          />
-        ),
-        saving: () => (
-          <VaultChooseRow
-            disabled
-            label="Saving…"
-            onChoose={actions.chooseVault}
-            status={O.some("Saving workspace vault")}
-          />
-        ),
-        failed: ({ message }) => (
-          <VaultChooseRow
-            disabled={false}
-            label="Choose folder"
-            onChoose={actions.chooseVault}
-            status={O.some(message)}
-          />
-        ),
-      })}
-    </section>
+  <div className="h-full min-h-0 w-full overflow-y-auto bg-background text-foreground">
+    <div className="flex min-h-full w-full items-center justify-center p-4">
+      <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
+        <h1 className="text-lg font-semibold">Choose workspace vault</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
+        {VaultSelectionState.match(selection, {
+          idle: () => (
+            <VaultChooseRow disabled={false} label="Choose folder" onChoose={actions.chooseVault} status={O.none()} />
+          ),
+          choosing: () => (
+            <VaultChooseRow
+              disabled
+              label="Choosing folder…"
+              onChoose={actions.chooseVault}
+              status={O.some("Opening folder picker")}
+            />
+          ),
+          manual: ({ draftPath, message }) => (
+            <ManualVaultPathForm
+              draftPath={draftPath}
+              message={message}
+              onCancel={actions.cancelManualVaultPath}
+              onSubmit={actions.submitManualVaultPath}
+            />
+          ),
+          saving: () => (
+            <VaultChooseRow
+              disabled
+              label="Saving…"
+              onChoose={actions.chooseVault}
+              status={O.some("Saving workspace vault")}
+            />
+          ),
+          failed: ({ message }) => (
+            <VaultChooseRow
+              disabled={false}
+              label="Choose folder"
+              onChoose={actions.chooseVault}
+              status={O.some(message)}
+            />
+          ),
+        })}
+      </section>
+    </div>
   </div>
 );
 
@@ -297,8 +299,15 @@ const IntakeWorkspaceSurface = ({
 );
 
 /**
- * Full-screen boundary that onboards a workspace vault and routes DOM events
- * into runtime-owned document intake actions.
+ * Full-screen boundary that routes DOM drag-and-drop events into
+ * runtime-owned document intake actions.
+ *
+ * **Details**
+ *
+ * The boundary never withholds its children: when no workspace vault is
+ * configured the intake affordances (file picker, drop overlay) stay inert,
+ * while vault onboarding itself is scoped to the vault surfaces through
+ * {@link VaultOnboardingGate}.
  *
  * **Example** (Create React Element)
  *
@@ -316,9 +325,41 @@ const IntakeWorkspaceSurface = ({
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
   const surface = useAtomValue(documentIntakeSurfaceAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
+  return <IntakeWorkspaceSurface surface={surface}>{children}</IntakeWorkspaceSurface>;
+}
+
+/**
+ * Vault-scoped onboarding gate: renders the choose-vault card until a
+ * workspace vault is configured, then renders its children.
+ *
+ * **Details**
+ *
+ * Wrap only the surfaces that genuinely need a vault (vault sync, intake
+ * management). Chat, Home, and the ontology regions must stay reachable on a
+ * fresh profile, so the whole-shell {@link DocumentIntakeTarget} boundary no
+ * longer hosts this gate. The card reuses the full vault-selection state
+ * machine, including the manual-path fallback for sessions without a native
+ * folder picker.
+ *
+ * **Example** (Create React Element)
+ *
+ * ```ts
+ * import { VaultOnboardingGate } from "@/intake/DocumentIntakeTarget"
+ * import { createElement } from "react"
+ *
+ * const element = createElement(VaultOnboardingGate, { children: null })
+ * console.log(element.type)
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function VaultOnboardingGate({ children }: { readonly children: ReactNode }): JSX.Element {
+  const surface = useAtomValue(documentIntakeSurfaceAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+
   if (surface.needsOnboarding) {
     return <VaultOnboarding actions={surface.actions} selection={surface.state.vaultSelection} />;
   }
 
-  return <IntakeWorkspaceSurface surface={surface}>{children}</IntakeWorkspaceSurface>;
+  return <>{children}</>;
 }

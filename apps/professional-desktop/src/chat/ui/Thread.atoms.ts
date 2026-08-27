@@ -122,7 +122,12 @@ export const scrollThreadAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
         onNone: thunkEffectVoid,
         onSome: (element) =>
           Effect.sync(() => {
-            const scrollToBottom = () => element.scrollIntoView({ behavior: "smooth", block: "end" });
+            // Streaming blocks can arrive faster than a smooth animation. If the
+            // viewport trails the growing DOM, the next update mistakes that lag
+            // for a reader who intentionally scrolled away and stops following.
+            // An atomic programmatic scroll keeps the pinned invariant truthful;
+            // the slack guard above still preserves genuine reader position.
+            const scrollToBottom = () => element.scrollIntoView({ behavior: "auto", block: "end" });
             if (P.isFunction(globalThis.requestAnimationFrame)) {
               globalThis.requestAnimationFrame(scrollToBottom);
             } else {

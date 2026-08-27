@@ -17,11 +17,12 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import * as A from "@beep/utils/Array";
 import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import { ensureRemoteExtractionAllowed } from "./Service.policy.ts";
 import { buildPrompt } from "./Service.prompt.ts";
-import { LangExtractRemotePolicy, LangExtractService } from "./Service.service.ts";
+import { LangExtractGenerationTimeout, LangExtractRemotePolicy, LangExtractService } from "./Service.service.ts";
 
 const GENERATED_BY = "@beep/langextract";
 const GENERATE_TEXT_TIMEOUT = Duration.seconds(30);
@@ -44,6 +45,9 @@ const GENERATE_TEXT_TIMEOUT = Duration.seconds(30);
 export const make = Effect.fn("LangExtractService.make")(function* () {
   const languageModel = yield* LanguageModel.LanguageModel;
   const remotePolicy = yield* Effect.serviceOption(LangExtractRemotePolicy);
+  const generationTimeout = (yield* Effect.serviceOption(LangExtractGenerationTimeout)).pipe(
+    O.getOrElse(() => GENERATE_TEXT_TIMEOUT)
+  );
 
   return LangExtractService.of({
     extract: Effect.fn("LangExtractService.extract")(function* (request) {
@@ -65,7 +69,7 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
           })
         ),
         Effect.timeoutOrElse({
-          duration: GENERATE_TEXT_TIMEOUT,
+          duration: generationTimeout,
           orElse: () =>
             Effect.fail(
               LangExtractError.fromReason("model-generation-timeout", {

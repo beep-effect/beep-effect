@@ -54,7 +54,15 @@ export { toSqliteTable } from "./table.ts";
  * @category type-level
  * @since 0.0.0
  */
-export type { SqliteEntityFactory, SqliteKit, SqliteKitConfig } from "./kit.ts";
+export type {
+  SqliteEntityFactory,
+  SqliteKit,
+  SqliteKitConfig,
+  SqliteKitExtension,
+  SqliteToolkit,
+  SqliteValidateCollision,
+  SqliteValidateMergedFields,
+} from "./kit.ts";
 /** SQLite model inference types.
  * @category type-level
  * @since 0.0.0

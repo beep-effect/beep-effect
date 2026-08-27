@@ -26,6 +26,7 @@ const migrateTheme = migrateWorkbenchThemeMode();
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  document.documentElement.classList.remove("dark", "light");
   vi.restoreAllMocks();
 });
 
@@ -92,6 +93,31 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
 
         expect(getByTestId("theme-child")).toBe(child);
         expect(localStorage.getItem(NEW_THEME_KEY)).toBe(encodeThemeMode(ThemeMode.Enum.dark));
+      })
+    );
+
+    it.effect(
+      "replaces the pre-paint root class when the live mode toggles",
+      Effect.fnUntraced(function* () {
+        localStorage.setItem(NEW_THEME_KEY, encodeThemeMode(ThemeMode.Enum.dark));
+        document.documentElement.classList.add("dark");
+        const { getByLabelText } = render(
+          <RegistryProvider>
+            <WorkbenchThemeProvider>
+              <ThemeToggle />
+            </WorkbenchThemeProvider>
+          </RegistryProvider>
+        );
+        const toggle = getByLabelText("Switch to light mode");
+
+        fireEvent.click(toggle);
+        yield* Effect.promise(() =>
+          waitFor(() => {
+            expect(toggle).toHaveAttribute("aria-label", "Switch to dark mode");
+            expect(document.documentElement).toHaveClass("light");
+            expect(document.documentElement).not.toHaveClass("dark");
+          })
+        );
       })
     );
 
