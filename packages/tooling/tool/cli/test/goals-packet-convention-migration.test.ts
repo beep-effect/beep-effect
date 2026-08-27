@@ -73,6 +73,23 @@ const injectedFileSystemError = (method: string, path: string): PlatformError.Pl
     description: "injected failure",
   });
 
+const makeGenesisRollbackSeed = Effect.fnUntraced(function* (root: string, label: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const packetPath = `${root}/${label}`;
+  const eventsDirectory = `${packetPath}/ops/events`;
+  const eventFileName = "00001-owned.json";
+  yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
+  yield* fs.writeFileString(`${packetPath}/ops/trace-parent`, "blocks trace directory\n");
+  return PacketGenesisSeed.make({
+    slug: label,
+    eventsDirectory,
+    eventFileName,
+    eventText: "owned\n",
+    tracePath: `${packetPath}/ops/trace-parent/trace.json`,
+    traceText: "trace\n",
+  });
+});
+
 describe("manifest translation", () => {
   it("rejects missing, invalid, and non-object manifests", () => {
     const missing = planManifestTranslation(
@@ -1011,6 +1028,44 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   );
 
   it.effect(
+    "repairs an exact owned genesis event when its trace is missing",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-recovery-" });
+      const packetPath = `${root}/demo`;
+      yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
+      const packet = GoalPacketRecord.make({
+        slug: "demo",
+        packetPath,
+        manifestPath: `${packetPath}/ops/manifest.json`,
+        readmePath: `${packetPath}/README.md`,
+      });
+      const manifest = encodeJson({
+        schemaVersion: "initiative-manifest/v2",
+        initiative: { id: "demo", status: "active" },
+        lifecycle: "active",
+        packetPath: "goals/demo",
+        completionGate,
+      });
+      const planned = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
+      expect(O.isSome(planned)).toBe(true);
+      if (O.isNone(planned)) return;
+      yield* fs.makeDirectory(planned.value.eventsDirectory);
+      yield* fs.writeFileString(
+        `${planned.value.eventsDirectory}/${planned.value.eventFileName}`,
+        planned.value.eventText
+      );
+
+      const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
+      expect(O.isSome(recovery)).toBe(true);
+      if (O.isNone(recovery)) return;
+      yield* applyPacketGenesisSeed(recovery.value);
+      expect(yield* fs.readFileString(recovery.value.tracePath)).toBe(recovery.value.traceText);
+      expect(O.isNone(yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z"))).toBe(true);
+    })
+  );
+
+  it.effect(
     "rolls back a newly created genesis stream when the trace write fails",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1086,28 +1141,12 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   );
 
   it.effect(
-    "reports precise rollback scan, read, and removal failures",
+    "reports rollback setup, quarantine, rescan, and read failures",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-rollback-errors-" });
-      const makeSeed = Effect.fnUntraced(function* (label: string) {
-        const packetPath = `${root}/${label}`;
-        const eventsDirectory = `${packetPath}/ops/events`;
-        const eventFileName = "00001-owned.json";
-        yield* fs.makeDirectory(`${packetPath}/ops`, { recursive: true });
-        yield* fs.writeFileString(`${packetPath}/ops/trace-parent`, "blocks trace directory\n");
-        return PacketGenesisSeed.make({
-          slug: label,
-          eventsDirectory,
-          eventFileName,
-          eventText: "owned\n",
-          tracePath: `${packetPath}/ops/trace-parent/trace.json`,
-          traceText: "trace\n",
-        });
-      });
-
-      const scanSeed = yield* makeSeed("scan-failure");
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-rollback-setup-errors-" });
+      const scanSeed = yield* makeGenesisRollbackSeed(root, "scan-failure");
       const scanFailure = yield* Effect.exit(
         applyPacketGenesisSeed(scanSeed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
@@ -1121,7 +1160,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
       expect(Exit.isFailure(scanFailure) ? scanFailure.cause.toString() : "").toContain("genesis rollback scan failed");
 
-      const quarantineCreateSeed = yield* makeSeed("quarantine-create-failure");
+      const quarantineCreateSeed = yield* makeGenesisRollbackSeed(root, "quarantine-create-failure");
       const quarantineCreateFailure = yield* Effect.exit(
         applyPacketGenesisSeed(quarantineCreateSeed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
@@ -1136,8 +1175,15 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(Exit.isFailure(quarantineCreateFailure) ? quarantineCreateFailure.cause.toString() : "").toContain(
         "genesis rollback quarantine failed"
       );
+      expect(yield* fs.exists(`${quarantineCreateSeed.eventsDirectory}/${quarantineCreateSeed.eventFileName}`)).toBe(
+        true
+      );
+      yield* fs.remove(path.dirname(quarantineCreateSeed.tracePath));
+      yield* fs.makeDirectory(path.dirname(quarantineCreateSeed.tracePath));
+      yield* applyPacketGenesisSeed(quarantineCreateSeed);
+      expect(yield* fs.readFileString(quarantineCreateSeed.tracePath)).toBe(quarantineCreateSeed.traceText);
 
-      const quarantineRenameSeed = yield* makeSeed("quarantine-rename-failure");
+      const quarantineRenameSeed = yield* makeGenesisRollbackSeed(root, "quarantine-rename-failure");
       const quarantineRenameFailure = yield* Effect.exit(
         applyPacketGenesisSeed(quarantineRenameSeed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
@@ -1153,7 +1199,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "genesis rollback quarantine failed"
       );
 
-      const rescanSeed = yield* makeSeed("rescan-failure");
+      const rescanSeed = yield* makeGenesisRollbackSeed(root, "rescan-failure");
       let rescanCalls = 0;
       const rescanFailure = yield* Effect.exit(
         applyPacketGenesisSeed(rescanSeed).pipe(
@@ -1172,7 +1218,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "genesis rollback rescan failed"
       );
 
-      const readSeed = yield* makeSeed("read-failure");
+      const readSeed = yield* makeGenesisRollbackSeed(root, "read-failure");
       let readEventPath = "";
       const readFailure = yield* Effect.exit(
         applyPacketGenesisSeed(readSeed).pipe(
@@ -1192,8 +1238,15 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(Exit.isFailure(readFailure) ? readFailure.cause.toString() : "").toContain(
         "genesis rollback event read failed"
       );
+    })
+  );
 
-      const foreignSeed = yield* makeSeed("foreign-conflict");
+  it.effect(
+    "preserves foreign events found before and during quarantine",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-rollback-foreign-" });
+      const foreignSeed = yield* makeGenesisRollbackSeed(root, "foreign-conflict");
       const foreignPath = `${foreignSeed.eventsDirectory}/00002-foreign.json`;
       const foreignFailure = yield* Effect.exit(
         applyPacketGenesisSeed(foreignSeed).pipe(
@@ -1212,7 +1265,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(yield* fs.readFileString(foreignPath)).toBe("foreign\n");
       expect(yield* fs.exists(`${foreignSeed.eventsDirectory}/${foreignSeed.eventFileName}`)).toBe(true);
 
-      const racedSeed = yield* makeSeed("foreign-race");
+      const racedSeed = yield* makeGenesisRollbackSeed(root, "foreign-race");
       const racedFileName = "00002-raced.json";
       const racedPath = `${racedSeed.eventsDirectory}/${racedFileName}`;
       let racedQuarantine = "";
@@ -1235,8 +1288,15 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "genesis rollback conflict: foreign bytes preserved at"
       );
       expect(yield* fs.readFileString(`${racedQuarantine}/${racedFileName}`)).toBe("raced\n");
+    })
+  );
 
-      const lateSeed = yield* makeSeed("late-foreign-race");
+  it.effect(
+    "preserves late foreign bytes and changed owned bytes in quarantine",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-rollback-late-" });
+      const lateSeed = yield* makeGenesisRollbackSeed(root, "late-foreign-race");
       const lateFileName = "00002-late.json";
       let lateEventPath = "";
       let lateForeignPath = "";
@@ -1263,7 +1323,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
       expect(yield* fs.readFileString(lateForeignPath)).toBe("late\n");
 
-      const changedSeed = yield* makeSeed("changed-conflict");
+      const changedSeed = yield* makeGenesisRollbackSeed(root, "changed-conflict");
       const changedPath = `${changedSeed.eventsDirectory}/${changedSeed.eventFileName}`;
       let changedQuarantine = "";
       const changedFailure = yield* Effect.exit(
@@ -1289,8 +1349,16 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(yield* fs.readFileString(`${changedQuarantine}/${changedSeed.eventFileName}`)).toBe(
         "concurrent replacement\n"
       );
+    })
+  );
 
-      const eventRemoveSeed = yield* makeSeed("event-remove-failure");
+  it.effect(
+    "reports owned-event and quarantine-directory removal failures",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "packet-genesis-rollback-remove-errors-" });
+      const eventRemoveSeed = yield* makeGenesisRollbackSeed(root, "event-remove-failure");
       let eventRemovePath = "";
       const eventRemoveFailure = yield* Effect.exit(
         applyPacketGenesisSeed(eventRemoveSeed).pipe(
@@ -1313,7 +1381,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         "genesis rollback event remove failed"
       );
 
-      const directoryRemoveSeed = yield* makeSeed("directory-remove-failure");
+      const directoryRemoveSeed = yield* makeGenesisRollbackSeed(root, "directory-remove-failure");
       let rollbackRoot = "";
       const directoryRemoveFailure = yield* Effect.exit(
         applyPacketGenesisSeed(directoryRemoveSeed).pipe(
