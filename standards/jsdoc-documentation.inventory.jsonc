@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-27T03:54:15.568Z",
+  "generatedAt": "2026-08-27T16:25:51.442Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 71,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 59,
-    "publicModules": 2504,
-    "publicExports": 16794,
+    "publicModules": 2508,
+    "publicExports": 16824,
     "openModules": 398,
     "openExports": 134,
     "missingExportExamples": 4,
@@ -748,7 +748,7 @@
         "srcDir": "src",
         "sourceFileCount": 16,
         "publicModuleCount": 16,
-        "publicExportCount": 74
+        "publicExportCount": 75
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -981,7 +981,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -1255,8 +1255,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 39,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-39-agentfixturekey",
+          "line": 40,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-40-agentfixturekey",
           "currentTags": [
             "@category",
             "@since"
@@ -1277,8 +1277,8 @@
           "exportKind": "type",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 61,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-61-agentfixturekey",
+          "line": 62,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-62-agentfixturekey",
           "currentTags": [
             "@category",
             "@since"
@@ -1299,8 +1299,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 79,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-79-skillfixturekey",
+          "line": 80,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-80-skillfixturekey",
           "currentTags": [
             "@category",
             "@since"
@@ -1321,8 +1321,8 @@
           "exportKind": "type",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 101,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-101-skillfixturekey",
+          "line": 102,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-102-skillfixturekey",
           "currentTags": [
             "@category",
             "@since"
@@ -1343,8 +1343,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 119,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-119-agentname",
+          "line": 120,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-120-agentname",
           "currentTags": [
             "@category",
             "@since"
@@ -1365,8 +1365,8 @@
           "exportKind": "type",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 141,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-141-agentname",
+          "line": 142,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-142-agentname",
           "currentTags": [
             "@category",
             "@since"
@@ -1387,8 +1387,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 159,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-159-skillname",
+          "line": 160,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-160-skillname",
           "currentTags": [
             "@category",
             "@since"
@@ -1409,8 +1409,8 @@
           "exportKind": "type",
           "filePath": "src/entities/Fixture.values.ts",
           "repoPath": "packages/agents/domain/src/entities/Fixture.values.ts",
-          "line": 181,
-          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-181-skillname",
+          "line": 192,
+          "anchor": "packages-agents-domain-src-entities-fixture-values-ts-192-skillname",
           "currentTags": [
             "@category",
             "@since"
@@ -1961,8 +1961,30 @@
           "exportKind": "class",
           "filePath": "src/entities/Skill/Skill.model.ts",
           "repoPath": "packages/agents/domain/src/entities/Skill/Skill.model.ts",
-          "line": 29,
-          "anchor": "packages-agents-domain-src-entities-skill-skill-model-ts-29-skill",
+          "line": 39,
+          "anchor": "packages-agents-domain-src-entities-skill-skill-model-ts-39-skill",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SkillFrontmatter",
+          "exportKind": "const",
+          "filePath": "src/entities/Skill/Skill.model.ts",
+          "repoPath": "packages/agents/domain/src/entities/Skill/Skill.model.ts",
+          "line": 95,
+          "anchor": "packages-agents-domain-src-entities-skill-skill-model-ts-95-skillfrontmatter",
           "currentTags": [
             "@category",
             "@since"
@@ -15121,9 +15143,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 101,
-        "publicModuleCount": 100,
-        "publicExportCount": 339
+        "sourceFileCount": 105,
+        "publicModuleCount": 104,
+        "publicExportCount": 367
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -15449,6 +15471,50 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/entity/AuditEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "line": 1,
+          "anchor": "packages-shared-domain-src-entity-auditentity-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/entity/BaseEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "line": 1,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/entity/EntityId.ts",
           "repoPath": "packages/shared/domain/src/entity/EntityId.ts",
           "line": 1,
@@ -15471,6 +15537,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 1,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/entity/EntityRef.ts",
           "repoPath": "packages/shared/domain/src/entity/EntityRef.ts",
           "line": 1,
@@ -15489,6 +15577,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/entity/OrgEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "line": 1,
+          "anchor": "packages-shared-domain-src-entity-orgentity-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -15532,7 +15642,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -15598,7 +15708,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         },
         {
@@ -17992,6 +18102,182 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "kit",
+          "exportKind": "const",
+          "filePath": "src/entity/AuditEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "line": 28,
+          "anchor": "packages-shared-domain-src-entity-auditentity-ts-28-kit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Entity",
+          "exportKind": "const",
+          "filePath": "src/entity/AuditEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "line": 50,
+          "anchor": "packages-shared-domain-src-entity-auditentity-ts-50-entity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "pg",
+          "exportKind": "const",
+          "filePath": "src/entity/AuditEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "line": 66,
+          "anchor": "packages-shared-domain-src-entity-auditentity-ts-66-pg",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Table",
+          "exportKind": "const",
+          "filePath": "src/entity/AuditEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "line": 82,
+          "anchor": "packages-shared-domain-src-entity-auditentity-ts-82-table",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "kit",
+          "exportKind": "const",
+          "filePath": "src/entity/BaseEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "line": 28,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-28-kit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Entity",
+          "exportKind": "const",
+          "filePath": "src/entity/BaseEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "line": 50,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-50-entity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "pg",
+          "exportKind": "const",
+          "filePath": "src/entity/BaseEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "line": 66,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-66-pg",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Table",
+          "exportKind": "const",
+          "filePath": "src/entity/BaseEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "line": 82,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-82-table",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "EntityIdValue",
           "exportKind": "const",
           "filePath": "src/entity/EntityId.ts",
@@ -18300,6 +18586,229 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "baseColumns",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 55,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-55-basecolumns",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "auditColumns",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 80,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-80-auditcolumns",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "orgColumns",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 102,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-102-orgcolumns",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "withAudit",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 128,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-128-withaudit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "withOrg",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 152,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-152-withorg",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "IdentityColumns",
+          "exportKind": "type",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 198,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-198-identitycolumns",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProductIdentityColumns",
+          "exportKind": "type",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 229,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-229-productidentitycolumns",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TierEntityFactory",
+          "exportKind": "type",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 282,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-282-tierentityfactory",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "entityFactory",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 339,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-339-entityfactory",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "productEntityFactory",
+          "exportKind": "const",
+          "filePath": "src/entity/EntityKit.ts",
+          "repoPath": "packages/shared/domain/src/entity/EntityKit.ts",
+          "line": 361,
+          "anchor": "packages-shared-domain-src-entity-entitykit-ts-361-productentityfactory",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "EntityType",
           "exportKind": "const",
           "filePath": "src/entity/EntityRef.ts",
@@ -18416,6 +18925,94 @@
           "repoPath": "packages/shared/domain/src/entity/EntityRef.ts",
           "line": 233,
           "anchor": "packages-shared-domain-src-entity-entityref-ts-233-make",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "kit",
+          "exportKind": "const",
+          "filePath": "src/entity/OrgEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "line": 26,
+          "anchor": "packages-shared-domain-src-entity-orgentity-ts-26-kit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Entity",
+          "exportKind": "const",
+          "filePath": "src/entity/OrgEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "line": 48,
+          "anchor": "packages-shared-domain-src-entity-orgentity-ts-48-entity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "pg",
+          "exportKind": "const",
+          "filePath": "src/entity/OrgEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "line": 64,
+          "anchor": "packages-shared-domain-src-entity-orgentity-ts-64-pg",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Table",
+          "exportKind": "const",
+          "filePath": "src/entity/OrgEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "line": 80,
+          "anchor": "packages-shared-domain-src-entity-orgentity-ts-80-table",
           "currentTags": [
             "@category",
             "@since"
@@ -18678,12 +19275,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "kit",
+          "exportKind": "const",
+          "filePath": "src/entity/ProductEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/ProductEntity.ts",
+          "line": 34,
+          "anchor": "packages-shared-domain-src-entity-productentity-ts-34-kit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "fields",
           "exportKind": "const",
           "filePath": "src/entity/ProductEntity.ts",
           "repoPath": "packages/shared/domain/src/entity/ProductEntity.ts",
-          "line": 41,
-          "anchor": "packages-shared-domain-src-entity-productentity-ts-41-fields",
+          "line": 57,
+          "anchor": "packages-shared-domain-src-entity-productentity-ts-57-fields",
           "currentTags": [
             "@category",
             "@since"
@@ -18700,34 +19319,56 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "ProductEntityKit",
-          "exportKind": "interface",
-          "filePath": "src/entity/ProductEntity.ts",
-          "repoPath": "packages/shared/domain/src/entity/ProductEntity.ts",
-          "line": 81,
-          "anchor": "packages-shared-domain-src-entity-productentity-ts-81-productentitykit",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "make",
+          "symbolName": "Entity",
           "exportKind": "const",
           "filePath": "src/entity/ProductEntity.ts",
           "repoPath": "packages/shared/domain/src/entity/ProductEntity.ts",
-          "line": 131,
-          "anchor": "packages-shared-domain-src-entity-productentity-ts-131-make",
+          "line": 94,
+          "anchor": "packages-shared-domain-src-entity-productentity-ts-94-entity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "pg",
+          "exportKind": "const",
+          "filePath": "src/entity/ProductEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/ProductEntity.ts",
+          "line": 111,
+          "anchor": "packages-shared-domain-src-entity-productentity-ts-111-pg",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Table",
+          "exportKind": "const",
+          "filePath": "src/entity/ProductEntity.ts",
+          "repoPath": "packages/shared/domain/src/entity/ProductEntity.ts",
+          "line": 127,
+          "anchor": "packages-shared-domain-src-entity-productentity-ts-127-table",
           "currentTags": [
             "@category",
             "@since"
@@ -19035,12 +19676,78 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * as EntityId from \"./EntityId.ts\";",
+          "symbolName": "export * as AuditEntity from \"./AuditEntity.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
           "line": 22,
-          "anchor": "packages-shared-domain-src-entity-index-ts-22-export-as-entityid-from-entityid-ts",
+          "anchor": "packages-shared-domain-src-entity-index-ts-22-export-as-auditentity-from-auditentity-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as BaseEntity from \"./BaseEntity.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/entity/index.ts",
+          "repoPath": "packages/shared/domain/src/entity/index.ts",
+          "line": 37,
+          "anchor": "packages-shared-domain-src-entity-index-ts-37-export-as-baseentity-from-baseentity-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as EntityId from \"./EntityId.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/entity/index.ts",
+          "repoPath": "packages/shared/domain/src/entity/index.ts",
+          "line": 52,
+          "anchor": "packages-shared-domain-src-entity-index-ts-52-export-as-entityid-from-entityid-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as EntityKit from \"./EntityKit.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/entity/index.ts",
+          "repoPath": "packages/shared/domain/src/entity/index.ts",
+          "line": 67,
+          "anchor": "packages-shared-domain-src-entity-index-ts-67-export-as-entitykit-from-entitykit-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -19061,8 +19768,30 @@
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
-          "line": 37,
-          "anchor": "packages-shared-domain-src-entity-index-ts-37-export-as-entityref-from-entityref-ts",
+          "line": 82,
+          "anchor": "packages-shared-domain-src-entity-index-ts-82-export-as-entityref-from-entityref-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as OrgEntity from \"./OrgEntity.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/entity/index.ts",
+          "repoPath": "packages/shared/domain/src/entity/index.ts",
+          "line": 97,
+          "anchor": "packages-shared-domain-src-entity-index-ts-97-export-as-orgentity-from-orgentity-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -19083,8 +19812,8 @@
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
-          "line": 52,
-          "anchor": "packages-shared-domain-src-entity-index-ts-52-export-as-principal-from-principal-ts",
+          "line": 112,
+          "anchor": "packages-shared-domain-src-entity-index-ts-112-export-as-principal-from-principal-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -19105,8 +19834,8 @@
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
-          "line": 59,
-          "anchor": "packages-shared-domain-src-entity-index-ts-59-export-as-productentity-from-productentity-ts",
+          "line": 119,
+          "anchor": "packages-shared-domain-src-entity-index-ts-119-export-as-productentity-from-productentity-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -19127,8 +19856,8 @@
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
-          "line": 74,
-          "anchor": "packages-shared-domain-src-entity-index-ts-74-export-as-publicentityid-from-publicentityid-ts",
+          "line": 134,
+          "anchor": "packages-shared-domain-src-entity-index-ts-134-export-as-publicentityid-from-publicentityid-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -19149,8 +19878,8 @@
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
-          "line": 89,
-          "anchor": "packages-shared-domain-src-entity-index-ts-89-export-as-primitives-from-primitives-ts",
+          "line": 149,
+          "anchor": "packages-shared-domain-src-entity-index-ts-149-export-as-primitives-from-primitives-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -19171,8 +19900,8 @@
           "exportKind": "re-export",
           "filePath": "src/entity/index.ts",
           "repoPath": "packages/shared/domain/src/entity/index.ts",
-          "line": 104,
-          "anchor": "packages-shared-domain-src-entity-index-ts-104-export-as-sourcekind-from-sourcekind-ts",
+          "line": 164,
+          "anchor": "packages-shared-domain-src-entity-index-ts-164-export-as-sourcekind-from-sourcekind-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -69508,8 +70237,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 103,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-103-export-qualityscriptcommanderror-from-quality-errors-ts",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-122-export-qualityscriptcommanderror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -69530,8 +70259,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-110-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
+          "line": 129,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-129-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -69552,8 +70281,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-134-qualityprofiledetectioninput",
+          "line": 153,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-153-qualityprofiledetectioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -69574,8 +70303,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-150-githubchecklanesformodefortesting",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-169-githubchecklanesformodefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69596,8 +70325,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 166,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-166-githubcheckprepushexternallanesfortesting",
+          "line": 185,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-185-githubcheckprepushexternallanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69618,8 +70347,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-182-githubcheckpromotedfallowlanediagnosticsfortesting",
+          "line": 201,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-201-githubcheckpromotedfallowlanediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69640,8 +70369,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-199-githubcheckqualitylanesfortesting",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-218-githubcheckqualitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69662,8 +70391,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 215,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-215-githubcheckreposanitylanesfortesting",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-234-githubcheckreposanitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69684,8 +70413,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 231,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-231-promotedfallowgithubchecklaneidsfortesting",
+          "line": 250,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-250-promotedfallowgithubchecklaneidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69706,8 +70435,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 247,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-247-detectqualityprofilefortesting",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-266-detectqualityprofilefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69728,8 +70457,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 263,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-263-qualityprofileconfigfortesting",
+          "line": 282,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-282-qualityprofileconfigfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69750,8 +70479,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 279,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-279-activeosvignoreidsfortesting",
+          "line": 298,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-298-activeosvignoreidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69772,8 +70501,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-333-iseffectdiagnosticsdirectivefortesting",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-352-iseffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -69796,8 +70525,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 638,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-638-runbunaudit",
+          "line": 657,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-657-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -69824,8 +70553,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 764,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-764-devqualitystepsfortesting",
+          "line": 783,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-783-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -69848,8 +70577,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 832,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-832-reviewfixdocgenlocalargsfortesting",
+          "line": 851,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-851-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -69872,8 +70601,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1055,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1055-rungithubchecks",
+          "line": 1074,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1074-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -69896,8 +70625,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1367,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1367-collecteffecttsgodiagnosticlines",
+          "line": 1386,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1386-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -69920,8 +70649,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1594,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1594-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 1613,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1613-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -69942,8 +70671,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1722,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1722-runtsgorulescheck",
+          "line": 1741,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1741-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -69965,8 +70694,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1873,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1873-runtesttsgochecks",
+          "line": 1892,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1892-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -69989,8 +70718,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1971,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1971-runtsgosmokecheck",
+          "line": 1990,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1990-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -70012,8 +70741,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2081,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2081-ismoduletagscannedpathfortesting",
+          "line": 2100,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2100-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -70036,8 +70765,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2102,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2102-runjsdocmoduletagscheck",
+          "line": 2121,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2121-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -70059,8 +70788,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2179,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2179-runjsdocinventory",
+          "line": 2198,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2198-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -70082,8 +70811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2232,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2232-runjsdocquality",
+          "line": 2251,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2251-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -70104,8 +70833,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2678,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2678-qualitycommand",
+          "line": 2762,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2762-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -77915,8 +78644,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 89,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-89-fleet-surface-exclude-prefixes",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-90-fleet-surface-exclude-prefixes",
           "currentTags": [
             "@category",
             "@since"
@@ -77937,8 +78666,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 131,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-131-classifyfleetliveness",
+          "line": 132,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-132-classifyfleetliveness",
           "currentTags": [
             "@param",
             "@returns",
@@ -77961,8 +78690,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 217,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-217-parsestatusporcelainz",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-218-parsestatusporcelainz",
           "currentTags": [
             "@param",
             "@returns",
@@ -77985,8 +78714,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 257,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-257-parsemergetreeconflictnames",
+          "line": 258,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-258-parsemergetreeconflictnames",
           "currentTags": [
             "@param",
             "@returns",
@@ -78009,8 +78738,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-298-transcriptprojectdirname",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-299-transcriptprojectdirname",
           "currentTags": [
             "@param",
             "@returns",
@@ -78033,8 +78762,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 328,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-328-parseprocstatstarttime",
+          "line": 329,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-329-parseprocstatstarttime",
           "currentTags": [
             "@param",
             "@returns",
@@ -78057,8 +78786,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 393,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-393-buildcontestedindex",
+          "line": 387,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-387-buildcontestedindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -78081,8 +78810,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-411-fleetmirrorserviceshape",
+          "line": 405,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-405-fleetmirrorserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -78103,8 +78832,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 441,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-441-fleetmirrorservice",
+          "line": 435,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-435-fleetmirrorservice",
           "currentTags": [
             "@category",
             "@since"
@@ -78125,8 +78854,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 1342,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1342-fleetmirrorservicelive",
+          "line": 1336,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1336-fleetmirrorservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -150887,7 +151616,7 @@
         "srcDir": "src",
         "sourceFileCount": 25,
         "publicModuleCount": 25,
-        "publicExportCount": 101
+        "publicExportCount": 102
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -151274,7 +152003,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -151482,8 +152211,8 @@
           "exportKind": "const",
           "filePath": "src/Alignment/Alignment.behavior.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
-          "line": 47,
-          "anchor": "packages-foundation-capability-langextract-src-alignment-alignment-behavior-ts-47-spanfrommatch",
+          "line": 73,
+          "anchor": "packages-foundation-capability-langextract-src-alignment-alignment-behavior-ts-73-spanfrommatch",
           "currentTags": [
             "@category",
             "@since"
@@ -151504,8 +152233,8 @@
           "exportKind": "const",
           "filePath": "src/Alignment/Alignment.behavior.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
-          "line": 230,
-          "anchor": "packages-foundation-capability-langextract-src-alignment-alignment-behavior-ts-230-aligncandidate",
+          "line": 319,
+          "anchor": "packages-foundation-capability-langextract-src-alignment-alignment-behavior-ts-319-aligncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -151526,8 +152255,8 @@
           "exportKind": "const",
           "filePath": "src/Alignment/Alignment.behavior.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
-          "line": 290,
-          "anchor": "packages-foundation-capability-langextract-src-alignment-alignment-behavior-ts-290-aligncandidates",
+          "line": 352,
+          "anchor": "packages-foundation-capability-langextract-src-alignment-alignment-behavior-ts-352-aligncandidates",
           "currentTags": [
             "@category",
             "@since"
@@ -152671,8 +153400,8 @@
           "exportKind": "const",
           "filePath": "src/Service/Service.layer.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Service/Service.layer.ts",
-          "line": 44,
-          "anchor": "packages-foundation-capability-langextract-src-service-service-layer-ts-44-make",
+          "line": 45,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-layer-ts-45-make",
           "currentTags": [
             "@effects",
             "@category",
@@ -152694,8 +153423,8 @@
           "exportKind": "const",
           "filePath": "src/Service/Service.layer.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Service/Service.layer.ts",
-          "line": 159,
-          "anchor": "packages-foundation-capability-langextract-src-service-service-layer-ts-159-layer",
+          "line": 163,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-layer-ts-163-layer",
           "currentTags": [
             "@category",
             "@since"
@@ -152826,8 +153555,8 @@
           "exportKind": "interface",
           "filePath": "src/Service/Service.service.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
-          "line": 33,
-          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-33-langextractserviceshape",
+          "line": 34,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-34-langextractserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -152848,8 +153577,8 @@
           "exportKind": "interface",
           "filePath": "src/Service/Service.service.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
-          "line": 56,
-          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-56-langextractremotepolicyshape",
+          "line": 57,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-57-langextractremotepolicyshape",
           "currentTags": [
             "@category",
             "@since"
@@ -152870,8 +153599,8 @@
           "exportKind": "class",
           "filePath": "src/Service/Service.service.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
-          "line": 126,
-          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-126-langextractservice",
+          "line": 127,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-127-langextractservice",
           "currentTags": [
             "@category",
             "@since"
@@ -152892,8 +153621,30 @@
           "exportKind": "class",
           "filePath": "src/Service/Service.service.ts",
           "repoPath": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
-          "line": 147,
-          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-147-langextractremotepolicy",
+          "line": 148,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-148-langextractremotepolicy",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LangExtractGenerationTimeout",
+          "exportKind": "class",
+          "filePath": "src/Service/Service.service.ts",
+          "repoPath": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
+          "line": 176,
+          "anchor": "packages-foundation-capability-langextract-src-service-service-service-ts-176-langextractgenerationtimeout",
           "currentTags": [
             "@category",
             "@since"
@@ -244483,8 +245234,8 @@
           "exportKind": "class",
           "filePath": "src/entities/Contradiction/Contradiction.model.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
-          "line": 43,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-model-ts-43-contradictioncandidate",
+          "line": 41,
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-model-ts-41-contradictioncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -244505,8 +245256,8 @@
           "exportKind": "class",
           "filePath": "src/entities/Contradiction/Contradiction.model.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
-          "line": 98,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-model-ts-98-contradictionreceipt",
+          "line": 92,
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-model-ts-92-contradictionreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -244527,8 +245278,8 @@
           "exportKind": "class",
           "filePath": "src/entities/Contradiction/Contradiction.model.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
-          "line": 137,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-model-ts-137-contradictiondisposition",
+          "line": 128,
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-model-ts-128-contradictiondisposition",
           "currentTags": [
             "@category",
             "@since"
@@ -244968,8 +245719,8 @@
           "exportKind": "class",
           "filePath": "src/entities/UsageRecord/UsageRecord.model.ts",
           "repoPath": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
-          "line": 170,
-          "anchor": "packages-epistemic-domain-src-entities-usagerecord-usagerecord-model-ts-170-turnfinalizationusageappend",
+          "line": 144,
+          "anchor": "packages-epistemic-domain-src-entities-usagerecord-usagerecord-model-ts-144-turnfinalizationusageappend",
           "currentTags": [
             "@category",
             "@since"
@@ -244990,8 +245741,8 @@
           "exportKind": "const",
           "filePath": "src/entities/UsageRecord/UsageRecord.model.ts",
           "repoPath": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
-          "line": 224,
-          "anchor": "packages-epistemic-domain-src-entities-usagerecord-usagerecord-model-ts-224-appendturnfinalizationusagerecord",
+          "line": 198,
+          "anchor": "packages-epistemic-domain-src-entities-usagerecord-usagerecord-model-ts-198-appendturnfinalizationusagerecord",
           "currentTags": [
             "@category",
             "@since"

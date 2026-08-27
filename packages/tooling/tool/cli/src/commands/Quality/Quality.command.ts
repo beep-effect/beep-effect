@@ -10,7 +10,20 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
-import { Console, DateTime, Effect, Equal, FileSystem, flow, Inspectable, Layer, Order, Path, pipe } from "effect";
+import {
+  Clock,
+  Console,
+  DateTime,
+  Effect,
+  Equal,
+  FileSystem,
+  flow,
+  Inspectable,
+  Layer,
+  Order,
+  Path,
+  pipe,
+} from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -25,7 +38,12 @@ import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
 import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
-import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.ts";
+import {
+  AdmissionConfig,
+  admissionStatus,
+  GITHUB_CHECK_MODE_VALUES,
+  reapAdmissionState,
+} from "../../internal/repo-run/index.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
@@ -86,6 +104,7 @@ import {
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
+import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
 import type {
   GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
   GithubCheckLaneSpec,
@@ -2663,6 +2682,71 @@ const qualityProfileCommand = Command.make("profile", {}, () =>
   Command.withSubcommands([qualityProfileDetectCommand, qualityProfileConfigCommand])
 );
 
+const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: number): ReadonlyArray<string> => [
+  `admission capacity: ${snapshot.activeTokens}/${snapshot.capacityTokens} tokens (MemAvailable ${snapshot.memAvailableGib.toFixed(1)} GiB${snapshot.hardFloorEngaged ? ", HARD FLOOR ENGAGED" : ""})`,
+  ...A.map(snapshot.leases, (lease) => {
+    const suspect =
+      nowMillis - lease.heartbeatAtMillis > AdmissionConfig.make({}).suspectAfterSeconds * 1000
+        ? " [suspect: heartbeat stale]"
+        : "";
+    return `- lease pid ${lease.pid} ${lease.kind}(${lease.weightTokens}) ${lease.checkoutRoot} @ ${lease.branch} since ${lease.startedAt}${suspect}`;
+  }),
+  ...A.map(
+    snapshot.tickets,
+    (ticket) =>
+      `- queued pid ${ticket.pid} ${ticket.kind}(${ticket.weightTokens}) ${ticket.checkoutRoot} @ ${ticket.branch}`
+  ),
+  ...A.map(snapshot.dead, (path) => `- dead: ${path}`),
+  ...A.map(snapshot.quarantined, (path) => `- quarantined: ${path}`),
+];
+
+const schedulerStatusCommand = Command.make(
+  "status",
+  {
+    json: Flag.boolean("json").pipe(Flag.withDescription("Emit the admission snapshot as JSON")),
+  },
+  Effect.fn(function* ({ json }) {
+    const snapshot = yield* admissionStatus();
+    if (json) {
+      const rendered = yield* jsonStringifyPretty(snapshot);
+      yield* printLines([rendered]);
+      return;
+    }
+    const nowMillis = yield* Clock.currentTimeMillis;
+    yield* printLines(renderAdmissionSnapshotLines(snapshot, nowMillis));
+  })
+).pipe(Command.withDescription("Show machine-wide admission capacity, leases, and queue"));
+
+const schedulerReapCommand = Command.make(
+  "reap",
+  {
+    apply: Flag.boolean("apply").pipe(
+      Flag.withDescription("Actually remove dead admission state (default: dry-run report)")
+    ),
+  },
+  Effect.fn(function* ({ apply }) {
+    const snapshot = yield* reapAdmissionState({ apply });
+    const deadLines = A.map(snapshot.dead, (path) => `- ${path}`);
+    yield* printLines([
+      apply ? "reaped dead admission state:" : "dry run — would reap:",
+      ...(A.length(deadLines) === 0 ? ["(nothing dead)"] : deadLines),
+    ]);
+  })
+).pipe(Command.withDescription("Reap dead admission leases and tickets (dry-run by default)"));
+
+const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
+  printLines([
+    "Quality scheduler commands:",
+    "- bun run beep quality scheduler status",
+    "- bun run beep quality scheduler status --json",
+    "- bun run beep quality scheduler reap",
+    "- bun run beep quality scheduler reap --apply",
+  ])
+).pipe(
+  Command.withDescription("Inspect and repair machine-wide quality admission"),
+  Command.withSubcommands([schedulerStatusCommand, schedulerReapCommand])
+);
+
 /**
  * Quality command group for repo operational checks.
  *
@@ -2721,6 +2805,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     knipCommand,
     turboConfigProofCommand,
     qualityProfileCommand,
+    qualitySchedulerCommand,
     packageVerifyCommand,
     changesetGraphCommand,
     changesetStatusCommand,
