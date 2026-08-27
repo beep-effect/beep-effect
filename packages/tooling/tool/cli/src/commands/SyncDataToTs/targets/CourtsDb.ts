@@ -11,6 +11,12 @@ import { Effect, flow, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertPinnedArchive, extractArchiveTextEntries, renderUnknownJsonModule } from "../internal/FreeLawProject.ts";
+import {
+  COURT_REPORTER_ARTIFACT_VERSION,
+  COURT_REPORTER_PROJECTION_VERSION,
+  COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+  classifyVocabularyAliases,
+} from "../internal/FreeLawProjectVocabulary.ts";
 import { fetchSource, formatJson, normalizeJson, outputFile, sourceMetadata } from "../internal/Source.ts";
 import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
 import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
@@ -20,6 +26,8 @@ const targetId = "courts-db" as const;
 const outputRoot = "packages/law-practice/domain/src/internal/generated/free-law-project" as const;
 const outputPath = `${outputRoot}/courts.ts` as const;
 const canonicalPath = `${outputRoot}/courts-db.data.json` as const;
+const vocabularyOutputPath = `${outputRoot}/courts-vocabulary.ts` as const;
+const vocabularyDataPath = `${outputRoot}/courts-vocabulary.data.json` as const;
 const refreshCommand = "bun run beep sync-data-to-ts --target courts-db" as const;
 const expectedCourtCount = 2_809;
 
@@ -369,6 +377,68 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     });
   }
 
+  const aliasSeeds = A.map(courts, (court) => {
+    const aliases = pipe(
+      [court.name, court.citation_string],
+      A.appendAll(pipe(O.fromNullishOr(court.name_abbreviation), A.fromOption)),
+      A.appendAll(pipe(O.fromUndefinedOr(court.sub_names), O.getOrElse(A.empty<string>))),
+      A.filter(Str.isNonEmpty),
+      A.dedupe
+    );
+
+    return [court.id, `${court.location}: ${court.name}`, aliases] as const;
+  });
+  const aliasesByCourtId = pipe(
+    classifyVocabularyAliases(aliasSeeds),
+    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
+    R.fromEntries
+  );
+  const courtVocabulary = A.map(courts, (court) => {
+    const aliases = pipe(
+      R.get(aliasesByCourtId, court.id),
+      O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
+    );
+
+    return {
+      id: court.id,
+      sourceId: court.id,
+      semanticKey: `court:${court.id}`,
+      lineageKey: `court:${court.id}`,
+      name: court.name,
+      nameAbbreviation: pipe(O.fromNullishOr(court.name_abbreviation), O.getOrNull),
+      citationString: court.citation_string,
+      sourceJurisdiction: pipe(O.fromNullishOr(court.jurisdiction), O.getOrNull),
+      system: court.system,
+      type: court.type,
+      hierarchyLevel: court.level,
+      location: court.location,
+      parentId: pipe(O.fromNullishOr(court.parent), O.getOrNull),
+      effectiveRanges: court.dates,
+      aliases: aliases.aliases,
+      contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
+      status: "active",
+      successorId: null,
+    };
+  });
+
+  const vocabularyArtifact = {
+    schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+    projectionVersion: COURT_REPORTER_PROJECTION_VERSION,
+    artifactVersion: COURT_REPORTER_ARTIFACT_VERSION,
+    source: {
+      repository: "courts-db",
+      release: COURTS_DB_RELEASE,
+      commit: COURTS_DB_COMMIT,
+      retrievedOn: "2026-07-25",
+      sourceUrl: COURTS_DB_SOURCE_URL,
+      sha256: source.sha256,
+      semanticSha256: COURTS_DB_SEMANTIC_SHA256,
+      refreshCommand,
+    },
+    stableIdCount: A.length(courtVocabulary),
+    records: courtVocabulary,
+  };
+
   const metadata = sourceMetadata(source, { version: COURTS_DB_RELEASE });
   const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "law-practice/free-law-project/courts-db/v1",
@@ -384,6 +454,13 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     counts: {
       courts: A.length(courts),
       placeVariables: A.length(placeNames),
+      stableCourtIds: A.length(courtVocabulary),
+    },
+    artifact: {
+      version: COURT_REPORTER_ARTIFACT_VERSION,
+      schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+      projectionVersion: COURT_REPORTER_PROJECTION_VERSION,
+      vocabularyPath: vocabularyDataPath,
     },
     data: {
       courts,
@@ -393,6 +470,15 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
   return SyncDataTargetProjection.make({
     files: [
       outputFile(outputPath, renderUnknownJsonModule({ exportName: "CourtsData", refreshCommand, value: courts })),
+      outputFile(
+        vocabularyOutputPath,
+        renderUnknownJsonModule({
+          exportName: "CourtsVocabularyData",
+          refreshCommand,
+          value: vocabularyArtifact,
+        })
+      ),
+      outputFile(vocabularyDataPath, formatJson(vocabularyArtifact)),
       outputFile(canonicalPath, formatJson(canonical)),
     ],
     canonicalPath,

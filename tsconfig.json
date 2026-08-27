@@ -1969,6 +1969,9 @@
       ],
       "@beep/shared-domain/entity/OrgEntity": [
         "./packages/shared/domain/src/entity/OrgEntity.ts"
+      ],
+      "@beep/law-practice-domain/values/CourtReporterVocabulary": [
+        "./packages/law-practice/domain/src/values/CourtReporterVocabulary/index.ts"
       ]
     }
   }

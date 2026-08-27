@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "court-reporter-vocabulary-lifecycle-evidence/v1",
+  "artifactVersion": "crv1:f353e51400a5:fad63b383b92",
+  "classifier": "classifyCourtReporterArtifactCompatibility",
+  "test": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+  "compatibleChanges": [
+    "addition",
+    "aliasAddition",
+    "tombstone",
+    "successor",
+    "merger",
+    "abbreviationReuse",
+    "dateSplit"
+  ],
+  "incompatibleChanges": [
+    "aliasRemoval",
+    "idReassignment",
+    "semanticReuse",
+    "removalWithoutTombstone",
+    "schemaChange",
+    "projectionChange"
+  ],
+  "fixtureMatrix": [
+    { "change": "addition", "expected": "compatible" },
+    { "change": "aliasAddition", "expected": "compatible" },
+    { "change": "aliasRemoval", "expected": "incompatible" },
+    { "change": "tombstone", "expected": "compatible" },
+    { "change": "successor", "expected": "compatible" },
+    { "change": "merger", "expected": "compatible" },
+    { "change": "abbreviationReuse", "expected": "compatible" },
+    { "change": "dateSplit", "expected": "compatible" },
+    { "change": "idReassignment", "expected": "incompatible" },
+    { "change": "semanticReuse", "expected": "incompatible" },
+    { "change": "removalWithoutTombstone", "expected": "incompatible" },
+    { "change": "schemaChange", "expected": "incompatible" },
+    { "change": "projectionChange", "expected": "incompatible" }
+  ],
+  "proof": {
+    "command": "bun run --cwd packages/law-practice/domain beep:test -- CourtReporterVocabulary.test.ts",
+    "result": "6 tests passed"
+  }
+}

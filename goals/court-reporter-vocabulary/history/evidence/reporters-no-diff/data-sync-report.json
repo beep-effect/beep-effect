@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "data-sync-report/v1",
+  "mode": "check",
+  "targets": [
+    {
+      "id": "reporters-db",
+      "changed": false,
+      "changedFiles": [],
+      "recordCount": 2729,
+      "summary": "1262 reporters, 798 journals, 373 laws, and companion abbreviation/regex data from reporters-db 3.2.66",
+      "sources": [
+        {
+          "id": "reporters-db-archive",
+          "url": "https://github.com/freelawproject/reporters-db/archive/fad63b383b92f9446c223ddc12bf0b6fd1a6b44c.tar.gz",
+          "sha256": "11d6aee9b5927fbf29d92fbce6e502c712d3c7acd0a3ed736293d7100b1386f2",
+          "version": "3.2.66"
+        }
+      ],
+      "canonicalPath": "packages/law-practice/domain/src/internal/generated/free-law-project/reporters-db.data.json",
+      "canonicalPatch": []
+    }
+  ]
+}

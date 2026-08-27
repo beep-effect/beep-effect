@@ -1,0 +1,223 @@
+import {
+  ArtifactDriftChangeKind,
+  CourtId,
+  CourtReporterArtifact,
+  CourtReporterArtifactComparison,
+  CourtReporterCompatibilityPolicy,
+  CourtSystem,
+  CourtType,
+  CourtVocabulary,
+  CourtVocabularyArtifact,
+  CourtVocabularyRecord,
+  classifyCourtReporterArtifactCompatibility,
+  findCourtById,
+  findCourtsByAlias,
+  findReporterById,
+  findReportersByAlias,
+  isCurrentCourtReporterArtifactVersion,
+  ReporterCiteType,
+  ReporterId,
+  ReporterVocabulary,
+  ReporterVocabularyArtifact,
+  ReporterVocabularyRecord,
+} from "@beep/law-practice-domain/values/CourtReporterVocabulary";
+import { NonNegativeInt } from "@beep/schema";
+import { A, O } from "@beep/utils";
+import { describe, expect, it } from "@effect/vitest";
+import * as Order from "effect/Order";
+import * as S from "effect/Schema";
+import type { CourtReporterArtifactVersion } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
+
+const currentCourt = CourtVocabulary.records[0]!;
+const secondCourt = CourtVocabulary.records[1]!;
+const thirdCourt = CourtVocabulary.records[2]!;
+const currentReporter = ReporterVocabulary.records[0]!;
+const secondReporter = ReporterVocabulary.records[1]!;
+
+const courtsArtifact = (records: ReadonlyArray<CourtVocabularyRecord>) =>
+  CourtVocabularyArtifact.make({
+    ...CourtVocabulary,
+    stableIdCount: NonNegativeInt.make(A.length(records)),
+    records,
+  });
+
+const reportersArtifact = (records: ReadonlyArray<ReporterVocabularyRecord>) =>
+  ReporterVocabularyArtifact.make({
+    ...ReporterVocabulary,
+    stableIdCount: NonNegativeInt.make(A.length(records)),
+    records,
+  });
+
+const comparisonArtifact = ({
+  courts = A.empty<CourtVocabularyRecord>(),
+  reporters = A.empty<ReporterVocabularyRecord>(),
+  schemaVersion = CourtReporterArtifact.schemaVersion,
+  projectionVersion = CourtReporterArtifact.projectionVersion,
+  version = CourtReporterArtifact.artifactVersion,
+}: {
+  readonly courts?: ReadonlyArray<CourtVocabularyRecord>;
+  readonly reporters?: ReadonlyArray<ReporterVocabularyRecord>;
+  readonly schemaVersion?: string;
+  readonly projectionVersion?: number;
+  readonly version?: CourtReporterArtifactVersion;
+}) =>
+  CourtReporterArtifactComparison.make({
+    schemaVersion,
+    projectionVersion,
+    artifactVersion: version,
+    policy: CourtReporterCompatibilityPolicy,
+    courts: courtsArtifact(courts),
+    reporters: reportersArtifact(reporters),
+  });
+
+const court = (
+  base: CourtVocabularyRecord,
+  fields: Partial<{
+    readonly id: CourtId;
+    readonly semanticKey: string;
+    readonly lineageKey: string;
+    readonly aliases: ReadonlyArray<string>;
+    readonly status: "active" | "tombstone";
+    readonly successorId: O.Option<CourtId>;
+  }>
+) => CourtVocabularyRecord.make({ ...base, ...fields });
+
+const reporter = (
+  base: ReporterVocabularyRecord,
+  fields: Partial<{
+    readonly id: ReporterId;
+    readonly semanticKey: string;
+    readonly lineageKey: string;
+    readonly aliases: ReadonlyArray<string>;
+    readonly status: "active" | "tombstone";
+    readonly successorId: O.Option<ReporterId>;
+  }>
+) => ReporterVocabularyRecord.make({ ...base, ...fields });
+
+const classify = (previous: Parameters<typeof comparisonArtifact>[0], next: Parameters<typeof comparisonArtifact>[0]) =>
+  classifyCourtReporterArtifactCompatibility(comparisonArtifact(previous), comparisonArtifact(next));
+
+describe("CourtReporterVocabulary", () => {
+  it("publishes schema-decoded pinned artifacts with unique stable identities", () => {
+    expect(S.is(CourtVocabularyArtifact)(CourtVocabulary)).toBe(true);
+    expect(S.is(ReporterVocabularyArtifact)(ReporterVocabulary)).toBe(true);
+    expect(CourtVocabulary.stableIdCount).toBe(2_809);
+    expect(ReporterVocabulary.stableIdCount).toBe(1_262);
+    expect(A.length(A.dedupe(A.map(CourtVocabulary.records, ({ id }) => id)))).toBe(2_809);
+    expect(A.length(A.dedupe(A.map(ReporterVocabulary.records, ({ id }) => id)))).toBe(1_262);
+    expect(CourtVocabulary.artifactVersion).toBe(ReporterVocabulary.artifactVersion);
+    expect(CourtVocabulary.source.commit).toBe("f353e51400a55cc8942b230b3e12540ad364fd23");
+    expect(ReporterVocabulary.source.commit).toBe("fad63b383b92f9446c223ddc12bf0b6fd1a6b44c");
+  });
+
+  it("preserves the pinned source literal domains without lossy remapping", () => {
+    const systems = A.sort(A.dedupe(A.map(CourtVocabulary.records, ({ system }) => system)), Order.String);
+    const types = A.sort(A.dedupe(A.getSomes(A.map(CourtVocabulary.records, ({ type }) => type))), Order.String);
+    const citeTypes = A.sort(A.dedupe(A.map(ReporterVocabulary.records, ({ citeType }) => citeType)), Order.String);
+
+    expect(systems).toStrictEqual(CourtSystem.Options);
+    expect(types).toStrictEqual(CourtType.Options);
+    expect(citeTypes).toStrictEqual(ReporterCiteType.Options);
+  });
+
+  it("resolves stable identities and preserves ambiguous aliases", () => {
+    expect(O.getOrThrow(findCourtById(currentCourt.id)).semanticKey).toBe(currentCourt.semanticKey);
+    expect(O.getOrThrow(findReporterById(currentReporter.id)).semanticKey).toBe(currentReporter.semanticKey);
+    expect(findCourtsByAlias("Ala.").length).toBeGreaterThan(0);
+    expect(findReportersByAlias("Woolw.")).toHaveLength(2);
+    expect(findReportersByAlias("Woolw.").map(({ id }) => id)).not.toStrictEqual([
+      findReportersByAlias("Woolw.")[0]?.id,
+    ]);
+  });
+
+  it("exposes vocabulary-only projections and an exact-version parser gate", () => {
+    expect("regexes" in ReporterVocabulary).toBe(false);
+    expect("variations" in currentReporter).toBe(false);
+    expect("sub_names" in currentCourt).toBe(false);
+    expect(isCurrentCourtReporterArtifactVersion(CourtReporterArtifact.artifactVersion)).toBe(true);
+    expect(isCurrentCourtReporterArtifactVersion("crv1:stale-parser-build")).toBe(false);
+  });
+
+  it("classifies every ratified lifecycle and incompatibility change", () => {
+    const addedCourt = court(currentCourt, {
+      id: CourtId.make("fixture-added-court"),
+      semanticKey: "fixture-added-court",
+      lineageKey: "fixture-added-court",
+      aliases: ["Fixture Added Court"],
+    });
+    const aliasedCourt = court(currentCourt, { aliases: [...currentCourt.aliases, "Fixture Alias"] });
+    const tombstonedCourt = court(currentCourt, {
+      status: "tombstone",
+      successorId: O.some(secondCourt.id),
+    });
+    const secondTombstone = court(secondCourt, {
+      status: "tombstone",
+      successorId: O.some(thirdCourt.id),
+    });
+    const firstTombstone = court(currentCourt, {
+      status: "tombstone",
+      successorId: O.some(thirdCourt.id),
+    });
+    const previousReporter = reporter(currentReporter, { aliases: ["Fixture Rep."] });
+    const unrelatedReporter = reporter(secondReporter, { aliases: ["Other Rep."] });
+    const reusedReporter = reporter(secondReporter, { aliases: ["Other Rep.", "Fixture Rep."] });
+    const splitReporter = reporter(currentReporter, {
+      id: ReporterId.make("reporter:fixture-date-split"),
+      semanticKey: `${currentReporter.semanticKey}:date-split`,
+      lineageKey: currentReporter.lineageKey,
+      aliases: ["Fixture Split Rep."],
+    });
+    const reassignedCourt = court(currentCourt, { id: CourtId.make("fixture-reassigned-court") });
+    const reusedCourt = court(currentCourt, { semanticKey: "fixture-semantic-reuse" });
+
+    const reports = [
+      classify({ courts: [currentCourt] }, { courts: [currentCourt, addedCourt] }),
+      classify({ courts: [currentCourt] }, { courts: [aliasedCourt] }),
+      classify({ courts: [aliasedCourt] }, { courts: [currentCourt] }),
+      classify({ courts: [currentCourt, secondCourt] }, { courts: [tombstonedCourt, secondCourt] }),
+      classify(
+        { courts: [currentCourt, secondCourt, thirdCourt] },
+        { courts: [firstTombstone, secondTombstone, thirdCourt] }
+      ),
+      classify({ reporters: [previousReporter, unrelatedReporter] }, { reporters: [previousReporter, reusedReporter] }),
+      classify({ reporters: [previousReporter] }, { reporters: [previousReporter, splitReporter] }),
+      classify({ courts: [currentCourt] }, { courts: [reassignedCourt] }),
+      classify({ courts: [currentCourt] }, { courts: [reusedCourt] }),
+      classify({ courts: [currentCourt] }, { courts: [] }),
+      classify({ schemaVersion: "court-reporter-vocabulary/v0" }, { schemaVersion: "court-reporter-vocabulary/v1" }),
+      classify({ projectionVersion: NonNegativeInt.make(0) }, { projectionVersion: NonNegativeInt.make(1) }),
+    ];
+    const kinds = A.sort(
+      A.dedupe(A.flatMap(reports, ({ changes }) => A.map(changes, ({ kind }) => kind))),
+      Order.String
+    );
+
+    expect(kinds).toStrictEqual(A.sort([...ArtifactDriftChangeKind.Options], Order.String));
+    expect(
+      A.every([reports[0], reports[1], ...reports.slice(3, 7)], ({ compatibility }) => compatibility === "compatible")
+    ).toBe(true);
+    expect(A.every([reports[2], ...reports.slice(7)], ({ compatibility }) => compatibility === "incompatible")).toBe(
+      true
+    );
+  });
+
+  it("reports an unchanged artifact as compatible with no drift", () => {
+    const current = CourtReporterArtifactComparison.make(CourtReporterArtifact);
+    const report = classifyCourtReporterArtifactCompatibility(current, current);
+
+    expect(report.compatibility).toBe("compatible");
+    expect(report.changes).toStrictEqual([]);
+  });
+
+  it("does not replay an unchanged historical successor transition", () => {
+    const tombstonedCourt = court(currentCourt, {
+      status: "tombstone",
+      successorId: O.some(secondCourt.id),
+    });
+    const historical = comparisonArtifact({ courts: [tombstonedCourt, secondCourt] });
+    const report = classifyCourtReporterArtifactCompatibility(historical, historical);
+
+    expect(report.compatibility).toBe("compatible");
+    expect(report.changes).toStrictEqual([]);
+  });
+});

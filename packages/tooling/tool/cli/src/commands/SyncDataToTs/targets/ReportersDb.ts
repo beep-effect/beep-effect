@@ -6,11 +6,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { A } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import { A, O, Str } from "@beep/utils";
+import { Crypto, Effect, Encoding, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertPinnedArchive, extractArchiveTextEntries, renderUnknownJsonModule } from "../internal/FreeLawProject.ts";
+import {
+  COURT_REPORTER_ARTIFACT_VERSION,
+  COURT_REPORTER_PROJECTION_VERSION,
+  COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+  classifyVocabularyAliases,
+} from "../internal/FreeLawProjectVocabulary.ts";
 import { fetchSource, formatJson, normalizeJson, outputFile, sourceMetadata } from "../internal/Source.ts";
 import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
 import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
@@ -19,7 +25,10 @@ const $I = $RepoCliId.create("commands/SyncDataToTs/targets/ReportersDb");
 const targetId = "reporters-db" as const;
 const outputRoot = "packages/law-practice/domain/src/internal/generated/free-law-project" as const;
 const canonicalPath = `${outputRoot}/reporters-db.data.json` as const;
+const vocabularyOutputPath = `${outputRoot}/reporters-vocabulary.ts` as const;
+const vocabularyDataPath = `${outputRoot}/reporters-vocabulary.data.json` as const;
 const refreshCommand = "bun run beep sync-data-to-ts --target reporters-db" as const;
+const textEncoder = new TextEncoder();
 
 /**
  * Pinned reporters-db release.
@@ -194,6 +203,15 @@ const recordArrayCount = <A>(record: Readonly<Record<string, ReadonlyArray<A>>>)
     A.reduce(0, (count, values) => count + A.length(values))
   );
 
+const makeReporterId = Effect.fn("SyncDataToTs.ReportersDb.makeReporterId")(function* (semanticKey: string) {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", textEncoder.encode(semanticKey))
+    .pipe(SyncDataToTsError.mapError("Failed to compute a stable reporters-db identifier", targetId, reportersPath));
+
+  return `reporter:${pipe(Encoding.encodeHex(digest), Str.slice(0, 24))}`;
+});
+
 /**
  * Decode all six authoritative reporters-db source datasets.
  *
@@ -244,6 +262,75 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
   });
   const { caseNameAbbreviations, journals, laws, regexes, reporters, stateAbbreviations } =
     yield* decodeReportersDbSourceData(entries);
+  const reporterSeeds = pipe(
+    R.toEntries(reporters),
+    A.flatMap(([primaryAbbreviation, records]) =>
+      A.map(records, (record) => {
+        const semanticKey = A.join([primaryAbbreviation, record.cite_type, record.name], "\u001f");
+        const lineageKey = A.join([primaryAbbreviation, record.name], "\u001f");
+        const candidateAliases = pipe(
+          [primaryAbbreviation],
+          A.appendAll(R.keys(record.editions)),
+          A.appendAll(R.keys(record.variations)),
+          A.appendAll(R.values(record.variations)),
+          A.filter(Str.isNonEmpty),
+          A.dedupe
+        );
+
+        return { candidateAliases, lineageKey, primaryAbbreviation, record, semanticKey };
+      })
+    )
+  );
+  const reportersWithIds = yield* Effect.forEach(
+    reporterSeeds,
+    (seed) => makeReporterId(seed.semanticKey).pipe(Effect.map((id) => ({ ...seed, id }))),
+    { concurrency: 16 }
+  );
+  const stableReporterIds = A.dedupe(A.map(reportersWithIds, (reporter) => reporter.id));
+
+  if (A.length(stableReporterIds) !== A.length(reportersWithIds)) {
+    return yield* SyncDataToTsError.make({
+      message: "Stable reporters-db identifiers contain a hash collision.",
+      targetId,
+      file: reportersPath,
+    });
+  }
+
+  const aliasesByReporterId = pipe(
+    reportersWithIds,
+    A.map(({ candidateAliases, id, record }) => [id, record.name, candidateAliases] as const),
+    classifyVocabularyAliases,
+    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
+    R.fromEntries
+  );
+  const reporterVocabulary = A.map(reportersWithIds, ({ id, lineageKey, primaryAbbreviation, record, semanticKey }) => {
+    const aliases = pipe(
+      R.get(aliasesByReporterId, id),
+      O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
+    );
+
+    return {
+      id,
+      semanticKey,
+      lineageKey,
+      primaryAbbreviation,
+      name: record.name,
+      citeType: record.cite_type,
+      editions: pipe(
+        R.toEntries(record.editions),
+        A.map(([abbreviation, edition]) => ({
+          abbreviation,
+          start: edition.start,
+          end: edition.end,
+        }))
+      ),
+      jurisdictions: record.mlz_jurisdiction,
+      aliases: aliases.aliases,
+      contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
+      status: "active",
+      successorId: null,
+    };
+  });
   const counts = {
     caseNameAbbreviationKeys: A.length(R.keys(caseNameAbbreviations)),
     caseNameExpansions: recordArrayCount(caseNameAbbreviations),
@@ -254,7 +341,25 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
     regexFamilies: A.length(R.keys(regexes)),
     reporterKeys: A.length(R.keys(reporters)),
     reporterRecords: recordArrayCount(reporters),
+    stableReporterIds: A.length(stableReporterIds),
     stateAbbreviations: A.length(R.keys(stateAbbreviations)),
+  };
+  const vocabularyArtifact = {
+    schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+    projectionVersion: COURT_REPORTER_PROJECTION_VERSION,
+    artifactVersion: COURT_REPORTER_ARTIFACT_VERSION,
+    source: {
+      repository: "reporters-db",
+      release: REPORTERS_DB_RELEASE,
+      commit: REPORTERS_DB_COMMIT,
+      retrievedOn: "2026-07-25",
+      sourceUrl: REPORTERS_DB_SOURCE_URL,
+      sha256: source.sha256,
+      semanticSha256: null,
+      refreshCommand,
+    },
+    stableIdCount: A.length(stableReporterIds),
+    records: reporterVocabulary,
   };
   const metadata = sourceMetadata(source, { version: REPORTERS_DB_RELEASE });
   const canonical = yield* normalizeJson(targetId, {
@@ -266,6 +371,12 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
       sourceUrl: REPORTERS_DB_SOURCE_URL,
       sha256: source.sha256,
       refreshCommand,
+    },
+    artifact: {
+      version: COURT_REPORTER_ARTIFACT_VERSION,
+      schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+      projectionVersion: COURT_REPORTER_PROJECTION_VERSION,
+      vocabularyPath: vocabularyDataPath,
     },
     counts,
     data: {
@@ -319,6 +430,15 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
           value: stateAbbreviations,
         })
       ),
+      outputFile(
+        vocabularyOutputPath,
+        renderUnknownJsonModule({
+          exportName: "ReportersVocabularyData",
+          refreshCommand,
+          value: vocabularyArtifact,
+        })
+      ),
+      outputFile(vocabularyDataPath, formatJson(vocabularyArtifact)),
       outputFile(canonicalPath, formatJson(canonical)),
     ],
     canonicalPath,

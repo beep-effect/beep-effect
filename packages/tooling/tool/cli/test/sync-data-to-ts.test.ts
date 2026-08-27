@@ -3,6 +3,7 @@ import { DEFAULT_JSON_PRETTY_MAX_LENGTH } from "@beep/repo-cli/test/Cli";
 import {
   assembleCourtsData,
   assertPinnedArchive,
+  classifyVocabularyAliases,
   decodeReportersDbSourceData,
   extractArchiveTextEntries,
   fetchSource,
@@ -498,6 +499,18 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       expect(data.stateAbbreviations["Ex."]).toBe("Example");
     })
   );
+
+  it("separates unique aliases from context-required abbreviation reuse", () => {
+    const classified = classifyVocabularyAliases([
+      ["first", "First Reporter", ["Unique First", "Reused Rep."]],
+      ["second", "Second Reporter", ["Unique Second", "Reused Rep."]],
+    ]);
+
+    expect(classified).toStrictEqual([
+      ["first", ["Unique First"], [["Reused Rep.", "First Reporter"]]],
+      ["second", ["Unique Second"], [["Reused Rep.", "Second Reporter"]]],
+    ]);
+  });
 
   it.effect(
     "assembles courts-db templates and inherits only missing parent fields",
