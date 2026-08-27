@@ -1,14 +1,15 @@
 /**
- * `beep explore --check` — read-only packet-stream check.
+ * `beep explore --check` — read-only stream-integrity and goal-fleet check.
  *
  * **Details**
  *
  * Scans both packet roots (`goals/`, `explorations/`) for packets that opted
  * into event sourcing (an `ops/events/` directory), folds each stream, and
  * reports forks, chain-integrity issues, and stale or missing trace
- * projections through the existing goals-doctor finding shape. Advisory in
- * this first slice (D8): findings are printed, the exit code stays zero, and
- * the blocking flip arrives later through the established ratchet.
+ * projections. It also scans every goal manifest for duplicate identities,
+ * dependency cycles, unreachable references, and references to packets that
+ * have not adopted the v2 convention. All findings use the goals-doctor shape
+ * and remain advisory: they are printed while the exit code stays zero.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -324,7 +325,7 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
     yield* Console.log(summary);
   }
   if (!A.isReadonlyArrayNonEmpty(scan.findings)) {
-    yield* Console.log("[explore:check] OK: no stream findings.");
+    yield* Console.log("[explore:check] OK: no stream-integrity or fleet-graph findings.");
     return;
   }
   yield* Console.error("[explore:check] findings (advisory):");
@@ -334,13 +335,13 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
 });
 
 /**
- * Run the read-only packet-stream check over both packet roots.
+ * Run the read-only stream-integrity and goal-fleet check.
  *
  * **Details**
  *
- * Advisory-only: findings are printed on stderr in the goals-doctor line
- * format, per-stream derived summaries on stdout, and the effect always
- * succeeds so CI stays green until the blocking ratchet flips.
+ * Advisory-only: stream and fleet-graph findings are printed on stderr in the
+ * goals-doctor line format, per-stream derived summaries on stdout, and the
+ * effect always succeeds so CI stays green until the blocking ratchet flips.
  *
  * **Example** (Verify the check returns an Effect)
  *

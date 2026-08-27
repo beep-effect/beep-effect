@@ -6,10 +6,12 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { MutableHashMap, MutableHashSet, Order } from "effect";
+import { MutableHashMap, MutableHashSet, Order, Result } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { applyJsoncModification } from "../../../internal/cli/Jsonc.ts";
+import { GoalManifest, GoalManifestSchemaVersion, isGoalStatus } from "../Goals.schemas.ts";
 import { isJsonRecord, parseGoalManifestText } from "../Inventory.ts";
 import {
   FleetLintFinding,
@@ -90,10 +92,14 @@ const emptyPlan = (slug: string, message: string): ManifestTranslationPlan =>
 
 type ManifestFields = {
   readonly beforeVersion: O.Option<string>;
+  readonly declaredVersion: O.Option<unknown>;
   readonly lifecycle: O.Option<string>;
   readonly packetPath: O.Option<string>;
   readonly status: O.Option<string>;
 };
+
+const isGoalManifestSchemaVersion = S.is(GoalManifestSchemaVersion);
+const decodeGoalManifestResult = S.decodeUnknownResult(GoalManifest);
 
 const issueWhen = (slug: string, condition: boolean, message: string): ReadonlyArray<TranslationIssue> =>
   condition ? A.of(issue(slug, message)) : A.empty<TranslationIssue>();
@@ -128,6 +134,11 @@ const inspectManifest = (
   const issues = A.flatten([
     issueWhen(record.slug, O.isNone(initiative), "initiative object is missing"),
     issueWhen(record.slug, O.isNone(status), "initiative.status is missing"),
+    issueWhen(
+      record.slug,
+      O.isSome(status) && !isGoalStatus(status.value),
+      `initiative.status "${O.getOrElse(status, () => "<missing>")}" is not a canonical goal status`
+    ),
     issueWhen(record.slug, O.isNone(declaredId), "initiative.id is missing"),
     pipe(
       declaredIdMismatch,
@@ -146,7 +157,16 @@ const inspectManifest = (
       O.getOrElse(A.empty)
     ),
   ]);
-  return [{ beforeVersion: stringField(manifest, "schemaVersion"), lifecycle, packetPath, status }, issues];
+  return [
+    {
+      beforeVersion: stringField(manifest, "schemaVersion"),
+      declaredVersion: R.get(manifest, "schemaVersion"),
+      lifecycle,
+      packetPath,
+      status,
+    },
+    issues,
+  ];
 };
 
 const legacyTranslationPlan = (
@@ -155,9 +175,14 @@ const legacyTranslationPlan = (
   fields: ManifestFields
 ): ManifestTranslationPlan => {
   let content = record.manifestText ?? "";
-  let edits = A.of("schemaVersion -> initiative-manifest/v2");
-  let drift = A.of<ManifestTranslation["drift"][number]>("breaking");
-  content = applyJsoncModification({ content, path: ["schemaVersion"], value: "initiative-manifest/v2" });
+  const needsVersionRewrite = !O.contains(fields.beforeVersion, "initiative-manifest/v2");
+  let edits = needsVersionRewrite ? A.of("schemaVersion -> initiative-manifest/v2") : A.empty<string>();
+  let drift = needsVersionRewrite
+    ? A.of<ManifestTranslation["drift"][number]>("breaking")
+    : A.empty<ManifestTranslation["drift"][number]>();
+  if (needsVersionRewrite) {
+    content = applyJsoncModification({ content, path: ["schemaVersion"], value: "initiative-manifest/v2" });
+  }
   let assumptions = A.of(
     TranslationAssumption.make({
       slug: record.slug,
@@ -213,22 +238,53 @@ const legacyTranslationPlan = (
 const parsedManifestPlan = (record: GoalPacketRecord, manifest: JsonRecord): ManifestTranslationPlan => {
   const probe = probeManifest(record.slug, manifest);
   const [fields, issues] = inspectManifest(record, manifest, probe);
-  if (A.isReadonlyArrayNonEmpty(issues)) {
+  const versionIssues = issueWhen(
+    record.slug,
+    O.isSome(fields.declaredVersion) && !isGoalManifestSchemaVersion(fields.declaredVersion.value),
+    "schemaVersion is present but is not a recognized string migration source"
+  );
+  const allIssues = A.appendAll(issues, versionIssues);
+  if (A.isReadonlyArrayNonEmpty(allIssues)) {
     return ManifestTranslationPlan.make({
       probe,
       translation: O.none(),
-      issues,
+      issues: allIssues,
       assumptions: A.empty<TranslationAssumption>(),
     });
   }
-  return O.contains(fields.beforeVersion, "initiative-manifest/v2")
+  const plan =
+    O.contains(fields.beforeVersion, "initiative-manifest/v2") && probe.hasLifecycle && probe.hasPacketPath
+      ? ManifestTranslationPlan.make({
+          probe,
+          translation: O.none(),
+          issues: A.empty<TranslationIssue>(),
+          assumptions: A.empty<TranslationAssumption>(),
+        })
+      : legacyTranslationPlan(record, probe, fields);
+  const candidateText = O.match(plan.translation, {
+    onNone: () => record.manifestText,
+    onSome: (translation) => translation.content,
+  });
+  const candidate = candidateText === undefined ? O.none() : parseGoalManifestText(candidateText);
+  if (O.isNone(candidate)) {
+    return ManifestTranslationPlan.make({
+      probe,
+      translation: O.none(),
+      issues: A.of(issue(record.slug, "translated candidate does not parse as a JSON object")),
+      assumptions: A.empty<TranslationAssumption>(),
+    });
+  }
+  const decoded = decodeGoalManifestResult(candidate.value);
+  return Result.isFailure(decoded)
     ? ManifestTranslationPlan.make({
         probe,
         translation: O.none(),
-        issues: A.empty<TranslationIssue>(),
+        issues: A.of(
+          issue(record.slug, `translated candidate does not decode as GoalManifest: ${decoded.failure.message}`)
+        ),
         assumptions: A.empty<TranslationAssumption>(),
       })
-    : legacyTranslationPlan(record, probe, fields);
+    : plan;
 };
 
 /**
@@ -247,12 +303,22 @@ const parsedManifestPlan = (record: GoalPacketRecord, manifest: JsonRecord): Man
  * import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory"
  * import * as O from "effect/Option"
  *
+ * const manifest = {
+ *   initiative: { id: "demo", status: "active" },
+ *   completionGate: {
+ *     operator: "yeet",
+ *     requiresPullRequest: true,
+ *     requiresMergeable: true,
+ *     statement: "Ship via yeet.",
+ *     grandfathered: false,
+ *   },
+ * }
  * const plan = planManifestTranslation(GoalPacketRecord.make({
  *   slug: "demo",
  *   packetPath: "goals/demo",
  *   manifestPath: "goals/demo/ops/manifest.json",
  *   readmePath: "goals/demo/README.md",
- *   manifestText: '{ "initiative": { "id": "demo", "status": "active" }, "completionGate": {} }',
+ *   manifestText: JSON.stringify(manifest),
  * }))
  * console.log(O.isSome(plan.translation)) // true
  * ```

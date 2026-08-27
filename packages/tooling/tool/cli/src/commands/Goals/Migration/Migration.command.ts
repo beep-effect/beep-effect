@@ -6,13 +6,15 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Layer, Path } from "effect";
+import { Console, DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GoalStatusInputError } from "../Goals.errors.ts";
-import { listGoalPackets } from "../Inventory.ts";
+import { listGoalPacketsStrict } from "../Inventory.ts";
 import { PacketStreamError } from "../PacketCore/PacketCore.errors.ts";
-import { isPacketSlug, PacketRoot } from "../PacketCore/PacketCore.schemas.ts";
+import { isPacketSlug, PacketEventTimestamp, PacketRoot } from "../PacketCore/PacketCore.schemas.ts";
 import { PacketStreamLocator } from "../PacketCore/PacketEventStore.ts";
 import { PacketCoreLive } from "../PacketCore/PacketTransitionWriter.ts";
 import { lintGoalFleet, planManifestTranslation } from "./ManifestTranslation.ts";
@@ -157,16 +159,24 @@ const planConventionMigration = Effect.fn("Goals.planConventionMigration")(funct
   mode: "preview" | "apply",
   at: string
 ) {
-  const records = yield* listGoalPackets();
+  const records = yield* listGoalPacketsStrict().pipe(
+    Effect.mapError((error) => PacketStreamError.new("fleet", `goal inventory scan failed: ${error.message}`))
+  );
+  const invalidRecord = A.findFirst(records, (record) => !isPacketSlug(record.slug));
+  if (O.isSome(invalidRecord)) {
+    return yield* PacketStreamError.new(
+      "fleet",
+      `goal inventory contains invalid packet directory "${invalidRecord.value.slug}"`
+    );
+  }
   const plans = A.map(records, planManifestTranslation);
   const translations = A.getSomes(A.map(plans, (plan) => plan.translation));
   let seeds = A.empty<PacketGenesisSeed>();
   for (const translation of translations) {
-    const record = O.getOrUndefined(A.findFirst(records, (item) => item.slug === translation.slug));
-    if (record !== undefined) {
-      const seed = yield* planPacketGenesisSeed(record, translation.content, at);
-      if (O.isSome(seed)) seeds = A.append(seeds, seed.value);
-    }
+    const record = A.findFirst(records, (item) => item.slug === translation.slug);
+    if (O.isNone(record)) continue;
+    const seed = yield* planPacketGenesisSeed(record.value, translation.content, at);
+    if (O.isSome(seed)) seeds = A.append(seeds, seed.value);
   }
   return {
     records,
@@ -187,6 +197,25 @@ const countDrift = (
   translations: ReadonlyArray<ManifestTranslation>,
   kind: ManifestTranslation["drift"][number]
 ): number => A.length(A.filter(translations, (translation) => A.contains(translation.drift, kind)));
+
+type ConventionReportCoordinates = {
+  readonly root: string;
+  readonly target: string;
+};
+
+const conventionReportCoordinates = Effect.fn("Goals.conventionReportCoordinates")(function* (reportPath: string) {
+  const path = yield* Path.Path;
+  const root = path.resolve("goals/packet-convention-migration/history");
+  const target = path.resolve(reportPath);
+  const relative = path.relative(root, target);
+  if (relative === "" || path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative)) {
+    return yield* PacketStreamError.new(
+      "fleet",
+      `report path must be a file beneath goals/packet-convention-migration/history; received "${reportPath}"`
+    );
+  }
+  return { root, target } satisfies ConventionReportCoordinates;
+});
 
 /**
  * Render a concise committed migration report with explicit Issues and Assumptions.
@@ -259,32 +288,290 @@ export const renderTranslationReport = (report: TranslationReport): string => {
   )}\n`;
 };
 
-const applyConventionPlan = Effect.fn("Goals.applyConventionPlan")(function* (
-  plan: ConventionPlan,
-  reportPath: string
-) {
+type ManifestSnapshot = {
+  readonly packetRoot: string;
+  readonly path: string;
+  readonly original: string;
+  readonly expected: string;
+  readonly slug: string;
+};
+
+type SeedSnapshot = {
+  readonly eventsDirectory: string;
+  readonly packetRoot: string;
+  readonly priorTrace: O.Option<string>;
+  readonly seed: PacketGenesisSeed;
+};
+
+const ensureMigrationApplicable = Effect.fn("Goals.ensureMigrationApplicable")(function* (report: TranslationReport) {
   const blocking =
-    A.some(plan.report.issues, (item) => item.severity === "violation") ||
-    A.some(plan.report.fleetFindings, (item) => item.severity === "violation");
+    A.some(report.issues, (item) => item.severity === "violation") ||
+    A.some(report.fleetFindings, (item) => item.severity === "violation");
   if (blocking) return yield* PacketStreamError.new("fleet", "migration report contains violations; apply refused");
+});
+
+const snapshotManifestTranslations = Effect.fn("Goals.snapshotManifestTranslations")(function* (plan: ConventionPlan) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  let snapshots = A.empty<ManifestSnapshot>();
   for (const translation of plan.report.translations) {
-    yield* fs
-      .writeFileString(translation.manifestPath, translation.content)
+    const record = A.findFirst(plan.records, (item) => item.slug === translation.slug);
+    if (O.isNone(record) || record.value.manifestText === undefined) {
+      return yield* PacketStreamError.new(translation.slug, "manifest source disappeared after planning");
+    }
+    const content = yield* fs
+      .readFileString(translation.manifestPath)
       .pipe(
         Effect.mapError((error) =>
-          PacketStreamError.new(translation.slug, `manifest translation write failed: ${String(error)}`)
+          PacketStreamError.new(translation.slug, `manifest snapshot failed: ${error.message}`)
         )
       );
+    if (content !== record.value.manifestText) {
+      return yield* PacketStreamError.new(translation.slug, "manifest changed after planning; re-run preview");
+    }
+    snapshots = A.append(snapshots, {
+      packetRoot: path.resolve(record.value.packetPath),
+      path: path.resolve(translation.manifestPath),
+      original: content,
+      expected: translation.content,
+      slug: translation.slug,
+    });
   }
-  for (const seed of plan.report.seeds) yield* applyPacketGenesisSeed(seed);
+  return snapshots;
+});
+
+const readOptionalSnapshot = Effect.fn("Goals.readOptionalSnapshot")(function* (filePath: string, context: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readFileString(filePath).pipe(
+    Effect.map(O.some),
+    Effect.catchIf(
+      (error) => error.reason._tag === "NotFound",
+      () => Effect.succeed(O.none<string>())
+    ),
+    Effect.mapError((error) => PacketStreamError.new("fleet", `${context}: ${error.message}`))
+  );
+});
+
+const snapshotGenesisSeeds = Effect.fn("Goals.snapshotGenesisSeeds")(function* (
+  seeds: ReadonlyArray<PacketGenesisSeed>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let snapshots = A.empty<SeedSnapshot>();
+  for (const seed of seeds) {
+    const streamPresent = yield* fs
+      .exists(seed.eventsDirectory)
+      .pipe(
+        Effect.mapError((error) => PacketStreamError.new(seed.slug, `event stream inspection failed: ${error.message}`))
+      );
+    if (streamPresent) {
+      return yield* PacketStreamError.new(seed.slug, "event stream appeared after planning; re-run preview");
+    }
+    snapshots = A.append(snapshots, {
+      eventsDirectory: path.resolve(seed.eventsDirectory),
+      packetRoot: path.resolve(path.dirname(path.dirname(seed.eventsDirectory))),
+      priorTrace: yield* readOptionalSnapshot(seed.tracePath, `trace snapshot failed for ${seed.slug}`),
+      seed,
+    });
+  }
+  return snapshots;
+});
+
+const rollbackManifest = Effect.fn("Goals.rollbackManifest")(function* (snapshot: ManifestSnapshot) {
+  const fs = yield* FileSystem.FileSystem;
+  const current = yield* fs
+    .readFileString(snapshot.path)
+    .pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(snapshot.slug, `manifest rollback read failed: ${error.message}`)
+      )
+    );
+  if (current !== snapshot.expected) {
+    return yield* PacketStreamError.new(
+      snapshot.slug,
+      "manifest rollback conflict: bytes changed after migration wrote them"
+    );
+  }
+  yield* writeContainedFileString(snapshot.packetRoot, snapshot.path, snapshot.original).pipe(
+    Effect.mapError((error) =>
+      PacketStreamError.new(snapshot.slug, `manifest rollback restore failed: ${error.message}`)
+    )
+  );
+});
+
+const rollbackSeed = Effect.fn("Goals.rollbackSeed")(function* (snapshot: SeedSnapshot) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const eventPath = path.join(snapshot.eventsDirectory, snapshot.seed.eventFileName);
+  const entries = yield* fs
+    .readDirectory(snapshot.eventsDirectory)
+    .pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(snapshot.seed.slug, `seed rollback scan failed: ${error.message}`)
+      )
+    );
+  if (A.length(entries) !== 1 || entries[0] !== snapshot.seed.eventFileName) {
+    return yield* PacketStreamError.new(
+      snapshot.seed.slug,
+      "seed rollback conflict: event directory contains foreign bytes"
+    );
+  }
+  const eventText = yield* fs
+    .readFileString(eventPath)
+    .pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(snapshot.seed.slug, `seed rollback event read failed: ${error.message}`)
+      )
+    );
+  if (eventText !== snapshot.seed.eventText) {
+    return yield* PacketStreamError.new(snapshot.seed.slug, "seed rollback conflict: event bytes changed");
+  }
+  const traceText = yield* fs
+    .readFileString(snapshot.seed.tracePath)
+    .pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(snapshot.seed.slug, `seed rollback trace read failed: ${error.message}`)
+      )
+    );
+  if (traceText !== snapshot.seed.traceText) {
+    return yield* PacketStreamError.new(snapshot.seed.slug, "seed rollback conflict: trace bytes changed");
+  }
+  yield* O.match(snapshot.priorTrace, {
+    onNone: () =>
+      fs
+        .remove(snapshot.seed.tracePath)
+        .pipe(
+          Effect.mapError((error) =>
+            PacketStreamError.new(snapshot.seed.slug, `seed rollback trace remove failed: ${error.message}`)
+          )
+        ),
+    onSome: (original) =>
+      writeContainedFileString(snapshot.packetRoot, path.resolve(snapshot.seed.tracePath), original).pipe(
+        Effect.mapError((error) =>
+          PacketStreamError.new(snapshot.seed.slug, `seed rollback trace restore failed: ${error.message}`)
+        )
+      ),
+  });
   yield* fs
-    .makeDirectory(path.dirname(reportPath), { recursive: true })
-    .pipe(Effect.mapError((error) => PacketStreamError.new("fleet", `report directory failed: ${String(error)}`)));
-  yield* fs
-    .writeFileString(reportPath, renderTranslationReport(plan.report))
-    .pipe(Effect.mapError((error) => PacketStreamError.new("fleet", `report write failed: ${String(error)}`)));
+    .remove(snapshot.eventsDirectory, { recursive: true })
+    .pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(snapshot.seed.slug, `seed rollback event remove failed: ${error.message}`)
+      )
+    );
+});
+
+const rollbackConventionMutation = Effect.fn("Goals.rollbackConventionMutation")(function* (
+  writtenManifests: ReadonlyArray<ManifestSnapshot>,
+  appliedSeeds: ReadonlyArray<SeedSnapshot>
+) {
+  let failures = A.empty<string>();
+  for (const snapshot of A.reverse(appliedSeeds)) {
+    const result = yield* Effect.result(rollbackSeed(snapshot));
+    if (Result.isFailure(result)) failures = A.append(failures, result.failure.message);
+  }
+  for (const snapshot of A.reverse(writtenManifests)) {
+    const result = yield* Effect.result(rollbackManifest(snapshot));
+    if (Result.isFailure(result)) failures = A.append(failures, result.failure.message);
+  }
+  if (A.isReadonlyArrayNonEmpty(failures)) {
+    return yield* PacketStreamError.new("fleet", `rollback incomplete: ${A.join(failures, "; ")}`);
+  }
+});
+
+const promoteManifestTranslation = Effect.fn("Goals.promoteManifestTranslation")(function* (
+  translation: ManifestTranslation,
+  snapshots: ReadonlyArray<ManifestSnapshot>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const snapshot = A.findFirst(snapshots, (item) => item.slug === translation.slug);
+  if (O.isNone(snapshot)) {
+    return yield* PacketStreamError.new(translation.slug, "manifest snapshot missing before promotion");
+  }
+  const current = yield* fs
+    .readFileString(snapshot.value.path)
+    .pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(translation.slug, `manifest promotion recheck failed: ${error.message}`)
+      )
+    );
+  if (current !== snapshot.value.original) {
+    return yield* PacketStreamError.new(translation.slug, "manifest changed before promotion; apply refused");
+  }
+  yield* writeContainedFileString(snapshot.value.packetRoot, snapshot.value.path, snapshot.value.expected).pipe(
+    Effect.mapError((error) =>
+      PacketStreamError.new(translation.slug, `manifest translation write failed: ${error.message}`)
+    )
+  );
+  return snapshot.value;
+});
+
+const promoteGenesisSeed = Effect.fn("Goals.promoteGenesisSeed")(function* (
+  seed: PacketGenesisSeed,
+  snapshots: ReadonlyArray<SeedSnapshot>
+) {
+  const snapshot = A.findFirst(snapshots, (item) => item.seed.slug === seed.slug);
+  if (O.isNone(snapshot)) {
+    return yield* PacketStreamError.new(seed.slug, "seed snapshot missing before promotion");
+  }
+  yield* applyPacketGenesisSeed(seed);
+  return snapshot.value;
+});
+
+const ensurePostApplyClean = Effect.fn("Goals.ensurePostApplyClean")(function* (report: TranslationReport) {
+  const dirty =
+    A.isReadonlyArrayNonEmpty(report.translations) ||
+    A.isReadonlyArrayNonEmpty(report.seeds) ||
+    A.isReadonlyArrayNonEmpty(report.issues) ||
+    A.isReadonlyArrayNonEmpty(report.fleetFindings);
+  if (dirty) {
+    return yield* PacketStreamError.new("fleet", "post-apply preview is not empty; all writes were rolled back");
+  }
+});
+
+const applyConventionPlan = Effect.fn("Goals.applyConventionPlan")(function* (
+  plan: ConventionPlan,
+  reportPath: string,
+  at: string
+) {
+  yield* ensureMigrationApplicable(plan.report);
+  const reportCoordinates = yield* conventionReportCoordinates(reportPath);
+  const manifestSnapshots = yield* snapshotManifestTranslations(plan);
+  const seedSnapshots = yield* snapshotGenesisSeeds(plan.report.seeds);
+  let writtenManifests = A.empty<ManifestSnapshot>();
+  let appliedSeeds = A.empty<SeedSnapshot>();
+
+  const mutation = Effect.gen(function* () {
+    for (const translation of plan.report.translations) {
+      writtenManifests = A.append(writtenManifests, yield* promoteManifestTranslation(translation, manifestSnapshots));
+    }
+    for (const seed of plan.report.seeds) {
+      appliedSeeds = A.append(appliedSeeds, yield* promoteGenesisSeed(seed, seedSnapshots));
+    }
+    const after = yield* planConventionMigration("preview", at);
+    yield* ensurePostApplyClean(after.report);
+    yield* writeContainedFileString(
+      reportCoordinates.root,
+      reportCoordinates.target,
+      `${renderTranslationReport(plan.report)}${postApplyProof(after.report)}`
+    ).pipe(
+      Effect.mapError((error) => PacketStreamError.new("fleet", `verified report write failed: ${error.message}`))
+    );
+    return after.report;
+  });
+  return yield* mutation.pipe(
+    Effect.matchEffect({
+      onFailure: (original) =>
+        rollbackConventionMutation(writtenManifests, appliedSeeds).pipe(
+          Effect.matchEffect({
+            onFailure: (cleanup) =>
+              Effect.fail(PacketStreamError.new("fleet", `${original.message}; rollback failed: ${cleanup.message}`)),
+            onSuccess: () => Effect.fail(original),
+          })
+        ),
+      onSuccess: Effect.succeed,
+    })
+  );
 });
 
 const postApplyProof = (report: TranslationReport): string => `
@@ -296,24 +583,13 @@ const postApplyProof = (report: TranslationReport): string => `
 - fleet findings: ${A.length(report.fleetFindings)}
 `;
 
-const writeVerifiedReport = Effect.fn("Goals.writeVerifiedConventionReport")(function* (
-  reportPath: string,
-  applied: TranslationReport,
-  after: TranslationReport
-) {
-  const fs = yield* FileSystem.FileSystem;
-  yield* fs
-    .writeFileString(reportPath, `${renderTranslationReport(applied)}${postApplyProof(after)}`)
-    .pipe(Effect.mapError((error) => PacketStreamError.new("fleet", `verified report write failed: ${String(error)}`)));
-});
-
 const atFlag = Flag.string("at").pipe(
   Flag.optional,
   Flag.withDescription("Explicit ISO adoption timestamp for deterministic genesis events; defaults to now")
 );
 const reportFlag = Flag.string("report").pipe(
   Flag.withDefault(PACKET_CONVENTION_REPORT_PATH),
-  Flag.withDescription("Committed Markdown report path written on apply")
+  Flag.withDescription("Markdown report path beneath goals/packet-convention-migration/history")
 );
 
 type MigrateConventionsCommandInput = {
@@ -345,6 +621,10 @@ export const goalsMigrateConventionsCommand = Command.make(
       const usage = "Usage: beep goals migrate-conventions --preview|--apply [--at <ISO timestamp>]";
       const mode = yield* requireExclusiveMode(preview, apply, usage);
       const timestamp = O.isSome(at) ? at.value : DateTime.formatIso(yield* DateTime.now);
+      if (!S.is(PacketEventTimestamp)(timestamp)) {
+        return yield* GoalStatusInputError.new(`--at must be a full ISO-8601 date-time; received "${timestamp}".`);
+      }
+      if (mode === "apply") yield* conventionReportCoordinates(report);
       const plan = yield* planConventionMigration(mode, timestamp);
       const rendered = renderTranslationReport(plan.report);
       yield* Console.log(rendered);
@@ -352,20 +632,14 @@ export const goalsMigrateConventionsCommand = Command.make(
         yield* Console.log("[goals:migrate-conventions] preview only — nothing written.");
         return;
       }
-      yield* applyConventionPlan(plan, report);
-      const after = yield* planConventionMigration("preview", timestamp);
-      const clean =
-        !A.isReadonlyArrayNonEmpty(after.report.translations) &&
-        !A.isReadonlyArrayNonEmpty(after.report.seeds) &&
-        !A.isReadonlyArrayNonEmpty(after.report.issues) &&
-        !A.isReadonlyArrayNonEmpty(after.report.fleetFindings);
-      yield* writeVerifiedReport(report, plan.report, after.report);
-      if (!clean) {
-        return yield* PacketStreamError.new(
-          "fleet",
-          "post-apply preview is not empty; inspect the committed migration report"
-        );
+      yield* ensureMigrationApplicable(plan.report);
+      const hasMutations =
+        A.isReadonlyArrayNonEmpty(plan.report.translations) || A.isReadonlyArrayNonEmpty(plan.report.seeds);
+      if (!hasMutations) {
+        yield* Console.log("[goals:migrate-conventions] fleet already conforms; existing report preserved.");
+        return;
       }
+      yield* applyConventionPlan(plan, report, timestamp);
       yield* Console.log(
         `[goals:migrate-conventions] applied ${A.length(plan.report.translations)} translation(s), ${A.length(plan.report.seeds)} seed(s); post-apply preview empty; report ${report}.`
       );

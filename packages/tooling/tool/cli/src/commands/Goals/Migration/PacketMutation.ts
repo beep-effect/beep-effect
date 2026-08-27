@@ -6,17 +6,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { A, O, pipe } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { Context, Effect, FileSystem, flow, Layer, Order, Path } from "effect";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { isGoalStatus } from "../Goals.schemas.ts";
-import { isJsonRecord, parseGoalManifestText } from "../Inventory.ts";
+import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
+import { decodeGoalManifest } from "../Goals.schemas.ts";
+import { parseGoalManifestText } from "../Inventory.ts";
 import { PacketStreamError } from "../PacketCore/PacketCore.errors.ts";
 import {
-  isPacketStage,
+  isPacketSlug,
   PacketEvent,
+  PacketEventTimestamp,
   PacketForkRepairPlan,
   StoredPacketEvent,
 } from "../PacketCore/PacketCore.schemas.ts";
@@ -29,6 +29,7 @@ import {
   renderPacketTraceFile,
 } from "../PacketCore/PacketFold.ts";
 import { PACKET_TRACE_SEGMENTS } from "../PacketCore/PacketTransitionWriter.ts";
+import { goalStagePosition } from "../SetStatus.ts";
 import { PacketGenesisSeed } from "./Migration.schemas.ts";
 import type { GoalPacketRecord } from "../Inventory.ts";
 import type { PacketDerivedState } from "../PacketCore/PacketCore.schemas.ts";
@@ -110,6 +111,14 @@ const sameListing = (left: ReadonlyArray<StoredPacketEvent>, right: ReadonlyArra
   return A.length(a) === A.length(b) && A.every(a, (value, index) => value === b[index]);
 };
 
+const forkRepairMadeProgress = (
+  before: PacketDerivedState,
+  after: PacketDerivedState,
+  repair: PacketForkRepairPlan
+): boolean =>
+  A.length(after.forks) < A.length(before.forks) &&
+  !A.some(after.forks, (fork) => fork.parentSeq === repair.fork.parentSeq && fork.parent === repair.fork.parent);
+
 const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -136,7 +145,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
       if (!A.contains(input.repair.filesToRemove, stored.fileName)) {
         yield* fs
           .copyFile(path.join(input.eventsDirectory, stored.fileName), path.join(input.stagedEvents, stored.fileName))
-          .pipe(Effect.mapError((error) => streamError(input.packet, `event copy failed: ${String(error)}`)));
+          .pipe(Effect.mapError((error) => streamError(input.packet, `event copy failed: ${error.message}`)));
       }
     }
   });
@@ -155,7 +164,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
       );
       yield* fs
         .writeFileString(path.join(input.stagedEvents, packetEventFileName(event, id)), content)
-        .pipe(Effect.mapError((error) => streamError(input.packet, `rebased event write failed: ${String(error)}`)));
+        .pipe(Effect.mapError((error) => streamError(input.packet, `rebased event write failed: ${error.message}`)));
     }
   });
 
@@ -172,9 +181,10 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     );
     if (O.isNone(planned)) return O.none<PacketForkRepairOutcome>();
     const repair = planned.value;
+    const originalDerived = foldListing(locator, original);
     const tempRoot = yield* fs
       .makeTempDirectory({ directory: locator.packetPath, prefix: ".tmp-packet-repair-" })
-      .pipe(Effect.mapError((error) => streamError(locator.packet, `repair staging failed: ${String(error)}`)));
+      .pipe(Effect.mapError((error) => streamError(locator.packet, `repair staging failed: ${error.message}`)));
     const stagedPacketPath = path.join(tempRoot, "staged-packet");
     const stagedEvents = path.join(stagedPacketPath, ...PACKET_EVENTS_SEGMENTS);
     const eventsDirectory = path.join(locator.packetPath, ...PACKET_EVENTS_SEGMENTS);
@@ -200,7 +210,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
       Effect.gen(function* () {
         yield* fs
           .makeDirectory(stagedEvents, { recursive: true })
-          .pipe(Effect.mapError((error) => streamError(locator.packet, `repair staging failed: ${String(error)}`)));
+          .pipe(Effect.mapError((error) => streamError(locator.packet, `repair staging failed: ${error.message}`)));
         yield* copySurvivorEvents({ eventsDirectory, original, repair, stagedEvents, packet: locator.packet });
         yield* writeRebaseDrafts({ repair, stagedEvents, packet: locator.packet });
         const stagedLocator = PacketStreamLocator.make({ ...locator, packetPath: stagedPacketPath });
@@ -209,11 +219,8 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         if (A.isReadonlyArrayNonEmpty(staged.issues) || A.isReadonlyArrayNonEmpty(derived.issues)) {
           return yield* streamError(locator.packet, "staged repair does not pass event integrity checks");
         }
-        if (A.isReadonlyArrayNonEmpty(derived.forks)) {
-          return yield* streamError(
-            locator.packet,
-            "staged repair still contains a fork; apply one innermost plan first"
-          );
+        if (!forkRepairMadeProgress(originalDerived, derived, repair)) {
+          return yield* streamError(locator.packet, "staged repair did not remove the targeted fork");
         }
         const fresh = yield* store.list(locator);
         if (!sameListing(original.events, fresh.events) || A.isReadonlyArrayNonEmpty(fresh.issues)) {
@@ -222,19 +229,19 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         yield* fs
           .rename(eventsDirectory, backupDirectory)
           .pipe(
-            Effect.mapError((error) => streamError(locator.packet, `existing stream move failed: ${String(error)}`))
+            Effect.mapError((error) => streamError(locator.packet, `existing stream move failed: ${error.message}`))
           );
         yield* fs
           .rename(stagedEvents, eventsDirectory)
           .pipe(
-            Effect.mapError((error) => streamError(locator.packet, `staged stream promotion failed: ${String(error)}`))
+            Effect.mapError((error) => streamError(locator.packet, `staged stream promotion failed: ${error.message}`))
           );
         const committed = yield* store.list(locator);
         const committedDerived = foldListing(locator, committed);
         if (
           A.isReadonlyArrayNonEmpty(committed.issues) ||
           A.isReadonlyArrayNonEmpty(committedDerived.issues) ||
-          A.isReadonlyArrayNonEmpty(committedDerived.forks)
+          !forkRepairMadeProgress(originalDerived, committedDerived, repair)
         ) {
           yield* fs.remove(eventsDirectory, { recursive: true, force: true }).pipe(Effect.ignore);
           yield* fs.rename(backupDirectory, eventsDirectory).pipe(Effect.ignore);
@@ -246,7 +253,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         yield* fs
           .writeFileString(tracePath, traceText)
           .pipe(
-            Effect.mapError((error) => streamError(locator.packet, `repaired trace write failed: ${String(error)}`))
+            Effect.mapError((error) => streamError(locator.packet, `repaired trace write failed: ${error.message}`))
           );
         yield* fs.remove(backupDirectory, { recursive: true, force: true }).pipe(Effect.ignore);
         yield* fs.remove(tempRoot, { recursive: true, force: true }).pipe(Effect.ignore);
@@ -278,42 +285,6 @@ export const PacketForkRepairApplierLive: Layer.Layer<
   never,
   PacketEventStore | FileSystem.FileSystem | Path.Path
 > = Layer.effect(PacketForkRepairApplier, makePacketForkRepairApplier());
-
-type PhaseSnapshot = { readonly stage: string; readonly ordinal: number };
-
-const phaseSnapshot = (manifest: Readonly<Record<string, unknown>>): O.Option<PhaseSnapshot> => {
-  const phases = R.get(manifest, "phases");
-  const entries = pipe(
-    phases,
-    O.flatMap((value) => {
-      if (A.isArray(value)) return O.some(value);
-      return isJsonRecord(value) ? O.some(A.map(R.toEntries(value), ([id, entry]) => ({ id, entry }))) : O.none();
-    }),
-    O.getOrElse(A.empty<unknown>)
-  );
-  const normalized = A.getSomes(
-    A.map(entries, (entry, index) => {
-      const candidate = isJsonRecord(entry) && isJsonRecord(entry.entry) ? { ...entry.entry, id: entry.id } : entry;
-      if (!isJsonRecord(candidate))
-        return O.none<{ readonly id: string; readonly status: string; readonly index: number }>();
-      const id = R.get(candidate, "id");
-      const status = R.get(candidate, "status");
-      return O.isSome(id) &&
-        P.isString(id.value) &&
-        isPacketStage(id.value) &&
-        O.isSome(status) &&
-        P.isString(status.value)
-        ? O.some({ id: id.value, status: status.value, index })
-        : O.none();
-    })
-  );
-  const current = pipe(
-    A.findFirst(normalized, (entry) => entry.status === "in-progress"),
-    O.orElse(() => A.findFirst(normalized, (entry) => entry.status === "pending")),
-    O.orElse(() => A.last(normalized))
-  );
-  return O.map(current, (entry) => ({ stage: entry.id, ordinal: entry.index }));
-};
 
 /**
  * Plan one honest genesis seed from the current translated manifest.
@@ -357,18 +328,24 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
   const present = yield* fs.exists(eventsDirectory).pipe(Effect.orElseSucceed(() => false));
   if (present) return O.none<PacketGenesisSeed>();
   const parsed = parseGoalManifestText(manifestText);
-  if (O.isNone(parsed) || !isJsonRecord(parsed.value)) {
+  if (O.isNone(parsed)) {
     return yield* streamError(record.slug, "translated manifest cannot seed genesis because it is invalid JSON");
   }
-  const initiative = R.get(parsed.value, "initiative");
-  if (O.isNone(initiative) || !isJsonRecord(initiative.value)) {
-    return yield* streamError(record.slug, "translated manifest cannot seed genesis without initiative");
+  if (!isPacketSlug(record.slug)) {
+    return yield* streamError(record.slug, `directory name "${record.slug}" is not a valid packet slug`);
   }
-  const status = R.get(initiative.value, "status");
-  if (O.isNone(status) || !isGoalStatus(status.value)) {
-    return yield* streamError(record.slug, "translated manifest cannot seed genesis without canonical status");
+  if (!S.is(PacketEventTimestamp)(at)) {
+    return yield* streamError(record.slug, `adoption timestamp "${at}" is not a full ISO-8601 date-time`);
   }
-  const position = phaseSnapshot(parsed.value);
+  const manifest = yield* decodeGoalManifest(parsed.value).pipe(
+    Effect.mapError((error) =>
+      streamError(
+        record.slug,
+        `translated manifest cannot seed genesis because schema decoding failed: ${error.message}`
+      )
+    )
+  );
+  const position = goalStagePosition(manifest);
   const event = PacketEvent.make({
     schemaVersion: "packet-event/v1",
     packet: record.slug,
@@ -379,7 +356,7 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
     actor: "convention-migration",
     body: {
       type: "packet-created",
-      status: status.value,
+      status: manifest.initiative.status,
       ...(O.isSome(position) ? { stage: position.value.stage, ordinal: position.value.ordinal } : {}),
     },
   });
@@ -435,15 +412,56 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
 export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(function* (seed: PacketGenesisSeed) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const present = yield* fs.exists(seed.eventsDirectory).pipe(Effect.orElseSucceed(() => false));
+  const present = yield* fs
+    .exists(seed.eventsDirectory)
+    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis stream inspection failed: ${error.message}`)));
   if (present) return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
-  yield* fs
-    .makeDirectory(seed.eventsDirectory, { recursive: true })
-    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${String(error)}`)));
-  yield* fs
-    .writeFileString(path.join(seed.eventsDirectory, seed.eventFileName), seed.eventText)
-    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${String(error)}`)));
-  yield* fs
-    .writeFileString(seed.tracePath, seed.traceText)
-    .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${String(error)}`)));
+  const packetRoot = path.dirname(path.dirname(seed.eventsDirectory));
+  const eventPath = path.join(seed.eventsDirectory, seed.eventFileName);
+  let createdEventsDirectory = false;
+  const rollback = Effect.fnUntraced(function* () {
+    if (!createdEventsDirectory) return;
+    const entries = yield* fs
+      .readDirectory(seed.eventsDirectory)
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback scan failed: ${error.message}`)));
+    if (A.isReadonlyArrayNonEmpty(entries)) {
+      if (A.length(entries) !== 1 || entries[0] !== seed.eventFileName) {
+        return yield* streamError(seed.slug, "genesis rollback conflict: event directory contains foreign bytes");
+      }
+      const content = yield* fs
+        .readFileString(eventPath)
+        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback read failed: ${error.message}`)));
+      if (content !== seed.eventText) {
+        return yield* streamError(seed.slug, "genesis rollback conflict: event bytes changed after creation");
+      }
+    }
+    yield* fs
+      .remove(seed.eventsDirectory, { recursive: true })
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis rollback remove failed: ${error.message}`)));
+  });
+  const mutation = Effect.gen(function* () {
+    yield* fs
+      .makeDirectory(seed.eventsDirectory)
+      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`)));
+    createdEventsDirectory = true;
+    yield* writeContainedFileString(path.resolve(seed.eventsDirectory), path.resolve(eventPath), seed.eventText).pipe(
+      Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`))
+    );
+    yield* writeContainedFileString(path.resolve(packetRoot), path.resolve(seed.tracePath), seed.traceText).pipe(
+      Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`))
+    );
+  });
+  yield* mutation.pipe(
+    Effect.matchEffect({
+      onFailure: (original) =>
+        rollback().pipe(
+          Effect.matchEffect({
+            onFailure: (cleanup) =>
+              Effect.fail(streamError(seed.slug, `${original.message}; rollback incomplete: ${cleanup.message}`)),
+            onSuccess: () => Effect.fail(original),
+          })
+        ),
+      onSuccess: Effect.succeed,
+    })
+  );
 });

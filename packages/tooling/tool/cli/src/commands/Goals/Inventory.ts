@@ -100,9 +100,65 @@ export class GoalPacketRecord extends S.Class<GoalPacketRecord>($I`GoalPacketRec
 
 const recordBySlug = Order.mapInput(Order.String, (record: GoalPacketRecord) => record.slug);
 
-const readOptionalFile = Effect.fn("Goals.readOptionalFile")(function* (filePath: string) {
+type InventoryScanMode = "permissive" | "strict";
+
+const readOptionalFile = Effect.fn("Goals.readOptionalFile")(function* (filePath: string, mode: InventoryScanMode) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readFileString(filePath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const read = fs.readFileString(filePath).pipe(
+    Effect.map(O.some),
+    Effect.catchIf(
+      (error) => error.reason._tag === "NotFound",
+      () => Effect.succeed(O.none<string>())
+    )
+  );
+  return yield* mode === "strict" ? read : read.pipe(Effect.orElseSucceed(O.none<string>));
+});
+
+const readGoalEntries = Effect.fn("Goals.readGoalEntries")(function* (goalsDir: string, mode: InventoryScanMode) {
+  const fs = yield* FileSystem.FileSystem;
+  const read = fs.readDirectory(goalsDir);
+  return yield* mode === "strict" ? read : read.pipe(Effect.orElseSucceed(A.empty<string>));
+});
+
+const scanGoalPacket = Effect.fn("Goals.scanGoalPacket")(function* (
+  goalsDir: string,
+  slug: string,
+  mode: InventoryScanMode
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const packetPath = path.join(goalsDir, slug);
+  const readStat = fs.stat(packetPath).pipe(Effect.map(O.some));
+  const stat = yield* mode === "strict" ? readStat : readStat.pipe(Effect.orElseSucceed(O.none));
+  if (O.isNone(stat) || stat.value.type !== "Directory") return O.none<GoalPacketRecord>();
+
+  const manifestPath = path.join(packetPath, "ops", "manifest.json");
+  const readmePath = path.join(packetPath, "README.md");
+  const manifestText = yield* readOptionalFile(manifestPath, mode);
+  const readmeText = yield* readOptionalFile(readmePath, mode);
+  const goalMdText = yield* readOptionalFile(path.join(packetPath, "GOAL.md"), mode);
+  return O.some(
+    GoalPacketRecord.make({
+      slug,
+      packetPath,
+      manifestPath,
+      readmePath,
+      ...optionalProp("manifestText", manifestText),
+      ...optionalProp("readmeText", readmeText),
+      ...optionalProp("goalMdChars", O.map(goalMdText, Str.length)),
+    })
+  );
+});
+
+const scanGoalPackets = Effect.fn("Goals.scanGoalPackets")(function* (repoRoot: string, mode: InventoryScanMode) {
+  const path = yield* Path.Path;
+  const goalsDir = path.join(repoRoot, GOALS_DIR);
+  const entries = yield* readGoalEntries(goalsDir, mode);
+  const records = yield* Effect.forEach(
+    A.filter(entries, (slug) => slug !== TEMPLATE_SLUG && !Str.startsWith(".")(slug)),
+    (slug) => scanGoalPacket(goalsDir, slug, mode)
+  );
+  return pipe(records, A.getSomes, A.sort(recordBySlug));
 });
 
 /**
@@ -127,42 +183,32 @@ const readOptionalFile = Effect.fn("Goals.readOptionalFile")(function* (filePath
  * @since 0.0.0
  */
 export const listGoalPackets = Effect.fn("Goals.listGoalPackets")(function* (repoRoot = ".") {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const goalsDir = path.join(repoRoot, GOALS_DIR);
-  const entries = yield* fs.readDirectory(goalsDir).pipe(Effect.orElseSucceed(A.empty<string>));
+  return yield* scanGoalPackets(repoRoot, "permissive").pipe(Effect.orElseSucceed(A.empty<GoalPacketRecord>));
+});
 
-  let records = A.empty<GoalPacketRecord>();
-  for (const slug of entries) {
-    if (slug === TEMPLATE_SLUG || Str.startsWith(".")(slug)) {
-      continue;
-    }
-    const packetPath = path.join(goalsDir, slug);
-    const stat = yield* fs.stat(packetPath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
-    if (O.isNone(stat) || stat.value.type !== "Directory") {
-      continue;
-    }
-    const manifestPath = path.join(packetPath, "ops", "manifest.json");
-    const readmePath = path.join(packetPath, "README.md");
-    const manifestText = yield* readOptionalFile(manifestPath);
-    const readmeText = yield* readOptionalFile(readmePath);
-    const goalMdText = yield* readOptionalFile(path.join(packetPath, "GOAL.md"));
-
-    records = A.append(
-      records,
-      GoalPacketRecord.make({
-        slug,
-        packetPath,
-        manifestPath,
-        readmePath,
-        ...optionalProp("manifestText", manifestText),
-        ...optionalProp("readmeText", readmeText),
-        ...optionalProp("goalMdChars", O.map(goalMdText, Str.length)),
-      })
-    );
-  }
-
-  return A.sort(records, recordBySlug);
+/**
+ * Scans the complete goal fleet while preserving unexpected filesystem failures.
+ *
+ * **When to use**
+ *
+ * Use when a writer must prove that every packet was readable before it mutates
+ * any fleet state. Missing optional packet files remain represented as absent
+ * fields, while directory, stat, and other read failures fail the Effect.
+ *
+ * **Example** (Build a strict inventory scan)
+ *
+ * ```ts
+ * import { listGoalPacketsStrict } from "@beep/repo-cli/commands/Goals/Inventory"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(listGoalPacketsStrict())) // true
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const listGoalPacketsStrict = Effect.fn("Goals.listGoalPacketsStrict")(function* (repoRoot = ".") {
+  return yield* scanGoalPackets(repoRoot, "strict");
 });
 
 /**

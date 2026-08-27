@@ -51,7 +51,7 @@ describe("explore --check", () => {
             expect(Exit.isSuccess(exit)).toBe(true);
             const output = yield* consoleText();
             expect(output).toContain("streams=0 findings=0");
-            expect(output).toContain("OK: no stream findings");
+            expect(output).toContain("OK: no stream-integrity or fleet-graph findings");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
