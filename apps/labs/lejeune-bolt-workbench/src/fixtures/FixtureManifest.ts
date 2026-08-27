@@ -6,8 +6,8 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { identity } from "effect";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { identity, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -64,27 +64,57 @@ const ExpectedFrozenSourceHashes: ReadonlyArray<FrozenSourceHash> = [
   }),
 ];
 
-const ExpectedManifestExtractionIdentities: ReadonlyArray<string> = [
-  "rfq-a-outlook-body|projectName",
-  "rfq-a-outlook-body|deliveryDate",
-  "rfq-a-outlook-body|domesticOrigin",
-  "rfq-a-outlook-body|finish",
-  "rfq-a-xlsx-takeoff|product",
-  "rfq-a-xlsx-takeoff|grade",
-  "rfq-a-xlsx-takeoff|diameter",
-  "rfq-a-xlsx-takeoff|length",
-  "rfq-a-xlsx-takeoff|quantity",
-  "rfq-a-xlsx-takeoff|dti",
-  "rfq-b-prose-email|projectName",
-  "rfq-b-prose-email|deliveryDate",
-  "rfq-b-prose-email|certificationRequirement",
-  "rfq-b-pdf-schedule|product",
-  "rfq-b-pdf-schedule|grade",
-  "rfq-b-pdf-schedule|diameter",
-  "rfq-b-pdf-schedule|length",
-  "rfq-b-pdf-schedule|quantity",
-  "rfq-b-pdf-schedule|finish",
-  "rfq-b-pdf-schedule|dti",
+class ManifestExtractionContract extends S.Class<ManifestExtractionContract>($I`ManifestExtractionContract`)(
+  {
+    endChar: NonNegativeInt,
+    name: S.NonEmptyString,
+    quote: S.NonEmptyString,
+    sourceDocumentId: FrozenFixtureSourceId,
+    startChar: NonNegativeInt,
+    value: S.NonEmptyString,
+  },
+  $I.annote("ManifestExtractionContract", {
+    description: "One exact source identity, field name, offset range, quote, and value frozen by manifest v1.",
+  })
+) {}
+
+const manifestExtractionContract = (
+  sourceDocumentId: typeof FrozenFixtureSourceId.Type,
+  name: string,
+  startChar: number,
+  endChar: number,
+  quote: string
+): ManifestExtractionContract =>
+  ManifestExtractionContract.make({
+    endChar: NonNegativeInt.make(endChar),
+    name,
+    quote,
+    sourceDocumentId,
+    startChar: NonNegativeInt.make(startChar),
+    value: quote,
+  });
+
+const ExpectedManifestExtractions: ReadonlyArray<ManifestExtractionContract> = [
+  manifestExtractionContract("rfq-a-outlook-body", "projectName", 26, 43, "North Loop Canopy"),
+  manifestExtractionContract("rfq-a-outlook-body", "deliveryDate", 55, 65, "2026-09-12"),
+  manifestExtractionContract("rfq-a-outlook-body", "domesticOrigin", 68, 85, "Domestic required"),
+  manifestExtractionContract("rfq-a-outlook-body", "finish", 95, 111, "MG B695 Class 55"),
+  manifestExtractionContract("rfq-a-xlsx-takeoff", "product", 6, 17, "TC assembly"),
+  manifestExtractionContract("rfq-a-xlsx-takeoff", "grade", 20, 32, "F1852 Type 1"),
+  manifestExtractionContract("rfq-a-xlsx-takeoff", "diameter", 35, 41, "7/8 in"),
+  manifestExtractionContract("rfq-a-xlsx-takeoff", "length", 44, 52, "3-1/4 in"),
+  manifestExtractionContract("rfq-a-xlsx-takeoff", "quantity", 55, 58, "180"),
+  manifestExtractionContract("rfq-a-xlsx-takeoff", "dti", 61, 74, "F959 Type 325"),
+  manifestExtractionContract("rfq-b-prose-email", "projectName", 20, 42, "County Shops Expansion"),
+  manifestExtractionContract("rfq-b-prose-email", "deliveryDate", 56, 66, "2026-09-20"),
+  manifestExtractionContract("rfq-b-prose-email", "certificationRequirement", 71, 96, "certification is required"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "product", 19, 38, "heavy hex bolt only"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "grade", 47, 58, "A490 Type 1"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "diameter", 70, 76, "3/4 in"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "length", 86, 94, "2-1/2 in"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "quantity", 106, 109, "860"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "finish", 119, 122, "HDG"),
+  manifestExtractionContract("rfq-b-pdf-schedule", "dti", 129, 142, "F959 Type 325"),
 ];
 
 const frozenSourceHashEquivalence = S.toEquivalence(FrozenSourceHash);
@@ -124,18 +154,23 @@ const manifestSourceHashesAreExact = (manifest: FrozenFixtureManifestFields): bo
     frozenSourceHashEquivalence(actual, expected)
   );
 
-const manifestExtractionIdentity = (field: ExtractedField): string => `${field.sourceDocumentId}|${field.name}`;
+const manifestExtractionMatchesContract = (field: ExtractedField, contract: ManifestExtractionContract): boolean =>
+  A.every(
+    [
+      Str.Equivalence(field.sourceDocumentId, contract.sourceDocumentId),
+      Str.Equivalence(field.name, contract.name),
+      N.Equivalence(field.anchor.startChar, contract.startChar),
+      N.Equivalence(field.anchor.endChar, contract.endChar),
+      Str.Equivalence(field.anchor.quote, contract.quote),
+      Str.Equivalence(field.value, contract.value),
+    ],
+    identity
+  );
 
-const manifestExtractionsAreExact = (manifest: FrozenFixtureManifestFields): boolean => {
-  const identities = A.map(manifest.extractedFields, manifestExtractionIdentity);
-  const identitiesMatch = A.every(A.zip(identities, ExpectedManifestExtractionIdentities), ([actual, expected]) =>
-    Str.Equivalence(actual, expected)
+const manifestExtractionsAreExact = (manifest: FrozenFixtureManifestFields): boolean =>
+  A.every(A.zip(manifest.extractedFields, ExpectedManifestExtractions), ([field, contract]) =>
+    manifestExtractionMatchesContract(field, contract)
   );
-  const valuesMatchAnchors = A.every(manifest.extractedFields, (field) =>
-    Str.Equivalence(field.value, field.anchor.quote)
-  );
-  return A.every([identitiesMatch, valuesMatchAnchors], identity);
-};
 
 const FrozenFixtureManifestChecks = S.makeFilterGroup(
   [

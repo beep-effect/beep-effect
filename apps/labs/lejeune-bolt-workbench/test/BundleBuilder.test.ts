@@ -1,16 +1,17 @@
 // @vitest-environment node
 
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
+import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import { FastCheck as fc, TestClock } from "effect/testing";
 import {
+  MutableRetentionMetadata,
   MutableRetentionMetadataFromJsonString,
   ProjectionStoreMetadataFromJsonString,
   RetentionAuthorization,
@@ -29,6 +30,25 @@ const inputFor = (
 ): BundleBuildInput => BundleBuildInput.make({ bundleRoot, mutableRoot, recordingPath, retentionAuthorizationPath });
 
 describe("LeJeune transactional bundle builder", () => {
+  it("round-trips schema-derived mutable retention metadata", () => {
+    const encode = S.encodeResult(MutableRetentionMetadata);
+    const decode = S.decodeUnknownResult(MutableRetentionMetadata);
+    const equivalent = S.toEquivalence(MutableRetentionMetadata);
+
+    fc.assert(
+      fc.property(S.toArbitrary(MutableRetentionMetadata)(fc), (value) =>
+        encode(value).pipe(
+          Result.flatMap(decode),
+          Result.match({
+            onFailure: () => false,
+            onSuccess: (decoded) => equivalent(decoded, value),
+          })
+        )
+      ),
+      fcRuns(20)
+    );
+  });
+
   it.effect("refuses an existing publication containing the mutable root without changing its contents", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

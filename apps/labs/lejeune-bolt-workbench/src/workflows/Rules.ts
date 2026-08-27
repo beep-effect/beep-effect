@@ -7,41 +7,24 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan";
-import { PosixPath } from "@beep/schema";
-import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { RuleResult, RuleSource } from "@/domain/Bundle";
+import { CanonicalRuleSourceContracts, RuleResult, RuleSource } from "@/domain/Bundle";
 import { EntityId } from "@/domain/Ontology";
 import { FixtureError } from "@/fixtures/Sources";
 import type { NormalizedFixture } from "@/domain/Bundle";
 import type { Component } from "@/domain/Ontology";
 
-const MATCHED_ASSEMBLY_EVIDENCE =
-  "Galvanized bolts and tension-control bolts are manufactured matched bolt-and-nut assembly cases.";
-const DTI_STRENGTH_EVIDENCE = "ASTM F959 DTIs are designated Type 325 or Type 490 to match bolt strength.";
-const A490_HDG_EVIDENCE = "A490 bolts must not be hot-dip galvanized or electroplated.";
 const A490_STANDARD_ID = EntityId.make("astm-a490-type-1");
+const DTI_325_STANDARD_ID = EntityId.make("astm-f959-type-325");
 const MATCHED_ASSEMBLY_STANDARD_ID = EntityId.make("astm-f1852-type-1");
 const MATCHED_ASSEMBLY_NUT_STANDARD_ID = EntityId.make("astm-a563-dh");
 const MATCHED_ASSEMBLY_WASHER_STANDARD_ID = EntityId.make("astm-f436-type-1");
 const MATCHED_ASSEMBLY_FINISH_ID = EntityId.make("mechanical-galvanized-b695-class-55");
-const RULE_RESEARCH_PATH = PosixPath.make(
-  "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md"
-);
-
-interface RuleSourceInput {
-  readonly evidence: string;
-  readonly id: string;
-  readonly revision: string;
-  readonly title: string;
-  readonly url: string;
-}
-
-const makeRuleSource = Effect.fnUntraced(function* (input: RuleSourceInput) {
+const makeRuleSource = Effect.fnUntraced(function* (input: (typeof CanonicalRuleSourceContracts)[number]) {
   const candidate = GroundedExtraction.cases.unaligned.make({ label: "rule-evidence", text: input.evidence });
   const anchors = yield* locateGroundedExtractions([candidate], input.evidence);
   const evidenceAnchor = yield* O.match(A.head(anchors), {
@@ -50,14 +33,14 @@ const makeRuleSource = Effect.fnUntraced(function* (input: RuleSourceInput) {
     onSome: Effect.succeed,
   });
   return RuleSource.make({
-    accessedOn: "2026-08-25",
+    accessedOn: input.accessedOn,
     evidence: input.evidence,
     evidenceAnchor,
-    id: EntityId.make(input.id),
-    researchPath: RULE_RESEARCH_PATH,
+    id: input.id,
+    researchPath: input.researchPath,
     revision: input.revision,
     title: input.title,
-    url: HttpsUrl.make(input.url),
+    url: input.url,
   });
 });
 
@@ -148,7 +131,14 @@ const dtiStrengthResult = (fixture: NormalizedFixture, source: RuleSource): Rule
   const bolt = A.findFirst(fixture.components, (component) => Str.Equivalence(component.kind, "bolt"));
   const dti = A.findFirst(fixture.components, (component) => Str.Equivalence(component.kind, "dti"));
   const strengthsMatch = O.zipWith(bolt, dti, (boltComponent, dtiComponent) =>
-    Str.Equivalence(boltComponent.strengthClass, dtiComponent.strengthClass)
+    A.every(
+      [
+        Str.Equivalence(boltComponent.strengthClass, dtiComponent.strengthClass),
+        Str.Equivalence(dtiComponent.standardId, DTI_325_STANDARD_ID),
+        Str.Equivalence(dtiComponent.strengthClass, "325"),
+      ],
+      identity
+    )
   ).pipe(O.getOrElse(() => false));
   return pipe(
     strengthsMatch,
@@ -158,8 +148,8 @@ const dtiStrengthResult = (fixture: NormalizedFixture, source: RuleSource): Rule
           caseId: EntityId.make(`${fixture.rfq.id}-dti-strength-mismatch`),
           disposition: "mismatch",
           matchedFacts: [
-            `Bolt strength: ${O.map(bolt, (component) => component.strengthClass).pipe(O.getOrElse(() => "missing"))}`,
-            `DTI strength: ${O.map(dti, (component) => component.strengthClass).pipe(O.getOrElse(() => "missing"))}`,
+            `Bolt standard/strength: ${O.map(bolt, (component) => `${component.standardId}/${component.strengthClass}`).pipe(O.getOrElse(() => "missing"))}`,
+            `DTI standard/strength: ${O.map(dti, (component) => `${component.standardId}/${component.strengthClass}`).pipe(O.getOrElse(() => "missing"))}`,
           ],
           requiresHuman: true,
           ruleId: "dti-strength-match",
@@ -171,8 +161,8 @@ const dtiStrengthResult = (fixture: NormalizedFixture, source: RuleSource): Rule
           caseId: EntityId.make(`${fixture.rfq.id}-dti-strength-positive`),
           disposition: "pass",
           matchedFacts: [
-            `Bolt strength: ${O.map(bolt, (component) => component.strengthClass).pipe(O.getOrElse(() => "missing"))}`,
-            `DTI strength: ${O.map(dti, (component) => component.strengthClass).pipe(O.getOrElse(() => "missing"))}`,
+            `Bolt standard/strength: ${O.map(bolt, (component) => `${component.standardId}/${component.strengthClass}`).pipe(O.getOrElse(() => "missing"))}`,
+            `DTI standard/strength: ${O.map(dti, (component) => `${component.standardId}/${component.strengthClass}`).pipe(O.getOrElse(() => "missing"))}`,
           ],
           requiresHuman: false,
           ruleId: "dti-strength-match",
@@ -235,29 +225,12 @@ const a490HdgResult = (fixture: NormalizedFixture, source: RuleSource): RuleResu
 export const evaluateRules = Effect.fn("lejeune.rules.evaluate")(function* (
   fixtures: readonly [NormalizedFixture, NormalizedFixture]
 ) {
+  const [matchedAssemblySourceContract, dtiSourceContract, coatingSourceContract] = CanonicalRuleSourceContracts;
   const [matchedSource, dtiSource, coatingSource] = yield* Effect.all(
     [
-      makeRuleSource({
-        evidence: MATCHED_ASSEMBLY_EVIDENCE,
-        id: "aisc-matched-assembly",
-        revision: "AISC Engineering FAQ 6.2; RCSC Specification 2020",
-        title: "AISC Engineering FAQs: 6. Bolting",
-        url: "https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/",
-      }),
-      makeRuleSource({
-        evidence: DTI_STRENGTH_EVIDENCE,
-        id: "portland-bolt-astm-f959",
-        revision: "ASTM F959 technical summary accessed 2026-08-25",
-        title: "Portland Bolt ASTM F959",
-        url: "https://www.portlandbolt.com/technical/specifications/astm-f959/",
-      }),
-      makeRuleSource({
-        evidence: A490_HDG_EVIDENCE,
-        id: "fastenal-a490-coating",
-        revision: "Fastenal Structural Bolts blueprint accessed 2026-08-25",
-        title: "Fastenal Blueprint: Structural Bolts",
-        url: "https://blueprint.fastenal.com/structural-bolts.html",
-      }),
+      makeRuleSource(matchedAssemblySourceContract),
+      makeRuleSource(dtiSourceContract),
+      makeRuleSource(coatingSourceContract),
     ],
     { concurrency: 3 }
   );

@@ -205,6 +205,24 @@ describe("LeJeune deterministic fixture bundle", () => {
         true,
       ]);
 
+      const dtiStandardSwizzleComponents = A.map(encodedRfqA.components, (component) =>
+        Str.Equivalence(component.kind, "dti") ? { ...component, standardId: "astm-a563-dh" } : component
+      );
+      const dtiStandardSwizzle = yield* S.decodeUnknownEffect(NormalizedFixture)({
+        ...encodedRfqA,
+        components: dtiStandardSwizzleComponents,
+      });
+      const dtiStandardSwizzleResults = yield* evaluateRules([dtiStandardSwizzle, rfqB]);
+      const dtiStandardSwizzleResult = O.getOrThrow(
+        A.findFirst(dtiStandardSwizzleResults, (result) =>
+          Str.Equivalence(result.caseId, "rfq-a-dti-strength-mismatch")
+        )
+      );
+      expect([dtiStandardSwizzleResult.disposition, dtiStandardSwizzleResult.requiresHuman]).toEqual([
+        "mismatch",
+        true,
+      ]);
+
       const provenanceFields = A.map(encodedRfqA.extractedFields, (field) =>
         Str.Equivalence(field.name, "product")
           ? { ...field, anchor: { ...field.anchor, quote: "XX assembly" }, value: "XX assembly" }
@@ -387,6 +405,31 @@ describe("LeJeune deterministic fixture bundle", () => {
         ...fixtureManifestJson,
         missingFields: ["rfq-a|domesticOrigin", "rfq-b|certificationRequirement"],
       };
+      const manifestSpanDrift: unknown = {
+        ...fixtureManifestJson,
+        extractedFields: [
+          {
+            ...firstManifestField,
+            anchor: {
+              ...firstManifestField.anchor,
+              endChar: firstManifestField.anchor.endChar + 1,
+              startChar: firstManifestField.anchor.startChar + 1,
+            },
+          },
+          ...remainingManifestFields,
+        ],
+      };
+      const manifestQuoteValueDrift: unknown = {
+        ...fixtureManifestJson,
+        extractedFields: [
+          {
+            ...firstManifestField,
+            anchor: { ...firstManifestField.anchor, quote: "South Loop Canopy" },
+            value: "South Loop Canopy",
+          },
+          ...remainingManifestFields,
+        ],
+      };
       const bundleFixtureCardinality: unknown = { ...bundle, fixtures: A.take(bundle.fixtures, 1) };
       const bundleRuleCardinality: unknown = { ...bundle, rules: A.take(bundle.rules, 1) };
       const bundleRuleIdDrift: unknown = {
@@ -411,6 +454,41 @@ describe("LeJeune deterministic fixture bundle", () => {
           sixthBundleRule,
         ],
       };
+      const bundleWithFirstRuleSource = (source: unknown): unknown => ({
+        ...bundle,
+        rules: [
+          { ...firstBundleRule, source },
+          secondBundleRule,
+          thirdBundleRule,
+          fourthBundleRule,
+          fifthBundleRule,
+          sixthBundleRule,
+        ],
+      });
+      const bundleRuleSourceUrlDrift = bundleWithFirstRuleSource({
+        ...firstBundleRule.source,
+        url: "https://example.com/altered-rule-source",
+      });
+      const bundleRuleSourceRevisionDrift = bundleWithFirstRuleSource({
+        ...firstBundleRule.source,
+        revision: "Altered governing revision",
+      });
+      const bundleRuleSourceEvidenceDrift = bundleWithFirstRuleSource({
+        ...firstBundleRule.source,
+        evidence: Str.replace("Galvanized", "Fabricated")(firstBundleRule.source.evidence),
+        evidenceAnchor: {
+          ...firstBundleRule.source.evidenceAnchor,
+          quote: Str.replace("Galvanized", "Fabricated")(firstBundleRule.source.evidenceAnchor.quote),
+        },
+      });
+      const bundleRuleSourceTitleDrift = bundleWithFirstRuleSource({
+        ...firstBundleRule.source,
+        title: "Altered rule source title",
+      });
+      const bundleRuleSourceResearchPathDrift = bundleWithFirstRuleSource({
+        ...firstBundleRule.source,
+        researchPath: "explorations/lejeune-bolt-agentic-demo/research/altered.md",
+      });
       const bundleRuleDispositionDrift: unknown = {
         ...bundle,
         rules: [
@@ -467,10 +545,26 @@ describe("LeJeune deterministic fixture bundle", () => {
         ["manifest-dangling-extraction", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDanglingExtraction)],
         ["manifest-duplicate-extraction", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestDuplicateExtraction)],
         ["manifest-missing-field-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestMissingFieldDrift)],
+        ["manifest-span-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestSpanDrift)],
+        ["manifest-quote-value-drift", S.decodeUnknownEffect(FrozenFixtureManifest)(manifestQuoteValueDrift)],
         ["bundle-fixture-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleFixtureCardinality)],
         ["bundle-rule-cardinality", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleCardinality)],
         ["bundle-rule-id-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleIdDrift)],
         ["bundle-rule-source-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceDrift)],
+        ["bundle-rule-source-url-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceUrlDrift)],
+        [
+          "bundle-rule-source-revision-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceRevisionDrift),
+        ],
+        [
+          "bundle-rule-source-evidence-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceEvidenceDrift),
+        ],
+        ["bundle-rule-source-title-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceTitleDrift)],
+        [
+          "bundle-rule-source-research-path-drift",
+          S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleSourceResearchPathDrift),
+        ],
         ["bundle-rule-disposition-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleDispositionDrift)],
         ["bundle-rule-order-drift", S.decodeUnknownEffect(ImmutableDemoBundle)(bundleRuleOrderDrift)],
         ["projection-class-vocabulary", S.decodeUnknownEffect(ProjectionSnapshot)(projectionClassVocabulary)],

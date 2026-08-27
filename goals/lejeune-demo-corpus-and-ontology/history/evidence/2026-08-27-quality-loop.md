@@ -132,3 +132,31 @@ finding reopens the loop; full proof remains an acceptance step, never a waiver.
 - Two post-fix fresh publications produced final identity
   `1474d1899f44511b3a363d3a4e1b1927cf2462cb9ee8685e994ba7f747851f91`; all five persisted
   JSON contracts were byte-identical across rebuilds with provider/network availability false.
+
+## Round 3 inventory
+
+The fresh panel began against exact commit `a5b195645a55b29e8621f974e162063370ca7dbf`.
+Architecture reported zero required findings. Schema/domain and quality reported five required
+findings; none was rejected or waived:
+
+| Inventory | Source finding | Status |
+| --- | --- | --- |
+| `RULE-004` DTI standard/family compatibility | `LEJ-SCHEMA-R3-001` | fixed; rereview pending |
+| `RULE-005` complete governing-source semantics | `LEJ-SCHEMA-R3-002` | fixed; rereview pending |
+| `FIXTURE-003` exact frozen extraction rows | `LEJ-SCHEMA-R3-003` | fixed; rereview pending |
+| `IMPORT-001` root Effect `Order` import | `QG-R3-001` | fixed; rereview pending |
+| `PROPERTY-001` mutable-retention arbitrary coverage | `QG-R3-002` | fixed; rereview pending |
+
+All other bounded quality checks passed. Full docgen and exact-tree Yeet remain queued acceptance
+steps, not implementation waivers.
+
+### Round 3 fixer proof
+
+- The lab audit passed with production build, typecheck, three files/22 tests, and lint.
+- Effect-import and schema-first gates passed with every touched/advisory counter at zero.
+- Knip and Fallow dead-code passed with no introduced findings; Fallow audit retained only its
+  inherited-adjacent nonblocking provider-smoke duplication.
+- Mutation tests now reject DTI standard swizzles, same-ID changes to governing URL/revision/
+  evidence/title/research path, and coherent manifest offset/quote/value drift.
+- The mutable-retention schema exposes a correlated `S.toArbitrary` generator and round-trip
+  property proof. `git diff --check` passed.

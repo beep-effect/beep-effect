@@ -9,11 +9,10 @@ import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
-import { Effect, identity } from "effect";
+import { Effect, identity, Number as N, Order } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -582,6 +581,60 @@ class RuleCaseContract extends S.Class<RuleCaseContract>($I`RuleCaseContract`)(
   })
 ) {}
 
+class CanonicalRuleSourceContract extends S.Class<CanonicalRuleSourceContract>($I`CanonicalRuleSourceContract`)(
+  {
+    accessedOn: S.Literal("2026-08-25"),
+    evidence: S.NonEmptyString,
+    id: EntityId,
+    researchPath: PosixPath,
+    revision: S.NonEmptyString,
+    ruleId: RuleId,
+    title: S.NonEmptyString,
+    url: HttpsUrl,
+  },
+  $I.annote("CanonicalRuleSourceContract", {
+    description: "The complete governing-source semantics for one rule in the frozen replay matrix.",
+  })
+) {}
+
+/** Complete canonical source records for the three fixed cited rules. @category fixtures @since 0.0.0 */
+export const CanonicalRuleSourceContracts: readonly [
+  CanonicalRuleSourceContract,
+  CanonicalRuleSourceContract,
+  CanonicalRuleSourceContract,
+] = [
+  CanonicalRuleSourceContract.make({
+    accessedOn: "2026-08-25",
+    evidence: "Galvanized bolts and tension-control bolts are manufactured matched bolt-and-nut assembly cases.",
+    id: EntityId.make("aisc-matched-assembly"),
+    researchPath: PosixPath.make("explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md"),
+    revision: "AISC Engineering FAQ 6.2; RCSC Specification 2020",
+    ruleId: "matched-assembly",
+    title: "AISC Engineering FAQs: 6. Bolting",
+    url: HttpsUrl.make("https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/"),
+  }),
+  CanonicalRuleSourceContract.make({
+    accessedOn: "2026-08-25",
+    evidence: "ASTM F959 DTIs are designated Type 325 or Type 490 to match bolt strength.",
+    id: EntityId.make("portland-bolt-astm-f959"),
+    researchPath: PosixPath.make("explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md"),
+    revision: "ASTM F959 technical summary accessed 2026-08-25",
+    ruleId: "dti-strength-match",
+    title: "Portland Bolt ASTM F959",
+    url: HttpsUrl.make("https://www.portlandbolt.com/technical/specifications/astm-f959/"),
+  }),
+  CanonicalRuleSourceContract.make({
+    accessedOn: "2026-08-25",
+    evidence: "A490 bolts must not be hot-dip galvanized or electroplated.",
+    id: EntityId.make("fastenal-a490-coating"),
+    researchPath: PosixPath.make("explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md"),
+    revision: "Fastenal Structural Bolts blueprint accessed 2026-08-25",
+    ruleId: "a490-hdg-refusal",
+    title: "Fastenal Blueprint: Structural Bolts",
+    url: HttpsUrl.make("https://blueprint.fastenal.com/structural-bolts.html"),
+  }),
+];
+
 const CanonicalRuleCases: ReadonlyArray<RuleCaseContract> = [
   RuleCaseContract.make({
     caseId: EntityId.make("rfq-a-matched-assembly-positive"),
@@ -696,7 +749,34 @@ const bundleFixtureIdentitiesAreClosed = (bundle: ImmutableDemoBundleFields): bo
   );
 };
 
-const ruleMatchesContract = (rule: RuleResult, ruleCase: RuleCaseContract): boolean =>
+const ruleSourceMatchesContract = (
+  rule: RuleResult,
+  sourceContract: CanonicalRuleSourceContract,
+  projection: ProjectionSnapshot
+): boolean =>
+  A.every(
+    [
+      Str.Equivalence(rule.source.accessedOn, sourceContract.accessedOn),
+      Str.Equivalence(rule.source.evidence, sourceContract.evidence),
+      N.Equivalence(rule.source.evidenceAnchor.startChar, 0),
+      N.Equivalence(rule.source.evidenceAnchor.endChar, Str.length(sourceContract.evidence)),
+      Str.Equivalence(rule.source.evidenceAnchor.quote, sourceContract.evidence),
+      Str.Equivalence(rule.source.id, sourceContract.id),
+      Str.Equivalence(rule.source.researchPath, sourceContract.researchPath),
+      Str.Equivalence(rule.source.revision, sourceContract.revision),
+      Str.Equivalence(rule.source.title, sourceContract.title),
+      Str.Equivalence(rule.source.url, sourceContract.url),
+      A.contains(projection.citations, `source:${rule.source.url}`),
+    ],
+    identity
+  );
+
+const ruleMatchesContract = (
+  rule: RuleResult,
+  ruleCase: RuleCaseContract,
+  sourceContract: CanonicalRuleSourceContract,
+  projection: ProjectionSnapshot
+): boolean =>
   A.every(
     [
       Str.Equivalence(rule.caseId, ruleCase.caseId),
@@ -704,13 +784,23 @@ const ruleMatchesContract = (rule: RuleResult, ruleCase: RuleCaseContract): bool
       Str.Equivalence(rule.source.id, ruleCase.sourceId),
       Str.Equivalence(rule.disposition, ruleCase.disposition),
       Bool.Equivalence(rule.requiresHuman, ruleCase.requiresHuman),
+      Str.Equivalence(rule.ruleId, sourceContract.ruleId),
+      ruleSourceMatchesContract(rule, sourceContract, projection),
     ],
     identity
   );
 
 const bundleRuleContractIsClosed = (bundle: ImmutableDemoBundleFields): boolean => {
-  const rulesMatch = A.every(A.zip(bundle.rules, CanonicalRuleCases), ([rule, ruleCase]) =>
-    ruleMatchesContract(rule, ruleCase)
+  const ruleContracts = A.zip(CanonicalRuleCases, [
+    CanonicalRuleSourceContracts[0],
+    CanonicalRuleSourceContracts[0],
+    CanonicalRuleSourceContracts[1],
+    CanonicalRuleSourceContracts[1],
+    CanonicalRuleSourceContracts[2],
+    CanonicalRuleSourceContracts[2],
+  ]);
+  const rulesMatch = A.every(A.zip(bundle.rules, ruleContracts), ([rule, [ruleCase, sourceContract]]) =>
+    ruleMatchesContract(rule, ruleCase, sourceContract, bundle.projection)
   );
   const projectionRowsMatch = A.every(
     A.zip(bundle.projection.ruleDispositions, CanonicalRuleProjectionRows),
@@ -871,6 +961,32 @@ const MutableRetentionMetadataAuthorityCheck = S.makeFilter(
   }
 );
 
+const mutableRetentionWithoutAuthorization = (): typeof MutableRetentionMetadataFields.Type => ({
+  disposition: "delete-or-promote",
+  dispositionDate: IsoDate.make(MUTABLE_CORPUS_DISPOSITION_DATE),
+  retentionAuthorization: O.none(),
+  schemaVersion: "lejeune-retention-metadata/v1",
+});
+
+const mutableRetentionWithAuthorization = (
+  authorization: RetentionAuthorization
+): typeof MutableRetentionMetadataFields.Type => ({
+  disposition: "delete-or-promote",
+  dispositionDate: authorization.newDispositionDate,
+  retentionAuthorization: O.some(authorization),
+  schemaVersion: "lejeune-retention-metadata/v1",
+});
+
+const MutableRetentionMetadataModel = MutableRetentionMetadataFields.mapFields(identity)
+  .check(MutableRetentionMetadataAuthorityCheck)
+  .annotate({
+    toArbitrary: () => (fc) =>
+      fc.oneof(
+        fc.constant(mutableRetentionWithoutAuthorization()),
+        S.toArbitrary(RetentionAuthorization)(fc).map(mutableRetentionWithAuthorization)
+      ),
+  });
+
 /**
  * Effective retention decision persisted beside the mutable review ledger.
  *
@@ -890,7 +1006,7 @@ const MutableRetentionMetadataAuthorityCheck = S.makeFilter(
  * @since 0.0.0
  */
 export class MutableRetentionMetadata extends S.Class<MutableRetentionMetadata>($I`MutableRetentionMetadata`)(
-  MutableRetentionMetadataFields.mapFields(identity).check(MutableRetentionMetadataAuthorityCheck),
+  MutableRetentionMetadataModel,
   $I.annote("MutableRetentionMetadata", {
     description: "The schema-validated mutable retention authority and its effective disposition date.",
   })
