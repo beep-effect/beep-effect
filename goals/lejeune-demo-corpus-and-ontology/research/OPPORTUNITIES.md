@@ -8,9 +8,10 @@
   app is not running` while the desktop process was present. `op whoami` had no
   signed-in session. The single `op run --env-file=.env` fallback waited without
   terminal output, then returned `authorization prompt dismissed`.
-- Impact: package build, tests, deterministic replay, and all local projections
-  are green, but the sanitized successful provider recording cannot be created
-  until the operator authorizes secret injection.
+- Impact: the MCP/initial CLI path delayed the provider proof. The operator later
+  authorized the same secret-reference injection through `op run`; the sanitized
+  Anthropic recording succeeded at `2026-08-27T12:25:18.044Z` without exposing
+  secret values, as recorded in the golden-bundle evidence.
 - Prevention: add an agent preflight that distinguishes desktop process state,
   MCP bridge availability, CLI sign-in, and a pending authorization prompt
   before a provider proof begins. It should report only state labels and never
@@ -28,3 +29,14 @@
 - Prevention: print the resolved publication root in the successful builder log, or document that
   `LEJEUNE_BUNDLE_ROOT` and `LEJEUNE_MUTABLE_ROOT` are relative to the package command's working
   directory.
+
+## 2026-08-27: lab creation left the generated Fallow boundary inventory stale
+
+- Work: run the authoritative Yeet pre-push proof after publishing the coherent LeJeune lab PR.
+- Evidence: `repo-sanity:fallow-boundaries-config` reported
+  `standards/fallow.boundaries.generated.jsonc is stale` and named
+  `bun run fallow:boundaries:write` as the repair command.
+- Impact: all 12 cheap gates passed, but the full proof stopped before its heavyweight wave and
+  required a follow-up generated-config commit.
+- Prevention: have lab creation or its post-create verification regenerate and check the Fallow
+  boundary inventory before the first publication attempt.
