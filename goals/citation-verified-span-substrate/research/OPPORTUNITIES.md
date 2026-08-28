@@ -65,3 +65,16 @@ Receipts recorded during execution, per the repository friction-capture law.
   staged diff.
 - **Prevention:** persist a reviewed publish-intent path list before commit and
   reject any resumed commit or push whose path set exceeds that list.
+
+### Base-policy changes can invalidate an already-proven feature diff
+
+- **What happened:** after merging the newly landed Yeet scheduler commits from
+  `origin/main`, the cheap gate rejected the otherwise unchanged feature diff
+  because the current changeset policy classified `@beep/langextract` and
+  `@beep/provenance` as versioned product workspaces.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` passed 11 of 12
+  collected gates and failed only `quality:changeset-status`, naming those two
+  workspaces as missing an in-range changeset.
+- **Prevention:** after any required base catch-up, rerun cheap gates before
+  entering the heavyweight admission queue and add release metadata while the
+  implementation context is still current.
