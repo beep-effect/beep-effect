@@ -28,10 +28,19 @@ checkout exclusion the deployed scheduler never had (origin-keyed; H-04/J-B3). A
 adopted fixes are landed and executable: 26 CQs (18 Must / 7 Should / 1 Could), 25
 executing tests + 19 must-fail fixtures + binding-contract machinery, validator 0
 blockers / 1 aggregated S5-visibility warn, real `--s4-lane` mode. Full map:
-[round3-triage.md](./research/reviews/pre-s4/round3-triage.md). Remaining WORK:
-**S4 lane launch** under `ontology/docs/s4-lane-contract.md` — with ONE launch
-precondition: re-sync the stale `~/.agents/skills` mirror (lacks the auditor's
-`_shared/schemas/`) or point lane commands at `~/.claude/skills/` explicitly.
+[round3-triage.md](./research/reviews/pre-s4/round3-triage.md).
+
+**S4 EXTRACTION IS COMPLETE** (same day): all seven lanes ran at codex max under the
+frozen contract (corpus `469136d2a8`), every output passed the `--s4-lane` validator
+independently, and the §5 merge landed — **337 candidates / 1,038 facts / 104 ledger
+entries** at [`ontology/extraction/s4/`](./ontology/extraction/s4/)
+(`CANDIDATES.yaml` / `FACTS.yaml` / `LEDGER.yaml` is the S4→S5 queue). Remaining
+WORK: the §4b NORMALIZATION GATE (the `ontology-foundational-auditor` skill run as
+written — adapter observations, blinded + adversary seats, mechanical `--gate`,
+STEWARD ratification by the operator) — precondition: re-sync the stale
+`~/.agents/skills` mirror (lacks the auditor's `_shared/schemas/`, which exist at
+`~/.claude/skills/`) or pass explicit `$SKILL`/`$SHARED` paths; then S5 adversarial
+taxonomy over the ledger.
 
 Superseded context below (kept for the trail):
 
@@ -79,6 +88,20 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-27 (tenth stint): S4 EXTRACTION FLEET — orchestrator duties executed
+  (topo-sort materialized to extraction/s4/inputs/, five frozen-input digests +
+  corpus commit 469136d2a872 pinned, fallow config census, seven lane prompts
+  embedding contract §3–§4 verbatim at research/prompts/s4-lane-*.md), seven codex
+  lanes at max effort ran concurrently, each self-checked AND independently
+  re-validated with the round-3 `--s4-lane` mode: turbo-tasks 36/214/7,
+  affected-typenames 1/0/3 (honest: the decoder's unconstrained typename string
+  cannot ground CQ-019's closed outcome partition — S5 material),
+  package-topology 141/799/17, literalkits 73/0/21, yeet-internals 16/0/5,
+  fallow-laws 18/14/12, admission-scheduler 52/11/10 — ALL 0-blocker. §5 merge
+  landed as a committed carrier (merge_s4_lanes.py; IRI-valued predicates merge as
+  SETS, only differing literal facts conflict): 337 candidates / 1,038 facts / 104
+  ledger entries incl. a real dependsOn definition conflict flagged for S5. Stopped
+  at: §4b normalization gate (auditor skill; mirror re-sync precondition) → S5.
 - 2026-08-27 (ninth stint): REVIEW-LOOP ROUND 3 (the cap's last) — three seats at
   ruled efforts (codex ultra + max, grok xhigh) returned 26 blockers / 18 warns, all
   triaged and the adopted set FIXED same-session (round3-triage.md). Structural:

@@ -1,0 +1,53 @@
+telemetry:
+  lane: s4-affected-typenames
+  runner: "codex exec"
+  model: gpt-5.6-sol
+  reasoning_effort: max
+  prompt_version: s4-lane-contract-v2
+  corpus_commit: 469136d2a872
+  started: 2026-08-27T23:31:10-05:00
+  finished: 2026-08-27T23:36:25-05:00
+  wall_seconds: 315
+  frozen_inputs:
+    - { path: ontology/docs/competency-questions.yaml, sha256_12: e06ec7fe12a6 }
+    - { path: ontology/docs/pre-glossary.csv, sha256_12: 9184cddcecc7 }
+    - { path: ontology/docs/literal-domains.md, sha256_12: 7f0cf3e79e7e }
+    - { path: ontology/docs/orsd.md, sha256_12: 2b0fd670129b }
+    - { path: ontology/docs/scope.md, sha256_12: 6c39b69481a3 }
+  candidate_count: 1
+  fact_count: 0
+  issue_count: 3
+
+issues:
+  - id: affected-typenames-I01
+    kind: schema-conflict
+    claim: "The affected-reason decoder admits an unconstrained typename string, so the exact source establishes neither a closed member inventory nor the fail-open partition required by CQ-019."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:31-34 — '__typename: S.String,'"
+    suggested_disposition: "Keep reason members unproposed until a pinned closed typename schema and fail-open mapping are supplied from an admitted source."
+    status: open
+  - id: affected-typenames-I02
+    kind: schema-conflict
+    claim: "An affected task may omit its reason, so this decoder does not guarantee the typed outcome completeness that CQ-019 expects for every AffectedComputation."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:49-55 — 'reason: S.optionalKey(TurboQueryAffectedReason),'"
+    suggested_disposition: "Define an ingestion rule for missing task reasons before asserting a total hasAffectedOutcome relation."
+    status: open
+  - id: affected-typenames-I03
+    kind: schema-conflict
+    claim: "turboPlanTaskFromAffectedTask drops the decoded reason when it constructs TurboPlanTask, so plan-task records cannot carry affected-outcome provenance."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:221-231 — 'return TurboPlanTask.make({'"
+    suggested_disposition: "Ingest affected outcomes from raw turbo query JSON before this boundary; do not derive the A-Box outcome from TurboPlanTask."
+    status: open
+
+candidates:
+  - candidate: AffectedComputation
+    kind: class
+    definition: "One execution of Turbo affected-set determination whose raw query result is decoded for Yeet planning."
+    admission_kind: decision
+    cq_justification: [CQ-019]
+    decision_relevance: "Identifies the computation whose affected-set provenance must be checked before narrowed verification scope is trusted."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:254-262 — 'turbo query affected'"
+    already_in_glossary: true
+    status: candidate
+
+facts: []
