@@ -1117,6 +1117,22 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/drivers/openai": {
+      "name": "@beep/openai",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/ai-openai": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/openai-compat": {
       "name": "@beep/openai-compat",
       "version": "0.0.3",
@@ -3409,6 +3425,8 @@
     "@beep/ontology-ui": ["@beep/ontology-ui@workspace:packages/ontology/ui"],
 
     "@beep/ontology-use-cases": ["@beep/ontology-use-cases@workspace:packages/ontology/use-cases"],
+
+    "@beep/openai": ["@beep/openai@workspace:packages/drivers/openai"],
 
     "@beep/openai-compat": ["@beep/openai-compat@workspace:packages/drivers/openai-compat"],
 

@@ -1975,7 +1975,8 @@
       ],
       "@beep/law-practice-use-cases/PatentClaimCandidate": [
         "./packages/law-practice/use-cases/src/PatentClaimCandidate/index.ts"
-      ]
+      ],
+      "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
     }
   }
 }

@@ -106,6 +106,7 @@ const config = {
     "packages/drivers/obs/package.json",
     "packages/drivers/exiftool/package.json",
     "packages/drivers/gov-legal-mcp/package.json",
+    "packages/drivers/openai/package.json",
   ],
   customTypes: {
     catalog: {
