@@ -12,7 +12,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
+import { ConceptAlignment, DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
 import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.ts";
 
 const $I = $OntologyId.create("TaxonomyRegistry");
@@ -77,6 +77,7 @@ export class FilingPath extends S.Class<FilingPath>($I`FilingPath`)(
  */
 export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput`)(
   {
+    alignments: S.Array(ConceptAlignment),
     conceptIri: IRIReference,
     documentClass: DocumentClass,
     filingPaths: S.Array(FilingPath),
@@ -178,6 +179,7 @@ export const runLibrarianLoop = Effect.fn("TaxonomyRegistry.runLibrarianLoop")(f
       })
   );
   return LibrarianOutput.make({
+    alignments: concept.alignments,
     conceptIri: concept.iri,
     documentClass: input.documentClass,
     filingPaths: A.map(seed.filingRoots, (root) =>

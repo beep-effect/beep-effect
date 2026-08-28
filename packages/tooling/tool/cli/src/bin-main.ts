@@ -239,12 +239,15 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
 }
 
 if (!handledByQualityFastPath && !handledByCiFastPath) {
-  const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }] = await Promise.all([
+  const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }, { MemoryStatsLive }] = await Promise.all([
     import("@beep/repo-utils"),
     import("effect/unstable/cli"),
     import("./commands/Root.ts"),
+    import("./internal/repo-run/QualityScheduler.ts"),
   ]);
-  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(BaseLayers));
+  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, MemoryStatsLive).pipe(
+    Layer.provideMerge(BaseLayers)
+  );
   const commandProgram = Effect.scoped(
     Layer.build(DerivedLayers).pipe(
       Effect.flatMap(
