@@ -493,7 +493,8 @@
     "packages/drivers/openclaw",
     "packages/drivers/obs",
     "packages/drivers/exiftool",
-    "packages/drivers/gov-legal-mcp"
+    "packages/drivers/gov-legal-mcp",
+    "packages/drivers/openai"
   ],
   "dependencies": {
     "brace-expansion": "^5.0.9",

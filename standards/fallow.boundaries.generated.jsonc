@@ -528,6 +528,12 @@
         ]
       },
       {
+        "name": "@beep/openai",
+        "patterns": [
+          "packages/drivers/openai/src/**"
+        ]
+      },
+      {
         "name": "@beep/openai-compat",
         "patterns": [
           "packages/drivers/openai-compat/src/**"
@@ -2556,6 +2562,21 @@
           "@beep/shacl",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/openai",
+        "allow": [
+          "@beep/identity",
+          "@beep/openai",
+          "@beep/schema",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/openai",
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {

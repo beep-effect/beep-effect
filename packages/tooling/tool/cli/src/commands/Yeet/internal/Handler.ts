@@ -16,11 +16,18 @@ import * as Str from "effect/String";
 import { printCommandJson } from "../../../internal/cli/Json.ts";
 import { GhPrView } from "../../../internal/github/index.ts";
 import {
+  AdmissionRequest,
+  type AdmissionOriginGate,
+  admissionTokenWeight,
+  commandTextForStep,
+  noAdmissionOriginGate,
+  QualitySchedulerError,
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
   repoProofStepDefinition,
   sortedUniquePaths,
+  withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -76,7 +83,9 @@ import {
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import {
   acquireFullProofLock,
+  acquireFullProofLockOrObserveAtPath,
   assertReusableVerifiedState,
+  proofLockPathForContext,
   releaseProofLock,
   writeVerifiedState,
 } from "./ProofState.ts";
@@ -102,7 +111,7 @@ import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } f
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunPlan } from "../../../internal/repo-run/index.ts";
+import type { MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
@@ -267,12 +276,108 @@ const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
   return results;
 });
 
+interface FullProofAdmissionIntent {
+  readonly priority: "publish" | "verify";
+}
+
+const defaultFullProofAdmissionIntent: FullProofAdmissionIntent = { priority: "verify" };
+
+const isQualitySchedulerError = S.is(QualitySchedulerError);
+
+const schedulerErrorToYeetError = <Success, Error, Requirements>(
+  effect: Effect.Effect<Success, Error | QualitySchedulerError, Requirements>
+): Effect.Effect<Success, Error | YeetCommandError, Requirements> =>
+  Effect.mapError(effect, (error) =>
+    isQualitySchedulerError(error)
+      ? YeetCommandError.make({ message: error.message, command: "bun run beep yeet verify", exitCode: 1 })
+      : error
+  );
+
+// Machine-wide weighted admission (ship-velocity D1) wraps the retained
+// per-origin coordinator: the contender queues with visible progress while a
+// sibling checkout proves, and its token weight is charged against live
+// memory capacity while the proof runs.
 const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator")(function* <
   Success,
   Error,
   Requirements,
->(context: RepoRunContext, proofSteps: ReadonlyArray<RepoPlanStep>, use: Effect.Effect<Success, Error, Requirements>) {
+>(
+  context: RepoRunContext,
+  proofSteps: ReadonlyArray<RepoPlanStep>,
+  use: Effect.Effect<Success, Error, Requirements>,
+  intent?: FullProofAdmissionIntent
+) {
+  const resolved = intent ?? defaultFullProofAdmissionIntent;
+  const path = yield* Path.Path;
+  const lockPath = yield* proofLockPathForContext(context);
+  const request = AdmissionRequest.make({
+    kind: "full-proof",
+    weightTokens: admissionTokenWeight("full-proof"),
+    priority: resolved.priority,
+    originKey: path.basename(lockPath, ".lock"),
+    checkoutRoot: context.repoRoot,
+    branch: context.branch,
+    command: A.join(A.map(proofSteps, commandTextForStep), " && "),
+  });
+  const originGate: AdmissionOriginGate<
+    Parameters<typeof releaseProofLock>[0],
+    YeetCommandError,
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  > = {
+    tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps),
+    release: releaseProofLock,
+  };
+  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+});
+
+// Merged previews keep the origin lock inside the preview proof (the preview
+// worktree shares the checkout's origin) while the 5-token machine-wide
+// admission wraps the WHOLE flow — worktree materialization and monorepo
+// install included — so several previews cannot install concurrently.
+const runWithOriginLockOnly = Effect.fn("Yeet.runWithOriginLockOnly")(function* <Success, Error, Requirements>(
+  context: RepoRunContext,
+  proofSteps: ReadonlyArray<RepoPlanStep>,
+  use: Effect.Effect<Success, Error, Requirements>
+) {
   return yield* Effect.acquireUseRelease(acquireFullProofLock(context, proofSteps), () => use, releaseProofLock);
+});
+
+const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmission")(function* <
+  Success,
+  Error,
+  Requirements,
+>(context: RepoRunContext, use: Effect.Effect<Success, Error, Requirements>) {
+  const path = yield* Path.Path;
+  const lockPath = yield* proofLockPathForContext(context);
+  const request = AdmissionRequest.make({
+    kind: "merged-preview",
+    weightTokens: admissionTokenWeight("merged-preview"),
+    priority: "verify",
+    originKey: path.basename(lockPath, ".lock"),
+    checkoutRoot: context.repoRoot,
+    branch: context.branch,
+    command: "bun run beep yeet verify --merged",
+  });
+  return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
+});
+
+// Review-fix loops take one admission token (class-capped at three concurrent
+// leases) but never the per-origin proof lock, preserving the cheaper loop
+// lane while a sibling full proof runs.
+const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(function* <Success, Error, Requirements>(
+  context: RepoRunContext,
+  use: Effect.Effect<Success, Error, Requirements>
+) {
+  const request = AdmissionRequest.make({
+    kind: "review-fix",
+    weightTokens: admissionTokenWeight("review-fix"),
+    priority: "verify",
+    originKey: "",
+    checkoutRoot: context.repoRoot,
+    branch: context.branch,
+    command: "bun run beep yeet verify --tier review-fix",
+  });
+  return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
 });
 
 /**
@@ -455,7 +560,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
 > {
   let skipCommit = yield* shouldSkipCommitForReusablePublish(plan.context, options);
   if (options.reuseVerified) {
@@ -556,7 +661,8 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
           }
           yield* writeVerifiedState(plan.context, "full", fullSteps);
           yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
-        })
+        }),
+        { priority: "publish" }
       );
 
       return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -589,7 +695,8 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
           yield* Console.log("[yeet] skipped local full proof after exact reusable proof-state match");
         }
         yield* validatePostCommitProofDidNotChangeWorktree(plan.context);
-      })
+      }),
+      { priority: "publish" }
     );
 
     yield* warnOnMismatchedPublishUpstream(plan.context);
@@ -1124,7 +1231,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
 > {
   if (options.mode === "status") {
     return yield* runStatusMode(plan.context, options);
@@ -1204,8 +1311,12 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
 
   const coordinatedExecution =
     options.mode === "verify" && options.tier === "full"
-      ? runWithFullProofCoordinator(plan.context, fullSteps, execution)
-      : execution;
+      ? options.merged
+        ? runWithOriginLockOnly(plan.context, fullSteps, execution)
+        : runWithFullProofCoordinator(plan.context, fullSteps, execution, { priority: "verify" })
+      : options.mode === "verify" && options.tier === "review-fix"
+        ? runWithReviewFixAdmission(plan.context, execution)
+        : execution;
 
   return yield* coordinatedExecution.pipe(
     Effect.tapError((error) =>
@@ -1299,7 +1410,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
 > {
   const artifactDir = yield* artifactDirForContext(context);
   yield* warnMergedVerifyIgnoresUncommittedWork(context);
@@ -1355,7 +1466,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
 > {
   const message = yield* validateRequiredMessage(options);
   yield* validateStartPrEarlyPrGuard(options);
@@ -1391,7 +1502,10 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     return yield* emptyPlanResult(context);
   }
   if (options.merged) {
-    return yield* runMergedVerify(context, options, message, modeOptions);
+    const merged = runMergedVerify(context, options, message, modeOptions);
+    return yield* options.mode === "verify" && options.tier === "full"
+      ? runWithMergedPreviewAdmission(context, merged)
+      : merged;
   }
 
   return yield* runPlanExecution(plan, options, message);

@@ -56,6 +56,14 @@
       "headers": {
         "IJ_MCP_SERVER_PROJECT_PATH": "${PWD}"
       }
+    },
+    "phoenix-docs": {
+      "type": "http",
+      "url": "https://arizeai-433a7140.mintlify.app/mcp"
+    },
+    "phoenix": {
+      "type": "http",
+      "url": "https://dankserver.tailc7c348.ts.net:8447/mcp"
     }
   }
 }

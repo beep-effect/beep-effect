@@ -96,3 +96,9 @@ sandbox_mode = "danger-full-access"
 
     [mcp_servers.webstorm.headers]
       IJ_MCP_SERVER_PROJECT_PATH = "<REPO_ROOT>"
+
+  [mcp_servers.phoenix-docs]
+    url = "https://arizeai-433a7140.mintlify.app/mcp"
+
+  [mcp_servers.phoenix]
+    url = "https://dankserver.tailc7c348.ts.net:8447/mcp"

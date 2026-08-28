@@ -1,5 +1,8 @@
 import {
+  acknowledgeYeetMonitorComments,
+  collectNewYeetMonitorComments,
   loadYeetMonitorCommentWatermark,
+  openYeetMonitorCommentStream,
   RepoRunContext,
   renderYeetMonitorCommentStreamStopped,
   runYeetPullRequestCommentMonitor,
@@ -186,6 +189,35 @@ describe("yeet monitor comment cursor persistence", () => {
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
+
+  it.effect("persists the cursor only after every collected row has been emitted", () => {
+    const commandsRef = Ref.makeUnsafe<ReadonlyArray<string>>(A.empty());
+    return withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const context = monitorContext(root);
+        yield* writeState(context, stateAt(PR_NUMBER, EARLIER_COMMENT_AT, 1));
+        const watermarkRef = yield* openYeetMonitorCommentStream(context, PR_NUMBER);
+
+        const comments = yield* collectNewYeetMonitorComments(context, PR_NUMBER, watermarkRef);
+
+        expect(A.map(comments, (comment) => comment.id)).toStrictEqual([44]);
+        expect((yield* Ref.get(watermarkRef)).issue.id).toBe(1);
+        expect(O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id)).toEqual(
+          O.some(1)
+        );
+
+        // Both monitor surfaces emit before they call this seam. If emission
+        // is interrupted, this call never happens and the comment repeats on
+        // the next session instead of disappearing behind a durable cursor.
+        yield* acknowledgeYeetMonitorComments(context, PR_NUMBER, watermarkRef, comments);
+
+        expect((yield* Ref.get(watermarkRef)).issue.id).toBe(44);
+        expect(O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id)).toEqual(
+          O.some(44)
+        );
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, commentEndpointStub))));
+  });
 
   it.live("writes its starting position even when the pull request is quiet", () => {
     const commandsRef = Ref.makeUnsafe<ReadonlyArray<string>>(A.empty());
