@@ -40,3 +40,15 @@
   required a follow-up generated-config commit.
 - Prevention: have lab creation or its post-create verification regenerate and check the Fallow
   boundary inventory before the first publication attempt.
+
+## 2026-08-27: XLSX archive bytes depended on the runner time zone
+
+- Work: close the published LeJeune PR through its dedicated hosted Labs check.
+- Evidence: the GitHub runner produced XLSX digest `4bb7423602f926d07ce3697f749d26cb989a4781f2ae69fb986f22b9c079a48d`
+  instead of the frozen `09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5`.
+  `fflate` encodes ZIP timestamps from local `Date` fields, so the same UTC instant wrote different
+  archive metadata in UTC and America/Chicago.
+- Impact: six Labs tests failed because the source digest no longer matched the frozen manifest and
+  closed bundle references. The extracted spreadsheet text was unchanged.
+- Prevention: pass `fflate` a zone-less fixed local timestamp and run the pinned digest test under
+  UTC plus at least one non-UTC time zone before publication.

@@ -51,6 +51,8 @@ const XLSX_ROW_TEXT = "A-1 | TC assembly | F1852 Type 1 | 7/8 in | 3-1/4 in | 18
 const PDF_SCHEDULE_TEXT =
   "Line B-1 | Product heavy hex bolt only | Grade A490 Type 1 | Diameter 3/4 in | Length 2-1/2 in | Quantity 860 | Finish HDG | DTI F959 Type 325";
 const FIXED_PDF_DATE = DateTime.toDateUtc(DateTime.makeUnsafe("2026-08-27T00:00:00.000Z"));
+// fflate writes ZIP dates through local Date fields. A zone-less value preserves the frozen archive bytes in every TZ.
+const FIXED_XLSX_MTIME = "2026-08-26T19:00:00";
 
 const worksheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>
@@ -150,7 +152,7 @@ const makeXlsxBytes = Effect.fn("LeJeuneFixtures.makeXlsxBytes")(() =>
           "xl/workbook.xml": strToU8(workbookXml),
           "xl/worksheets/sheet1.xml": strToU8(worksheetXml),
         },
-        { level: 9, mtime: FIXED_PDF_DATE }
+        { level: 9, mtime: FIXED_XLSX_MTIME }
       ),
     catch: (cause) =>
       fixtureErrorWithCause("xlsx-generate", "Failed to generate the deterministic synthetic XLSX fixture.", cause),
