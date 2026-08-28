@@ -1972,7 +1972,8 @@
       ],
       "@beep/repo-cli/commands/Cache": [
         "./packages/tooling/tool/cli/src/commands/Cache/index.ts"
-      ]
+      ],
+      "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
     }
   }
 }

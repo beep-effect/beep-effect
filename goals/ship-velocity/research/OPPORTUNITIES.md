@@ -699,3 +699,15 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
 - What would have prevented it: expose named lint subchecks as real nested commands (or reject
   unknown positional arguments before starting the aggregate) and print the exact invocation in
   validation output and packet handoffs.
+
+## 2026-08-27 — Scheduler status unexpectedly required JSON output
+
+- What was happening: the documented pre-proof inspection command
+  `bun run beep quality scheduler status` was used to check machine-wide admission before
+  starting validation.
+- Evidence: the command printed its help and exited nonzero with `Missing required flag: --json`;
+  rerunning `bun run beep quality scheduler status --json` succeeded and reported the live
+  capacity, leases, and queue.
+- What would have prevented it: make `--json` optional as the help text implies and render the
+  existing human-readable status by default, or document the JSON flag as required everywhere
+  the scheduler status command is prescribed.

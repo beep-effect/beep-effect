@@ -134,9 +134,9 @@ clean; it does not consume a lane slot.
 Only packets that directly feed Lane 1:
 
 - [`agentic-professional-runtime`](../goals/agentic-professional-runtime/README.md) (3/5)
-- [`semantic-foundation`](../goals/semantic-foundation/README.md) (1/6) — scoped to
-  **M1 Intake-Serving Semantic Seed** and **M4 ClaimGate Shapes** (feeds
-  intake P4). Feeder research phases are now R1–R4; M2/M3 queue in NEXT.
+- [`semantic-foundation`](../goals/semantic-foundation/README.md) (3/6) — closed
+  after **M1 Intake-Serving Semantic Seed**. Feeder research phases R1-R4 are
+  complete; M2-M4 remain gated future capabilities.
 
 [`file-processing-capability`](../goals/file-processing-capability/README.md)
 completed and retired from this lane (2026-08-17 re-eval).

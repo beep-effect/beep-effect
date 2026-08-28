@@ -99,9 +99,16 @@ the C5 metric correction and the new C7 item below.
 
 ## P4 — Concurrency + cache proof — COMPLETE 2026-08-27
 
-- ~~D1 weighted admission leases; D2 adaptive concurrency; D3 hardening + RSS telemetry.~~
-  Machine-wide, starttime-fenced weighted leases gate full proof, merged preview, review-fix, and
-  publish work; Check concurrency adapts to admitted memory and receipts record peak RSS.
+- ~~D1 weighted admission leases~~ — landed in PR #870 on 2026-08-27. Its
+  `internal/repo-run/QualityScheduler.{schemas.,}ts` implementation is the single machine-wide
+  admission authority; this closeout extends its proof orchestration instead of retaining the
+  superseded parallel `Yeet/internal/Admission.ts` implementation. Full proofs containing the
+  merged-preview parity lane reserve the five-token merged-preview weight, and verdict receipts
+  record per-step peak RSS.
+- ~~D2 adaptive concurrency; D3 hardening + RSS telemetry.~~ Check uses the measured-safe
+  workstation profile while the scheduler controls heavyweight proof concurrency. Scheduler
+  leases retain starttime-fenced reaping, heartbeat, memory-floor, and quarantine behavior from
+  PR #870; Yeet adds per-step peak-RSS receipts for later cap decisions.
 - ~~A4 dead-owner takeover (needs D1 leases).~~ The installed user watcher polls every 30 seconds,
   treats a lease as stale at 240 seconds, CAS-fences zombies, prefers resume, and otherwise opens
   an isolated incident worktree. The resulting worst-case detection bound is 270 seconds.

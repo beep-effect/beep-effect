@@ -1798,5 +1798,6 @@
   "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
   "@beep/repo-cli/commands/Cache": [
     "./packages/tooling/tool/cli/src/commands/Cache/index.ts"
-  ]
+  ],
+  "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
 }

@@ -7,7 +7,6 @@
 
 export * from "@beep/repo-cli/commands/Yeet/index";
 export * from "../commands/Yeet/internal/Ack.ts";
-export * from "../commands/Yeet/internal/Admission.ts";
 export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";

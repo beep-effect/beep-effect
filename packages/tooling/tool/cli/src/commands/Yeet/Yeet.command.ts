@@ -6,7 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Match } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
@@ -20,6 +21,7 @@ import { YeetInboxSeverity } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
+  rejectYeetUntilEventPairing,
   runYeetMerge,
   runYeetMergeLoop,
   runYeetReplyPass,
@@ -361,9 +363,17 @@ const watchFlag = Flag.boolean("watch").pipe(
   )
 );
 
+const untilEventFlag = Flag.boolean("until-event").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "With --watch: exit on the first actionable event batch (a failing check immediately, new PR comments after a short settle window) so a supervising session is woken the moment there is something to act on"
+  )
+);
+
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
+  untilEvent: untilEventFlag,
   untilMerged: untilMergedFlag,
   watch: watchFlag,
 } as const;
@@ -485,13 +495,65 @@ const yeetPublishCommand = Command.make("publish", publishFlags, (options) => ru
   Command.withDescription("Commit reviewed staged changes, prove the commit, then push")
 );
 
-const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilMerged, watch, ...options }) =>
-  untilMerged && !options.plan
-    ? runYeetMergeLoop(options)
-    : watch && !options.plan
-      ? runYeetWatchLoop(options)
-      : runYeetMode("monitor", options)
-).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
+const YeetMonitorCommandRoute = LiteralKit(["classic", "invalid-until-event", "merge-loop", "watch"]);
+
+const SelectYeetMonitorCommandRoute = Fn({
+  input: S.Struct({
+    plan: S.Boolean,
+    untilEvent: S.Boolean,
+    untilMerged: S.Boolean,
+    watch: S.Boolean,
+  }),
+  output: YeetMonitorCommandRoute,
+}).pipe(
+  $I.annoteSchema("SelectYeetMonitorCommandRoute", {
+    description: "Selects the monitor runtime from the four parsed mode switches.",
+  })
+);
+
+/**
+ * Select the runtime route for a parsed `yeet monitor` invocation.
+ *
+ * **Details**
+ *
+ * Plan mode always retains the classic planner. Outside plan mode,
+ * `untilEvent` is valid only with watch mode and never with the merge loop.
+ * Keeping the precedence in one pure selector makes the CLI pairing contract
+ * directly testable without executing a monitor.
+ *
+ * **Example** (Select event watch mode)
+ *
+ * ```ts
+ * import { yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet"
+ *
+ * console.log(yeetMonitorCommandRoute({ plan: false, untilEvent: true, untilMerged: false, watch: true })) // "watch"
+ * ```
+ *
+ * @param options - The four monitor mode switches parsed by the CLI.
+ * @returns The monitor implementation the handler should construct.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSync((options) =>
+  Match.value(options).pipe(
+    Match.when({ plan: true }, () => YeetMonitorCommandRoute.Enum.classic),
+    Match.when({ untilEvent: true, untilMerged: true }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
+    Match.when({ untilEvent: true, watch: false }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
+    Match.when({ untilMerged: true }, () => YeetMonitorCommandRoute.Enum["merge-loop"]),
+    Match.when({ watch: true }, () => YeetMonitorCommandRoute.Enum.watch),
+    Match.orElse(() => YeetMonitorCommandRoute.Enum.classic)
+  )
+);
+
+const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilEvent, untilMerged, watch, ...options }) => {
+  const route = yeetMonitorCommandRoute({ plan: options.plan, untilEvent, untilMerged, watch });
+  return {
+    classic: runYeetMode("monitor", options),
+    "invalid-until-event": rejectYeetUntilEventPairing,
+    "merge-loop": runYeetMergeLoop(options),
+    watch: runYeetWatchLoop(options, untilEvent),
+  }[route];
+}).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
   Command.withDescription("Reset the clone after a merge: prune refs, fast-forward main, delete merged branches")
