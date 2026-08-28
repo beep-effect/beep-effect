@@ -733,36 +733,36 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
       yield* Console.log(
         "[yeet] start-pr-early: pushing before local proof; full proof and hosted monitor remain required"
       );
+      const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
+      yield* runRequiredPhase(
+        plan.context,
+        preflightSteps,
+        recorder,
+        "yeet clean-HEAD install preflight failed before the early push."
+      );
+      yield* warnOnMismatchedPublishUpstream(plan.context);
+      const earlyPushSteps = A.filter(
+        earlyPublishSteps,
+        (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+      );
+      const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
+      if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
+        return yield* failWithIssueArtifacts(
+          plan.context,
+          earlyPushSteps,
+          earlyPublishResults,
+          "yeet start-pr-early push phase failed."
+        );
+      }
+
+      if (options.pr) {
+        yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
+      }
+
       yield* runWithFullProofCoordinator(
         plan.context,
         fullSteps,
         Effect.gen(function* () {
-          const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
-          yield* runRequiredPhase(
-            plan.context,
-            preflightSteps,
-            recorder,
-            "yeet clean-HEAD install preflight failed before the early push."
-          );
-          yield* warnOnMismatchedPublishUpstream(plan.context);
-          const earlyPushSteps = A.filter(
-            earlyPublishSteps,
-            (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
-          );
-          const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
-          if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
-            return yield* failWithIssueArtifacts(
-              plan.context,
-              earlyPushSteps,
-              earlyPublishResults,
-              "yeet start-pr-early push phase failed."
-            );
-          }
-
-          if (options.pr) {
-            yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
-          }
-
           yield* runRequiredProofPhase(
             plan.context,
             fullSteps,

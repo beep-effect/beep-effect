@@ -720,3 +720,12 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   pass-through separator. Turbo rejected `--run` four times before any test started.
 - What would have prevented it: reject Vitest-only flags in the root dispatcher with the exact
   package-scoped command, or place focused arguments after Turbo's `--` separator automatically.
+
+## 2026-08-27 — Scheduler admission blocked the early PR push
+
+- What was happening: `yeet publish --start-pr-early` committed the change, then requested the
+  five-token merged-preview lease before running its early push or creating the PR.
+- Evidence: the next output after `start-pr-early: pushing before local proof` was
+  `admission: waiting`, with the push still absent while unrelated proofs held four tokens.
+- What would have prevented it: keep the clean-HEAD preflight, push, and PR creation outside the
+  proof coordinator. Acquire scheduler admission immediately before the heavyweight proof phase.
