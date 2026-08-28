@@ -1,0 +1,6 @@
+# Falsifiability (tri-split reshape): a WorkUnit admitted with a charge exceeding the
+# remaining token capacity at admission must violate the deployed-policy invariant.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:wu-big ciops:admittedBy ciops:g-over .
+ciops:g-over ciops:admissionChargeTokens 5 ;
+    ciops:capacityAtAdmissionTokens 3 .

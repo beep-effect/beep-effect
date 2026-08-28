@@ -137,3 +137,13 @@ explorations/graph-3d-navigation/research/seed/
 
 # codegraph local index (shared-memory-code-kg-wiring)
 .codegraph/
+
+# beep-ci-operational-ontology raw pre-packet capture: 34MB of raw session
+# transcripts, local session state, and logs (session/machine identifiers,
+# absolute home paths). Never commit (public repo). The committed deliverable
+# is the distilled, redacted prose capture beside it.
+explorations/beep-ci-operational-ontology/prose/pre-packet-transcript/
+# beep-ci-operational-ontology: fleet journal snapshot payload (machine paths/pids in
+# verdict messages; committed manifest lives beside it)
+explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/*/
+explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/gh-runs-*.json

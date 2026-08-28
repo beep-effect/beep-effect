@@ -1,0 +1,14 @@
+# CQ-021: Which seat requests are queued for admission — with what work kind, priority class, admission charge, enqueue time — and which agent owns each?
+# Expected: non_empty | priority: must_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?req ?agent ?kind ?priority ?charge ?enqueuedAt WHERE {
+  ?req rdf:type ciops:SeatRequest ;
+       ciops:requestedBy ?agent ;
+       ciops:hasWorkKind ?kind ;
+       ciops:hasPriorityClass ?priority ;
+       ciops:admissionChargeTokens ?charge ;
+       ciops:enqueuedAt ?enqueuedAt .
+  FILTER NOT EXISTS { ?grant ciops:grantedFrom ?req }
+}

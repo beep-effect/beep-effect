@@ -1,0 +1,13 @@
+# CQ-023: Is any seat request waiting beyond its policy's declared starvation bound without a modeled exception? (starvation invariant; must be zero — good P95 does not imply no starvation)
+# Expected: zero_rows | priority: must_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?req ?waited ?bound WHERE {
+  ?req rdf:type ciops:SeatRequest ;
+       ciops:observedQueueWaitMs ?waited ;
+       ciops:governedBy ?policy .
+  ?policy ciops:starvationBoundMs ?bound .
+  FILTER (?waited > ?bound)
+  FILTER NOT EXISTS { ?req ciops:hasStarvationException ?exc }
+}

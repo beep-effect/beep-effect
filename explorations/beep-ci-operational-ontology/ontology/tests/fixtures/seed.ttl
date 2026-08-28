@@ -1,0 +1,166 @@
+# beep-ci-ops seeded A-Box (round-2 deliverable; extended by the post-grill application
+# pass) — the coherent happy-path graph the full suite executes against. Individuals
+# match the committed "# harness binds" VALUES rows exactly (ep-example, cs-example,
+# tree-example, epoch-example, proof-example, checkout-example, fail-example).
+# Extend deliberately; run_cq_suite.py is the oracle.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# --- lanes (CQ-001) ---
+ciops:LaneBuild a ciops:VerificationLane ; ciops:hasLaneKind ciops:TurboTaskLane .
+ciops:LaneLint a ciops:VerificationLane ; ciops:hasLaneKind ciops:TurboTaskLane .
+ciops:LaneCheapGates a ciops:VerificationLane ; ciops:hasLaneKind ciops:CollectedGateLane .
+
+# --- episode, tiers, admissibility (CQ-002, CQ-006, CQ-017) ---
+ciops:ep-example a ciops:VerificationEpisode ;
+    ciops:targetsTier ciops:TierLocalFullProof ;
+    ciops:timeToCertaintyMs 630000 ;
+    ciops:queueWaitMs 45000 ;
+    ciops:lockWaitMs 120000 ;
+    ciops:executionMs 300000 ;
+    ciops:repairGapMs 100000 ;
+    ciops:ciWaitMs 65000 ;
+    ciops:episodeStartedAt "2026-08-13T08:24:45Z"^^xsd:dateTime .
+ciops:TierLocalFullProof ciops:requiresLane ciops:LaneLint .
+ciops:TierLocalFullProof ciops:requiresLane ciops:LaneStorybook .
+ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneLint .
+ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneFullPrePush .
+ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneSecretScanBaseRef .
+
+ciops:wu-1 rdf:type ciops:WorkUnit ;
+    ciops:admissibleFor ciops:ep-example ;
+    ciops:executesLane ciops:LaneLint ;
+    ciops:admittedBy ciops:grant-1 ;
+    ciops:hasCostEstimate ciops:ce-1 ;
+    ciops:hasScope ciops:AffectedScope ;
+    ciops:hasCachePosture ciops:LocalWriteRemoteRead .
+
+# --- costs (CQ-003, CQ-010, CQ-026) ---
+ciops:ce-1 ciops:p50Ms 143000 ; ciops:p95Ms 200000 ;
+    ciops:hasMemoryClass ciops:MemMedium ; ciops:hasCostProvenance ciops:measured .
+
+# --- change set + topology (CQ-004) ---
+ciops:cs-example ciops:touchesPackage ciops:pkg-a .
+ciops:pkg-b ciops:dependsOnTransitive ciops:pkg-a .
+
+# --- evidence, tree, epoch (CQ-005, CQ-006, CQ-014, CQ-015, CQ-019) ---
+# proof-1: full-repo evidence — FullRepoScope needs no scope-provenance edge (arm 2).
+ciops:proof-1 a ciops:VerificationEvidence ;
+    ciops:validInEpoch ciops:epoch-example ;
+    ciops:provesTree ciops:tree-example ;
+    ciops:dischargesObligation ciops:LaneLint ;
+    ciops:hasScope ciops:FullRepoScope ;
+    ciops:recordedAt "2026-08-27T10:00:00Z" .
+ciops:tree-example ciops:hasCurrentEpoch ciops:epoch-example .
+ciops:epoch-example ciops:beganAt "2026-08-27T09:00:00Z" .
+# proof-example: narrowed scope WITH honest provenance — trusts a fail-CLOSED computation.
+ciops:proof-example a ciops:VerificationEvidence ;
+    ciops:validInEpoch ciops:epoch-example ;
+    ciops:cachedIn ciops:cache-1 ;
+    ciops:hasScope ciops:AffectedScope ;
+    ciops:scopedByComputation ciops:affected-2 ;
+    ciops:recordedAt "2026-08-27T11:00:00Z" .
+ciops:checkout-example a ciops:Checkout ;
+    ciops:mountsCache ciops:cache-1 ;
+    ciops:inEpoch ciops:epoch-example .
+
+# --- admission queue: requests, grants, policy (CQ-008, CQ-009, CQ-010, CQ-021, CQ-023) ---
+ciops:agent-example a ciops:Agent .
+ciops:policy-example a ciops:AdmissionPolicy ;
+    ciops:starvationBoundMs 120000 .
+# req-example: queued (no grant) — CQ-021 row; waiting inside the bound — CQ-023 green.
+ciops:req-example a ciops:SeatRequest ;
+    ciops:requestedBy ciops:agent-example ;
+    ciops:hasWorkKind ciops:FullProofWork ;
+    ciops:hasPriorityClass ciops:VerifyPriority ;
+    ciops:admissionChargeTokens 3 ;
+    ciops:enqueuedAt "2026-08-27T13:59:00Z"^^xsd:dateTime ;
+    ciops:observedQueueWaitMs 30000 ;
+    ciops:governedBy ciops:policy-example .
+# req-2: GRANTED (grant-1 grantedFrom) — must be excluded from CQ-021's queued view.
+ciops:req-2 a ciops:SeatRequest ;
+    ciops:requestedBy ciops:agent-example ;
+    ciops:hasWorkKind ciops:FullProofWork ;
+    ciops:hasPriorityClass ciops:VerifyPriority ;
+    ciops:admissionChargeTokens 3 ;
+    ciops:enqueuedAt "2026-08-27T13:50:00Z"^^xsd:dateTime ;
+    ciops:observedQueueWaitMs 60000 ;
+    ciops:governedBy ciops:policy-example .
+# req-3: waiting BEYOND the bound WITH a modeled exception — legal degradation,
+# CQ-023 stays green; still queued, so it appears in CQ-021 (all properties bound).
+ciops:req-3 a ciops:SeatRequest ;
+    ciops:requestedBy ciops:agent-example ;
+    ciops:hasWorkKind ciops:ReviewFixWork ;
+    ciops:hasPriorityClass ciops:VerifyPriority ;
+    ciops:admissionChargeTokens 1 ;
+    ciops:enqueuedAt "2026-08-27T13:40:00Z"^^xsd:dateTime ;
+    ciops:observedQueueWaitMs 300000 ;
+    ciops:governedBy ciops:policy-example ;
+    ciops:hasStarvationException ciops:HardFloorException .
+
+ciops:MachineProofLock rdf:type ciops:ContendedResource .
+ciops:grant-1 a ciops:SeatGrant ;
+    ciops:grantedFrom ciops:req-2 ;
+    ciops:contendsFor ciops:MachineProofLock ;
+    ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasWorkKind ciops:FullProofWork ;
+    ciops:occupiesCheckout ciops:checkout-example ;
+    ciops:admissionChargeTokens 3 ;
+    ciops:capacityAtAdmissionTokens 8 ;
+    ciops:hasBudget ciops:budget-1 .
+ciops:budget-1 ciops:softP95BudgetMs 900000 .
+
+# --- schedule proposal (CQ-020; CQ-019 arm 2 exercises its narrowed scope) ---
+ciops:sp-example a ciops:ScheduleProposal ;
+    ciops:proposedFor ciops:ep-example ;
+    ciops:hasScope ciops:AffectedScope ;
+    ciops:scopedByComputation ciops:affected-2 ;
+    ciops:hasStep ciops:st-1 .
+ciops:st-1 a ciops:ScheduleStep ;
+    ciops:stepIndex 1 ;
+    ciops:schedulesWorkUnit ciops:wu-1 .
+
+# --- executions + stopping (CQ-022, CQ-025) ---
+ciops:fail-example a ciops:CommittedFailure ;
+    ciops:failsEpisode ciops:ep-example .
+# exec-1: running — the failure obsoletes it (CQ-022 row).
+ciops:exec-1 a ciops:WorkUnitExecution ;
+    ciops:ofWorkUnit ciops:wu-1 ;
+    ciops:servesEpisode ciops:ep-example ;
+    ciops:hasExecutionState ciops:RunningExecution ;
+    ciops:hasCancelClass ciops:CleanCancel .
+# exec-2: completed with actuals — excluded by CQ-022's state filter; CQ-025's pair.
+ciops:exec-2 a ciops:WorkUnitExecution ;
+    ciops:ofWorkUnit ciops:wu-1 ;
+    ciops:servesEpisode ciops:ep-example ;
+    ciops:hasExecutionState ciops:CompletedExecution ;
+    ciops:hasCancelClass ciops:CleanCancel ;
+    ciops:actualWallMs 150000 .
+
+# --- invalidation (CQ-011) ---
+ciops:ev-biome-bump a ciops:InvalidationEvent ;
+    ciops:occurredAt "2026-08-20T12:00:00Z"^^xsd:dateTime ;
+    ciops:touchesHashSurface ciops:hs-root-toolpin ;
+    ciops:radiatesToPackage ciops:pkg-a .
+ciops:hs-root-toolpin ciops:feedsLane ciops:LaneLint .
+
+# --- failure signatures (CQ-013) ---
+ciops:sig-full-pre-push a ciops:FailureSignature ;
+    ciops:attributedDelayMs 5400000 ;
+    ciops:surfacedByLane ciops:LaneCheapGates .
+ciops:LaneCheapGates ciops:hasCostEstimate ciops:ce-2 .
+ciops:ce-2 ciops:p50Ms 60000 ; ciops:p95Ms 90000 .
+
+# --- operational change events (CQ-016) ---
+ciops:iv-shared-turbo-cache a ciops:OperationalChangeEvent ;
+    ciops:landedAt "2026-08-20T00:00:00Z" .
+
+# --- affected computations (CQ-019: fail-open exists, nothing trusts it; fail-closed
+#     carries the honest provenance edges above) ---
+ciops:affected-1 a ciops:AffectedComputation ;
+    ciops:hasAffectedOutcome ciops:fo-1 .
+ciops:fo-1 a ciops:FailOpenOutcome .
+ciops:affected-2 a ciops:AffectedComputation ;
+    ciops:hasAffectedOutcome ciops:fo-2 .
+ciops:fo-2 a ciops:FailClosedOutcome .

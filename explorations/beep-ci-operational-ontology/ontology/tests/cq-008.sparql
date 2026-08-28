@@ -1,0 +1,10 @@
+# CQ-008: Which contended resources exist, and which active grants currently hold or wait on each?
+# Expected: non_empty | priority: must_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?res ?grant ?state WHERE {
+  ?res rdf:type ciops:ContendedResource .
+  ?grant ciops:contendsFor ?res ; ciops:hasGrantState ?state .
+  VALUES ?state { ciops:ActiveGrant ciops:WaitingGrant }
+}

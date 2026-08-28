@@ -1,0 +1,7 @@
+# CQ-024: What cache posture does each WorkUnit execute under (local-only, or local-write-remote-read)?
+# Expected: non_empty | priority: should_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?wu ?posture WHERE {
+  ?wu ciops:hasCachePosture ?posture .
+}

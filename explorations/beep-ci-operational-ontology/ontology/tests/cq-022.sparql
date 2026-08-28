@@ -1,0 +1,13 @@
+# CQ-022: Which in-flight WorkUnit executions does a given committed failure obsolete, and is each a clean or dirty cancel candidate?
+# Expected: non_empty | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?exec ?cancelClass WHERE {
+  VALUES ?failure { ciops:fail-example }  # harness binds
+  ?failure rdf:type ciops:CommittedFailure ; ciops:failsEpisode ?ep .
+  ?exec rdf:type ciops:WorkUnitExecution ;
+        ciops:servesEpisode ?ep ;
+        ciops:hasExecutionState ciops:RunningExecution ;
+        ciops:hasCancelClass ?cancelClass .
+}

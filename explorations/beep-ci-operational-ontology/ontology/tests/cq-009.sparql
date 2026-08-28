@@ -1,0 +1,11 @@
+# CQ-009: Are any two active FULL-PROOF-class grants occupying the same checkout? (turbo-contention law; must be zero)
+# Expected: zero_rows | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?g1 ?g2 ?checkout WHERE {
+  ?g1 ciops:occupiesCheckout ?checkout ; ciops:hasGrantState ciops:ActiveGrant ;
+      ciops:hasWorkKind ciops:FullProofWork .
+  ?g2 ciops:occupiesCheckout ?checkout ; ciops:hasGrantState ciops:ActiveGrant ;
+      ciops:hasWorkKind ciops:FullProofWork .
+  FILTER (?g1 != ?g2)
+}

@@ -1,0 +1,8 @@
+# Falsifiability: two active FULL-PROOF-class grants on one checkout must violate.
+# (Work-kind self-scoping added with CQ-021's vocabulary — the query now demands
+# hasWorkKind FullProofWork on both grants.)
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:g1 ciops:occupiesCheckout ciops:co-1 ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasWorkKind ciops:FullProofWork .
+ciops:g2 ciops:occupiesCheckout ciops:co-1 ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasWorkKind ciops:FullProofWork .
