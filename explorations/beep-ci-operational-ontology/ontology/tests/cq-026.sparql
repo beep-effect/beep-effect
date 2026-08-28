@@ -2,9 +2,9 @@
 # Expected: zero_rows | priority: should_have | derivation: direct_lookup
 # GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
 PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-SELECT ?wu ?p95 ?softMax WHERE {
-  ?wu ciops:admittedBy ?grant ; ciops:hasCostEstimate ?c .
+SELECT ?grant ?p95 ?softMax WHERE {
+  ?grant ciops:usedCostEstimate ?c .
   ?c ciops:p95Ms ?p95 .
   ?grant ciops:hasBudget ?b . ?b ciops:softP95BudgetMs ?softMax .
-  FILTER (?p95 > ?softMax)
+  FILTER ( !isNumeric(?p95) || !isNumeric(?softMax) || ?p95 > ?softMax )
 }

@@ -48,6 +48,8 @@ map.html
 **/docs
 !goals/**/docs/
 !goals/**/docs/**
+!explorations/*/ontology/docs/
+!explorations/*/ontology/docs/**
 # Root docs/ is tracked authored documentation; generated + private stay out
 !/docs/
 # Legacy root docgen aggregate paths; current aggregate output is /docs/generated/
@@ -147,3 +149,7 @@ explorations/beep-ci-operational-ontology/prose/pre-packet-transcript/
 # verdict messages; committed manifest lives beside it)
 explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/*/
 explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/gh-runs-*.json
+
+# Python bytecode (packet research scripts)
+**/__pycache__/
+*.pyc

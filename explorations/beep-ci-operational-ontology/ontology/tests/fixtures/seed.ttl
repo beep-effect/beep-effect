@@ -1,8 +1,8 @@
-# beep-ci-ops seeded A-Box (round-2 deliverable; extended by the post-grill application
-# pass) — the coherent happy-path graph the full suite executes against. Individuals
-# match the committed "# harness binds" VALUES rows exactly (ep-example, cs-example,
-# tree-example, epoch-example, proof-example, checkout-example, fail-example).
-# Extend deliberately; run_cq_suite.py is the oracle.
+# beep-ci-ops seeded A-Box (round-2 deliverable; extended by the application pass and
+# repaired by review-loop round 3) — the coherent happy-path graph the full suite
+# executes against. Individuals match the committed "# harness binds" VALUES rows
+# exactly (ep-example, cs-example, tree-example, epoch-example, proof-example,
+# checkout-example, fail-example). Extend deliberately; run_cq_suite.py is the oracle.
 @prefix ciops: <https://oip.law/ontology/ci-ops#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -21,7 +21,8 @@ ciops:ep-example a ciops:VerificationEpisode ;
     ciops:executionMs 300000 ;
     ciops:repairGapMs 100000 ;
     ciops:ciWaitMs 65000 ;
-    ciops:episodeStartedAt "2026-08-13T08:24:45Z"^^xsd:dateTime .
+    ciops:episodeStartedAt "2026-08-13T08:24:45Z"^^xsd:dateTime ;
+    ciops:hasCurrentProposal ciops:sp-example .
 ciops:TierLocalFullProof ciops:requiresLane ciops:LaneLint .
 ciops:TierLocalFullProof ciops:requiresLane ciops:LaneStorybook .
 ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneLint .
@@ -33,8 +34,7 @@ ciops:wu-1 rdf:type ciops:WorkUnit ;
     ciops:executesLane ciops:LaneLint ;
     ciops:admittedBy ciops:grant-1 ;
     ciops:hasCostEstimate ciops:ce-1 ;
-    ciops:hasScope ciops:AffectedScope ;
-    ciops:hasCachePosture ciops:LocalWriteRemoteRead .
+    ciops:hasScope ciops:AffectedScope .
 
 # --- costs (CQ-003, CQ-010, CQ-026) ---
 ciops:ce-1 ciops:p50Ms 143000 ; ciops:p95Ms 200000 ;
@@ -69,7 +69,7 @@ ciops:checkout-example a ciops:Checkout ;
 ciops:agent-example a ciops:Agent .
 ciops:policy-example a ciops:AdmissionPolicy ;
     ciops:starvationBoundMs 120000 .
-# req-example: queued (no grant) — CQ-021 row; waiting inside the bound — CQ-023 green.
+# req-example: queued ticket — CQ-021 row; waiting inside the declared bound — CQ-023 green.
 ciops:req-example a ciops:SeatRequest ;
     ciops:requestedBy ciops:agent-example ;
     ciops:hasWorkKind ciops:FullProofWork ;
@@ -78,17 +78,8 @@ ciops:req-example a ciops:SeatRequest ;
     ciops:enqueuedAt "2026-08-27T13:59:00Z"^^xsd:dateTime ;
     ciops:observedQueueWaitMs 30000 ;
     ciops:governedBy ciops:policy-example .
-# req-2: GRANTED (grant-1 grantedFrom) — must be excluded from CQ-021's queued view.
-ciops:req-2 a ciops:SeatRequest ;
-    ciops:requestedBy ciops:agent-example ;
-    ciops:hasWorkKind ciops:FullProofWork ;
-    ciops:hasPriorityClass ciops:VerifyPriority ;
-    ciops:admissionChargeTokens 3 ;
-    ciops:enqueuedAt "2026-08-27T13:50:00Z"^^xsd:dateTime ;
-    ciops:observedQueueWaitMs 60000 ;
-    ciops:governedBy ciops:policy-example .
-# req-3: waiting BEYOND the bound WITH a modeled exception — legal degradation,
-# CQ-023 stays green; still queued, so it appears in CQ-021 (all properties bound).
+# req-3: waiting BEYOND the bound WITH the modeled hard-floor exception — legal
+# degradation, CQ-023 stays green; still queued, so it appears in CQ-021 (all bound).
 ciops:req-3 a ciops:SeatRequest ;
     ciops:requestedBy ciops:agent-example ;
     ciops:hasWorkKind ciops:ReviewFixWork ;
@@ -101,19 +92,17 @@ ciops:req-3 a ciops:SeatRequest ;
 
 ciops:MachineProofLock rdf:type ciops:ContendedResource .
 ciops:grant-1 a ciops:SeatGrant ;
-    ciops:grantedFrom ciops:req-2 ;
     ciops:contendsFor ciops:MachineProofLock ;
     ciops:hasGrantState ciops:ActiveGrant ;
-    ciops:hasWorkKind ciops:FullProofWork ;
-    ciops:occupiesCheckout ciops:checkout-example ;
+    ciops:hasOriginKey "origin-beep-effect" ;
     ciops:admissionChargeTokens 3 ;
     ciops:capacityAtAdmissionTokens 8 ;
+    ciops:usedCostEstimate ciops:ce-1 ;
     ciops:hasBudget ciops:budget-1 .
 ciops:budget-1 ciops:softP95BudgetMs 900000 .
 
-# --- schedule proposal (CQ-020; CQ-019 arm 2 exercises its narrowed scope) ---
+# --- schedule proposal (CQ-020; CQ-019 arms 2-4 exercise its narrowed scope) ---
 ciops:sp-example a ciops:ScheduleProposal ;
-    ciops:proposedFor ciops:ep-example ;
     ciops:hasScope ciops:AffectedScope ;
     ciops:scopedByComputation ciops:affected-2 ;
     ciops:hasStep ciops:st-1 .
@@ -121,21 +110,25 @@ ciops:st-1 a ciops:ScheduleStep ;
     ciops:stepIndex 1 ;
     ciops:schedulesWorkUnit ciops:wu-1 .
 
-# --- executions + stopping (CQ-022, CQ-025) ---
+# --- attempts, executions, stopping (CQ-022, CQ-024, CQ-025) ---
+ciops:att-1 a ciops:VerificationAttempt .
 ciops:fail-example a ciops:CommittedFailure ;
-    ciops:failsEpisode ciops:ep-example .
-# exec-1: running — the failure obsoletes it (CQ-022 row).
+    ciops:inAttempt ciops:att-1 .
+# exec-1: running in the failed attempt — the failure obsoletes it (CQ-022 row).
 ciops:exec-1 a ciops:WorkUnitExecution ;
     ciops:ofWorkUnit ciops:wu-1 ;
-    ciops:servesEpisode ciops:ep-example ;
+    ciops:inAttempt ciops:att-1 ;
     ciops:hasExecutionState ciops:RunningExecution ;
     ciops:hasCancelClass ciops:CleanCancel .
-# exec-2: completed with actuals — excluded by CQ-022's state filter; CQ-025's pair.
+# exec-2: completed with actuals + resolved posture — excluded by CQ-022's state
+# filter; CQ-024's posture row; CQ-025's calibration pair via usedCostEstimate.
 ciops:exec-2 a ciops:WorkUnitExecution ;
     ciops:ofWorkUnit ciops:wu-1 ;
-    ciops:servesEpisode ciops:ep-example ;
+    ciops:inAttempt ciops:att-1 ;
     ciops:hasExecutionState ciops:CompletedExecution ;
     ciops:hasCancelClass ciops:CleanCancel ;
+    ciops:hasCachePosture ciops:LocalWriteRemoteRead ;
+    ciops:usedCostEstimate ciops:ce-1 ;
     ciops:actualWallMs 150000 .
 
 # --- invalidation (CQ-011) ---

@@ -15,12 +15,17 @@
   landedAt: "2026-08-27T19:52:03Z"
   mergeCommit: debbbb51f77ae10015788dec0b819f12b96c3552
   pr: 870
-  mechanismChanged: admission          # bounce-fail proof lock -> durable ticket/lease queueing
+  mechanismChanged: admission          # per-origin proof lock RETAINED; a weighted
+                                       # ticket/lease admission layer now queues
+                                       # contenders that previously bounce-failed
   hypothesis: >
-    Lock-contention bounces (17% of fleet attempts pre-intervention) are replaced by
-    queue wait; episode time-to-certainty shifts from bounce churn + retry loops to
-    queueWaitMs. Attribution requires the pre-intervention journal snapshot
-    (evidence/journal-snapshot-2026-08-27/) because the ring-buffer vein self-erases.
+    OBSERVATIONAL: the per-origin proof lock is retained (QualityScheduler.ts module
+    header; round-2 seat F + round-3 I-06) — #870 layers durable weighted admission
+    over it, so contender behavior changes from bounce-fail churn + retry loops to
+    queue wait (queueWaitMs). The expected association is a shift of episode
+    time-to-certainty composition, not a lock removal. Attribution requires the
+    pre-intervention journal snapshot (evidence/journal-snapshot-2026-08-27/) because
+    the ring-buffer vein self-erases.
   measurementCaveats:
     - "ADOPTION-QUALIFIED MEMBERSHIP (round-2 seat F): merge time is NOT the fleet boundary — checkouts on pre-#870 binaries keep bounce behavior after landedAt. Post-period membership requires per-checkout HEAD ancestry >= mergeCommit (adoption census: evidence snapshot CHECKOUT_HEADS.txt)."
     - "Pre/post clocks differ: pre-period bounce ATTEMPTS were excluded from episode opening (--exclude-bounces), though waiting wall time remains inside episode durations; post-period queue wait is out-of-journal until the ticket/lease store is ingested."

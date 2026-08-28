@@ -10,7 +10,9 @@
 > `QualityScheduler.ts` and the D1 design record); what changes is contender behavior —
 > new-binary contenders QUEUE instead of bouncing. The 27%/17% lock-bounce economy
 > below is the behavior #870 was built to retire. #870 is the packet's **first
-> ControlIntervention** (`landedAt 2026-08-27T19:52:03Z`) — with one hard attribution
+> OperationalChangeEvent** (`landedAt 2026-08-27T19:52:03Z`; vernacular: control
+> intervention — OBSERVATIONAL by default, causal only with the kpi-measurement-rules
+> §2 supporting design; round-3 I-05 naming fix) — with one hard attribution
 > caveat (seat F): **merge time is NOT the fleet boundary.** Adoption is staggered:
 > checkouts running pre-#870 binaries keep bouncing after 19:52Z, so intervention
 > membership must be qualified per (checkout, HEAD ancestry ≥ `debbbb51f7`), never by
@@ -101,8 +103,11 @@ python3 explorations/beep-ci-operational-ontology/research/scripts/kpi_baseline_
   ~/YeeBois/projects/* --modes verify,repair,publish --exclude-bounces --max-episode-hours 24
 ```
 
-Percentiles are nearest-rank on the sorted sample (`round(p/100*(n-1))`) — named here so
-an independent rerun does not invent estimator semantics. Inputs are machine-local
+Percentiles: the table above was computed by probe v3.1, whose estimator
+(`round(p/100*(n-1))`) was NOT true nearest-rank (round-3 seat H-13) — probe v3.2
+implements one-based-rank `ceil(p/100*n)`; see the round-3 addendum at the end of
+this document for the v3.2 re-run (headline quantiles unchanged at this n). Named here
+so an independent rerun does not invent estimator semantics. Inputs are machine-local
 (`.beep` is gitignored), so determinism here means: same journal bytes → same numbers.
 The durable ETL (labs-incubated per the incubation ruling) will snapshot its input
 inventory (journal digests) alongside each published distribution.
@@ -190,3 +195,26 @@ already applies the item-1 filters via the probe v3 flags.)
 3. Episode end uses local green; CI-tier certainty (merge-ready) needs the
    `monitor` lane + GitHub check data joined in.
 4. No epoch qualification yet: an episode spanning a `git merge origin/main` mixes epochs.
+
+## Round-3 addendum (2026-08-27, probe v3.2)
+
+Seat H (H-13) proved the v3.1 percentile index `round(p/100*(n-1))` is not
+nearest-rank (P50 of `[1,2,3,4]`: v3.1 gives 3, nearest-rank gives 2). Probe v3.2
+implements one-based-rank `ceil(p/100*n)`. Fleet re-run with the identical filter
+recipe (`--modes verify,repair,publish --exclude-bounces --max-episode-hours 24`),
+2026-08-27 late evening:
+
+| metric | v3.1 published | v3.2 re-run |
+|---|---|---|
+| red→green episodes | 282 | **284** |
+| episode P50 | 41.3m | **41.3m** |
+| episode P95 | 3.1h | **3.1h** |
+| green attempts P50/P95 | 12.5m / 31.2m | 12.5m / 31.2m |
+| lock bounces (of kept) | 17% (fleet, earlier window) → 21% this window | 21% |
+| right-censored pairs (red attempts) | 90 (236) | 92 (243) |
+
+The headline quantiles are UNCHANGED at this sample size — the estimator defect was
+real but immaterial at n≈284 (it matters at small per-tier partitions, which is why
+the ETL law mandates the true estimator). Count drift (282→284 episodes, 90→92
+censored) is the RING BUFFER moving between runs — two more days of journal writes,
+not the estimator; every number remains retained-window-relative per §Limitations.

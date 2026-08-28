@@ -6,5 +6,5 @@ SELECT ?wu ?charge ?capacity WHERE {
   ?wu ciops:admittedBy ?grant .
   ?grant ciops:admissionChargeTokens ?charge ;
          ciops:capacityAtAdmissionTokens ?capacity .
-  FILTER (?charge > ?capacity)
+  FILTER ( !isNumeric(?charge) || !isNumeric(?capacity) || ?charge > ?capacity )
 }

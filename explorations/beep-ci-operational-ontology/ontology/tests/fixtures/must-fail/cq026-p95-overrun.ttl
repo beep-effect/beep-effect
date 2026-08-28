@@ -1,7 +1,7 @@
-# Falsifiability (the demoted heuristic screen): an admitted WorkUnit whose predicted
-# p95 exceeds the advisory soft budget must surface — a smell, never a guarantee.
+# Falsifiability (the demoted heuristic screen): an admitted grant whose GOVERNING
+# estimate's p95 exceeds the advisory soft budget must surface — a smell, never a
+# guarantee. (Round-3 W-05: the screen reads usedCostEstimate.)
 @prefix ciops: <https://oip.law/ontology/ci-ops#> .
-ciops:wu-slow ciops:admittedBy ciops:g-x ; ciops:hasCostEstimate ciops:ce-slow .
+ciops:g-x ciops:usedCostEstimate ciops:ce-slow ; ciops:hasBudget ciops:b-x .
 ciops:ce-slow ciops:p95Ms 1200000 .
-ciops:g-x ciops:hasBudget ciops:b-x .
 ciops:b-x ciops:softP95BudgetMs 900000 .

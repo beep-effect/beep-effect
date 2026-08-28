@@ -1,0 +1,26 @@
+stakeholder_need,use_case_id,cq_id,ontology_terms,sparql_test
+Agent plans the cheapest next validation sequence,UC-001,CQ-001,VerificationLane;LaneKind;hasLaneKind,ontology/tests/cq-001.sparql
+Agent plans the cheapest next validation sequence,UC-001,CQ-002,WorkUnit;VerificationEpisode;AssuranceTier;admissibleFor;executesLane;targetsTier;requiresLane,ontology/tests/cq-002.sparql
+Agent plans the cheapest next validation sequence,UC-001,CQ-003,CostEstimate;MemoryClass;CostProvenance;hasCostEstimate;p50Ms;p95Ms;hasMemoryClass;hasCostProvenance,ontology/tests/cq-003.sparql
+Agent plans the cheapest next validation sequence,UC-001,CQ-004,ChangeSet;PackageRef;touchesPackage;dependsOnTransitive,ontology/tests/cq-004.sparql
+Change event invalidation blast radius,UC-003,CQ-005,VerificationEvidence;CacheEpoch;TreeState;InvalidationEvent;validInEpoch;provesTree;invalidates,ontology/tests/cq-005.sparql
+Certainty accounting before publish,UC-004,CQ-006,AssuranceTier;VerificationEvidence;TreeState;CacheEpoch;requiresLane;dischargesObligation;provesTree;validInEpoch;invalidates,ontology/tests/cq-006.sparql
+KPI attribution and lever discovery,UC-005,CQ-007,VerificationEpisode;timeToCertaintyMs;queueWaitMs;lockWaitMs;executionMs;repairGapMs;ciWaitMs,ontology/tests/cq-007.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-008,ContendedResource;SeatGrant;GrantState;contendsFor;hasGrantState,ontology/tests/cq-008.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-009,SeatGrant;GrantState;hasOriginKey;hasGrantState,ontology/tests/cq-009.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-010,WorkUnit;SeatGrant;admittedBy;admissionChargeTokens;capacityAtAdmissionTokens,ontology/tests/cq-010.sparql
+Change event invalidation blast radius,UC-003,CQ-011,InvalidationEvent;HashSurface;VerificationLane;PackageRef;touchesHashSurface;feedsLane;radiatesToPackage;occurredAt,ontology/tests/cq-011.sparql
+KPI attribution and lever discovery,UC-005,CQ-012,VerificationEpisode;queueWaitMs;lockWaitMs;executionMs;repairGapMs;ciWaitMs;timeToCertaintyMs;episodeStartedAt,ontology/tests/cq-012.sparql
+KPI attribution and lever discovery,UC-005,CQ-013,FailureSignature;VerificationLane;surfacedByLane;attributedDelayMs;hasCostEstimate;p50Ms,ontology/tests/cq-013.sparql
+Change event invalidation blast radius,UC-003,CQ-014,CacheEpoch;VerificationEvidence;TreeState;beganAt;recordedAt;hasCurrentEpoch,ontology/tests/cq-014.sparql
+Certainty accounting before publish,UC-004,CQ-015,VerificationEvidence;Checkout;SharedCache;cachedIn;mountsCache;inEpoch,ontology/tests/cq-015.sparql
+KPI attribution and lever discovery,UC-005,CQ-016,OperationalChangeEvent;landedAt,ontology/tests/cq-016.sparql
+Certainty accounting before publish,UC-004,CQ-017,AssuranceTier;VerificationLane;requiresLane,ontology/tests/cq-017.sparql
+Change event invalidation blast radius,UC-003,CQ-019,AffectedComputation;FailOpenOutcome;VerificationEvidence;ScheduleProposal;Scope;hasAffectedOutcome;scopedByComputation;hasScope,ontology/tests/cq-019.sparql
+Agent plans the cheapest next validation sequence,UC-001,CQ-020,ScheduleProposal;ScheduleStep;WorkUnit;Scope;VerificationEpisode;hasCurrentProposal;hasStep;stepIndex;schedulesWorkUnit;hasScope,ontology/tests/cq-020.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-021,SeatRequest;Agent;AdmissionWorkKind;AdmissionPriorityClass;requestedBy;hasWorkKind;hasPriorityClass;admissionChargeTokens;enqueuedAt,ontology/tests/cq-021.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-022,CommittedFailure;WorkUnitExecution;VerificationAttempt;ExecutionState;CancelClass;inAttempt;hasExecutionState;hasCancelClass,ontology/tests/cq-022.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-023,SeatRequest;AdmissionPolicy;StarvationException;observedQueueWaitMs;governedBy;starvationBoundMs;hasStarvationException,ontology/tests/cq-023.sparql
+Certainty accounting before publish,UC-004,CQ-024,WorkUnitExecution;CachePosture;hasCachePosture,ontology/tests/cq-024.sparql
+KPI attribution and lever discovery,UC-005,CQ-025,WorkUnitExecution;CostEstimate;actualWallMs;usedCostEstimate;hasExecutionState;p50Ms;p95Ms,ontology/tests/cq-025.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-026,SeatGrant;ResourceBudget;CostEstimate;usedCostEstimate;hasBudget;softP95BudgetMs;p95Ms,ontology/tests/cq-026.sparql

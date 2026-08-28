@@ -91,7 +91,7 @@ for c in testable:
 
 # --- traceability matrix ---------------------------------------------------------
 buf = io.StringIO()
-w = csv.writer(buf, quoting=csv.QUOTE_MINIMAL)
+w = csv.writer(buf, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
 w.writerow(["stakeholder_need", "use_case_id", "cq_id", "ontology_terms", "sparql_test"])
 for c in testable:
     num = c["id"].split("-")[1]

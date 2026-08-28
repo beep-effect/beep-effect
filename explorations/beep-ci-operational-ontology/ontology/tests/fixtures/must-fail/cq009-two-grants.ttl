@@ -1,8 +1,8 @@
-# Falsifiability: two active FULL-PROOF-class grants on one checkout must violate.
-# (Work-kind self-scoping added with CQ-021's vocabulary — the query now demands
-# hasWorkKind FullProofWork on both grants.)
+# Falsifiability (round-3 H-04/J-B3): two active grants on ONE ORIGIN with DIFFERENT
+# checkouts are exactly the deployed-prohibited state the old checkout-joined query
+# missed — the origin-keyed query must violate.
 @prefix ciops: <https://oip.law/ontology/ci-ops#> .
-ciops:g1 ciops:occupiesCheckout ciops:co-1 ; ciops:hasGrantState ciops:ActiveGrant ;
-    ciops:hasWorkKind ciops:FullProofWork .
-ciops:g2 ciops:occupiesCheckout ciops:co-1 ; ciops:hasGrantState ciops:ActiveGrant ;
-    ciops:hasWorkKind ciops:FullProofWork .
+ciops:g1 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "same-origin" .
+ciops:g2 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "same-origin" .

@@ -10,5 +10,4 @@ SELECT ?req ?agent ?kind ?priority ?charge ?enqueuedAt WHERE {
        ciops:hasPriorityClass ?priority ;
        ciops:admissionChargeTokens ?charge ;
        ciops:enqueuedAt ?enqueuedAt .
-  FILTER NOT EXISTS { ?grant ciops:grantedFrom ?req }
 }

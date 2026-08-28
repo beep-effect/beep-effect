@@ -7,7 +7,6 @@ SELECT ?exec ?actual ?p50 ?p95 WHERE {
   ?exec rdf:type ciops:WorkUnitExecution ;
         ciops:hasExecutionState ciops:CompletedExecution ;
         ciops:actualWallMs ?actual ;
-        ciops:ofWorkUnit ?wu .
-  ?wu ciops:hasCostEstimate ?c .
+        ciops:usedCostEstimate ?c .
   ?c ciops:p50Ms ?p50 ; ciops:p95Ms ?p95 .
 }

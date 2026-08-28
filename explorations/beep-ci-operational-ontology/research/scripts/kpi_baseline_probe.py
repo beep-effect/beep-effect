@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""S0 KPI baseline probe v3 — reads yeet attempt journals.
+"""S0 KPI baseline probe v3.2 — reads yeet attempt journals.
 
 Source vein: .beep/yeet/runs/*/attempts.ndjson (yeet-attempt-journal/v1),
 branch-scoped Started/Finished events with the full verdict embedded per
@@ -21,8 +21,12 @@ v3 changes (round-1 panel):
   starts counted; chronological sort uses parsed timestamps; the resolved
   roots and journal count are echoed; percentile estimator is named.
 
-Percentile estimator: nearest-rank on the sorted sample
-(index = round(p/100 * (n-1))).
+Percentile estimator: TRUE nearest-rank on the sorted sample
+(one-based rank ceil(p/100 * n), i.e. index ceil(p/100*n)-1). v3.1 used
+round(p/100*(n-1)), which is NOT nearest-rank and differs on small samples
+(round-3 seat H-13, executed counterexample: P50 of [1,2,3,4] gave 3, true
+nearest-rank gives 2). Numbers in kpi-baseline-2026-08-27.md computed under
+v3.1 carry an addendum with the v3.2 re-run.
 
 Usage:
   python kpi_baseline_probe.py <root> [<root> ...]                 # raw, all modes
@@ -32,6 +36,7 @@ Usage:
 import argparse
 import glob
 import json
+import math
 import sys
 from datetime import datetime
 
@@ -44,7 +49,7 @@ def pct(vals, p):
     if not vals:
         return None
     s = sorted(vals)
-    k = max(0, min(len(s) - 1, round(p / 100 * (len(s) - 1))))
+    k = max(0, min(len(s) - 1, math.ceil(p / 100 * len(s)) - 1))
     return s[k]
 
 

@@ -3,9 +3,13 @@
 The binding rules for computing the packet's ONE KPI — fleet-aggregated P50/P95
 time-to-certainty per verification episode. Every number the packet publishes obeys
 this document; a number that can't state which rule produced it is not a KPI reading.
-The first-cut baseline ([kpi-baseline-2026-08-27.md](./kpi-baseline-2026-08-27.md),
-probe `scripts/kpi_baseline_probe.py` v3.1) predates some rules and says so inline;
-v2 of the probe conforms fully.
+Probe conformance, stated honestly (round-3 H-13 killed a phantom "v2 conforms"
+sentence): the committed probe is `scripts/kpi_baseline_probe.py` **v3.2** — it
+implements §3 censorship reporting and §4's TRUE nearest-rank estimator (fixed in
+v3.2; v3.1's `round(p*(n-1))` was not nearest-rank), but does NOT yet implement §1's
+seat-request clock, §2's tier partitioning, or the cut+uncut dual report — those are
+the durable ETL's obligations (labs-incubated), and any number published before it
+exists must name which rules its probe version skips.
 
 ## 1. Episode identity
 
@@ -45,9 +49,11 @@ v2 of the probe conforms fully.
 
 ## 3. Censorship
 
-- The attempt-journal vein is a RING BUFFER (newest ~50 attempts/branch,
-  `AttemptJournal.ts`): every figure is RETAINED-WINDOW-RELATIVE and the report says
-  so. History beyond retention is evicted, not absent — no negation, no "never
+- The attempt-journal vein is a RING BUFFER (exactly the newest 50 `attempt-started`
+  events per branch-scoped run-id file per checkout — `RETAINED_ATTEMPTS = 50`,
+  eviction drops everything before the 50th-newest start plus any torn trailing line;
+  round-3 J W7 precision): every figure is RETAINED-WINDOW-RELATIVE and the report
+  says so. History beyond retention is evicted, not absent — no negation, no "never
   happened" claims over it (closed-world.yaml declares this vein open-world).
 - **Right-censored episodes** (red streak still open at snapshot, or opening truncated
   by eviction) are REPORTED, not dropped: publish BOTH the cut distribution (censored
@@ -71,7 +77,20 @@ v2 of the probe conforms fully.
 
 - Veins: `.beep/yeet/runs/*/attempts.ndjson` (yeet-attempt-journal/v1),
   `verdict.json` (last-write-only — never a history source), the #870 admission store
-  (tickets/leases) for queue instants, `gh` run data for CI waits.
+  (tickets/leases) for queue instants, `gh` run data for CI waits. Per-lane wall cost
+  is `verdict.lanes[].durationMs` nested in `attempt-finished`; attempt-level
+  `verdict.elapsedMs` covers the whole attempt (round-3 J-B2 — journal "step records"
+  do not exist).
+- **The admission store SELF-ERASES its handoffs** (round-3 H-05/J-B4, proven against
+  the running scheduler): admission deletes the ticket file, completion deletes the
+  lease, the lease body carries neither nonce nor enqueue time, and the ticket→lease
+  linkage survives only in the lease FILENAME stem (`nonce-pid`). Consequences: queue
+  wait for GRANTED work is not reconstructable from a single store snapshot — the ETL
+  must either poll snapshots at a cadence finer than typical queue waits or wait for a
+  scheduler-side admission-transition journal (recorded as a candidate repo
+  improvement). Until then, §1's seat-request clock is computable only for episodes
+  whose tickets were observed while queued; others fall back to attempt start, and the
+  report says which clock each episode used.
 - Every aggregate names its probe version, flags, resolved roots, and snapshot
   instant; perishable inputs are snapshotted under `evidence/` with digests before
   they self-erase (the ring buffer waits for no one).

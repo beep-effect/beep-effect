@@ -19,14 +19,19 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-**The grill frontier is CLOSED and the application pass is APPLIED** (2026-08-27).
-The suite is at 26 CQs (18 Must / 7 Should), 25 executing tests + 12 must-fail
-fixtures, validator 0 blockers / 0 WARNS (the round-0 admission-law warns are closed
-by the scheduling-trio CQs). Remaining WORK, in order: (1) review-loop round 3 —
-post-grill delta attack + disposition audit of rounds 1–2 (the cap's last round);
-(2) S4 lane launch under the amended contract (`ontology/docs/s4-lane-contract.md`
-§4b normalization gate = the `ontology-foundational-auditor` skill; corpus pin
-satisfied from the working tree after the origin/main merge).
+**The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
+ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
+fidelity) landed 26 blockers / 18 warns — including two structural catches: the
+repo's `**/docs` gitignore had silently kept the ENTIRE `ontology/docs/` authority
+surface out of every commit (I-01, fixed with a negation rule), and CQ-009 audited a
+checkout exclusion the deployed scheduler never had (origin-keyed; H-04/J-B3). All
+adopted fixes are landed and executable: 26 CQs (18 Must / 7 Should / 1 Could), 25
+executing tests + 19 must-fail fixtures + binding-contract machinery, validator 0
+blockers / 1 aggregated S5-visibility warn, real `--s4-lane` mode. Full map:
+[round3-triage.md](./research/reviews/pre-s4/round3-triage.md). Remaining WORK:
+**S4 lane launch** under `ontology/docs/s4-lane-contract.md` — with ONE launch
+precondition: re-sync the stale `~/.agents/skills` mirror (lacks the auditor's
+`_shared/schemas/`) or point lane commands at `~/.claude/skills/` explicitly.
 
 Superseded context below (kept for the trail):
 
@@ -74,6 +79,28 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-27 (ninth stint): REVIEW-LOOP ROUND 3 (the cap's last) — three seats at
+  ruled efforts (codex ultra + max, grok xhigh) returned 26 blockers / 18 warns, all
+  triaged and the adopted set FIXED same-session (round3-triage.md). Structural:
+  `**/docs` gitignore had excluded the whole ontology/docs authority surface from
+  every commit (fixed, negation rule + landed); the `~/.agents/skills` mirror is
+  stale (S4 launch precondition recorded). Reality corrections against the RUNNING
+  scheduler: CQ-009 rebuilt origin-keyed (deployed law was never checkout-scoped);
+  grantedFrom removed (ticket→lease handoff self-erases — no stored edge exists);
+  QuarantineException removed (corrupt-record isolation, not an owner state);
+  starvation bound re-declared as operator policy (aging promotes rank, guarantees
+  nothing — seat H ran the scheduler to prove a 5×-aged ticket still queued).
+  Semantic repairs, each with a permanent fixture: CQ-019 grew derived-scope and
+  dangling-target arms (4 total); CQ-020 gained hasCurrentProposal + projected
+  proposal; CQ-022 attempt-scoped (VerificationAttempt admitted, retry-cancellation
+  killed); CQ-008 typed-grant-only (WaitingGrant removed); isNumeric guards on all
+  numeric constraints; CQ-025/026 pinned to usedCostEstimate. Machinery: binding
+  contract now executable (bind_params + mutation self-tests); two-kind validator
+  exact-token + Must/Should-rooted at blocker level (two false licenses killed);
+  literal-domain member audit; real --s4-lane mode; probe v3.2 true nearest-rank
+  (fleet re-run: headline quantiles unchanged, addendum in the baseline). Suite:
+  25 tests + 19 fixtures, 0 failures. Stopped at: S4 lane launch (mirror re-sync
+  precondition).
 - 2026-08-27 (eighth stint): APPLICATION PASS — all 12 grill rulings applied and
   executing. Renames landed (VerificationEvidence / AssuranceTier /
   OperationalChangeEvent with vernacular altLabels); 7 new CQs (CQ-020 ordering,

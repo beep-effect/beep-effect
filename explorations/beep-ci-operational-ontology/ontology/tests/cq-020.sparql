@@ -1,10 +1,11 @@
-# CQ-020: For a given episode, what ordered WorkUnit sequence does the current schedule proposal prescribe, and what scope does each step carry?
+# CQ-020: For a given episode, what ordered WorkUnit sequence does its CURRENT schedule proposal prescribe, and what scope does each step carry?
 # Expected: non_empty | priority: must_have | derivation: direct_lookup
 # GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
 PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-SELECT ?step ?idx ?wu ?scope WHERE {
+SELECT ?proposal ?step ?idx ?wu ?scope WHERE {
   VALUES ?ep { ciops:ep-example }  # harness binds
-  ?proposal a ciops:ScheduleProposal ; ciops:proposedFor ?ep ; ciops:hasStep ?step .
+  ?ep ciops:hasCurrentProposal ?proposal .
+  ?proposal a ciops:ScheduleProposal ; ciops:hasStep ?step .
   ?step ciops:stepIndex ?idx ; ciops:schedulesWorkUnit ?wu .
   ?wu ciops:hasScope ?scope .
 } ORDER BY ?idx

@@ -5,9 +5,9 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX ciops: <https://oip.law/ontology/ci-ops#>
 SELECT ?exec ?cancelClass WHERE {
   VALUES ?failure { ciops:fail-example }  # harness binds
-  ?failure rdf:type ciops:CommittedFailure ; ciops:failsEpisode ?ep .
+  ?failure rdf:type ciops:CommittedFailure ; ciops:inAttempt ?attempt .
   ?exec rdf:type ciops:WorkUnitExecution ;
-        ciops:servesEpisode ?ep ;
+        ciops:inAttempt ?attempt ;
         ciops:hasExecutionState ciops:RunningExecution ;
         ciops:hasCancelClass ?cancelClass .
 }

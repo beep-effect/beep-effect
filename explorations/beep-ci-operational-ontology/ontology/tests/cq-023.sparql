@@ -8,6 +8,6 @@ SELECT ?req ?waited ?bound WHERE {
        ciops:observedQueueWaitMs ?waited ;
        ciops:governedBy ?policy .
   ?policy ciops:starvationBoundMs ?bound .
-  FILTER (?waited > ?bound)
-  FILTER NOT EXISTS { ?req ciops:hasStarvationException ?exc }
+  FILTER ( !isNumeric(?waited) || !isNumeric(?bound) || ?waited > ?bound )
+  FILTER NOT EXISTS { ?req ciops:hasStarvationException ciops:HardFloorException }
 }

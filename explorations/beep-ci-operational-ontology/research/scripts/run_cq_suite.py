@@ -19,6 +19,7 @@ Fixture oracles: rows_ge_1 [all_bound], ask_false, counts_mismatch.
 
 Run: uv run --with pyoxigraph python run_cq_suite.py    (exit 1 on any failure)
 """
+import re
 import sys
 from pathlib import Path
 
@@ -35,8 +36,8 @@ UNBOUND_ALLOWED = {"cq-013": {"lane", "p50"}}
 # intentional, never accidental. Each ASK must be TRUE against the seed.
 ANTECEDENTS = {
     "cq-009": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-        ASK { ?g ciops:hasGrantState ciops:ActiveGrant ; ciops:occupiesCheckout ?c ;
-                 ciops:hasWorkKind ciops:FullProofWork . }""",
+        ASK { ?g a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+                 ciops:hasOriginKey ?o . FILTER(?o != "") }""",
     "cq-010": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
         ASK { ?wu ciops:admittedBy ?g .
               ?g ciops:admissionChargeTokens ?ch ; ciops:capacityAtAdmissionTokens ?cap . }""",
@@ -52,7 +53,7 @@ ANTECEDENTS = {
         ASK { ?r a ciops:SeatRequest ; ciops:observedQueueWaitMs ?w ; ciops:governedBy ?p .
               ?p ciops:starvationBoundMs ?b . }""",
     "cq-026": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-        ASK { ?wu ciops:admittedBy ?g ; ciops:hasCostEstimate ?ce . ?ce ciops:p95Ms ?p .
+        ASK { ?g ciops:usedCostEstimate ?ce . ?ce ciops:p95Ms ?p .
               ?g ciops:hasBudget ?b . ?b ciops:softP95BudgetMs ?m . }""",
 }
 
@@ -60,13 +61,20 @@ FIXTURES = [
     ("must-fail/cq004-touched-only.ttl", "cq-004", "rows_ge_1_all_bound"),
     ("must-fail/cq006-invalidated-proof.ttl", "cq-006", "rows_ge_1"),
     ("must-fail/cq006-unrelated-proof.ttl", "cq-006", "rows_ge_1"),
+    ("must-fail/cq008-ticket-not-grant.ttl", "cq-008", "rows_eq_0"),
     ("must-fail/cq009-two-grants.ttl", "cq-009", "rows_ge_1"),
     ("must-fail/cq010-oversize.ttl", "cq-010", "rows_ge_1"),
+    ("must-fail/cq010-string-tokens.ttl", "cq-010", "rows_ge_1"),
     ("must-fail/cq019-filtered-trust.ttl", "cq-019", "rows_ge_1"),
     ("must-fail/cq019-scope-gap.ttl", "cq-019", "rows_ge_1_all_bound"),
     ("must-fail/cq019-schedule-trust.ttl", "cq-019", "rows_ge_1_all_bound"),
+    ("must-fail/cq019-derived-scope-gap.ttl", "cq-019", "rows_ge_1_all_bound"),
+    ("must-fail/cq019-dangling-target.ttl", "cq-019", "rows_ge_1_all_bound"),
+    ("must-fail/cq022-cross-attempt.ttl", "cq-022", "rows_eq_0"),
     ("must-fail/cq023-starved-request.ttl", "cq-023", "rows_ge_1_all_bound"),
+    ("must-fail/cq023-invented-exception.ttl", "cq-023", "rows_ge_1_all_bound"),
     ("must-fail/cq026-p95-overrun.ttl", "cq-026", "rows_ge_1_all_bound"),
+    ("must-fail/cq026-string-budget.ttl", "cq-026", "rows_ge_1_all_bound"),
     ("must-fail/cq015-no-mount.ttl", "cq-015", "ask_false"),
     ("must-fail/cq012-incomplete-episode.ttl", "cq-012", "counts_mismatch"),
 ]
@@ -152,6 +160,66 @@ for name in names:
             continue
     print(f"PASS: {name} seed {len(rows)} row(s), all bound")
 
+# --- binding-contract carrier (round-3 seat H-08) --------------------------------
+# The `# harness binds` convention is EXECUTABLE, not prose: bind_params() is the
+# canonical substitution (one single-line tuple, datatype-preserving because the
+# caller passes serialized RDF terms, replacing ALL marked blocks), the static checks
+# reject convention violations in the committed queries, and the mutation tests prove
+# the machinery refuses the round-2 counterexample shapes (batched rows, partial
+# multi-block replacement).
+BIND_RE = re.compile(r"(VALUES\s*(?:\([^)]*\)|\?\w+)\s*\{)([^}]*)(\}\s*#\s*harness binds)")
+
+
+def marked_blocks(text):
+    return list(BIND_RE.finditer(text))
+
+
+def block_rows(body):
+    rows = re.findall(r"\([^)]*\)", body)
+    return rows if rows else ([body.strip()] if body.strip() else [])
+
+
+def bind_params(text, row):
+    if not marked_blocks(text):
+        raise ValueError("no marked blocks to bind")
+    if not isinstance(row, str) or "\n" in row:
+        raise ValueError("exactly one single-line parameter tuple is required")
+    return BIND_RE.sub(lambda m: m.group(1) + " " + row + " " + m.group(3), text)
+
+
+for name in names:
+    text = (TESTS / f"{name}.sparql").read_text()
+    seen_rows = set()
+    for m in marked_blocks(text):
+        rows = block_rows(m.group(2))
+        if len(rows) != 1:
+            fail(f"{name}: marked block carries {len(rows)} rows — the convention is ONE-ROW-ONLY")
+        else:
+            seen_rows.add(re.sub(r"\s+", " ", rows[0]).strip())
+    if len(seen_rows) > 1:
+        fail(f"{name}: marked blocks disagree on the committed tuple {sorted(seen_rows)}")
+
+q2 = (TESTS / "cq-002.sparql").read_text()
+committed = block_rows(marked_blocks(q2)[0].group(2))[0]
+if rows_of(seed.query(bind_params(q2, committed))) != rows_of(seed.query(q2)):
+    fail("binding: rebinding cq-002 with its committed tuple changed the result")
+else:
+    print("PASS: binding rebind-identity (cq-002)")
+try:
+    bind_params(q2, "ciops:a\nciops:b")
+    fail("binding: batched/multi-line tuple was accepted (one-row rule dead)")
+except ValueError:
+    print("PASS: binding rejects a batched tuple")
+q12 = (TESTS / "cq-012.sparql").read_text()
+newrow = '("2026-09-01T00:00:00Z"^^xsd:dateTime "2026-09-30T23:59:59Z"^^xsd:dateTime)'
+bound12 = bind_params(q12, newrow)
+rows12 = {re.sub(r"\s+", " ", block_rows(m.group(2))[0]).strip() for m in marked_blocks(bound12)}
+if rows12 == {re.sub(r"\s+", " ", newrow).strip()}:
+    seed.query(bound12)  # must stay executable after substitution
+    print("PASS: binding replaces ALL marked blocks with one tuple (cq-012)")
+else:
+    fail(f"binding: partial multi-block replacement — blocks carry {sorted(rows12)}")
+
 # --- must-fail fixture pass ------------------------------------------------------
 for rel, name, oracle in FIXTURES:
     store = load_store(FIX / rel)
@@ -165,6 +233,12 @@ for rel, name, oracle in FIXTURES:
             fail(f"{tag}: expected ask false, got {val}")
         continue
     rows = rows_of(res)
+    if oracle == "rows_eq_0":
+        if rows:
+            fail(f"{tag}: expected 0 rows (the exclusion must hold), got {len(rows)}")
+        else:
+            print(f"PASS: {tag} 0 rows (exclusion holds)")
+        continue
     if oracle in ("rows_ge_1", "rows_ge_1_all_bound"):
         if not rows:
             fail(f"{tag}: expected >=1 row (violation/obligation must surface), got 0")
