@@ -283,8 +283,8 @@ const cycleFrom = (
           )
         ),
       onSome: (startIndex) => {
-        const cycle = A.drop(path, startIndex);
-        return A.isReadonlyArrayNonEmpty(cycle) ? O.some(cycle) : O.none();
+        const cycle: readonly [PosInt, ...PosInt[]] = [current, ...A.drop(path, Num.increment(startIndex))];
+        return O.some(cycle);
       },
     })
   );
@@ -494,7 +494,7 @@ const PatentApplicationSectionIssue = PatentApplicationSectionIssueKind.toTagged
 const sectionRoleIndex = (role: PatentApplicationSectionRole): number =>
   pipe(
     A.findFirstIndex(PatentApplicationSectionRole.Options, (candidate) => Eq.equals(candidate, role)),
-    O.getOrElse(() => -1)
+    O.getOrThrow
   );
 
 const inspectPatentApplicationSections = (
@@ -585,10 +585,15 @@ const PatentApplicationDocumentFields = S.Struct({
   }),
 });
 
+const normalizeClaimAlignmentText: (value: string) => string = flow(Str.replace(/\s+/gu, " "), Str.trim);
+
 const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
   (document: typeof PatentApplicationDocumentFields.Type): S.FilterOutput => {
     const hasClaimsSection = A.some(document.sections, (section) => Eq.equals(section.role, "claims"));
-    const claimsAlign = A.every(document.claims, (claim) => Str.includes(claim.claimText)(document.sourceText));
+    const normalizedSourceText = normalizeClaimAlignmentText(document.sourceText);
+    const claimsAlign = A.every(document.claims, (claim) =>
+      Str.includes(normalizeClaimAlignmentText(claim.claimText))(normalizedSourceText)
+    );
     return A.getSomes([
       hasClaimsSection ? O.none<string>() : O.some("Patent application document must include a claims section."),
       claimsAlign ? O.none<string>() : O.some("Every patent claim must align to the normalized source text."),

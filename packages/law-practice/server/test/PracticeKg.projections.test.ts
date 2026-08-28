@@ -1,7 +1,10 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { Table as CandidateClaimTable } from "@beep/epistemic-tables/entities/CandidateClaim";
 import { Table as EvidenceTable } from "@beep/epistemic-tables/entities/Evidence";
-import { normalizePatentApplicationDocument } from "@beep/law-practice-domain/values/PatentDocument";
+import {
+  normalizePatentApplicationDocument,
+  PatentApplicationDocument,
+} from "@beep/law-practice-domain/values/PatentDocument";
 import {
   buildPracticeKgBundle,
   LawPracticeServerLive,
@@ -140,9 +143,11 @@ const normalizedPatentFixture = Md.make([
   Md.h1("BRIEF DESCRIPTION OF THE DRAWINGS"),
   Md.p("Figure 1 depicts the sensor system."),
   Md.h1("DETAILED DESCRIPTION OF THE INVENTION"),
-  Md.p("The optical sensor communicates with the processor."),
+  Md.p(
+    "The claim text A sensor system comprising an optical sensor and a processor. is quoted here before the claims section."
+  ),
   Md.h1("CLAIMS"),
-  Md.p("1. A sensor system comprising an optical sensor and a processor."),
+  Md.p("1. A sensor system comprising an optical sensor\nand a processor."),
   Md.p("2. The sensor system of claim 1, wherein the optical sensor detects light."),
   Md.p("3. The sensor system of claim 2, wherein the processor emits an alert."),
   Md.h1("ABSTRACT"),
@@ -688,7 +693,7 @@ describe("practice KG projections", () => {
   );
 
   it.effect(
-    "persists claims from one normalized Markdown patent without invoking duplicate extraction",
+    "persists docket-scoped normalized patents with exact claims-section evidence and bounded input",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -718,25 +723,36 @@ describe("practice KG projections", () => {
               document,
               sourceFile: "20001US05-patent.md",
             }),
+            PracticeKgPatentDocumentInput.make({
+              docket: "20001US06",
+              document,
+              sourceFile: "20001US06-patent.md",
+            }),
           ],
         })
       ).pipe(provideScopedLayer(claimsLayer));
 
-      expect(summary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
+      expect(summary).toMatchObject({ claims: 6, failedFiles: 0, files: 2 });
       const rows = yield* Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-        return yield* sql
-          .unsafe(PracticeKgQueries.candidateClaims, ["20001US05", null, null])
-          .pipe(Effect.flatMap(decodeCandidateClaimRows));
+        return yield* Effect.forEach(["20001US05", "20001US06"], (docket) =>
+          sql
+            .unsafe(PracticeKgQueries.candidateClaims, [docket, null, null])
+            .pipe(Effect.flatMap(decodeCandidateClaimRows))
+        ).pipe(Effect.map(A.flatten));
       }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
 
       expect(A.map(rows, ({ claimText }) => claimText)).toStrictEqual(
-        A.map(document.claims, ({ claimText }) => claimText)
+        A.appendAll(
+          A.map(document.claims, ({ claimText }) => claimText),
+          A.map(document.claims, ({ claimText }) => claimText)
+        )
       );
       expect(
         A.every(
           rows,
-          ({ evidenceQuote, sourceFile }) => sourceFile === "20001US05-patent.md" && evidenceQuote.length > 0
+          ({ evidenceQuote, sourceFile }) =>
+            A.contains(["20001US05-patent.md", "20001US06-patent.md"], sourceFile) && evidenceQuote.length > 0
         )
       ).toBe(true);
       expect(
@@ -745,6 +761,28 @@ describe("practice KG projections", () => {
           ({ endChar, evidenceQuote, startChar }) => document.sourceText.slice(startChar, endChar) === evidenceQuote
         )
       ).toBe(true);
+      const claimsSectionStart = O.getOrElse(Str.indexOf("\nCLAIMS\n")(document.sourceText), () => 0);
+      expect(A.every(rows, ({ startChar }) => startChar > claimsSectionStart)).toBe(true);
+
+      const oversizedDocument = PatentApplicationDocument.make({
+        claims: document.claims,
+        sections: document.sections,
+        sourceText: `${document.sourceText}\n${Str.repeat(2 * 1024 * 1024 + 1)("x")}`,
+      });
+      const oversizedFailure = yield* runPracticeKgClaimsBatch(
+        PracticeKgClaimsOptions.make({
+          bundleOut,
+          inputs,
+          patentDocuments: [
+            PracticeKgPatentDocumentInput.make({
+              docket: "20001US07",
+              document: oversizedDocument,
+              sourceFile: "20001US07-oversized-patent.md",
+            }),
+          ],
+        })
+      ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+      expect(oversizedFailure.message).toContain("Normalized patent document exceeds 2097152 bytes");
     }, provideTestLayer),
     { timeout: 120_000 }
   );

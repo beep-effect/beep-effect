@@ -6,10 +6,11 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { Heading, renderPlainTextBlock, renderPlainTextBlocks } from "@beep/md";
+import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
 import { LiteralKit, PosInt } from "@beep/schema";
 import { Effect, flow, Match, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -24,10 +25,14 @@ import type { Block, Document } from "@beep/md";
 import type { PatentApplicationSectionRole } from "./PatentDocument.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.normalizer");
-const claimBlockPattern = /^\s*(\d+)\.\s+(.+?)(?=^\s*\d+\.\s+|\s*$)/gmsu;
-const transitionPattern = /\b(consisting essentially of|consisting of|comprising|including|having|wherein)\b/iu;
+const claimBlockPattern = /(?:^|\n)[\t ]*(\d+)\.[\t ]+(.+?)(?=\n[\t ]*\d+\.[\t ]+|\s*$)/gsu;
+const transitionPattern = /\b(consisting essentially of|consisting of|comprising|including|having|wherein)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
-const referenceNumberPattern = /\d+/gu;
+const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
+const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
+const isAmbiguousLexicalTransition = S.is(ambiguousLexicalTransition);
+const isOrderedList = S.is(Ol);
+const ambiguousTransitionPrefixPattern = /\b(?:by|for|of|without)\s*$/iu;
 
 const ClaimNumberFromString = S.FiniteFromString.pipe(S.decodeTo(PosInt));
 
@@ -169,8 +174,14 @@ const sectionRoleFromHeading = (heading: string): O.Option<PatentApplicationSect
         ),
       () => O.some("detailed-description" as const)
     ),
-    Match.when("claims", () => O.some("claims" as const)),
-    Match.when("abstract", () => O.some("abstract" as const)),
+    Match.when(
+      (value) => A.contains(["a claim or claims", "claim", "claims"], value),
+      () => O.some("claims" as const)
+    ),
+    Match.when(
+      (value) => A.contains(["abstract", "abstract of the disclosure"], value),
+      () => O.some("abstract" as const)
+    ),
     Match.when(
       (value) =>
         A.contains(
@@ -193,6 +204,30 @@ interface SectionDraftState {
   readonly drafts: ReadonlyArray<SectionDraft>;
   readonly errors: ReadonlyArray<PatentDocumentNormalizationError>;
 }
+
+const renderPatentTextBlock = (block: Block): string =>
+  Match.value(block).pipe(
+    Match.when(isOrderedList, ({ children, start }) =>
+      pipe(
+        children,
+        A.map(
+          (item, index) =>
+            `${Num.sum(start, index)}. ${renderPlainTextBlock(
+              Ol.make({
+                children: [item],
+              })
+            )}`
+        ),
+        A.join("\n")
+      )
+    ),
+    Match.orElse(renderPlainTextBlock)
+  );
+
+const renderPatentTextBlocks: (blocks: ReadonlyArray<Block>) => string = flow(
+  A.map(renderPatentTextBlock),
+  A.join("\n")
+);
 
 const flushCurrent = (state: SectionDraftState): SectionDraftState => ({
   ...state,
@@ -259,22 +294,60 @@ const collectSectionDrafts = (document: Document): SectionDraftState =>
   );
 
 const parseClaimNumber = (value: string): O.Option<PosInt> => S.decodeOption(ClaimNumberFromString)(value);
+const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
+  Str.toLowerCase,
+  S.decodeUnknownOption(PatentClaimTransition),
+  O.getOrThrow
+);
 
 const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> =>
-  Str.match(transitionPattern)(claimText);
+  pipe(
+    A.fromIterable(Str.matchAll(transitionPattern)(claimText)),
+    A.findFirst((match) => {
+      const transition = Str.toLowerCase(pipe(A.get(match, 0), O.getOrThrow));
+      if (!isAmbiguousLexicalTransition(transition)) {
+        return true;
+      }
+      const matchIndex = pipe(O.fromUndefinedOr(match.index), O.getOrThrow);
+      const prefix = Str.slice(0, matchIndex)(claimText);
+      return O.isNone(Str.match(ambiguousTransitionPrefixPattern)(prefix));
+    })
+  );
 
-const parentClaimNumbers = (preamble: string): ReadonlyArray<PosInt> =>
+const claimReferencesFromMatch = (match: RegExpMatchArray): O.Option<ReadonlyArray<PosInt>> =>
+  pipe(
+    A.get(match, 1),
+    O.flatMap(parseClaimNumber),
+    O.flatMap((start) =>
+      pipe(
+        O.fromUndefinedOr(match[2]),
+        O.match({
+          onNone: () => O.some<ReadonlyArray<PosInt>>([start]),
+          onSome: (endText) =>
+            pipe(
+              parseClaimNumber(endText),
+              O.filter((end) => Num.isGreaterThanOrEqualTo(end, start)),
+              O.map((end) => A.map(A.range(start, end), (value) => PosInt.make(value)))
+            ),
+        })
+      )
+    )
+  );
+
+const parentClaimNumbers = (preamble: string): O.Option<ReadonlyArray<PosInt>> =>
   pipe(
     Str.match(claimReferenceMarkerPattern)(preamble),
-    O.map((marker) => Str.slice((marker.index ?? 0) + marker[0].length)(preamble)),
-    O.map((value) => A.fromIterable(Str.matchAll(referenceNumberPattern)(value))),
-    O.map(
-      flow(
-        A.map((match) => pipe(A.get(match, 0), O.flatMap(parseClaimNumber))),
-        A.getSomes
-      )
-    ),
-    O.getOrElse(A.empty)
+    O.match({
+      onNone: () => O.some(A.empty<PosInt>()),
+      onSome: (marker) => {
+        const markerIndex = pipe(O.fromUndefinedOr(marker.index), O.getOrThrow);
+        const value = Str.slice(Num.sum(markerIndex, Str.length(marker[0])))(preamble);
+        const matches = A.fromIterable(Str.matchAll(claimReferencePattern)(value));
+        return A.isReadonlyArrayEmpty(matches)
+          ? O.none()
+          : pipe(A.map(matches, claimReferencesFromMatch), O.all, O.map(flow(A.flatten, A.dedupe)));
+      },
+    })
   );
 
 const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
@@ -293,12 +366,17 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
         reason: "invalid-claim",
       })
   );
-  const transition = Str.toLowerCase(transitionMatch[0]);
-  const transitionStart = transitionMatch.index ?? 0;
+  const transition = parseClaimTransition(transitionMatch[0]);
+  const transitionStart = pipe(O.fromUndefinedOr(transitionMatch.index), O.getOrThrow);
   const preamble = Str.trim(Str.slice(0, transitionStart)(claimText));
   const body = Str.trim(Str.slice(transitionStart + transitionMatch[0].length)(claimText));
-  const references = parentClaimNumbers(preamble);
-  if (!S.is(PatentClaimTransition)(transition) || Str.isEmpty(preamble) || Str.isEmpty(body)) {
+  const references = yield* Effect.fromOption(parentClaimNumbers(preamble), () =>
+    PatentDocumentNormalizationError.make({
+      message: `Claim ${claimNumberText} contains an invalid parent-claim reference.`,
+      reason: "invalid-claim",
+    })
+  );
+  if (Str.isEmpty(preamble) || Str.isEmpty(body)) {
     return yield* PatentDocumentNormalizationError.make({
       message: `Claim ${claimNumberText} does not preserve a non-empty preamble, transition, and body.`,
       reason: "invalid-claim",
@@ -319,7 +397,7 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
 const claimsFromDraft = Effect.fn("PatentDocument.claimsFromDraft")(function* (
   draft: SectionDraft
 ): Effect.fn.Return<PatentClaims, PatentDocumentNormalizationError> {
-  const claimsText = renderPlainTextBlocks(draft.blocks);
+  const claimsText = renderPatentTextBlocks(draft.blocks);
   const matches = A.fromIterable(Str.matchAll(claimBlockPattern)(claimsText));
   if (A.isReadonlyArrayEmpty(matches)) {
     return yield* PatentDocumentNormalizationError.make({
@@ -328,19 +406,7 @@ const claimsFromDraft = Effect.fn("PatentDocument.claimsFromDraft")(function* (
     });
   }
   const claims = yield* Effect.forEach(matches, (match) =>
-    pipe(
-      O.all({ claimNumber: A.get(match, 1), claimText: A.get(match, 2) }),
-      O.match({
-        onNone: () =>
-          Effect.fail(
-            PatentDocumentNormalizationError.make({
-              message: "A numbered claim could not be separated into its number and text.",
-              reason: "invalid-claim",
-            })
-          ),
-        onSome: ({ claimNumber, claimText }) => parseClaim(claimNumber, claimText),
-      })
-    )
+    parseClaim(pipe(A.get(match, 1), O.getOrThrow), pipe(A.get(match, 2), O.getOrThrow))
   );
   return yield* S.decodeUnknownEffect(PatentClaims)(claims).pipe(
     Effect.mapError((cause) =>
@@ -391,7 +457,7 @@ export const normalizePatentApplicationDocument = Effect.fn("PatentDocument.norm
     return yield* A.headNonEmpty(errors);
   }
   const sections = yield* Effect.forEach(drafts, (draft) => {
-    const content = Str.trim(renderPlainTextBlocks(draft.blocks));
+    const content = Str.trim(renderPatentTextBlocks(draft.blocks));
     return Str.isNonEmpty(content)
       ? Effect.succeed(PatentApplicationSection.make({ content, heading: draft.heading, role: draft.role }))
       : Effect.fail(
@@ -418,7 +484,7 @@ export const normalizePatentApplicationDocument = Effect.fn("PatentDocument.norm
   return yield* S.decodeUnknownEffect(PatentApplicationDocument)({
     claims,
     sections,
-    sourceText: renderPlainTextBlocks(document.children),
+    sourceText: renderPatentTextBlocks(document.children),
   }).pipe(
     Effect.mapError((cause) =>
       PatentDocumentNormalizationError.make({

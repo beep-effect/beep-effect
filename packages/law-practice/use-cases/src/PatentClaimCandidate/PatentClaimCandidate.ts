@@ -10,7 +10,11 @@ import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { Defect, PosInt } from "@beep/schema";
-import { Effect } from "effect";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { Effect, flow, pipe } from "effect";
+import * as A from "effect/Array";
+import * as Num from "effect/Number";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
@@ -48,6 +52,9 @@ export class PatentClaimCandidateInput extends S.Class<PatentClaimCandidateInput
     claim: PatentClaim.annotateKey({
       description: "Typed patent claim produced by the domain normalization boundary.",
     }),
+    claimsHeading: S.NonEmptyString.annotateKey({
+      description: "Recognized claims-section heading used to constrain evidence alignment.",
+    }),
     digest: ContentDigest.annotateKey({
       description: "Content digest of the normalized patent document.",
     }),
@@ -56,6 +63,9 @@ export class PatentClaimCandidateInput extends S.Class<PatentClaimCandidateInput
     }),
     entitySeed: PosInt.annotateKey({
       description: "Bounded deterministic seed used by the current spike entity envelope.",
+    }),
+    identityDigest: ContentDigest.annotateKey({
+      description: "Docket-scoped document digest used for collision-resistant persisted public identifiers.",
     }),
     operationId: OperationId.annotateKey({
       description: "Normalization activity identifier retained in the candidate snapshot.",
@@ -100,6 +110,59 @@ export class PatentClaimCandidateError extends S.TaggedError<PatentClaimCandidat
   })
 ) {}
 
+const patentClaimCandidateError = (cause: unknown): PatentClaimCandidateError =>
+  PatentClaimCandidateError.make({
+    cause,
+    message: `Patent claim candidate mapping failed: ${String(cause)}`,
+  });
+
+const escapeRegExp = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")(value);
+
+const whitespaceFlexiblePattern: (value: string) => string = flow(
+  Str.split(/\s+/u),
+  A.map(escapeRegExp),
+  A.join("\\s+")
+);
+
+const claimEvidenceFrom = (
+  sourceText: string,
+  claimsHeading: string,
+  claim: PatentClaim
+): O.Option<readonly [startChar: number, quote: string]> =>
+  pipe(
+    Str.match(new RegExp(`(?:^|\\n)[\\t ]*${escapeRegExp(claimsHeading)}[\\t ]*(?:\\n|$)`, "iu"))(sourceText),
+    O.flatMap((headingMatch) =>
+      pipe(
+        O.fromUndefinedOr(headingMatch.index),
+        O.map((headingStart) => Num.sum(headingStart, Str.length(headingMatch[0]))),
+        O.flatMap((claimsStart) => {
+          const claimsText = Str.slice(claimsStart)(sourceText);
+          const claimPattern = new RegExp(
+            `(?:^|\\n)[\\t ]*${claim.claimNumber}\\.[\\t ]+(${whitespaceFlexiblePattern(claim.claimText)})`,
+            "iu"
+          );
+          return pipe(
+            Str.match(claimPattern)(claimsText),
+            O.flatMap((claimMatch) =>
+              pipe(
+                O.all({
+                  matchStart: O.fromUndefinedOr(claimMatch.index),
+                  quote: A.get(claimMatch, 1),
+                }),
+                O.flatMap(({ matchStart, quote }) =>
+                  pipe(
+                    Str.indexOf(quote)(claimMatch[0]),
+                    O.map((quoteOffset) => [Num.sum(claimsStart, Num.sum(matchStart, quoteOffset)), quote] as const)
+                  )
+                )
+              )
+            )
+          );
+        })
+      )
+    )
+  );
+
 /**
  * Map a typed patent claim directly into candidate and evidence entities.
  *
@@ -131,31 +194,34 @@ export class PatentClaimCandidateError extends S.TaggedError<PatentClaimCandidat
  * })
  * const program = patentClaimCandidateFrom(PatentClaimCandidateInput.make({
  *   claim,
+ *   claimsHeading: "CLAIMS",
  *   digest: ContentDigest.make("sha256:0000000000000000000000000000000000000000000000000000000000000000"),
  *   docket: "US-EXAMPLE-1",
  *   entitySeed: PosInt.make(1),
+ *   identityDigest: ContentDigest.make("sha256:1111111111111111111111111111111111111111111111111111111111111111"),
  *   operationId: OperationId.make("operation:0000000000000000000000000000000000000000000000000000000000000000"),
  *   sourceFile: "example.md",
- *   sourceText: claimText
+ *   sourceText: `CLAIMS\n1. ${claimText}`
  * }))
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @effects Fails when the typed claim no longer aligns to its supplied source
  * text or an epistemic entity rejects the mapped shape.
- * @category mappings
+ * @category mapping
  * @since 0.0.0
  */
 export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(function* (
   input: PatentClaimCandidateInput
 ): Effect.fn.Return<OfficeActionCandidateExtraction, PatentClaimCandidateError> {
-  const startChar = yield* Effect.fromOption(Str.indexOf(input.claim.claimText)(input.sourceText), () =>
-    PatentClaimCandidateError.make({
-      message: `Claim ${input.claim.claimNumber} does not align to the normalized patent source text.`,
-    })
+  const [startChar, evidenceQuote] = yield* Effect.fromOption(
+    claimEvidenceFrom(input.sourceText, input.claimsHeading, input.claim),
+    () =>
+      patentClaimCandidateError(`Claim ${input.claim.claimNumber} does not align to the normalized patent source text.`)
   );
-  const evidenceFixtureKey = `evidence:${input.digest}:${input.claim.claimNumber}`;
-  const fixtureKey = `claim:${input.digest}:${input.claim.claimNumber}`;
+  const evidenceFixtureKey = `evidence:${input.identityDigest}:${input.claim.claimNumber}`;
+  const fixtureKey = `claim:${input.identityDigest}:${input.claim.claimNumber}`;
+  const identityKey = `p${Str.slice(7)(input.identityDigest)}c${input.claim.claimNumber}`;
   const claimReferences = PatentClaim.match(input.claim, {
     dependent: ({ claimReferences: references }) => references,
     independent: () => [],
@@ -177,25 +243,19 @@ export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(f
       family: Str.takeLeft(5)(input.docket),
       sourceFile: input.sourceFile,
     },
-  }).pipe(
-    Effect.mapError((cause) =>
-      PatentClaimCandidateError.make({ cause, message: "Mapped patent candidate failed epistemic decoding." })
-    )
-  );
+    publicId: `${Epistemic.CandidateClaimId.tableName}_${identityKey}`,
+  }).pipe(Effect.mapError(patentClaimCandidateError));
   const evidence = yield* decodeEvidence({
     ...spikeEntityInput("EpistemicEvidence", input.entitySeed * 10 + 1),
     artifactFixtureKey: input.digest,
+    publicId: `${Epistemic.EvidenceId.tableName}_${identityKey}`,
     span: {
       confidence: 1,
-      endChar: startChar + Str.length(input.claim.claimText),
-      quote: input.claim.claimText,
+      endChar: Num.sum(startChar, Str.length(evidenceQuote)),
+      quote: evidenceQuote,
       startChar,
     },
     spanFixtureKey: evidenceFixtureKey,
-  }).pipe(
-    Effect.mapError((cause) =>
-      PatentClaimCandidateError.make({ cause, message: "Mapped patent evidence failed epistemic decoding." })
-    )
-  );
+  }).pipe(Effect.mapError(patentClaimCandidateError));
   return OfficeActionCandidateExtraction.make({ candidate, evidence });
 });

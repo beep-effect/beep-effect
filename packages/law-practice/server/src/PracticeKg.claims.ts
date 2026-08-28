@@ -414,20 +414,41 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       { concurrency: 1 }
     );
     const persistPatentDocument = Effect.fnUntraced(function* (input: PracticeKgPatentDocumentInput) {
+      if (Str.length(input.document.sourceText) > maxClaimsInputBytes) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Normalized patent document exceeds ${maxClaimsInputBytes} bytes: ${input.sourceFile}`,
+        });
+      }
       const bytes = new TextEncoder().encode(input.document.sourceText);
+      if (bytes.byteLength > maxClaimsInputBytes) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Normalized patent document exceeds ${maxClaimsInputBytes} bytes: ${input.sourceFile}`,
+        });
+      }
       const digestHex = yield* hashBytes(bytes);
       const digest = yield* decodeContentDigest(`sha256:${digestHex}`);
+      const identityHex = yield* hashBytes(new TextEncoder().encode(`${input.docket}\0${digestHex}`));
+      const identityDigest = yield* decodeContentDigest(`sha256:${identityHex}`);
       const operationId = yield* decodeOperationId(`operation:${digestHex}`);
-      const baseSeed = (Number.parseInt(Str.slice(0, 8)(digestHex), 16) % 20_000_000) + 1;
+      const baseSeed = (Number.parseInt(Str.slice(0, 8)(identityHex), 16) % 20_000_000) + 1;
+      const claimsHeading = yield* Effect.fromOption(
+        A.findFirst(input.document.sections, ({ role }) => Eq.equals(role, "claims")),
+        () =>
+          PracticeKgClaimsError.make({
+            message: `Normalized patent document has no claims section: ${input.sourceFile}`,
+          })
+      );
       yield* Effect.forEach(
         input.document.claims,
         (claim, index) =>
           patentClaimCandidateFrom(
             PatentClaimCandidateInput.make({
               claim,
+              claimsHeading: claimsHeading.heading,
               digest,
               docket: input.docket,
               entitySeed: PosInt.make(baseSeed + index),
+              identityDigest,
               operationId,
               sourceFile: input.sourceFile,
               sourceText: input.document.sourceText,
