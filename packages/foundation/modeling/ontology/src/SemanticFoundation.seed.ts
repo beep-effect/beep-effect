@@ -37,9 +37,9 @@ export const SemanticFoundationSchemeIri = iri(scheme.iri);
  *
  * **Details**
  *
- * FOLIO mappings remain empty until a report verifies a term-level semantic
- * match; the research verifies the namespace and source, but not a matching
- * concept identifier for these M1 terms.
+ * External alignments remain empty in this unconditional base seed. The
+ * taxonomy loader appends them only after the asset manifest and vendor slice
+ * pass the configured admission checks.
  *
  * **Example** (Log the seed title)
  *

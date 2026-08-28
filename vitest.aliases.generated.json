@@ -1795,5 +1795,6 @@
     "./packages/foundation/ui-system/editor/src/capability/toolbar.tsx"
   ],
   "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
-  "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"]
+  "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
+  "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
 }

@@ -1,4 +1,5 @@
 import { tmpdir } from "node:os";
+import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
 import {
   emptyTurboPlanSnapshot,
   proofCoordinatorLockPath,
@@ -60,6 +61,11 @@ const runGit = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<str
   expect(result.exitCode).toBe(0);
 });
 
+const memoryStatsTestLayer = Layer.succeed(
+  MemoryStats,
+  MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
+);
+
 const withProofCoordinatorRepo = <Success, Error, Requirements>(
   use: (repo: {
     readonly context: RepoRunContext;
@@ -86,7 +92,12 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
           yield* fs.remove(acquiredPath, { force: true });
         })
       );
-    })
+    }).pipe(
+      // Coordinator locks and admission leases both live under the temp
+      // runtime root, so removing tmpDir cleans every artifact.
+      provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_RUNTIME_DIR: `${tmpDir}/runtime` }))),
+      provideScopedLayer(memoryStatsTestLayer)
+    )
   );
 
 const proofStep = (repoRoot: string, id: string, source: string): RepoPlanStep =>

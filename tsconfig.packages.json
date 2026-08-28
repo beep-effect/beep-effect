@@ -151,6 +151,9 @@
       "path": "packages/drivers/onepassword-cli"
     },
     {
+      "path": "packages/drivers/openai"
+    },
+    {
       "path": "packages/drivers/openai-compat"
     },
     {

@@ -320,6 +320,13 @@ export const YEET_WATCH_INTERVAL_MILLIS = 10_000;
  * exits non-zero so a supervising session treats the stream's end as a signal,
  * not a shrug.
  *
+ * With `untilEvent` — `yeet monitor --watch --until-event` — the stream also
+ * exits on the first actionable batch: immediately on a failing check, and a
+ * short settle window after the first new PR comment. The supervising session
+ * blocks on the command, acts on the emitted rows the moment it returns, and
+ * re-arms it; the durable comment watermark and idempotent failure capsules
+ * make that relaunch loop lossless.
+ *
  * **Example** (Build the watch-loop runner effect)
  *
  * ```ts
@@ -331,21 +338,57 @@ export const YEET_WATCH_INTERVAL_MILLIS = 10_000;
  * ```
  *
  * @param options - Parsed `yeet monitor` flag values.
- * @returns Nothing on a green settle; a reported non-zero exit otherwise.
+ * @param untilEvent - Whether the stream exits on the first actionable event
+ * batch instead of only at terminal PR states.
+ * @returns Nothing on a green settle or a comment-only event exit; a reported
+ * non-zero exit otherwise.
  * @category commands
  * @since 0.0.0
  */
 export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* (
-  options: YeetPorcelainOptions
+  options: YeetPorcelainOptions,
+  untilEvent = false
 ): Effect.fn.Return<
   void,
   YeetCommandError | CliReportedExit,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const context = yield* hydrateYeetReadOnlyContext(options);
-  const ended = yield* runYeetWatchStream(context, { intervalMillis: YEET_WATCH_INTERVAL_MILLIS });
-  if (yeetWatchExitFailure(ended)) {
-    yield* Console.error(`yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`);
-    return yield* failWithReportedExit(`yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`);
-  }
+  const ended = yield* runYeetWatchStream(context, { intervalMillis: YEET_WATCH_INTERVAL_MILLIS, untilEvent });
+  const verdict = `yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`;
+  yield* Console.error(verdict).pipe(
+    Effect.andThen(failWithReportedExit(verdict)),
+    Effect.when(Effect.succeed(yeetWatchExitFailure(ended))),
+    Effect.asVoid
+  );
 });
+
+const YEET_UNTIL_EVENT_PAIRING_MESSAGE =
+  "yeet monitor --until-event requires --watch and cannot be combined with --until-merged.";
+
+/**
+ * Reject an `--until-event` invocation that is not paired with `--watch`.
+ *
+ * **Details**
+ *
+ * The event-exit contract belongs to the watch stream alone: the classic
+ * monitor already exits on the first red check, and the merge loop's whole
+ * point is not exiting. Failing loudly beats silently ignoring the flag —
+ * a supervisor that believes it armed an event exit and did not would wait on
+ * a process with a completely different lifetime.
+ *
+ * **Example** (Build the rejection effect)
+ *
+ * ```ts
+ * import { rejectYeetUntilEventPairing } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(rejectYeetUntilEventPairing)) // true
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const rejectYeetUntilEventPairing: Effect.Effect<never, CliReportedExit> = Console.error(
+  YEET_UNTIL_EVENT_PAIRING_MESSAGE
+).pipe(Effect.andThen(failWithReportedExit(YEET_UNTIL_EVENT_PAIRING_MESSAGE)));

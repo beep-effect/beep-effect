@@ -5,6 +5,8 @@ import {
   renderYeetWatchEventLine,
   YEET_WATCH_SCHEMA_VERSION,
   YeetCheckSignal,
+  YeetMonitorIssueComment,
+  YeetMonitorReviewComment,
   YeetWatchCheck,
   YeetWatchDiffInput,
   YeetWatchEnded,
@@ -12,6 +14,7 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
@@ -215,6 +218,87 @@ describe("renderYeetWatchEventLine", () => {
       const decoded = yield* decodeLine(line);
 
       expect(decoded.kind).toBe("watch-ended");
+      expect(decoded.schemaVersion).toBe(YEET_WATCH_SCHEMA_VERSION);
+    })
+  );
+
+  it.effect("round-trips the event end reason", () =>
+    Effect.gen(function* () {
+      const ended = YeetWatchEnded.make({ at: AT, failing: 0, headSha: "aaa111", reason: "event" });
+      const decoded = yield* decodeLine(yield* renderYeetWatchEventLine(ended));
+
+      expect(decoded.kind === "watch-ended" ? decoded.reason : null).toBe("event");
+    })
+  );
+});
+
+describe("yeetWatchCommentEvent", () => {
+  const decodeLine = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
+
+  const reviewComment = YeetMonitorReviewComment.make({
+    author: "greptile-apps[bot]",
+    body: "Please  preserve  the polling interval.",
+    createdAt: "2026-08-27T00:00:01Z",
+    id: 43,
+    line: O.some(88),
+    path: "src/Monitor.ts",
+    url: "https://github.com/o/r/pull/751#discussion_r43",
+  });
+
+  it("maps both collection variants, keeping review coordinates and dropping them for issues", () => {
+    const review = yeetWatchCommentEvent(reviewComment, AT, "aaa111");
+    expect(review.source).toBe("review");
+    expect(review.path).toBe("src/Monitor.ts");
+    expect(review.line).toBe(88);
+    // The excerpt is single-line: rendering must not break the NDJSON contract.
+    expect(review.body).toBe("Please preserve the polling interval.");
+
+    const issue = yeetWatchCommentEvent(
+      YeetMonitorIssueComment.make({
+        author: "octocat",
+        body: "The hosted checks are green.",
+        createdAt: "2026-08-27T00:00:02Z",
+        id: 44,
+        url: "https://github.com/o/r/pull/751#issuecomment-44",
+      }),
+      AT,
+      "aaa111"
+    );
+    expect(issue.source).toBe("issue");
+    expect(issue.path).toBeNull();
+    expect(issue.line).toBeNull();
+  });
+
+  it("offers the data-last form for stamping one poll's batch", () => {
+    const stamp = yeetWatchCommentEvent(AT, "aaa111");
+    expect(stamp(reviewComment).commentId).toBe(43);
+  });
+
+  it("bounds and sanitizes a hostile body instead of streaming it verbatim", () => {
+    const hostile = yeetWatchCommentEvent(
+      YeetMonitorIssueComment.make({
+        author: "mallory",
+        body: `\u001B]8;;https://evil.example\u0007link\u001B]8;;\u0007 ${Str.repeat(300)("a")}`,
+        createdAt: "2026-08-27T00:00:03Z",
+        id: 45,
+        url: "https://github.com/o/r/pull/751#issuecomment-45",
+      }),
+      AT,
+      "aaa111"
+    );
+
+    expect(Str.includes("\u001B")(hostile.body)).toBe(false);
+    expect(Str.length(hostile.body)).toBeLessThanOrEqual(201);
+  });
+
+  it.effect("renders a comment row that round-trips through the stream schema", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeLine(
+        yield* renderYeetWatchEventLine(yeetWatchCommentEvent(reviewComment, AT, "aaa111"))
+      );
+
+      expect(decoded.kind).toBe("comment-posted");
+      expect(decoded.kind === "comment-posted" ? decoded.commentId : null).toBe(43);
       expect(decoded.schemaVersion).toBe(YEET_WATCH_SCHEMA_VERSION);
     })
   );

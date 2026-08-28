@@ -43,6 +43,7 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { configStringOptionSync } from "../../internal/cli/EnvConfig.ts";
 import { repoRunOutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
+import { parseAdmissionProcStatStartTime } from "../../internal/repo-run/index.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import {
   FLEET_LIVENESS_WINDOW_SECONDS,
@@ -325,14 +326,7 @@ export const transcriptProjectDirName = (absolutePath: string): string => Str.re
  * @category parsing
  * @since 0.0.0
  */
-export const parseProcStatStartTime = (stat: string): O.Option<string> => {
-  const closeParen = Str.lastIndexOf(")")(stat);
-  if (O.isNone(closeParen)) {
-    return O.none();
-  }
-  const fields = A.filter(Str.split(Str.trim(Str.slice(closeParen.value + 1)(stat)), /\s+/), Str.isNonEmpty);
-  return O.fromUndefinedOr(fields[19]);
-};
+export const parseProcStatStartTime: (stat: string) => O.Option<string> = parseAdmissionProcStatStartTime;
 
 type SurfaceIndex = MutableHashMap.MutableHashMap<string, MutableHashSet.MutableHashSet<string>>;
 

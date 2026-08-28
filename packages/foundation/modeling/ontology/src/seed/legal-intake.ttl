@@ -20,6 +20,7 @@ beep:concept/correspondence a skos:Concept ;
 beep:concept/email-message a skos:Concept ;
   skos:inScheme beep:taxonomy/legal-intake ;
   skos:broader beep:concept/correspondence ;
+  skos:closeMatch <https://folio.openlegalstandard.org/RDQy4rbUg82ScgiiXEQ7ZBU> ;
   skos:prefLabel "Email message"@en .
 
 beep:document-class/draft a skos:Concept ; skos:inScheme beep:taxonomy/legal-intake ; skos:prefLabel "Draft"@en .

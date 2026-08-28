@@ -1969,7 +1969,8 @@
       ],
       "@beep/shared-domain/entity/OrgEntity": [
         "./packages/shared/domain/src/entity/OrgEntity.ts"
-      ]
+      ],
+      "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
     }
   }
 }
