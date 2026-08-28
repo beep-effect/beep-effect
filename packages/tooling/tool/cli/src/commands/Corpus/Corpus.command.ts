@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
 import { CorpusCommandError } from "./Corpus.errors.ts";
@@ -191,14 +191,14 @@ const restorationRunLabelFlag = Flag.string("run-label").pipe(
   Flag.withDescription("Immutable destination label under corpus raw storage")
 );
 const restorationCrashPointFlag = Flag.choiceWithValue("crash-point", [
-  ["none", "none" as const],
-  ["after-payload-sync", "after-payload-sync" as const],
-  ["after-rename", "after-rename" as const],
-  ["before-pass", "before-pass" as const],
+  ["none", "none"],
+  ["after-payload-sync", "after-payload-sync"],
+  ["after-rename", "after-rename"],
+  ["before-pass", "before-pass"],
 ]).pipe(Flag.withDefault("none"), Flag.withDescription("Synthetic interruption boundary for recovery proofs"));
 const restorationMailScopeFlag = Flag.choiceWithValue("scope", [
-  ["slice", "slice" as const],
-  ["full", "full" as const],
+  ["slice", "slice"],
+  ["full", "full"],
 ]).pipe(Flag.withDefault("slice"), Flag.withDescription("One metadata-selected PST or the complete mail estate"));
 const restorationExpectedStoresFlag = Flag.integer("expected-stores").pipe(
   Flag.withDescription("Frozen terminal mail-store denominator for the selected scope")
@@ -207,7 +207,7 @@ const restorationMaxAmplificationFlag = Flag.float("max-amplification-ratio").pi
   Flag.withDescription("Approved maximum output-bytes to input-bytes ratio for each PST attempt")
 );
 const restorationMaxElapsedFlag = Flag.integer("max-elapsed-millis").pipe(
-  Flag.withDescription("Approved maximum elapsed milliseconds for each PST attempt")
+  Flag.withDescription("Approved maximum elapsed milliseconds for each individual transformation attempt")
 );
 const restorationMaxTotalOutputFlag = Flag.integer("max-total-output-bytes").pipe(
   Flag.withDescription("Approved cumulative retained-output byte ceiling for the selected restoration family")
@@ -232,10 +232,22 @@ const restorationExpectedLegacyWordOccurrencesFlag = Flag.integer("expected-occu
 const restorationMaxVisualRmseFlag = Flag.float("max-visual-rmse").pipe(
   Flag.withDescription("Approved maximum normalized rendered-page RMSE")
 );
-const restorationBwrapFlag = Flag.string("bwrap").pipe(Flag.withDefault("bwrap"));
-const restorationCompareFlag = Flag.string("compare").pipe(Flag.withDefault("compare"));
-const restorationPdfinfoFlag = Flag.string("pdfinfo").pipe(Flag.withDefault("pdfinfo"));
-const restorationPdftoppmFlag = Flag.string("pdftoppm").pipe(Flag.withDefault("pdftoppm"));
+const restorationBwrapFlag = Flag.string("bwrap").pipe(
+  Flag.withDefault("bwrap"),
+  Flag.withDescription("bubblewrap binary used to isolate transformation subprocesses")
+);
+const restorationCompareFlag = Flag.string("compare").pipe(
+  Flag.withDefault("compare"),
+  Flag.withDescription("ImageMagick compare binary used for rendered-page fidelity measurements")
+);
+const restorationPdfinfoFlag = Flag.string("pdfinfo").pipe(
+  Flag.withDefault("pdfinfo"),
+  Flag.withDescription("Poppler pdfinfo binary used to count converted PDF pages")
+);
+const restorationPdftoppmFlag = Flag.string("pdftoppm").pipe(
+  Flag.withDefault("pdftoppm"),
+  Flag.withDescription("Poppler pdftoppm binary used to render fidelity-check pages")
+);
 
 const parseSalvageSourceSpec = Effect.fn("CorpusCommand.parseSalvageSourceSpec")(function* (
   value: string
@@ -445,27 +457,26 @@ const corpusRestorationPreserveCommand = Command.make(
     runLabel,
     sourceRoot,
   }) {
-    yield* preserveRestorationArchive(
-      RestorationPreserveOptions.make({
-        absentRecycleTreePath: absentRecycleTree,
-        capacityCeilingBytes: NonNegativeInt.make(capacityCeilingBytes),
-        chunkSizeBytes: NonNegativeInt.make(chunkSizeBytes),
-        corpusRoot,
-        crashPoint,
-        expectedCollectorRowCount: NonNegativeInt.make(expectedCollectorRows),
-        expectedMissingRecyclePayloadCount: NonNegativeInt.make(expectedMissingRecyclePayloads),
-        expectedMutatedDestinationCount: NonNegativeInt.make(expectedMutatedDestinations),
-        expectedRootArchiveBytes: NonNegativeInt.make(expectedRootArchiveBytes),
-        expectedSourceDirectoryCount: NonNegativeInt.make(expectedSourceDirectories),
-        expectedSourceFileCount: NonNegativeInt.make(expectedSourceFiles),
-        expectedSourceTreeBytes: NonNegativeInt.make(expectedSourceTreeBytes),
-        minimumFreeAfterBytes: NonNegativeInt.make(minimumFreeAfterBytes),
-        rootArchivePath: rootArchive,
-        runLabel,
-        sourceManifestPath: collectorManifest,
-        sourceRoot,
-      })
-    ).pipe(Effect.asVoid);
+    const options = yield* S.decodeEffect(RestorationPreserveOptions)({
+      absentRecycleTreePath: absentRecycleTree,
+      capacityCeilingBytes,
+      chunkSizeBytes,
+      corpusRoot,
+      crashPoint,
+      expectedCollectorRowCount: expectedCollectorRows,
+      expectedMissingRecyclePayloadCount: expectedMissingRecyclePayloads,
+      expectedMutatedDestinationCount: expectedMutatedDestinations,
+      expectedRootArchiveBytes,
+      expectedSourceDirectoryCount: expectedSourceDirectories,
+      expectedSourceFileCount: expectedSourceFiles,
+      expectedSourceTreeBytes,
+      minimumFreeAfterBytes,
+      rootArchivePath: rootArchive,
+      runLabel,
+      sourceManifestPath: collectorManifest,
+      sourceRoot,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration preservation options."));
+    yield* preserveRestorationArchive(options).pipe(Effect.asVoid);
   })
 ).pipe(
   Command.withDescription("Preserve the ratified corpus state through the bounded bar-v2 archive boundary"),
@@ -479,7 +490,10 @@ const corpusRestorationVerifyCommand = Command.make(
     runLabel: restorationRunLabelFlag,
   },
   Effect.fn(function* ({ corpusRoot, runLabel }) {
-    yield* verifyRestorationArchive(RestorationVerifyOptions.make({ corpusRoot, runLabel })).pipe(Effect.asVoid);
+    const options = yield* S.decodeEffect(RestorationVerifyOptions)({ corpusRoot, runLabel }).pipe(
+      CorpusCommandError.mapError("Invalid restoration verification options.")
+    );
+    yield* verifyRestorationArchive(options).pipe(Effect.asVoid);
   })
 ).pipe(
   Command.withDescription("Fresh-process verification of every terminal restoration archive object"),
@@ -493,7 +507,10 @@ const corpusRestorationAcceptanceCommand = Command.make(
     runLabel: restorationRunLabelFlag,
   },
   Effect.fn(function* ({ corpusRoot, runLabel }) {
-    yield* reconcileRestorationAcceptance(RestorationVerifyOptions.make({ corpusRoot, runLabel })).pipe(Effect.asVoid);
+    const options = yield* S.decodeEffect(RestorationVerifyOptions)({ corpusRoot, runLabel }).pipe(
+      CorpusCommandError.mapError("Invalid restoration acceptance options.")
+    );
+    yield* reconcileRestorationAcceptance(options).pipe(Effect.asVoid);
   })
 ).pipe(
   Command.withDescription("Reconcile four separate aggregate-only restoration acceptance records"),
@@ -503,6 +520,7 @@ const corpusRestorationAcceptanceCommand = Command.make(
 const corpusRestorationMailCommand = Command.make(
   "restore-mail",
   {
+    bwrap: restorationBwrapFlag,
     corpusRoot: corpusRootFlag,
     expectedStores: restorationExpectedStoresFlag,
     java: javaFlag,
@@ -516,6 +534,7 @@ const corpusRestorationMailCommand = Command.make(
     tikaJar: tikaJarFlag,
   },
   Effect.fn(function* ({
+    bwrap,
     corpusRoot,
     expectedStores,
     java,
@@ -528,21 +547,21 @@ const corpusRestorationMailCommand = Command.make(
     scope,
     tikaJar,
   }) {
-    yield* restoreMail(
-      RestorationMailOptions.make({
-        corpusRoot,
-        expectedStoreCount: NonNegativeInt.make(expectedStores),
-        javaPath: O.getOrElse(java, () => "java"),
-        maxAmplificationRatio,
-        maxElapsedMillis: NonNegativeInt.make(maxElapsedMillis),
-        maxTotalElapsedMillis: NonNegativeInt.make(maxTotalElapsedMillis),
-        maxTotalOutputBytes: NonNegativeInt.make(maxTotalOutputBytes),
-        pffexportPath: O.getOrElse(pffexport, () => "pffexport"),
-        runLabel,
-        scope,
-        tikaJarPath: tikaJar,
-      })
-    ).pipe(Effect.asVoid);
+    const options = yield* S.decodeEffect(RestorationMailOptions)({
+      bwrapPath: bwrap,
+      corpusRoot,
+      expectedStoreCount: expectedStores,
+      javaPath: O.getOrElse(java, () => "java"),
+      maxAmplificationRatio,
+      maxElapsedMillis,
+      maxTotalElapsedMillis,
+      maxTotalOutputBytes,
+      pffexportPath: O.getOrElse(pffexport, () => "pffexport"),
+      runLabel,
+      scope,
+      tikaJarPath: tikaJar,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration mail options."));
+    yield* restoreMail(options).pipe(Effect.asVoid);
   })
 ).pipe(
   Command.withDescription("Restore one metadata-selected PST or the complete mail estate at concurrency one"),
@@ -567,16 +586,15 @@ const corpusRestorationRecycleCommand = Command.make(
     maxTotalOutputBytes,
     runLabel,
   }) {
-    yield* restoreRecycle(
-      RestorationRecycleOptions.make({
-        corpusRoot,
-        expectedMissingContentCount: NonNegativeInt.make(expectedMissingContent),
-        expectedSurfaceCount: NonNegativeInt.make(expectedSurfaces),
-        maxTotalElapsedMillis: NonNegativeInt.make(maxTotalElapsedMillis),
-        maxTotalOutputBytes: NonNegativeInt.make(maxTotalOutputBytes),
-        runLabel,
-      })
-    ).pipe(Effect.asVoid);
+    const options = yield* S.decodeEffect(RestorationRecycleOptions)({
+      corpusRoot,
+      expectedMissingContentCount: expectedMissingContent,
+      expectedSurfaceCount: expectedSurfaces,
+      maxTotalElapsedMillis,
+      maxTotalOutputBytes,
+      runLabel,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration recycle options."));
+    yield* restoreRecycle(options).pipe(Effect.asVoid);
   })
 ).pipe(
   Command.withDescription("Restore all recycle surfaces through a four-class occurrence join"),
@@ -619,25 +637,24 @@ const corpusRestorationLegacyWordCommand = Command.make(
     runLabel,
     tikaJar,
   }) {
-    yield* restoreLegacyWord(
-      RestorationLegacyWordOptions.make({
-        bwrapPath: bwrap,
-        comparePath: compare,
-        converterPath: converter,
-        corpusRoot,
-        expectedConverterVersion,
-        expectedOccurrenceCount: NonNegativeInt.make(expectedOccurrences),
-        javaPath: O.getOrElse(java, () => "java"),
-        maxElapsedMillis: NonNegativeInt.make(maxElapsedMillis),
-        maxTotalElapsedMillis: NonNegativeInt.make(maxTotalElapsedMillis),
-        maxTotalOutputBytes: NonNegativeInt.make(maxTotalOutputBytes),
-        maxVisualRmse,
-        pdfinfoPath: pdfinfo,
-        pdftoppmPath: pdftoppm,
-        runLabel,
-        tikaJarPath: tikaJar,
-      })
-    ).pipe(Effect.asVoid);
+    const options = yield* S.decodeEffect(RestorationLegacyWordOptions)({
+      bwrapPath: bwrap,
+      comparePath: compare,
+      converterPath: converter,
+      corpusRoot,
+      expectedConverterVersion,
+      expectedOccurrenceCount: expectedOccurrences,
+      javaPath: O.getOrElse(java, () => "java"),
+      maxElapsedMillis,
+      maxTotalElapsedMillis,
+      maxTotalOutputBytes,
+      maxVisualRmse,
+      pdfinfoPath: pdfinfo,
+      pdftoppmPath: pdftoppm,
+      runLabel,
+      tikaJarPath: tikaJar,
+    }).pipe(CorpusCommandError.mapError("Invalid restoration legacy-Word options."));
+    yield* restoreLegacyWord(options).pipe(Effect.asVoid);
   })
 ).pipe(
   Command.withDescription("Convert every distinct legacy .doc digest inside a pinned fidelity sandbox"),

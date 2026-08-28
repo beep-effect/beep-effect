@@ -10,12 +10,15 @@ Status: `active`
 
 Current phase state:
 
-- **P0 Preservation gate:** tooling and synthetic interruption proofs are
-  implemented; the archive operation awaits approved numeric ceilings.
-- **P1 Mail vertical slice:** the source-path engine, attachment repair, and
+- **P0 Preservation gate:** tooling, exact writer ownership, interrupted-tail
+  repair, and synthetic crash proofs are implemented; the archive operation
+  awaits approved numeric ceilings.
+- **P1 Mail vertical slice:** run-bound source-path extraction, child
+  reconciliation, attachment repair, sandboxing, hard resource ceilings, and
   synthetic exception lanes are implemented; the live slice follows P0.
 - **P2 Transformation wave:** recycle, legacy-Word, and acceptance tooling has
-  synthetic coverage; the single live wave follows the passing slice.
+  synthetic occurrence, fidelity, restart, tamper, and acceptance-integrity
+  coverage; the single live wave follows the passing slice.
 - **P3 Close:** reconcile every ledger, write the reflection, drive the final
   PR to mergeable through Yeet, and flip packet state in that same PR.
 

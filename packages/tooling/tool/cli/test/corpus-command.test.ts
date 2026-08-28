@@ -1,5 +1,7 @@
 import {
+  ArchiveLedgerRecord,
   archiveMoveCorpus,
+  CollectorManifestRecord,
   CorpusArchiveMoveManifestRecord,
   CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
@@ -12,7 +14,6 @@ import {
   classifyRecycleBinName,
   decodeArchiveLedgerRecordJson,
   decodeCorpusProvenanceRecordJson,
-  decodeRestorationAcceptanceRecordJson,
   decodeTransformationLedgerRecordJson,
   encodeCorpusProvenanceRecordJson,
   encodeTransformationLedgerRecordJson,
@@ -35,15 +36,21 @@ import {
   verifyRestorationArchive,
   verifySalvage,
 } from "@beep/repo-cli/commands/Corpus";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
+import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
+import { Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
+import { ChildProcess } from "effect/unstable/process";
 
 const testLayer = Layer.mergeAll(
   CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
@@ -51,6 +58,55 @@ const testLayer = Layer.mergeAll(
 );
 
 const provideTestLayer = provideScopedLayer(testLayer);
+
+const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const arbitrary = S.toArbitrary(schema)(fc);
+  const encode = S.encodeResult(schema);
+  const decode = S.decodeUnknownResult(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+      return equivalent(decoded, value);
+    }),
+    fcRuns(10)
+  );
+};
+
+describe("corpus evidence schemas", () => {
+  it("round-trips schema-derived arbitrary evidence and option values", () => {
+    assertSchemaArbitraryRoundTrip(CollectorManifestRecord);
+    assertSchemaArbitraryRoundTrip(CorpusArchiveMoveManifestRecord);
+    assertSchemaArbitraryRoundTrip(CorpusProvenanceRecord);
+    assertSchemaArbitraryRoundTrip(ArchiveLedgerRecord.cases["archive-preflight"]);
+    assertSchemaArbitraryRoundTrip(TransformationLedgerRecord.cases["family-run-summary"]);
+    assertSchemaArbitraryRoundTrip(RestorationVerifyOptions);
+  });
+
+  it("decodes inherited collector failures and secret exclusions without destination fields", () => {
+    const decode = S.decodeUnknownResult(CollectorManifestRecord);
+
+    expect(
+      Result.isSuccess(
+        decode({
+          reason: "source unreadable",
+          src: "C:\\source\\unreadable.bin",
+          status: "error",
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({
+          src: "C:\\source\\excluded.bin",
+          status: "excluded-secret",
+        })
+      )
+    ).toBe(true);
+  });
+});
 
 const filetime2020 = 132_223_104_000_000_000n;
 
@@ -1060,7 +1116,9 @@ const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservatio
   let directoryCount = 1;
   let fileCount = 0;
   let sourceTreeBytes = 0;
-  const visit = Effect.fn("CorpusTest.measurePreservationDenominators.visit")(function* (directory: string) {
+  const visit: (directory: string) => Effect.Effect<void> = Effect.fn(
+    "CorpusTest.measurePreservationDenominators.visit"
+  )(function* (directory: string) {
     for (const name of yield* fs.readDirectory(directory).pipe(Effect.orDie)) {
       const entry = path.join(directory, name);
       const info = yield* fs.stat(entry).pipe(Effect.orDie);
@@ -1083,6 +1141,62 @@ const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservatio
   };
 });
 
+const collectorManifestJson = S.fromJsonString(CollectorManifestRecord);
+
+const waitForOpenProcessFile = Effect.fn("CorpusTest.waitForOpenProcessFile")(function* (
+  filePath: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const descriptorRoot = `/proc/${process.pid}/fd`;
+  for (let attempt = 0; attempt < 5_000; attempt += 1) {
+    const descriptors = yield* fs.readDirectory(descriptorRoot).pipe(Effect.orDie);
+    const targets = yield* Effect.forEach(
+      descriptors,
+      (descriptor) => fs.readLink(`${descriptorRoot}/${descriptor}`).pipe(Effect.option),
+      { concurrency: "unbounded" }
+    );
+    if (A.some(targets, (target) => O.exists(target, (value) => value === filePath))) return true;
+    yield* Effect.yieldNow;
+  }
+  return false;
+});
+
+const writePresentCollectorManifest = Effect.fn("CorpusTest.writePresentCollectorManifest")(function* (
+  sourceRoot: string,
+  collectorManifest: string
+): Effect.fn.Return<number, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const records: Array<CollectorManifestRecord> = [];
+  const visit: (directory: string) => Effect.Effect<void> = Effect.fn("CorpusTest.writePresentCollectorManifest.visit")(
+    function* (directory: string) {
+      for (const name of yield* fs.readDirectory(directory).pipe(Effect.orDie)) {
+        const entry = path.join(directory, name);
+        const info = yield* fs.stat(entry).pipe(Effect.orDie);
+        if (info.type === "Directory") {
+          yield* visit(entry);
+        } else if (info.type === "File") {
+          const relativePath = path.relative(sourceRoot, entry);
+          records.push(
+            CollectorManifestRecord.cases.copied.make({
+              dst: `F:/salvage/${relativePath}`,
+              size: NonNegativeInt.make(Number(info.size)),
+              src: `C:/source/${relativePath}`,
+              status: "copied",
+            })
+          );
+        }
+      }
+    }
+  );
+  yield* visit(sourceRoot);
+  const encoded = yield* Effect.forEach(records, (record) =>
+    S.encodeEffect(collectorManifestJson)(record).pipe(Effect.orDie)
+  );
+  yield* fs.writeFileString(collectorManifest, `${A.join(encoded, "\n")}\n`).pipe(Effect.orDie);
+  return records.length;
+});
+
 const restorationOptions = (
   input: PreservationDenominators & {
     readonly absentTree: string;
@@ -1096,11 +1210,18 @@ const restorationOptions = (
 ): RestorationPreserveOptions =>
   RestorationPreserveOptions.make({
     absentRecycleTreePath: input.absentTree,
-    capacityCeilingBytes: NonNegativeInt.make(input.capacityCeilingBytes),
-    chunkSizeBytes: NonNegativeInt.make(1_024),
+    capacityCeilingBytes: PosInt.make(input.capacityCeilingBytes),
+    chunkSizeBytes: PosInt.make(1_024),
+    collectorDestinationPrefixSegments: NonNegativeInt.make(2),
     corpusRoot: input.corpusRoot,
     crashPoint: input.crashPoint ?? "none",
+    expectedCollectorCopiedCount: NonNegativeInt.make(1),
+    expectedCollectorErrorCount: NonNegativeInt.make(1),
+    expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
+    expectedCollectorResumedCount: NonNegativeInt.make(1),
     expectedCollectorRowCount: NonNegativeInt.make(3),
+    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(2),
     expectedMissingRecyclePayloadCount: NonNegativeInt.make(1),
     expectedMutatedDestinationCount: NonNegativeInt.make(1),
     expectedRootArchiveBytes: input.expectedRootArchiveBytes,
@@ -1131,16 +1252,28 @@ const makeRestorationFixture = Effect.fn("CorpusTest.makeRestorationFixture")(fu
   yield* fs.writeFile(path.join(nestedRoot, "large.bin"), largeBytes);
   yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
   const collectorRows = [
-    {
-      dst: "F:\\salvage\\tree\\nested\\large.bin",
-      size: largeBytes.length,
+    CollectorManifestRecord.cases.copied.make({
+      dst: "F:\\salvage\\nested\\large.bin",
+      size: NonNegativeInt.make(largeBytes.length),
       src: "C:\\source\\large.bin",
       status: "copied",
-    },
-    { dst: "F:\\salvage\\tree\\missing.bin", size: 1, src: "C:\\source\\missing.bin", status: "resumed" },
-    { dst: "F:\\salvage\\tree\\unreadable.bin", size: 0, src: "C:\\source\\unreadable.bin", status: "error" },
+    }),
+    CollectorManifestRecord.cases.resumed.make({
+      dst: "F:\\salvage\\missing.bin",
+      size: NonNegativeInt.make(1),
+      src: "C:\\source\\missing.bin",
+      status: "resumed",
+    }),
+    CollectorManifestRecord.cases.error.make({
+      reason: "source unreadable",
+      src: "C:\\source\\unreadable.bin",
+      status: "error",
+    }),
   ];
-  yield* fs.writeFileString(collectorManifest, `${A.join(A.map(collectorRows, JSON.stringify), "\n")}\n`);
+  const encodedCollectorRows = yield* Effect.forEach(collectorRows, (record) =>
+    S.encodeEffect(collectorManifestJson)(record).pipe(Effect.orDie)
+  );
+  yield* fs.writeFileString(collectorManifest, `${A.join(encodedCollectorRows, "\n")}\n`);
   return {
     absentTree,
     collectorManifest,
@@ -1152,6 +1285,256 @@ const makeRestorationFixture = Effect.fn("CorpusTest.makeRestorationFixture")(fu
 });
 
 describe("corpus restoration preservation", () => {
+  it.effect(
+    "rejects traversal-bearing run labels and archive-relative paths at decode boundaries",
+    Effect.fnUntraced(function* () {
+      const runLabelResult = yield* S.decodeEffect(RestorationVerifyOptions)({
+        corpusRoot: "/tmp/corpus",
+        runLabel: "../escape",
+      }).pipe(Effect.option);
+      const archivePathResult = yield* decodeArchiveLedgerRecordJson(
+        '{"destinationRelativePath":"../escape","objectId":"object-1","objectKind":"directory","recordedAt":"2026-08-27T00:00:00.000Z","recordType":"archive-directory-pass","runId":"preservation-1","schemaVersion":"oppold-corpus-restoration/v1","sourceLabel":"source-tree","sourceRelativePath":"safe"}'
+      ).pipe(Effect.option);
+
+      expect(O.isNone(runLabelResult)).toBe(true);
+      expect(O.isNone(archivePathResult)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "rejects a collector row whose recorded byte size differs from its canonical source file",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRestorationFixture();
+        const manifest = yield* fs.readFileString(fixture.collectorManifest);
+        yield* fs.writeFileString(
+          fixture.collectorManifest,
+          Str.replace(`${1024 * 1024 + 37}`, `${1024 * 1024 + 38}`)(manifest)
+        );
+        const error = yield* preserveRestorationArchive(
+          restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 })
+        ).pipe(Effect.flip);
+        const archiveRootExists = yield* fs.exists(path.join(fixture.corpusRoot, "raw", "synthetic-restoration"));
+
+        expect(error.message).toContain("size contradicts");
+        expect(archiveRootExists).toBe(false);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "recopies a same-size source that stabilizes after changing in flight",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRestorationFixture();
+        const sourcePath = path.join(fixture.sourceRoot, "nested", "large.bin");
+        const sourceBytes = new Uint8Array(2 * 1024 * 1024);
+        sourceBytes.fill(0x31);
+        const stableReplacement = new Uint8Array(sourceBytes.length);
+        stableReplacement.fill(0x32);
+        yield* fs.writeFile(sourcePath, sourceBytes);
+        const replacementPath = path.join(path.dirname(fixture.sourceRoot), "stable-replacement.bin");
+        yield* fs.writeFile(replacementPath, stableReplacement);
+        const denominators = yield* measurePreservationDenominators(fixture.sourceRoot, fixture.rootArchive);
+        const collectorRowCount = yield* writePresentCollectorManifest(fixture.sourceRoot, fixture.collectorManifest);
+        const options = RestorationPreserveOptions.make({
+          ...restorationOptions({
+            ...fixture,
+            ...denominators,
+            capacityCeilingBytes: 64 * 1024 * 1024,
+          }),
+          chunkSizeBytes: PosInt.make(1024 * 1024),
+          expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
+          expectedCollectorErrorCount: NonNegativeInt.make(0),
+          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
+          expectedCollectorResumedCount: NonNegativeInt.make(0),
+          expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
+          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
+          expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+          expectedMutatedDestinationCount: NonNegativeInt.make(0),
+        });
+        yield* Effect.forkChild(
+          Effect.gen(function* () {
+            const sourceOpened = yield* waitForOpenProcessFile(sourcePath);
+            if (!sourceOpened) return yield* Effect.die("Preservation source was not observably open for mutation.");
+            yield* fs.rename(replacementPath, sourcePath);
+          })
+        );
+        const summary = yield* preserveRestorationArchive(options);
+        const verified = yield* verifyRestorationArchive(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-restoration",
+          })
+        );
+        const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
+        const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+        const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
+        const changedRows = A.filter(records, (record) => record.recordType === "archive-changed-during-copy");
+        const stablePass = A.findFirst(
+          records,
+          (record) => record.recordType === "archive-file-pass" && record.sourceRelativePath === "nested/large.bin"
+        );
+        const destination = yield* fs.readFile(
+          path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "payload", "tree", "nested", "large.bin")
+        );
+
+        expect(summary.unapprovedCount).toBe(0);
+        expect(verified.unapprovedCount).toBe(0);
+        expect(changedRows).toHaveLength(1);
+        expect(O.isSome(stablePass)).toBe(true);
+        expect(Uint8Array.from(destination)).toStrictEqual(stableReplacement);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "does not let a stable recopy mask unrelated source-tree drift",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRestorationFixture();
+        const sourcePath = path.join(fixture.sourceRoot, "nested", "large.bin");
+        const sourceBytes = new Uint8Array(2 * 1024 * 1024);
+        sourceBytes.fill(0x41);
+        const stableReplacement = new Uint8Array(sourceBytes.length);
+        stableReplacement.fill(0x42);
+        yield* fs.writeFile(sourcePath, sourceBytes);
+        const replacementPath = path.join(path.dirname(fixture.sourceRoot), "stable-replacement.bin");
+        yield* fs.writeFile(replacementPath, stableReplacement);
+        const denominators = yield* measurePreservationDenominators(fixture.sourceRoot, fixture.rootArchive);
+        const collectorRowCount = yield* writePresentCollectorManifest(fixture.sourceRoot, fixture.collectorManifest);
+        const options = RestorationPreserveOptions.make({
+          ...restorationOptions({
+            ...fixture,
+            ...denominators,
+            capacityCeilingBytes: 64 * 1024 * 1024,
+          }),
+          chunkSizeBytes: PosInt.make(1024 * 1024),
+          expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
+          expectedCollectorErrorCount: NonNegativeInt.make(0),
+          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
+          expectedCollectorResumedCount: NonNegativeInt.make(0),
+          expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
+          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
+          expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+          expectedMutatedDestinationCount: NonNegativeInt.make(0),
+        });
+        yield* Effect.forkChild(
+          Effect.gen(function* () {
+            const sourceOpened = yield* waitForOpenProcessFile(sourcePath);
+            if (!sourceOpened) return yield* Effect.die("Preservation source was not observably open for mutation.");
+            yield* fs.rename(replacementPath, sourcePath);
+            yield* fs.writeFileString(path.join(fixture.sourceRoot, "unrelated-added.bin"), "unexpected drift");
+          })
+        );
+        const error = yield* preserveRestorationArchive(options).pipe(Effect.flip);
+        const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
+        const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+        const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
+
+        expect(error.message).toMatch(/source/iu);
+        expect(A.some(records, (record) => record.recordType === "archive-changed-during-copy")).toBe(true);
+        expect(A.some(records, (record) => record.recordType === "archive-manifest-seal")).toBe(false);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects symlinked partial and ledger destinations without touching their outside canaries",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        for (const attack of ["partial", "ledger"] as const) {
+          const fixture = yield* makeRestorationFixture();
+          const archiveRoot = path.join(fixture.corpusRoot, "raw", "synthetic-restoration");
+          const outsideCanary = path.join(path.dirname(fixture.corpusRoot), `${attack}-outside-canary.txt`);
+          const attackedPath =
+            attack === "ledger"
+              ? path.join(archiveRoot, "archive-ledger.jsonl")
+              : path.join(archiveRoot, "payload", "tree", "nested", "large.bin.partial");
+          yield* fs.makeDirectory(path.dirname(attackedPath), { recursive: true });
+          yield* fs.writeFileString(outsideCanary, `${attack} canary`);
+          yield* fs.symlink(outsideCanary, attackedPath);
+
+          const error = yield* preserveRestorationArchive(
+            restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 })
+          ).pipe(Effect.flip);
+
+          expect(error.message).toContain(attack === "ledger" ? "restoration append destination" : "Partial archive");
+          expect(yield* fs.readFileString(outsideCanary)).toBe(`${attack} canary`);
+        }
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "reclaims an exact writer claim left by a killed restoration writer process",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-writer-claim-test-" });
+        const claimDirectory = path.join(root, "writer-claims");
+        const claimName = ".preservation-writer.claim";
+        const claimPath = path.join(claimDirectory, claimName);
+        yield* fs.makeDirectory(claimDirectory, { recursive: true });
+        const childProgram = `
+          import { withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
+          import { NodeServices } from "@effect/platform-node";
+          import { Console, Effect } from "effect";
+
+          await Effect.runPromise(
+            withRestorationWriterClaim(
+              process.env.BEEP_RESTORATION_TEST_CLAIM_DIRECTORY,
+              ".preservation-writer.claim",
+              Console.log("CLAIMED").pipe(Effect.andThen(Effect.never))
+            ).pipe(Effect.provide(NodeServices.layer))
+          );
+        `;
+        const child = yield* ChildProcess.make("bun", ["--eval", childProgram], {
+          cwd: process.cwd(),
+          env: { BEEP_RESTORATION_TEST_CLAIM_DIRECTORY: claimDirectory },
+          extendEnv: true,
+          stdin: "ignore",
+          stdout: "pipe",
+          stderr: "ignore",
+        });
+        const claimedOutput = yield* child.stdout.pipe(Stream.decodeText(), Stream.runHead);
+        yield* child.kill({ killSignal: "SIGKILL" });
+        const childExit = yield* Effect.result(child.exitCode);
+        const staleClaimExists = yield* fs.exists(claimPath);
+
+        expect({ claimedOutput, staleClaimExists }).toMatchObject({
+          claimedOutput: O.some("CLAIMED\n"),
+          staleClaimExists: true,
+        });
+        expect(Result.isFailure(childExit)).toBe(true);
+
+        yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void);
+
+        expect(yield* fs.exists(claimPath)).toBe(false);
+      },
+      Effect.scoped,
+      provideTestLayer
+    ),
+    120_000
+  );
+
   it.effect(
     "streams, resumes, seals, extends provenance, and independently verifies synthetic archive objects",
     Effect.fnUntraced(
@@ -1228,8 +1611,15 @@ describe("corpus restoration preservation", () => {
           ).pipe(Effect.flip);
           const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
           const interruptedText = yield* fs.readFileString(manifestPath);
+          const provenancePath = path.join(fixture.corpusRoot, "raw", "provenance.jsonl");
+          const interruptedProvenance = (yield* fs.exists(provenancePath))
+            ? yield* fs.readFileString(provenancePath)
+            : "";
           expect(interrupted.message).toContain(crashPoint);
           expect(interruptedText).not.toContain('"recordType":"archive-file-pass"');
+
+          yield* fs.writeFileString(manifestPath, `${interruptedText}{"recordType":"interrupted-manifest`);
+          yield* fs.writeFileString(provenancePath, `${interruptedProvenance}{"interrupted":"provenance`);
 
           yield* preserveRestorationArchive(restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 }));
           const verified = yield* verifyRestorationArchive(
@@ -1238,6 +1628,8 @@ describe("corpus restoration preservation", () => {
               runLabel: "synthetic-restoration",
             })
           );
+          expect(yield* fs.readFileString(manifestPath)).not.toContain("interrupted-manifest");
+          expect(yield* fs.readFileString(provenancePath)).not.toContain('"interrupted":"provenance');
           expect(verified.unapprovedCount).toBe(0);
         }
       },
@@ -1329,6 +1721,63 @@ describe("corpus restoration preservation", () => {
   );
 });
 
+const restorationBwrapStub = `#!/usr/bin/env bash
+set -eu
+saw_unshare="0"
+mount_hosts=()
+mount_targets=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --unshare-all)
+      saw_unshare="1"
+      shift
+      ;;
+    --ro-bind|--bind)
+      mount_hosts+=("$2")
+      mount_targets+=("$3")
+      shift 3
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+if [ "$saw_unshare" != "1" ] || [ "$#" -lt 1 ]; then
+  exit 91
+fi
+command="$1"
+shift
+mapped_command="$command"
+for index in "\${!mount_targets[@]}"; do
+  target="\${mount_targets[$index]}"
+  host="\${mount_hosts[$index]}"
+  if [ "$command" = "$target" ]; then
+    mapped_command="$host"
+  elif [[ "$command" = "$target/"* ]]; then
+    mapped_command="$host\${command#$target}"
+  fi
+done
+mapped=()
+for argument in "$@"; do
+  mapped_argument="$argument"
+  for index in "\${!mount_targets[@]}"; do
+    target="\${mount_targets[$index]}"
+    host="\${mount_hosts[$index]}"
+    if [ "$argument" = "$target" ]; then
+      mapped_argument="$host"
+    elif [[ "$argument" = "$target/"* ]]; then
+      mapped_argument="$host\${argument#$target}"
+    fi
+  done
+  mapped+=("$mapped_argument")
+done
+exec "$mapped_command" "\${mapped[@]}"
+`;
+
 const restorationPffexportStub = `#!/usr/bin/env bash
 if [ "$1" = "-V" ]; then
   printf 'pffexport 20260608\n'
@@ -1349,6 +1798,10 @@ exit 0
 `;
 
 const restorationTikaStub = `#!/usr/bin/env bash
+printf 'synthetic extracted attachment text\n'
+`;
+
+const emptyRestorationTikaStub = `#!/usr/bin/env bash
 exit 0
 `;
 
@@ -1361,8 +1814,41 @@ printf '%s\\n' '${message}' >&2
 exit 2
 `;
 
+const failingRestorationPffexportWithOutputStub = (message: string): string => `#!/usr/bin/env bash
+if [ "$1" = "-V" ]; then
+  printf 'pffexport 20260608\\n'
+  exit 0
+fi
+target=""
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = "-t" ]; then target="$argument"; fi
+  previous="$argument"
+done
+mkdir -p "$target.export"
+printf 'retained partial engine output' > "$target.export/partial-output.bin"
+printf '%s\\n' '${message}' >&2
+exit 2
+`;
+
+const emptyRestorationPffexportStub = `#!/usr/bin/env bash
+if [ "$1" = "-V" ]; then
+  printf 'pffexport 20260608\n'
+  exit 0
+fi
+target=""
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = "-t" ]; then target="$argument"; fi
+  previous="$argument"
+done
+mkdir -p "$target.export"
+exit 0
+`;
+
 const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixture")(function* (
-  pffexportScript: string
+  pffexportScript: string,
+  tikaScript: string = restorationTikaStub
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1376,62 +1862,155 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
   const absentTree = path.join(root, "recorded-absent");
   const pffexportPath = path.join(root, "pffexport-stub");
   const tikaPath = path.join(root, "tika-stub");
+  const bwrapPath = path.join(root, "bwrap-stub");
   yield* fs.makeDirectory(corpusRoot, { recursive: true });
   yield* fs.makeDirectory(mailRoot, { recursive: true });
   const mailBytes = new Uint8Array(1024 * 1024 + 31);
   mailBytes.fill(0x42);
   yield* fs.writeFile(mailPath, mailBytes);
   yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
-  yield* fs.writeFileString(
-    collectorManifest,
-    `${JSON.stringify({
-      dst: "F:\\salvage\\tree\\$Recycle.Bin\\surface-a\\$Rstore.pst",
-      size: mailBytes.length,
+  const collectorRow = yield* S.encodeEffect(collectorManifestJson)(
+    CollectorManifestRecord.cases.copied.make({
+      dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
+      size: NonNegativeInt.make(mailBytes.length),
       src: "C:\\source\\mail-store.pst",
       status: "copied",
-    })}\n`
-  );
-  yield* writeStub(pffexportScript, pffexportPath);
-  yield* writeStub(restorationTikaStub, tikaPath);
-  const denominators = yield* measurePreservationDenominators(sourceRoot, rootArchive);
-  yield* preserveRestorationArchive(
-    RestorationPreserveOptions.make({
-      absentRecycleTreePath: absentTree,
-      capacityCeilingBytes: NonNegativeInt.make(10 * 1024 * 1024),
-      chunkSizeBytes: NonNegativeInt.make(4_096),
-      corpusRoot,
-      expectedCollectorRowCount: NonNegativeInt.make(1),
-      expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
-      expectedMutatedDestinationCount: NonNegativeInt.make(0),
-      ...denominators,
-      minimumFreeAfterBytes: NonNegativeInt.make(0),
-      rootArchivePath: rootArchive,
-      runLabel: "synthetic-mail-restoration",
-      sourceManifestPath: collectorManifest,
-      sourceRoot,
     })
-  );
-  return { corpusRoot, pffexportPath, tikaPath };
+  ).pipe(Effect.orDie);
+  yield* fs.writeFileString(collectorManifest, `${collectorRow}\n`);
+  yield* writeStub(pffexportScript, pffexportPath);
+  yield* writeStub(tikaScript, tikaPath);
+  yield* writeStub(restorationBwrapStub, bwrapPath);
+  const denominators = yield* measurePreservationDenominators(sourceRoot, rootArchive);
+  const preservationOptions = RestorationPreserveOptions.make({
+    absentRecycleTreePath: absentTree,
+    capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
+    chunkSizeBytes: PosInt.make(4_096),
+    collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+    corpusRoot,
+    expectedCollectorCopiedCount: NonNegativeInt.make(1),
+    expectedCollectorErrorCount: NonNegativeInt.make(0),
+    expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+    expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
+    expectedCollectorResumedCount: NonNegativeInt.make(0),
+    expectedCollectorRowCount: NonNegativeInt.make(1),
+    expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
+    expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+    expectedMutatedDestinationCount: NonNegativeInt.make(0),
+    ...denominators,
+    minimumFreeAfterBytes: NonNegativeInt.make(0),
+    rootArchivePath: rootArchive,
+    runLabel: "synthetic-mail-restoration",
+    sourceManifestPath: collectorManifest,
+    sourceRoot,
+  });
+  yield* preserveRestorationArchive(preservationOptions);
+  return { bwrapPath, corpusRoot, pffexportPath, preservationOptions, tikaPath };
 });
 
-const mailRestorationOptions = (fixture: {
-  readonly corpusRoot: string;
-  readonly pffexportPath: string;
-  readonly tikaPath: string;
-}): RestorationMailOptions =>
+const mailRestorationOptions = (
+  fixture: {
+    readonly bwrapPath: string;
+    readonly corpusRoot: string;
+    readonly pffexportPath: string;
+    readonly tikaPath: string;
+  },
+  scope: "full" | "slice" = "slice"
+): RestorationMailOptions =>
   RestorationMailOptions.make({
+    bwrapPath: fixture.bwrapPath,
     corpusRoot: fixture.corpusRoot,
     expectedStoreCount: NonNegativeInt.make(1),
     javaPath: fixture.tikaPath,
     maxAmplificationRatio: 10,
-    maxElapsedMillis: NonNegativeInt.make(30_000),
-    maxTotalElapsedMillis: NonNegativeInt.make(30_000),
-    maxTotalOutputBytes: NonNegativeInt.make(1024 * 1024 * 1024),
+    maxElapsedMillis: PosInt.make(30_000),
+    maxTotalElapsedMillis: PosInt.make(30_000),
+    maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
     pffexportPath: fixture.pffexportPath,
     runLabel: "synthetic-mail-restoration",
-    scope: "slice",
+    scope,
     tikaJarPath: fixture.tikaPath,
   });
+
+const readTransformationLedgerFixture = Effect.fnUntraced(function* (ledgerPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+  const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+  return { lines, records };
+});
+
+const truncateLedgerAtFirstAttemptStart = Effect.fnUntraced(function* (ledgerPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const decoded = yield* readTransformationLedgerFixture(ledgerPath);
+  const start = A.findFirst(decoded.records, (record) => record.recordType === "family-attempt-start");
+  if (O.isNone(start)) return yield* Effect.die("Mail run did not publish its durable attempt start.");
+  const index = A.findFirstIndex(decoded.records, (record) => record === start.value);
+  if (O.isNone(index)) return yield* Effect.die("Mail attempt start was absent from its ledger.");
+  yield* fs.writeFileString(ledgerPath, `${A.join(A.take(decoded.lines, index.value + 1), "\n")}\n`);
+  return start.value;
+});
+
+type MailLedgerTamper = "repair-attempt" | "settlement-retry" | "settlement-source";
+
+const replaceFirstTransformationRecord = <Selected extends TransformationLedgerRecord>(
+  records: ReadonlyArray<TransformationLedgerRecord>,
+  predicate: (record: TransformationLedgerRecord) => record is Selected,
+  replace: (record: Selected) => TransformationLedgerRecord
+): O.Option<ReadonlyArray<TransformationLedgerRecord>> =>
+  O.flatMap(A.findFirstIndex(records, predicate), (index) =>
+    O.flatMap(A.get(records, index), (record) =>
+      predicate(record) ? A.replace(records, index, replace(record)) : O.none()
+    )
+  );
+
+const tamperRestartedMailSegment = (
+  records: ReadonlyArray<TransformationLedgerRecord>,
+  interruptedAttemptId: string,
+  tamper: MailLedgerTamper
+): O.Option<ReadonlyArray<TransformationLedgerRecord>> =>
+  Match.value(tamper).pipe(
+    Match.when("settlement-source", () =>
+      replaceFirstTransformationRecord(
+        records,
+        (
+          record
+        ): record is Extract<TransformationLedgerRecord, { readonly recordType: "family-attempt-interrupted" }> =>
+          record.recordType === "family-attempt-interrupted",
+        (record) =>
+          TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
+            ...record,
+            sourceId: "tampered-source-object",
+          })
+      )
+    ),
+    Match.when("settlement-retry", () =>
+      replaceFirstTransformationRecord(
+        records,
+        (
+          record
+        ): record is Extract<TransformationLedgerRecord, { readonly recordType: "family-attempt-interrupted" }> =>
+          record.recordType === "family-attempt-interrupted",
+        (record) =>
+          TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
+            ...record,
+            retryOrdinal: NonNegativeInt.make(record.retryOrdinal + 1),
+          })
+      )
+    ),
+    Match.when("repair-attempt", () =>
+      replaceFirstTransformationRecord(
+        records,
+        (record): record is Extract<TransformationLedgerRecord, { readonly recordType: "attachment-type-repair" }> =>
+          record.recordType === "attachment-type-repair",
+        (record) =>
+          TransformationLedgerRecord.cases["attachment-type-repair"].make({
+            ...record,
+            attemptId: interruptedAttemptId,
+          })
+      )
+    ),
+    Match.exhaustive
+  );
 
 describe("corpus restoration mail", () => {
   it.effect(
@@ -1442,10 +2021,20 @@ describe("corpus restoration mail", () => {
         const path = yield* Path.Path;
         const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
         const summary = yield* restoreMail(mailRestorationOptions(fixture));
-        const ledgerPath = path.join(fixture.corpusRoot, "staging", "restoration", "transformation-ledger.jsonl");
+        const ledgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-mail-restoration",
+          "ledgers",
+          "mail",
+          "slice.jsonl"
+        );
         const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const pass = A.findFirst(records, (record) => record.recordType === "mail-store-pass");
+        const children = A.filter(records, (record) => record.recordType === "mail-child-pass");
         const repair = A.findFirst(
           records,
           (record) => record.recordType === "attachment-type-repair" && record.repairStatus === "repaired"
@@ -1455,10 +2044,220 @@ describe("corpus restoration mail", () => {
         expect(summary.unapprovedCount).toBe(0);
         expect(
           O.map(pass, (record) =>
-            record.recordType === "mail-store-pass" ? record.accountedChildCount === record.childCount : false
+            record.recordType === "mail-store-pass" ? record.accountedChildCount > record.childCount : false
           )
         ).toStrictEqual(O.some(true));
+        expect(A.some(children, (record) => record.recordType === "mail-child-pass" && !record.engineReported)).toBe(
+          true
+        );
         expect(O.isSome(repair)).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "resumes one durably started mail attempt and a pending summary without resetting the family clock",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+        const options = mailRestorationOptions(fixture);
+        yield* restoreMail(options);
+        const ledgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-mail-restoration",
+          "ledgers",
+          "mail",
+          "slice.jsonl"
+        );
+        yield* truncateLedgerAtFirstAttemptStart(ledgerPath);
+        const interruptedLedger = yield* fs.readFileString(ledgerPath);
+        yield* fs.writeFileString(ledgerPath, `${interruptedLedger}{"recordType":"interrupted-attempt`);
+
+        const changedPolicy = yield* restoreMail(
+          RestorationMailOptions.make({ ...options, maxAmplificationRatio: options.maxAmplificationRatio + 1 })
+        ).pipe(Effect.flip);
+        expect(changedPolicy.message).toContain("restart contract");
+
+        yield* TestClock.adjust("2 seconds");
+        const resumed = yield* restoreMail(options);
+        const resumedLines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+        const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson);
+        const familyStarts = A.filter(records, (record) => record.recordType === "family-run-start");
+        const attemptStarts = A.filter(records, (record) => record.recordType === "family-attempt-start");
+        const interrupted = A.filter(records, (record) => record.recordType === "family-attempt-interrupted");
+        const terminals = A.filter(
+          records,
+          (record) => record.recordType === "mail-store-pass" || record.recordType === "mail-store-exception"
+        );
+        const summaries = A.filter(records, (record) => record.recordType === "family-run-summary");
+
+        expect(resumed.passCount).toBe(1);
+        expect(familyStarts).toHaveLength(1);
+        expect(attemptStarts).toHaveLength(2);
+        expect(interrupted).toHaveLength(1);
+        expect(terminals).toHaveLength(1);
+        expect(summaries).toHaveLength(1);
+        expect(yield* fs.readFileString(ledgerPath)).not.toContain("interrupted-attempt");
+        expect(A.map(attemptStarts, (record) => record.retryOrdinal)).toStrictEqual([0, 1]);
+        expect(A.map(interrupted, (record) => record.attemptId)).toStrictEqual(
+          A.take(
+            A.map(attemptStarts, (record) => record.attemptId),
+            1
+          )
+        );
+        expect(A.map(terminals, (record) => record.attemptId)).toStrictEqual(
+          A.drop(
+            A.map(attemptStarts, (record) => record.attemptId),
+            1
+          )
+        );
+        expect(A.every(summaries, (record) => record.elapsedMillis >= 2_000)).toBe(true);
+
+        yield* fs.writeFileString(ledgerPath, `${A.join(A.dropRight(resumedLines, 1), "\n")}\n`);
+        const finalized = yield* restoreMail(options);
+        const finalizedLedger = yield* readTransformationLedgerFixture(ledgerPath);
+        expect(finalized.passCount).toBe(1);
+        expect(
+          A.filter(finalizedLedger.records, (record) => record.recordType === "family-attempt-start")
+        ).toHaveLength(2);
+        expect(A.filter(finalizedLedger.records, (record) => record.recordType === "family-run-summary")).toHaveLength(
+          1
+        );
+        expect(
+          A.filter(finalizedLedger.records, (record) => record.recordType === "family-acceptance-pass")
+        ).toHaveLength(1);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "finishes interrupted-output retention when the candidate was already moved before its ownership row",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+        const options = mailRestorationOptions(fixture);
+        yield* restoreMail(options);
+        const runRoot = path.join(fixture.corpusRoot, "staging", "restoration", "runs", "synthetic-mail-restoration");
+        const ledgerPath = path.join(runRoot, "ledgers", "mail", "slice.jsonl");
+        const firstStart = yield* truncateLedgerAtFirstAttemptStart(ledgerPath);
+
+        const outputRoot = path.join(runRoot, "output", "mail", "slice");
+        const retainedRoot = path.join(outputRoot, "interrupted", firstStart.attemptId);
+        yield* fs.makeDirectory(retainedRoot, { recursive: true });
+        yield* fs.rename(path.join(outputRoot, "attempts", firstStart.attemptId), path.join(retainedRoot, "final"));
+
+        const resumed = yield* restoreMail(options);
+        const resumedLines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+        const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson);
+        const interruptions = A.filter(records, (record) => record.recordType === "family-attempt-interrupted");
+        const starts = A.filter(records, (record) => record.recordType === "family-attempt-start");
+        const terminals = A.filter(
+          records,
+          (record) => record.recordType === "mail-store-pass" || record.recordType === "mail-store-exception"
+        );
+
+        expect(resumed.passCount).toBe(1);
+        expect(interruptions).toHaveLength(1);
+        expect(starts).toHaveLength(2);
+        expect(terminals).toHaveLength(1);
+        expect(interruptions[0]?.attemptId).toBe(firstStart.attemptId);
+        expect(interruptions[0]?.retainedOutputRelativePath).toBe(`interrupted/${firstStart.attemptId}`);
+        expect(terminals[0]?.attemptId).toBe(starts[1]?.attemptId);
+        expect(yield* fs.exists(path.join(retainedRoot, "final"))).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects tampered settlement ownership, retry ordinals, and cross-attempt attachment repairs",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        for (const tamper of ["settlement-source", "settlement-retry", "repair-attempt"] as const) {
+          const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+          const options = mailRestorationOptions(fixture, "full");
+          yield* restoreMail(options);
+          const ledgerPath = path.join(
+            fixture.corpusRoot,
+            "staging",
+            "restoration",
+            "runs",
+            "synthetic-mail-restoration",
+            "ledgers",
+            "mail",
+            "full.jsonl"
+          );
+          yield* truncateLedgerAtFirstAttemptStart(ledgerPath);
+          yield* restoreMail(options);
+
+          const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+          const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+          const segment = A.dropRight(records, 2);
+          const interrupted = A.findFirst(segment, (record) => record.recordType === "family-attempt-interrupted");
+          const acceptance = records[records.length - 1];
+          const summary = records[records.length - 2];
+          if (O.isNone(interrupted) || acceptance?.recordType !== "family-acceptance-pass" || summary === undefined) {
+            return yield* Effect.die("Expected complete restarted mail evidence for tampering.");
+          }
+          const tampered = tamperRestartedMailSegment(segment, interrupted.value.attemptId, tamper);
+          if (O.isNone(tampered)) {
+            return yield* Effect.die(`Mail ledger lacked the ${tamper} evidence selected for tampering.`);
+          }
+          const tamperedSegment = tampered.value;
+          const encodedSegment = yield* Effect.forEach(tamperedSegment, encodeTransformationLedgerRecordJson);
+          const evidenceSha256 = Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${A.join(encodedSegment, "\n")}\n`))));
+          const rewrittenAcceptance = TransformationLedgerRecord.cases["family-acceptance-pass"].make({
+            ...acceptance,
+            evidenceSha256,
+          });
+          const encodedTerminal = yield* Effect.forEach(
+            [summary, rewrittenAcceptance] as const,
+            encodeTransformationLedgerRecordJson
+          );
+          yield* fs.writeFileString(ledgerPath, `${A.join(A.appendAll(encodedSegment, encodedTerminal), "\n")}\n`);
+
+          const error = yield* reconcileRestorationAcceptance(
+            RestorationVerifyOptions.make({
+              corpusRoot: fixture.corpusRoot,
+              runLabel: "synthetic-mail-restoration",
+            })
+          ).pipe(Effect.flip);
+
+          expect(error.message).toContain("Final mail acceptance evidence");
+        }
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects empty Tika extraction and a zero-child engine result instead of emitting a family PASS",
+    Effect.fnUntraced(
+      function* () {
+        for (const [pffexportScript, tikaScript] of [
+          [restorationPffexportStub, emptyRestorationTikaStub],
+          [emptyRestorationPffexportStub, restorationTikaStub],
+        ] as const) {
+          const fixture = yield* makeMailRestorationFixture(pffexportScript, tikaScript);
+          const error = yield* restoreMail(mailRestorationOptions(fixture)).pipe(Effect.flip);
+
+          expect(error.message).toContain("zero-unapproved-terminal");
+        }
       },
       Effect.scoped,
       provideTestLayer
@@ -1478,7 +2277,16 @@ describe("corpus restoration mail", () => {
         ] as const) {
           const fixture = yield* makeMailRestorationFixture(failingRestorationPffexportStub(message));
           yield* restoreMail(mailRestorationOptions(fixture)).pipe(Effect.flip);
-          const ledgerPath = path.join(fixture.corpusRoot, "staging", "restoration", "transformation-ledger.jsonl");
+          const ledgerPath = path.join(
+            fixture.corpusRoot,
+            "staging",
+            "restoration",
+            "runs",
+            "synthetic-mail-restoration",
+            "ledgers",
+            "mail",
+            "slice.jsonl"
+          );
           const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
           const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
           const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
@@ -1495,6 +2303,59 @@ describe("corpus restoration mail", () => {
   );
 
   it.effect(
+    "binds approved corrupt-store partial output to terminal evidence and rejects later drift",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeMailRestorationFixture(failingRestorationPffexportWithOutputStub("corrupt store"));
+        const summary = yield* restoreMail(mailRestorationOptions(fixture, "full"));
+        const runRoot = path.join(fixture.corpusRoot, "staging", "restoration", "runs", "synthetic-mail-restoration");
+        const ledgerPath = path.join(runRoot, "ledgers", "mail", "full.jsonl");
+        const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+        const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+        const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
+        if (O.isNone(terminal) || terminal.value.recordType !== "mail-store-exception") {
+          return yield* Effect.die("Expected an approved corrupt-store terminal with retained output.");
+        }
+        expect(terminal.value.approved).toBe(true);
+        expect(terminal.value.retainedOutputBytes).toBeGreaterThan(0);
+        expect(summary.outputBytes).toBe(terminal.value.retainedOutputBytes);
+
+        const beforeTamper = yield* reconcileRestorationAcceptance(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-mail-restoration",
+          })
+        ).pipe(Effect.flip);
+        expect(beforeTamper.message).not.toContain("Final mail acceptance evidence");
+
+        const partialRoot = path.join(
+          runRoot,
+          "output",
+          "mail",
+          "full",
+          "attempts",
+          `${terminal.value.attemptId}.partial`
+        );
+        const exportTree = A.findFirst(yield* fs.readDirectory(partialRoot), Str.endsWith(".export"));
+        if (O.isNone(exportTree)) return yield* Effect.die("Expected retained partial pffexport output.");
+        yield* fs.writeFileString(path.join(partialRoot, exportTree.value, "partial-output.bin"), "drifted");
+
+        const afterTamper = yield* reconcileRestorationAcceptance(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-mail-restoration",
+          })
+        ).pipe(Effect.flip);
+        expect(afterTamper.message).toContain("Final mail acceptance evidence");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
     "denies an unavailable cumulative output ceiling before creating mail attempt payloads",
     Effect.fnUntraced(
       function* () {
@@ -1504,10 +2365,21 @@ describe("corpus restoration mail", () => {
         const error = yield* restoreMail(
           RestorationMailOptions.make({
             ...mailRestorationOptions(fixture),
-            maxTotalOutputBytes: NonNegativeInt.make(Number.MAX_SAFE_INTEGER),
+            maxTotalOutputBytes: PosInt.make(Number.MAX_SAFE_INTEGER),
           })
         ).pipe(Effect.flip);
-        const outputExists = yield* fs.exists(path.join(fixture.corpusRoot, "staging", "restoration", "mail", "slice"));
+        const outputExists = yield* fs.exists(
+          path.join(
+            fixture.corpusRoot,
+            "staging",
+            "restoration",
+            "runs",
+            "synthetic-mail-restoration",
+            "output",
+            "mail",
+            "slice"
+          )
+        );
 
         expect(error.message).toContain("capacity preflight denied");
         expect(outputExists).toBe(false);
@@ -1537,6 +2409,8 @@ const makeRecycleRestorationFixture = Effect.fn("CorpusTest.makeRecycleRestorati
   yield* fs.makeDirectory(path.join(surfaceA, "duplicate-b"), { recursive: true });
   yield* fs.makeDirectory(surfaceB, { recursive: true });
   yield* fs.makeDirectory(path.join(surfaceC, "$Rdirectory"), { recursive: true });
+  yield* fs.makeDirectory(path.join(surfaceC, "$Rdirectory", "empty-nested"), { recursive: true });
+  yield* fs.makeDirectory(path.join(surfaceC, "$Rdirectory-copy"), { recursive: true });
   yield* fs.writeFileString(path.join(surfaceA, "$Rcase-a.txt"), "first collision payload");
   yield* fs.writeFile(
     path.join(surfaceA, "$Icase-a.txt"),
@@ -1562,23 +2436,32 @@ const makeRecycleRestorationFixture = Effect.fn("CorpusTest.makeRecycleRestorati
   );
   yield* fs.writeFileString(path.join(surfaceC, "$Rorphan.txt"), "orphan payload");
   yield* fs.writeFileString(path.join(surfaceC, "$Rdirectory", "child.bin"), "directory payload");
+  yield* fs.writeFileString(path.join(surfaceC, "$Rdirectory-copy", "child.bin"), "directory payload");
   yield* fs.writeFile(
     path.join(surfaceC, "$Idirectory"),
     makeMetadataV2("E:\\Recovered\\..\\Directory", 17n, filetime2020)
   );
-  yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
-  yield* fs.writeFileString(
-    collectorManifest,
-    `${JSON.stringify({ dst: "F:\\salvage\\tree\\unreadable.bin", size: 0, src: "C:\\source\\unreadable.bin", status: "error" })}\n`
+  yield* fs.writeFile(
+    path.join(surfaceC, "$Idirectory-copy"),
+    makeMetadataV2("E:\\Recovered\\Directory Copy", 17n, filetime2020)
   );
+  yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
+  const collectorRowCount = yield* writePresentCollectorManifest(sourceRoot, collectorManifest);
   const denominators = yield* measurePreservationDenominators(sourceRoot, rootArchive);
   yield* preserveRestorationArchive(
     RestorationPreserveOptions.make({
       absentRecycleTreePath: absentTree,
-      capacityCeilingBytes: NonNegativeInt.make(10 * 1024 * 1024),
-      chunkSizeBytes: NonNegativeInt.make(4_096),
+      capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
+      chunkSizeBytes: PosInt.make(4_096),
+      collectorDestinationPrefixSegments: NonNegativeInt.make(2),
       corpusRoot,
-      expectedCollectorRowCount: NonNegativeInt.make(1),
+      expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
+      expectedCollectorErrorCount: NonNegativeInt.make(0),
+      expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+      expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
+      expectedCollectorResumedCount: NonNegativeInt.make(0),
+      expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
+      expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
       expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
       expectedMutatedDestinationCount: NonNegativeInt.make(0),
       ...denominators,
@@ -1605,12 +2488,21 @@ describe("corpus restoration recycle", () => {
             corpusRoot: fixture.corpusRoot,
             expectedMissingContentCount: NonNegativeInt.make(1),
             expectedSurfaceCount: NonNegativeInt.make(3),
-            maxTotalElapsedMillis: NonNegativeInt.make(30_000),
-            maxTotalOutputBytes: NonNegativeInt.make(1024 * 1024 * 1024),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
             runLabel: "synthetic-recycle-restoration",
           })
         );
-        const ledgerPath = path.join(fixture.corpusRoot, "staging", "restoration", "transformation-ledger.jsonl");
+        const ledgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-recycle-restoration",
+          "ledgers",
+          "recycle",
+          "full.jsonl"
+        );
         const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const joins = A.filter(records, (record) => record.recordType === "recycle-join");
@@ -1628,7 +2520,7 @@ describe("corpus restoration recycle", () => {
         );
         const caseFolded = A.map(mappedPaths, Str.toLowerCase);
 
-        expect(summary.passCount).toBe(4);
+        expect(summary.passCount).toBe(5);
         expect(summary.exceptionCount).toBe(3);
         expect(summary.unapprovedCount).toBe(0);
         expect(joins).toHaveLength(12);
@@ -1637,11 +2529,100 @@ describe("corpus restoration recycle", () => {
             ["duplicate", 1],
             ["missing-content", 1],
             ["orphan-content", 1],
-            ["valid-pair", 4],
+            ["valid-pair", 5],
           ])
         );
         expect(new Set(caseFolded).size).toBe(mappedPaths.length);
         expect(A.some(mappedPaths, Str.includes("__"))).toBe(true);
+        expect(
+          A.every(
+            mappings,
+            (record) =>
+              record.recordType === "recycle-mapping" &&
+              Str.isNonEmpty(record.contentObjectId) &&
+              Str.isNonEmpty(record.metadataObjectId)
+          )
+        ).toBe(true);
+        const joinedObjectIds = A.flatMap(joins, (record) =>
+          record.recordType === "recycle-join" ? record.sourceObjectIds : []
+        );
+        expect(joinedObjectIds).toHaveLength(13);
+        expect(new Set(joinedObjectIds).size).toBe(joinedObjectIds.length);
+        const directoryMapping = A.findFirst(
+          mappings,
+          (record) => record.recordType === "recycle-mapping" && record.originalPath === "E:\\Recovered\\..\\Directory"
+        );
+        const directoryCopyMapping = A.findFirst(
+          mappings,
+          (record) => record.recordType === "recycle-mapping" && record.originalPath === "E:\\Recovered\\Directory Copy"
+        );
+        expect(
+          O.zipWith(directoryMapping, directoryCopyMapping, (left, right) =>
+            left.recordType === "recycle-mapping" && right.recordType === "recycle-mapping"
+              ? left.digest !== right.digest
+              : false
+          )
+        ).toStrictEqual(O.some(true));
+        const emptyDirectoryExists = yield* O.match(directoryMapping, {
+          onNone: () => Effect.succeed(false),
+          onSome: (record) =>
+            record.recordType === "recycle-mapping"
+              ? fs.exists(
+                  path.join(
+                    fixture.corpusRoot,
+                    "staging",
+                    "restoration",
+                    "runs",
+                    "synthetic-recycle-restoration",
+                    "output",
+                    "recycle",
+                    "full",
+                    "restored",
+                    record.restoredRelativePath,
+                    "empty-nested"
+                  )
+                )
+              : Effect.succeed(false),
+        });
+        expect(emptyDirectoryExists).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects preserved recycle content whose bytes no longer match its sealed object identity",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRecycleRestorationFixture();
+        yield* fs.writeFileString(
+          path.join(
+            fixture.corpusRoot,
+            "raw",
+            "synthetic-recycle-restoration",
+            "payload",
+            "tree",
+            "$Recycle.Bin",
+            "surface-a",
+            "$Rcase-a.txt"
+          ),
+          "mutated collision bytes"
+        );
+        const error = yield* restoreRecycle(
+          RestorationRecycleOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            expectedMissingContentCount: NonNegativeInt.make(1),
+            expectedSurfaceCount: NonNegativeInt.make(3),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+            runLabel: "synthetic-recycle-restoration",
+          })
+        ).pipe(Effect.flip);
+
+        expect(error.message).toContain("verification");
       },
       Effect.scoped,
       provideTestLayer
@@ -1649,50 +2630,7 @@ describe("corpus restoration recycle", () => {
   );
 });
 
-const legacyWordBwrapStub = `#!/usr/bin/env bash
-set -eu
-converter_host=""
-input_host=""
-output_host=""
-saw_unshare="0"
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --unshare-all)
-      saw_unshare="1"
-      shift
-      ;;
-    --ro-bind)
-      if [ "$3" = "/tool/converter" ]; then converter_host="$2"; fi
-      case "$3" in /input/source.*) input_host="$2" ;; esac
-      shift 3
-      ;;
-    --bind)
-      if [ "$3" = "/output" ]; then output_host="$2"; fi
-      shift 3
-      ;;
-    --)
-      shift
-      break
-      ;;
-    *)
-      shift
-      ;;
-  esac
-done
-if [ "$saw_unshare" != "1" ] || [ -z "$converter_host" ] || [ -z "$input_host" ] || [ -z "$output_host" ]; then
-  exit 91
-fi
-shift
-mapped=()
-for argument in "$@"; do
-  case "$argument" in
-    /input/source.*) mapped+=("$input_host") ;;
-    /output) mapped+=("$output_host") ;;
-    *) mapped+=("$argument") ;;
-  esac
-done
-exec "$converter_host" "\${mapped[@]}"
-`;
+const legacyWordBwrapStub = restorationBwrapStub;
 
 const legacyWordConverterStub = `#!/usr/bin/env bash
 set -eu
@@ -1733,12 +2671,18 @@ prefix="\${@: -1}"
 printf 'synthetic rendered page\\n' > "$prefix-1.png"
 `;
 
+const legacyWordEmptyPdftoppmStub = `#!/usr/bin/env bash
+exit 0
+`;
+
 const legacyWordCompareStub = `#!/usr/bin/env bash
 printf '0 (0)\\n' >&2
 exit 0
 `;
 
-const makeLegacyWordRestorationFixture = Effect.fn("CorpusTest.makeLegacyWordRestorationFixture")(function* () {
+const makeLegacyWordRestorationFixture = Effect.fn("CorpusTest.makeLegacyWordRestorationFixture")(function* (
+  pdftoppmScript: string = legacyWordPdftoppmStub
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-legacy-word-restoration-test-" });
@@ -1764,24 +2708,28 @@ const makeLegacyWordRestorationFixture = Effect.fn("CorpusTest.makeLegacyWordRes
   yield* fs.writeFile(path.join(sourceRoot, "set-b", "duplicate.doc"), cfb);
   yield* fs.writeFileString(path.join(sourceRoot, "not-binary.doc"), "plain text with a legacy extension");
   yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
-  yield* fs.writeFileString(
-    collectorManifest,
-    `${JSON.stringify({ dst: "F:\\salvage\\tree\\unreadable.bin", size: 0, src: "C:\\source\\unreadable.bin", status: "error" })}\n`
-  );
+  const collectorRowCount = yield* writePresentCollectorManifest(sourceRoot, collectorManifest);
   yield* writeStub(legacyWordBwrapStub, bwrapPath);
   yield* writeStub(legacyWordConverterStub, converterPath);
   yield* writeStub(legacyWordTikaStub, tikaPath);
   yield* writeStub(legacyWordPdfinfoStub, pdfinfoPath);
-  yield* writeStub(legacyWordPdftoppmStub, pdftoppmPath);
+  yield* writeStub(pdftoppmScript, pdftoppmPath);
   yield* writeStub(legacyWordCompareStub, comparePath);
   const denominators = yield* measurePreservationDenominators(sourceRoot, rootArchive);
   yield* preserveRestorationArchive(
     RestorationPreserveOptions.make({
       absentRecycleTreePath: absentTree,
-      capacityCeilingBytes: NonNegativeInt.make(10 * 1024 * 1024),
-      chunkSizeBytes: NonNegativeInt.make(4_096),
+      capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
+      chunkSizeBytes: PosInt.make(4_096),
+      collectorDestinationPrefixSegments: NonNegativeInt.make(2),
       corpusRoot,
-      expectedCollectorRowCount: NonNegativeInt.make(1),
+      expectedCollectorCopiedCount: NonNegativeInt.make(collectorRowCount),
+      expectedCollectorErrorCount: NonNegativeInt.make(0),
+      expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+      expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(collectorRowCount),
+      expectedCollectorResumedCount: NonNegativeInt.make(0),
+      expectedCollectorRowCount: NonNegativeInt.make(collectorRowCount),
+      expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(collectorRowCount),
       expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
       expectedMutatedDestinationCount: NonNegativeInt.make(0),
       ...denominators,
@@ -1795,6 +2743,33 @@ const makeLegacyWordRestorationFixture = Effect.fn("CorpusTest.makeLegacyWordRes
   return { bwrapPath, comparePath, converterPath, corpusRoot, pdfinfoPath, pdftoppmPath, tikaPath };
 });
 
+const legacyWordRestorationOptions = (fixture: {
+  readonly bwrapPath: string;
+  readonly comparePath: string;
+  readonly converterPath: string;
+  readonly corpusRoot: string;
+  readonly pdfinfoPath: string;
+  readonly pdftoppmPath: string;
+  readonly tikaPath: string;
+}): RestorationLegacyWordOptions =>
+  RestorationLegacyWordOptions.make({
+    bwrapPath: fixture.bwrapPath,
+    comparePath: fixture.comparePath,
+    converterPath: fixture.converterPath,
+    corpusRoot: fixture.corpusRoot,
+    expectedConverterVersion: "LibreOffice synthetic 1.0",
+    expectedOccurrenceCount: NonNegativeInt.make(3),
+    javaPath: fixture.tikaPath,
+    maxElapsedMillis: PosInt.make(30_000),
+    maxTotalElapsedMillis: PosInt.make(30_000),
+    maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+    maxVisualRmse: 0,
+    pdfinfoPath: fixture.pdfinfoPath,
+    pdftoppmPath: fixture.pdftoppmPath,
+    runLabel: "synthetic-legacy-word-restoration",
+    tikaJarPath: fixture.tikaPath,
+  });
+
 describe("corpus restoration legacy Word", () => {
   it.effect(
     "converts distinct CFB digests in a sandbox and approves only the explicit non-binary exception",
@@ -1803,26 +2778,17 @@ describe("corpus restoration legacy Word", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const fixture = yield* makeLegacyWordRestorationFixture();
-        const summary = yield* restoreLegacyWord(
-          RestorationLegacyWordOptions.make({
-            bwrapPath: fixture.bwrapPath,
-            comparePath: fixture.comparePath,
-            converterPath: fixture.converterPath,
-            corpusRoot: fixture.corpusRoot,
-            expectedConverterVersion: "LibreOffice synthetic 1.0",
-            expectedOccurrenceCount: NonNegativeInt.make(3),
-            javaPath: fixture.tikaPath,
-            maxElapsedMillis: NonNegativeInt.make(30_000),
-            maxTotalElapsedMillis: NonNegativeInt.make(30_000),
-            maxTotalOutputBytes: NonNegativeInt.make(1024 * 1024 * 1024),
-            maxVisualRmse: 0,
-            pdfinfoPath: fixture.pdfinfoPath,
-            pdftoppmPath: fixture.pdftoppmPath,
-            runLabel: "synthetic-legacy-word-restoration",
-            tikaJarPath: fixture.tikaPath,
-          })
+        const summary = yield* restoreLegacyWord(legacyWordRestorationOptions(fixture));
+        const ledgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-legacy-word-restoration",
+          "ledgers",
+          "legacy-word",
+          "full.jsonl"
         );
-        const ledgerPath = path.join(fixture.corpusRoot, "staging", "restoration", "transformation-ledger.jsonl");
         const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const passes = A.filter(records, (record) => record.recordType === "legacy-word-pass");
@@ -1851,135 +2817,134 @@ describe("corpus restoration legacy Word", () => {
       provideTestLayer
     )
   );
+
+  it.effect(
+    "rejects a renderer that returns success without materializing the positive pdfinfo page denominator",
+    Effect.fnUntraced(
+      function* () {
+        const fixture = yield* makeLegacyWordRestorationFixture(legacyWordEmptyPdftoppmStub);
+        const error = yield* restoreLegacyWord(legacyWordRestorationOptions(fixture)).pipe(Effect.flip);
+
+        expect(error.message).toContain("zero-unapproved-terminal");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
 });
 
 describe("corpus restoration acceptance", () => {
   it.effect(
-    "reconciles terminal detail into four separate immutable aggregate-only PASS records",
+    "rejects slice-only mail evidence when final acceptance requires the full-estate ledger",
+    Effect.fnUntraced(
+      function* () {
+        const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+        yield* restoreMail(mailRestorationOptions(fixture));
+        const error = yield* reconcileRestorationAcceptance(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-mail-restoration",
+          })
+        ).pipe(Effect.flip);
+
+        expect(error.message).toContain("mail transformation ledger");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects a current full-family ledger copied from a different preservation run",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const fixture = yield* makeRestorationFixture();
-        yield* preserveRestorationArchive(restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 }));
-        const digest = Sha256Hex.make("a".repeat(64));
-        const records = [
-          TransformationLedgerRecord.cases["mail-child-pass"].make({
-            attemptId: "mail-attempt",
-            childRelativePath: "child.txt",
-            recordType: "mail-child-pass",
-            sha256: digest,
-            sizeBytes: NonNegativeInt.make(4),
-            sourceObjectId: "mail-object",
-          }),
-          TransformationLedgerRecord.cases["mail-store-pass"].make({
-            accountedChildCount: NonNegativeInt.make(1),
-            attemptId: "mail-attempt",
-            childCount: NonNegativeInt.make(1),
-            elapsedMillis: NonNegativeInt.make(10),
-            inputBytes: NonNegativeInt.make(4),
-            objectId: "mail-object",
-            outputBytes: NonNegativeInt.make(4),
-            recordType: "mail-store-pass",
-            sha256: digest,
-            warningCount: NonNegativeInt.make(0),
-          }),
-          TransformationLedgerRecord.cases["family-run-summary"].make({
-            elapsedMillis: NonNegativeInt.make(10),
-            exceptionCount: NonNegativeInt.make(0),
-            family: "mail",
-            inputBytes: NonNegativeInt.make(4),
-            outputBytes: NonNegativeInt.make(4),
-            passCount: NonNegativeInt.make(1),
-            recordType: "family-run-summary",
-            sourceCount: NonNegativeInt.make(1),
-            unapprovedCount: NonNegativeInt.make(0),
-          }),
-          TransformationLedgerRecord.cases["family-acceptance-pass"].make({
-            expectedCount: NonNegativeInt.make(1),
-            family: "mail",
-            recordType: "family-acceptance-pass",
-            terminalCount: NonNegativeInt.make(1),
-            unapprovedCount: 0,
-          }),
-          TransformationLedgerRecord.cases["recycle-mapping"].make({
-            digest,
-            originalPath: "C:\\Recovered\\file.txt",
-            recordType: "recycle-mapping",
-            restoredRelativePath: "surface/file.txt",
-            sourceObjectId: "recycle-object",
-            surfaceId: "surface",
-          }),
-          TransformationLedgerRecord.cases["recycle-join"].make({
-            count: NonNegativeInt.make(1),
-            joinClass: "valid-pair",
-            recordType: "recycle-join",
-            surfaceId: "surface",
-          }),
-          TransformationLedgerRecord.cases["family-run-summary"].make({
-            elapsedMillis: NonNegativeInt.make(11),
-            exceptionCount: NonNegativeInt.make(0),
-            family: "recycle",
-            inputBytes: NonNegativeInt.make(4),
-            outputBytes: NonNegativeInt.make(4),
-            passCount: NonNegativeInt.make(1),
-            recordType: "family-run-summary",
-            sourceCount: NonNegativeInt.make(2),
-            unapprovedCount: NonNegativeInt.make(0),
-          }),
-          TransformationLedgerRecord.cases["family-acceptance-pass"].make({
-            expectedCount: NonNegativeInt.make(1),
-            family: "recycle",
-            recordType: "family-acceptance-pass",
-            terminalCount: NonNegativeInt.make(1),
-            unapprovedCount: 0,
-          }),
-          TransformationLedgerRecord.cases["legacy-word-pass"].make({
-            convertedSha256: digest,
-            engineVersion: "pinned",
-            normalizedTextSha256: digest,
-            originalSha256: digest,
-            pageCountDelta: 0,
-            recordType: "legacy-word-pass",
-            visualRmse: 0,
-          }),
-          TransformationLedgerRecord.cases["family-run-summary"].make({
-            elapsedMillis: NonNegativeInt.make(12),
-            exceptionCount: NonNegativeInt.make(0),
-            family: "legacy-word",
-            inputBytes: NonNegativeInt.make(4),
-            outputBytes: NonNegativeInt.make(4),
-            passCount: NonNegativeInt.make(1),
-            recordType: "family-run-summary",
-            sourceCount: NonNegativeInt.make(1),
-            unapprovedCount: NonNegativeInt.make(0),
-          }),
-          TransformationLedgerRecord.cases["family-acceptance-pass"].make({
-            expectedCount: NonNegativeInt.make(1),
-            family: "legacy-word",
-            recordType: "family-acceptance-pass",
-            terminalCount: NonNegativeInt.make(1),
-            unapprovedCount: 0,
-          }),
-        ];
-        const encoded = yield* Effect.forEach(records, encodeTransformationLedgerRecordJson);
-        const ledgerPath = path.join(fixture.corpusRoot, "staging", "restoration", "transformation-ledger.jsonl");
-        yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
-        yield* fs.writeFileString(ledgerPath, `${A.join(encoded, "\n")}\n`);
-        const acceptances = yield* reconcileRestorationAcceptance(
-          RestorationVerifyOptions.make({ corpusRoot: fixture.corpusRoot, runLabel: "synthetic-restoration" })
+        const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+        yield* restoreMail(mailRestorationOptions(fixture, "full"));
+        yield* preserveRestorationArchive(
+          RestorationPreserveOptions.make({
+            ...fixture.preservationOptions,
+            runLabel: "synthetic-mail-restoration-other",
+          })
         );
-        const decoded = yield* Effect.forEach(acceptances, (acceptance) =>
-          fs
-            .readFileString(
-              path.join(fixture.corpusRoot, "staging", "restoration", "acceptance", `${acceptance.family}.json`)
-            )
-            .pipe(Effect.flatMap((json) => decodeRestorationAcceptanceRecordJson(Str.trim(json))))
+        const sourceLedgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-mail-restoration",
+          "ledgers",
+          "mail",
+          "full.jsonl"
         );
+        const crossRunLedgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-mail-restoration-other",
+          "ledgers",
+          "mail",
+          "full.jsonl"
+        );
+        yield* fs.makeDirectory(path.dirname(crossRunLedgerPath), { recursive: true });
+        yield* fs.writeFileString(crossRunLedgerPath, yield* fs.readFileString(sourceLedgerPath));
+        const error = yield* reconcileRestorationAcceptance(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-mail-restoration-other",
+          })
+        ).pipe(Effect.flip);
 
-        expect(acceptances).toHaveLength(4);
-        expect(decoded).toHaveLength(4);
-        expect(A.every(decoded, (record) => record.status === "pass" && record.unapprovedCount === 0)).toBe(true);
+        expect(error.message).toContain("identity or scope does not match");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects a prior unapproved family run even when a later full-family run passes",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+        yield* restoreMail(mailRestorationOptions(fixture, "full"));
+        const ledgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-mail-restoration",
+          "ledgers",
+          "mail",
+          "full.jsonl"
+        );
+        const ledgerText = yield* fs.readFileString(ledgerPath);
+        const lines = A.filter(Str.split(/\r?\n/u)(ledgerText), Str.isNonEmpty);
+        const acceptance = yield* decodeTransformationLedgerRecordJson(O.getOrElse(A.last(lines), () => ""));
+        if (acceptance.recordType !== "family-acceptance-pass") {
+          return yield* Effect.die("Expected a real full-mail acceptance row.");
+        }
+        const priorFailure = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
+          ...acceptance,
+          message: "Synthetic prior run remained unapproved.",
+          recordType: "family-acceptance-failure",
+          unapprovedCount: NonNegativeInt.make(1),
+        });
+        const encodedFailure = yield* encodeTransformationLedgerRecordJson(priorFailure);
+        const priorRun = A.append(A.dropRight(lines, 1), encodedFailure);
+        yield* fs.writeFileString(ledgerPath, `${A.join(priorRun, "\n")}\n${ledgerText}`);
+        const error = yield* reconcileRestorationAcceptance(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-mail-restoration",
+          })
+        ).pipe(Effect.flip);
+
+        expect(error.message).toContain("unapproved prior run");
       },
       Effect.scoped,
       provideTestLayer

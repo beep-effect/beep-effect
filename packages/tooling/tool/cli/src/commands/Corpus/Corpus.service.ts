@@ -486,12 +486,30 @@ export const verifySalvage = Effect.fn("Corpus.verifySalvage")(function* (
 /**
  * Preserve a ratified corpus snapshot through a resumable, durably synced archive boundary.
  *
- * **Example** (Reference the preservation use case)
+ * **Example** (Build a preservation program)
  *
  * ```ts
- * import { preserveRestorationArchive } from "@beep/repo-cli/commands/Corpus"
+ * import { preserveRestorationArchive, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
  *
- * console.log(typeof preserveRestorationArchive === "function") // true
+ * const program = preserveRestorationArchive(RestorationPreserveOptions.make({
+ *   absentRecycleTreePath: "/archive/absent",
+ *   capacityCeilingBytes: PosInt.make(8),
+ *   corpusRoot: "/archive/corpus",
+ *   expectedCollectorRowCount: NonNegativeInt.make(1),
+ *   expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+ *   expectedMutatedDestinationCount: NonNegativeInt.make(0),
+ *   expectedRootArchiveBytes: NonNegativeInt.make(4),
+ *   expectedSourceDirectoryCount: NonNegativeInt.make(1),
+ *   expectedSourceFileCount: NonNegativeInt.make(1),
+ *   expectedSourceTreeBytes: NonNegativeInt.make(4),
+ *   minimumFreeAfterBytes: NonNegativeInt.make(0),
+ *   rootArchivePath: "/source/archive.zip",
+ *   sourceManifestPath: "/source/manifest.jsonl",
+ *   sourceRoot: "/source/tree"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - Explicit source paths, opening denominators, and approved byte ceilings.
@@ -510,12 +528,16 @@ export const preserveRestorationArchive = Effect.fn("Corpus.preserveRestorationA
 /**
  * Reconcile the four restoration families into separate immutable acceptance records.
  *
- * **Example** (Reference final acceptance reconciliation)
+ * **Example** (Build final acceptance reconciliation)
  *
  * ```ts
- * import { reconcileRestorationAcceptance } from "@beep/repo-cli/commands/Corpus"
+ * import { reconcileRestorationAcceptance, RestorationVerifyOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
  *
- * console.log(typeof reconcileRestorationAcceptance === "function") // true
+ * const program = reconcileRestorationAcceptance(
+ *   RestorationVerifyOptions.make({ corpusRoot: "/archive/corpus", runLabel: "restoration-1" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - Corpus root and immutable preservation run label shared by the transformation wave.
@@ -534,12 +556,26 @@ export const reconcileRestorationAcceptance = Effect.fn("Corpus.reconcileRestora
 /**
  * Restore the selected mail slice or full estate through the public source-path libpff runner.
  *
- * **Example** (Reference mail restoration)
+ * **Example** (Build a full mail restoration program)
  *
  * ```ts
- * import { restoreMail } from "@beep/repo-cli/commands/Corpus"
+ * import { restoreMail, RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
  *
- * console.log(typeof restoreMail === "function") // true
+ * const program = restoreMail(RestorationMailOptions.make({
+ *   corpusRoot: "/archive/corpus",
+ *   expectedStoreCount: NonNegativeInt.make(1),
+ *   maxAmplificationRatio: 4,
+ *   maxElapsedMillis: PosInt.make(60_000),
+ *   maxTotalElapsedMillis: PosInt.make(60_000),
+ *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
+ *   pffexportPath: "/usr/bin/pffexport",
+ *   runLabel: "restoration-1",
+ *   scope: "full",
+ *   tikaJarPath: "/opt/tika/tika-app.jar"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - Frozen engine paths, scope, denominator, and resource ceilings.
@@ -558,12 +594,26 @@ export const restoreMail = Effect.fn("Corpus.restoreMail")(function* (
 /**
  * Convert all distinct legacy-Word digests through a pinned sandboxed fidelity pipeline.
  *
- * **Example** (Reference legacy-Word restoration)
+ * **Example** (Build legacy-Word restoration)
  *
  * ```ts
- * import { restoreLegacyWord } from "@beep/repo-cli/commands/Corpus"
+ * import { restoreLegacyWord, RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
  *
- * console.log(typeof restoreLegacyWord === "function") // true
+ * const program = restoreLegacyWord(RestorationLegacyWordOptions.make({
+ *   converterPath: "/usr/bin/soffice",
+ *   corpusRoot: "/archive/corpus",
+ *   expectedConverterVersion: "LibreOffice 26.2.5.2",
+ *   expectedOccurrenceCount: NonNegativeInt.make(1),
+ *   maxElapsedMillis: PosInt.make(60_000),
+ *   maxTotalElapsedMillis: PosInt.make(60_000),
+ *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
+ *   maxVisualRmse: 0.15,
+ *   runLabel: "restoration-1",
+ *   tikaJarPath: "/opt/tika/tika-app.jar"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - Pinned converter identity, source denominator, sandbox tools, and fidelity ceilings.
@@ -582,12 +632,22 @@ export const restoreLegacyWord = Effect.fn("Corpus.restoreLegacyWord")(function*
 /**
  * Restore every preserved recycle surface through an occurrence-preserving join.
  *
- * **Example** (Reference recycle restoration)
+ * **Example** (Build recycle restoration)
  *
  * ```ts
- * import { restoreRecycle } from "@beep/repo-cli/commands/Corpus"
+ * import { restoreRecycle, RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { Effect } from "effect"
  *
- * console.log(typeof restoreRecycle === "function") // true
+ * const program = restoreRecycle(RestorationRecycleOptions.make({
+ *   corpusRoot: "/archive/corpus",
+ *   expectedMissingContentCount: NonNegativeInt.make(0),
+ *   expectedSurfaceCount: NonNegativeInt.make(1),
+ *   maxTotalElapsedMillis: PosInt.make(60_000),
+ *   maxTotalOutputBytes: PosInt.make(1_073_741_824),
+ *   runLabel: "restoration-1"
+ * }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - Frozen preservation label and approved surface and missing-content denominators.
@@ -606,12 +666,16 @@ export const restoreRecycle = Effect.fn("Corpus.restoreRecycle")(function* (
 /**
  * Independently reparse a sealed restoration ledger and verify every terminal destination.
  *
- * **Example** (Reference the independent verifier)
+ * **Example** (Build an independent verification program)
  *
  * ```ts
- * import { verifyRestorationArchive } from "@beep/repo-cli/commands/Corpus"
+ * import { verifyRestorationArchive, RestorationVerifyOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
  *
- * console.log(typeof verifyRestorationArchive === "function") // true
+ * const program = verifyRestorationArchive(
+ *   RestorationVerifyOptions.make({ corpusRoot: "/archive/corpus", runLabel: "restoration-1" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - Corpus root and immutable restoration run label.

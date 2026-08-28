@@ -613,6 +613,17 @@ export type RunCapturedOptions = SpawnFields & {
 };
 
 /**
+ * Captured-command options with a concurrent fail-only watchdog.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunCapturedWatchedOptions<E, R> = RunCapturedOptions & {
+  /** External invariant monitor whose failure aborts and reaps the running child. */
+  readonly abortWhen: Effect.Effect<never, E, R>;
+};
+
+/**
  * Spawn a command and capture combined stdout+stderr into one string.
  *
  * **Details**
@@ -621,10 +632,12 @@ export type RunCapturedOptions = SpawnFields & {
  * reach the `PlatformError` channel, while an elapsed `timeout` raises
  * {@link CaptureCommandTimedOutError}; map those operational errors at the
  * call site. Set `bound` to cap the buffer, `trim` to trim the captured text,
- * and `tee` to stream chunks to the parent stdout while capturing. The timeout
- * bounds the full command lifetime, including the direct child's exit signal.
- * Stdin defaults to `"ignore"` so noninteractive capture cannot inherit or
- * leave an unread pipe accidentally.
+ * and `tee` to stream chunks to the parent stdout while capturing. A fail-only
+ * `abortWhen` watchdog races the capture inside the child scope, so a watchdog
+ * failure interrupts and reaps the child before reaching the caller. The
+ * timeout bounds the full command lifetime, including the direct child's exit
+ * signal. Stdin defaults to `"ignore"` so noninteractive capture cannot inherit
+ * or leave an unread pipe accidentally.
  *
  * **Example** (Capture a trimmed git status)
  *
@@ -647,16 +660,34 @@ export type RunCapturedOptions = SpawnFields & {
  * @category execution
  * @since 0.0.0
  */
-export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
-  options: RunCapturedOptions
+export interface RunCaptured {
+  <E, R>(
+    options: RunCapturedWatchedOptions<E, R>
+  ): Effect.Effect<
+    CapturedStep,
+    E | PlatformError.PlatformError | CaptureCommandTimedOutError,
+    R | ChildProcessSpawner.ChildProcessSpawner
+  >;
+  (
+    options: RunCapturedOptions
+  ): Effect.Effect<
+    CapturedStep,
+    PlatformError.PlatformError | CaptureCommandTimedOutError,
+    ChildProcessSpawner.ChildProcessSpawner
+  >;
+}
+
+export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(function* <E, R>(
+  options: RunCapturedOptions | RunCapturedWatchedOptions<E, R>
 ): Effect.fn.Return<
   CapturedStep,
-  PlatformError.PlatformError | CaptureCommandTimedOutError,
-  ChildProcessSpawner.ChildProcessSpawner
+  E | PlatformError.PlatformError | CaptureCommandTimedOutError,
+  R | ChildProcessSpawner.ChildProcessSpawner
 > {
   const source = options.source ?? "all";
   const commandLine = formatCommandLine(options.command, options.args);
   const timeout = options.timeout;
+  const abortWhen = "abortWhen" in options ? options.abortWhen : undefined;
   const operation = Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
@@ -678,9 +709,19 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
         ],
         { concurrency: "unbounded" }
       );
-      const [captured, exitCode] = yield* P.isUndefined(timeout)
+      const watchedCapture = P.isUndefined(abortWhen)
         ? capture
-        : capture.pipe(
+        : Effect.raceFirst(
+            capture,
+            abortWhen.pipe(
+              Effect.catch((error) =>
+                interruptTimedOutCapture(handle, forceKillAfter).pipe(Effect.andThen(Effect.fail(error)))
+              )
+            )
+          );
+      const [captured, exitCode] = yield* P.isUndefined(timeout)
+        ? watchedCapture
+        : watchedCapture.pipe(
             Effect.timeoutOrElse({
               duration: timeout,
               orElse: () =>
@@ -705,7 +746,7 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
   );
 
   return yield* operation;
-});
+}) as RunCaptured;
 
 /**
  * Options for {@link runCapturedStreams}.
