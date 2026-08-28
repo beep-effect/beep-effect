@@ -14,7 +14,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { EffectSchema, Fn, LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
@@ -79,7 +79,7 @@ export type PreservationSourceClass = typeof PreservationSourceClass.Type;
  * import { PreservationObjectIdentity } from "@beep/repo-cli/commands/Corpus"
  *
  * const object = PreservationObjectIdentity.make({
- *   mtimeEpoch: 1754784000,
+ *   mtimeEpoch: 1754784000000,
  *   mtimeIso: "2026-08-10T00:00:00Z",
  *   relativePath: "store-a/mailbox.pst",
  *   sizeBytes: 1024,
@@ -114,7 +114,7 @@ export class PreservationObjectIdentity extends S.Class<PreservationObjectIdenti
  * import { SourceStabilityObservation } from "@beep/repo-cli/commands/Corpus"
  *
  * const observed = SourceStabilityObservation.make({
- *   mtimeEpoch: 1754784000,
+ *   mtimeEpoch: 1754784000000,
  *   sizeBytes: 2048
  * })
  * console.log(observed.sizeBytes) // 2048
@@ -342,12 +342,13 @@ export type PreservationPassKind = typeof PreservationPassKind.Type;
  *   kind: "copied",
  *   bytesCopied: 2048,
  *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
- *   statAfter: { mtimeEpoch: 1754784000, sizeBytes: 2048 },
- *   statBefore: { mtimeEpoch: 1754784000, sizeBytes: 2048 }
+ *   statAfter: { mtimeEpoch: 1754784000000, sizeBytes: 2048 },
+ *   statBefore: { mtimeEpoch: 1754784000000, sizeBytes: 2048 }
  * })
  * console.log(outcome.kind) // "copied"
  * ```
  *
+ * @returns A tagged-union schema whose constructors and matcher cover every archive-attempt outcome.
  * @category schemas
  * @since 0.0.0
  */
@@ -407,7 +408,7 @@ export type PreservationAttemptOutcome = typeof PreservationAttemptOutcome.Type;
  *   attempt: 1,
  *   destRelativePath: "store-a/mailbox.pst",
  *   object: {
- *     mtimeEpoch: 1754784000,
+ *     mtimeEpoch: 1754784000000,
  *     mtimeIso: "2026-08-10T00:00:00Z",
  *     relativePath: "store-a/mailbox.pst",
  *     sizeBytes: 2048,
@@ -549,6 +550,7 @@ export class InheritedLossRow extends S.Class<InheritedLossRow>($I`InheritedLoss
  *   measuredAt: "2026-08-27T00:00:00Z",
  *   objectCount: 12157,
  *   requiredBytes: 358000000000,
+ *   sourceRoot: "/media/t7",
  *   sourceBytes: 357000000000
  * })
  * console.log(measurement.objectCount) // 12157
@@ -563,11 +565,75 @@ export class CapacityMeasurement extends S.Class<CapacityMeasurement>($I`Capacit
     measuredAt: S.NonEmptyString,
     objectCount: NonNegativeInt,
     requiredBytes: NonNegativeInt,
+    sourceRoot: S.NonEmptyString,
     sourceBytes: NonNegativeInt,
   },
   $I.annote("CapacityMeasurement", {
     title: "Capacity Measurement",
-    description: "Source object count and byte totals measured against destination free space before the archive run.",
+    description:
+      "Canonical source identity, object count, and byte totals measured against destination free space before the archive run.",
+  })
+) {}
+
+/**
+ * Paths supplied to the archive writer's post-payload-sync hook.
+ *
+ * **Example** (Inspect hook paths)
+ *
+ * ```ts
+ * import { ArchiveWriterPayloadSyncHookInput } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const input = ArchiveWriterPayloadSyncHookInput.make({
+ *   partialAbs: "/tmp/archive.bin.preservation-partial",
+ *   sourceAbs: "/tmp/source.bin"
+ * })
+ * console.log(input.sourceAbs) // "/tmp/source.bin"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ArchiveWriterPayloadSyncHookInput extends S.Class<ArchiveWriterPayloadSyncHookInput>(
+  $I`ArchiveWriterPayloadSyncHookInput`
+)(
+  {
+    partialAbs: S.NonEmptyString,
+    sourceAbs: S.NonEmptyString,
+  },
+  $I.annote("ArchiveWriterPayloadSyncHookInput", {
+    title: "Archive Writer Payload Sync Hook Input",
+    description: "Source and staged-destination paths observed after payload sync and before source re-stat.",
+  })
+) {}
+
+/**
+ * Optional fault-injection contract for constructing an archive-writer layer.
+ *
+ * **Example** (Construct writer options)
+ *
+ * ```ts
+ * import { ArchiveWriterLiveOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const options = ArchiveWriterLiveOptions.make({
+ *   afterPayloadSync: () => Effect.void
+ * })
+ * console.log(options.afterPayloadSync !== undefined) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ArchiveWriterLiveOptions extends S.Class<ArchiveWriterLiveOptions>($I`ArchiveWriterLiveOptions`)(
+  {
+    afterPayloadSync: Fn({
+      input: ArchiveWriterPayloadSyncHookInput,
+      output: EffectSchema<void, never, never>(),
+    }).pipe(S.optionalKey),
+  },
+  $I.annote("ArchiveWriterLiveOptions", {
+    title: "Archive Writer Live Options",
+    description: "Schema-backed test hook invoked between staged payload sync and the source stability re-stat.",
   })
 ) {}
 
@@ -640,12 +706,14 @@ const CapacityPreflightKind = LiteralKit(["proposed", "approved"]);
  *     measuredAt: "2026-08-27T00:00:00Z",
  *     objectCount: 12157,
  *     requiredBytes: 358000000000,
+ *     sourceRoot: "/media/t7",
  *     sourceBytes: 357000000000
  *   }
  * })
  * console.log(preflight.kind) // "approved"
  * ```
  *
+ * @returns A tagged-union schema for proposed and operator-approved capacity states.
  * @category schemas
  * @since 0.0.0
  */
@@ -779,6 +847,7 @@ const VerificationOutcomeKind = LiteralKit(["verified", "missing-destination", "
  * console.log(outcome.kind) // "verified"
  * ```
  *
+ * @returns A tagged-union schema covering every independent destination-verification outcome.
  * @category schemas
  * @since 0.0.0
  */
@@ -827,7 +896,7 @@ export type PreservationVerificationOutcome = typeof PreservationVerificationOut
  * const row = PreservationVerificationRow.make({
  *   destRelativePath: "store-a/mailbox.pst",
  *   object: {
- *     mtimeEpoch: 1754784000,
+ *     mtimeEpoch: 1754784000000,
  *     mtimeIso: "2026-08-10T00:00:00Z",
  *     relativePath: "store-a/mailbox.pst",
  *     sizeBytes: 2048,
@@ -948,7 +1017,7 @@ export class PreservationVerificationReport extends S.Class<PreservationVerifica
  *   record: "t7-archive/v1",
  *   archivedAt: "2026-08-27T00:00:00Z",
  *   destRelativePath: "store-a/mailbox.pst",
- *   mtimeEpoch: 1754784000,
+ *   mtimeEpoch: 1754784000000,
  *   mtimeIso: "2026-08-10T00:00:00Z",
  *   relativePath: "store-a/mailbox.pst",
  *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),

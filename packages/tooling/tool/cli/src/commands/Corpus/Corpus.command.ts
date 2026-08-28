@@ -192,6 +192,7 @@ const corpusExtractCommand = Command.make(
     source: sourceLabelFlag,
     tikaJar: tikaJarFlag,
   },
+  // fallow-ignore-next-line complexity -- pre-existing extract-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({
     concurrency,
     corpusRoot,
@@ -295,6 +296,7 @@ const corpusSalvageCommand = Command.make(
     sampleStride: sampleStrideFlag,
     source: salvageSourceFlag,
   },
+  // fallow-ignore-next-line complexity -- pre-existing salvage-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({ corpusRoot, dedupe, runLabel, sampleStride, source }) {
     const sources = yield* Effect.forEach(source, parseSalvageSourceSpec);
     const options = CorpusSalvageOptions.make({

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { DateTime, Effect, Encoding, FileSystem, Layer, MutableHashMap, Path, pipe, Stream } from "effect";
@@ -14,6 +15,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
+import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import {
   PreservationArchiveIoError,
   PreservationCeilingExceededError,
@@ -30,15 +32,16 @@ import {
   StreamingHasher,
 } from "./Preservation.contracts.ts";
 import {
+  ArchiveWriterPayloadSyncHookInput,
   CapacityMeasurement,
   CapacityPreflight,
   CapacityPreflightJson,
   CorpusLedgerRecordJson,
+  InheritedLossRow,
   PreservationAttemptOutcome,
   PreservationManifestRow,
   PreservationManifestRowJson,
   PreservationObjectIdentity,
-  PreservationPassKind,
   PreservationRunSummary,
   PreservationVerificationOutcome,
   PreservationVerificationReport,
@@ -47,17 +50,21 @@ import {
   SourceStabilityObservation,
   StreamingHashResult,
   T7ArchiveProvenanceRecord,
+  T7PreservationOptions,
 } from "./Preservation.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { PreservationCommandError } from "../Corpus.errors.ts";
 import type { ArchiveWriterShape, PreservationManifestStoreShape } from "./Preservation.contracts.ts";
-import type { T7PreservationOptions } from "./Preservation.schemas.ts";
+import type { ArchiveWriterLiveOptions, CorpusLedgerRecord } from "./Preservation.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Corpus/internal/Preservation");
 
 const archiveDirectoryName = "t7-salvage-2026-08-10";
 const sourceDirectoryName = "oppold-salvage-2026-08-10";
 const rootArchiveName = "oppold-corpus.zip";
 const manifestName = "preservation-manifest.jsonl";
 const preflightName = "preservation-preflight.json";
+const inheritedLossName = "inherited-loss.jsonl";
 const partialSuffix = ".preservation-partial";
 const hashChunkBytes = 1024 * 1024;
 // Bar v2 stops-and-reports rather than spinning: after this many attempts the
@@ -67,10 +74,44 @@ const utf8Encoder = new TextEncoder();
 const decodeSha256 = S.decodeUnknownEffect(Sha256Hex);
 const decodeNumber = S.decodeUnknownEffect(S.FiniteFromString);
 const stabilityEquivalence = S.toEquivalence(SourceStabilityObservation);
-const isPreservationPassKind = S.is(PreservationPassKind);
+const objectIdentityEquivalence = S.toEquivalence(PreservationObjectIdentity);
+const inheritedLossRowsEquivalence = S.toEquivalence(S.Array(InheritedLossRow));
+const isT7ArchiveProvenanceRecord = S.is(T7ArchiveProvenanceRecord);
 type Sha256State = ReturnType<typeof sha256.create>;
 
+class CollectorManifestRecord extends S.Class<CollectorManifestRecord>($I`CollectorManifestRecord`)(
+  {
+    dst: S.OptionFromOptionalKey(S.NonEmptyString),
+    size: S.OptionFromOptionalKey(NonNegativeInt),
+    status: S.Literals(["copied", "error", "excluded-secret", "resumed"]),
+  },
+  $I.annote("CollectorManifestRecord", {
+    description:
+      "Minimal decoded collector-ledger row used to reconcile successful destinations and inherited failures.",
+  })
+) {}
+
+class CollectorReconciliationSummary extends S.Class<CollectorReconciliationSummary>(
+  $I`CollectorReconciliationSummary`
+)(
+  {
+    collectorErrors: NonNegativeInt,
+    deliberateExclusions: NonNegativeInt,
+    missingDestinations: NonNegativeInt,
+    reconciledDestinations: NonNegativeInt,
+    sizeMismatches: NonNegativeInt,
+  },
+  $I.annote("CollectorReconciliationSummary", {
+    description:
+      "Aggregate collector-manifest reconciliation without corpus filenames or other client-bearing evidence.",
+  })
+) {}
+
+const CollectorManifestRecordJson = JsonStringCodec(CollectorManifestRecord);
+const InheritedLossRowJson = JsonStringCodec(InheritedLossRow);
+
 type PreservationRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type ApprovedCapacityPreflight = Extract<CapacityPreflight, { readonly kind: "approved" }>;
 
 const ioError =
   (operation: string, path: string) =>
@@ -91,10 +132,25 @@ const manifestPathFor = (corpusRoot: string, path: Path.Path): string =>
 const preflightPathFor = (corpusRoot: string, path: Path.Path): string =>
   path.join(archiveRootFor(corpusRoot, path), preflightName);
 
+const inheritedLossPathFor = (corpusRoot: string, path: Path.Path): string =>
+  path.join(archiveRootFor(corpusRoot, path), inheritedLossName);
+
+const normalizedRelativePath = (path: Path.Path, root: string, candidate: string): string =>
+  pipe(path.relative(path.resolve(root), path.resolve(candidate)), Str.replaceAll("\\", "/"));
+
+const isContainedPath = (path: Path.Path, root: string, candidate: string): boolean => {
+  const relative = normalizedRelativePath(path, root, candidate);
+  return (
+    relative === "" ||
+    relative === "." ||
+    (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith("../")(relative))
+  );
+};
+
 const sourceObservation = (info: FileSystem.File.Info): SourceStabilityObservation => {
   const mtimeEpoch = pipe(
     info.mtime,
-    O.map((mtime) => Math.floor(DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) / 1000)),
+    O.map((mtime) => DateTime.toEpochMillis(DateTime.makeUnsafe(mtime))),
     O.getOrElse(() => 0)
   );
   return SourceStabilityObservation.make({ mtimeEpoch, sizeBytes: NonNegativeInt.make(Number(info.size)) });
@@ -193,14 +249,22 @@ const fsyncDirectory = Effect.fn("Preservation.fsyncDirectory")(function* (
   );
 });
 
+const ensureDurableParent = Effect.fn("Preservation.ensureDurableParent")(function* (
+  filePath: string
+): Effect.fn.Return<string, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const parent = path.dirname(filePath);
+  yield* fs.makeDirectory(parent, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", parent)));
+  return parent;
+});
+
 const appendDurably = Effect.fn("Preservation.appendDurably")(function* (
   filePath: string,
   text: string
 ): Effect.fn.Return<void, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const parent = path.dirname(filePath);
-  yield* fs.makeDirectory(parent, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", parent)));
+  const parent = yield* ensureDurableParent(filePath);
   yield* Effect.scoped(
     fs.open(filePath, { flag: "a+" }).pipe(
       Effect.flatMap((handle) => handle.writeAll(utf8Encoder.encode(`${text}\n`)).pipe(Effect.andThen(handle.sync))),
@@ -210,14 +274,28 @@ const appendDurably = Effect.fn("Preservation.appendDurably")(function* (
   yield* fsyncDirectory(parent);
 });
 
-const occurrenceKey = (row: PreservationManifestRow): string =>
-  A.join(
-    [row.object.sourceClass, row.object.relativePath, `${row.object.sizeBytes}`, `${row.object.mtimeEpoch}`],
-    "\u0000"
+const writeFileDurably = Effect.fn("Preservation.writeFileDurably")(function* (
+  filePath: string,
+  text: string
+): Effect.fn.Return<void, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const parent = yield* ensureDurableParent(filePath);
+  const partialPath = `${filePath}${partialSuffix}`;
+  yield* Effect.scoped(
+    fs.open(partialPath, { flag: "w+" }).pipe(
+      Effect.flatMap((handle) => handle.writeAll(utf8Encoder.encode(text)).pipe(Effect.andThen(handle.sync))),
+      Effect.mapError(ioError("write-and-fsync", partialPath))
+    )
   );
+  yield* fs.rename(partialPath, filePath).pipe(Effect.mapError(ioError("atomic-promote", filePath)));
+  yield* fsyncDirectory(parent);
+});
+
+const occurrenceKey = (row: PreservationManifestRow): string =>
+  A.join([row.object.sourceClass, row.object.relativePath], "\u0000");
 
 const identityKey = (object: PreservationObjectIdentity): string =>
-  A.join([object.sourceClass, object.relativePath, `${object.sizeBytes}`, `${object.mtimeEpoch}`], "\u0000");
+  A.join([object.sourceClass, object.relativePath], "\u0000");
 
 const readManifest = Effect.fn("Preservation.readManifest")(function* (
   manifestPath: string
@@ -253,6 +331,8 @@ const terminalManifestRows = (rows: ReadonlyArray<PreservationManifestRow>): Rea
  * console.log(layer.pipe !== undefined) // true
  * ```
  *
+ * @param manifestPath - Destination JSONL path whose appends and directory entries are durably synced.
+ * @returns A layer providing append, full-read, and last-terminal-row manifest operations.
  * @category layers
  * @since 0.0.0
  */
@@ -325,8 +405,8 @@ const streamRemainder = Effect.fn("Preservation.streamRemainder")(function* (
   let copied = 0;
   yield* Effect.scoped(
     fs.open(partialAbs, { flag: offset === 0 ? "w+" : "a+" }).pipe(
-      Effect.flatMap((handle) =>
-        Effect.gen(function* () {
+      Effect.flatMap(
+        Effect.fnUntraced(function* (handle) {
           yield* Stream.runForEach(fs.stream(sourceAbs, { chunkSize: hashChunkBytes, offset }), (chunk) =>
             Effect.sync(() => {
               hasher.update(chunk);
@@ -453,11 +533,11 @@ const promoteVerifiedCopy = Effect.fn("Preservation.promoteVerifiedCopy")(functi
   parent: string,
   statBefore: SourceStabilityObservation,
   staged: StagedPrefix,
-  afterPayload: (sourceAbs: string, partialAbs: string) => Effect.Effect<void>
+  afterPayload: NonNullable<ArchiveWriterLiveOptions["afterPayloadSync"]>
 ): Effect.fn.Return<PreservationAttemptOutcome, PreservationArchiveIoError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const bytesCopied = yield* streamRemainder(sourceAbs, partialAbs, staged.stagedBytes, staged.hasher);
-  yield* afterPayload(sourceAbs, partialAbs);
+  yield* afterPayload(ArchiveWriterPayloadSyncHookInput.make({ partialAbs, sourceAbs }));
   const statAfterOption = yield* statSource(sourceAbs);
   if (O.isNone(statAfterOption)) {
     return unreadable("Source became unreadable during preservation.");
@@ -509,19 +589,21 @@ const promoteVerifiedCopy = Effect.fn("Preservation.promoteVerifiedCopy")(functi
  * console.log(layer.pipe !== undefined) // true
  * ```
  *
+ * @param options - Optional crash/mutation hook invoked after payload sync and before the stability re-stat.
+ * @returns A layer providing atomic copy, prefix-resume, and destination-digest verification.
  * @category layers
  * @since 0.0.0
  */
-export const makeArchiveWriterLive = (options?: {
-  readonly afterPayloadSync?: ((sourceAbs: string, partialAbs: string) => Effect.Effect<void>) | undefined;
-}): Layer.Layer<ArchiveWriter, never, FileSystem.FileSystem | Path.Path> =>
+export const makeArchiveWriterLive = (
+  options?: ArchiveWriterLiveOptions
+): Layer.Layer<ArchiveWriter, never, FileSystem.FileSystem | Path.Path> =>
   Layer.effect(
     ArchiveWriter,
     Effect.gen(function* () {
       const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
       const afterPayloadSync = pipe(
         O.fromNullishOr(options?.afterPayloadSync),
-        O.getOrElse(() => (_sourceAbs: string, _partialAbs: string) => Effect.void)
+        O.getOrElse(() => (_input: ArchiveWriterPayloadSyncHookInput) => Effect.void)
       );
       const archiveObject = Effect.fn("ArchiveWriter.archiveObject")(function* (
         sourceAbs: string,
@@ -535,11 +617,12 @@ export const makeArchiveWriterLive = (options?: {
           return unreadable("Source could not be opened for preservation.");
         }
         const statBefore = statBeforeOption.value;
-        if (statBefore.sizeBytes !== identity.sizeBytes) {
-          return changedOutcome(
-            SourceStabilityObservation.make({ mtimeEpoch: identity.mtimeEpoch, sizeBytes: identity.sizeBytes }),
-            statBefore
-          );
+        const approvedObservation = SourceStabilityObservation.make({
+          mtimeEpoch: identity.mtimeEpoch,
+          sizeBytes: identity.sizeBytes,
+        });
+        if (!stabilityEquivalence(statBefore, approvedObservation)) {
+          return changedOutcome(approvedObservation, statBefore);
         }
         const parent = path.dirname(destAbs);
         const partialAbs = `${destAbs}${partialSuffix}`;
@@ -589,26 +672,47 @@ const expectedDigest = (row: PreservationManifestRow): O.Option<Sha256Hex> =>
     unreadable: () => O.none<Sha256Hex>(),
   });
 
+const missingVerificationRow = (row: PreservationManifestRow, verifiedAt: string): PreservationVerificationRow =>
+  PreservationVerificationRow.make({
+    destRelativePath: row.destRelativePath,
+    object: row.object,
+    outcome: PreservationVerificationOutcome.cases["missing-destination"].make({ kind: "missing-destination" }),
+    verifiedAt,
+  });
+
 const verifyRow = Effect.fn("Preservation.verifyRow")(function* (
   archiveRoot: string,
   row: PreservationManifestRow
 ): Effect.fn.Return<PreservationVerificationRow, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const destination = path.join(archiveRoot, row.destRelativePath);
   const verifiedAt = DateTime.formatIso(yield* DateTime.now);
+  const destination = path.resolve(archiveRoot, row.destRelativePath);
+  if (!isContainedPath(path, archiveRoot, destination)) {
+    return missingVerificationRow(row, verifiedAt);
+  }
   const exists = yield* fs.exists(destination).pipe(Effect.mapError(ioError("verify-exists", destination)));
   if (!exists) {
-    return PreservationVerificationRow.make({
-      destRelativePath: row.destRelativePath,
-      object: row.object,
-      outcome: PreservationVerificationOutcome.cases["missing-destination"].make({ kind: "missing-destination" }),
-      verifiedAt,
-    });
+    return missingVerificationRow(row, verifiedAt);
   }
-  const actualBytes = Number(
-    (yield* fs.stat(destination).pipe(Effect.mapError(ioError("verify-stat", destination)))).size
-  );
+  const canonicalRoot = yield* fs.realPath(archiveRoot).pipe(Effect.mapError(ioError("verify-realpath", archiveRoot)));
+  const canonicalDestination = yield* fs
+    .realPath(destination)
+    .pipe(Effect.mapError(ioError("verify-realpath", destination)));
+  const expectedCanonicalDestination = path.resolve(canonicalRoot, row.destRelativePath);
+  if (
+    !isContainedPath(path, canonicalRoot, canonicalDestination) ||
+    !Str.Equivalence(canonicalDestination, expectedCanonicalDestination)
+  ) {
+    return missingVerificationRow(row, verifiedAt);
+  }
+  const destinationInfo = yield* fs
+    .stat(canonicalDestination)
+    .pipe(Effect.mapError(ioError("verify-stat", canonicalDestination)));
+  if (destinationInfo.type !== "File") {
+    return missingVerificationRow(row, verifiedAt);
+  }
+  const actualBytes = Number(destinationInfo.size);
   if (actualBytes !== row.object.sizeBytes) {
     return PreservationVerificationRow.make({
       destRelativePath: row.destRelativePath,
@@ -621,7 +725,7 @@ const verifyRow = Effect.fn("Preservation.verifyRow")(function* (
       verifiedAt,
     });
   }
-  const actual = yield* hashStream(destination);
+  const actual = yield* hashStream(canonicalDestination);
   const expected = expectedDigest(row);
   if (O.isNone(expected) || !Str.Equivalence(expected.value, actual.sha256)) {
     return PreservationVerificationRow.make({
@@ -667,6 +771,8 @@ const verificationSummary = (rows: ReadonlyArray<PreservationVerificationRow>): 
  * console.log(layer.pipe !== undefined) // true
  * ```
  *
+ * @param manifestPath - Destination JSONL manifest to reparse independently from the archive run.
+ * @returns A layer that verifies contained, non-symlinked terminal destinations one at a time.
  * @category layers
  * @since 0.0.0
  */
@@ -744,6 +850,239 @@ const scopedSourceFiles = Effect.fn("Preservation.scopedSourceFiles")(function* 
   });
 });
 
+const collectorRelativePath = (destination: string): O.Option<string> => {
+  const normalized = Str.replaceAll("\\", "/")(destination);
+  const marker = `${sourceDirectoryName}/`;
+  return pipe(
+    Str.indexOf(marker)(normalized),
+    O.map((index) => Str.slice(index + marker.length)(normalized)),
+    O.filter(Str.isNonEmpty)
+  );
+};
+
+const readCollectorManifest = Effect.fn("Preservation.readCollectorManifest")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<
+  ReadonlyArray<CollectorManifestRecord>,
+  PreservationArchiveIoError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const manifestPath = path.join(path.resolve(options.t7Root), sourceDirectoryName, "_meta", "manifest.jsonl");
+  const text = yield* fs
+    .readFileString(manifestPath)
+    .pipe(Effect.mapError(ioError("collector-manifest-read", manifestPath)));
+  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
+  return yield* Effect.forEach(lines, (line) =>
+    CollectorManifestRecordJson.decode(line).pipe(Effect.mapError(ioError("collector-manifest-decode", manifestPath)))
+  );
+});
+
+type CollectorTerminalEvidence = {
+  readonly collectorErrors: number;
+  readonly deliberateExclusions: number;
+  readonly terminalSuccesses: MutableHashMap.MutableHashMap<string, NonNegativeInt>;
+};
+
+type CollectorDestinationStatus = "missing" | "reconciled" | "size-mismatch";
+
+const collectorSuccessCoordinates = Effect.fn("Preservation.collectorSuccessCoordinates")(function* (
+  row: CollectorManifestRecord,
+  manifestPath: string
+): Effect.fn.Return<readonly [string, NonNegativeInt], PreservationArchiveIoError> {
+  const coordinates = O.all({ destination: row.dst, size: row.size });
+  if (O.isNone(coordinates)) {
+    return yield* PreservationArchiveIoError.make({
+      cause: row.status,
+      message: "A successful collector-manifest row omitted its destination or size.",
+      operation: "collector-manifest-decode",
+      path: manifestPath,
+    });
+  }
+  const relative = collectorRelativePath(coordinates.value.destination);
+  if (O.isNone(relative)) {
+    return yield* PreservationArchiveIoError.make({
+      cause: "collector destination is outside the declared salvage namespace",
+      message: "A successful collector-manifest row did not target the declared salvage tree.",
+      operation: "collector-manifest-reconcile",
+      path: manifestPath,
+    });
+  }
+  return [relative.value, coordinates.value.size];
+});
+
+const collectorTerminalEvidence = Effect.fn("Preservation.collectorTerminalEvidence")(function* (
+  rows: ReadonlyArray<CollectorManifestRecord>,
+  manifestPath: string
+): Effect.fn.Return<CollectorTerminalEvidence, PreservationArchiveIoError> {
+  if (A.length(rows) === 0) {
+    return yield* PreservationArchiveIoError.make({
+      cause: "collector manifest is empty",
+      message: "The collector manifest must contain terminal evidence rows before preservation can run.",
+      operation: "collector-manifest-reconcile",
+      path: manifestPath,
+    });
+  }
+  const successfulRows = A.filter(rows, (row) => row.status === "copied" || row.status === "resumed");
+  if (A.length(successfulRows) === 0) {
+    return yield* PreservationArchiveIoError.make({
+      cause: "collector manifest has no successful terminal destinations",
+      message: "The collector manifest must include at least one copied or resumed destination.",
+      operation: "collector-manifest-reconcile",
+      path: manifestPath,
+    });
+  }
+  const terminalEntries = yield* Effect.forEach(successfulRows, (row) =>
+    collectorSuccessCoordinates(row, manifestPath)
+  );
+  return {
+    collectorErrors: A.length(A.filter(rows, (row) => row.status === "error")),
+    deliberateExclusions: A.length(A.filter(rows, (row) => row.status === "excluded-secret")),
+    terminalSuccesses: MutableHashMap.fromIterable(terminalEntries),
+  };
+});
+
+const reconcileCollectorDestination = Effect.fn("Preservation.reconcileCollectorDestination")(function* (
+  salvageRoot: string,
+  manifestPath: string,
+  relative: string,
+  expectedSize: NonNegativeInt
+): Effect.fn.Return<CollectorDestinationStatus, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const destination = path.resolve(salvageRoot, relative);
+  if (!isContainedPath(path, salvageRoot, destination)) {
+    return yield* PreservationArchiveIoError.make({
+      cause: "collector destination escapes the declared salvage namespace",
+      message: "Collector-manifest reconciliation rejected an escaping destination.",
+      operation: "collector-manifest-reconcile",
+      path: manifestPath,
+    });
+  }
+  const exists = yield* fs
+    .exists(destination)
+    .pipe(Effect.mapError(ioError("collector-destination-exists", destination)));
+  if (!exists) return "missing";
+  const info = yield* fs.stat(destination).pipe(Effect.mapError(ioError("collector-destination-stat", destination)));
+  return info.type === "File" && Number(info.size) === expectedSize ? "reconciled" : "size-mismatch";
+});
+
+const reconcileCollectorDestinations = Effect.fn("Preservation.reconcileCollectorDestinations")(function* (
+  salvageRoot: string,
+  manifestPath: string,
+  terminalSuccesses: MutableHashMap.MutableHashMap<string, NonNegativeInt>
+): Effect.fn.Return<
+  ReadonlyArray<CollectorDestinationStatus>,
+  PreservationArchiveIoError,
+  FileSystem.FileSystem | Path.Path
+> {
+  return yield* Effect.forEach(terminalSuccesses, ([relative, expectedSize]) =>
+    reconcileCollectorDestination(salvageRoot, manifestPath, relative, expectedSize)
+  );
+});
+
+const reconcileCollectorManifest = Effect.fn("Preservation.reconcileCollectorManifest")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<CollectorReconciliationSummary, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const salvageRoot = path.join(path.resolve(options.t7Root), sourceDirectoryName);
+  const manifestPath = path.join(salvageRoot, "_meta", "manifest.jsonl");
+  const evidence = yield* collectorTerminalEvidence(yield* readCollectorManifest(options), manifestPath);
+  const statuses = yield* reconcileCollectorDestinations(salvageRoot, manifestPath, evidence.terminalSuccesses);
+  const count = (status: CollectorDestinationStatus): NonNegativeInt =>
+    NonNegativeInt.make(A.length(A.filter(statuses, (candidate) => candidate === status)));
+  return CollectorReconciliationSummary.make({
+    collectorErrors: NonNegativeInt.make(evidence.collectorErrors),
+    deliberateExclusions: NonNegativeInt.make(evidence.deliberateExclusions),
+    missingDestinations: count("missing"),
+    reconciledDestinations: count("reconciled"),
+    sizeMismatches: count("size-mismatch"),
+  });
+});
+
+const inheritedLossRows = (summary: CollectorReconciliationSummary): ReadonlyArray<InheritedLossRow> => [
+  InheritedLossRow.make({
+    count: summary.collectorErrors,
+    evidenceRef:
+      "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#the-collector-ledger-salvage-_metamanifestjsonl",
+    lossClass: "collector-error",
+  }),
+  InheritedLossRow.make({
+    count: summary.deliberateExclusions,
+    evidenceRef:
+      "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#the-collector-ledger-salvage-_metamanifestjsonl",
+    lossClass: "deliberate-exclusion",
+  }),
+  InheritedLossRow.make({
+    count: NonNegativeInt.make(1),
+    evidenceRef:
+      "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#filesystem-and-drive-facts",
+    lossClass: "exfat-stripped-metadata",
+  }),
+  InheritedLossRow.make({
+    count: NonNegativeInt.make(13),
+    evidenceRef:
+      "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#the-three-recycle-surfaces-are-three-volumes",
+    lossClass: "missing-recycle-r-record",
+  }),
+  InheritedLossRow.make({
+    count: summary.missingDestinations,
+    evidenceRef:
+      "explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md#the-collector-ledger-salvage-_metamanifestjsonl",
+    lossClass: "mutated-e-tree-destination",
+  }),
+];
+
+const readInheritedLossRows = Effect.fn("Preservation.readInheritedLossRows")(function* (
+  ledgerPath: string
+): Effect.fn.Return<ReadonlyArray<InheritedLossRow>, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(ledgerPath).pipe(Effect.mapError(ioError("inherited-loss-exists", ledgerPath))))) {
+    return A.empty<InheritedLossRow>();
+  }
+  const text = yield* fs.readFileString(ledgerPath).pipe(Effect.mapError(ioError("inherited-loss-read", ledgerPath)));
+  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
+  return yield* Effect.forEach(lines, (line) =>
+    InheritedLossRowJson.decode(line).pipe(Effect.mapError(ioError("inherited-loss-decode", ledgerPath)))
+  );
+});
+
+const seedInheritedLossLedger = Effect.fn("Preservation.seedInheritedLossLedger")(function* (
+  corpusRoot: string,
+  summary: CollectorReconciliationSummary
+): Effect.fn.Return<void, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const ledgerPath = inheritedLossPathFor(corpusRoot, path);
+  const expected = inheritedLossRows(summary);
+  if (yield* fs.exists(ledgerPath).pipe(Effect.mapError(ioError("inherited-loss-exists", ledgerPath)))) {
+    const existing = yield* readInheritedLossRows(ledgerPath);
+    if (!inheritedLossRowsEquivalence(existing, expected)) {
+      return yield* PreservationArchiveIoError.make({
+        cause: "existing inherited-loss opening balance differs from the current reconciliation",
+        message: "The inherited-loss ledger does not match the current collector reconciliation.",
+        operation: "inherited-loss-reconcile",
+        path: ledgerPath,
+      });
+    }
+    return;
+  }
+  const encoded = yield* Effect.forEach(expected, InheritedLossRowJson.encode).pipe(
+    Effect.mapError(ioError("inherited-loss-encode", ledgerPath))
+  );
+  yield* writeFileDurably(ledgerPath, `${A.join(encoded, "\n")}\n`);
+});
+
+const inheritedLossLedgerMatches = Effect.fn("Preservation.inheritedLossLedgerMatches")(function* (
+  corpusRoot: string,
+  summary: CollectorReconciliationSummary
+): Effect.fn.Return<boolean, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const rows = yield* readInheritedLossRows(inheritedLossPathFor(corpusRoot, path));
+  return inheritedLossRowsEquivalence(rows, inheritedLossRows(summary));
+});
+
 const destinationFreeBytes = Effect.fn("Preservation.destinationFreeBytes")(function* (
   corpusRoot: string
 ): Effect.fn.Return<number, PreservationArchiveIoError, ChildProcessSpawner.ChildProcessSpawner> {
@@ -777,6 +1116,26 @@ const destinationFreeBytes = Effect.fn("Preservation.destinationFreeBytes")(func
   return NonNegativeInt.make(parsed * 1024);
 });
 
+const measureCapacity = Effect.fn("Preservation.measureCapacity")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<CapacityMeasurement, PreservationArchiveIoError, PreservationRequirements> {
+  const files = yield* scopedSourceFiles(options);
+  const sourceBytes = A.reduce(files, 0, (total, file) => total + file.identity.sizeBytes);
+  const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
+  const corpusRoot = path.resolve(options.corpusRoot);
+  const sourceRoot = path.resolve(options.t7Root);
+  yield* fs.makeDirectory(corpusRoot, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", corpusRoot)));
+  return CapacityMeasurement.make({
+    destFreeBytes: NonNegativeInt.make(yield* destinationFreeBytes(corpusRoot)),
+    measuredAt: DateTime.formatIso(yield* DateTime.now),
+    objectCount: NonNegativeInt.make(A.length(files)),
+    requiredBytes: NonNegativeInt.make(sourceBytes),
+    sourceBytes: NonNegativeInt.make(sourceBytes),
+    sourceRoot,
+  });
+});
+
 /**
  * Live T7 scope census and destination-capacity layer.
  *
@@ -796,25 +1155,9 @@ export const CapacityPreflightServiceLive: Layer.Layer<CapacityPreflightService,
     CapacityPreflightService,
     Effect.gen(function* () {
       const runtime = yield* Effect.context<PreservationRequirements>();
-      const measure = Effect.fn("CapacityPreflightService.measure")(function* (
-        options: T7PreservationOptions
-      ): Effect.fn.Return<CapacityMeasurement, PreservationArchiveIoError, PreservationRequirements> {
-        const files = yield* scopedSourceFiles(options);
-        const sourceBytes = A.reduce(files, 0, (total, file) => total + file.identity.sizeBytes);
-        const corpusRoot = (yield* Path.Path).resolve(options.corpusRoot);
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.makeDirectory(corpusRoot, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", corpusRoot)));
-        return CapacityMeasurement.make({
-          destFreeBytes: NonNegativeInt.make(yield* destinationFreeBytes(corpusRoot)),
-          measuredAt: DateTime.formatIso(yield* DateTime.now),
-          objectCount: NonNegativeInt.make(A.length(files)),
-          requiredBytes: NonNegativeInt.make(sourceBytes),
-          sourceBytes: NonNegativeInt.make(sourceBytes),
-        });
-      });
       return CapacityPreflightService.of({
         measure: Effect.fn("CapacityPreflightService.measure.provided")((options: T7PreservationOptions) =>
-          measure(options).pipe(Effect.provide(runtime))
+          measureCapacity(options).pipe(Effect.provide(runtime))
         ),
       });
     })
@@ -845,23 +1188,28 @@ const writePreflight = Effect.fn("Preservation.writePreflight")(function* (
   yield* fsyncDirectory(path.dirname(statePath));
 });
 
-/** Measure and persist a proposed T7 preservation preflight. @since 0.0.0 */
+/**
+ * Measure and durably persist a proposed T7 source census and destination
+ * capacity record for later operator approval.
+ *
+ * **Example** (Build a capacity preflight effect)
+ *
+ * ```ts
+ * import { preflightT7Preservation, T7PreservationOptions } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = preflightT7Preservation(
+ *   T7PreservationOptions.make({ corpusRoot: "/tmp/corpus", t7Root: "/media/t7" })
+ * )
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
 export const preflightT7PreservationImpl = Effect.fn("CorpusCommandService.preflightT7Preservation")(function* (
   options: T7PreservationOptions
 ): Effect.fn.Return<CapacityPreflight, PreservationArchiveIoError, PreservationRequirements> {
-  const files = yield* scopedSourceFiles(options);
-  const sourceBytes = A.reduce(files, 0, (total, file) => total + file.identity.sizeBytes);
-  const path = yield* Path.Path;
-  const fs = yield* FileSystem.FileSystem;
-  const corpusRoot = path.resolve(options.corpusRoot);
-  yield* fs.makeDirectory(corpusRoot, { recursive: true }).pipe(Effect.mapError(ioError("mkdir", corpusRoot)));
-  const measurement = CapacityMeasurement.make({
-    destFreeBytes: NonNegativeInt.make(yield* destinationFreeBytes(corpusRoot)),
-    measuredAt: DateTime.formatIso(yield* DateTime.now),
-    objectCount: NonNegativeInt.make(A.length(files)),
-    requiredBytes: NonNegativeInt.make(sourceBytes),
-    sourceBytes: NonNegativeInt.make(sourceBytes),
-  });
+  const measurement = yield* measureCapacity(options);
   const preflight = CapacityPreflight.cases.proposed.make({ kind: "proposed", measurement });
   yield* writePreflight(options.corpusRoot, preflight);
   yield* printLines([
@@ -892,12 +1240,27 @@ const readPreflightState = Effect.fn("Preservation.readPreflightState")(function
   );
 });
 
-/** Persist operator approval over the previously measured byte ceiling. @since 0.0.0 */
+/**
+ * Persist operator approval over the previously measured byte ceiling while
+ * retaining the canonical source identity for run-time refresh checks.
+ *
+ * **Example** (Build an approval effect)
+ *
+ * ```ts
+ * import { approveT7Preservation } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = approveT7Preservation("/tmp/corpus", 400_000_000_000, "operator")
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
 export const approveT7PreservationImpl = Effect.fn("CorpusCommandService.approveT7Preservation")(function* (
   corpusRoot: string,
   ceilingBytes: number,
   approvedBy: string
-): Effect.fn.Return<CapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ApprovedCapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
   const proposed = yield* readPreflightState(corpusRoot, "Run preservation preflight before approval.");
   const approved = CapacityPreflight.cases.approved.make({
     approvedAt: DateTime.formatIso(yield* DateTime.now),
@@ -913,7 +1276,7 @@ export const approveT7PreservationImpl = Effect.fn("CorpusCommandService.approve
 
 const loadApprovedPreflight = Effect.fn("Preservation.loadApprovedPreflight")(function* (
   corpusRoot: string
-): Effect.fn.Return<CapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ApprovedCapacityPreflight, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
   const decoded = yield* readPreflightState(corpusRoot, "Run preservation preflight before the archive run.");
   if (decoded.kind !== "approved") {
     return yield* PreservationPreflightUnapprovedError.make({
@@ -930,25 +1293,61 @@ const loadApprovedPreflight = Effect.fn("Preservation.loadApprovedPreflight")(fu
   return decoded;
 });
 
-const outcomeSha = (outcome: PreservationAttemptOutcome): O.Option<Sha256Hex> =>
-  PreservationAttemptOutcome.match(outcome, {
-    "already-complete": (value) => O.some(value.sha256),
-    "changed-during-copy": () => O.none<Sha256Hex>(),
-    copied: (value) => O.some(value.sha256),
-    "resume-completed": (value) => O.some(value.sha256),
-    "resume-discarded": () => O.none<Sha256Hex>(),
-    unreadable: () => O.none<Sha256Hex>(),
+const refreshApprovedPreflight = Effect.fn("Preservation.refreshApprovedPreflight")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<ApprovedCapacityPreflight, PreservationCommandError, PreservationRequirements> {
+  const approved = yield* loadApprovedPreflight(options.corpusRoot);
+  const current = yield* measureCapacity(options);
+  if (!Str.Equivalence(approved.measurement.sourceRoot, current.sourceRoot)) {
+    return yield* PreservationPreflightUnapprovedError.make({
+      message: "The approved preflight belongs to a different canonical T7 source root; run preflight again.",
+    });
+  }
+  if (current.requiredBytes > approved.ceilingBytes) {
+    return yield* PreservationCeilingExceededError.make({
+      ceilingBytes: approved.ceilingBytes,
+      measuredBytes: current.requiredBytes,
+      message: "The current preservation requirement exceeds the approved ceiling.",
+    });
+  }
+  if (current.requiredBytes > current.destFreeBytes) {
+    return yield* PreservationCeilingExceededError.make({
+      ceilingBytes: current.destFreeBytes,
+      measuredBytes: current.requiredBytes,
+      message: "The current destination free space is smaller than the preservation requirement.",
+    });
+  }
+  const refreshed = CapacityPreflight.cases.approved.make({
+    approvedAt: approved.approvedAt,
+    approvedBy: approved.approvedBy,
+    ceilingBytes: approved.ceilingBytes,
+    kind: "approved",
+    measurement: current,
   });
+  yield* writePreflight(options.corpusRoot, refreshed);
+  return refreshed;
+});
+
+const readCorpusLedger = Effect.fn("Preservation.readCorpusLedger")(function* (
+  ledgerPath: string
+): Effect.fn.Return<ReadonlyArray<CorpusLedgerRecord>, PreservationArchiveIoError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(ledgerPath).pipe(Effect.mapError(ioError("provenance-exists", ledgerPath))))) {
+    return A.empty<CorpusLedgerRecord>();
+  }
+  const text = yield* fs.readFileString(ledgerPath).pipe(Effect.mapError(ioError("provenance-read", ledgerPath)));
+  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
+  return yield* Effect.forEach(lines, (line) =>
+    CorpusLedgerRecordJson.decode(line).pipe(Effect.mapError(ioError("provenance-decode", ledgerPath)))
+  );
+});
 
 const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(function* (
   corpusRoot: string,
-  row: PreservationManifestRow
+  row: PreservationManifestRow,
+  sha: Sha256Hex
 ): Effect.fn.Return<void, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
-  const sha = outcomeSha(row.outcome);
-  if (O.isNone(sha)) {
-    return;
-  }
   const ledgerPath = path.join(corpusRoot, "raw", "provenance.jsonl");
   const provenance = T7ArchiveProvenanceRecord.make({
     archivedAt: row.archivedAt,
@@ -957,10 +1356,26 @@ const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(func
     mtimeIso: row.object.mtimeIso,
     record: "t7-archive/v1",
     relativePath: row.object.relativePath,
-    sha256: sha.value,
+    sha256: sha,
     sizeBytes: row.object.sizeBytes,
     sourceClass: row.object.sourceClass,
   });
+  const existing = yield* readCorpusLedger(ledgerPath);
+  if (
+    A.some(
+      existing,
+      (record) =>
+        isT7ArchiveProvenanceRecord(record) &&
+        record.sourceClass === provenance.sourceClass &&
+        Str.Equivalence(record.relativePath, provenance.relativePath) &&
+        Str.Equivalence(record.destRelativePath, provenance.destRelativePath) &&
+        record.sizeBytes === provenance.sizeBytes &&
+        record.mtimeEpoch === provenance.mtimeEpoch &&
+        Str.Equivalence(record.sha256, provenance.sha256)
+    )
+  ) {
+    return;
+  }
   const encoded = yield* CorpusLedgerRecordJson.encode(provenance).pipe(
     Effect.mapError(ioError("provenance-encode", ledgerPath))
   );
@@ -975,17 +1390,27 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
   destAbs: string,
   destRelativePath: string,
   identity: PreservationObjectIdentity
-): Effect.fn.Return<A.NonEmptyReadonlyArray<PreservationManifestRow>, PreservationArchiveIoError> {
+): Effect.fn.Return<
+  A.NonEmptyReadonlyArray<PreservationManifestRow>,
+  PreservationArchiveIoError,
+  FileSystem.FileSystem
+> {
   const key = identityKey(identity);
+  const fs = yield* FileSystem.FileSystem;
   const attemptOnce = Effect.fnUntraced(function* () {
     const attempt = 1 + O.getOrElse(MutableHashMap.get(attemptCounts, key), () => 0);
     MutableHashMap.set(attemptCounts, key, attempt);
-    const outcome = yield* writer.archiveObject(sourceAbs, destAbs, identity);
+    const currentIdentity = yield* fs.stat(sourceAbs).pipe(
+      Effect.map((info) => objectIdentity(info, identity.relativePath, identity.sourceClass)),
+      Effect.option
+    );
+    const attemptIdentity = O.getOrElse(currentIdentity, () => identity);
+    const outcome = yield* writer.archiveObject(sourceAbs, destAbs, attemptIdentity);
     const row = PreservationManifestRow.make({
       archivedAt: DateTime.formatIso(yield* DateTime.now),
       attempt: NonNegativeInt.make(attempt),
       destRelativePath,
-      object: identity,
+      object: attemptIdentity,
       outcome,
     });
     yield* manifest.append(row);
@@ -1004,11 +1429,56 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
   return rows;
 });
 
-/** Run the approved T7 preservation archive operation. @since 0.0.0 */
+const sourceMatchesVerificationReport = Effect.fn("Preservation.sourceMatchesVerificationReport")(function* (
+  options: T7PreservationOptions,
+  report: PreservationVerificationReport
+): Effect.fn.Return<boolean, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
+  const currentFiles = yield* scopedSourceFiles(options);
+  if (A.length(currentFiles) !== report.summary.rowsChecked) return false;
+  const manifestIdentities = MutableHashMap.empty<string, PreservationObjectIdentity>();
+  for (const row of report.rows) {
+    MutableHashMap.set(manifestIdentities, identityKey(row.object), row.object);
+  }
+  return A.every(currentFiles, (file) =>
+    O.exists(MutableHashMap.get(manifestIdentities, identityKey(file.identity)), (identity) =>
+      objectIdentityEquivalence(identity, file.identity)
+    )
+  );
+});
+
+/**
+ * Run the approved T7 preservation archive operation after refreshing capacity
+ * and reconciling the collector and inherited-loss ledgers.
+ *
+ * **Example** (Build an archive-run effect)
+ *
+ * ```ts
+ * import { runT7Preservation, T7PreservationOptions } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = runT7Preservation(
+ *   T7PreservationOptions.make({ corpusRoot: "/tmp/corpus", t7Root: "/media/t7" })
+ * )
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
 export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preservation")(function* (
   options: T7PreservationOptions
 ): Effect.fn.Return<PreservationRunSummary, PreservationCommandError, PreservationRequirements> {
-  yield* loadApprovedPreflight(options.corpusRoot);
+  yield* refreshApprovedPreflight(options);
+  const reconciliation = yield* reconcileCollectorManifest(options);
+  if (reconciliation.sizeMismatches > 0) {
+    return yield* PreservationUnapprovedRowsError.make({
+      message: "Collector-manifest reconciliation found current destinations with changed sizes.",
+      unapprovedRows: reconciliation.sizeMismatches,
+    });
+  }
+  yield* seedInheritedLossLedger(options.corpusRoot, reconciliation);
+  yield* printLines([
+    `preservation collector: reconciled=${reconciliation.reconciledDestinations} inheritedMissing=${reconciliation.missingDestinations} collectorErrors=${reconciliation.collectorErrors} deliberateExclusions=${reconciliation.deliberateExclusions}`,
+  ]);
   const path = yield* Path.Path;
   const archiveRoot = archiveRootFor(options.corpusRoot, path);
   const manifestPath = manifestPathFor(options.corpusRoot, path);
@@ -1046,9 +1516,10 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
           );
           attempted += A.length(rows);
           const terminalRow = A.lastNonEmpty(rows);
-          if (isPreservationPassKind(terminalRow.outcome.kind)) {
+          const sha = expectedDigest(terminalRow);
+          if (O.isSome(sha)) {
             passed += 1;
-            yield* appendPassProvenance(options.corpusRoot, terminalRow);
+            yield* appendPassProvenance(options.corpusRoot, terminalRow, sha.value);
           } else {
             unapproved += 1;
           }
@@ -1073,11 +1544,27 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
   );
 });
 
-/** Independently reparse and verify the terminal destination manifest. @since 0.0.0 */
+/**
+ * Independently reparse the terminal destination manifest and require it to
+ * cover the refreshed source census and inherited-loss opening balance.
+ *
+ * **Example** (Build an independent verification effect)
+ *
+ * ```ts
+ * import { verifyT7Preservation } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = verifyT7Preservation("/tmp/corpus")
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const verifyT7PreservationImpl = Effect.fn("CorpusCommandService.verifyT7Preservation")(function* (
   corpusRoot: string
-): Effect.fn.Return<PreservationVerificationReport, PreservationCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<PreservationVerificationReport, PreservationCommandError, PreservationRequirements> {
   const path = yield* Path.Path;
+  const approved = yield* loadApprovedPreflight(corpusRoot);
   const archiveRoot = archiveRootFor(corpusRoot, path);
   const report = yield* Effect.scoped(
     Effect.gen(function* () {
@@ -1090,11 +1577,22 @@ export const verifyT7PreservationImpl = Effect.fn("CorpusCommandService.verifyT7
   yield* printLines([
     `preservation verify: rows=${report.summary.rowsChecked} verified=${report.summary.verified} missing=${report.summary.missing} sizeMismatched=${report.summary.sizeMismatched} hashMismatched=${report.summary.hashMismatched}`,
   ]);
-  const failedRows = report.summary.rowsChecked - report.summary.verified;
-  if (failedRows > 0) {
+  const options = T7PreservationOptions.make({ corpusRoot, t7Root: approved.measurement.sourceRoot });
+  const sourceMatches = yield* sourceMatchesVerificationReport(options, report);
+  const reconciliation = yield* reconcileCollectorManifest(options);
+  const inheritedLossComplete = yield* inheritedLossLedgerMatches(corpusRoot, reconciliation);
+  const complete =
+    report.summary.rowsChecked === approved.measurement.objectCount &&
+    report.summary.verified === approved.measurement.objectCount &&
+    sourceMatches &&
+    reconciliation.sizeMismatches === 0 &&
+    inheritedLossComplete;
+  if (!complete) {
+    const unverifiedRows = report.summary.rowsChecked - report.summary.verified;
     return yield* PreservationVerificationFailure.make({
-      failedRows: NonNegativeInt.make(failedRows),
-      message: "Independent preservation verification found non-verified terminal rows.",
+      failedRows: NonNegativeInt.make(unverifiedRows > 0 ? unverifiedRows : 1),
+      message:
+        "Independent preservation verification found non-verified, missing-census, source-drift, or inherited-loss rows.",
     });
   }
   return report;
