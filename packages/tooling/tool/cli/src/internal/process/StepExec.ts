@@ -597,6 +597,7 @@ const admissionWorkloadFields = (
 const sameAdmissionBinding = (left: AdmissionWorkloadBinding, right: AdmissionWorkloadBinding): boolean =>
   Str.Equivalence(left.workloadPath, right.workloadPath) && Str.Equivalence(left.leaseId, right.leaseId);
 
+// fallow-ignore-next-line complexity -- fail-closed admission binding keeps explicit and inherited identities in one check
 const resolveAdmissionWorkload = Effect.fn("StepExec.resolveAdmissionWorkload")(function* (
   options: SpawnFields
 ): Effect.fn.Return<O.Option<ResolvedAdmissionWorkload>, AdmissionWorkloadRegistrationError> {
@@ -699,6 +700,22 @@ const spawnFields = (options: SpawnFields, configured: O.Option<ResolvedAdmissio
     detached: O.fromUndefinedOr(O.isSome(configured) && configured.value.ownership === "inherited" ? false : undefined),
     forceKillAfter: O.fromUndefinedOr(options.forceKillAfter),
   });
+
+type ChildStdio = Pick<ChildProcess.CommandOptions, "stdin" | "stdout" | "stderr">;
+
+const makeAdmittedChild = Effect.fn("StepExec.makeAdmittedChild")(function* (
+  options: SpawnFields & { readonly command: string; readonly args: ReadonlyArray<string> },
+  stdio: ChildStdio
+) {
+  const admission = yield* resolveAdmissionWorkload(options);
+  yield* prepareAdmissionWorkload(admission);
+  const handle = yield* ChildProcess.make(options.command, [...options.args], {
+    ...spawnFields(options, admission),
+    ...stdio,
+  });
+  yield* registerAdmissionWorkload(admission, handle.pid);
+  return handle;
+});
 
 const decodedText = <E>(stream: Stream.Stream<Uint8Array, E>): Stream.Stream<string, E> =>
   stream.pipe(Stream.decodeText());
@@ -1014,15 +1031,11 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {
-      const admission = yield* resolveAdmissionWorkload(options);
-      yield* prepareAdmissionWorkload(admission);
-      const handle = yield* ChildProcess.make(options.command, [...options.args], {
-        ...spawnFields(options, admission),
+      const handle = yield* makeAdmittedChild(options, {
         stdin: options.stdin ?? "ignore",
         stdout: "pipe",
         stderr: "pipe",
       });
-      yield* registerAdmissionWorkload(admission, handle.pid);
       const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
       const [stdout, stderr, exitCode] = yield* Effect.all(
         [
@@ -1101,15 +1114,11 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {
-      const admission = yield* resolveAdmissionWorkload(options);
-      yield* prepareAdmissionWorkload(admission);
-      const handle = yield* ChildProcess.make(options.command, [...options.args], {
-        ...spawnFields(options, admission),
+      const handle = yield* makeAdmittedChild(options, {
         stdin: options.stdin ?? options.stdio,
         stdout: options.stdio,
         stderr: options.stdio,
       });
-      yield* registerAdmissionWorkload(admission, handle.pid);
       return yield* handle.exitCode;
     })
   );

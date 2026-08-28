@@ -324,6 +324,7 @@ const generatedMarkerCountsAreValid = (lines: ReadonlyArray<string>): boolean =>
   return O.isSome(begin) && O.isSome(end) && begin.value < end.value;
 };
 
+// fallow-ignore-next-line complexity -- this pass tracks generated markers while preserving authored status prose
 const projectReadmeStatus = (content: string, state: ExplorationProjectionState): O.Option<string> => {
   const lines = Str.split(/\r?\n/)(content);
   const headingIndex = A.findFirstIndex(lines, (line) => line === "## Status");
@@ -425,6 +426,7 @@ export const renderExplorationAtlas: {
   return A.join(A.append(lines, ""), "\n");
 });
 
+// fallow-ignore-next-line complexity -- every stream defect must stay in one validation ledger before projection
 const stateFromStream = Effect.fn("Explore.stateFromStream")(function* (
   slug: PacketSlug,
   packetPath: string,
@@ -509,6 +511,7 @@ const stateFromManifestAdoption = (manifest: ExplorationManifestEntry): Explorat
  * @category use-cases
  * @since 0.0.0
  */
+// fallow-ignore-next-line complexity -- each packet is read, validated, and projected as one ordered transaction
 export const buildExplorationProjection = Effect.fn("Explore.buildExplorationProjection")(function* (
   repoRoot?: string
 ) {

@@ -185,6 +185,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
     : A.empty<WatchCheckRow>();
 });
 
+// fallow-ignore-next-line complexity -- the GraphQL cursor and page validity checks form one pagination state machine
 const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
   context: RepoRunContext,
   pullRequestId: string
@@ -705,6 +706,7 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
  * @category services
  * @since 0.0.0
  */
+// fallow-ignore-next-line complexity -- the polling loop owns one coherent snapshot, comment cursor, and exit decision
 export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function* (
   context: RepoRunContext,
   config: { readonly intervalMillis: number; readonly untilEvent?: boolean }

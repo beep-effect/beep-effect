@@ -711,3 +711,12 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
 - What would have prevented it: make `--json` optional as the help text implies and render the
   existing human-readable status by default, or document the JSON flag as required everywhere
   the scheduler status command is prescribed.
+
+## 2026-08-27 — Focused test arguments were sent to Turbo instead of Vitest
+
+- What was happening: a focused repo-cli regression run used
+  `bun run test --run <test-files>`, matching Vitest's argument shape.
+- Evidence: the root test dispatcher appended `--run` and every file path before Turbo's
+  pass-through separator. Turbo rejected `--run` four times before any test started.
+- What would have prevented it: reject Vitest-only flags in the root dispatcher with the exact
+  package-scoped command, or place focused arguments after Turbo's `--` separator automatically.

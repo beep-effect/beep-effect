@@ -1449,6 +1449,7 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
   return A.getSomes(failures);
 });
 
+// fallow-ignore-next-line complexity -- each lane must complete its proof lookup, run, failure capture, and receipt write in order
 const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function* (
   label: string,
   wave: GithubCheckLaneWaveSpec

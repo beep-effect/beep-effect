@@ -196,9 +196,7 @@ BunRuntime.runMain(
               }
               expect(ready).toBe(true);
 
-              const workload = yield* S.decodeUnknownEffect(ActiveAdmissionWorkload)(
-                yield* fs.readFileString(workloadPath)
-              );
+              const workload = yield* S.decodeEffect(ActiveAdmissionWorkload)(yield* fs.readFileString(workloadPath));
               const nestedPid = Number(yield* fs.readFileString(readyPath));
               const nestedGroup = processGroupFromStat(yield* fs.readFileString(`/proc/${nestedPid}/stat`));
               expect(nestedGroup).toBe(workload.processGroupId);

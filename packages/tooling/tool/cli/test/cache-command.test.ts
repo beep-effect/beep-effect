@@ -1,5 +1,6 @@
 import { buildCacheDashboard, CacheCommandError, CacheWarmLane } from "@beep/repo-cli/commands/Cache";
 import { runCacheWarmForTesting } from "@beep/repo-cli/test/Cache";
+import { NonNegativeInt } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -171,7 +172,9 @@ describe("cache command", () => {
               { TURBO_API: undefined, TURBO_TOKEN: undefined, TURBO_TEAM: undefined },
               runCacheWarmForTesting(root, O.none(), () => {
                 invoked = true;
-                return Effect.succeed(CacheWarmLane.make({ command: [], durationMs: 0, exitCode: 0 }));
+                return Effect.succeed(
+                  CacheWarmLane.make({ command: [], durationMs: NonNegativeInt.make(0), exitCode: 0 })
+                );
               }).pipe(Effect.flip)
             );
 
@@ -198,7 +201,7 @@ describe("cache command", () => {
             const dirtyError = yield* withWarmEnvironment(
               validWarmEnvironment,
               runCacheWarmForTesting(root, O.none(), () =>
-                Effect.succeed(CacheWarmLane.make({ command: [], durationMs: 0, exitCode: 0 }))
+                Effect.succeed(CacheWarmLane.make({ command: [], durationMs: NonNegativeInt.make(0), exitCode: 0 }))
               ).pipe(Effect.flip)
             );
             expect(dirtyError.message).toContain("clean checkout");
@@ -213,7 +216,7 @@ describe("cache command", () => {
             const staleError = yield* withWarmEnvironment(
               validWarmEnvironment,
               runCacheWarmForTesting(root, O.none(), () =>
-                Effect.succeed(CacheWarmLane.make({ command: [], durationMs: 0, exitCode: 0 }))
+                Effect.succeed(CacheWarmLane.make({ command: [], durationMs: NonNegativeInt.make(0), exitCode: 0 }))
               ).pipe(Effect.flip)
             );
             expect(staleError.message).toContain("HEAD to equal origin/main exactly");
@@ -266,7 +269,9 @@ describe("cache command", () => {
               runCacheWarmForTesting(root, O.some(receiptPath), () =>
                 fs.writeFileString(path.join(root, "README.md"), "# changed during warm\n").pipe(
                   Effect.mapError((cause) => CacheCommandError.new("injected warm mutation failed", cause)),
-                  Effect.as(CacheWarmLane.make({ command: ["fixture"], durationMs: 1, exitCode: 0 }))
+                  Effect.as(
+                    CacheWarmLane.make({ command: ["fixture"], durationMs: NonNegativeInt.make(1), exitCode: 0 })
+                  )
                 )
               ).pipe(Effect.flip)
             );
