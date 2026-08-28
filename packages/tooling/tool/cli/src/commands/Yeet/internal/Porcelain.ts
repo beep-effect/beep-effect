@@ -355,10 +355,12 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
 > {
   const context = yield* hydrateYeetReadOnlyContext(options);
   const ended = yield* runYeetWatchStream(context, { intervalMillis: YEET_WATCH_INTERVAL_MILLIS, untilEvent });
-  if (yeetWatchExitFailure(ended)) {
-    yield* Console.error(`yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`);
-    return yield* failWithReportedExit(`yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`);
-  }
+  const verdict = `yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`;
+  yield* Console.error(verdict).pipe(
+    Effect.andThen(failWithReportedExit(verdict)),
+    Effect.when(Effect.succeed(yeetWatchExitFailure(ended))),
+    Effect.asVoid
+  );
 });
 
 const YEET_UNTIL_EVENT_PAIRING_MESSAGE =

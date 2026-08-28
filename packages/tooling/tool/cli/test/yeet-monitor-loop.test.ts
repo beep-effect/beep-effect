@@ -79,8 +79,12 @@ const ts2306TornReadLog = ghLog("Build", "Run bun run beep ci lane build", [
   "Failed:    @beep/ontology-config#build",
 ]);
 
-const failedJob = (databaseId: number, name: string, flakeClass: O.Option<YeetMonitorFlakeClass>) =>
-  YeetMonitorFailedJob.make({ databaseId, name, flakeClass });
+const failedJob = (
+  databaseId: number,
+  name: string,
+  flakeClass: O.Option<YeetMonitorFlakeClass>,
+  runCompleted = true
+) => YeetMonitorFailedJob.make({ databaseId, name, flakeClass, runCompleted });
 
 // `gh run view --json jobs` reports every step of a job, and a step that never
 // reached a terminal state carries `conclusion: null`. These fixtures keep the
@@ -379,6 +383,20 @@ describe("awaiting-log classification", () => {
     const second = planYeetMonitorReruns(first.budget, "abc123", [classified]);
     expect(second.decisions[0]?.status).toBe("rerun");
   });
+
+  it("defers a known flake until its parent run completes without spending the allowance", () => {
+    const activeRunJob = failedJob(991, "Check", O.some("ts2589-no-location"), false);
+    const deferred = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [activeRunJob]);
+
+    expect(deferred.decisions[0]?.status).toBe("awaiting-run");
+    expect(deferred.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
+    expect(renderYeetMonitorJobDecision(deferred.decisions[0]!)).toContain("parent run is still active");
+
+    const completedRunJob = failedJob(991, "Check", O.some("ts2589-no-location"));
+    const completed = planYeetMonitorReruns(deferred.budget, "abc123", [completedRunJob]);
+    expect(completed.decisions[0]?.status).toBe("rerun");
+    expect(HashSet.size(completed.budget)).toBe(1);
+  });
 });
 
 const monitorContext = RepoRunContext.make({
@@ -524,6 +542,27 @@ describe("collectYeetMonitorFailedJobs", () => {
     )
   );
 
+  it.effect("defers a materialized flake until the in-progress parent run completes", () =>
+    Effect.gen(function* () {
+      const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
+
+      expect(A.map(jobs, (job) => [job.name, job.runCompleted, O.getOrNull(job.flakeClass)])).toStrictEqual([
+        ["Check", false, "ts2589-no-location"],
+      ]);
+      const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", jobs);
+      expect(plan.decisions[0]?.status).toBe("awaiting-run");
+      expect(plan.budget).toStrictEqual(emptyYeetMonitorRerunBudget);
+    }).pipe(
+      provideScopedLayer(
+        monitorSpawnerLayer({
+          jobLog: { exitCode: 0, output: ts2589FlakeLog },
+          runJobs: midRunJobs,
+          runList: midRunList,
+        })
+      )
+    )
+  );
+
   it.effect("keeps the conservative reading for an unreadable log once the run has concluded", () =>
     Effect.gen(function* () {
       const jobs = yield* collectYeetMonitorFailedJobs(monitorContext, "abc123");
@@ -561,21 +600,22 @@ describe("applyYeetMonitorJobDecision", () => {
       })
     );
 
-  it.effect("refunds the budget key when GitHub rejects the rerun", () =>
+  it.effect("keeps the allowance spent when GitHub rejects the rerun", () =>
     Effect.gen(function* () {
-      const refund = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision(), "abc123");
+      const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
 
-      expect(refund).toStrictEqual(O.some(yeetMonitorRerunKey("abc123", "Check")));
+      expect(result).toBeUndefined();
       const lines = A.map(yield* TestConsole.logLines, String);
-      expect(A.some(lines, (line) => Str.includes("refunding its allowance")(line))).toBe(true);
+      expect(A.some(lines, (line) => Str.includes("allowance spent")(line))).toBe(true);
+      expect(A.some(lines, (line) => Str.includes("unbounded retry loop")(line))).toBe(true);
     }).pipe(provideScopedLayer(spawner(1)))
   );
 
-  it.effect("refunds nothing when the rerun is accepted", () =>
+  it.effect("completes without a refund when the rerun is accepted", () =>
     Effect.gen(function* () {
-      const refund = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision(), "abc123");
+      const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
 
-      expect(refund).toStrictEqual(O.none());
+      expect(result).toBeUndefined();
     }).pipe(provideScopedLayer(spawner(0)))
   );
 
@@ -584,9 +624,9 @@ describe("applyYeetMonitorJobDecision", () => {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
         YeetMonitorFailedJob.make({ databaseId: 991, logPending: true, name: "Check" }),
       ]);
-      const refund = yield* applyYeetMonitorJobDecision(monitorContext, plan.decisions[0]!, "abc123");
+      const result = yield* applyYeetMonitorJobDecision(monitorContext, plan.decisions[0]!);
 
-      expect(refund).toStrictEqual(O.none());
+      expect(result).toBeUndefined();
       const lines = A.map(yield* TestConsole.logLines, String);
       expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
     }).pipe(provideScopedLayer(spawner(1)))

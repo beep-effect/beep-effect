@@ -281,6 +281,8 @@ export const detectYeetMonitorFlakeClass = (log: string): O.Option<YeetMonitorFl
  * "needs code fix", because the next poll can genuinely change the answer.
  * Once the parent run has concluded, an unreadable log stops being pending and
  * the conservative reading stands.
+ * `runCompleted` separately prevents a known-flake rerun from being attempted
+ * while GitHub still rejects job reruns for the active parent run.
  *
  * **Example** (Describe an unclassified red job)
  *
@@ -300,6 +302,7 @@ export class YeetMonitorFailedJob extends S.Class<YeetMonitorFailedJob>($I`YeetM
     name: S.String,
     flakeClass: YeetMonitorFlakeClass.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     logPending: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    runCompleted: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
   },
   $I.annote("YeetMonitorFailedJob", {
     description: "One failed hosted job paired with the flake class its log matched, if any.",
@@ -403,6 +406,38 @@ export class YeetMonitorAwaitingLog extends S.Class<YeetMonitorAwaitingLog>($I`Y
 ) {}
 
 /**
+ * A flake-matching job whose parent run must finish before GitHub can rerun it.
+ *
+ * **Details**
+ *
+ * The decision spends no rerun allowance. The next poll classifies the same
+ * job again, and only a completed parent run can turn it into `rerun`. This
+ * avoids hammering `gh run rerun --job` on every poll while the run is active.
+ *
+ * **Example** (Defer a rerun)
+ *
+ * ```ts
+ * import { YeetMonitorAwaitingRun } from "@beep/repo-cli/test/Yeet"
+ *
+ * const decision = YeetMonitorAwaitingRun.make({ databaseId: 991, name: "Check" })
+ * console.log(decision.status) // "awaiting-run"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetMonitorAwaitingRun extends S.Class<YeetMonitorAwaitingRun>($I`YeetMonitorAwaitingRun`)(
+  {
+    status: S.tag("awaiting-run"),
+    databaseId: S.Finite,
+    name: S.String,
+  },
+  $I.annote("YeetMonitorAwaitingRun", {
+    description: "A flake-matching red job deferred until its parent workflow run completes.",
+  })
+) {}
+
+/**
  * What the merge loop decided about one red job.
  *
  * **Example** (Decode a needs-code-fix decision)
@@ -427,6 +462,7 @@ export const YeetMonitorJobDecision = S.Union([
   YeetMonitorRerunSpent,
   YeetMonitorNeedsCodeFix,
   YeetMonitorAwaitingLog,
+  YeetMonitorAwaitingRun,
 ]).pipe(
   S.toTaggedUnion("status"),
   $I.annoteSchema("YeetMonitorJobDecision", {
@@ -593,38 +629,46 @@ export const planYeetMonitorReruns: {
               YeetMonitorAwaitingLog.make({ databaseId: job.databaseId, name: job.name })
             ),
           }
-        : O.match(job.flakeClass, {
-            onNone: () => ({
+        : !job.runCompleted && O.isSome(job.flakeClass)
+          ? {
               budget: plan.budget,
               decisions: A.append(
                 plan.decisions,
-                YeetMonitorNeedsCodeFix.make({ databaseId: job.databaseId, name: job.name })
+                YeetMonitorAwaitingRun.make({ databaseId: job.databaseId, name: job.name })
               ),
-            }),
-            onSome: (flakeClass) => {
-              const key = yeetMonitorRerunKey(headSha, job.name);
-              return HashSet.has(plan.budget, key)
-                ? {
-                    budget: plan.budget,
-                    decisions: A.append(
-                      plan.decisions,
-                      YeetMonitorRerunSpent.make({ databaseId: job.databaseId, flakeClass, name: job.name })
-                    ),
-                  }
-                : {
-                    budget: HashSet.add(plan.budget, key),
-                    decisions: A.append(
-                      plan.decisions,
-                      YeetMonitorRerunJob.make({
-                        command: yeetMonitorRerunCommand(job.databaseId),
-                        databaseId: job.databaseId,
-                        flakeClass,
-                        name: job.name,
-                      })
-                    ),
-                  };
-            },
-          })
+            }
+          : O.match(job.flakeClass, {
+              onNone: () => ({
+                budget: plan.budget,
+                decisions: A.append(
+                  plan.decisions,
+                  YeetMonitorNeedsCodeFix.make({ databaseId: job.databaseId, name: job.name })
+                ),
+              }),
+              onSome: (flakeClass) => {
+                const key = yeetMonitorRerunKey(headSha, job.name);
+                return HashSet.has(plan.budget, key)
+                  ? {
+                      budget: plan.budget,
+                      decisions: A.append(
+                        plan.decisions,
+                        YeetMonitorRerunSpent.make({ databaseId: job.databaseId, flakeClass, name: job.name })
+                      ),
+                    }
+                  : {
+                      budget: HashSet.add(plan.budget, key),
+                      decisions: A.append(
+                        plan.decisions,
+                        YeetMonitorRerunJob.make({
+                          command: yeetMonitorRerunCommand(job.databaseId),
+                          databaseId: job.databaseId,
+                          flakeClass,
+                          name: job.name,
+                        })
+                      ),
+                    };
+              },
+            })
     )
 );
 
@@ -670,6 +714,8 @@ export const renderYeetMonitorJobDecision = (decision: YeetMonitorJobDecision): 
       "needs-code-fix": (value) => `[yeet] ${value.name}: red with no known flake fingerprint; needs code fix`,
       "awaiting-log": (value) =>
         `[yeet] ${value.name}: red; failing-step log not available yet (run still in progress), reclassifying next poll`,
+      "awaiting-run": (value) =>
+        `[yeet] ${value.name}: known flake matched, but the parent run is still active; deferring rerun to the next poll`,
     })
   );
 
@@ -754,7 +800,12 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
 ): Effect.fn.Return<YeetMonitorFailedJob, never, ChildProcessSpawner.ChildProcessSpawner> {
   const shapeClass = detectGithubJobShapeClass(job);
   if (O.isSome(shapeClass)) {
-    return YeetMonitorFailedJob.make({ databaseId: job.databaseId, flakeClass: shapeClass, name: job.name });
+    return YeetMonitorFailedJob.make({
+      databaseId: job.databaseId,
+      flakeClass: shapeClass,
+      name: job.name,
+      runCompleted,
+    });
   }
   const result = yield* runRepoCommandCapture(
     "gh",
@@ -771,6 +822,7 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
     // Only a failed fetch can still be the short materialization lag we defer.
     logPending: result.exitCode !== 0 && !result.truncated && !runCompleted,
     name: job.name,
+    runCompleted,
   });
 });
 
@@ -799,7 +851,7 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
  * @param context - Yeet run context naming the branch and repo root.
  * @param headSha - The head SHA whose red jobs are collected.
  * @returns One classified record per red job at that head.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFailedJobs")(function* (
@@ -833,17 +885,15 @@ export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFa
 const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
   context: RepoRunContext,
   databaseId: number
-): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture("gh", ["run", "rerun", "--job", `${databaseId}`], context.repoRoot).pipe(
     Effect.orElseSucceed(() => ({ exitCode: 1, output: Str.empty, truncated: false }))
   );
   if (result.exitCode !== 0) {
     yield* Console.log(
-      `[yeet] rerun of job ${databaseId} was rejected; leaving it red and refunding its allowance for a later poll`
+      `[yeet] rerun of job ${databaseId} was rejected; leaving it red with its allowance spent to avoid an unbounded retry loop`
     );
-    return false;
   }
-  return true;
 });
 
 /**
@@ -851,11 +901,10 @@ const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
  *
  * **Details**
  *
- * Returns the budget key to refund when an approved rerun was rejected —
- * GitHub refuses `gh run rerun --job` while the parent run is still active,
- * and a spent allowance for a rerun that never happened would convert the
- * mid-run early report into a permanently unhealable red. The caller removes
- * refunded keys from the plan's budget so a later poll retries the rerun.
+ * Known flakes inside an active parent run are deferred before reaching this
+ * function. A rejected rerun against a completed run leaves the allowance
+ * spent, because authentication, stale-job, and permission failures are
+ * permanent until external state changes and must not become a polling loop.
  *
  * **Example** (Build the applier effect)
  *
@@ -868,22 +917,19 @@ const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
  *
  * @param context - Yeet run context naming the repo root.
  * @param decision - The decision to report and, for `rerun`, execute.
- * @param headSha - The head SHA the decision's budget key is scoped to.
- * @returns The budget key to refund, or `None` when nothing needs refunding.
- * @category execution
+ * @returns Nothing once the decision has been reported and any rerun attempted.
+ * @category processes
  * @since 0.0.0
  */
 export const applyYeetMonitorJobDecision = Effect.fn("YeetMonitorLoop.applyDecision")(function* (
   context: RepoRunContext,
-  decision: YeetMonitorJobDecision,
-  headSha: string
-): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  decision: YeetMonitorJobDecision
+): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(renderYeetMonitorJobDecision(decision));
   if (decision.status !== "rerun") {
-    return O.none();
+    return;
   }
-  const accepted = yield* rerunJob(context, decision.databaseId);
-  return accepted ? O.none() : O.some(yeetMonitorRerunKey(headSha, decision.name));
+  yield* rerunJob(context, decision.databaseId);
 });
 
 /**
@@ -954,15 +1000,10 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   }
   const failedJobs = yield* collectYeetMonitorFailedJobs(context, headSha.value);
   const plan = planYeetMonitorReruns(budget, headSha.value, failedJobs);
-  const refunds = yield* Effect.forEach(
-    plan.decisions,
-    (decision) => applyYeetMonitorJobDecision(context, decision, headSha.value),
-    { concurrency: 1 }
-  );
-  // A refunded key restores the one-rerun allowance the plan spent on a rerun
-  // GitHub rejected, so a later poll — typically after the parent run finally
-  // concludes — can execute it instead of reporting `rerun-spent` forever.
-  return { budget: A.reduce(A.getSomes(refunds), plan.budget, (spent, key) => HashSet.remove(spent, key)), terminal };
+  yield* Effect.forEach(plan.decisions, (decision) => applyYeetMonitorJobDecision(context, decision), {
+    concurrency: 1,
+  });
+  return { budget: plan.budget, terminal };
 });
 
 /**

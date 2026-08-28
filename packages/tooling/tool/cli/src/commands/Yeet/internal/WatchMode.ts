@@ -46,6 +46,7 @@ import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
+  acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
   openYeetMonitorCommentStream,
   renderYeetMonitorCommentStreamStopped,
@@ -368,6 +369,7 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
   yield* Effect.forEach(polled.success, flow(yeetWatchCommentEvent(at, snapshot.headSha), emitWatchEvent), {
     discard: true,
   });
+  yield* acknowledgeYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef, polled.success);
   return A.length(polled.success);
 });
 

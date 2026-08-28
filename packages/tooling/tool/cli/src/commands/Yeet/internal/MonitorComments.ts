@@ -5,9 +5,9 @@
  *
  * The stream is durable across runs and independent of the check watcher it is
  * raced against. Durable: the per-collection watermarks are persisted to a
- * branch-scoped artifact after every poll that advances them, so a comment
- * posted while no monitor was attached is printed by the next run instead of
- * falling into the gap between a process exit and the next process start.
+ * branch-scoped artifact after every emitted batch, so a comment posted while
+ * no monitor was attached is printed by the next run instead of falling into
+ * the gap between a process exit and the next process start.
  * Independent: a poll that fails degrades this stream alone — the surrounding
  * race can never be decided by a GitHub read error, because the poller's error
  * channel is `never` by construction.
@@ -136,6 +136,9 @@ export class YeetMonitorIssueComment extends S.TaggedClass<YeetMonitorIssueComme
     description: "Normalized GitHub pull request conversation comment streamed during Yeet monitoring.",
   })
 ) {}
+
+const isYeetMonitorReviewComment = S.is(YeetMonitorReviewComment);
+const isYeetMonitorIssueComment = S.is(YeetMonitorIssueComment);
 
 /**
  * Comment variants surfaced by a Yeet monitor session.
@@ -658,12 +661,11 @@ export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommen
  *
  * This is the shared core of every comment-observing monitor surface: one poll
  * fetches both REST collections concurrently, filters each against its own
- * cursor, and — when anything new arrived — advances the in-memory watermark
- * and persists it through the branch-scoped artifact before returning. The
- * classic monitor's forever-poller prints what this returns; the watch stream
- * turns it into typed event rows. Persisting inside the collector is what makes
- * relaunch loops lossless: by the time a caller has acted on a comment, the
- * next session's resume point already excludes it.
+ * cursor, then returns the unseen rows without advancing the watermark. The
+ * caller emits those rows and acknowledges them with
+ * {@link acknowledgeYeetMonitorComments}; keeping that order prevents a
+ * cancellation or encoding failure from persisting past a comment that was
+ * never actually surfaced.
  *
  * **Example** (Build the collector effect)
  *
@@ -676,20 +678,16 @@ export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommen
  *
  * @param context - Repo run context carrying the repo root and artifact directory.
  * @param pullRequestNumber - The pull request whose comments are polled.
- * @param watermarkRef - The session's watermark; advanced when comments arrive.
+ * @param watermarkRef - The session's last acknowledged watermark.
  * @returns The new comments in `(createdAt, id)` order, possibly empty.
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewComments")(function* (
   context: RepoRunContext,
   pullRequestNumber: number,
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>
-): Effect.fn.Return<
-  ReadonlyArray<YeetMonitorComment>,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
-> {
+): Effect.fn.Return<ReadonlyArray<YeetMonitorComment>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const watermark = yield* Ref.get(watermarkRef);
   const [reviewPayload, issuePayload] = yield* Effect.all(
     [
@@ -712,17 +710,54 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
   const issueComments = pipe(issuePayload, A.map(normalizeIssueComment));
   const newReviewComments = A.filter(reviewComments, (comment) => isYeetMonitorCommentAfter(watermark.review, comment));
   const newIssueComments = A.filter(issueComments, (comment) => isYeetMonitorCommentAfter(watermark.issue, comment));
-  const newComments = A.sort([...newReviewComments, ...newIssueComments], commentOrder);
-  if (A.isReadonlyArrayEmpty(newComments)) {
-    return newComments;
+  return A.sort([...newReviewComments, ...newIssueComments], commentOrder);
+});
+
+/**
+ * Advance and persist the comment watermark after a batch has been emitted.
+ *
+ * **Details**
+ *
+ * Acknowledgment is deliberately separate from collection. Callers first
+ * render or encode every row, then acknowledge the batch. If emission is
+ * interrupted, the old cursor remains durable and the next session repeats
+ * the unseen row instead of losing it.
+ *
+ * **Example** (Build an acknowledgment effect)
+ *
+ * ```ts
+ * import { acknowledgeYeetMonitorComments } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.succeed(acknowledgeYeetMonitorComments))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the artifact directory.
+ * @param pullRequestNumber - The pull request whose rows were emitted.
+ * @param watermarkRef - The session watermark to advance.
+ * @param comments - The successfully emitted comments to acknowledge.
+ * @returns Nothing after the in-memory and durable cursors are advanced.
+ * @category processes
+ * @since 0.0.0
+ */
+export const acknowledgeYeetMonitorComments = Effect.fn("YeetMonitor.acknowledgeComments")(function* (
+  context: RepoRunContext,
+  pullRequestNumber: number,
+  watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
+  comments: ReadonlyArray<YeetMonitorComment>
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  if (A.isReadonlyArrayEmpty(comments)) {
+    return;
   }
+  const watermark = yield* Ref.get(watermarkRef);
+  const reviewComments = A.filter(comments, isYeetMonitorReviewComment);
+  const issueComments = A.filter(comments, isYeetMonitorIssueComment);
   const advanced = YeetMonitorCommentWatermark.make({
-    issue: nextCursor(watermark.issue, newIssueComments),
-    review: nextCursor(watermark.review, newReviewComments),
+    issue: nextCursor(watermark.issue, issueComments),
+    review: nextCursor(watermark.review, reviewComments),
   });
   yield* Ref.set(watermarkRef, advanced);
   yield* persistCommentState(context, pullRequestNumber, advanced);
-  return newComments;
 });
 
 const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
@@ -735,7 +770,11 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
   ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const newComments = yield* collectNewYeetMonitorComments(context, pullRequestNumber, watermarkRef);
-  yield* Effect.forEach(newComments, (comment) => Console.log(renderYeetMonitorComment(comment)), { concurrency: 1 });
+  yield* Effect.forEach(newComments, (comment) => Console.log(renderYeetMonitorComment(comment)), {
+    concurrency: 1,
+    discard: true,
+  });
+  yield* acknowledgeYeetMonitorComments(context, pullRequestNumber, watermarkRef, newComments);
 });
 
 /**
@@ -828,14 +867,12 @@ const pollTick = Effect.fn("YeetMonitor.pollTick")(function* (
  * @category formatting
  * @since 0.0.0
  */
-export const renderYeetMonitorCommentStreamStart = (resumedFrom: O.Option<string>): string =>
-  pipe(
-    resumedFrom,
-    O.match({
-      onNone: () => "[yeet] streaming new PR comments from now (no saved position for this branch)",
-      onSome: (createdAt) => `[yeet] resuming the PR comment stream from ${createdAt}`,
-    })
-  );
+export const renderYeetMonitorCommentStreamStart: (resumedFrom: O.Option<string>) => string = flow(
+  O.match({
+    onNone: () => "[yeet] streaming new PR comments from now (no saved position for this branch)",
+    onSome: (createdAt) => `[yeet] resuming the PR comment stream from ${createdAt}`,
+  })
+);
 
 /**
  * Open a comment-stream session against the branch's persisted position.
@@ -847,9 +884,9 @@ export const renderYeetMonitorCommentStreamStart = (resumedFrom: O.Option<string
  * position immediately rather than only when it observes something — otherwise
  * a quiet session leaves no position at all, and the next run starts from
  * *its* own clock, which is precisely the gap a comment posted between the two
- * runs falls into. The watermark comes back as a `Ref` because
- * {@link collectNewYeetMonitorComments} advances it in place on every poll
- * that saw comments.
+ * runs falls into. The watermark comes back as a `Ref` so
+ * {@link acknowledgeYeetMonitorComments} can advance it after every batch has
+ * been emitted successfully.
  *
  * **Example** (Build the opener effect)
  *

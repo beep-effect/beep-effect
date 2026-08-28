@@ -924,6 +924,34 @@ describe("comment rows and --until-event", () => {
 
   const pendingChecks = checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]);
 
+  it.live("ends immediately when the pull request is already merged", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.reason).toBe("pr-merged");
+        expect(ended.failing).toBe(0);
+        const lines = A.map(yield* TestConsole.logLines, String);
+        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
   // The event exit on a red keys on the snapshot while siblings still run —
   // the whole point of the mode: the supervisor is woken with the failure
   // capsule already durable instead of waiting out the rest of the wave.
@@ -1191,6 +1219,43 @@ describe("comment rows and --until-event", () => {
       )
     )
   );
+
+  it.live("stops polling comments at the failure bound while checks keep advancing", () => {
+    const failedCommentPoll: PollScript = {
+      view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+      checks: { exitCode: 0, output: pendingChecks },
+      threads: { exitCode: 0, output: threadsJson([]) },
+      reviewComments: { exitCode: 1, output: "gh: API rate limit exceeded" },
+    };
+    return inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.reason).toBe("all-terminal");
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, (line) => Str.includes("stopped after 5 consecutive failed polls")(line))).toBe(true);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            {
+              ...greenScript("aaa111"),
+              reviewComments: { exitCode: 1, output: "gh: API rate limit exceeded" },
+            },
+          ])
+        )
+      )
+    );
+  });
 });
 
 describe("yeetWatchExitFailure", () => {

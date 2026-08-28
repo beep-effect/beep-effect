@@ -386,11 +386,13 @@ turbo work, so they are cheap to run mid-loop.
   job whose log matches a known flake fingerprint (`ts2589-no-location`, CI
   timeout) gets exactly one `gh run rerun --job <databaseId>` per job per head
   SHA — never `--failed`, which would re-execute coexisting genuine reds; a
-  rerun GitHub rejects (it refuses job reruns while the parent run is live)
-  refunds the allowance for a later poll. A red whose log has not materialized
-  yet reports "awaiting log" and is reclassified next poll. Anything else is
-  reported as "needs code fix". The loop ends on MERGED (after the sweep),
-  on CLOSED, or when you interrupt it.
+  known flake inside an active parent run is deferred without spending its
+  allowance. Once the run completes, the loop attempts the rerun once. A
+  rejected rerun keeps that allowance spent so authentication, permission, or
+  stale-job failures cannot become an unbounded polling loop. A red whose log
+  has not materialized yet reports "awaiting log" and is reclassified next
+  poll. Anything else is reported as "needs code fix". The loop ends on MERGED
+  (after the sweep), on CLOSED, or when you interrupt it.
 - **Branch-deletion contract.** `sweep` deletes with `-d` when the branch is an
   ancestor of `origin/main`. It uses `-D` only when the PR is MERGED **and** the
   local tip still equals the PR's recorded head SHA **and** no worktree holds the
