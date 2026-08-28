@@ -1798,5 +1798,6 @@
   "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
   "@beep/law-practice-domain/values/CourtReporterVocabulary": [
     "./packages/law-practice/domain/src/values/CourtReporterVocabulary/index.ts"
-  ]
+  ],
+  "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
 }
