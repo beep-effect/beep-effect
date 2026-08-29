@@ -1,0 +1,9 @@
+diff --git a/apps/crypto-taxes/src/data/constants.ts b/apps/crypto-taxes/src/data/constants.ts
+index fdee6e5e4e..30a508f8f5 100644
+--- a/apps/crypto-taxes/src/data/constants.ts
++++ b/apps/crypto-taxes/src/data/constants.ts
+@@ -1,3 +1,3 @@
+ export const EXCHANGES = ["coinbase", "gemini", "binance", "crypto.com"] as const;
+ 
+-export const BASE_CURRENCY = "USD";
++
