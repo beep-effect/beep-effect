@@ -1,0 +1,2315 @@
+diff --git a/intellij.yaml b/intellij.yaml
+index b6fedb2e43..c47fdab40a 100644
+--- a/intellij.yaml
++++ b/intellij.yaml
+@@ -1,3 +1,6 @@
+ sharedIndex:
+     project:
+         - url: https://dankserver.tailc7c348.ts.net/beep-effect/project/beep-effect/
++    consents:
++        - kind: project
++          decision: allowed
+diff --git a/packages/foundation/modeling/identity/src/Id.ts b/packages/foundation/modeling/identity/src/Id.ts
+index 5bec710562..07c39f0d3b 100644
+--- a/packages/foundation/modeling/identity/src/Id.ts
++++ b/packages/foundation/modeling/identity/src/Id.ts
+@@ -558,7 +558,7 @@ type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<
+ 
+ type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] | keyof S.Top>;
+ 
+-type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
++export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
+ 
+ /**
+  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
+diff --git a/packages/foundation/modeling/ontology/package.json b/packages/foundation/modeling/ontology/package.json
+index 43088bdbdd..686462cfc8 100644
+--- a/packages/foundation/modeling/ontology/package.json
++++ b/packages/foundation/modeling/ontology/package.json
+@@ -58,6 +58,7 @@
+     "@beep/identity": "workspace:^",
+     "@beep/rdf": "workspace:^",
+     "@beep/schema": "workspace:^",
++    "@beep/utils": "workspace:^",
+     "effect": "catalog:"
+   },
+   "devDependencies": {
+diff --git a/packages/foundation/modeling/ontology/src/experimental/Primitive/ObjectType.schemas.ts b/packages/foundation/modeling/ontology/src/experimental/Primitive/ObjectType.schemas.ts
+new file mode 100644
+index 0000000000..db9e55ed9b
+--- /dev/null
++++ b/packages/foundation/modeling/ontology/src/experimental/Primitive/ObjectType.schemas.ts
+@@ -0,0 +1,67 @@
++/**
++ * ObjectType - Schema wrapper with OSDK metadata
++ *
++ * Wraps Effect S.TaggedClass definitions with ontology metadata
++ * (primaryKey, title, links, displayName) for OSDK compilation.
++ *
++ * @example
++ * ```ts
++ * import * as S from "effect"
++ * import { ObjectType } from "@beep/ontology"
++ *
++ * class Department extends S.TaggedClass<Department>()("Department", {
++ *   id: S.String.pipe(S.brand("DepartmentId")),
++ *   name: S.NonEmptyString,
++ * }) {}
++ *
++ * const DepartmentType = ObjectType.from(Department, {
++ *   primaryKey: "id",
++ *   title: "name",
++ *   displayName: "Department",
++ * })
++ * ```
++ */
++import { $OntologyId } from "@beep/identity";
++import { LiteralKit } from "@beep/schema";
++
++const $I = $OntologyId.create("experimental/Primitive/ObjectType.schemas");
++
++// =============================================================================
++// Link Configuration
++// =============================================================================
++
++/**
++ * Link cardinality options
++ *
++ * @example
++ * ```ts
++ * import { LinkCardinality } from "@beep/ontology";
++ *
++ * console.log(LinkCardinality.Enum.OneToMany)
++ *
++ * ```
++ *
++ * @since 0.1.0
++ * @category models
++ */
++export const LinkCardinality = LiteralKit(["OneToOne", "OneToMany", "ManyToOne", "ManyToMany"]).pipe(
++  $I.annoteSchema("LinkCardinality", {
++    description: "Link cardinality options for ObjectType definitions",
++  })
++);
++
++/**
++ * Companion type for {@link LinkCardinality}
++ *
++ * @example
++ * ```ts
++ * import { LinkCardinality } from "@beep/ontology";
++ *
++ * const T: LinkCardinality = LinkCardinality.Enum.OneToMany
++ *
++ * ```
++ *
++ * @since 0.1.0
++ * @category models
++ */
++export type LinkCardinality = typeof LinkCardinality.Type;
+diff --git a/packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts b/packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts
+new file mode 100644
+index 0000000000..2539791139
+--- /dev/null
++++ b/packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts
+@@ -0,0 +1,1462 @@
++/**
++ * Beep Primitives
++ *
++ * Effect Schema aligned primitive types with OSDK-compatible metadata.
++ * These form the algebraic signature Σ from which free algebras are constructed.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { $OntologyId } from "@beep/identity";
++import { LiteralKit, UnknownRecord } from "@beep/schema";
++import { dual, O, P, Str } from "@beep/utils";
++import { pipe } from "effect";
++import * as S from "effect/Schema";
++import type { AnnotatedSchema } from "@beep/identity";
++
++const $I = $OntologyId.create("experimental/Primitive/Primitive.schemas");
++
++type CompositeFieldSchemaMeta = {
++  readonly description: string;
++};
++
++// =============================================================================
++// Primitive Types
++// =============================================================================
++
++/**
++ * Literal vocabulary for scalar primitive field tags.
++ *
++ * @example
++ * ```ts
++ * import { PrimitiveTag } from "@beep/ontology"
++ *
++ * const tag = PrimitiveTag.Enum.String
++ * console.log(PrimitiveTag.is.String(tag))
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const PrimitiveTag = LiteralKit([
++  "String",
++  "Int",
++  "Number",
++  "Boolean",
++  "Date",
++  "DateTimeUtc",
++  "Timestamp",
++  "Decimal",
++]).annotate(
++  $I.annote("PrimitiveTag", {
++    description: "Literal vocabulary for scalar primitive field tags.",
++  })
++);
++
++/**
++ * Runtime type for {@link PrimitiveTag}.
++ *
++ * @example
++ * ```ts
++ * import { PrimitiveTag } from "@beep/ontology"
++ *
++ * const tag: PrimitiveTag = PrimitiveTag.Enum.DateTimeUtc
++ * console.log(tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PrimitiveTag = typeof PrimitiveTag.Type;
++
++/**
++ * Beep primitive type for String values.
++ *
++ * @example
++ * ```ts
++ * import { StringType } from "@beep/ontology"
++ * const stringType = StringType.make({})
++ *
++ * console.log(stringType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class StringType extends S.TaggedClass<StringType>($I`StringType`)(
++  PrimitiveTag.Enum.String,
++  {},
++  $I.annote("StringType", {
++    description: "Beep primitive type for string values.",
++  })
++) {}
++
++/**
++ * Beep primitive type for Int values.
++ *
++ * @example
++ * ```ts
++ * import { IntType } from "@beep/ontology"
++ * const intType = IntType.make({})
++ *
++ * console.log(intType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class IntType extends S.TaggedClass<IntType>($I`IntType`)(
++  PrimitiveTag.Enum.Int,
++  {},
++  $I.annote("IntType", {
++    description: "Beep primitive type for integer values.",
++  })
++) {}
++
++/**
++ * Beep primitive type for Number values.
++ *
++ * @example
++ * ```ts
++ * import { NumberType } from "@beep/ontology"
++ * const numberType = NumberType.make({})
++ *
++ * console.log(numberType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class NumberType extends S.TaggedClass<NumberType>($I`NumberType`)(
++  PrimitiveTag.Enum.Number,
++  {},
++  $I.annote("NumberType", {
++    description: "Beep primitive type for floating-point number values.",
++  })
++) {}
++
++/**
++ * Beep primitive type for Boolean values.
++ *
++ * @example
++ * ```ts
++ * import { BooleanType } from "@beep/ontology"
++ * const booleanType = BooleanType.make({})
++ *
++ * console.log(booleanType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class BooleanType extends S.TaggedClass<BooleanType>($I`BooleanType`)(
++  PrimitiveTag.Enum.Boolean,
++  {},
++  $I.annote("BooleanType", {
++    description: "Beep primitive type for boolean values.",
++  })
++) {}
++
++/**
++ * Beep primitive type for Date values.
++ *
++ * @example
++ * ```ts
++ * import { DateType } from "@beep/ontology"
++ * const dateType = DateType.make({})
++ *
++ * console.log(dateType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class DateType extends S.TaggedClass<DateType>($I`DateType`)(
++  PrimitiveTag.Enum.Date,
++  {},
++  $I.annote("DateType", {
++    description: "Beep primitive type for calendar date values without time component.",
++  })
++) {}
++
++/**
++ * Beep primitive type for DateTimeUtc values.
++ *
++ * @example
++ * ```ts
++ * import { DateTimeUtcType } from "@beep/ontology"
++ * const dateTimeUtcType = DateTimeUtcType.make({})
++ *
++ * console.log(dateTimeUtcType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class DateTimeUtcType extends S.TaggedClass<DateTimeUtcType>($I`DateTimeUtcType`)(
++  PrimitiveTag.Enum.DateTimeUtc,
++  {},
++  $I.annote("DateTimeUtcType", {
++    description: "Beep primitive type for UTC date-time values with timezone information.",
++  })
++) {}
++
++/**
++ * Beep primitive type for Timestamp values.
++ *
++ * @example
++ * ```ts
++ * import { TimestampType } from "@beep/ontology"
++ * const timestampType = TimestampType.make({})
++ *
++ * console.log(timestampType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class TimestampType extends S.TaggedClass<TimestampType>($I`TimestampType`)(
++  PrimitiveTag.Enum.Timestamp,
++  {},
++  $I.annote("TimestampType", {
++    description: "Beep primitive type for Unix timestamp values representing moments in time.",
++  })
++) {}
++
++/**
++ * Beep primitive type for Decimal values.
++ *
++ * @example
++ * ```ts
++ * import { DecimalType } from "@beep/ontology"
++ * const decimalType = DecimalType.make({})
++ *
++ * console.log(decimalType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class DecimalType extends S.TaggedClass<DecimalType>($I`DecimalType`)(
++  PrimitiveTag.Enum.Decimal,
++  {},
++  $I.annote("DecimalType", {
++    description: "Beep primitive type for arbitrary-precision decimal values.",
++  })
++) {}
++
++// =============================================================================
++// Composite Types
++// =============================================================================
++
++/**
++ * Literal vocabulary for composite field tags.
++ *
++ * @example
++ * ```ts
++ * import { CompositeTag } from "@beep/ontology"
++ *
++ * const tag = CompositeTag.Enum.Array
++ * console.log(CompositeTag.is.Array(tag))
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const CompositeTag = LiteralKit(["Array", "Struct"]).annotate(
++  $I.annote("CompositeTag", {
++    description: "Literal vocabulary for composite field tags.",
++  })
++);
++
++/**
++ * Runtime type for {@link CompositeTag}.
++ *
++ * @example
++ * ```ts
++ * import { CompositeTag } from "@beep/ontology"
++ *
++ * const tag: CompositeTag = CompositeTag.Enum.Struct
++ * console.log(tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type CompositeTag = typeof CompositeTag.Type;
++
++/**
++ * Beep composite type for array values.
++ *
++ * @example
++ * ```ts
++ * import { ArrayType, StringType } from "@beep/ontology"
++ *
++ * const arrayType = ArrayType.make({ _item: StringType.make({}) })
++ * console.log(arrayType._item)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class ArrayType extends S.TaggedClass<ArrayType>($I`ArrayType`)(
++  CompositeTag.Enum.Array,
++  {
++    _item: S.Unknown.pipe(
++      $I.annoteKey("ArrayType._item", {
++        description: "Descriptor carried for each element of an array field.",
++      })
++    ),
++  },
++  $I.annote("ArrayType", {
++    description: "Composite field type whose elements share a single descriptor.",
++  })
++) {
++  /**
++   * Creates an annotated array item field schema from a child schema.
++   *
++   * @example
++   * ```ts
++   * import { ArrayType, StringType } from "@beep/ontology"
++   *
++   * const schema = ArrayType.create(StringType, {
++   *   description: "Primitive descriptor for each array item."
++   * })
++   *
++   * console.log(schema.fields._item)
++   * ```
++   *
++   * @category constructors
++   * @since 0.0.0
++   */
++  static readonly create: {
++    <const T extends S.Top>(
++      meta: CompositeFieldSchemaMeta
++    ): (schema: T) => S.Struct<{
++      readonly _item: T["Rebuild"];
++    }>;
++    <const T extends S.Top>(
++      schema: T,
++      meta: CompositeFieldSchemaMeta
++    ): S.Struct<{
++      readonly _item: T["Rebuild"];
++    }>;
++  } = dual(
++    2,
++    <const T extends S.Top>(
++      schema: T,
++      meta: CompositeFieldSchemaMeta
++    ): S.Struct<{
++      readonly _item: T["Rebuild"];
++    }> =>
++      S.Struct({
++        _item: schema.annotateKey({ description: meta.description }),
++      })
++  );
++}
++
++/**
++ * Beep composite type for struct values.
++ *
++ * @example
++ * ```ts
++ * import { StringType, StructType } from "@beep/ontology"
++ *
++ * const structType = StructType.make({ _fields: { name: StringType.make({}) } })
++ * console.log(structType._fields.name)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class StructType extends S.TaggedClass<StructType>($I`StructType`)(
++  CompositeTag.Enum.Struct,
++  {
++    _fields: UnknownRecord.pipe(
++      $I.annoteKey("StructType._fields", {
++        description: "Record of named field descriptors carried by a struct field.",
++      })
++    ),
++  },
++  $I.annote("StructType", {
++    description: "Composite field type represented by a record of named field descriptors.",
++  })
++) {
++  /**
++   * Creates an annotated struct fields schema from a child schema.
++   *
++   * @example
++   * ```ts
++   * import { StructType } from "@beep/ontology"
++   * import { UnknownRecord } from "@beep/schema"
++   *
++   * const schema = StructType.create(UnknownRecord, {
++   *   description: "Record containing named field descriptors."
++   * })
++   *
++   * console.log(schema.fields._fields)
++   * ```
++   *
++   * @category constructors
++   * @since 0.0.0
++   */
++  static readonly create: {
++    <const T extends S.Top>(
++      meta: CompositeFieldSchemaMeta
++    ): (schema: T) => S.Struct<{
++      readonly _fields: T["Rebuild"];
++    }>;
++    <const T extends S.Top>(
++      schema: T,
++      meta: CompositeFieldSchemaMeta
++    ): S.Struct<{
++      readonly _fields: T["Rebuild"];
++    }>;
++  } = dual(
++    2,
++    <const T extends S.Top>(
++      schema: T,
++      meta: CompositeFieldSchemaMeta
++    ): S.Struct<{
++      readonly _fields: T["Rebuild"];
++    }> =>
++      S.Struct({
++        _fields: schema.annotateKey({ description: meta.description }),
++      })
++  );
++}
++
++// =============================================================================
++// OSDK-specific Types
++// =============================================================================
++
++/**
++ * Literal vocabulary for OSDK-specific primitive field tags.
++ *
++ * @example
++ * ```ts
++ * import { OsdkPrimitiveTag } from "@beep/ontology"
++ *
++ * const tag = OsdkPrimitiveTag.Enum.GeoPoint
++ * console.log(OsdkPrimitiveTag.is.GeoPoint(tag))
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const OsdkPrimitiveTag = LiteralKit(["GeoPoint", "GeoShape", "MediaReference"]).annotate(
++  $I.annote("OsdkPrimitiveTag", {
++    description: "Literal vocabulary for OSDK-specific primitive field tags.",
++  })
++);
++
++/**
++ * Runtime type for {@link OsdkPrimitiveTag}.
++ *
++ * @example
++ * ```ts
++ * import { OsdkPrimitiveTag } from "@beep/ontology"
++ *
++ * const tag: OsdkPrimitiveTag = OsdkPrimitiveTag.Enum.MediaReference
++ * console.log(tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type OsdkPrimitiveTag = typeof OsdkPrimitiveTag.Type;
++
++/**
++ * Beep primitive type for OSDK geospatial point values.
++ *
++ * @example
++ * ```ts
++ * import { GeoPointType } from "@beep/ontology"
++ *
++ * const geoPointType = GeoPointType.make({})
++ * console.log(geoPointType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class GeoPointType extends S.TaggedClass<GeoPointType>($I`GeoPointType`)(
++  OsdkPrimitiveTag.Enum.GeoPoint,
++  {},
++  $I.annote("GeoPointType", {
++    description: "Beep primitive type for OSDK geospatial point values.",
++  })
++) {}
++
++/**
++ * Beep primitive type for OSDK geospatial shape values.
++ *
++ * @example
++ * ```ts
++ * import { GeoShapeType } from "@beep/ontology"
++ *
++ * const geoShapeType = GeoShapeType.make({})
++ * console.log(geoShapeType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class GeoShapeType extends S.TaggedClass<GeoShapeType>($I`GeoShapeType`)(
++  OsdkPrimitiveTag.Enum.GeoShape,
++  {},
++  $I.annote("GeoShapeType", {
++    description: "Beep primitive type for OSDK geospatial shape values.",
++  })
++) {}
++
++/**
++ * Beep primitive type for OSDK media reference values.
++ *
++ * @example
++ * ```ts
++ * import { MediaReferenceType } from "@beep/ontology"
++ *
++ * const mediaReferenceType = MediaReferenceType.make({})
++ * console.log(mediaReferenceType._tag)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export class MediaReferenceType extends S.TaggedClass<MediaReferenceType>($I`MediaReferenceType`)(
++  OsdkPrimitiveTag.Enum.MediaReference,
++  {},
++  $I.annote("MediaReferenceType", {
++    description: "Beep primitive type for OSDK media reference values.",
++  })
++) {}
++
++/**
++ * Union of all scalar and OSDK-specific primitive field types.
++ *
++ * @example
++ * ```ts
++ * import { PrimitiveType, StringType } from "@beep/ontology"
++ *
++ * const primitiveType: PrimitiveType = StringType.make({})
++ * console.log(PrimitiveType.guards.String(primitiveType))
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const PrimitiveType = S.Union([
++  StringType,
++  IntType,
++  NumberType,
++  BooleanType,
++  DateType,
++  DateTimeUtcType,
++  TimestampType,
++  DecimalType,
++  GeoPointType,
++  GeoShapeType,
++  MediaReferenceType,
++]).pipe(
++  $I.annoteSchema("PrimitiveType", {
++    description: "Union of all scalar and OSDK-specific Beep primitive field types.",
++  }),
++  S.toTaggedUnion("_tag")
++);
++
++/**
++ * Runtime type for {@link PrimitiveType}.
++ *
++ * @example
++ * ```ts
++ * import { PrimitiveType, StringType } from "@beep/ontology"
++ *
++ * const primitiveType: PrimitiveType = StringType.make({})
++ * console.log(primitiveType._tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PrimitiveType = typeof PrimitiveType.Type;
++
++/**
++ * Union of all Beep field types, including primitives and composites.
++ *
++ * @example
++ * ```ts
++ * import { ArrayType, FieldType, StringType } from "@beep/ontology"
++ *
++ * const fieldType: FieldType = ArrayType.make({ _item: StringType.make({}) })
++ * console.log(FieldType.guards.Array(fieldType))
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const FieldType = S.Union([
++  StringType,
++  IntType,
++  NumberType,
++  BooleanType,
++  DateType,
++  DateTimeUtcType,
++  TimestampType,
++  DecimalType,
++  GeoPointType,
++  GeoShapeType,
++  MediaReferenceType,
++  ArrayType,
++  StructType,
++]).pipe(
++  $I.annoteSchema("FieldType", {
++    description: "Union of all Beep field types, including primitives and composites.",
++  }),
++  S.toTaggedUnion("_tag")
++);
++
++/**
++ * Runtime type for {@link FieldType}.
++ *
++ * @example
++ * ```ts
++ * import { FieldType, StringType } from "@beep/ontology"
++ *
++ * const fieldType: FieldType = StringType.make({})
++ * console.log(fieldType._tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type FieldType = typeof FieldType.Type;
++
++export const BaseActionParameterType = LiteralKit([
++  "Boolean",
++  "String",
++  "Integer",
++  "Long",
++  "Double",
++  "DateTime",
++  "Timestamp",
++  "Attachment",
++  "Marking",
++  "MediaReference",
++  "ScenarioReference",
++  "ObjectType",
++  "GeoShape",
++  "GeoHash",
++]).pipe(
++  $I.annoteSchema("BaseActionParameterType", {
++    description: "",
++  })
++);
++
++export type BaseActionParameterType = typeof BaseActionParameterType.Type;
++
++export const BaseWirePropertyType = LiteralKit([
++  "string",
++  "datetime",
++  "double",
++  "boolean",
++  "integer",
++  "timestamp",
++  "short",
++  "long",
++  "float",
++  "decimal",
++  "byte",
++  "marking",
++  "mediaReference",
++  "numericTimeseries",
++  "stringTimeseries",
++  "sensorTimeseries",
++  "attachment",
++  "geopoint",
++  "geoshape",
++  "geotimeSeriesReference",
++  "vector",
++]).pipe(
++  $I.annoteSchema("BaseActionParameterType", {
++    description: "",
++  })
++);
++
++export type BaseWirePropertyType = typeof BaseWirePropertyType.Type;
++
++export const WirePropertyType = S.Union([BaseWirePropertyType, S.Record(S.String, BaseWirePropertyType)]).pipe(
++  $I.annoteSchema("WirePropertyType", {
++    description: "",
++  })
++);
++
++export type WirePropertyType = typeof WirePropertyType.Type;
++
++const fromClientVersion = <Major extends number, Minor extends number, Patch extends number>(
++  expectedClientVersion?: undefined | VersionString<Major, Minor, Patch>
++) => {
++  const expectedClientVersionOpt = O.fromNullishOr(expectedClientVersion);
++
++  const makeDefaultParts = () => {
++    const major = 0 as Major;
++    const minor = 0 as Minor;
++    const patch = 0 as Patch;
++
++    return {
++      major,
++      minor,
++      patch,
++    };
++  };
++
++  return expectedClientVersionOpt.pipe(
++    O.match({
++      onNone: makeDefaultParts,
++      onSome: (expectedClientVersion) => {
++        const is = S.is(S.Number);
++
++        const isMajor = (value: unknown): value is Major => is(value);
++        const isMinor = (value: unknown): value is Minor => is(value);
++        const isPatch = (value: unknown): value is Patch => is(value);
++
++        return pipe(Str.split(".")(expectedClientVersion), ([major, minor, patch]) =>
++          pipe(
++            {
++              major,
++              minor,
++              patch,
++            },
++            O.liftPredicate(
++              P.Struct({
++                major: isMajor,
++                minor: isMinor,
++                patch: isPatch,
++              })
++            ),
++            O.getOrElse(makeDefaultParts)
++          )
++        );
++      },
++    })
++  );
++};
++
++export const VersionString = <const Major extends number, const Minor extends number, const Patch extends number>(
++  major: Major,
++  minor: Minor,
++  patch: Patch
++) =>
++  S.TemplateLiteral([
++    S.Literal(major).annotateKey({
++      description: "",
++    }),
++    ".",
++    S.Literal(minor).annotateKey({
++      description: "",
++    }),
++    ".",
++    S.Literal(patch).annotateKey({
++      description: "",
++    }),
++  ]).pipe(
++    $I.annoteSchema("VersionString", {
++      description: "",
++    })
++  );
++
++export type VersionString<Major extends number, Minor extends number, Patch extends number> = S.Schema.Type<
++  AnnotatedSchema<S.TemplateLiteral<readonly [S.Literal<Major>, ".", S.Literal<Minor>, ".", S.Literal<Patch>]>>
++>;
++
++export const PropertyModifierValue = LiteralKit([
++  "ApplyMainValue",
++  "ApplyReducers",
++  "ApplyReducersAndExtractMainValue",
++]).pipe(
++  $I.annoteSchema("PropertyModifierValue", {
++    description: "",
++  })
++);
++
++export type PropertyModifierValue = typeof PropertyModifierValue.Type;
++
++export const PrimaryKeyType = LiteralKit([
++  "string",
++  "datetime",
++  "double",
++  "integer",
++  "timestamp",
++  "short",
++  "long",
++  "byte",
++]).pipe(
++  $I.annoteSchema("PrimaryKeyType", {
++    description: "",
++  })
++);
++
++export type PrimaryKeyTypes = typeof PrimaryKeyType.Type;
++
++export class OntologyMetadata extends S.Class<OntologyMetadata>($I`OntologyMetadata`)(
++  {
++    ontologyRid: S.String,
++    ontologyApiName: S.String,
++    userAgent: S.String,
++  },
++  $I.annote("OntologyMetadata", {
++    description: "",
++  })
++) {}
++
++export class OsdkMetadata extends S.Class<OsdkMetadata>($I`OsdkMetadata`)(
++  {
++    extraUserAgent: S.String,
++  },
++  $I.annote("OsdkMetadata", {
++    description: "",
++  })
++) {}
++
++export class PropertyBooleanFormattingRule extends S.Class<PropertyBooleanFormattingRule>(
++  $I`PropertyBooleanFormattingRule`
++)(
++  {
++    type: S.tag("boolean"),
++    valueIfTrue: S.String,
++    valueIfFalse: S.String,
++  },
++  $I.annote("PropertyBooleanFormattingRule", {
++    description: "",
++  })
++) {}
++
++export class StringConstant extends S.Class<StringConstant>($I`StringConstant`)(
++  {
++    type: S.tag("string"),
++    value: S.String,
++  },
++  $I.annote("StringConstant", {
++    description: "",
++  })
++) {}
++
++export class PropertyTypeReference extends S.Class<PropertyTypeReference>($I`PropertyTypeReference`)(
++  {
++    type: S.tag("propertyType"),
++    value: S.String,
++  },
++  $I.annote("PropertyTypeReference", {
++    description: "",
++  })
++) {}
++
++export const PropertyTypeReferenceOrStringConstant = S.Union([PropertyTypeReference, StringConstant]).pipe(
++  $I.annoteSchema("PropertyTypeReferenceOrStringConstant", {
++    description: "",
++  })
++);
++
++export type PropertyTypeReferenceOrStringConstantType = typeof PropertyTypeReferenceOrStringConstant.Type;
++
++export class DatetimeStringFormat extends S.Class<DatetimeStringFormat>($I`DatetimeStringFormat`)(
++  {
++    type: S.tag("stringFormat"),
++  },
++  $I.annote("DatetimeStringFormat", {
++    description: "",
++  })
++) {}
++
++export const DatetimeLocalizedFormatType = LiteralKit([
++  "DATE_FORMAT_RELATIVE_TO_NOW",
++  "DATE_FORMAT_DATE",
++  "DATE_FORMAT_YEAR_AND_MONTH",
++  "DATE_FORMAT_DATE_TIME",
++  "DATE_FORMAT_DATE_TIME_SHORT",
++  "DATE_FORMAT_TIME",
++  "DATE_FORMAT_ISO_INSTANT",
++]).pipe(
++  $I.annoteSchema("DatetimeLocalizedFormatType", {
++    description: "",
++  })
++);
++
++export type DatetimeLocalizedFormatType = typeof DatetimeLocalizedFormatType.Type;
++
++export class DatetimeTimezoneStatic extends S.Class<DatetimeTimezoneStatic>($I`DatetimeTimezoneStatic`)(
++  {
++    type: S.tag("static"),
++    zoneId: PropertyTypeReferenceOrStringConstant,
++  },
++  $I.annote("DatetimeTimezoneStatic", {
++    description: "",
++  })
++) {}
++
++export class DatetimeTimezoneUser extends S.Class<DatetimeTimezoneUser>($I`DatetimeTimezoneUser`)(
++  {
++    type: S.tag("user"),
++  },
++  $I.annote("DatetimeTimezoneUser", {
++    description: "",
++  })
++) {}
++
++export const DatetimeTimezone = S.Union([DatetimeTimezoneStatic, DatetimeTimezoneUser]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("DatetimeTimezone", {
++    description: "",
++  })
++);
++
++export type DatetimeTimezone = typeof DatetimeTimezone.Type;
++
++export class DatetimeLocalizedFormat extends S.Class<DatetimeLocalizedFormat>($I`DatetimeLocalizedFormat`)(
++  {
++    type: S.tag("localizedFormat"),
++    format: DatetimeLocalizedFormatType,
++  },
++  $I.annote("DatetimeLocalizedFormat", {
++    description: "",
++  })
++) {}
++
++export const DatetimeFormat = S.Union([DatetimeStringFormat, DatetimeLocalizedFormat]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("DatetimeFormat", {
++    description: "",
++  })
++);
++export type DatetimeFormat = typeof DatetimeFormat.Type;
++
++export class PropertyTimestampFormattingRule extends S.Class<PropertyTimestampFormattingRule>(
++  $I`PropertyTimestampFormattingRule`
++)({
++  type: S.tag("timestamp"),
++  format: DatetimeFormat,
++  displayTimezone: DatetimeTimezone,
++}) {}
++
++export class PropertyDateFormattingRule extends S.Class<PropertyDateFormattingRule>($I`PropertyDateFormattingRule`)(
++  {
++    type: S.tag("date"),
++    format: DatetimeFormat,
++  },
++  $I.annote("PropertyDateFormattingRule", {
++    description: "",
++  })
++) {}
++
++export const KnownType = LiteralKit(["USER_OR_GROUP_ID", "RESOURCE_RID", "ARTIFACT_GID"]).pipe(
++  $I.annoteSchema("KnownType", {
++    description: "",
++  })
++);
++
++export type KnownType = typeof KnownType.Type;
++
++export class PropertyKnownTypeFormattingRule extends S.Class<PropertyKnownTypeFormattingRule>(
++  $I`PropertyKnownTypeFormattingRule`
++)(
++  {
++    type: S.tag("knownType"),
++    knownType: KnownType,
++  },
++  $I.annote("PropertyKnownTypeFormattingRule", {
++    description: "",
++  })
++) {}
++
++export const NumberRoundingMode = LiteralKit(["CEIL", "FLOOR", "ROUND_CLOSEST"]).pipe(
++  $I.annoteSchema("NumberRoundingMode", {
++    description: "",
++  })
++);
++
++export type NumberRoundingMode = typeof NumberRoundingMode.Type;
++
++export const NumberFormatNotation = LiteralKit(["STANDARD", "SCIENTIFIC", "ENGINEERING", "COMPACT"]).pipe(
++  $I.annoteSchema("NumberFormatNotation", {
++    description: "",
++  })
++);
++
++export type NumberFormatNotation = typeof NumberFormatNotation.Type;
++
++export const NumberFormatCurrencyStyle = LiteralKit(["STANDARD", "COMPACT"]).pipe(
++  $I.annoteSchema("NumberFormatCurrencyStyle", {
++    description: "",
++  })
++);
++
++export type NumberFormatCurrencyStyle = typeof NumberFormatCurrencyStyle.Type;
++
++export const DurationPrecision = LiteralKit(["DAYS", "HOURS", "MINUTES", "SECONDS", "AUTO"]).pipe(
++  $I.annoteSchema("DurationPrecision", {
++    description: "",
++  })
++);
++
++export type DurationPrecision = typeof DurationPrecision.Type;
++
++export const DurationBaseValue = LiteralKit(["SECONDS", "MILISECONDS"]).pipe(
++  $I.annoteSchema("DurationBaseValue", {
++    description: "",
++  })
++);
++
++export type DurationBaseValue = typeof DurationBaseValue.Type;
++
++export const NumberScaleType = LiteralKit(["THOUSANDS", "MILLIONS", "BILLIONS"]).pipe(
++  $I.annoteSchema("NumberScaleType", {
++    description: "",
++  })
++);
++
++export type NumberScaleType = typeof NumberScaleType.Type;
++
++export const NumberRatioType = LiteralKit(["PERCENTAGE", "PER_MILLE", "BASIS_POINTS"]).pipe(
++  $I.annoteSchema("NumberRatioType", {
++    description: "",
++  })
++);
++
++export type NumberRatioType = typeof NumberRatioType.Type;
++
++export class Affix extends S.Class<Affix>($I`Affix`)(
++  {
++    prefix: S.optionalKey(PropertyTypeReferenceOrStringConstant),
++    postfix: S.optionalKey(PropertyTypeReferenceOrStringConstant),
++  },
++  $I.annote("Affix", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatOptions extends S.Class<NumberFormatOptions>($I`NumberFormatOptions`)(
++  {
++    useGrouping: S.optionalKey(S.Boolean),
++    convertNegativeToParenthesis: S.optionalKey(S.Boolean),
++    minimumIntegerDigits: S.optionalKey(S.Number),
++    minimumFractionDigits: S.optionalKey(S.Number),
++    maximumFractionDigits: S.optionalKey(S.Number),
++    minimumSignificantDigits: S.optionalKey(S.Number),
++    maximumSignificantDigits: S.optionalKey(S.Number),
++    notation: S.optionalKey(NumberFormatNotation),
++    roundingMode: S.optionalKey(NumberRoundingMode),
++  },
++  $I.annote("NumberFormatOptions", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatStandard extends S.Class<NumberFormatStandard>($I`NumberFormatStandard`)(
++  {
++    type: S.tag("standard"),
++    baseFormatOptions: NumberFormatOptions,
++  },
++  $I.annote("NumberFormatStandard", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatFixedValues extends S.Class<NumberFormatFixedValues>($I`NumberFormatFixedValues`)(
++  {
++    type: S.tag("fixedValues"),
++    values: S.Record(S.Number, S.String),
++  },
++  $I.annote("NumberFormatFixedValues", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatCurrency extends S.Class<NumberFormatCurrency>($I`NumberFormatCurrency`)(
++  {
++    type: S.tag("currency"),
++    baseFormatOptions: NumberFormatOptions,
++    style: NumberFormatCurrencyStyle,
++    currencyCode: PropertyTypeReferenceOrStringConstant,
++  },
++  $I.annote("NumberFormatCurrency", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatStandardUnit extends S.Class<NumberFormatStandardUnit>($I`NumberFormatStandardUnit`)(
++  {
++    type: S.tag("standardUnit"),
++    baseFormatOptions: NumberFormatOptions,
++    unit: PropertyTypeReferenceOrStringConstant,
++  },
++  $I.annote("NumberFormatStandardUnit", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatCustomUnit extends S.Class<NumberFormatCustomUnit>($I`NumberFormatCustomUnit`)(
++  {
++    type: S.tag("customUnit"),
++    baseFormatOptions: NumberFormatOptions,
++    unit: PropertyTypeReferenceOrStringConstant,
++  },
++  $I.annote("NumberFormatCustomUnit", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatAffix extends S.Class<NumberFormatAffix>($I`NumberFormatAffix`)(
++  {
++    type: S.tag("affix"),
++    baseFormatOptions: NumberFormatOptions,
++    affix: Affix,
++  },
++  $I.annote("NumberFormatAffix", {
++    description: "",
++  })
++) {}
++
++export class HumanReadableFormat extends S.Class<HumanReadableFormat>($I`HumanReadableFormat`)(
++  {
++    type: S.tag("humanReadable"),
++    showFullUnits: S.optionalKey(S.Boolean),
++  },
++  $I.annote("HumanReadableFormat", {
++    description: "",
++  })
++) {}
++
++export class TimeCodeFormat extends S.Class<TimeCodeFormat>($I`TimeCodeFormat`)(
++  {
++    type: S.tag("timeCode"),
++  },
++  $I.annote("TimeCodeFormat", {
++    description: "",
++  })
++) {}
++
++export const DurationFormatStyle = S.Union([HumanReadableFormat, TimeCodeFormat]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("DurationFormatStyle", {
++    description: "",
++  })
++);
++
++export type DurationFormatStyle = typeof DurationFormatStyle.Type;
++
++export class NumberFormatDuration extends S.Class<NumberFormatDuration>($I`NumberFormatDuration`)(
++  {
++    type: S.tag("duration"),
++    formatStyle: DurationFormatStyle,
++    precision: S.optionalKey(DurationPrecision),
++    baseValue: DurationBaseValue,
++  },
++  $I.annote("NumberFormatDuration", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatScale extends S.Class<NumberFormatScale>($I`NumberFormatScale`)(
++  {
++    type: S.tag("scale"),
++    scaleType: NumberScaleType,
++    baseFormatOptions: NumberFormatOptions,
++  },
++  $I.annote("NumberFormatScale", {
++    description: "",
++  })
++) {}
++
++export class NumberFormatRatio extends S.Class<NumberFormatRatio>($I`NumberFormatRatio`)(
++  {
++    type: S.tag("ratio"),
++    ratioType: NumberRatioType,
++    baseFormatOptions: NumberFormatOptions,
++  },
++  $I.annote("NumberFormatRatio", {
++    description: "",
++  })
++) {}
++
++export const PropertyNumberFormattingRuleType = S.Union([
++  NumberFormatStandard,
++  NumberFormatFixedValues,
++  NumberFormatCurrency,
++  NumberFormatStandardUnit,
++  NumberFormatCustomUnit,
++  NumberFormatAffix,
++  NumberFormatDuration,
++  NumberFormatScale,
++  NumberFormatRatio,
++]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("PropertyNumberFormattingRuleType", {
++    description: "",
++  })
++);
++
++export type PropertyNumberFormattingRuleType = typeof PropertyNumberFormattingRuleType.Type;
++
++export class PropertyNumberFormattingRule extends S.Class<PropertyNumberFormattingRule>(
++  $I`PropertyNumberFormattingRule`
++)(
++  {
++    type: S.tag("number"),
++    numberType: PropertyNumberFormattingRuleType,
++  },
++  $I.annote("PropertyNumberFormattingRule", {
++    description: "",
++  })
++) {}
++
++export const PropertyValueFormattingRule = S.Union([
++  PropertyNumberFormattingRule,
++  PropertyTimestampFormattingRule,
++  PropertyDateFormattingRule,
++  PropertyBooleanFormattingRule,
++  PropertyKnownTypeFormattingRule,
++]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("PropertyValueFormattingRule", {
++    description: "",
++  })
++);
++
++export type PropertyValueFormattingRule = typeof PropertyValueFormattingRule.Type;
++
++export class ObjectInterfaceCompileDefinitionBase extends S.Class<ObjectInterfaceCompileDefinitionBase>(
++  $I`ObjectInterfaceCompileDefinitionBase`
++)(
++  {
++    objectSet: S.optionalKey(S.Any),
++    props: S.optionalKey(S.Any),
++    strictProps: S.optionalKey(S.Any),
++    linksType: S.optionalKey(S.Any),
++  },
++  $I.annote("ObjectInterfaceCompileDefinitionBase", {
++    description: "",
++  })
++) {}
++
++export class ObjectInterfaceCompileDefinitionObject extends ObjectInterfaceCompileDefinitionBase.extend<ObjectInterfaceCompileDefinitionObject>(
++  $I`ObjectInterfaceCompileDefinitionObject`
++)(
++  {
++    type: S.tag("object"),
++  },
++  $I.annote("ObjectInterfaceCompileDefinitionObject", {
++    description: "",
++  })
++) {}
++
++export class ObjectInterfaceCompileDefinitionInterface extends ObjectInterfaceCompileDefinitionBase.extend<ObjectInterfaceCompileDefinitionInterface>(
++  $I`ObjectInterfaceCompileDefinitionObject`
++)(
++  {
++    type: S.tag("interface"),
++  },
++  $I.annote("ObjectInterfaceCompileDefinitionInterface", {
++    description: "",
++  })
++) {}
++
++export const ObjectInterfaceCompileDefinition = S.Union([
++  ObjectInterfaceCompileDefinitionObject,
++  ObjectInterfaceCompileDefinitionInterface,
++]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("ObjectInterfaceCompileDefinition", {
++    description: "",
++  })
++);
++
++export type ObjectInterfaceCompileDefinition = typeof ObjectInterfaceCompileDefinition.Type;
++
++export const VersionBoundStr = <Major extends number = 0, Minor extends number = 0, Patch extends number = 0>(
++  expectedClientVersion?: undefined | VersionString<Major, Minor, Patch>
++) =>
++  O.fromNullishOr(expectedClientVersion).pipe(
++    O.match({
++      onNone: () => VersionString<Major, Minor, Patch>(0 as Major, 0 as Minor, 0 as Patch),
++      onSome: (expectedClientVersion) => {
++        const { major, minor, patch } = fromClientVersion(expectedClientVersion);
++
++        return VersionString(major, minor, patch);
++      },
++    })
++  );
++
++export type VersionBoundStr<
++  Major extends number = 0,
++  Minor extends number = 0,
++  Patch extends number = 0,
++> = AnnotatedSchema<S.TemplateLiteral<readonly [S.Literal<Major>, ".", S.Literal<Minor>, ".", S.Literal<Patch>]>>;
++
++export const VersionBound = <Major extends number = 0, Minor extends number = 0, Patch extends number = 0>(
++  strSchema: ReturnType<typeof VersionBoundStr<Major, Minor, Patch>>
++) =>
++  S.Struct({
++    __expectedClientVersion: S.optionalKey(strSchema),
++  });
++
++export type VersionBound<Major extends number, Minor extends number, Patch extends number> = S.Schema.Type<
++  S.Struct<{
++    readonly __expectedClientVersion: S.optionalKey<
++      AnnotatedSchema<S.TemplateLiteral<readonly [S.Literal<Major>, ".", S.Literal<Minor>, ".", S.Literal<Patch>]>>
++    >;
++  }>
++>;
++
++export const ReleaseStatus = LiteralKit(["ACTIVE", "EXPERIMENTAL", "DEPRECATED", "ENDORSED"]).pipe(
++  $I.annoteSchema("ReleaseStatus", {
++    description: "",
++  })
++);
++
++export type ReleaseStatus = typeof ReleaseStatus.Type;
++
++export const ObjectTypeVisibility = LiteralKit(["NORMAL", "PROMINENT", "HIDDEN"]).pipe(
++  $I.annoteSchema("ObjectTypeVisibility", {
++    description: "",
++  })
++);
++
++export type ObjectTypeVisibility = typeof ObjectTypeVisibility.Type;
++
++export class Icon extends S.Class<Icon>($I`Icon`)(
++  {
++    type: S.tag("blueprint"),
++    color: S.String,
++    name: S.String,
++  },
++  $I.annote("Icon", {
++    description: "",
++  })
++) {}
++
++export const NullabilityType = LiteralKit(["nullable", "non-nullable"]).pipe(
++  $I.annoteSchema("NullabilityType", {
++    description: "",
++  })
++);
++
++export type NullabilityType = typeof NullabilityType.Type;
++
++export const MultiplicityType = LiteralKit(["array", "single"]).pipe(
++  $I.annoteSchema("MultiplicityType", {
++    description: "",
++  })
++);
++
++export type MultiplicityType = typeof MultiplicityType.Type;
++
++export const PropertyTypeMarking = LiteralKit(["CBAC", "MANDATORY"]).pipe(
++  $I.annoteSchema("PropertyTypeMarking", {
++    description: "",
++  })
++);
++
++export type PropertyTypeMarking = typeof PropertyTypeMarking.Type;
++
++export class PropertyTypeMetadata extends S.Class<PropertyTypeMetadata>($I`PropertyTypeMetadata`)(
++  {
++    type: S.tag("marking"),
++    markingType: S.optionalKey(PropertyTypeMarking),
++  },
++  $I.annote("PropertyTypeMetadata", {
++    description: "",
++  })
++) {}
++
++//
++// export class ObjectMetadata extends ObjectInterfaceBaseMetadata.extend<ObjectMetadata>($I`ObjectMetadata`)(
++// 	{
++// 		type: S.tag("object"),
++//
++// 	},
++// 	$I.annote("ObjectMetadata", {
++// 		description: "",
++// 	})
++// ) {}
++
++export class ObjectTypeDefinition extends S.Class<ObjectTypeDefinition>($I`ObjectTypeDefinition`)(
++  {
++    type: S.tag("object"),
++    apiName: S.String,
++    primaryKeyApiName: S.optionalKey(LiteralKit(["type", "apiName", "primaryKeyApiName"])),
++    primaryKeyType: S.optionalKey(PrimaryKeyType),
++    osdkMetadata: S.optionalKey(OsdkMetadata),
++    __DefinitionMetadata: S.Struct({
++      type: S.tag("object"),
++      apiName: S.String,
++      displayName: S.String,
++      description: S.UndefinedOr(S.String),
++      properties: S.Record(
++        S.Any, // todo
++        S.Any
++      ),
++      rid: S.String,
++      implements: S.String.pipe(S.Array).annotateKey({
++        description: 'Represents the "super interfaces" of this object.',
++      }),
++    }),
++  },
++  $I.annote("ObjectTypeDefinition", {
++    description: "",
++  })
++) {}
++
++export class ObjectInterfaceBaseMetadataBase extends S.Class<ObjectInterfaceBaseMetadataBase>(
++  $I`ObjectInterfaceBaseMetadataBase`
++)(
++  {
++    apiName: S.String,
++    displayName: S.String,
++    description: S.UndefinedOr(S.String),
++    properties: S.Record(
++      S.Any, // todo
++      S.Any
++    ),
++    rid: S.String,
++    implements: S.String.pipe(S.Array).annotateKey({
++      description: 'Represents the "super interfaces" of this object.',
++    }),
++  },
++  $I.annote("ObjectInterfaceBaseMetadataBase", {
++    description: "",
++  })
++) {}
++
++export class ObjectInterfaceBaseMetadataObject extends ObjectInterfaceBaseMetadataBase.extend<ObjectInterfaceBaseMetadataObject>(
++  $I`ObjectInterfaceBaseMetadataObject`
++)(
++  {
++    type: S.tag("object"),
++  },
++  $I.annote("ObjectInterfaceBaseMetadataObject", {
++    description: "",
++  })
++) {}
++
++export class ObjectInterfaceBaseMetadataInterface extends ObjectInterfaceBaseMetadataBase.extend<ObjectInterfaceBaseMetadataInterface>(
++  $I`ObjectInterfaceBaseMetadataInterface`
++)(
++  {
++    type: S.tag("interface"),
++  },
++  $I.annote("ObjectInterfaceBaseMetadataInterface", {
++    description: "",
++  })
++) {}
++
++export const ObjectInterfaceBaseMetadata = S.Union([
++  ObjectInterfaceBaseMetadataObject,
++  ObjectInterfaceBaseMetadataInterface,
++]).pipe(
++  S.toTaggedUnion("type"),
++  $I.annoteSchema("ObjectInterfaceBaseMetadata", {
++    description: "",
++  })
++);
++
++export type ObjectInterfaceBaseMetadata = typeof ObjectInterfaceBaseMetadata.Type;
+diff --git a/packages/foundation/modeling/ontology/src/index.ts b/packages/foundation/modeling/ontology/src/index.ts
+index 3dd8c17a77..1502aabdc7 100644
+--- a/packages/foundation/modeling/ontology/src/index.ts
++++ b/packages/foundation/modeling/ontology/src/index.ts
+@@ -8,6 +8,13 @@
+ /**
+  * Package version.
+  *
++ * @example
++ * ```ts
++ * import { VERSION } from "@beep/ontology"
++ *
++ * console.log(VERSION)
++ * ```
++ *
+  * @category configuration
+  * @since 0.0.0
+  */
+@@ -20,6 +27,14 @@ export const VERSION = "0.0.0" as const;
+  * @since 0.0.0
+  */
+ export { Ontology } from "./create.ts";
++/**
++ * Experimental primitive field schema constructors.
++ *
++ * @experimental These schemas model an in-progress primitive-field algebra.
++ * @category schemas
++ * @since 0.0.0
++ */
++export * from "./experimental/Primitive/Primitive.schemas.ts";
+ /**
+  * Annotation display-map readers and draft guards.
+  *
+diff --git a/standards/repo-exports.catalog.jsonc b/standards/repo-exports.catalog.jsonc
+index 515bab128b..abf5183f56 100644
+--- a/standards/repo-exports.catalog.jsonc
++++ b/standards/repo-exports.catalog.jsonc
+@@ -27,8 +27,8 @@
+     "packagesWithoutPublicExports": 6,
+     "missingWorkspaceMetadata": 4,
+     "importSpecifiers": 1078,
+-    "publicExportEntries": 15094,
+-    "uniquePackageSymbols": 6531
++    "publicExportEntries": 15117,
++    "uniquePackageSymbols": 6549
+   },
+   "packages": [
+     {
+@@ -1312,11 +1312,286 @@
+         "@beep/ontology"
+       ],
+       "counts": {
+-        "publicExportEntries": 12,
+-        "uniqueSymbols": 12,
+-        "sourceFiles": 9
++        "publicExportEntries": 35,
++        "uniqueSymbols": 30,
++        "sourceFiles": 10
+       },
+       "exports": [
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "ArrayType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 295,
++          "summary": "Beep composite type for array values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . arraytype class beep composite type for array values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "BooleanType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 145,
++          "summary": "Beep primitive type for Boolean values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . booleantype class beep primitive type for boolean values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "CompositeTag",
++          "exportKind": "const",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 259,
++          "summary": "Literal vocabulary for composite field tags.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . compositetag const literal vocabulary for composite field tags. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "CompositeTag",
++          "exportKind": "type",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 279,
++          "summary": "Runtime type for {@link CompositeTag}.",
++          "categories": [
++            "models"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . compositetag type runtime type for {@link compositetag}. models packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "DateTimeUtcType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 189,
++          "summary": "Beep primitive type for DateTimeUtc values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . datetimeutctype class beep primitive type for datetimeutc values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "DateType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 167,
++          "summary": "Beep primitive type for Date values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . datetype class beep primitive type for date values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "DecimalType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 233,
++          "summary": "Beep primitive type for Decimal values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . decimaltype class beep primitive type for decimal values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "FieldType",
++          "exportKind": "const",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 506,
++          "summary": "Union of all Beep field types, including primitives and composites.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . fieldtype const union of all beep field types, including primitives and composites. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "FieldType",
++          "exportKind": "type",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 541,
++          "summary": "Runtime type for {@link FieldType}.",
++          "categories": [
++            "models"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . fieldtype type runtime type for {@link fieldtype}. models packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "GeoPointType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 391,
++          "summary": "Beep primitive type for OSDK geospatial point values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . geopointtype class beep primitive type for osdk geospatial point values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "GeoShapeType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 413,
++          "summary": "Beep primitive type for OSDK geospatial shape values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . geoshapetype class beep primitive type for osdk geospatial shape values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
+         {
+           "packageName": "@beep/ontology",
+           "packagePath": "packages/foundation/modeling/ontology",
+@@ -1365,6 +1640,31 @@
+           ],
+           "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . getontologymetadata const reads ontology metadata from an effect schema annotation display map. utilities packages/foundation/modeling/ontology/src/model.ts"
+         },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "IntType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 101,
++          "summary": "Beep primitive type for Int values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . inttype class beep primitive type for int values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
+         {
+           "packageName": "@beep/ontology",
+           "packagePath": "packages/foundation/modeling/ontology",
+@@ -1399,6 +1699,56 @@
+           "tags": [],
+           "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . isontologypredicateannotationdraft const packages/foundation/modeling/ontology/src/model.ts"
+         },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "MediaReferenceType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 435,
++          "summary": "Beep primitive type for OSDK media reference values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . mediareferencetype class beep primitive type for osdk media reference values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "NumberType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 123,
++          "summary": "Beep primitive type for Number values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . numbertype class beep primitive type for number values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
+         {
+           "packageName": "@beep/ontology",
+           "packagePath": "packages/foundation/modeling/ontology",
+@@ -1440,6 +1790,56 @@
+           "tags": [],
+           "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . ontologyassemblyerror class packages/foundation/modeling/ontology/src/model.ts"
+         },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "OsdkPrimitiveTag",
++          "exportKind": "const",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 355,
++          "summary": "Literal vocabulary for OSDK-specific primitive field tags.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . osdkprimitivetag const literal vocabulary for osdk-specific primitive field tags. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "OsdkPrimitiveTag",
++          "exportKind": "type",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 375,
++          "summary": "Runtime type for {@link OsdkPrimitiveTag}.",
++          "categories": [
++            "models"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . osdkprimitivetag type runtime type for {@link osdkprimitivetag}. models packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
+         {
+           "packageName": "@beep/ontology",
+           "packagePath": "packages/foundation/modeling/ontology",
+@@ -1464,6 +1864,106 @@
+           ],
+           "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . parsejsonldontology const parses the poc json-ld graph representation back into an assembled ontology result. projections packages/foundation/modeling/ontology/src/projections/jsonld.ts"
+         },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "PrimitiveTag",
++          "exportKind": "const",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 34,
++          "summary": "Literal vocabulary for scalar primitive field tags.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . primitivetag const literal vocabulary for scalar primitive field tags. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "PrimitiveTag",
++          "exportKind": "type",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 63,
++          "summary": "Runtime type for {@link PrimitiveTag}.",
++          "categories": [
++            "models"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . primitivetag type runtime type for {@link primitivetag}. models packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "PrimitiveType",
++          "exportKind": "const",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 457,
++          "summary": "Union of all scalar and OSDK-specific primitive field types.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . primitivetype const union of all scalar and osdk-specific primitive field types. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "PrimitiveType",
++          "exportKind": "type",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 490,
++          "summary": "Runtime type for {@link PrimitiveType}.",
++          "categories": [
++            "models"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . primitivetype type runtime type for {@link primitivetype}. models packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
+         {
+           "packageName": "@beep/ontology",
+           "packagePath": "packages/foundation/modeling/ontology",
+@@ -1560,6 +2060,81 @@
+           ],
+           "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . projectturtle const projects an assembled ontology into a compact turtle document. projections packages/foundation/modeling/ontology/src/projections/turtle.ts"
+         },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "StringType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 79,
++          "summary": "Beep primitive type for String values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . stringtype class beep primitive type for string values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "StructType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 323,
++          "summary": "Beep composite type for struct values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . structtype class beep composite type for struct values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
++        {
++          "packageName": "@beep/ontology",
++          "packagePath": "packages/foundation/modeling/ontology",
++          "topoOrder": 6,
++          "importSpecifier": "@beep/ontology",
++          "exportSubpath": ".",
++          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
++          "symbolName": "TimestampType",
++          "exportKind": "class",
++          "sourcePath": "packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts",
++          "sourceLine": 211,
++          "summary": "Beep primitive type for Timestamp values.",
++          "categories": [
++            "schemas"
++          ],
++          "since": [
++            "0.0.0"
++          ],
++          "tags": [
++            "@example",
++            "@category",
++            "@since"
++          ],
++          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . timestamptype class beep primitive type for timestamp values. schemas packages/foundation/modeling/ontology/src/experimental/primitive/primitive.schemas.ts"
++        },
+         {
+           "packageName": "@beep/ontology",
+           "packagePath": "packages/foundation/modeling/ontology",
+diff --git a/standards/repo-exports.catalog.md b/standards/repo-exports.catalog.md
+index c98cc50cb6..8f5e76effa 100644
+--- a/standards/repo-exports.catalog.md
++++ b/standards/repo-exports.catalog.md
+@@ -21,8 +21,8 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
+ | packagesWithoutPublicExports | 6 |
+ | missingWorkspaceMetadata | 4 |
+ | importSpecifiers | 1078 |
+-| publicExportEntries | 15094 |
+-| uniquePackageSymbols | 6531 |
++| publicExportEntries | 15117 |
++| uniquePackageSymbols | 6549 |
+ 
+ ## Seed Discovery Proof
+ 
+@@ -42,7 +42,7 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
+ | 3 | `dependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 |
+ | 4 | `optionalDependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 |
+ | 5 | `@beep/hubspot` | `packages/drivers/hubspot` | has-public-exports | 5 | 48 | 15 |
+-| 6 | `@beep/ontology` | `packages/foundation/modeling/ontology` | has-public-exports | 1 | 12 | 12 |
++| 6 | `@beep/ontology` | `packages/foundation/modeling/ontology` | has-public-exports | 1 | 35 | 30 |
+ | 7 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | has-public-exports | 2 | 6 | 5 |
+ | 8 | `@beep/root` | `.` | no-public-exports | 0 | 0 | 0 |
+ | 9 | `@beep/canvas-domain` | `packages/canvas/domain` | has-public-exports | 5 | 35 | 24 |
+@@ -189,17 +189,40 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
+ 
+ | Import | Symbol | Kind | Source | Summary |
+ |---|---|---|---|---|
++| `@beep/ontology` | `ArrayType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:295` | Beep composite type for array values. |
++| `@beep/ontology` | `BooleanType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:145` | Beep primitive type for Boolean values. |
++| `@beep/ontology` | `CompositeTag` | const | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:259` | Literal vocabulary for composite field tags. |
++| `@beep/ontology` | `CompositeTag` | type | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:279` | Runtime type for {@link CompositeTag}. |
++| `@beep/ontology` | `DateTimeUtcType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:189` | Beep primitive type for DateTimeUtc values. |
++| `@beep/ontology` | `DateType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:167` | Beep primitive type for Date values. |
++| `@beep/ontology` | `DecimalType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:233` | Beep primitive type for Decimal values. |
++| `@beep/ontology` | `FieldType` | const | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:506` | Union of all Beep field types, including primitives and composites. |
++| `@beep/ontology` | `FieldType` | type | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:541` | Runtime type for {@link FieldType}. |
++| `@beep/ontology` | `GeoPointType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:391` | Beep primitive type for OSDK geospatial point values. |
++| `@beep/ontology` | `GeoShapeType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:413` | Beep primitive type for OSDK geospatial shape values. |
+ | `@beep/ontology` | `getOntologyKeyMetadata` | const | `packages/foundation/modeling/ontology/src/model.ts:591` | Reads ontology metadata from a schema property-key annotation display map. |
+ | `@beep/ontology` | `getOntologyMetadata` | const | `packages/foundation/modeling/ontology/src/model.ts:582` | Reads ontology metadata from an Effect Schema annotation display map. |
++| `@beep/ontology` | `IntType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:101` | Beep primitive type for Int values. |
+ | `@beep/ontology` | `isOntologyClassAnnotationDraft` | const | `packages/foundation/modeling/ontology/src/model.ts:518` |  |
+ | `@beep/ontology` | `isOntologyPredicateAnnotationDraft` | const | `packages/foundation/modeling/ontology/src/model.ts:519` |  |
++| `@beep/ontology` | `MediaReferenceType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:435` | Beep primitive type for OSDK media reference values. |
++| `@beep/ontology` | `NumberType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:123` | Beep primitive type for Number values. |
+ | `@beep/ontology` | `Ontology` | const | `packages/foundation/modeling/ontology/src/create.ts:52` | Creates an ontology authoring scope with identity-aware annotation helpers, |
+ | `@beep/ontology` | `OntologyAssemblyError` | class | `packages/foundation/modeling/ontology/src/model.ts:610` |  |
++| `@beep/ontology` | `OsdkPrimitiveTag` | const | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:355` | Literal vocabulary for OSDK-specific primitive field tags. |
++| `@beep/ontology` | `OsdkPrimitiveTag` | type | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:375` | Runtime type for {@link OsdkPrimitiveTag}. |
+ | `@beep/ontology` | `parseJsonLdOntology` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:487` | Parses the POC JSON-LD graph representation back into an assembled ontology result. |
++| `@beep/ontology` | `PrimitiveTag` | const | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:34` | Literal vocabulary for scalar primitive field tags. |
++| `@beep/ontology` | `PrimitiveTag` | type | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:63` | Runtime type for {@link PrimitiveTag}. |
++| `@beep/ontology` | `PrimitiveType` | const | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:457` | Union of all scalar and OSDK-specific primitive field types. |
++| `@beep/ontology` | `PrimitiveType` | type | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:490` | Runtime type for {@link PrimitiveType}. |
+ | `@beep/ontology` | `projectJsonLdContext` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:69` | Projects an assembled ontology into a reusable JSON-LD context document. |
+ | `@beep/ontology` | `projectJsonLdOntology` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:264` | Projects an assembled ontology into the POC JSON-LD graph representation. |
+ | `@beep/ontology` | `projectMarkdown` | const | `packages/foundation/modeling/ontology/src/projections/markdown.ts:351` | Projects an assembled ontology into deterministic Markdown documentation. |
+ | `@beep/ontology` | `projectTurtle` | const | `packages/foundation/modeling/ontology/src/projections/turtle.ts:260` | Projects an assembled ontology into a compact Turtle document. |
++| `@beep/ontology` | `StringType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:79` | Beep primitive type for String values. |
++| `@beep/ontology` | `StructType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:323` | Beep composite type for struct values. |
++| `@beep/ontology` | `TimestampType` | class | `packages/foundation/modeling/ontology/src/experimental/Primitive/Primitive.schemas.ts:211` | Beep primitive type for Timestamp values. |
+ | `@beep/ontology` | `VERSION` | const | `packages/foundation/modeling/ontology/src/index.ts:14` | Package version. |
+ 
+ ### @beep/architecture-lab-ui
