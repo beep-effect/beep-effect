@@ -1,0 +1,215 @@
+diff --git a/goals/oppold-corpus-salvage-restoration/research/OPPORTUNITIES.md b/goals/oppold-corpus-salvage-restoration/research/OPPORTUNITIES.md
+index 87a172d4e1..131c92fe77 100644
+--- a/goals/oppold-corpus-salvage-restoration/research/OPPORTUNITIES.md
++++ b/goals/oppold-corpus-salvage-restoration/research/OPPORTUNITIES.md
+@@ -63,3 +63,27 @@ Receipts recorded while executing this packet, per `AGENTS.md`.
+ - **Prevented by:** give the tooling scan a committed baseline or changed-file
+   mode so feature work can distinguish regressions from inherited migration
+   inventory.
++
++## 2026-08-27 — A concurrent sync captured unrelated workspace configuration
++
++- **Doing:** checking the feature branch and preservation inputs immediately
++  before the approved P0 archive run.
++- **Evidence:** `git show --stat HEAD` showed 12 `.codex` configuration, agent,
++  and hook paths in a concurrent sync commit even though those paths were
++  outside this packet's publish intent.
++- **Prevented by:** make sync helpers preserve unrelated dirty paths and require
++  a named-path index before committing; run the final proof and publication
++  from an isolated clean checkout built only from the packet's reviewed paths.
++
++## 2026-08-27 — Synthetic rows hid the collector's status-specific wire shape
++
++- **Doing:** starting the approved P0 preservation run against the inherited
++  collector ledger.
++- **Evidence:** preflight rejected all 5,986 `error` rows and 12
++  `excluded-secret` rows because the initial schema required `dst` and `size`
++  for every status. The real ledger records those fields only for the 22,510
++  successful `copied` and `resumed` rows.
++- **Prevented by:** freeze one sanitized example for every external status and
++  decode those exact shapes in the pre-mutation test suite; model the ledger as
++  a status-tagged union so fields required only by successful rows cannot leak
++  into inherited-loss variants.
+diff --git a/packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts b/packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts
+index 6d2e0cf5dc..210e26b44b 100644
+--- a/packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts
++++ b/packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts
+@@ -438,10 +438,9 @@ export class RestorationLegacyWordOptions extends S.Class<RestorationLegacyWordO
+  * import * as S from "effect/Schema"
+  *
+  * const decoded = S.decodeUnknownOption(CollectorManifestRecord)({
+- *   dst: "F:\\salvage\\tree\\file.bin",
+- *   size: 4,
++ *   reason: "source unreadable",
+  *   src: "C:\\source\\file.bin",
+- *   status: "copied"
++ *   status: "error"
+  * })
+  * console.log(decoded._tag) // "Some"
+  * ```
+@@ -449,18 +448,75 @@ export class RestorationLegacyWordOptions extends S.Class<RestorationLegacyWordO
+  * @category models
+  * @since 0.0.0
+  */
+-export class CollectorManifestRecord extends S.Class<CollectorManifestRecord>($I`CollectorManifestRecord`)(
++class CollectorCopiedManifestRecord extends S.Class<CollectorCopiedManifestRecord>($I`CollectorCopiedManifestRecord`)(
+   {
+     dst: S.NonEmptyString,
+     size: NonNegativeInt,
+     src: S.NonEmptyString,
+-    status: LiteralKit(["copied", "error", "excluded-secret", "resumed"]),
++    status: S.Literal("copied"),
+   },
+-  $I.annote("CollectorManifestRecord", {
+-    description: "Schema-decoded source, destination, size, and outcome from the inherited collector ledger.",
++  $I.annote("CollectorCopiedManifestRecord", {
++    description: "Inherited collector success row for a newly copied destination.",
+   })
+ ) {}
+ 
++class CollectorResumedManifestRecord extends S.Class<CollectorResumedManifestRecord>(
++  $I`CollectorResumedManifestRecord`
++)(
++  {
++    dst: S.NonEmptyString,
++    size: NonNegativeInt,
++    src: S.NonEmptyString,
++    status: S.Literal("resumed"),
++  },
++  $I.annote("CollectorResumedManifestRecord", {
++    description: "Inherited collector success row for a destination resumed from prior work.",
++  })
++) {}
++
++class CollectorErrorManifestRecord extends S.Class<CollectorErrorManifestRecord>($I`CollectorErrorManifestRecord`)(
++  {
++    reason: S.NonEmptyString,
++    src: S.NonEmptyString,
++    status: S.Literal("error"),
++  },
++  $I.annote("CollectorErrorManifestRecord", {
++    description: "Inherited collector failure row that records a source and non-empty reason without a destination.",
++  })
++) {}
++
++class CollectorExcludedSecretManifestRecord extends S.Class<CollectorExcludedSecretManifestRecord>(
++  $I`CollectorExcludedSecretManifestRecord`
++)(
++  {
++    src: S.NonEmptyString,
++    status: S.Literal("excluded-secret"),
++  },
++  $I.annote("CollectorExcludedSecretManifestRecord", {
++    description: "Inherited collector exclusion row whose source was deliberately omitted as secret material.",
++  })
++) {}
++
++export const CollectorManifestRecord = S.Union([
++  CollectorCopiedManifestRecord,
++  CollectorErrorManifestRecord,
++  CollectorExcludedSecretManifestRecord,
++  CollectorResumedManifestRecord,
++]).pipe(
++  S.toTaggedUnion("status"),
++  $I.annoteSchema("CollectorManifestRecord", {
++    description: "Status-tagged source, destination, size, and outcome row from the inherited collector ledger.",
++  })
++);
++
++/**
++ * One status-specific row from the inherited collector manifest.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type CollectorManifestRecord = typeof CollectorManifestRecord.Type;
++
+ /**
+  * Decodes one inherited collector JSONL row.
+  *
+@@ -470,7 +526,7 @@ export class CollectorManifestRecord extends S.Class<CollectorManifestRecord>($I
+  * import { decodeCollectorManifestRecordJson } from "@beep/repo-cli/commands/Corpus"
+  * import { Effect } from "effect"
+  *
+- * const decoded = decodeCollectorManifestRecordJson('{"dst":"relative","size":0,"src":"C:\\\\source","status":"error"}')
++ * const decoded = decodeCollectorManifestRecordJson('{"reason":"unreadable","src":"C:\\\\source","status":"error"}')
+  * console.log(Effect.isEffect(decoded)) // true
+  * ```
+  *
+diff --git a/packages/tooling/tool/cli/test/corpus-command.test.ts b/packages/tooling/tool/cli/test/corpus-command.test.ts
+index 17622628e2..ce6fb80925 100644
+--- a/packages/tooling/tool/cli/test/corpus-command.test.ts
++++ b/packages/tooling/tool/cli/test/corpus-command.test.ts
+@@ -84,6 +84,28 @@ describe("corpus evidence schemas", () => {
+     assertSchemaArbitraryRoundTrip(TransformationLedgerRecord.cases["family-run-summary"]);
+     assertSchemaArbitraryRoundTrip(RestorationVerifyOptions);
+   });
++
++  it("decodes inherited collector failures and secret exclusions without destination fields", () => {
++    const decode = S.decodeUnknownResult(CollectorManifestRecord);
++
++    expect(
++      Result.isSuccess(
++        decode({
++          reason: "source unreadable",
++          src: "C:\\source\\unreadable.bin",
++          status: "error",
++        })
++      )
++    ).toBe(true);
++    expect(
++      Result.isSuccess(
++        decode({
++          src: "C:\\source\\excluded.bin",
++          status: "excluded-secret",
++        })
++      )
++    ).toBe(true);
++  });
+ });
+ 
+ const filetime2020 = 132_223_104_000_000_000n;
+@@ -1156,7 +1178,7 @@ const writePresentCollectorManifest = Effect.fn("CorpusTest.writePresentCollecto
+         } else if (info.type === "File") {
+           const relativePath = path.relative(sourceRoot, entry);
+           records.push(
+-            CollectorManifestRecord.make({
++            CollectorManifestRecord.cases.copied.make({
+               dst: `F:/salvage/${relativePath}`,
+               size: NonNegativeInt.make(Number(info.size)),
+               src: `C:/source/${relativePath}`,
+@@ -1230,21 +1252,20 @@ const makeRestorationFixture = Effect.fn("CorpusTest.makeRestorationFixture")(fu
+   yield* fs.writeFile(path.join(nestedRoot, "large.bin"), largeBytes);
+   yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
+   const collectorRows = [
+-    CollectorManifestRecord.make({
++    CollectorManifestRecord.cases.copied.make({
+       dst: "F:\\salvage\\nested\\large.bin",
+       size: NonNegativeInt.make(largeBytes.length),
+       src: "C:\\source\\large.bin",
+       status: "copied",
+     }),
+-    CollectorManifestRecord.make({
++    CollectorManifestRecord.cases.resumed.make({
+       dst: "F:\\salvage\\missing.bin",
+       size: NonNegativeInt.make(1),
+       src: "C:\\source\\missing.bin",
+       status: "resumed",
+     }),
+-    CollectorManifestRecord.make({
+-      dst: "F:\\salvage\\unreadable.bin",
+-      size: NonNegativeInt.make(0),
++    CollectorManifestRecord.cases.error.make({
++      reason: "source unreadable",
+       src: "C:\\source\\unreadable.bin",
+       status: "error",
+     }),
+@@ -1849,7 +1870,7 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
+   yield* fs.writeFile(mailPath, mailBytes);
+   yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
+   const collectorRow = yield* S.encodeEffect(collectorManifestJson)(
+-    CollectorManifestRecord.make({
++    CollectorManifestRecord.cases.copied.make({
+       dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
+       size: NonNegativeInt.make(mailBytes.length),
+       src: "C:\\source\\mail-store.pst",
