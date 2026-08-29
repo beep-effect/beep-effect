@@ -1,5 +1,8 @@
 # Wiring evidence — 2026-08-06
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Live proofs for the SPEC verification matrix, executed during P1/P2. Raw
 command transcripts live in the session that drove this packet; key outputs
 are quoted verbatim here.
