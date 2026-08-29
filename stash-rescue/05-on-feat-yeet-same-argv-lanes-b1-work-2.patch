@@ -1,0 +1,544 @@
+diff --git a/.changeset/yeet-same-argv-ci-lanes.md b/.changeset/yeet-same-argv-ci-lanes.md
+new file mode 100644
+index 0000000000..23d32d593d
+--- /dev/null
++++ b/.changeset/yeet-same-argv-ci-lanes.md
+@@ -0,0 +1,30 @@
++---
++"@beep/repo-cli": patch
++---
++
++Yeet's pre-push proof now runs the hosted lane bodies verbatim instead of cousin root
++commands, so a local green means what a hosted green means (ship-velocity B1).
++
++Five lanes in the pre-push collector changed from root aggregates to `beep ci lane`
++dispatches carrying the PR shape `check.yml` passes its matrix jobs: `quality:lint` and the
++new `quality:lint-policy` replace `bun run lint`, `quality:check` replaces `bun run check`,
++and `quality:test-unit` + `quality:test-integration` replace the single unscoped
++`bun run test`. All five come from one builder shared with `beep ci local`, so the two local
++replay paths cannot drift from each other or from the workflow.
++
++Env posture stays local on purpose: this makes the *command* identical, not the environment.
++PR-posture env (`CI=true`, blank secrets, cache flags) belongs to the later `--ci-parity`
++tier.
++
++Two lanes were taking their scope from ambient environment rather than from argv, which would
++have made the argv parity cosmetic. `beep ci lane lint-policy` now passes `--full` so a local
++replay scans the same repo-wide surface the required Lint Policy context does, instead of
++silently falling back to changed-file scope off `CI` (hosted behavior is unchanged — it
++already forced the full sweep). Because the affected-scoped Check lane suppresses the two
++repo-wide tsgo extras that root `bun run check` carried, those extras stay in the local proof
++as `quality:check:tsgo-tests` and `quality:check:tsgo-smoke` rather than disappearing with the
++root command; they are the only gate on Effect tsgo diagnostics in test files.
++
++`beep ci lane` also applies the same Turbo env hygiene the root quality runner does, so a lane
++body that shells out to Turbo cannot leave a killed run's terminal in mouse-capture mode or
++pass an unresolved `op://` token reference through as a literal value.
+diff --git a/.claude/skills/yeet/SKILL.md b/.claude/skills/yeet/SKILL.md
+index 2e81e68d14..e232e0c274 100644
+--- a/.claude/skills/yeet/SKILL.md
++++ b/.claude/skills/yeet/SKILL.md
+@@ -215,11 +215,15 @@ one.
+ ## Authoritative Gates (green local must mean green CI)
+ 
+ `bun run beep yeet verify` (full tier) is the authoritative local gate. Its
+-pre-push proof runs the *same global commands CI runs* — `bun run check` (global
+-tsgo with the effect language-service rules), full `bun run docgen` (which
+-compiles the fenced code in every titled `**Example** (Title)` section),
+-`bun run test`, and the secrets/security/SAST/Nix lanes. If `yeet verify` is
+-green, CI should be green on the first push.
++pre-push proof dispatches the *hosted lane bodies themselves* — `beep ci lane`
++`check`, `lint`, `lint-policy`, `test-unit`, and `test-integration`, each with
++the affected shape `check.yml` passes its matrix jobs — alongside the full root
++build, bounded docgen (which compiles the fenced code in every titled
++`**Example** (Title)` section), the repo-wide tsgo test/smoke extras, and the
++secrets/security/SAST/Nix lanes. The command is literally the one CI runs, so if
++`yeet verify` is green, CI should be green on the first push. What it does not
++yet replay is CI's *environment* (`CI=true`, blank PR secrets, PR cache posture)
++or the merged tree — use `verify --merged` for the tree.
+ 
+ The full verify tier and every publish push path also run
+ `publish:00-head-install-preflight`: a frozen-lockfile install in a detached,
+@@ -232,8 +236,8 @@ The following cheaper commands are convenient inner-loop tools but are **NOT
+ authoritative** — do not conclude "it's green" from them:
+ 
+ - `bunx turbo run check --filter=<pkg>` (package-scoped) can pass while the
+-  global `bun run check` fails an effect-LSP rule (e.g. `strictEffectProvide`
+-  /TS377032). Only the global check matches CI.
++  proof's `beep ci lane check` fails an effect-LSP rule (e.g.
++  `strictEffectProvide`/TS377032). Only the lane matches CI.
+ - `bun run docgen:local ... --reuse-proof-manifest` skips recompiling
+   `**Example**` blocks when a source hash is unchanged, so it can miss a broken
+   example or an unresolved import subpath that full `bun run docgen` (and CI)
+diff --git a/goals/ship-velocity/PLAN.md b/goals/ship-velocity/PLAN.md
+index d4e8550adf..abd8aaf49d 100644
+--- a/goals/ship-velocity/PLAN.md
++++ b/goals/ship-velocity/PLAN.md
+@@ -18,7 +18,10 @@ phase flips ride the final PR of each phase.
+ 
+ ## P1 — Instant wins
+ 
+-- B1 same-argv lanes (`beep ci lane` from yeet).
++- ~~B1 same-argv lanes (`beep ci lane` from yeet)~~ — done 2026-08-16: the pre-push collector's
++  Lint, Lint Policy, Check, Test Unit, and Test Integration lanes dispatch the hosted
++  `beep ci lane` argv from the shared builder in `Ci/CiLane.ts`, so local and hosted cannot drift.
++  Env posture stays local (B4 owns PR-posture env).
+ - E1 publish refuses hand-staged INDEX + regenerates from manifests.
+ - C1 local remote-cache read path + checkout env template.
+ - A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
+diff --git a/goals/ship-velocity/research/OPPORTUNITIES.md b/goals/ship-velocity/research/OPPORTUNITIES.md
+index c20c92f15d..95a0c69c10 100644
+--- a/goals/ship-velocity/research/OPPORTUNITIES.md
++++ b/goals/ship-velocity/research/OPPORTUNITIES.md
+@@ -81,3 +81,17 @@ session/machine ids.
+   claiming CI parity must run from the artifact state CI actually has — wipe derived outputs
+   first (the cold-world script now does). Fix: check.dependsOn ^build, making the lane's
+   input explicit instead of inherited from whatever a -b sub-build left behind.
++- B1 (2026-08-16): two lanes took their *scope* from ambient env rather than argv, so "same
++  command" would not have meant "same work". `beep lint policy` picks full-repo vs changed-file
++  scope from `isCi()`, so a local replay of the required Lint Policy context would have scanned
++  strictly less than hosted — in a lane with 11 recorded failures. Likewise the affected-scoped
++  Check lane suppresses the two repo-wide tsgo extras that root `bun run check` carried, which
++  are the only gate on Effect tsgo diagnostics in test files. Fixed by putting `--full` in the
++  lane body and re-adding the extras as their own local lanes. Prevention law for the rest of
++  B-track: a lane's scope must be stated in its argv, never inherited from the environment —
++  otherwise argv parity is cosmetic and the audit that reads only the command lies.
++- B1 (2026-08-16): `A.filterMap(xs, (x) => Option)` compiles and silently yields `[]` — effect
++  v4's `filterMap` takes a `Filter` (Result-returning), not an Option-returning function. Cost a
++  debug cycle on a test that reported "no lane carries the flake quarantine" when both lanes
++  did. Already recorded as agent memory; worth a lint rule or a v3→v4 migration note, since the
++  failure mode is a wrong answer rather than a type error.
+diff --git a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+index acb7e0146e..58521098a8 100644
+--- a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
++++ b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+@@ -20,6 +20,7 @@ import { Console, Duration, Effect, FileSystem, Match, Path, pipe } from "effect
+ import { dual } from "effect/Function";
+ import * as S from "effect/Schema";
+ import { Argument, Command, Flag } from "effect/unstable/cli";
++import { turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
+ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+ import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+ import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
+@@ -902,7 +903,11 @@ export const ciLaneStepsForTesting: {
+       // therefore runs only the package Turbo graph instead of duplicating
+       // that battery through the root `bun run lint` aggregate.
+       lint: () => [turboTaskLaneStep(repoRoot, "lint", "lint", [HOSTED_16GB_TURBO_CONCURRENCY_ARG], options)],
+-      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
++      // `--full` states the hosted scope in the argv instead of inheriting it
++      // from ambient `CI=true`, so a local replay scans the same repo-wide
++      // surface the required Lint Policy context does. Hosted runs are
++      // unchanged: `beep lint policy` already forces the full sweep under CI.
++      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
+       nix: () => [
+         QualityTaskStep.make({
+           label: "ci:nix:flake-check",
+@@ -952,11 +957,16 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
+   step: QualityTaskStep
+ ): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
++  // Lane bodies that shell out to Turbo need the same env hygiene the root
++  // quality runner applies: no interactive TUI (it can leave a killed run's
++  // terminal in mouse-capture mode) and no unresolved `op://` token/team
++  // references leaking through as literal values on a workstation.
++  const envOverrides = yield* turboEnvOverrides(step.command, step.args);
+   return yield* runToExit({
+     command: step.command,
+     args: step.args,
+     cwd: step.cwd,
+-    env: step.env ?? {},
++    env: { ...envOverrides, ...(step.env ?? {}) },
+     extendEnv: true,
+     stdio: "inherit",
+   }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
+@@ -1306,32 +1316,79 @@ export class CiLocalStepPlan extends S.Class<CiLocalStepPlan>($I`CiLocalStepPlan
+ 
+ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArray<string> => {
+   const affectedFlags = plan.affected ? ["--affected", "--base", plan.base] : A.empty<string>();
++  // check.yml gives every Turbo-backed matrix lane `--summarize` as well as the
++  // affected shape. It only writes gitignored `.turbo/runs/*.json` receipts, so
++  // replaying it locally costs nothing and keeps the dispatched argv identical
++  // to the hosted one.
++  const turboShapeFlags = [...affectedFlags, "--summarize"];
+ 
+   return CiLaneId.$match(laneId, {
+     build: A.empty<string>,
+-    check: () => affectedFlags,
++    check: () => turboShapeFlags,
+     codegen: A.empty<string>,
+     commitlint: () => ["--from", plan.base],
+-    coverage: () => affectedFlags,
++    coverage: () => turboShapeFlags,
+     "desktop-ipc": A.empty<string>,
+     docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+     ecosystem: A.empty<string>,
+     fallow: () => ["--base", plan.base, "--validate-envelopes"],
+     "jsdoc-ratchet": A.empty<string>,
+     knip: A.empty<string>,
+-    lint: () => affectedFlags,
++    lint: () => turboShapeFlags,
+     "lint-policy": A.empty<string>,
+     nix: A.empty<string>,
+-    property: () => affectedFlags,
++    property: () => turboShapeFlags,
+     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),
+     sast: A.empty<string>,
+     secrets: A.empty<string>,
+     security: A.empty<string>,
+-    "test-integration": () => affectedFlags,
+-    "test-unit": () => affectedFlags,
++    "test-integration": () => turboShapeFlags,
++    "test-unit": () => turboShapeFlags,
+   });
+ };
+ 
++/**
++ * Build the `beep ci lane <id>` dispatch step for one lane.
++ *
++ * **Details**
++ *
++ * This is the single source of the argv every local replay of a hosted lane
++ * runs — the local CI battery and Yeet's pre-push proof both dispatch through
++ * it, so neither can drift into a cousin root command that only approximates
++ * the hosted body (ship-velocity B1). Callers own the label because failure
++ * attribution keys on it.
++ *
++ * **Example** (Dispatch the affected check lane)
++ *
++ * ```ts
++ * import { CiLocalStepPlan, ciLaneDispatchStep } from "@beep/repo-cli/commands/Ci"
++ *
++ * const plan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false })
++ * console.log(ciLaneDispatchStep("/repo", "quality:check", "check", plan).args)
++ * ```
++ *
++ * @param repoRoot - Repository root used as the subprocess working directory.
++ * @param label - Lane label used for failure attribution.
++ * @param laneId - CI lane to dispatch.
++ * @param plan - Resolved local battery shape.
++ * @returns The planned `beep ci lane` dispatch step.
++ * @category constructors
++ * @since 0.0.0
++ */
++export const ciLaneDispatchStep: {
++  (repoRoot: string, label: string, laneId: CiLaneId, plan: CiLocalStepPlan): QualityTaskStep;
++  (label: string, laneId: CiLaneId, plan: CiLocalStepPlan): (repoRoot: string) => QualityTaskStep;
++} = dual(
++  4,
++  (repoRoot: string, label: string, laneId: CiLaneId, plan: CiLocalStepPlan): QualityTaskStep =>
++    QualityTaskStep.make({
++      label,
++      command: "bun",
++      args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
++      cwd: repoRoot,
++    })
++);
++
+ /**
+  * Build the local battery step plan. Exposed for focused unit tests.
+  *
+@@ -1362,14 +1419,7 @@ export const ciLocalStepsForTesting: {
+ } = dual(
+   3,
+   (repoRoot: string, selection: ReadonlyArray<CiLaneId>, plan: CiLocalStepPlan): ReadonlyArray<QualityTaskStep> =>
+-    A.map(selection, (laneId) =>
+-      QualityTaskStep.make({
+-        label: `ci:local:${laneId}`,
+-        command: "bun",
+-        args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
+-        cwd: repoRoot,
+-      })
+-    )
++    A.map(selection, (laneId) => ciLaneDispatchStep(repoRoot, `ci:local:${laneId}`, laneId, plan))
+ );
+ 
+ /**
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts b/packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts
+index f52ef291ff..488148f248 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts
+@@ -10,7 +10,9 @@ import { Match, Order, pipe } from "effect";
+ import { dual } from "effect/Function";
+ import * as O from "effect/Option";
+ import { QualityTaskStep } from "../../../internal/process/index.ts";
++import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
+ import { GithubCheckLaneSpec, GithubCheckLaneWave, GithubCheckLaneWaveSpec } from "../Quality.schemas.ts";
++import type { CiLaneId } from "../../Ci/CiLane.ts";
+ import type {
+   FallowQualityFeatureFamily,
+   GithubCheckLaneStage,
+@@ -93,6 +95,39 @@ const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>):
+ const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
+   bunRunLane(repoRoot, label, ["beep", "quality", ...args]);
+ 
++// PR shape for locally replayed hosted lanes: affected against the `origin/main`
++// the collector already refreshed, matching what check.yml passes its matrix
++// jobs. Env posture stays local on purpose — B1 makes the command identical, not
++// the environment (`CI=true`, blank PR secrets, and cache flags belong to the
++// later `--ci-parity` tier). `onMainBranch` only shapes the repo-sanity lane,
++// which this collector plans separately.
++const PRE_PUSH_CI_LANE_PLAN = CiLocalStepPlan.make({
++  affected: true,
++  base: "origin/main",
++  onMainBranch: false,
++});
++
++/**
++ * Build a pre-push lane step that dispatches the hosted lane body verbatim.
++ *
++ * **Example** (Inspect GitHub checks)
++ *
++ * ```ts
++ * import { githubCheckQualityLanes } from "@beep/repo-cli/test/Quality"
++ *
++ * console.log(githubCheckQualityLanes("/repo")[1]?.step.args)
++ * ```
++ *
++ * @param repoRoot - Repository root used as the subprocess working directory.
++ * @param label - Lane label used for failure attribution.
++ * @param laneId - Hosted CI lane replayed by this pre-push lane.
++ * @returns The `beep ci lane` dispatch step for the lane.
++ * @category utilities
++ * @since 0.0.0
++ */
++const ciLaneStep = (repoRoot: string, label: string, laneId: CiLaneId): QualityTaskStep =>
++  ciLaneDispatchStep(repoRoot, label, laneId, PRE_PUSH_CI_LANE_PLAN);
++
+ /**
+  * Opt a Turbo-backed lane into no-location TS2589 flake quarantine.
+  *
+@@ -227,12 +262,34 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
+     "heavy",
+     ts2589QuarantineLane(bunRunLane(repoRoot, "quality:build", ["build"]))
+   ),
+-  githubCheckLane("quality:lint", "repo-quality", "heavy", bunRunLane(repoRoot, "quality:lint", ["lint"])),
++  githubCheckLane("quality:lint", "repo-quality", "heavy", ciLaneStep(repoRoot, "quality:lint", "lint")),
++  githubCheckLane(
++    "quality:lint-policy",
++    "repo-quality",
++    "heavy",
++    ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
++  ),
+   githubCheckLane(
+     "quality:check",
+     "repo-quality",
+     "heavy",
+-    ts2589QuarantineLane(bunRunLane(repoRoot, "quality:check", ["check"]))
++    ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
++  ),
++  // The hosted Check context runs affected-scoped, which suppresses the two
++  // repo-wide extras root `bun run check` used to carry. They are the only gate
++  // on Effect tsgo diagnostics in test files, so they stay as their own local
++  // lanes rather than disappearing with the root command.
++  githubCheckLane(
++    "quality:check:tsgo-tests",
++    "repo-quality",
++    "heavy",
++    repoCliLane(repoRoot, "quality:check:tsgo-tests", ["test-tsgo"])
++  ),
++  githubCheckLane(
++    "quality:check:tsgo-smoke",
++    "repo-quality",
++    "heavy",
++    repoCliLane(repoRoot, "quality:check:tsgo-smoke", ["tsgo-smoke"])
+   ),
+   githubCheckLane("quality:knip", "repo-quality", "preflight", repoCliLane(repoRoot, "quality:knip", ["knip"])),
+   githubCheckLane(
+@@ -250,7 +307,13 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
+     "documentation",
+     bunRunLane(repoRoot, "quality:docgen", ["docgen:local", "--", "--allow-full"])
+   ),
+-  githubCheckLane("quality:test", "repo-quality", "test", bunRunLane(repoRoot, "quality:test", ["test"])),
++  githubCheckLane("quality:test-unit", "repo-quality", "test", ciLaneStep(repoRoot, "quality:test-unit", "test-unit")),
++  githubCheckLane(
++    "quality:test-integration",
++    "repo-quality",
++    "test",
++    ciLaneStep(repoRoot, "quality:test-integration", "test-integration")
++  ),
+ ];
+ 
+ /**
+diff --git a/packages/tooling/tool/cli/test/ci-lane.test.ts b/packages/tooling/tool/cli/test/ci-lane.test.ts
+index 6d31ecf26d..d1079404f8 100644
+--- a/packages/tooling/tool/cli/test/ci-lane.test.ts
++++ b/packages/tooling/tool/cli/test/ci-lane.test.ts
+@@ -131,6 +131,11 @@ describe("ciLaneStepsForTesting", () => {
+     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
+   });
+ 
++  it("states the lint-policy full sweep in argv instead of inheriting CI=true", () => {
++    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", baseOptions));
++    expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--full"]);
++  });
++
+   it("runs the first ecosystem member's type and bundle contracts explicitly", () => {
+     const steps = ciLaneStepsForTesting(REPO_ROOT, "ecosystem", baseOptions);
+     expect(A.map(steps, (step) => step.command)).toEqual(["bun", "bun"]);
+@@ -315,10 +320,25 @@ describe("ciLocalStepsForTesting", () => {
+     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
+   });
+ 
++  it("keeps --summarize on turbo-backed lanes even without the affected shape", () => {
++    const check = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["check"], branchPlan));
++    expect([...check.args]).toEqual(["run", "beep", "ci", "lane", "check", "--summarize"]);
++  });
++
+   it("forwards the affected shape to turbo-backed lanes", () => {
+     const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
+     const lint = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint"], affectedPlan));
+-    expect([...lint.args]).toEqual(["run", "beep", "ci", "lane", "lint", "--affected", "--base", "origin/main"]);
++    expect([...lint.args]).toEqual([
++      "run",
++      "beep",
++      "ci",
++      "lane",
++      "lint",
++      "--affected",
++      "--base",
++      "origin/main",
++      "--summarize",
++    ]);
+ 
+     const docgen = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["docgen"], affectedPlan));
+     expect([...docgen.args]).toEqual([
+diff --git a/packages/tooling/tool/cli/test/quality-tasks.test.ts b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+index 04cad5423e..914908a47b 100644
+--- a/packages/tooling/tool/cli/test/quality-tasks.test.ts
++++ b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+@@ -1,4 +1,9 @@
+-import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
++import {
++  CiLaneRunOptions,
++  CiLocalStepPlan,
++  ciLaneStepsForTesting,
++  ciLocalStepsForTesting,
++} from "@beep/repo-cli/commands/Ci";
+ import {
+   collectAuditDiffInputForTesting,
+   fallowAuditDiffFallbackArgsForTesting,
+@@ -83,6 +88,7 @@ import * as S from "effect/Schema";
+ import { FastCheck as fc } from "effect/testing";
+ import * as TestConsole from "effect/testing/TestConsole";
+ import { ChildProcess } from "effect/unstable/process";
++import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
+ import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
+ 
+ const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+@@ -98,6 +104,13 @@ const isDomainError = S.is(DomainError);
+ const isQualityTaskFailed = S.is(QualityTaskFailed);
+ const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
+ const isString = (value: unknown): value is string => typeof value === "string";
++const qualityLaneArgs = (lanes: ReadonlyArray<GithubCheckLaneSpec>, laneId: string): ReadonlyArray<string> =>
++  pipe(
++    lanes,
++    A.findFirst((lane) => lane.id === laneId),
++    O.map((lane) => lane.step.args),
++    O.getOrThrowWith(() => new Error(`missing quality lane ${laneId}`))
++  );
+ const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
+   const handle = yield* ChildProcess.make("git", [...args], {
+     cwd: repoRoot,
+@@ -502,19 +515,25 @@ describe("quality task adapter", () => {
+     expect(A.map(lanes, (lane) => lane.id)).toEqual([
+       "quality:build",
+       "quality:lint",
++      "quality:lint-policy",
+       "quality:check",
++      "quality:check:tsgo-tests",
++      "quality:check:tsgo-smoke",
+       "quality:knip",
+       "quality:jsdoc-ratchet",
+       "quality:docgen",
+-      "quality:test",
++      "quality:test-unit",
++      "quality:test-integration",
+     ]);
+     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
+     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
+-    expect(lanes[1]?.step.args).toEqual(["run", "lint"]);
+-    expect(lanes[2]?.step.args).toEqual(["run", "check"]);
+-    expect(lanes[3]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
+-    expect(lanes[4]?.step.args).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
+-    expect(lanes[6]?.step.args).toEqual(["run", "test"]);
++    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "build"]);
++    expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
++    expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
++    // Affected-scoped `beep ci lane check` drops the repo-wide tsgo extras root
++    // `bun run check` carried, so they keep running as their own local lanes.
++    expect(qualityLaneArgs(lanes, "quality:check:tsgo-tests")).toEqual(["run", "beep", "quality", "test-tsgo"]);
++    expect(qualityLaneArgs(lanes, "quality:check:tsgo-smoke")).toEqual(["run", "beep", "quality", "tsgo-smoke"]);
+     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual([
+       "preflight",
+       "heavy",
+@@ -523,6 +542,45 @@ describe("quality task adapter", () => {
+     ]);
+   });
+ 
++  // ship-velocity B1: a local green must mean what a hosted green means, so the
++  // pre-push collector dispatches the hosted lane bodies verbatim instead of
++  // running cousin root commands that only approximate them.
++  it("dispatches every replayable required lane through the hosted beep ci lane argv", () => {
++    const lanes = githubCheckQualityLanesForTesting("/repo");
++    const prPlan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false });
++    const hostedArgs = (laneId: CiLaneId): ReadonlyArray<string> =>
++      O.getOrThrow(A.head(ciLocalStepsForTesting("/repo", [laneId], prPlan))).args;
++
++    expect(qualityLaneArgs(lanes, "quality:lint")).toEqual(hostedArgs("lint"));
++    expect(qualityLaneArgs(lanes, "quality:lint-policy")).toEqual(hostedArgs("lint-policy"));
++    expect(qualityLaneArgs(lanes, "quality:check")).toEqual(hostedArgs("check"));
++    expect(qualityLaneArgs(lanes, "quality:test-unit")).toEqual(hostedArgs("test-unit"));
++    expect(qualityLaneArgs(lanes, "quality:test-integration")).toEqual(hostedArgs("test-integration"));
++
++    expect(qualityLaneArgs(lanes, "quality:check")).toEqual([
++      "run",
++      "beep",
++      "ci",
++      "lane",
++      "check",
++      "--affected",
++      "--base",
++      "origin/main",
++      "--summarize",
++    ]);
++  });
++
++  it("keeps the ts2589 flake quarantine on the dispatched check lane", () => {
++    const lanes = githubCheckQualityLanesForTesting("/repo");
++    const quarantined = pipe(
++      lanes,
++      A.filter((lane) => O.isSome(O.fromNullishOr(lane.step.flakeQuarantine))),
++      A.map((lane) => lane.id)
++    );
++
++    expect(quarantined).toEqual(["quality:build", "quality:check"]);
++  });
++
+   it("maps repo-sanity github checks as collector lanes", () => {
+     const lanes = githubCheckRepoSanityLanesForTesting("/repo");
+ 
+diff --git a/packages/tooling/tool/cli/test/yeet.test.ts b/packages/tooling/tool/cli/test/yeet.test.ts
+index 19128436be..54cb11b5b5 100644
+--- a/packages/tooling/tool/cli/test/yeet.test.ts
++++ b/packages/tooling/tool/cli/test/yeet.test.ts
+@@ -422,8 +422,18 @@ describe("yeet planner", () => {
+     ).toEqual(["readonly", "write"]);
+     expect(findStep(plan.steps, "full:pre-push").waves).toEqual([
+       expect.objectContaining({ id: "preflight" }),
+-      expect.objectContaining({ id: "heavy", laneIds: ["quality:build", "quality:lint", "quality:check"] }),
+-      expect.objectContaining({ id: "test", laneIds: ["quality:test"] }),
++      expect.objectContaining({
++        id: "heavy",
++        laneIds: [
++          "quality:build",
++          "quality:lint",
++          "quality:lint-policy",
++          "quality:check",
++          "quality:check:tsgo-tests",
++          "quality:check:tsgo-smoke",
++        ],
++      }),
++      expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
+       expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
+     ]);
+   });
