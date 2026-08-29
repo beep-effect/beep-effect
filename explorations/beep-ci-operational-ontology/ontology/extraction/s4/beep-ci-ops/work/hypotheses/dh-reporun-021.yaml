@@ -1,0 +1,25 @@
+id: "dh:reporun:021"
+observation_refs:
+  - "so:sha256:324517ded376b6dfcf6932e4ac2f2ddefd53a76bfb56b19e6fe9de926ea19990"
+  - "so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa"
+cq_warrants: ["CQ-004"]
+proposed_referent:
+  label: "Turbo workspace-package metadata entry"
+  description: "A name-and-path record included in a Turbo planning snapshot."
+representation_status: unresolved
+alternatives:
+  - label: "PackageRef denoted by the metadata entry"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Snapshot-local DTO with no independent ontology role"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "CQ-004 warrants packages, but a two-field snapshot record does not establish the PackageRef identity criterion or dependency-closure role. It may be only a representation of a package, so the null stands."
+epistemic_status: proposed
+confidence:
+  value: 0.54
+  use_for_acceptance: false
+

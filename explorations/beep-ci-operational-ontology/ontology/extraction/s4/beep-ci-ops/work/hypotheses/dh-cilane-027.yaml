@@ -1,0 +1,26 @@
+id: "dh:cilane:027"
+observation_refs:
+  - "so:sha256:0512afa09cd64a85c440014d4b55794c9d4ab7838ae92b929f118183c3ff217c"
+  - "so:sha256:9b02dee5beb27bfe22e05bae06719fd3788e666a8d5b5121aac66ab212f7758f"
+  - "so:sha256:cceaca254e21183bb3611ba9b99fb64be6b7db2492b86d2e394bf16e70dd1f7c"
+  - "so:sha256:d2295cd09efed29bbba5da39f091791432542f2c6b81bb0728a3cea7c5850600"
+cq_warrants: []
+proposed_referent:
+  label: "DocgenLaneMode source vocabulary"
+  description: "The source-level literals, schema value, alias, and flag-choice adapter for none, affected, and full modes."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "documentation-lane execution mode"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "controlled vocabulary for lane invocation scope"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The mode values and adapter declarations can all serve CLI branching without denoting an operational mode universal. No supplied fact records differing work, scope, or execution under the three values."
+epistemic_status: proposed
+confidence:
+  value: 0.79
+  use_for_acceptance: false

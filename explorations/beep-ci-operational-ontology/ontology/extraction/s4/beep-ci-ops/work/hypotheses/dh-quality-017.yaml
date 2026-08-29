@@ -1,0 +1,24 @@
+id: "dh:quality:017"
+observation_refs:
+  - "so:sha256:174bc1e94d345376660ef5fa87113a49198ca33bcb34da61b934af64724b4ace"
+cq_warrants: []
+proposed_referent:
+  label: "Possible information artifact denoted by QualityProfileConfig"
+  description: "The name suggests a report, summary, document, configuration, profile, matrix, or related record, but the observations do not establish that instances are created, retained, exchanged, or consulted outside the implementation."
+representation_status: unresolved
+alternatives:
+  - label: "QualityProfileConfig schema or DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "An operational domain entity suggested by QualityProfileConfig"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only an S.Class-based declaration and possibly its export. Without an observed document lifecycle, persistence boundary, exchange, or domain bearer, the implementation-only null remains live."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.52
+  use_for_acceptance: false

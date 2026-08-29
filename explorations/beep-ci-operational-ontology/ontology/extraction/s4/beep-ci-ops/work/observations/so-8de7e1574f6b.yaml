@@ -1,0 +1,25 @@
+id: so:sha256:8de7e1574f6bb139c82c1a54e58cc377cb9b2425574eb104ef6e6d47a051f173
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 122
+  end_line: 122
+  content_sha256: 291a1c048bac4fd183b86553fc077169414fb37a2f831975e00cfa4e92b9a2a8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::YeetAttemptJournalEvent
+  lexical_name: YeetAttemptJournalEvent
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetAttemptJournalEvent
+- predicate: exports_symbol
+  object: YeetAttemptJournalEvent
+source_excerpt: export type YeetAttemptJournalEvent = typeof YeetAttemptJournalEvent.Type;
+epistemic_status: parser_derived

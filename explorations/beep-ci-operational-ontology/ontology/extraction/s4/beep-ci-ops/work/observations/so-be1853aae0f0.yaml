@@ -1,0 +1,31 @@
+id: so:sha256:be1853aae0f018d491da8f4e61a6144f1a4e2667aee6d3772e8a68897842cc5f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 312
+  end_line: 326
+  content_sha256: bb9f7cf93cccc08bc3ac047bc92e29a83da22a0630cadce613b193e4ef77cef8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::YeetThreadTransition
+  lexical_name: YeetThreadTransition
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: opened
+- predicate: declares_literal_member
+  object: resolved
+- predicate: declares_literal_member
+  object: unresolved
+- predicate: exports_symbol
+  object: YeetThreadTransition
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetThreadTransition extends S.Class<YeetThreadTransition>($I`YeetThreadTransition`)(
+epistemic_status: parser_derived

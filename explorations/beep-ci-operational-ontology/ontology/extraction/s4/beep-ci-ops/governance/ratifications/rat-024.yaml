@@ -1,0 +1,9 @@
+id: rat:24
+proposal_ref: otp:work-unit-specification:001
+proposal_sha256: 518ab5e27715d8f21041f8b91e248bf6d43158ae9d20c763f51e47b8e436c433
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept WorkUnitSpecification — the spec half ratifies alone; WorkUnitExecution is named S5 debt.

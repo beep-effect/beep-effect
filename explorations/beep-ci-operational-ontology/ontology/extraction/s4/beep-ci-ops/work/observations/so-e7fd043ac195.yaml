@@ -1,0 +1,25 @@
+id: so:sha256:e7fd043ac19533e9559a8e42d333b920f5fb90d225039875011febff897e44ea
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 747
+  end_line: 756
+  content_sha256: 13d66a790f1f8b48e9b7163b7364ce4a2e6d981bec392692e353252037790cae
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetEpochTarget
+  lexical_name: FleetEpochTarget
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: FleetEpochTarget
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class FleetEpochTarget extends S.Class<FleetEpochTarget>($I`FleetEpochTarget`)(
+epistemic_status: parser_derived

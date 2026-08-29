@@ -1,0 +1,49 @@
+target: "otp:enqueued-at:001"
+target_sha256: "4ade3c9a294939800f1cbe7c0d3cbdeb7b0634d6f87cd17416c7f230a6042e42"
+chain_sha256: "7d98eac8cad60e9432c3f7fa9ff15f257e975ba21fe93623e290d53789aa2ef6"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge, so there is no proposed is-a relation to test; no
+    valid subsumption relation is asserted or inferred.
+attacks:
+  - surface: identity
+    rule: identity-card-entity-kind-mismatch
+    counterexample: >-
+      The proposal is a data property, but its IdentityCard individuates enqueue boundaries. If
+      the same request is enqueued twice within one millisecond, the two occurrences are
+      distinct while the available subject-value assertion and finite timestamp cannot
+      distinguish them. Proposal rigidity unresolved, identity none, and FA explicitly_deferred
+      agree with the IC; the card still analyzes event identity rather than property semantics.
+    outcome: landed
+  - surface: warrant
+    rule: cq-term-required
+    counterexample: >-
+      If enqueuedAt is removed, the CQ-021 SELECT cannot bind its enqueuedAt result for any
+      queued SeatRequest, and the CQ explicitly lists enqueuedAt among required_properties.
+      Unlike a mere listing mention, this property is projected and therefore necessary.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-ticket-dto
+    counterexample: >-
+      A queue implementation with no modeled enqueue occurrence can stamp a ticket DTO with the
+      current millisecond and later subtract it for priority aging. The exact
+      creation-and-comparison behavior therefore survives in the implementation-only null world.
+    outcome: landed
+rival_models_still_viable:
+  - "The ontology should model an enqueue event, with the instant as its temporal boundary."
+  - "The enqueue time is a dependent temporal quality of the SeatRequest."
+  - "Only the recorded millisecond timestamp value is required."
+evidence:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "po:sha256:9c431dec2cde95c190b0b7d6cdbcbda162b9cf587a8906a6fe1a4d2286a01d58"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "CQ-021"

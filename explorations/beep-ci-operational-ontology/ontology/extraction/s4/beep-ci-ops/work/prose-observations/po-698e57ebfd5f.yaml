@@ -1,0 +1,10 @@
+id: po:sha256:698e57ebfd5f300db72965bcf84f6b21f63a77c7d7e7d140e18778f9906782aa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 313
+  end_line: 320
+quote: 'kind: "full-proof"'
+epistemic_status: quoted_prose

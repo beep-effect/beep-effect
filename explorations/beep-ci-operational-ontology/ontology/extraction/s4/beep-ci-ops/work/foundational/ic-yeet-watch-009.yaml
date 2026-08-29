@@ -1,0 +1,54 @@
+id: "ic:yeet-watch:009"
+hypothesis_ref: "dh:yeet-watch:030"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Membership check against the Yeet monitor failure-signature specification
+    domain in ic:yeet-watch:005: two occurrences represent the same
+    install-failure specification only when they preserve the same failed-job
+    prerequisite, normalized install-step predicate, failed-install condition,
+    no-subsequent-lane-work rule, classifier priority, applicability context,
+    and version lineage. Matching installations and records remain distinct,
+    and the install-failure spelling is only evidence.
+  reidentification_key:
+    - "job conclusion must be failure"
+    - "normalized install-step name and failed conclusion"
+    - "all later steps must be cleanup, skipped, or unconcluded"
+    - "classifier priority, applicability context, and version lineage"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One job-shape recognition prescription joins a failed install step to the
+    absence of later lane work. Matching jobs, installation processes, failure
+    causes, detector calls, and bounded reruns are not parts of its unity.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "subkind: failed hosted jobs whose dependency installation failed before lane work"
+    - "event: a particular dependency-installation failure occurrence"
+    - "role: a matching failed job currently eligible for a bounded rerun"
+    - "subkind: transient network-caused installation failures rather than all matching failures"
+    - "none: the install-failure token as only a lexical selector"
+  existential_dependencies:
+    - "At least one faithful bearer of the install-failure recognition prescription, generically rather than this token"
+    - "The GitHub step-name, conclusion, cleanup, and ordering vocabulary in which the predicate is interpreted"
+    - "A Yeet policy revision for its current rerun-authorized role, but no particular installation or rerun execution"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as a historical specification"
+    - "withdrawn from the current rerun policy"
+    - "ceased when no faithful bearer of the specification remains"
+counterexamples:
+  - description: >-
+      A genuinely broken lockfile deterministically fails the install step
+      before any lane runs and therefore matches install-failure even though a
+      rerun cannot repair it and no transient environment fault occurred.
+  - description: >-
+      Distinct jobs can fail different installation processes yet satisfy the
+      same pre-lane job-shape prescription.
+status: proposed

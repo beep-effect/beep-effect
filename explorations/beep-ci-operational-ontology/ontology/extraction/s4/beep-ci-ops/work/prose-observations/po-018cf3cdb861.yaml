@@ -1,0 +1,10 @@
+id: po:sha256:018cf3cdb8617f0a83157007f024a999ae433a9275dc350de23dd30671b4b9db
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 26
+  end_line: 26
+quote: const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;
+epistemic_status: quoted_prose

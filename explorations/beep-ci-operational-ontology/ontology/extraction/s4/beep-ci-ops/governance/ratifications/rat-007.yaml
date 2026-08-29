@@ -1,0 +1,10 @@
+id: rat:7
+proposal_ref: otp:seat-request:001
+proposal_sha256: a5bcff26d4a14de7330a7e909ad8b88ea6ed75308427a388e725119c4fd42a10
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept SeatRequest — the ticket/lease split is real and load-bearing; a transition journal becomes
+  an event term at S5 if it lands.

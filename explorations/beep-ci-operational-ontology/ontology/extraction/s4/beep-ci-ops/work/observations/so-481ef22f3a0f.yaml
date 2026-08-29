@@ -1,0 +1,25 @@
+id: so:sha256:481ef22f3a0f0cce7cd6630fd9e0db7c702596ef73baf442048dbedaaaa248d5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 216
+  end_line: 216
+  content_sha256: 7b1a8ce5fd005224ffdcabd84b4b6db6deacc170b971500d0eaa72d23ef1d8fd
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetMergeReadyCriterion
+  lexical_name: YeetMergeReadyCriterion
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetMergeReadyCriterion
+- predicate: exports_symbol
+  object: YeetMergeReadyCriterion
+source_excerpt: export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
+epistemic_status: parser_derived

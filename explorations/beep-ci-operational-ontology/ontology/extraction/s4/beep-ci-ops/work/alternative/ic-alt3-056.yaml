@@ -1,0 +1,31 @@
+id: ic:alt3:056
+hypothesis_ref: dh:yeet-handler:010
+identity:
+  supplies_identity: true
+  identity_criterion: Two verdict records are the same iff they are the same serialized result
+    of one Yeet run, including outcome, lanes, and elapsed time. runId is reidentification
+    evidence rather than the criterion; the run itself is not the record.
+  reidentification_key:
+  - runId
+  - YeetVerdictJson
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one machine-readable verdict artifact for one yeet run
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - the Yeet run it records
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: buildYeetVerdict can construct a value that has not been written; writeRunVerdict
+    persists a JSON encoding. A second write of another run is another record, even with a
+    similar outcome.
+status: proposed

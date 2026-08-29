@@ -1,0 +1,18 @@
+id: fa:alt4:046
+hypothesis_ref: dh:topology:141
+identity_card_ref: ic:alt4:046
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: topology-capture catalog entry for this workspace package name"
+    still_viable: true
+  - label: "kind: the workspace software package as an operational domain participant (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: lexical alias with no package-slot referent
+    still_viable: false
+strongest_counterexample: The cited observation is only the capture line naming @beep/xai plus a trailing integer; that row can exist as a generated serialization without a maintained source tree, so treating the name as a Kind overclaims the evidence.
+verdict: analyzed
+needed_evidence: A package.json and source tree for @beep/xai that persist independently of this topo-sort capture row, or a capture row for @beep/xai that is not consumed by the affected-package closure, would discriminate Kind from catalog-entry information object.

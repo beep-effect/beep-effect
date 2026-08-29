@@ -1,0 +1,23 @@
+id: so:sha256:68873bb4e05d5b7aea9abb4f56d69c1b609593aa66c1c0fddda658e64406310f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 338
+  end_line: 567
+  content_sha256: 624042e3ffcfac19fb9cf0d7e6dde98a6e25a19797097eccbdf6ad640f94edb9
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CI_LANE_DESCRIPTORS
+  lexical_name: CI_LANE_DESCRIPTORS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CI_LANE_DESCRIPTORS
+source_excerpt: 'export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = ['
+epistemic_status: parser_derived

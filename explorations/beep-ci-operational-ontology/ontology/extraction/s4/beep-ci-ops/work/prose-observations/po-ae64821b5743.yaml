@@ -1,0 +1,10 @@
+id: po:sha256:ae64821b574310e683ecf5e51f124b3462285b77b4e6ce103b86ed541fd1cb5a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 43
+  end_line: 46
+quote: export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe(
+epistemic_status: quoted_prose

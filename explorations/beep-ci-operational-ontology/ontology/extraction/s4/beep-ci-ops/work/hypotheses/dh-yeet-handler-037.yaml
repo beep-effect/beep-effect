@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:037"
+observation_refs:
+  - "so:sha256:6fa41fba4350c2e1692cd6374437c8b1dbc07d3e85b3049ef54319278105205c"
+  - "so:sha256:e4892ab6bc090b8c2749a3438d8787c73eee5428328738101716821a4cab7dbd"
+cq_warrants: []
+proposed_referent:
+  label: "validatePublishCommitMessage implementation and test alias"
+  description: "No domain-ontology referent is proposed for the validatePublishCommitMessage implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "publish commit-message validation rule"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

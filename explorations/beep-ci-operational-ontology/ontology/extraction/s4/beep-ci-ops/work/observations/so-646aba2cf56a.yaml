@@ -1,0 +1,31 @@
+id: so:sha256:646aba2cf56ad94a6ba492b809ea12ceebdacec8837d7923a6c4d34445cee2cf
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 583
+  end_line: 592
+  content_sha256: bbb5483257faa369ca8f41bf2a5f1d5a002f1c931a0513a23180bfb912f2670f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetUnknownReason
+  lexical_name: FleetUnknownReason
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: head-unknown
+- predicate: declares_literal_member
+  object: not-live
+- predicate: declares_literal_member
+  object: probe-failed
+- predicate: declares_literal_member
+  object: target-unmaterialized
+- predicate: exports_symbol
+  object: FleetUnknownReason
+source_excerpt: export const FleetUnknownReason = LiteralKit([
+epistemic_status: parser_derived

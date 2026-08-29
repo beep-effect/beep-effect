@@ -1,0 +1,48 @@
+target: "otp:hard-floor-engaged-situation:001"
+target_sha256: "8b1c727f7f40d19fbe085962f4f507df735a20b458c7736809c5e830836ef4e0"
+chain_sha256: "19f22b488ca7d8688b2462d43c959a48c6e1e9a6ea562fe2b7c8d3a3c43eb1e2"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: observation-scoped-vs-continuous-situation
+    counterexample: >-
+      Two hard-floor observations can be separated by an unobserved recovery,
+      defeating identity as one continuous below-floor interval. The adopted
+      StarvationException is instead a request- and observation-scoped situation,
+      makes no cross-snapshot continuity claim, and explicitly reserves the
+      continuous world-side situation as a separate possible extension.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-closed-exception-domain
+    counterexample: >-
+      Without StarvationException, CQ-023 cannot type the modeled exception that
+      prevents a hard-floor observation from being reported as an unqualified
+      starvation violation. The question directly requires the generic class
+      and fixes HardFloorException as its closed deployed member.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-hard-floor-exception-discriminator
+    counterexample: >-
+      An inert Boolean field can report true, but the cited scheduler compares
+      measured memory with the governed hard floor, forces live admission
+      capacity to zero, and exposes the same condition for per-request exception
+      derivation. The policy-recognized observation is not exhausted by a DTO bit.
+    outcome: survived
+rival_models_still_viable:
+  - "A continuous below-floor world situation may be modeled separately once threshold-crossing evidence exists."
+evidence:
+  - "so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451"
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+  - "CQ-023"

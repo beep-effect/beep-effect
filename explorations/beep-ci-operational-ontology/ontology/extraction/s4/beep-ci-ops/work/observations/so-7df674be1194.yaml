@@ -1,0 +1,27 @@
+id: so:sha256:7df674be11942f63ac94e7c586a21e07045ac51ff40a42d31ad62abedbd4b59f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 109
+  end_line: 114
+  content_sha256: aab4e9f5dd0ae8f0d4aed872b3b79443e777ed4a69c6c33704d4c8c9e909e089
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::GateInputScope
+  lexical_name: GateInputScope
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: goals-packets
+- predicate: declares_literal_member
+  object: repo-code
+- predicate: exports_symbol
+  object: GateInputScope
+source_excerpt: export const GateInputScope = LiteralKit(["repo-code", "goals-packets"]).pipe(
+epistemic_status: parser_derived

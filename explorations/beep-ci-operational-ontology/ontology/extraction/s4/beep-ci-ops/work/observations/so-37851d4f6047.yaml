@@ -1,0 +1,23 @@
+id: so:sha256:37851d4f6047fadde7a2d9f4ce8e6112fe87fbbbd2ac7545e896a44d16ec85e6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 422
+  end_line: 431
+  content_sha256: e47f33ff70ada324ca609a1c551d5bdd1be007b74808053fe80aeac29388ecbe
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::phaseOrderValue
+  lexical_name: phaseOrderValue
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const phaseOrderValue = (phase: RepoPlanPhase): number =>'
+epistemic_status: parser_derived

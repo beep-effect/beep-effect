@@ -1,0 +1,27 @@
+id: ic:alt4:055
+hypothesis_ref: dh:worktree-config:018
+identity:
+  supplies_identity: true
+  identity_criterion: Two Fallow health verification-lane procedure specifications are the same when they prescribe the same invocable health command governed by the same complexity-ceiling configuration; a recorded elapsed-time snapshot in the inventory is evidence of a past run, never the criterion of the procedure.
+  reidentification_key:
+    - fallow health
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The invocable command plus the complexity-ceiling configuration compose one procedure specification.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+    - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: The inventory's elapsedMs and filesAnalyzed figures are a snapshot of one execution and must not be identified with this repeatable procedure.
+  - description: A Fallow command other than health, even in the same inventory, is a different procedure.
+status: proposed

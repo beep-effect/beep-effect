@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:041"
+observation_refs:
+  - "so:sha256:596f62c0247e43302d1c9e05a2cb12f2f1997547905b135f7ff12fd8b232d7a8"
+cq_warrants: []
+proposed_referent:
+  label: "Internal local-only cache-argument transformation helper"
+  description: "An exported procedure from an argument array to another argument array."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A procedure specification for enforcing a local-only cache posture"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "An event in which invocation arguments are restricted to local caching"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The signature does not expose the transformation result, an invocation, or a policy obligation, so it cannot defeat the implementation-helper null."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

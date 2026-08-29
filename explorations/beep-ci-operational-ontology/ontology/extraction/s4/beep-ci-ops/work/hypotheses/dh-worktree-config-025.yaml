@@ -1,0 +1,18 @@
+id: "dh:worktree-config:025"
+observation_refs:
+  - "so:sha256:09ddb47a16d37e42a145c9827776837fad5e5de78529bc1d7fd158f4d87cab81"
+cq_warrants: []
+proposed_referent:
+  label: "porcelainBlocks parsing helper"
+  description: "An internal variable declaration named porcelainBlocks whose construct is otherwise unrepresented by the observation vocabulary."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "porcelain block partition operation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole fact is an unrepresentable variable declaration, which cannot ground a surviving denotation hypothesis by itself."
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

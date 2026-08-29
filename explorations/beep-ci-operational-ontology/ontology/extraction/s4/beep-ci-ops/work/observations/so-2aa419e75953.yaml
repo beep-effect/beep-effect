@@ -1,0 +1,25 @@
+id: so:sha256:2aa419e7595332d539b698167921fce17fe8263e6aaa325bb36aebfb8390220f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 82
+  end_line: 91
+  content_sha256: a0abfea9d02e25427068eb8bc2e34beb6bf08c73c5e1cd03f15412e977e9eb6f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetStashState
+  lexical_name: YeetStashState
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetStashState
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetStashState extends S.Class<YeetStashState>($I`YeetStashState`)(
+epistemic_status: parser_derived

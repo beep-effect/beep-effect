@@ -1,0 +1,33 @@
+id: ic:alt2:047
+hypothesis_ref: dh:turbo-cache:002
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two build task specifications are the same iff they prescribe the same repeatable Turbo build work — the same upstream
+    dependency, hash inputs, environment inputs, cached outputs, cache enablement, and non-persistence declarations in this
+    configuration; the task name is evidence rather than the criterion.
+  reidentification_key:
+  - turbo.json tasks.build
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One specification per distinct Turbo task prescription named build.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    A particular package's build execution is not this specification: the turbo.json entry is shared across packages via ^build.
+- description: >-
+    Editing outputs or env of the build entry while keeping the same prescribed work is state change of one specification,
+    not a second task.
+status: proposed

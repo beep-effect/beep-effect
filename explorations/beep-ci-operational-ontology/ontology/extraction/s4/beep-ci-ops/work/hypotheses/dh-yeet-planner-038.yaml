@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:038"
+observation_refs:
+  - "so:sha256:4847b42a77c5181cfaaca44c1a247889eb1668cd262e8d4c646070e445f06902"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for staleGateVerdicts in GateStaleness.ts"
+  description: "No separate domain referent is established for the source declaration staleGateVerdicts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::staleGateVerdicts"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records an exported source declaration but no fact about its behavior, represented subject, persistence, or domain identity; export visibility alone cannot reject the implementation-only null."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

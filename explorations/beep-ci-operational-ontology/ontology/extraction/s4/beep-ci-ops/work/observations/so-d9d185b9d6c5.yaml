@@ -1,0 +1,23 @@
+id: so:sha256:d9d185b9d6c50f91b8f290bfdb7d0341025004e8f63f92f7aae8a5dbc2171f05
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 975
+  end_line: 991
+  content_sha256: 03e7f0bad61d19fec32053e68112f4656d3dd669d94c85ccc9f0aab2f282f82d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runStatusMode
+  lexical_name: runStatusMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
+epistemic_status: parser_derived

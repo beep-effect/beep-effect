@@ -1,0 +1,45 @@
+target: "otp:grant-state:001"
+target_sha256: "52dec384190fecc63db3c4588ca485b769ea3b9e253d18f5dbd53bd6f84f799b"
+chain_sha256: "50a0a43570efe487ef32d00e311c6ba75bff36f17cc8eb369de5a1e522a6e850"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edges, so there is no proposed subsumption relation to test; no valid subsumption relation is the present result."
+attacks:
+  - surface: identity
+    rule: "missing-bearer-continuity"
+    counterexample: "A lease file can be deleted and a later lease created with equal owner fields while ETL emits active and released rows. Without a durable grant reference or release event, the card cannot decide whether those rows are phases of one SeatGrant or the end and creation of different bearers."
+    outcome: landed
+  - surface: identity
+    rule: "unresolved-takes-precedence"
+    counterexample: "The FA is explicitly_deferred and the proposal retains that status; the card's anti-rigid phase analysis is not mislabeled as a completed analyzed verdict."
+    outcome: survived
+  - surface: warrant
+    rule: "decision-term-warrant"
+    counterexample: "CQ-008 and CQ-009 explicitly require GrantState and hasGrantState to restrict their active-grant answers, so the operational warrant itself survives."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-lease-presence-dto"
+    counterexample: "A live-store DTO can be called active while its file exists, charge capacity, and be deleted in a finalizer. Those facts are all true when deletion ends the record and no persisting grant changes phase."
+    outcome: landed
+  - surface: identity
+    rule: "rival-model-disclosure"
+    counterexample: "Lease-as-grant, snapshot assertion, and release-event-without-released-phase models remain viable and are all disclosed in open_issues."
+    outcome: survived
+rival_models_still_viable:
+  - "The lease record is itself the SeatGrant, so deletion ends the individual rather than moving a persisting grant to a released phase."
+  - "Snapshots carry only lease-presence assertions and no lifecycle-state individuals."
+  - "The ontology should model a release event but not a persisting ReleasedGrant phase."
+evidence:
+  - "so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1"
+  - "po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a"
+  - "po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a"
+  - "po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01"
+  - "CQ-008"
+  - "CQ-009"

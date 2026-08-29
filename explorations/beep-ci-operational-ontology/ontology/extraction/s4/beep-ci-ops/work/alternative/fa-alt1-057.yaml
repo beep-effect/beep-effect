@@ -1,0 +1,22 @@
+id: "fa:alt1:057"
+hypothesis_ref: "dh:yeet-planner:008"
+identity_card_ref: "ic:alt1:057"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "Full operational verification procedure kind"
+    still_viable: true
+  - label: "the assurance tier itself"
+    still_viable: false
+  - label: "literal planner selector token"
+    still_viable: false
+strongest_counterexample: "The supplied quotation maps the full member directly to constructed
+  content for the pre-push proof-step specification, which is already more than a token and
+  already not an execution."
+verdict: "analyzed"
+needed_evidence: "An observed full-tier verify run reidentified independently of
+  proofDefinitionForTier. Until then procedure-spec and process-kind are observationally
+  equivalent."

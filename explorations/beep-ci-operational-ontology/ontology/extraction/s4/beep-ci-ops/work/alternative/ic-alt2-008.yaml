@@ -1,0 +1,37 @@
+id: ic:alt2:008
+hypothesis_ref: dh:sched-core:015
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two remaining-capacity qualities are the same iff they inhere in the same live admission pool as the pre-grant remainder
+    (computed capacity tokens minus active charges) at one decision instant; no persisted remainder field is required for
+    sameness of that quality.
+  reidentification_key:
+  - admissionCapacityTokensFor output
+  - activeTokenTotal of LiveAdmissionState
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: One remainder quality per live admission pool; its value is the pre-grant slack at a decision instant.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - information_object
+  - none
+  existential_dependencies:
+  - live admission pool / host machine
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - hard floor engaged (capacity tokens = 0)
+counterexamples:
+- description: >-
+    The gate never names a remainder field; it tests activeTokenTotal plus the new charge against capacity. That is extensionally
+    the remainder comparison, not a second stored quantity.
+- description: >-
+    Two decisions with the same numeric slack on different snapshots are two value-states of the pool quality, not two remainder
+    kinds.
+status: proposed

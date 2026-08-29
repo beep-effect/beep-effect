@@ -1,0 +1,63 @@
+target: "otp:enqueued-at:001"
+target_sha256: "2b6de0c2d8e73d8b6044d4718bf5803f29f54e4cab5ad3731ae8fa169889c7de"
+chain_sha256: "28cd9dd6e7d0eb5166776a4a6a2c67bf5dfefb69ec797bcbf7f1d4b5e4c8a19f"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  A clock-provenanced link from each recorded enqueuedAtMillis value to its SeatRequest enqueue
+  occurrence, together with a steward choice between a mere recorded instant, a temporal quality,
+  and an event boundary, would settle the identity-card scope and determine whether the
+  implementation-only twin is false.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The revised proposal asserts no parents edge, so there is no proposed is-a relation to test;
+    no valid subsumption relation is asserted or inferred.
+attacks:
+  - surface: identity
+    rule: "identity-card-entity-kind-mismatch"
+    counterexample: >-
+      The same SeatRequest can be enqueued twice within one millisecond, producing distinct enqueue
+      occurrences but the same subject-value pair. The revised proposal explicitly limits enqueuedAt
+      to a data property and denies event identity, while its unresolved card still individuates
+      enqueue boundaries. That is an honest parked choice, but current evidence cannot settle which
+      entity the card should analyze.
+    outcome: landed
+  - surface: identity
+    rule: "identifier-is-identity"
+    counterexample: >-
+      Equal millisecond values, request identifiers, or field names cannot identify enqueue
+      occurrences. The card explicitly treats those technical values as supporting evidence and
+      requires occurrence plus clock provenance, so it rejects identifier-as-identity while
+      correctly exposing the missing evidence.
+    outcome: survived
+  - surface: warrant
+    rule: "cq-term-required"
+    counterexample: >-
+      Removing enqueuedAt leaves CQ-021 unable to bind its projected enqueue-time column for any
+      SeatRequest, and the CQ explicitly lists enqueuedAt among required properties. This is a
+      genuine decision-term warrant rather than a listing mention.
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-ticket-dto"
+    counterexample: >-
+      A queue DTO can stamp current milliseconds and subtract that value for priority aging without
+      any modeled enqueue event. CQ-021 independently requires the data relation, but the
+      observations alone do not decide whether it denotes a domain instant, a temporal quality, or
+      only a recorded value; the requested provenance would discriminate those models.
+    outcome: landed
+rival_models_still_viable:
+  - "An enqueue event boundary."
+  - "A temporal quality of a SeatRequest."
+  - "Only the recorded millisecond timestamp value."
+evidence:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "po:sha256:9c431dec2cde95c190b0b7d6cdbcbda162b9cf587a8906a6fe1a4d2286a01d58"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "CQ-021"
+

@@ -1,0 +1,23 @@
+id: so:sha256:0e3b8e1c6adf38de2dc40769ce5e0ae43ed0535bbc90d08a4c2b2fc7fee0aa97
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 227
+  end_line: 229
+  content_sha256: 3779f38581f4e8f57a04647e9b9d44434496678f6e36b4978e1b4274feae508a
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::transit
+  lexical_name: transit
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^transit
+source_excerpt: '"transit": {'
+epistemic_status: parser_derived

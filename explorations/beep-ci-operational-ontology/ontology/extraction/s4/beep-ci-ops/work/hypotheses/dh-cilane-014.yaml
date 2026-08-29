@@ -1,0 +1,25 @@
+id: "dh:cilane:014"
+observation_refs:
+  - "po:sha256:0126fd0574061a79d5cdf4a90ee2961ba2d90b452535c332c5c3578986bd233d"
+  - "po:sha256:35522873fbc67e68e03632a86c3574c239b7e8b82d6244d58e2a76de7256202d"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "lint verification lane"
+  description: "A possible operational verification lane named by the quoted lint token."
+representation_status: lexical_alias
+alternatives:
+  - label: "lint command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "source-lint verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Two overlapping quotations confirm list membership but no operational identity. They expose neither a lint task specification nor an execution or verdict, so the implementation-only selector hypothesis remains unrejected."
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

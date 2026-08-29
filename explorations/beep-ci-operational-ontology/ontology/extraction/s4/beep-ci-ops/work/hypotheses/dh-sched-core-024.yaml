@@ -1,0 +1,25 @@
+id: "dh:sched-core:024"
+observation_refs:
+  - "so:sha256:10b44ba2f3d448b4a6be53a0a4cffeb046829f624edc4ac40cb85bf3c214a13d"
+  - "so:sha256:4a608a5ce1e05e5ad45c307b00c7232d0ee44a854f8654d02331dcd6de01319b"
+  - "so:sha256:b4f5b75392f29f2e7b41a869f0f685ed4eadd7fedc00d48ccf83f1613d07282f"
+  - "po:sha256:594f03f52dbbf8506e3e2e91a8e60b5863b28b8d09d194750a4fe569b587e05e"
+cq_warrants: []
+proposed_referent:
+  label: "quarantined corrupt admission record"
+  description: "An undecodable ticket or lease information artifact moved out of live admission state for operator inspection."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "a failed decoding occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "malformed branch tag and renamed file only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A classifier can return a malformed tag while the quarantine helpers are no-ops; the cited declarations and tag show no move, quarantine destination, live-state exclusion, or governed corrupt-record bearer."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.86, use_for_acceptance: false}

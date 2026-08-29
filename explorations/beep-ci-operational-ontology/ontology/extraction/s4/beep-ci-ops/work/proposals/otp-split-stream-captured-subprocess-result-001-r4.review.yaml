@@ -1,0 +1,50 @@
+target: "otp:split-stream-captured-subprocess-result:001"
+target_sha256: "cb668d89ddb2edffcbc1310ca3aa03ca716881882c0615377404cf971ca01343"
+chain_sha256: "3ae6e03a4ad2d906993be1f0b85cb60dd1c85abd4cd4b4c5e74b6cd90aae661b"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: deferred-capture-provenance-identity
+    counterexample: >-
+      Two subprocess executions can produce identical exit status, stdout,
+      stderr, and truncation values. The card distinguishes them by capture act
+      and recorded execution and explicitly defers reidentification because the
+      present record shape does not expose that provenance.
+    outcome: survived
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      CQ-005 and CQ-006 can be answered by other retained VerificationEvidence
+      records with applicability and discharge provenance. The revised definition
+      and open issue concede that this specialized result class is not necessary,
+      while the warrant still asserts necessary support for VerificationEvidence.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-not-in-observations
+    counterexample: >-
+      The cited observations establish only the CapturedStreams class declaration,
+      the runCapturedStreams function declaration, and the options alias. They do
+      not observe a child spawn, separate stream folds, exit-code acquisition,
+      record construction, retention, or evidence use; a transient stub-return DTO
+      therefore satisfies the closure without the proposed retained artifact.
+    outcome: landed
+rival_models_still_viable:
+  - "A transient split-stream return object with no retained operational role."
+  - "A retained diagnostic record that does not bear the VerificationEvidence role."
+evidence:
+  - "so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d"
+  - "so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49"
+  - "so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976"
+  - "CQ-005"
+  - "CQ-006"

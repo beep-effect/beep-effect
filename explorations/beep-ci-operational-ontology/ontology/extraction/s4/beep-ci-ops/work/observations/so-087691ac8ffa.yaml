@@ -1,0 +1,24 @@
+id: so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 600
+  end_line: 601
+  content_sha256: e607885738874e0e21e0832e83003c1ff3c9c3a8859d7b28aae0d16d6724d60d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::effectivePriorityRank
+  lexical_name: effectivePriorityRank
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const effectivePriorityRank = (ticket: YeetAdmissionTicket, nowMillis: number, config:
+  AdmissionConfig): number =>'
+epistemic_status: parser_derived

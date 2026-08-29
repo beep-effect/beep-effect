@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:017"
+observation_refs:
+  - "so:sha256:82cc465bb10ae2a8bcbba7efecaf89eeef1a167bd40b5486c7af26b8f6471a7a"
+  - "po:sha256:aac8ce7affe0bdd25e59ca5492726e91fb9a3b936009ebef512981bcfdc1c9b4"
+cq_warrants: []
+proposed_referent:
+  label: "Possible Turbo task specification named storybook"
+  description: "The observations expose a configuration key but no representable task facts that settle its denotation."
+representation_status: unresolved
+alternatives:
+  - label: "A Storybook service task specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "An implementation-only configuration grouping"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The parser emitted only an unrepresentable construct and the quotation repeats the key, leaving no discriminator for a service, lane, or task-specification referent."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.34
+  use_for_acceptance: false

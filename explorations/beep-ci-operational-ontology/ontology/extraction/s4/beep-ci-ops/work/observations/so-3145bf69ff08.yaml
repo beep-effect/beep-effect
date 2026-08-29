@@ -1,0 +1,24 @@
+id: so:sha256:3145bf69ff0885794e69fe0243087275b2cd336044e8572173246a69a2be5f40
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 174
+  end_line: 184
+  content_sha256: 5a025d47eb83a8730744c22dfdc49845da07c83b47fdad8e1850c71ef8a01824
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::hydrateYeetReadOnlyContext
+  lexical_name: hydrateYeetReadOnlyContext
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: hydrateYeetReadOnlyContext
+source_excerpt: export const hydrateYeetReadOnlyContext = Effect.fn("Yeet.hydrateYeetReadOnlyContext")(function*
+  (
+epistemic_status: parser_derived

@@ -1,0 +1,25 @@
+id: so:sha256:eead03dc8d17aff2cc13199838c2c6022bf2615917539e7f9f287627ca3d6f20
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 155
+  end_line: 155
+  content_sha256: 091b31953988a59837ab52bc61be51cdd9fa66ab0cc6415c248ff6696b47e26f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::YeetMonitorFlakeClass
+  lexical_name: YeetMonitorFlakeClass
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetMonitorFlakeClass
+- predicate: exports_symbol
+  object: YeetMonitorFlakeClass
+source_excerpt: export type YeetMonitorFlakeClass = typeof YeetMonitorFlakeClass.Type;
+epistemic_status: parser_derived

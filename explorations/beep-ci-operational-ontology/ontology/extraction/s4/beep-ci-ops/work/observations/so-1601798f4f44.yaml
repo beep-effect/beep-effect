@@ -1,0 +1,24 @@
+id: so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1108
+  end_line: 1198
+  content_sha256: f1d1fef5f1e9228f4d87d11212a72f778fa9d2af80ee6ea0fd4d3b331c6408ad
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::withQualityAdmission
+  lexical_name: withQualityAdmission
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: withQualityAdmission
+source_excerpt: export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmission")(function*
+  <
+epistemic_status: parser_derived

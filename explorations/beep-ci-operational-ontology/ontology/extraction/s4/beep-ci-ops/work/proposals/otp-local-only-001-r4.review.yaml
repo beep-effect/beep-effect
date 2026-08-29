@@ -1,0 +1,47 @@
+target: "otp:local-only:001"
+target_sha256: "8aa57847195d65ff5a10fe4042e352215243b3e19431636a6606766774bdae23"
+chain_sha256: "86adcbb2c3ad6122e813d348b7afa01f2c230d27fad2ccd6828f7de021b094fb"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-identity-not-tag-identity
+    counterexample: >-
+      Two invocations can emit distinct resolver records containing local:rw
+      while referring to one governed local-only posture, whereas the same label
+      under a policy permitting remote writes denotes different content. The
+      card uses cache authority and vocabulary version rather than the tag or
+      string as identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-domain-member
+    counterexample: >-
+      Removing LocalOnly leaves CQ-024 unable to classify executions whose
+      effective posture permits local reads and writes while forbidding remote
+      cache access. The named value is required by the closed three-arm answer
+      domain, not merely mentioned in prose.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-cache-posture-discriminator
+    counterexample: >-
+      A lexical DTO can carry local:rw, but it cannot preserve the deployed
+      resolver behavior that selects the local-only branch and supplies that
+      effective cache argument to Turbo. The runtime transfer posture is not
+      exhausted by the DTO or string that represents it.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:c5efde190ee92ca63e6e934eb78e8deb7bec01d061e7f60a251c65bc458a5eee"
+  - "po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c"
+  - "po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d"
+  - "CQ-024"

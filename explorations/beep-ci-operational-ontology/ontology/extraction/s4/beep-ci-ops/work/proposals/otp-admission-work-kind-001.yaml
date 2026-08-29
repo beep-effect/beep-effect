@@ -1,0 +1,56 @@
+id: otp:admission-work-kind:001
+hypothesis_ref: dh:sched-core:004
+identity_card_ref: ic:sched-core:004
+foundational_status: analyzed
+term:
+  local_name: AdmissionWorkKind
+  preferred_label: admission work kind
+  proposed_iri: https://oip.law/ontology/ci-ops#AdmissionWorkKind
+  owl_entity_kind: class
+definition:
+  text: A governed closed-vocabulary specification whose full-proof, merged-preview, review-fix, and publish values classify
+    queued admission work for CQ-021 and carry the deployed charge mapping of three, five, one, and one tokens respectively.
+    Publish remains a reserved value even though current heavy publish proof requests use the full-proof kind.
+  source:
+  - CQ-021
+  - so:sha256:5010a3754c9b71cbae1923e541fce6661c98432e5921c39242d69c0255198a8d
+  - so:sha256:52812cd00f245efb47e28b49b04b48f05de8a7fae89b4f413ebf61b3fc57cb86
+  - so:sha256:ebee067e625c3a5650da8dd8f45209c9f1ecba5607feb53883b955501198153c
+  - po:sha256:1df4ac671a4779bf2519466b2ecb2dcc2b23e9ba22e02ad5cebe87366eca3566
+  - po:sha256:3f57f55191e8fc667ab387c84eba3390bc82db471f29e0fa36e1b21ab00a90d9
+  - po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe
+  - po:sha256:709c9ffbbdc3990c9c40d48b8af0e6596207859623572c9f79141a30cd87cef4
+  - po:sha256:e7c3ea8d5b5153343db1a4808576432838febc5a2b7ad96a4994272b8eff7b08
+  - po:sha256:f8f04fa03ce6beb02f2e04238f731ef8f501b5d1d788adca0999a49c255d3f2d
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-021
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: Deployed admission assigns full-proof 3, merged-preview
+  5, review-fix 1, and publish 1 tokens, so work-kind selection changes scheduler capacity charging.'
+- 'Rejected weak alternative: closed string union with no domain interpretation.'
+open_issues:
+- 'Steward must choose whether to adopt the still-viable rival model: The members are controlled lexical aliases that denote
+  operational work categories without themselves forming a class taxonomy.'
+revision_log:
+- from_sha256: fb678eef6fb74c540eae12d34615baab852158b311352d83967003cc85d1c0ea
+  addressed:
+  - discriminator-not-in-observations
+  - discriminator-true-of-dto
+- from_sha256: 31390c860bc9316062ce616505d31e073f5dfa7f85de7043b86a9c7c4a21d6a7
+  addressed:
+  - discriminator-not-in-observations
+  - discriminator-true-of-dto
+revision_requests: []
+status: proposed

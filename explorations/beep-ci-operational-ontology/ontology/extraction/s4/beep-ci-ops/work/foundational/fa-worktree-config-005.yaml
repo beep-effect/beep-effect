@@ -1,0 +1,14 @@
+id: fa:worktree-config:005
+hypothesis_ref: dh:worktree-config:009
+identity_card_ref: ic:worktree-config:005
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Treat each command or planner DTO as a distinct WorkUnit specification.
+  still_viable: false
+strongest_counterexample: An unrelated policy revision does not change identical prescriptive content, while a scope or completion-rule
+  change does; content, not policy lineage or carrier token, supplies identity.
+verdict: analyzed

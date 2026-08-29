@@ -1,0 +1,32 @@
+id: "ic:alt1:007"
+hypothesis_ref: "dh:sched-core:010"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission-state snapshots are the same iff they are the point-in-time
+    view produced by the same observation instant of the same scan of live capacity, charges,
+    leases, tickets, memory, and exceptional records. A later scan is a different snapshot even
+    if every field compares equal."
+  reidentification_key:
+    - "AdmissionSnapshot"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one snapshot record whose parts are the capacity, charge, lease, ticket, memory, and
+    exceptional lists at that instant"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "situation"
+  existential_dependencies:
+    - "the live admission state at the observation instant"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "If the snapshot were the live admission state, heartbeat updates would mutate one
+      individual; snapshotAdmissionState instead constructs a new AdmissionSnapshot from a scan,
+      so a later status read is a second information object."
+status: "proposed"

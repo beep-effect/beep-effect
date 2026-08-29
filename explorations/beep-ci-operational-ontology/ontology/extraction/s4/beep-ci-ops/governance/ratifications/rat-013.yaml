@@ -1,0 +1,9 @@
+id: rat:13
+proposal_ref: otp:agent:001
+proposal_sha256: 423d346e2647f038d764902349eb01702a6276356d18d0fa49151a5681ff9871
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept Agent — local class with gUFO/PROV alignment recorded for S5 mapping.

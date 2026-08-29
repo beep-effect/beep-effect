@@ -1,0 +1,35 @@
+id: "ic:alt1:001"
+hypothesis_ref: "dh:reporun:002"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two setup-step-failure shape criteria are the same iff they recognize the
+    same job-record conditions: a GitHub job whose job-level conclusion is failure and that
+    contains at least one setup-named step whose own conclusion is failure, before any
+    repository command is taken to have run. The printed class name is reidentification
+    evidence, never the sameness criterion."
+  reidentification_key:
+    - "setup-5xx"
+    - "GithubJobShapeClass"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one recognition criterion as a single information object; matching hosted jobs are not
+    parts of the criterion"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+    - "event"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A workflow that names a missing action version also matches the same detector as a
+      hosted action-download 5xx; treating the criterion as the kind of those job occurrences
+      would collapse two historically different mechanisms into one individual, and treating
+      each matching job as the criterion would multiply the spec once per failure."
+status: "proposed"

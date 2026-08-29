@@ -1,0 +1,23 @@
+id: so:sha256:d4d6c27eec971144fa5bc98d719e5d524ea5f0bd3952571b15aa593f02a8cf87
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 387
+  end_line: 397
+  content_sha256: 08224a4913a0771bc6e968d7bac280402f947c595019cf27ef220de5ceed9616
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::proofArgsForTier
+  lexical_name: proofArgsForTier
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const proofArgsForTier = (
+epistemic_status: parser_derived

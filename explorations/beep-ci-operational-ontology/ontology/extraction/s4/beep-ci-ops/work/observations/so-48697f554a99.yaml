@@ -1,0 +1,23 @@
+id: so:sha256:48697f554a99d14878f7ab0a976be3a6c390c682446b8a40451c77a175475819
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 417
+  end_line: 417
+  content_sha256: f9bbe7994beadaa9b5134dd72c9929391d74f9618f640be2c7f8061bcf03ea73
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runWithFullProofCoordinatorForTesting
+  lexical_name: runWithFullProofCoordinatorForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: runWithFullProofCoordinatorForTesting
+source_excerpt: export const runWithFullProofCoordinatorForTesting = runWithFullProofCoordinator;
+epistemic_status: parser_derived

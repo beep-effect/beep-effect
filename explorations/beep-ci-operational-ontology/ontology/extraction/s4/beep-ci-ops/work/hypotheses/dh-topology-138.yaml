@@ -1,0 +1,25 @@
+id: "dh:topology:138"
+observation_refs:
+  - "po:sha256:2b505a7e2cb2db7f6cfe502464c6071c49acbd258fe9e573c98b4cd8071005de"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/workspace-server workspace package"
+  description: "The workspace software package information artifact identified by @beep/workspace-server in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/workspace-server as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The adversary's serialization-only DTO wins: the sole cited evidence is one generated topology row containing a package-looking token and ordinal, with no manifest, dependency edge, lineage, or independently governed package reference."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

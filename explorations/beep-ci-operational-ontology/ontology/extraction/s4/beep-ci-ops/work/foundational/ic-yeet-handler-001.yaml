@@ -1,0 +1,56 @@
+id: "ic:yeet-handler:001"
+hypothesis_ref: "dh:yeet-handler:007"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: sameness must be grounded either in one lane-summary assertion
+    generated within one parent verdict or in one concrete embedded record
+    token; matching lane id, status, duration, or other encoded fields is only
+    evidence because distinct attempts can emit equal values.
+  reidentification_key:
+    - "the parent verdict's terminal recording act and attempt provenance"
+    - "the represented planned lane within that attempt"
+    - "the component occurrence or assertional content, subject to the token-versus-content ruling"
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    The schema-framed claims about one planned lane--phase, status, optional
+    execution measures, and repair command--form one assertional component
+    within a verdict.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "situation: the attempt-indexed lane-status state of affairs represented by the record"
+    - "event: the WorkUnitExecution occurrence itself"
+    - "information_object: a component token whose identity is inherited from its parent verdict"
+  existential_dependencies:
+    - >-
+      As information, it requires some digital or material bearer, but the
+      evidence does not decide whether dependence is generic on any faithful
+      encoding or specific to one record token.
+    - >-
+      Under the component-token rival it also depends on one parent verdict;
+      under the information-content rival it can be concretized in multiple
+      verdict or journal encodings.
+    - >-
+      It requires an aboutness and provenance relation to a planned lane and
+      attempt for interpretation, but it need not existentially depend on an
+      execution because a not-run lane record can exist.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "superseded by a later lane-summary assertion"
+    - "no longer concretized after destruction of its final faithful bearer"
+counterexamples:
+  - description: >-
+      Two different Yeet attempts can emit byte-equal lane entries with the
+      same lane id and status; collapsing them would erase their distinct
+      recording acts and attempt contexts.
+  - description: >-
+      laneFromPlanned creates a not-run lane record when no WorkUnitExecution
+      occurred, so the record cannot take its identity from an execution.
+status: proposed

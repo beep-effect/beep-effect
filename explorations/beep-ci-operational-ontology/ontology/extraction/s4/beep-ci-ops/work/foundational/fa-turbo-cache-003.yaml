@@ -1,0 +1,17 @@
+id: "fa:turbo-cache:003"
+hypothesis_ref: "dh:turbo-cache:003"
+identity_card_ref: "ic:turbo-cache:003"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A lint verification lane is realized by the task specification but is a distinct operational referent."
+    still_viable: true
+  - label: "The declaration is a template for package-specific lint task specifications."
+    still_viable: true
+  - label: "The entry is only a source configuration key."
+    still_viable: false
+strongest_counterexample: "Identical inherited lint settings can resolve to different package scripts, so the observed root entry may be a template rather than the complete specification or lane itself."
+verdict: analyzed

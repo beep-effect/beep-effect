@@ -1,0 +1,23 @@
+id: "fa:reporun:005"
+hypothesis_ref: "dh:reporun:008"
+identity_card_ref: "ic:reporun:005"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "quality verification lane"
+    still_viable: true
+  - label: "controlled-vocabulary member naming a proof surface"
+    still_viable: true
+  - label: "general software quality attribute"
+    still_viable: false
+  - label: "CLI selector token only"
+    still_viable: false
+strongest_counterexample: >-
+  The label quality can remain unchanged while the governed check set changes,
+  and unrelated repositories can use the same label for different standards;
+  the source therefore supports a contextual prescription, not a universal
+  quality attribute or a dated run.
+verdict: analyzed

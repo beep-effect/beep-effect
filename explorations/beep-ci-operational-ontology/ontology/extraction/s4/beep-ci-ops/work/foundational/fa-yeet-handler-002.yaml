@@ -1,0 +1,29 @@
+id: "fa:yeet-handler:002"
+hypothesis_ref: "dh:yeet-handler:010"
+identity_card_ref: "ic:yeet-handler:002"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Yeet run or verification-attempt process itself"
+    still_viable: false
+  - label: "terminal outcome situation for the represented Yeet attempt"
+    still_viable: true
+  - label: "one information-content object with multiple serialized concretizations"
+    still_viable: true
+  - label: "distinct record token for each standalone-file or journal storage occurrence"
+    still_viable: true
+strongest_counterexample: >-
+  The same constructed verdict is written both as the last-write verdict.json
+  artifact and inside an append-only attempt-finished event. Treating file path
+  as identity wrongly splits a possible shared content object, while treating
+  equal attempt content as identity wrongly merges possible record tokens and
+  separately recorded attempts.
+verdict: explicitly_deferred
+needed_evidence: >-
+  An artifact-identity and custody contract stating whether the verdict.json
+  serialization and attempt-journal embedding are distinct record individuals
+  or concretizations of one information-content object, together with rules
+  for correction, copying, and supersession.

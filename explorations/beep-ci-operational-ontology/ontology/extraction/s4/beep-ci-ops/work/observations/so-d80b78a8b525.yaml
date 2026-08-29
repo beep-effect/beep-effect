@@ -1,0 +1,23 @@
+id: so:sha256:d80b78a8b525a1d9d3429688e5907aaa7a926b965d94a29efb3fb9dd1080795f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 284
+  end_line: 284
+  content_sha256: 8c575e2b4c2d7821c500822256a07542c4d5974faea2672c4383444da9c1244b
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::decodeTurboPlanTasksFromQueryJsonForTesting
+  lexical_name: decodeTurboPlanTasksFromQueryJsonForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: decodeTurboPlanTasksFromQueryJsonForTesting
+source_excerpt: export const decodeTurboPlanTasksFromQueryJsonForTesting = decodeTurboPlanTasksFromQueryJson;
+epistemic_status: parser_derived

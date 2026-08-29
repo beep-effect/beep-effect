@@ -1,0 +1,25 @@
+id: so:sha256:e5889bf926cca97972fac66ac70522193133f1b1f529d136a45b8cde89356e33
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 183
+  end_line: 197
+  content_sha256: 45ad69b2593113cf809ee300cfa2b23bb17ad917a797ccf2754d781c94cd335d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::TurboPlanTask
+  lexical_name: TurboPlanTask
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: TurboPlanTask
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class TurboPlanTask extends S.Class<TurboPlanTask>($I`TurboPlanTask`)(
+epistemic_status: parser_derived

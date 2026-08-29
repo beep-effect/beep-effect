@@ -1,0 +1,33 @@
+id: "ic:sched-core:023"
+hypothesis_ref: "dh:sched-core:024"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two quarantined-record phase tokens are the same only when the same underlying admission-record carrier continues through the move into quarantine and remains there continuously; an equal byte copy or similarly named path is another bearer."
+  reidentification_key:
+    - "pre-move to post-move carrier lineage"
+    - "source and quarantine paths as supporting evidence"
+    - "record bytes and move event"
+ontoclean:
+  rigidity: "anti_rigid"
+  carries_identity: true
+  supplies_identity: false
+  unity: "One admission-record bearer in one continuous corrupt-and-quarantined interval, preserved across the filesystem rename."
+  dependence: "intrinsic"
+ufo_analysis:
+  candidate_category: "phase"
+  alternatives:
+    - "information-object subkind of corrupt admission record"
+    - "failed decoding occurrence"
+    - "filesystem placement convention with no modeled phase"
+  existential_dependencies:
+    - "an admission-record information artifact"
+    - "its undecodable condition and quarantine placement"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "repaired or reclassified as decodable"
+    - "removed after operator inspection"
+counterexamples:
+  - description: "Two files containing the same malformed bytes are two record bearers and therefore two quarantine phases, even if their names and decoding failures match."
+status: "proposed"

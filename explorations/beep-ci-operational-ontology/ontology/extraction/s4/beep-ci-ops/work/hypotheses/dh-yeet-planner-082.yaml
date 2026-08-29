@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:082"
+observation_refs:
+  - "so:sha256:e9e70e88674d1f85b64e1f04da48fdf952a70af876566e016f1dea8ab8611a21"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for GIT_PUSH_STEP_ID in Planner.ts"
+  description: "No separate domain referent is established for the source declaration GIT_PUSH_STEP_ID."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::GIT_PUSH_STEP_ID"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records an exported source declaration but no fact about its behavior, represented subject, persistence, or domain identity; export visibility alone cannot reject the implementation-only null."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

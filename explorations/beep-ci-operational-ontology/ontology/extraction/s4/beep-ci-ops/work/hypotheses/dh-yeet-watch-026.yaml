@@ -1,0 +1,32 @@
+id: "dh:yeet-watch:026"
+observation_refs:
+  - "so:sha256:44d7fdedf0dc4125ca3980265b33580cbf1e77466cf41381319cf3d103b5146b"
+  - "so:sha256:eead03dc8d17aff2cc13199838c2c6022bf2615917539e7f9f287627ca3d6f20"
+  - "so:sha256:2d29b10e7be9942692eac2bec73f2f2b0dce79c261a0b36e86ded8dd6bdbdaac"
+  - "so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0"
+  - "so:sha256:a54ed495f8b367b873cce3eeb1d1ca8c0baa31727fe130d5b42091d0080359cc"
+  - "so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef"
+  - "so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2"
+  - "po:sha256:14f257e298db255a69389e25e0d5f008b17f9fe76b0dfd030796a21ce21c64b1"
+  - "po:sha256:7c8dce37f296f5b415706c26f536390262d1a9b1c5ebed896259fcecae0ef312"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "ts2589-no-location failure signature specification"
+  description: "A repeatable operational criterion for recognizing a failed hosted job whose log exhibits the no-location TS2589 fingerprint."
+representation_status: lexical_alias
+alternatives:
+  - label: "ts2589-no-location literal token"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "failed hosted-job occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Stub detector, planner, and applier declarations plus a pure enum member reproduce every cited observation; no cited record shows a TS2589 match or caused rerun beyond the literal token."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

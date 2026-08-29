@@ -1,0 +1,23 @@
+id: so:sha256:142cdf7ed9e4ec9033cdb37ce4e2bf4fdd030d12b8d7f3d950310f7b386f92d7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 190
+  end_line: 196
+  content_sha256: ed6d82ac9030899f483c3ca75ca6092385c349d4cb2f670352b15220a85fd559
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::CI_TIMEOUT_PATTERNS
+  lexical_name: CI_TIMEOUT_PATTERNS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const CI_TIMEOUT_PATTERNS: ReadonlyArray<RegExp> = ['
+epistemic_status: parser_derived

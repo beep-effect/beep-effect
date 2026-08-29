@@ -1,0 +1,22 @@
+id: "dh:quality:097"
+observation_refs:
+  - "so:sha256:d52cdafcf1e13098ab47dbfbb1eb7f87f6b815fbeab0d55384e901ede10ac30b"
+  - "so:sha256:e2b754537de96571fb1a615893b0d750323b76bbc96526bc527596c59557db64"
+cq_warrants: []
+proposed_referent:
+  label: "QualityTaskBypassArgName source vocabulary"
+  description: "A source-controlled lexical vocabulary containing \"--completions\", \"--help\", \"--log-level\", \"--version\", \"-h\", \"-v\". The record supports those spellings, not independently existing domain individuals or kinds."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational classification corresponding to QualityTaskBypassArgName"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only literal membership, aliasing, or export facts for QualityTaskBypassArgName. Those facts are fully compatible with a code-only vocabulary and do not observe policies, states, events, or other domain instances carrying the labels."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

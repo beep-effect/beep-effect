@@ -1,0 +1,24 @@
+id: "fa:yeet-watch:007"
+hypothesis_ref: "dh:yeet-watch:028"
+identity_card_ref: "ic:yeet-watch:007"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Structural subkind of failed hosted jobs whose implicit setup step failed"
+    still_viable: true
+  - label: "Anti-rigid rerun-eligible role borne by a matching failed job under current policy"
+    still_viable: true
+  - label: "Actual GitHub control-plane 5xx failure event"
+    still_viable: false
+  - label: "Setup-5xx literal with no denoted recognition prescription"
+    still_viable: false
+strongest_counterexample: >-
+  The detector never tests an HTTP response: a deterministic nonexistent action
+  version produces the same failed-setup-step shape. Therefore setup-5xx is a
+  repeatable job-shape prescription and policy classification, not evidence
+  that one 5xx event occurred; a structural job subkind and a policy-relative
+  rerun role remain viable rivals.
+verdict: analyzed

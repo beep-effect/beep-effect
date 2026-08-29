@@ -1,0 +1,24 @@
+id: so:sha256:d9c822aad3386dc91b49bf3de4775416ba8ac79e9cf2f6fef5f8a651f60a979b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 28
+  end_line: 28
+  content_sha256: 52f29034998c2995fe4d4fc88b4e8b3f14f1637d5fb3aca316efbbb16ac96985
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::defaultProofTasks
+  lexical_name: defaultProofTasks
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const defaultProofTasks: ReadonlyArray<TurboConfigProofTaskName> = ["lint", "check",
+  "test", "docgen"];'
+epistemic_status: parser_derived

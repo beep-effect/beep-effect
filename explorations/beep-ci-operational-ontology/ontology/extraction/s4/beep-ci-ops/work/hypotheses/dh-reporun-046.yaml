@@ -1,0 +1,25 @@
+id: "dh:reporun:046"
+observation_refs:
+  - "so:sha256:81196942646bc6125f2b4d968506098e034fadcca9d1f7866e4c8c8874eb5198"
+  - "so:sha256:85b4b4f1adcc10a1368bf728d2888e809fc13fc7324537e9db8d6c96bd7976db"
+cq_warrants: []
+proposed_referent:
+  label: "run-to-exit subprocess helper"
+  description: "The implementation options and function that spawn a child with inherited or ignored streams and return its exit code."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Repeatable subprocess-execution procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "WorkUnitExecution occurrence caused by an invocation"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The function specifies how code spawns and waits for a child, but the lane observes no invocation, durable procedure specification, or WorkUnit identity. Source behavior alone does not turn the helper into an ontology referent."
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false
+

@@ -88,6 +88,20 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-29 (eleventh stint): §4b NORMALIZATION GATE COMPLETE + RATIFIED. The
+  ontology-foundational-auditor ran AS WRITTEN in a dedicated worktree
+  (branch ontology-s4b-normalization, pin c1558f6ca9b1): 1,112 observations
+  (3 committed adapters + goldens, 353 prose quotes incl. 15 runtime
+  captures), 692 hypotheses, 235 ic/fa pairs, 235 blinded grok pairs, 232
+  proposals, five adversarial rounds (234/235 first-round FAIL; locus census
+  → steward-ruled concede-where-held; 216 concessions, 21 runtime-hardened),
+  31 survivors ALL RATIFIED by the steward (rat-001..031, grilled sitting;
+  docket artifact bd0987d0). Engine re-locked 5× as the skill hardened
+  mid-run; run finished on the pinned mirror snapshot. 57.75%
+  unresolved-fraction waiver RATIFIED (the parked CQ measurement/episode
+  vocabulary = next-run corpus extension). NEXT: S5 adversarial taxonomy over
+  the 104-entry LEDGER + 149 unresolved rows + ratified term set.
+
 - 2026-08-27 (tenth stint): S4 EXTRACTION FLEET — orchestrator duties executed
   (topo-sort materialized to extraction/s4/inputs/, five frozen-input digests +
   corpus commit 469136d2a872 pinned, fallow config census, seven lane prompts

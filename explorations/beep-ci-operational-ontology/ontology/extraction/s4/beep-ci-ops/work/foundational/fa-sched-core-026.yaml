@@ -1,0 +1,15 @@
+id: "fa:sched-core:026"
+hypothesis_ref: "dh:sched-core:027"
+identity_card_ref: "ic:sched-core:026"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The primary referent is each capacity-overshoot recovery process rather than the reusable rollback procedure."
+    still_viable: true
+  - label: "The rule is implementation-specific concurrency repair with no independently governed procedure artifact."
+    still_viable: true
+strongest_counterexample: "A three-way race can yield multiple contenders evaluating the same rule over different rescans, so procedure identity cannot be inferred from any one loser or recovery occurrence."
+verdict: "analyzed"

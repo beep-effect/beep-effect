@@ -1,0 +1,25 @@
+id: so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 73
+  end_line: 84
+  content_sha256: a2670871acaffc7495c3f42b15a3f8797219323a950a44b390f2fee68addbd0d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::YeetAttemptFinished
+  lexical_name: YeetAttemptFinished
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetAttemptFinished
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetAttemptFinished extends S.Class<YeetAttemptFinished>($I`YeetAttemptFinished`)(
+epistemic_status: parser_derived

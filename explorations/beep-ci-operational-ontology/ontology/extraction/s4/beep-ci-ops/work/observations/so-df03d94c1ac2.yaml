@@ -1,0 +1,23 @@
+id: so:sha256:df03d94c1ac24abd4ed051438346ff33a2e073e4e10b1e2e3368f328c5f4983b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 410
+  end_line: 420
+  content_sha256: 51ed1b01031fc71ea903c119e3ab72f22eab7d063f802e4cd2baea07ce1c52c8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::stageTemporaryFile
+  lexical_name: stageTemporaryFile
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const stageTemporaryFile = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

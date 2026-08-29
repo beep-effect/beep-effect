@@ -1,0 +1,10 @@
+id: po:sha256:03e9aaac7d867e871fe1b6bec68141b31d170bd428aec327da8ca43df00397bc
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 39
+  end_line: 39
+quote: '`local:rw` is the fail-closed default. `local:rw,remote:r` is the only'
+epistemic_status: quoted_prose

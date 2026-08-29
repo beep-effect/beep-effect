@@ -1,0 +1,29 @@
+id: ic:alt3:006
+hypothesis_ref: dh:sched-core:007
+identity:
+  supplies_identity: false
+  identity_criterion: Two admission charges are the same iff they are the token-amount quality
+    inhering in one queued request and copied onto the active grant that consumes machine-wide
+    capacity. The numeric field is measurement evidence rather than the criterion.
+  reidentification_key:
+  - weightTokens
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: a single token magnitude inhering in one admission contender
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - information_object
+  existential_dependencies:
+  - the ticket or lease that bears the charge
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: A second ticket with the same numeric weightTokens is not the same charge;
+    the amount inheres in a different contender and is summed separately against capacity.
+status: proposed

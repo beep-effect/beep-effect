@@ -1,0 +1,10 @@
+id: po:sha256:9cff923770c88f07abedd29fe1a4b5a700805f3fab2234902793d907998339ba
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 673
+  end_line: 686
+quote: Gate coordinating one origin-scoped resource (the per-origin full-proof
+epistemic_status: quoted_prose

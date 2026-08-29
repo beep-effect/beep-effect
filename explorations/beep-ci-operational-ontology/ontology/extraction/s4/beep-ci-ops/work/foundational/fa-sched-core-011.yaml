@@ -1,0 +1,15 @@
+id: "fa:sched-core:011"
+hypothesis_ref: "dh:sched-core:012"
+identity_card_ref: "ic:sched-core:011"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The primary referent is the current capacity quality produced by each computation, not the repeatable procedure."
+    still_viable: true
+  - label: "The arithmetic function is implementation-local and no independently governed procedure artifact exists."
+    still_viable: true
+strongest_counterexample: "Calling the same rule at two memory readings creates two computation occurrences and two capacity results; neither occurrence nor result is the reusable procedure itself."
+verdict: "analyzed"

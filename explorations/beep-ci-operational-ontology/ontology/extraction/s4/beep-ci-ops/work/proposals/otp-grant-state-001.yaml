@@ -1,0 +1,54 @@
+id: otp:grant-state:001
+hypothesis_ref: dh:sched-core:023
+identity_card_ref: ic:sched-core:022
+foundational_status: analyzed
+term:
+  local_name: GrantState
+  preferred_label: grant state
+  proposed_iri: https://oip.law/ontology/ci-ops#GrantState
+  owl_entity_kind: class
+definition:
+  text: A governed grant-state vocabulary specification whose deployed ActiveGrant value classifies a live SeatGrant lease
+    while it is heartbeated and charged against capacity. CQ-008 and CQ-009 require that active classification; queued contenders
+    are SeatRequests, and lease deletion ends the deployed grant record rather than supplying evidence for a ReleasedGrant
+    phase.
+  source:
+  - CQ-008
+  - CQ-009
+  - so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1
+  - po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a
+  - po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a
+  - po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe
+  - po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01
+  - po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618
+  - po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+revision_log:
+- from_sha256: 52dec384190fecc63db3c4588ca485b769ea3b9e253d18f5dbd53bd6f84f799b
+  addressed:
+  - missing-bearer-continuity
+  - discriminator-true-of-lease-presence-dto
+- from_sha256: 4744be6baf638d0d5df331e90dbcbeae6478f64140d6680514e1aee7e479b766
+  addressed:
+  - missing-bearer-continuity
+  - discriminator-true-of-lease-presence-dto
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-008
+  - CQ-009
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: A granted lease is heartbeated while it charges capacity
+  and leaves the live set through liveness reaping, completion cleanup, or pre-work overshoot rollback.'
+open_issues: []
+revision_requests: []
+status: proposed

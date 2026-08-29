@@ -1,0 +1,23 @@
+id: so:sha256:c8f5795c5d3d93e1eebe6c05885bc8829819812b2f724bf93b4e58813bcc7198
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 66
+  end_line: 66
+  content_sha256: b0ab71508702b067bac2cbb818a68004c3606bb56268bca9f1b921b050d0859c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("commands/Yeet/internal/GateStaleness");
+epistemic_status: parser_derived

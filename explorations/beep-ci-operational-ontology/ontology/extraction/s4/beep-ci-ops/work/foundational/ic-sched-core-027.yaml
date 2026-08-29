@@ -1,0 +1,32 @@
+id: "ic:sched-core:027"
+hypothesis_ref: "dh:sched-core:028"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two request-specific grant-admission boundaries are the same only when they are the temporal boundary of one and the same successful lease-staging occurrence for one candidate grant; equal millisecond values can label distinct grants."
+  reidentification_key:
+    - "lease-staging occurrence provenance"
+    - "candidate grant or lease lineage"
+    - "clock source, time scale, and resolution"
+ontoclean:
+  rigidity: "unresolved"
+  carries_identity: false
+  supplies_identity: false
+  unity: "One temporal boundary anchored to one successful lease-staging occurrence; the lease records only a finite millisecond value."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "unresolved"
+  alternatives:
+    - "admission or lease-staging event boundary"
+    - "temporal quality of a SeatGrant"
+    - "millisecond timestamp information value"
+  existential_dependencies:
+    - "a successful lease-staging occurrence and candidate grant"
+    - "a clock and temporal reference system"
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "instantaneous boundary; it does not persist or unfold"
+counterexamples:
+  - description: "Two leases can share admittedAtMillis, and the scheduler therefore uses pid and startedAt tie-breakers; the timestamp cannot individuate the admission occurrences."
+status: "proposed"

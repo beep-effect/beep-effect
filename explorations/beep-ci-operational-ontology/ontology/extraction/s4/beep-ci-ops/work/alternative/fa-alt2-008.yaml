@@ -1,0 +1,22 @@
+id: fa:alt2:008
+hypothesis_ref: dh:sched-core:015
+identity_card_ref: ic:alt2:008
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'quality: pre-grant remaining token capacity of the live pool'
+  still_viable: true
+- label: 'information_object: a derived query value equal to capacity minus active charges'
+  still_viable: true
+- label: 'none: unmaterialized arithmetic with no entity'
+  still_viable: true
+strongest_counterexample: >-
+  No supplied record names a persisted pre-grant remainder, so quality and mere arithmetic are observationally equivalent:
+  both predict the same inequality in selfMayAttempt.
+verdict: analyzed
+needed_evidence: >-
+  A stored remainder field, a log that reports remaining tokens as a quantity, or a CQ that asks for remaining capacity as
+  such, would split a quality/information object from pure unmaterialized arithmetic.

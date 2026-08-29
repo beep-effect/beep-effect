@@ -1,0 +1,26 @@
+id: "fa:yeet-handler:001"
+hypothesis_ref: "dh:yeet-handler:007"
+identity_card_ref: "ic:yeet-handler:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "WorkUnitExecution occurrence represented directly by each lane value"
+    still_viable: false
+  - label: "attempt-indexed lane-status situation represented by the record"
+    still_viable: true
+  - label: "embedded record token individuated by parent verdict and component occurrence"
+    still_viable: true
+strongest_counterexample: >-
+  A planned lane produces a not-run summary even though no execution exists,
+  and another attempt may produce an equal encoded summary; an execution model
+  invents an occurrence in the first case, while a field-equality identity
+  model collapses distinct recording acts in the second.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A provenance and artifact-lifecycle contract stating whether a lane entry is
+  an independently identifiable information-content object or only a concrete
+  component token of one verdict, including how equal entries across attempts
+  and serialized copies are reidentified.

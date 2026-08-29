@@ -1,0 +1,33 @@
+id: so:sha256:224953450ba88d781df4d38eee5612e1729518fa106aa66e289084f57a47bc93
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: .fallowrc.jsonc
+source_span:
+  start_line: 1
+  end_line: 438
+  content_sha256: 691fc59b0ea9de8df6cf590a19a1179ff161acb077b4c4c20c5d61520fd183bf
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: .fallowrc.jsonc::$schema
+  lexical_name: $schema
+  syntactic_kind: config_document
+observed_facts:
+- predicate: config_key_value
+  object: boundary-violation=error
+- predicate: config_key_value
+  object: duplicate-exports=off
+- predicate: config_key_value
+  object: empty-catalog-groups=off
+- predicate: config_key_value
+  object: gate=new-only
+- predicate: config_key_value
+  object: require-suppression-reason=error
+- predicate: config_key_value
+  object: unused-catalog-entries=off
+source_excerpt: '{'
+epistemic_status: parser_derived

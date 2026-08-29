@@ -1,0 +1,23 @@
+id: so:sha256:8214c2ba78e9dd23b83c83aa727b3e73cd6323e1260ceb362beabcfa4fe4fbb8
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 110
+  end_line: 110
+  content_sha256: 2c86700d650dc79b707bb55ef1407081074d1cce6eb881461b6774b97d78d6ef
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CI_LANE_REPLAY_VALUES
+  lexical_name: CI_LANE_REPLAY_VALUES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CI_LANE_REPLAY_VALUES
+source_excerpt: export const CI_LANE_REPLAY_VALUES = ["exact", "approximate", "none"] as const;
+epistemic_status: parser_derived

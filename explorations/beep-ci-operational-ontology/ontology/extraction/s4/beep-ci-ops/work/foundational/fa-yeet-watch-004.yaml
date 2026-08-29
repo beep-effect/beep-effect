@@ -1,0 +1,24 @@
+id: "fa:yeet-watch:004"
+hypothesis_ref: "dh:yeet-watch:016"
+identity_card_ref: "ic:yeet-watch:004"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Broad terminal skipped-or-neutral phase borne by a check execution"
+    still_viable: true
+  - label: "Snapshot-bound skip-assignment information object rather than one reusable skip value"
+    still_viable: true
+  - label: "Particular nonexecution occurrence denoted by every skip value"
+    still_viable: false
+  - label: "Skip literal as a selector with no denoted classification content"
+    still_viable: false
+strongest_counterexample: >-
+  Skip groups neutral bucket evidence with skipped or skipping evidence. A
+  neutral check may have executed, whereas a skipped check may not have done
+  so, and each produces its own record. The member therefore cannot identify a
+  single nonexecution event, though a broad terminal phase and distinct
+  snapshot-bound information assignments remain viable rivals.
+verdict: analyzed

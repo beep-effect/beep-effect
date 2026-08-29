@@ -1,0 +1,31 @@
+id: "ic:turbo-cache:017"
+hypothesis_ref: "dh:turbo-cache:019"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same Storybook-start task specification only when they are the same authored persistent-service launch instruction in the same versioned configuration lineage with the same complete inherited dependency and lifecycle prescriptions; the storybook:start key alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key storybook:start"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The build dependency and persistent launch declarations compose one reusable Storybook-service specification."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A Storybook-start service procedure specification"
+    - "A running Storybook service process"
+    - "A verification lane"
+  existential_dependencies:
+    - "The Storybook-build specification, package script, and configuration that complete the launch instruction"
+    - "At least one bearer of the specification content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "The same start specification can launch several restarted Storybook server processes, and depending on a build says nothing about whether those processes verify any behavior."
+status: proposed

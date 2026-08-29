@@ -1,0 +1,48 @@
+target: "otp:fallow-audit-lane:001"
+target_sha256: "1053c5217cf1a6b434848b6f45bbb98e8b4faa0aab5c73ad3caf88e5f2d13e29"
+chain_sha256: "bf7bc8b7a7e1453c44aa59f3ab97a137af6367153c9504c14c01962250eb7e4b"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edges, so there is no proposed subsumption relation to test; no valid subsumption relation is the present result."
+attacks:
+  - surface: identity
+    rule: "content-lineage-identity-conflict"
+    counterexample: "Two repositories can carry semantically identical Fallow audit prescriptions while their policy lineages differ. The card makes lineage and revision identity-defining even though the proposal defines the individual by the prescription's content, wrongly separating equal information content."
+    outcome: landed
+  - surface: identity
+    rule: "analysis-card-consistency"
+    counterexample: "The proposal supplies identity and says analyzed, agreeing with ic:worktree-config:011 and fa:worktree-config:011."
+    outcome: survived
+  - surface: warrant
+    rule: "listing-cq-warrant"
+    counterexample: "CQ-001 requires the generic VerificationLane and LaneKind vocabulary needed to enumerate data. It neither names FallowAuditLane nor requires its base, gate, or command prescription as an ontology individual."
+    outcome: landed
+  - surface: warrant
+    rule: "obligation-procedure-split"
+    counterexample: "The same Fallow procedure can realize different lane obligations under different tier policies, and one lane obligation can be discharged by a revised procedure. Calling the procedure-specification artifact the lane collapses the standing obligation/procedure distinction."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-config-entry"
+    counterexample: "A command catalog entry can bind origin/main and new-only and remain only executable configuration. That pure config twin has the same command and gate facts without a separately individuated verification-lane artifact."
+    outcome: landed
+  - surface: identity
+    rule: "rival-model-disclosure"
+    counterexample: "Parameterized plan, abstract process type, and inventory-entry models remain viable and all are presented in open_issues."
+    outcome: survived
+rival_models_still_viable:
+  - "Parameterized Fallow audit plan information content"
+  - "Abstract Fallow audit process type instantiated by dated activities"
+  - "Inventory command-entry information object only"
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048"
+  - "po:sha256:805ea8b43e9d37cc3d82a889148ac8fd3aebda4deb587e5a779fa63dd858e9f3"
+  - "po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c"
+  - "CQ-001"

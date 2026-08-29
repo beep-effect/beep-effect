@@ -1,0 +1,24 @@
+id: "fa:alt1:005"
+hypothesis_ref: "dh:sched-core:001"
+identity_card_ref: "ic:alt1:005"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: false
+rival_models:
+  - label: "the queued admission request itself as a relator mediating contender and capacity pool"
+    still_viable: true
+  - label: "role of the contender process while waiting"
+    still_viable: true
+  - label: "queue DTO with no referent beyond serialization"
+    still_viable: false
+strongest_counterexample: "The durable ticket is quoted as a contender waiting for admission,
+  but promotion deletes the ticket and creates a lease: if the ticket were the request-relator,
+  promotion would have to be a phase change of one individual, which the file lifecycle does not
+  show."
+verdict: "analyzed"
+needed_evidence: "Whether operators reidentify one admission request across the ticket-to-lease
+  transition (relator/role of the request) or reidentify only the persisted ticket while it
+  exists (information object). Observationally equivalent until a query or log line treats the
+  post-promotion lease as the same individual as the pre-promotion ticket."

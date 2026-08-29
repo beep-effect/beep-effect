@@ -1,0 +1,28 @@
+id: ic:alt4:058
+hypothesis_ref: dh:yeet-watch:027
+identity:
+  supplies_identity: true
+  identity_criterion: Two ci-timeout failure signature specifications are the same when they are the flake class produced by matching a failed-job log against the timeout pattern family and that class can drive a once-per-head-and-job rerun decision; the token ci-timeout is evidence, never the criterion of a timeout occurrence.
+  reidentification_key:
+    - ci-timeout
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The timeout pattern family plus the flake-class assignment plus the rerun-budget key compose one signature specification.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+    - event
+  existential_dependencies:
+    - failed hosted job log
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A job that actually timed out but whose log matches none of the patterns yields no ci-timeout class, so the occurrence is not this signature.
+  - description: A lexical mention of ci-timeout in a comment would not cause planYeetMonitorReruns to mint a rerun decision.
+status: proposed

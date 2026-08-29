@@ -1,0 +1,34 @@
+id: ic:turbo-cache:019
+hypothesis_ref: dh:turbo-cache:021
+identity:
+  supplies_identity: true
+  identity_criterion: Two cache-posture specifications are the same information content exactly when they prescribe the same
+    allocation of local and remote cache read and write authority and the same caller-override responsibility; resolver episodes,
+    tags, serialization, and carrier copies are evidence, not identity.
+  reidentification_key:
+  - normative cache-authority matrix
+  - caller-override rule
+  - posture specification version
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One governed cache-authority specification whose alternatives classify the effective posture of a Turbo execution.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - an invocation-scoped resolver-result token
+  - an execution-borne cache mode
+  existential_dependencies:
+  - a governing cache-posture vocabulary
+  - at least one policy or software carrier
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - superseded when its cache-authority or override semantics change
+counterexamples:
+- description: One resolver result may be serialized and copied three times without creating three posture specifications,
+    while two policies can reuse the same tag but authorize different remote writes and therefore express different content.
+status: proposed

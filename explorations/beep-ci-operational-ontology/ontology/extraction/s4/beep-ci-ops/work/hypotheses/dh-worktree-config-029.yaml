@@ -1,0 +1,18 @@
+id: "dh:worktree-config:029"
+observation_refs:
+  - "so:sha256:24d6b85aa384168778baa867a734b75151f1dc7cbda5869cf1b4e48960b431b4"
+cq_warrants: []
+proposed_referent:
+  label: "parseWorktreePorcelain function"
+  description: "The exported function declaration named parseWorktreePorcelain; the observation supplies its parameter and return signature but no execution behavior."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "worktree-list parsing process"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Export syntax and a function signature establish callable implementation machinery but no independently warranted operational process or execution."
+epistemic_status: proposed
+confidence: {value: 0.93, use_for_acceptance: false}

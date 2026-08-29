@@ -1,0 +1,23 @@
+id: so:sha256:53673fe0c6cf5e0dc24ef39a749d9aaa246eb58c8be1454460215ee5a0c2c482
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 129
+  end_line: 134
+  content_sha256: 93cd11e6956ca3f6bb87e6101cbe4bea8c1055c2b721b8280bfdcf6a3383820d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::turboCachePullRequestPosture
+  lexical_name: turboCachePullRequestPosture
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: turboCachePullRequestPosture
+source_excerpt: export const turboCachePullRequestPosture = {
+epistemic_status: parser_derived

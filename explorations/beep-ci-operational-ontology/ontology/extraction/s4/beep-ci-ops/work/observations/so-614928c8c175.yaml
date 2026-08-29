@@ -1,0 +1,24 @@
+id: so:sha256:614928c8c175bac46a12f02186c7b297306b95fa35819e8555bb6fdace0e7761
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 514
+  end_line: 517
+  content_sha256: d2ec1b41912e012a6c20d1c71e0475a0daacf30de5d760e9d60e9d2c8f59889e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::githubCheckModeFlagChoices
+  lexical_name: githubCheckModeFlagChoices
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: githubCheckModeFlagChoices
+source_excerpt: 'export const githubCheckModeFlagChoices: ReadonlyArray<readonly [GithubCheckMode, GithubCheckMode]>
+  = A.map('
+epistemic_status: parser_derived

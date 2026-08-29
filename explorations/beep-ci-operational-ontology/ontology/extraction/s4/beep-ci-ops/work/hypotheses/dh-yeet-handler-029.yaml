@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:029"
+observation_refs:
+  - "so:sha256:612c7e8405c36b730f55df1ebec5588625a43101ca64081816285c743f42fed3"
+  - "so:sha256:b60423a5242154f3cd302071bd2fbbb535c327e80685717f083a230aeef2c1ab"
+cq_warrants: []
+proposed_referent:
+  label: "YeetVerdictExtras representation and test alias"
+  description: "No domain-ontology referent is proposed for the YeetVerdictExtras representation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "supplemental verdict information"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only a static type declaration or alias. Type-level representation does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

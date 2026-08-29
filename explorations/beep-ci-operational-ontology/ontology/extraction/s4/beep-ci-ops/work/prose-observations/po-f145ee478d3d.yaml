@@ -1,0 +1,10 @@
+id: po:sha256:f145ee478d3d0a92bbbe070e06d3596bffb5b28c620dc5d1f60eaa02a14cba7a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 362
+  end_line: 370
+quote: '_tag: S.tag("local-only"),'
+epistemic_status: quoted_prose

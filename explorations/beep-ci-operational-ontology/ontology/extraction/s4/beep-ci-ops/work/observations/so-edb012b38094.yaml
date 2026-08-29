@@ -1,0 +1,29 @@
+id: so:sha256:edb012b38094de5a54c096ee0e38af428f6d3a7147f18cc4bc1368c302cec206
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 927
+  end_line: 932
+  content_sha256: b4aee1f80ea99a1969e29c167fcf8516e3cb8dcb607043dce48224dcd83a0c06
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::PromotionTickInfo
+  lexical_name: PromotionTickInfo
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: availableGib
+- predicate: declares_field
+  object: capacityTokens
+- predicate: declares_field
+  object: nowMillis
+- predicate: declares_field
+  object: state
+source_excerpt: interface PromotionTickInfo {
+epistemic_status: parser_derived

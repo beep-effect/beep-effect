@@ -1,0 +1,11 @@
+id: po:sha256:a8f45d7aff5dac863717489999e1c1b730d1b57612435ac657d3bab1a0f533ea
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/ARCHITECTURE.md
+source_span:
+  start_line: 3
+  end_line: 7
+quote: If a proposed slice, package, adapter, or dependency contradicts this document, the proposal must
+  change or this document must be amended.
+epistemic_status: quoted_prose

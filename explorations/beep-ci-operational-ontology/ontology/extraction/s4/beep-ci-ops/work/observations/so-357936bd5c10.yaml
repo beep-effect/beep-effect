@@ -1,0 +1,23 @@
+id: so:sha256:357936bd5c10475bb683a73ef496a31521cdf91e52e444875205b73303f7ab1b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 60
+  end_line: 60
+  content_sha256: 08addd937200471fa8210e4e6ea83f0514ab9b61f8905e910ee6ae6b7f49c729
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::YEET_WATCH_SCHEMA_VERSION
+  lexical_name: YEET_WATCH_SCHEMA_VERSION
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YEET_WATCH_SCHEMA_VERSION
+source_excerpt: export const YEET_WATCH_SCHEMA_VERSION = "yeet-watch/v1";
+epistemic_status: parser_derived

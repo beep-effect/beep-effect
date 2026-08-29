@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:006"
+observation_refs:
+  - "so:sha256:0d75cf3eaec545f3236b0d41d6ef75fa4a94c7cea62644db5e9e7db9e5777780"
+cq_warrants: []
+proposed_referent:
+  label: "mergeReadyCriterionHolds helper"
+  description: "No domain-ontology referent is proposed for the mergeReadyCriterionHolds helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "merge-readiness decision rule"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only export visibility and a declaration header. Exported implementation access does not distinguish a domain referent from code plumbing."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

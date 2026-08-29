@@ -1,0 +1,27 @@
+id: "dh:yeet-watch:021"
+observation_refs:
+  - "so:sha256:01e37039cebeb141034280ea9064d32ad90e9c6042b222c941260520dc67e9aa"
+  - "so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1"
+  - "so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+cq_warrants: []
+proposed_referent:
+  label: "mergeability-change information record"
+  description: "A watch-stream row recording a change in GitHub's mergeability answer between consecutive polls."
+representation_status: unresolved
+alternatives:
+  - label: "pull-request mergeability change"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "mergeability-diff DTO"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Construction and serialization code makes a mergeability-change record plausible, but the lane contains no runtime row or CQ warrant that would make the record more than an implementation representation."
+epistemic_status: proposed
+confidence:
+  value: 0.81
+  use_for_acceptance: false

@@ -1,0 +1,24 @@
+id: "dh:quality:052"
+observation_refs:
+  - "so:sha256:5cd70a27e717b031265de56647d70eee204c245864c4f66e220e25e323233b1e"
+  - "so:sha256:9fd6b93ee7433dd8e3f6c31ca2be058badf0d7ef8af7d448396f4182106d2c23"
+  - "po:sha256:ed8c3611c799b36685a4246f270047bf8876198fbebca2e14034d16d3fb78b95"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "\"lint\" label in QualityTaskName"
+  description: "The observed token is retained only as a lexical member of the QualityTaskName source vocabulary. The harvested claim that it denotes a canonical quality-verification lane specification remains possible but is not established by these records."
+representation_status: lexical_alias
+alternatives:
+  - label: "A reusable quality-verification lane specification denoted by \"lint\""
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied observations establish \"lint\" only as a literal or backing-array member of QualityTaskName. They do not observe an operational bearer, stable specification identity, execution occurrence, or lifecycle corresponding to that token, so the implementation-only null stands."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

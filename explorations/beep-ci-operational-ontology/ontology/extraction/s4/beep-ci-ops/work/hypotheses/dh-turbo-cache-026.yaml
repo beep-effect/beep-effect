@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:026"
+observation_refs:
+  - "so:sha256:0746f76122b2ff7b389a1a07c57dd6bb4f54eb6156bfc732149d3cf036c2a980"
+  - "so:sha256:ae5373686163d941e62ead9847ba81429413a670b5870c580c78b9f532bbcb59"
+cq_warrants: []
+proposed_referent:
+  label: "Internal Turbo cache fallback-reason vocabulary"
+  description: "A software vocabulary containing incomplete-remote-config and unsupported-cache-mode labels."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Operational cache-configuration failure reasons"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Lexical aliases for diagnostic reason values"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only an exported literal vocabulary and its alias; no observed occurrence, consequence, or externally recorded reason defeats the null."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

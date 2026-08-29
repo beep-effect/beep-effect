@@ -1,0 +1,23 @@
+id: "fa:worktree-config:008"
+hypothesis_ref: "dh:worktree-config:012"
+identity_card_ref: "ic:worktree-config:008"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "One parameterized docgen procedure-specification information object"
+    still_viable: true
+  - label: "Abstract docgen procedure universal instantiated by separate specifications"
+    still_viable: true
+  - label: "Two unrelated command-description information objects"
+    still_viable: true
+  - label: "A particular docgen execution"
+    still_viable: false
+strongest_counterexample: >-
+  The affected and full-repository commands can be invoked repeatedly against
+  different trees. Every invocation has its own temporal course and output,
+  while the rule choosing between the two commands persists as prescriptive
+  information.
+verdict: analyzed

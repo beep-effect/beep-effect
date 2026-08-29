@@ -1,0 +1,14 @@
+id: fa:sched-core:022
+hypothesis_ref: dh:sched-core:023
+identity_card_ref: ic:sched-core:022
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Model ReleasedGrant as a later phase of a SeatGrant that survives lease deletion.
+  still_viable: false
+strongest_counterexample: The deployed lease is deleted at cleanup or rollback and no durable grant reference survives, so
+  the evidence warrants an ActiveGrant vocabulary value but not phase continuity into a released bearer.
+verdict: analyzed

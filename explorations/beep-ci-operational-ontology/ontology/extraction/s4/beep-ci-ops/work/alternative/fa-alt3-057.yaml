@@ -1,0 +1,23 @@
+id: fa:alt3:057
+hypothesis_ref: dh:yeet-watch:013
+identity_card_ref: ic:alt3:057
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'quality: pass as the classified outcome inhering in a watch-check'
+  still_viable: true
+- label: 'phase: the check while classified passing'
+  still_viable: true
+- label: 'information_object: the pass token stored on the snapshot'
+  still_viable: true
+strongest_counterexample: diffYeetWatchSnapshots emits a transition when a check's outcome
+  changes across snapshots. The world GitHub check can move while a prior snapshot still records
+  pass, so the classification is not the live check state.
+verdict: analyzed
+needed_evidence: Whether pass is a quality/phase of the watch-check bearer or only the stored
+  token. Observationally equivalent on the classifier plus the snapshot differ; a check whose
+  GitHub state is success while the watch stores pending would already favor the information-object
+  reading.

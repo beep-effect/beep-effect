@@ -1,0 +1,23 @@
+id: so:sha256:00c7d05354f3798ed7ce481fb1029252a480eead748647ffe035a256e000efc1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1019
+  end_line: 1056
+  content_sha256: e20c779c8db51ec7638d35e2960f5616565d9e47bd800d0d085e8a02df92d7fe
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::waitForAdmission
+  lexical_name: waitForAdmission
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, GateRequirements>(
+epistemic_status: parser_derived

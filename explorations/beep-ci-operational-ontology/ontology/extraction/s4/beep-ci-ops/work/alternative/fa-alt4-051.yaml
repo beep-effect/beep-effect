@@ -1,0 +1,20 @@
+id: fa:alt4:051
+hypothesis_ref: dh:turbo-cache:022
+identity_card_ref: ic:alt4:051
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "information object: resolved caller-controlled cache-plan record"
+    still_viable: true
+  - label: "role: a Turbo invocation playing caller-controlled cache (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: quality of a one-shot invocation event
+    still_viable: true
+  - label: lexical alias with no posture referent
+    still_viable: false
+strongest_counterexample: The resolver produces this tagged record for CI and for an explicit cache argument, so the posture varies with invocation conditions rather than existing only as a source token; that still does not show an enduring invocation continuant playing a role.
+verdict: analyzed
+needed_evidence: The same Turbo invocation re-resolved from caller-controlled to another posture without ending, versus a new plan record per invocation, would discriminate role of a continuant from a one-shot information record.

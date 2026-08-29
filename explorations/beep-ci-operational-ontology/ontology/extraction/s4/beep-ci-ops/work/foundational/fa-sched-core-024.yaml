@@ -1,0 +1,15 @@
+id: "fa:sched-core:024"
+hypothesis_ref: "dh:sched-core:025"
+identity_card_ref: "ic:sched-core:024"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "The relevant referent is the process's actual alive-or-dead phase, not the criterion used to judge it."
+    still_viable: true
+  - label: "The code is only a platform-specific probing implementation with no independent criterion artifact."
+    still_viable: true
+strongest_counterexample: "A probe may return alive under the unreadable-start-time fallback even after pid reuse, demonstrating that criterion execution and the process's actual continuity are different entities."
+verdict: "analyzed"

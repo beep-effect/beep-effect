@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:031"
+observation_refs:
+  - "so:sha256:638368816fa977991af2d07b3c2d4e1f0e8ce38b7469b5e78bc6facd7a8810ba"
+cq_warrants: []
+proposed_referent:
+  label: "failWithRerunGuidance helper"
+  description: "No domain-ontology referent is proposed for the failWithRerunGuidance helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "rerun-guidance failure response"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

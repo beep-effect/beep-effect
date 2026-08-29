@@ -1,0 +1,23 @@
+id: so:sha256:8a9cf32d4b1ef1adfac54f4b90c6b11c5c238c95ee312a1d8ddfd6345f38ae43
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 450
+  end_line: 450
+  content_sha256: 2a926affa1aa563a86076e67540c91f5d31cb52642b569986b575ed9380731d0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::shellSafeArgPattern
+  lexical_name: shellSafeArgPattern
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const shellSafeArgPattern = /^[A-Za-z0-9_@%+=:,./-]+$/u;
+epistemic_status: parser_derived

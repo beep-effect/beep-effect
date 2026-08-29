@@ -1,0 +1,17 @@
+id: "fa:sched-core:025"
+hypothesis_ref: "dh:sched-core:026"
+identity_card_ref: "ic:sched-core:025"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The intended referent is each individual admission episode that executes the coordination procedure."
+    still_viable: true
+  - label: "A normative coordination protocol is distinct from both its code expression and its execution."
+    still_viable: true
+  - label: "The cited helpers are unrelated implementation functions rather than one coherent procedure."
+    still_viable: false
+strongest_counterexample: "The same reusable procedure can be executed, interrupted, and rerun many times; identifying it with one ticket-to-lease episode would merge specification and execution."
+verdict: "analyzed"

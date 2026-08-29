@@ -1,0 +1,65 @@
+target: "otp:hard-floor-engaged-situation:001"
+target_sha256: "80d9d927549cd5cd7d07ff2d4fe51d23384e6ff5e8f06f64f1e2242a8b67bccf"
+chain_sha256: "4ea25a674977e72d0b2580ff4f2bac9c12fa9cec9c22f6162e65847b79795053"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge, so it proposes no is-a relation
+    whose rigidity, identity inheritance, dependence, unity, or absence can be
+    evaluated.
+attacks:
+  - surface: identity
+    rule: rigidity-identity-conflict
+    counterexample: >-
+      Situation S ends when memory recovers above the hard floor and a later
+      below-floor episode is a new situation. S therefore cannot leave
+      HardFloorEngagedSituation and persist as the same individual, yet the
+      referenced card still marks the class anti_rigid. Changing only the proposal
+      field to unresolved does not repair that card-level contradiction.
+    outcome: landed
+  - surface: identity
+    rule: identity-continuity-evidence-gap
+    counterexample: >-
+      Snapshot A at 10:00 and snapshot B at 10:02 can both report true and zero
+      capacity although memory recovered at 10:01. The cited snapshots contain no
+      continuous machine-and-policy interval, so the card cannot tell whether A
+      and B concern one situation or two.
+    outcome: landed
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two separate episodes share hardFloorEngaged=true and can even report the
+      same availableGib value. The card attempts to use machine, policy, and a
+      maximal interval rather than the Boolean key, so the identifier shortcut
+      itself is resisted.
+    outcome: survived
+  - surface: warrant
+    rule: support-not-necessary-for-decision-term
+    counterexample: >-
+      CQ-023 needs AdmissionPolicy, its starvation bound, and a modeled
+      HardFloorException. It can derive the exception directly from the snapshot
+      Boolean as its notes prescribe; neither the policy class nor the query needs
+      a reified HardFloorEngagedSituation class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-boolean-branch
+    counterexample: >-
+      A pure control-flow branch can compare availableGib with hardFloorGib,
+      return zero, and serialize hardFloorEngaged=true in a snapshot DTO. All cited
+      facts remain true without a world-level situation individual.
+    outcome: landed
+rival_models_still_viable:
+  - "An intrinsic phase of the machine admission regime"
+  - "A Boolean assertion in an admission snapshot"
+  - "An implementation branch with no separately reified situation"
+evidence:
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+  - "CQ-023"

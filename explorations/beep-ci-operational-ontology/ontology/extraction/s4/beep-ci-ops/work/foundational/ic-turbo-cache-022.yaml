@@ -1,0 +1,34 @@
+id: ic:turbo-cache:022
+hypothesis_ref: dh:turbo-cache:024
+identity:
+  supplies_identity: false
+  identity_criterion: 'This individual carries the CachePosture identity criterion: it is the same local-write and remote-read
+    posture specification across invocations and copies exactly while its normative content permits local reads and writes
+    plus remote reads but not remote writes; the tag and cache-mode string are evidence, not identity.'
+  reidentification_key:
+  - local read-write authority
+  - remote read-only authority
+  - CachePosture vocabulary version
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One governed posture value prescribing local reads and writes together with remote reads and no remote writes.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a separate cache mode for each invocation
+  - a lexical configuration value
+  existential_dependencies:
+  - the CachePosture specification
+  - a policy or software carrier
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - superseded if its local or remote authority semantics change
+counterexamples:
+- description: Two invocations can carry distinct plan records that both hand Turbo local:rw,remote:r while referring to one
+    governed posture value; a similarly named value that also permits remote writes would be different content.
+status: proposed

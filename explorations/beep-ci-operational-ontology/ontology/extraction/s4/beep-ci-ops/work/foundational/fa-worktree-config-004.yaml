@@ -1,0 +1,28 @@
+id: "fa:worktree-config:004"
+hypothesis_ref: "dh:worktree-config:008"
+identity_card_ref: "ic:worktree-config:004"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "One verification-result information-content object with multiple serialized concretizations"
+    still_viable: true
+  - label: "A distinct verification record token for each generation and custody history"
+    still_viable: true
+  - label: "Verification outcome situation or execution occurrence itself"
+    still_viable: false
+  - label: "Existing result record contingently playing an evidentiary role"
+    still_viable: true
+strongest_counterexample: >-
+  Equal bytes can come from separate runs with different tree, epoch, and
+  provenance, while one issued assertion can have several faithful copies.
+  Neither bytes nor storage path distinguishes information content from record
+  token, and neither is the outcome that the record describes.
+verdict: explicitly_deferred
+needed_evidence: >-
+  An artifact-identity and custody contract must state whether copied result
+  records are new individuals or concretizations of one information content,
+  and must define how generation provenance, correction, invalidation, and
+  supersession affect identity.

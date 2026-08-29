@@ -1,0 +1,23 @@
+id: so:sha256:a9b1143682020b235d90148d8bcd767d3cb3d359572e94b00d517ec7fffbfe8c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 54
+  end_line: 54
+  content_sha256: b72ceeeebee1be0babff3bb36f103627d414c786a09d30550175a09916d66600
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::YEET_FEEDBACK_TASKS
+  lexical_name: YEET_FEEDBACK_TASKS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YEET_FEEDBACK_TASKS
+source_excerpt: export const YEET_FEEDBACK_TASKS = ["build", "check", "lint", "test"] as const;
+epistemic_status: parser_derived
