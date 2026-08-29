@@ -1,0 +1,210 @@
+diff --git a/apps/professional-desktop/server/OntologyMcpTransport.ts b/apps/professional-desktop/server/OntologyMcpTransport.ts
+index 6f35c99358..5772c17f54 100644
+--- a/apps/professional-desktop/server/OntologyMcpTransport.ts
++++ b/apps/professional-desktop/server/OntologyMcpTransport.ts
+@@ -246,7 +246,7 @@ export const makeOntologyMcpTransportLayer = (options: {
+       const mcpConfig = yield* OntologyMcpConfig;
+       const epistemic = yield* EpistemicConfig;
+       const governed = mcpConfig.mutationsEnabled ? Layer.merge(readOnly, mutations) : readOnly;
+-      return epistemic.destinationAllowlist.length === 0 ? governed : Layer.merge(governed, publish);
++      return A.isReadonlyArrayEmpty(epistemic.destinationAllowlist) ? governed : Layer.merge(governed, publish);
+     })
+   );
+   const mcp = registration.pipe(Layer.provide(server));
+diff --git a/apps/professional-desktop/src/chat/ui/Composer.atoms.ts b/apps/professional-desktop/src/chat/ui/Composer.atoms.ts
+index 2708714ad7..0af8988139 100644
+--- a/apps/professional-desktop/src/chat/ui/Composer.atoms.ts
++++ b/apps/professional-desktop/src/chat/ui/Composer.atoms.ts
+@@ -19,7 +19,7 @@ import { editorStateToDocument } from "@beep/lexical-schema";
+ import * as Md from "@beep/md/Md.model";
+ import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+ import { documentSafetyIssues, refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
+-import { LiteralKit } from "@beep/schema";
++import { LiteralKit, SchemaUtils } from "@beep/schema";
+ import { toast } from "@beep/ui/components/sonner";
+ import { A, O, Str } from "@beep/utils";
+ import { Effect, Match, Result, Tuple } from "effect";
+@@ -275,22 +275,38 @@ export type ComposerDocumentSafetyGate = typeof ComposerDocumentSafetyGate.Type;
+ const rawNormalizationMessage =
+   "This legacy draft contains trusted raw Markdown or HTML. Review the escaped literal copy before sending.";
+ 
+-interface DocumentViolationFlags {
+-  readonly footnote: boolean;
+-  readonly raw: boolean;
+-  readonly scalar: boolean;
+-  readonly url: boolean;
+-}
++class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
++  {
++    footnote: S.Boolean.pipe(
++      SchemaUtils.withKeyDefaults(
++        false
++      )
++    ),
++    raw: S.Boolean.pipe(
++      SchemaUtils.withKeyDefaults(
++        false
++      )
++    ),
++    scalar: S.Boolean.pipe(
++      SchemaUtils.withKeyDefaults(
++        false
++      )
++    ),
++    url: S.Boolean.pipe(
++      SchemaUtils.withKeyDefaults(
++        false
++      )
++    )
++  },
++  $I.annote("DocumentViolationFlags", {
++    description:
++      "Per-category presence flags folded from document safety violations to select the composer refusal reason and preserve raw-normalization state.",
++  })
++) {}
+ 
+-const emptyDocumentViolationFlags: DocumentViolationFlags = {
+-  footnote: false,
+-  raw: false,
+-  scalar: false,
+-  url: false,
+-};
+ 
+ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>): DocumentViolationFlags =>
+-  A.reduce(issues, emptyDocumentViolationFlags, (flags, issue) =>
++  A.reduce(issues, DocumentViolationFlags.make(), (flags, issue) =>
+     Match.value(issue).pipe(
+       Match.tagsExhaustive({
+         DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
+diff --git a/apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts b/apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts
+index 795151fa59..807a8769a8 100644
+--- a/apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts
++++ b/apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts
+@@ -13,6 +13,7 @@
+  * @since 0.0.0
+  */
+ 
++import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+ import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
+ import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
+ import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
+@@ -57,7 +58,7 @@ import {
+   VerifyTextAnchorInput,
+   verifyTextAnchor,
+ } from "@beep/provenance/VerifiedTextAnchor";
+-import { LiteralKit, NonNegativeInt, PosInt, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
++import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
+ import { Cuid } from "@beep/schema/Cuid";
+ import { PosixPath } from "@beep/schema/PosixPath";
+ import { Principal } from "@beep/shared-domain/entity/Principal";
+@@ -68,11 +69,10 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+ import { A, O, Str } from "@beep/utils";
+ import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
+ import { Workspace } from "@beep/workspace-use-cases/server";
+-import { Config, DateTime, Effect, FileSystem, Layer, Path, pipe } from "effect";
++import { Config, DateTime, Effect, FileSystem, Layer, Path, pipe, Tuple } from "effect";
+ import * as Eq from "effect/Equal";
+ import * as P from "effect/Predicate";
+ import * as S from "effect/Schema";
+-import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+ import type { JsonObject } from "@beep/schema/Json";
+ import type { Crypto } from "effect";
+ 
+@@ -262,34 +262,71 @@ class ContradictionQaFact extends S.Class<ContradictionQaFact>($I`ContradictionQ
+   })
+ ) {}
+ 
+-type EvidenceSpecification = {
+-  readonly artifactFixtureKey: string;
+-  readonly createdAt: number;
+-  readonly publicIdSuffix: Cuid;
+-  readonly span: typeof EvidenceSpan.Encoded;
+-  readonly spanFixtureKey: string;
+-};
++class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSpecification`)(
++  {
++    artifactFixtureKey: S.NonEmptyString,
++    createdAt: S.DateTimeUtcFromMillis.pipe(S.toEncoded),
++    publicIdSuffix: Cuid,
++    span: EvidenceSpan.pipe(S.toEncoded),
++    spanFixtureKey: S.NonEmptyString,
++  },
++  $I.annote("EvidenceSpecification", {
++    description:
++      "Encoded identity, timestamp, and span inputs used to construct and collision-check one deterministic contradiction QA evidence fixture.",
++  })
++) {}
+ 
+-type BeliefSpecification = {
+-  readonly fact: ContradictionQaFact;
+-  readonly identity: typeof LogicalEdgeIdentity.Encoded;
+-  readonly recordedAt: number;
+-};
++class BeliefSpecification extends S.Class<BeliefSpecification>($I`BeliefSpecification`)(
++  {
++    fact: ContradictionQaFact,
++    identity: LogicalEdgeIdentity.pipe(S.toEncoded),
++    recordedAt: S.DateTimeUtcFromMillis.pipe(S.toEncoded),
++  },
++  $I.annote("BeliefSpecification", {
++    description:
++      "Encoded logical-edge identity, fact, and recording time used to construct and collision-check one deterministic contradiction QA belief.",
++  })
++) {}
+ 
+-type CandidateSpecification = {
+-  readonly confidence: number;
+-  readonly detector: string;
+-  readonly leftEvidence: Evidence;
+-  readonly leftBelief: EdgeVersion;
+-  readonly proposalFact: ContradictionQaFact;
+-  readonly proposalLosingBelief: "left" | "right";
+-  readonly proposalRationale: string;
+-  readonly proposalSeed: string;
+-  readonly receiptSeed: string;
+-  readonly recordedAt: number;
+-  readonly rightEvidence: Evidence;
+-  readonly rightBelief: EdgeVersion;
+-};
++const ProposalLosingBelief = LiteralKit(["left", "right"])
++  .annotate(
++    $I.annote("ProposalLosingBelief", {
++      description: "Belief side displaced by a deterministic contradiction QA resolution proposal.",
++    })
++  )
++  .pipe(
++    SchemaUtils.withStatics((schema) => ({
++      makeTagged: <TLiteral extends typeof schema.Type>(literal: S.Literal<TLiteral>) =>
++        S.Struct({
++          proposalLosingBelief: S.tag(literal.literal),
++          confidence: Confidence.pipe(S.toEncoded),
++          detector: S.NonEmptyString,
++          leftEvidence: Evidence,
++          leftBelief: EdgeVersion,
++          proposalFact: ContradictionQaFact,
++          proposalRationale: S.NonEmptyString,
++          proposalSeed: S.NonEmptyString,
++          receiptSeed: S.NonEmptyString,
++          recordedAt: S.DateTimeUtcFromMillis.pipe(S.toEncoded),
++          rightEvidence: Evidence,
++          rightBelief: EdgeVersion,
++        }),
++    }))
++  );
++
++type ProposalLosingBelief = typeof ProposalLosingBelief.Type;
++
++const CandidateSpecification = ProposalLosingBelief.mapMembers(
++  Tuple.evolve([ProposalLosingBelief.makeTagged, ProposalLosingBelief.makeTagged])
++).pipe(
++  S.toTaggedUnion("proposalLosingBelief"),
++  $I.annoteSchema("CandidateSpecification", {
++    description:
++      "Deterministic contradiction candidate fixture joining two persisted beliefs and their evidence with a scored resolution proposal.",
++  })
++);
++
++type CandidateSpecification = typeof CandidateSpecification.Type;
+ 
+ const evidenceTable = DbSchema.evidence;
+ const evidenceVerificationTable = DbSchema.evidenceVerification;
