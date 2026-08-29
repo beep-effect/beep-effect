@@ -1,0 +1,1814 @@
+diff --git a/.changeset/turbo-local-remote-cache-reads.md b/.changeset/turbo-local-remote-cache-reads.md
+new file mode 100644
+index 0000000000..4a5586520e
+--- /dev/null
++++ b/.changeset/turbo-local-remote-cache-reads.md
+@@ -0,0 +1,30 @@
++---
++"@beep/repo-cli": patch
++---
++
++Honor a configured Turbo remote-read posture instead of forcing local-only cache.
++
++Root quality commands injected `--cache=local:rw` on every non-CI invocation, so a
++workstation configured for remote reads could never use them — the AWS cache warmed by
++every merge was unreachable from any local lane. The decision now lives in a schema-first
++resolver (`internal/cli/TurboCache.ts`): a complete quad (`TURBO_API`, `TURBO_TOKEN`,
++`TURBO_TEAM`, `TURBO_CACHE=local:rw,remote:r`) is honored and everything else fails closed
++to `--cache=local:rw`, including a quad that asks for remote *writes*, which no workstation
++is credentialed for.
++
++Turbo steps whose credentials are still 1Password references now spawn under
++`op run --env-file=.env`, and `turboEnvOverrides` recognizes that wrapped form so the
++mouse-capture guard still applies to it. The unresolved-reference scrub is scoped to
++*direct* turbo spawns: `op run` resolves `op://` references out of the environment it is
++handed, not only out of its `--env-file`, so scrubbing them from a wrapped spawn would
++delete the references the wrapper exists to resolve. Any spawn that is *not* wrapped — because the
++1Password session is missing, expired, or denied, or because the step carries its own
++environment — has its remote posture rewritten to local-only rather than failing the lane,
++in the arguments and in the environment both, since a `--cache` flag outranks
++`TURBO_CACHE`. Steps carrying their own environment (the hosted coverage identity,
++testcontainer connection URIs) stay unwrapped so `op run`'s dotenv overlay cannot clobber a
++lane-critical value; those tasks are `cache: false` anyway. The `op run` wrapper also stops
++dropping a step's `env` and `flakeQuarantine` fields on the way through.
++
++Per-checkout enablement is `bash scripts/enable-turbo-remote-reads.sh`, documented in
++`standards/turbo-remote-cache.md`, with the four names added to `.env.example`.
+diff --git a/.env.example b/.env.example
+index 02acdfc74c..46f6a8d9c0 100644
+--- a/.env.example
++++ b/.env.example
+@@ -196,8 +196,18 @@
+ # CLOUD_GOOGLE_CAPTCHA_SITE_KEY=
+ # CLOUD_GOOGLE_CAPTCHA_SECRET_KEY=
+ # RAILWAY_TOKEN=
+-# TURBO_TOKEN=
++#
++# Turbo remote cache — read-only for workstations. All four names are required
++# together: the CLI injects `--cache=local:rw` unless the whole quad is present
++# and TURBO_CACHE is exactly `local:rw,remote:r`. Store the READ-ONLY token as
++# a 1Password reference (never the trusted write token, never a resolved
++# value); `op run` resolves it when the lane spawns. Enable a checkout with
++# `bash scripts/enable-turbo-remote-reads.sh`; see
++# standards/turbo-remote-cache.md.
++# TURBO_API=
++# TURBO_TOKEN=op://<vault>/<item>/<field>
+ # TURBO_TEAM=
++# TURBO_CACHE=local:rw,remote:r
+ # MARKETING_DUB_TOKEN=
+ # LIVEBLOCKS_SECRET_KEY=
+ 
+diff --git a/goals/ship-velocity/PLAN.md b/goals/ship-velocity/PLAN.md
+index d4e8550adf..8635e98814 100644
+--- a/goals/ship-velocity/PLAN.md
++++ b/goals/ship-velocity/PLAN.md
+@@ -20,7 +20,10 @@ phase flips ride the final PR of each phase.
+ 
+ - B1 same-argv lanes (`beep ci lane` from yeet).
+ - E1 publish refuses hand-staged INDEX + regenerates from manifests.
+-- C1 local remote-cache read path + checkout env template.
++- ~~C1 local remote-cache read path + checkout env template.~~ Done 2026-08-16 (schema-first
++  `resolveTurboCachePlan` honors a complete remote-read quad and fails closed otherwise;
++  `op run` env for reference-backed Turbo steps; `scripts/enable-turbo-remote-reads.sh` +
++  `standards/turbo-remote-cache.md` + `.env.example`).
+ - A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
+   backoff).
+ 
+diff --git a/goals/ship-velocity/SPEC.md b/goals/ship-velocity/SPEC.md
+index 84333d2652..9f6f538476 100644
+--- a/goals/ship-velocity/SPEC.md
++++ b/goals/ship-velocity/SPEC.md
+@@ -139,6 +139,16 @@ be closed, not tolerated.
+   eligible-remote-hit rate, forced/disabled excluded, p50/p95 lane wall time by cache mode.
+   Then de-fragment keys (stop hashing per-clone `.env*` globally, localize story globs) with
+   before/after probes. Prior audit: 24% hits, 93.6% of misses in all-miss (cold/forced) groups.
++- **C6 op-run reference resolvability.** C1 leaves the degrade-to-local-only contract unmet for
++  one case: `op run` fails hard when any `op://` reference in scope cannot be resolved, while
++  `canUseLocalEnv` probes only `op whoami` — session alive, references unverified. A stale
++  reference anywhere in `.env` therefore fails the lane instead of degrading it. Pre-existing
++  (the root build step has carried `useLocalEnv` all along), but C1 widens it from one step to
++  every cacheable Turbo step in an `op://`-configured checkout. Fix: probe reference
++  resolvability before wrapping, cache the verdict per run (not per step — the probe is a
++  subprocess), and fall back to an unwrapped local-only spawn on failure. Deferred out of C1
++  deliberately: it changes shared `canUseLocalEnv` semantics that B1 also touches, and its
++  caching deserves its own review. Cannot affect a checkout whose credentials are literal.
+ 
+ ## Workstream D — Concurrency: install the gate the profile describes
+ 
+diff --git a/goals/ship-velocity/research/OPPORTUNITIES.md b/goals/ship-velocity/research/OPPORTUNITIES.md
+index c20c92f15d..62c43a9409 100644
+--- a/goals/ship-velocity/research/OPPORTUNITIES.md
++++ b/goals/ship-velocity/research/OPPORTUNITIES.md
+@@ -81,3 +81,109 @@ session/machine ids.
+   claiming CI parity must run from the artifact state CI actually has — wipe derived outputs
+   first (the cold-world script now does). Fix: check.dependsOn ^build, making the lane's
+   input explicit instead of inherited from whatever a -b sub-build left behind.
++
++## 2026-08-16 — C1 implementation
++
++- Building the C1 resolver, I found the workstation's interactive shell already exports the
++  full remote-read quad (`TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM`/`TURBO_CACHE=local:rw,remote:r`)
++  with literal — not `op://` — credential values, while the checked-in `.env.example` listed
++  only two of the four names and no checkout documents the contract. So the cache was
++  *configured* and the CLI's forced `--cache=local:rw` was the only thing suppressing it; the
++  C4 audit's "not enabled locally" verdict read as a config gap when it was a CLI gap. Proven
++  live against the cache's status endpoint: authenticated `200`, unauthenticated `401`.
++  Prevention: any env-driven capability needs its full name set in `.env.example` plus one
++  operator doc at the moment it is deployed, so "is it configured?" is answerable without
++  reading the consumer's source.
++- **Vacuous-test receipt (15 assertions).** The same shell export made 15 existing
++  `quality-tasks.test.ts` cases fail the moment the resolver went live (`expected
++  --cache=local:rw, received --cache=local:rw,remote:r`). The cause is the vacuous-assertion
++  class, not a behavior change: the helper *restated the production formula* in the test
++  (`Bun.env.CI === "true" || A.some(args, isTurboCacheControlArg) ? [] : ["--cache=local:rw"]`,
++  plus a verbatim copy of `isTurboCacheControlArg`), so each assertion compared the
++  implementation against a second copy of itself. That proves nothing about the policy: it
++  passes for any implementation the copy also describes, and it fails whenever the copy drifts
++  — which is exactly what happened, on a machine difference rather than on a code defect. The
++  suite's apparent green had been conditional on this workstation being *unconfigured*, and a
++  verify launched from a configured shell would have failed for a reason unrelated to the
++  change under test.
++  Fix, stated honestly: the tautology was not removed from those 15 cases, it was *relocated*.
++  They now derive the cache segment from the same resolver, which makes them structural
++  assertions (the plan's args reach turbo, in the right position, for every lane) and
++  environment-independent by construction; the policy itself is proven separately in
++  `turbo-cache.test.ts`, where concrete literals are asserted against explicitly constructed
++  environments with no ambient reads. Prevention, general form: a test may restate a value or
++  derive it, never both-ways-at-once — derive the environment-dependent segment and assert the
++  decision function against literals somewhere else. A restated formula is a second
++  implementation that silently inherits every bug of the first and adds drift of its own.
++  Detection idea for A5/B-track: flag test helpers whose body is a textual near-duplicate of a
++  production expression (the copied `isTurboCacheControlArg` here was byte-identical).
++- `withLocalEnv` in `Quality/Tasks.ts` rebuilt the op-run step from four fields and silently
++  dropped `env` and `flakeQuarantine`. It was harmless only because the single `useLocalEnv`
++  step today (root build) carries no `env`, and the quarantine policy is read from the
++  pre-resolution step. Making more steps op-wrappable would have turned it into a real
++  regression (a coverage step losing `CI=true`, or an integration step losing its
++  testcontainer URI). Prevention: step transformers should copy-with-override
++  (`optionalProp` over every optional field) rather than re-enumerate a subset — or the step
++  model should expose a total `withCommand` helper so no call site can forget a field.
++- `op run --env-file=.env` overlays the checkout's dotenv onto the child, so wrapping a step
++  that carries its own `env` can silently clobber lane-critical values. There is no way to
++  express "step env wins" with `op run`, so the wrapper is now restricted to steps with no
++  step-specific env. Worth recording because the obvious reading of "wire op-run env for all
++  Turbo steps" is unsafe as stated.
++- Self-review before the proof slot caught a real defect the tests would not have: my
++  `turboEnvOverrides` scrubbed `op://` credential references for *every* turbo spawn, including
++  the `op run`-wrapped one. An ambient-env probe settles what the docs left implicit — `op run`
++  resolves `op://` references out of the environment it is handed, not only out of
++  `--env-file` (a bogus ambient reference made it fail on the vault name). So the scrub deleted
++  the exact reference the wrapper exists to resolve: a checkout holding the quad as shell
++  exports would have handed the wrapped turbo *no credential at all* while argv demanded
++  `remote:r`. Fixed by scoping the scrub to direct `bunx turbo` spawns. Prevention: when a
++  wrapper's whole job is to transform a value, the transform stage must be excluded from every
++  sanitizer aimed at the untransformed form — state the pipeline stage a guard belongs to, not
++  just its condition.
++- The regression guard for the above was itself vacuous on the first attempt: vitest's
++  `toEqual` **ignores keys whose value is `undefined`**, and this codebase uses
++  `{ VAR: undefined }` as the spawner's *delete* signal. Every assertion about a scrub was
++  therefore passing for both the scrubbing and the non-scrubbing implementation. Only
++  `toStrictEqual` compares undefined-valued keys. Verified by mutation: with the fix reverted
++  the strict assertion fails (`TURBO_TOKEN: undefined`, `TURBO_CACHE: "local:rw"` leaking into
++  the wrapped spawn), where the `toEqual` form had passed. Prevention, repo-wide: any
++  assertion over an env-override record that encodes deletion as `undefined` must use
++  `toStrictEqual` — a lint or review checklist item, since the weaker matcher silently proves
++  nothing and reads identically. Second instance of the vacuous-assertion class in one packet.
++- The new-file zero-uncovered rule turned out to be satisfiable only because it was *measured*
++  rather than assumed. A targeted `bunx vitest run <files> --coverage --coverage.include=<file>`
++  (no turbo, no ratchet env, ~7s) reported `TurboCache.ts` at 100% on all four metrics — but the
++  same probe surfaced the real exposure one file over: `EnvConfig.ts`'s new
++  `isUnresolvedSecretReference(value) ? "secret-reference" : "literal"` arm is **unexecutable on
++  any checkout whose credentials are literal**, and this workstation's are. It would have been a
++  permanently uncovered branch added to a baselined file, invisible to every local run. Fixed by
++  moving the ternary into the pure module as `turboCacheValueSourceFor(boolean)` where a test
++  reaches both arms with no environment at all. Prevention, and the generalizable half: an
++  environment-classifying branch belongs in a pure function that takes the verdict, never at the
++  reading edge that produces it — otherwise its coverage is a property of the machine.
++  Corollary worth adopting packet-wide: scoped `--coverage.include` on a single file is cheap
++  enough (seconds, no lock) to run before every proof that adds a file, instead of discovering
++  the floor from a hosted lane.
++- Same probe, second finding: `Tasks.ts`'s run-time degradation arm was unreachable in tests for
++  the same reason (its guard calls an env reader). Rather than mutate the ambient environment in
++  a shared test file — fragile, because the default ConfigProvider snapshots the environment at
++  the first config read — the session verdict became a *parameter* and the function got a
++  `...ForTesting` export, the convention already used dozens of times in that file. That closed a
++  real gap, not just a number: nothing had proven that an unwrapped step's remote posture is
++  actually rewritten, or that the rewrite carries `env` and `flakeQuarantine` through. Four cases
++  now do. Prevention: when a guard mixes a pure decision with an ambient read, take the read as
++  an argument — testability and the coverage floor both follow for free.
++
++## 2026-08-17 — A7 monitor hardening
++
++Recorded by A7; carried into the tree by the C1 branch because A7's own tree was already
++committed and proven, and prose is not worth re-proving it.
++
++- The publish intent gate fires from **two different positions** in the pipeline for the same
++  remedy: an *untracked-path* refusal lands after the fallow-advisory preflight has already run,
++  while an *unstaged-modification* refusal lands before it. Three refusals on one branch in one
++  session (A7/#738), every one fixed by a `git add` the tool could have prompted for precisely,
++  with unpredictable cost — seconds or a wasted preflight — keyed on a distinction the operator
++  has no reason to model. Under `--start-pr-early` the wasted preflight is on the critical path.
++  Prevention: one gate position, and stage-intent validation before any preflight work.
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+index bcc65add4b..6c11a8e79f 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+@@ -31,8 +31,19 @@ import {
+   configStringEqualsSync,
+   configStringOption,
+   isUnresolvedSecretReference,
++  readTurboCacheEnvironmentSync,
+   turboEnvOverrides,
+ } from "../../internal/cli/EnvConfig.ts";
++import { optionalProp } from "../../internal/cli/OptionRecord.ts";
++import {
++  hasRemoteTurboCacheArgs,
++  isTurboCacheControlArg,
++  localOnlyTurboCacheArgs,
++  resolveTurboCachePlan,
++  turboCacheEnvironmentNeedsSecretSession,
++  turboCachePlanArgs,
++  turboCachePlanNeedsSecretSession,
++} from "../../internal/cli/TurboCache.ts";
+ import {
+   formatCommandLine,
+   QualityTaskStep,
+@@ -502,16 +513,6 @@ export const workspaceTaskFiltersForTesting = workspaceTaskFilters;
+ 
+ const commandText = formatCommandLine;
+ 
+-const isTurboCacheControlArg = (arg: string): boolean =>
+-  arg === "--no-cache" ||
+-  arg === "--force" ||
+-  Str.startsWith("--force=")(arg) ||
+-  arg === "--remote-only" ||
+-  Str.startsWith("--remote-only=")(arg) ||
+-  arg === "--remote-cache-read-only" ||
+-  Str.startsWith("--remote-cache-read-only=")(arg) ||
+-  Str.startsWith("--cache=")(arg);
+-
+ const isTurboConcurrencyArg = (arg: string): boolean =>
+   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
+ 
+@@ -679,8 +680,28 @@ const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
+ 
+ const isCi = (): boolean => Bun.env.CI === "true" || configStringEqualsSync("CI", "true");
+ 
++// A workstation configured for remote reads is honored; everything else falls
++// back to local-only. The decision itself lives in `internal/cli/TurboCache`
++// so the whole matrix stays unit-testable without mutating the environment.
++const turboCachePlan = (args: ReadonlyArray<string>) =>
++  resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: isCi() });
++
+ const localTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+-  isCi() || A.some(args, isTurboCacheControlArg) ? A.empty() : ["--cache=local:rw"];
++  turboCachePlanArgs(turboCachePlan(args));
++
++// Steps carrying their own environment must not be op-wrapped: `op run
++// --env-file=.env` overlays the checkout's dotenv onto the child, which would
++// clobber lane-critical values (the hosted coverage identity, a testcontainer
++// connection URI). They are `cache: false` lanes in turbo.json, so they lose no
++// remote hits by staying unwrapped; the run-time degradation below keeps a
++// reference-backed remote posture from reaching them anyway.
++const turboStepLocalEnv = (
++  env: Record<string, string | undefined> | undefined,
++  args: ReadonlyArray<string>
++): O.Option<boolean> =>
++  env === undefined && turboCachePlanNeedsSecretSession(turboCachePlan(args)) ? O.some(true) : O.none();
++
++const needsTurboSecretSession = (): boolean => turboCacheEnvironmentNeedsSecretSession(readTurboCacheEnvironmentSync());
+ 
+ const ciFreshTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+   isCi() && !A.some(args, isTurboCacheControlArg) ? ["--force", ...args] : args;
+@@ -812,14 +833,61 @@ const usableSqlConnectionUri = (value: string | undefined): O.Option<string> =>
+ const sqlIntegrationConnectionUriFromEnv = (env: Record<string, string | undefined>): O.Option<string> =>
+   usableSqlConnectionUri(env.BEEP_TEST_DATABASE_URL);
+ 
++const carriedStepProps = (step: QualityTaskStep) => ({
++  ...optionalProp("env", O.fromUndefinedOr(step.env)),
++  ...optionalProp("flakeQuarantine", O.fromUndefinedOr(step.flakeQuarantine)),
++});
++
++// A spawn that is not wrapped in `op run` sees the credentials exactly as this
++// process does — unresolved `op://` references — so it must not carry a remote
++// cache posture. Rewriting is a no-op for arguments that carry none, which is
++// every step outside a checkout configured for reference-backed remote reads.
++// The session verdict is a parameter so both arms are reachable from a test
++// without mutating the ambient environment.
++const withoutUnusableRemoteCache = (step: QualityTaskStep, needsSecretSession: boolean): QualityTaskStep =>
++  needsSecretSession && hasRemoteTurboCacheArgs(step.args)
++    ? QualityTaskStep.make({
++        label: step.label,
++        command: step.command,
++        args: localOnlyTurboCacheArgs(step.args),
++        cwd: step.cwd,
++        ...carriedStepProps(step),
++      })
++    : step;
++
++/**
++ * Strip an unusable remote cache posture from a step that will not run under
++ * `op run`. Exposed for focused unit tests.
++ *
++ * **Example** (Degrade an unwrapped step)
++ *
++ * ```ts
++ * import { QualityTaskStep, withoutUnusableRemoteCacheForTesting } from "@beep/repo-cli/test/Quality"
++ *
++ * const step = QualityTaskStep.make({
++ *   label: "check",
++ *   command: "bunx",
++ *   args: ["turbo", "run", "check", "--cache=local:rw,remote:r"],
++ *   cwd: "/repo"
++ * })
++ * console.log(withoutUnusableRemoteCacheForTesting(step, true).args)
++ * ```
++ *
++ * @category utilities
++ * @since 0.0.0
++ */
++export const withoutUnusableRemoteCacheForTesting = withoutUnusableRemoteCache;
++
+ const withLocalEnv = Effect.fn("QualityTasks.withLocalEnv")(function* (step: QualityTaskStep) {
+   if (step.useLocalEnv !== true) {
+-    return step;
++    return withoutUnusableRemoteCache(step, needsTurboSecretSession());
+   }
+ 
++  // A missing, expired, or denied 1Password session degrades the lane to
++  // local-only instead of failing it.
+   const shouldUseLocalEnv = yield* canUseLocalEnv(step.cwd);
+   if (!shouldUseLocalEnv) {
+-    return step;
++    return withoutUnusableRemoteCache(step, needsTurboSecretSession());
+   }
+ 
+   return QualityTaskStep.make({
+@@ -827,6 +895,7 @@ const withLocalEnv = Effect.fn("QualityTasks.withLocalEnv")(function* (step: Qua
+     command: "op",
+     args: ["run", "--env-file=.env", "--", step.command, ...step.args],
+     cwd: step.cwd,
++    ...carriedStepProps(step),
+   });
+ });
+ 
+@@ -1313,7 +1382,7 @@ const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, arg
+     command: "bunx",
+     args: turboRunArgs(tasks, args),
+     cwd,
+-    ...O.getSomesStruct({ env: O.fromUndefinedOr(env) }),
++    ...O.getSomesStruct({ env: O.fromUndefinedOr(env), useLocalEnv: turboStepLocalEnv(env, args) }),
+   });
+ };
+ 
+diff --git a/packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts b/packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts
+index 4a54263c77..d2a821c8a6 100644
+--- a/packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts
++++ b/packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts
+@@ -20,14 +20,16 @@
+ 
+ import { $RepoCliId } from "@beep/identity/packages";
+ import { thunkFalse } from "@beep/utils";
++import * as O from "@beep/utils/Option";
+ import { Config, ConfigProvider, Effect, FileSystem, pipe } from "effect";
+ import * as A from "effect/Array";
+ import { dual } from "effect/Function";
+-import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+ import { runToExit } from "../process/StepExec.ts";
++import { TurboCacheEnvironment, TurboCacheMode, turboCacheValueSourceFor } from "./TurboCache.ts";
+ import type { ChildProcessSpawner } from "effect/unstable/process";
++import type { TurboCacheValueSource } from "./TurboCache.ts";
+ 
+ const $I = $RepoCliId.create("internal/cli/EnvConfig");
+ 
+@@ -251,15 +253,55 @@ export const booleanEnvValue: {
+ export const isUnresolvedSecretReference = (value: string | undefined): boolean =>
+   value !== undefined && Str.startsWith("op://")(value);
+ 
++const OP_RUN_ARGUMENT_SEPARATOR = "--";
++
++const isBunxTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
++  command === "bunx" &&
++  pipe(
++    A.head(args),
++    O.exists((arg) => arg === "turbo")
++  );
++
++// `op run --env-file=.env -- bunx turbo ...` is still a turbo spawn: the
++// overrides below must reach it, or an op-wrapped lane silently loses the
++// mouse-capture guard and the fail-closed cache posture.
++const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
++  command === "op" &&
++  pipe(
++    A.findFirstIndex(args, (arg) => arg === OP_RUN_ARGUMENT_SEPARATOR),
++    O.map((index) => A.drop(args, index + 1)),
++    O.exists((childArgs) =>
++      pipe(
++        A.head(childArgs),
++        O.exists((childCommand) => isBunxTurbo(childCommand, A.drop(childArgs, 1)))
++      )
++    )
++  );
++
+ /**
+- * Compute the environment overrides applied when spawning `turbo` via `bunx`.
++ * Compute the environment overrides applied when spawning `turbo`, directly via
++ * `bunx` or wrapped in `op run`.
+  *
+  * **Details**
+  *
+  * Forces `TURBO_UI=false` so the child never enables its interactive TUI (which
+  * can leave the terminal in mouse-capture mode when a task tears down), and
+- * scrubs `TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved `op://` references.
+- * Returns an empty object for any non-turbo command.
++ * scrubs `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved
++ * `op://` references. Returns an empty object for any non-turbo command.
++ *
++ * **Gotchas**
++ *
++ * Scrubbing a credential and leaving a remote cache posture in place would ask
++ * turbo to read a remote cache it has no usable token for, so a scrub also
++ * pins `TURBO_CACHE` to local-only. That is the environment half of failing
++ * closed; the argument half is `localOnlyTurboCacheArgs`, because a `--cache`
++ * flag outranks the environment variable.
++ *
++ * The scrub applies to a *direct* turbo spawn only. `op run` resolves `op://`
++ * references out of the environment it is handed — not just out of its
++ * `--env-file` — so scrubbing them from a wrapped spawn would delete the very
++ * references it exists to resolve, leaving the wrapped turbo with no
++ * credential at all.
+  *
+  * **Example** (Turbo and non-turbo overrides)
+  *
+@@ -281,20 +323,24 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
+   command: string,
+   args: ReadonlyArray<string>
+ ) {
+-  if (
+-    command !== "bunx" ||
+-    !pipe(
+-      A.head(args),
+-      O.exists((arg) => arg === "turbo")
+-    )
+-  ) {
++  const directTurbo = isBunxTurbo(command, args);
++  if (!directTurbo && !isOpRunTurbo(command, args)) {
+     return {};
+   }
+ 
++  // A wrapped spawn hands its environment to `op run`, which resolves the
++  // `op://` references in it. Scrubbing them here would strip the credential
++  // before it can be resolved, so a wrapped spawn takes the TUI guard only.
++  if (!directTurbo) {
++    return { TURBO_UI: "false" };
++  }
++
++  const turboApi = yield* configStringOption("TURBO_API");
+   const turboToken = yield* configStringOption("TURBO_TOKEN");
+   const turboTeam = yield* configStringOption("TURBO_TEAM");
+-  const turboTokenValue = pipe(turboToken, O.getOrUndefined);
+-  const turboTeamValue = pipe(turboTeam, O.getOrUndefined);
++  const unresolvedApi = isUnresolvedSecretReference(pipe(turboApi, O.getOrUndefined));
++  const unresolvedToken = isUnresolvedSecretReference(pipe(turboToken, O.getOrUndefined));
++  const unresolvedTeam = isUnresolvedSecretReference(pipe(turboTeam, O.getOrUndefined));
+   return {
+     // Spawned turbo inherits the parent TTY; its interactive TUI enables
+     // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
+@@ -302,11 +348,54 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
+     // the terminal — leaving it emitting mouse-motion reports and swallowing
+     // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
+     TURBO_UI: "false",
+-    ...(isUnresolvedSecretReference(turboTokenValue) ? { TURBO_TOKEN: undefined } : {}),
+-    ...(isUnresolvedSecretReference(turboTeamValue) ? { TURBO_TEAM: undefined } : {}),
++    ...(unresolvedApi ? { TURBO_API: undefined } : {}),
++    ...(unresolvedToken ? { TURBO_TOKEN: undefined } : {}),
++    ...(unresolvedTeam ? { TURBO_TEAM: undefined } : {}),
++    ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum.LocalOnly } : {}),
+   };
+ });
+ 
++const turboCacheValueSource = (name: string): O.Option<TurboCacheValueSource> =>
++  pipe(
++    configStringOptionSync(name),
++    O.map(Str.trim),
++    O.filter(Str.isNonEmpty),
++    O.map((value) => turboCacheValueSourceFor(isUnresolvedSecretReference(value)))
++  );
++
++/**
++ * Read the checkout's Turbo remote-read configuration from the ambient
++ * environment.
++ *
++ * **Details**
++ *
++ * Evaluated at call time, like every other reader here. Credential *values*
++ * never leave this function: `TURBO_API`, `TURBO_TOKEN`, and `TURBO_TEAM` are
++ * reduced to whether they are literal or still an unresolved `op://` reference,
++ * and only the non-secret `TURBO_CACHE` posture is carried through verbatim.
++ *
++ * **Example** (Read the ambient cache configuration)
++ *
++ * ```ts
++ * import { readTurboCacheEnvironmentSync } from "@beep/repo-cli/internal/cli/EnvConfig"
++ *
++ * console.log(typeof readTurboCacheEnvironmentSync().cache)
++ * ```
++ *
++ * @returns The remote-read configuration this checkout carries.
++ * @category configuration
++ * @since 0.0.0
++ */
++export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
++  TurboCacheEnvironment.make(
++    O.getSomesStruct({
++      api: turboCacheValueSource("TURBO_API"),
++      token: turboCacheValueSource("TURBO_TOKEN"),
++      team: turboCacheValueSource("TURBO_TEAM"),
++      cache: pipe(configStringOptionSync("TURBO_CACHE"), O.map(Str.trim), O.filter(Str.isNonEmpty)),
++    })
++  );
++
+ /**
+  * A subprocess step shape recognized by the local-env wrapper.
+  *
+diff --git a/packages/tooling/tool/cli/src/internal/cli/TurboCache.ts b/packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+new file mode 100644
+index 0000000000..921323f115
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+@@ -0,0 +1,656 @@
++/**
++ * Local Turbo cache posture: the decision that says whether a workstation may
++ * read the shared remote cache.
++ *
++ * **Details**
++ *
++ * Root quality commands used to inject `--cache=local:rw` on every non-CI Turbo
++ * invocation, so a checkout configured for remote reads could never use them.
++ * This module owns that decision instead. A checkout is honored only when the
++ * whole remote-read quad is present and unambiguous (`TURBO_API`,
++ * `TURBO_TOKEN`, `TURBO_TEAM`, and `TURBO_CACHE` pinned to the sanctioned
++ * `local:rw,remote:r` posture); every other configuration fails closed to
++ * local-only.
++ *
++ * The domain is deliberately pure: the environment is modeled as value
++ * *sources* (a literal value versus an unresolved `op://` secret reference),
++ * never as secret values, so the whole matrix is unit-testable and no secret
++ * can reach a log line through this module.
++ *
++ * @internal
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $RepoCliId } from "@beep/identity/packages";
++import { LiteralKit } from "@beep/schema";
++import { A, O, Str } from "@beep/utils";
++import { Match, pipe, Tuple } from "effect";
++import * as S from "effect/Schema";
++
++const $I = $RepoCliId.create("internal/cli/TurboCache");
++
++/**
++ * Cache postures this CLI is willing to hand to Turbo.
++ *
++ * **Details**
++ *
++ * `local:rw` is the fail-closed default. `local:rw,remote:r` is the only
++ * sanctioned remote posture for a workstation: agents read the shared cache and
++ * never hold a write credential (writes stay with the trusted main-push jobs).
++ *
++ * **Example** (Read the sanctioned remote-read posture)
++ *
++ * ```ts
++ * import { TurboCacheMode } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(TurboCacheMode.Enum.LocalWriteRemoteRead)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCacheMode = LiteralKit({
++  literals: ["local:rw", "local:rw,remote:r"],
++  enumMapping: [
++    ["local:rw", "LocalOnly"],
++    ["local:rw,remote:r", "LocalWriteRemoteRead"],
++  ],
++}).pipe(
++  $I.annoteSchema("TurboCacheMode", {
++    description: "Cache postures the repo CLI is willing to hand to Turbo.",
++  })
++);
++
++/**
++ * Cache postures this CLI is willing to hand to Turbo.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCacheMode = typeof TurboCacheMode.Type;
++
++/**
++ * The environment variable names that together enable remote cache reads.
++ *
++ * **Example** (List the remote-read quad)
++ *
++ * ```ts
++ * import { TurboCacheEnvName } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(TurboCacheEnvName.Options.length)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM", "TURBO_CACHE"]).pipe(
++  $I.annoteSchema("TurboCacheEnvName", {
++    description: "Environment variable names that together enable Turbo remote cache reads.",
++  })
++);
++
++/**
++ * The environment variable names that together enable remote cache reads.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCacheEnvName = typeof TurboCacheEnvName.Type;
++
++/**
++ * Whether a configured value is already usable or is still a 1Password
++ * reference that only `op run` can resolve.
++ *
++ * **Example** (Check a secret-reference source)
++ *
++ * ```ts
++ * import { TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(TurboCacheValueSource.is["secret-reference"]("secret-reference"))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCacheValueSource = LiteralKit(["literal", "secret-reference"]).pipe(
++  $I.annoteSchema("TurboCacheValueSource", {
++    description: "Whether a configured Turbo cache value is literal or an unresolved op:// reference.",
++  })
++);
++
++/**
++ * Whether a configured value is already usable or is still a 1Password
++ * reference that only `op run` can resolve.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCacheValueSource = typeof TurboCacheValueSource.Type;
++
++/**
++ * Why the caller, not this CLI, owns the cache flags for an invocation.
++ *
++ * **Example** (Check the CI reason)
++ *
++ * ```ts
++ * import { TurboCacheCallerReason } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(TurboCacheCallerReason.is.ci("ci"))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCacheCallerReason = LiteralKit(["ci", "explicit-cache-arg"]).pipe(
++  $I.annoteSchema("TurboCacheCallerReason", {
++    description: "Why the caller, not the repo CLI, owns the Turbo cache flags for an invocation.",
++  })
++);
++
++/**
++ * Why the caller, not this CLI, owns the cache flags for an invocation.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCacheCallerReason = typeof TurboCacheCallerReason.Type;
++
++/**
++ * Why a checkout fell back to the local-only cache posture.
++ *
++ * **Example** (Check the incomplete-config reason)
++ *
++ * ```ts
++ * import { TurboCacheFallbackReason } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(TurboCacheFallbackReason.is["incomplete-remote-config"]("incomplete-remote-config"))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCacheFallbackReason = LiteralKit(["incomplete-remote-config", "unsupported-cache-mode"]).pipe(
++  $I.annoteSchema("TurboCacheFallbackReason", {
++    description: "Why a checkout fell back to the local-only Turbo cache posture.",
++  })
++);
++
++/**
++ * Why a checkout fell back to the local-only cache posture.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCacheFallbackReason = typeof TurboCacheFallbackReason.Type;
++
++/**
++ * The remote-read configuration a checkout actually carries.
++ *
++ * **Details**
++ *
++ * `api`, `token`, and `team` are modeled as value *sources* rather than values:
++ * this domain never needs a secret, only whether one still has to be resolved
++ * by `op run`. `cache` keeps its literal text because the posture itself is the
++ * thing being validated; an unresolved reference there simply fails the mode
++ * check. Absent keys mean absent or blank environment entries.
++ *
++ * **Example** (Describe a fully configured checkout)
++ *
++ * ```ts
++ * import { TurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const environment = TurboCacheEnvironment.make({
++ *   api: "literal",
++ *   token: "secret-reference",
++ *   team: "literal",
++ *   cache: "local:rw,remote:r"
++ * })
++ * console.log(environment.cache)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class TurboCacheEnvironment extends S.Class<TurboCacheEnvironment>($I`TurboCacheEnvironment`)(
++  {
++    api: S.optionalKey(TurboCacheValueSource),
++    token: S.optionalKey(TurboCacheValueSource),
++    team: S.optionalKey(TurboCacheValueSource),
++    cache: S.optionalKey(S.String),
++  },
++  $I.annote("TurboCacheEnvironment", {
++    description: "The Turbo remote-read configuration a checkout actually carries.",
++  })
++) {}
++
++/**
++ * Tags of the resolved cache plan.
++ *
++ * **Example** (List the plan tags)
++ *
++ * ```ts
++ * import { TurboCachePlanTag } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(TurboCachePlanTag.Options.length)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCachePlanTag = LiteralKit(["caller-controlled", "local-only", "remote-read"]).pipe(
++  $I.annoteSchema("TurboCachePlanTag", {
++    description: "Tags of the resolved local Turbo cache plan.",
++  })
++);
++
++/**
++ * Tags of the resolved cache plan.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCachePlanTag = typeof TurboCachePlanTag.Type;
++
++/**
++ * The caller already controls caching, so the CLI injects nothing.
++ *
++ * **Example** (Describe a caller-controlled plan)
++ *
++ * ```ts
++ * import { CallerControlledTurboCache } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(CallerControlledTurboCache.make({ reason: "ci" })._tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class CallerControlledTurboCache extends S.Class<CallerControlledTurboCache>($I`CallerControlledTurboCache`)(
++  {
++    _tag: S.tag("caller-controlled"),
++    reason: TurboCacheCallerReason,
++  },
++  $I.annote("CallerControlledTurboCache", {
++    description: "The caller already controls Turbo caching, so the CLI injects no cache flag.",
++  })
++) {}
++
++/**
++ * The checkout is not provably configured for remote reads, so it stays local.
++ *
++ * **Example** (Describe an incomplete configuration)
++ *
++ * ```ts
++ * import { LocalOnlyTurboCache } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const plan = LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing: ["TURBO_API"] })
++ * console.log(plan.missing)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class LocalOnlyTurboCache extends S.Class<LocalOnlyTurboCache>($I`LocalOnlyTurboCache`)(
++  {
++    _tag: S.tag("local-only"),
++    reason: TurboCacheFallbackReason,
++    missing: S.Array(TurboCacheEnvName),
++  },
++  $I.annote("LocalOnlyTurboCache", {
++    description: "The checkout is not provably configured for remote reads, so Turbo stays local-only.",
++  })
++) {}
++
++/**
++ * The checkout carries a complete, sanctioned remote-read configuration.
++ *
++ * **Details**
++ *
++ * `requiresSecretSession` is true when at least one member of the quad is still
++ * an `op://` reference; those invocations must run under `op run` or degrade to
++ * local-only, because Turbo would otherwise receive an unresolved reference.
++ *
++ * **Example** (Describe an honored remote-read plan)
++ *
++ * ```ts
++ * import { RemoteReadTurboCache, TurboCacheMode } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const plan = RemoteReadTurboCache.make({
++ *   mode: TurboCacheMode.Enum.LocalWriteRemoteRead,
++ *   requiresSecretSession: true
++ * })
++ * console.log(plan.mode)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class RemoteReadTurboCache extends S.Class<RemoteReadTurboCache>($I`RemoteReadTurboCache`)(
++  {
++    _tag: S.tag("remote-read"),
++    mode: TurboCacheMode,
++    requiresSecretSession: S.Boolean,
++  },
++  $I.annote("RemoteReadTurboCache", {
++    description: "The checkout carries a complete, sanctioned Turbo remote-read configuration.",
++  })
++) {}
++
++/**
++ * The resolved cache decision for one Turbo invocation.
++ *
++ * **Example** (Decode a local-only plan)
++ *
++ * ```ts
++ * import { TurboCachePlan } from "@beep/repo-cli/test/SharedInternals"
++ * import * as S from "effect/Schema"
++ *
++ * const plan = S.decodeUnknownSync(TurboCachePlan)({
++ *   _tag: "local-only",
++ *   reason: "unsupported-cache-mode",
++ *   missing: []
++ * })
++ * console.log(plan._tag)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const TurboCachePlan = TurboCachePlanTag.mapMembers(
++  Tuple.evolve([() => CallerControlledTurboCache, () => LocalOnlyTurboCache, () => RemoteReadTurboCache])
++).pipe(
++  S.toTaggedUnion("_tag"),
++  $I.annoteSchema("TurboCachePlan", {
++    description: "The resolved local Turbo cache decision for one invocation.",
++  })
++);
++
++/**
++ * The resolved cache decision for one Turbo invocation.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurboCachePlan = typeof TurboCachePlan.Type;
++
++const CACHE_ARG_PREFIX = "--cache=";
++const REMOTE_CACHE_MODE_SEGMENT = "remote:";
++
++/**
++ * Whether an argument already controls Turbo caching.
++ *
++ * **Details**
++ *
++ * Any of these means the caller has taken the decision out of the CLI's hands,
++ * so no cache flag is injected: injecting a second one would reach Turbo twice.
++ *
++ * **Example** (Recognize explicit cache control)
++ *
++ * ```ts
++ * import { isTurboCacheControlArg } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(isTurboCacheControlArg("--force"))
++ * console.log(isTurboCacheControlArg("--filter=@beep/schema"))
++ * ```
++ *
++ * @param arg - One Turbo argument.
++ * @returns Whether the argument already controls caching.
++ * @category predicates
++ * @since 0.0.0
++ */
++export const isTurboCacheControlArg = (arg: string): boolean =>
++  arg === "--no-cache" ||
++  arg === "--force" ||
++  Str.startsWith("--force=")(arg) ||
++  arg === "--remote-only" ||
++  Str.startsWith("--remote-only=")(arg) ||
++  arg === "--remote-cache-read-only" ||
++  Str.startsWith("--remote-cache-read-only=")(arg) ||
++  Str.startsWith(CACHE_ARG_PREFIX)(arg);
++
++const isRemoteTurboCacheArg = (arg: string): boolean =>
++  Str.startsWith(CACHE_ARG_PREFIX)(arg) && Str.includes(REMOTE_CACHE_MODE_SEGMENT)(arg);
++
++const isConfigured = (value: string | undefined): boolean =>
++  pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.exists(Str.isNonEmpty));
++
++const isSecretReference = (source: TurboCacheValueSource | undefined): boolean => source === "secret-reference";
++
++/**
++ * Classify a configured value by whether it still needs resolving.
++ *
++ * **Details**
++ *
++ * Takes the verdict rather than the value, so the secret itself never crosses
++ * into this module. It lives here rather than beside the `op://` predicate at
++ * the reading edge because both arms then sit in a pure module where a test
++ * can reach them without mutating the ambient environment — the reader's
++ * secret-reference arm would otherwise be unexecutable on any checkout whose
++ * credentials happen to be literal.
++ *
++ * **Example** (Classify both arms)
++ *
++ * ```ts
++ * import { turboCacheValueSourceFor } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(turboCacheValueSourceFor(true), turboCacheValueSourceFor(false))
++ * ```
++ *
++ * @param unresolvedSecretReference - Whether the value is still an `op://` reference.
++ * @returns The matching value source.
++ * @category constructors
++ * @since 0.0.0
++ */
++export const turboCacheValueSourceFor = (unresolvedSecretReference: boolean): TurboCacheValueSource =>
++  unresolvedSecretReference ? "secret-reference" : "literal";
++
++/**
++ * Whether this checkout's cache credentials still need `op run` to resolve.
++ *
++ * **Details**
++ *
++ * Asked at run time, independent of any invocation's arguments: a Turbo spawn
++ * that is not wrapped in `op run` receives unresolved `op://` references, so it
++ * must not be handed a remote posture. Callers pair this with
++ * {@link localOnlyTurboCacheArgs}.
++ *
++ * **Example** (Literal values need no session)
++ *
++ * ```ts
++ * import { TurboCacheEnvironment, turboCacheEnvironmentNeedsSecretSession } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const environment = TurboCacheEnvironment.make({ api: "literal", token: "literal", team: "literal" })
++ * console.log(turboCacheEnvironmentNeedsSecretSession(environment))
++ * ```
++ *
++ * @param environment - The remote-read configuration the checkout carries.
++ * @returns Whether any configured cache value is an unresolved `op://` reference.
++ * @category predicates
++ * @since 0.0.0
++ */
++export const turboCacheEnvironmentNeedsSecretSession = (environment: TurboCacheEnvironment): boolean =>
++  isSecretReference(environment.api) || isSecretReference(environment.token) || isSecretReference(environment.team);
++
++const missingTurboCacheEnvNames = (environment: TurboCacheEnvironment): ReadonlyArray<TurboCacheEnvName> => {
++  const configured = {
++    TURBO_API: environment.api !== undefined,
++    TURBO_TOKEN: environment.token !== undefined,
++    TURBO_TEAM: environment.team !== undefined,
++    TURBO_CACHE: isConfigured(environment.cache),
++  } satisfies Record<TurboCacheEnvName, boolean>;
++
++  return A.filter(TurboCacheEnvName.Options, (name) => !configured[name]);
++};
++
++const requestedTurboCacheMode = (environment: TurboCacheEnvironment): O.Option<TurboCacheMode> =>
++  pipe(O.fromUndefinedOr(environment.cache), O.map(Str.trim), O.filter(TurboCacheMode.is.LocalWriteRemoteRead));
++
++/**
++ * Resolve the cache plan for one Turbo invocation.
++ *
++ * **Details**
++ *
++ * The decision is total and fails closed. CI and any caller-supplied cache flag
++ * are left untouched; a complete quad pinned to `local:rw,remote:r` is honored;
++ * anything else — a missing quad member, a blank value, or any other posture
++ * including a remote *write* posture, which no workstation is credentialed for
++ * — resolves to local-only.
++ *
++ * **Gotchas**
++ *
++ * A remote-read plan whose quad still holds `op://` references is only usable
++ * under `op run`. Callers must either wrap the invocation or downgrade its
++ * arguments with {@link localOnlyTurboCacheArgs}.
++ *
++ * **Example** (Honor a complete configuration)
++ *
++ * ```ts
++ * import { resolveTurboCachePlan, TurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const plan = resolveTurboCachePlan(
++ *   TurboCacheEnvironment.make({
++ *     api: "literal",
++ *     token: "secret-reference",
++ *     team: "literal",
++ *     cache: "local:rw,remote:r"
++ *   }),
++ *   { args: [], ci: false }
++ * )
++ * console.log(plan._tag)
++ * ```
++ *
++ * @param environment - The remote-read configuration the checkout carries.
++ * @param options - The invocation's arguments and whether it runs under CI.
++ * @returns The resolved cache plan.
++ * @category resolution
++ * @since 0.0.0
++ */
++export const resolveTurboCachePlan = (
++  environment: TurboCacheEnvironment,
++  options: { readonly args: ReadonlyArray<string>; readonly ci: boolean }
++): TurboCachePlan => {
++  if (options.ci) {
++    return CallerControlledTurboCache.make({ reason: "ci" });
++  }
++
++  if (A.some(options.args, isTurboCacheControlArg)) {
++    return CallerControlledTurboCache.make({ reason: "explicit-cache-arg" });
++  }
++
++  const missing = missingTurboCacheEnvNames(environment);
++  if (!A.isReadonlyArrayEmpty(missing)) {
++    return LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing });
++  }
++
++  return pipe(
++    requestedTurboCacheMode(environment),
++    O.match({
++      onNone: () => LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: A.empty() }),
++      onSome: (mode) =>
++        RemoteReadTurboCache.make({
++          mode,
++          requiresSecretSession: turboCacheEnvironmentNeedsSecretSession(environment),
++        }),
++    })
++  );
++};
++
++/**
++ * The cache arguments a plan contributes to a Turbo invocation.
++ *
++ * **Example** (Inject the local-only flag)
++ *
++ * ```ts
++ * import { LocalOnlyTurboCache, turboCachePlanArgs } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const args = turboCachePlanArgs(
++ *   LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: [] })
++ * )
++ * console.log(args)
++ * ```
++ *
++ * @param plan - The resolved cache plan.
++ * @returns The cache arguments to prepend, empty when the caller owns them.
++ * @category resolution
++ * @since 0.0.0
++ */
++export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> =>
++  Match.value(plan).pipe(
++    Match.discriminatorsExhaustive("_tag")({
++      "caller-controlled": () => A.empty<string>(),
++      "local-only": () => [`${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`],
++      "remote-read": ({ mode }) => [`${CACHE_ARG_PREFIX}${mode}`],
++    })
++  );
++
++/**
++ * Whether a plan's Turbo invocation must run under `op run` to be usable.
++ *
++ * **Example** (Local-only plans need no session)
++ *
++ * ```ts
++ * import { LocalOnlyTurboCache, turboCachePlanNeedsSecretSession } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * const plan = LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: [] })
++ * console.log(turboCachePlanNeedsSecretSession(plan))
++ * ```
++ *
++ * @param plan - The resolved cache plan.
++ * @returns Whether the invocation needs 1Password env injection.
++ * @category resolution
++ * @since 0.0.0
++ */
++export const turboCachePlanNeedsSecretSession = (plan: TurboCachePlan): boolean =>
++  plan._tag === "remote-read" && plan.requiresSecretSession;
++
++/**
++ * Downgrade already-built Turbo arguments to the local-only cache posture.
++ *
++ * **Details**
++ *
++ * The run-time half of failing closed. Arguments are built before the CLI knows
++ * whether a 1Password session exists; when the session turns out to be missing
++ * or denied, the lane must still run rather than hand Turbo a remote posture it
++ * has no usable token for. Arguments that carry no remote posture are returned
++ * unchanged, so this is safe to apply unconditionally.
++ *
++ * **Example** (Degrade a remote-read invocation)
++ *
++ * ```ts
++ * import { localOnlyTurboCacheArgs } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(localOnlyTurboCacheArgs(["turbo", "run", "check", "--cache=local:rw,remote:r"]))
++ * ```
++ *
++ * @param args - The already-built command arguments.
++ * @returns The arguments with any remote cache posture replaced by local-only.
++ * @category resolution
++ * @since 0.0.0
++ */
++export const localOnlyTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
++  A.map(args, (arg) => (isRemoteTurboCacheArg(arg) ? `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}` : arg));
++
++/**
++ * Whether arguments already carry a remote cache posture.
++ *
++ * **Details**
++ *
++ * Lets a caller skip {@link localOnlyTurboCacheArgs} — and the step rebuild it
++ * implies — for the overwhelmingly common case of arguments that never asked
++ * for a remote cache.
++ *
++ * **Example** (Detect a remote posture)
++ *
++ * ```ts
++ * import { hasRemoteTurboCacheArgs } from "@beep/repo-cli/test/SharedInternals"
++ *
++ * console.log(hasRemoteTurboCacheArgs(["turbo", "run", "check", "--cache=local:rw"]))
++ * ```
++ *
++ * @param args - The already-built command arguments.
++ * @returns Whether any argument requests remote cache access.
++ * @category predicates
++ * @since 0.0.0
++ */
++export const hasRemoteTurboCacheArgs = (args: ReadonlyArray<string>): boolean => A.some(args, isRemoteTurboCacheArg);
+diff --git a/packages/tooling/tool/cli/src/test/SharedInternals.test-kit.ts b/packages/tooling/tool/cli/src/test/SharedInternals.test-kit.ts
+index 113b92d10b..9d4587299c 100644
+--- a/packages/tooling/tool/cli/src/test/SharedInternals.test-kit.ts
++++ b/packages/tooling/tool/cli/src/test/SharedInternals.test-kit.ts
+@@ -7,6 +7,7 @@
+ 
+ export * from "../internal/cli/EnvConfig.ts";
+ export * from "../internal/cli/Jsonc.ts";
++export * from "../internal/cli/TurboCache.ts";
+ export * from "../internal/GlobPattern.ts";
+ export * from "../internal/github/index.ts";
+ export * from "../internal/quality/SchemaFirstPolicyFinding.ts";
+diff --git a/packages/tooling/tool/cli/test/quality-tasks.test.ts b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+index 04cad5423e..7c8391b5b2 100644
+--- a/packages/tooling/tool/cli/test/quality-tasks.test.ts
++++ b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+@@ -63,9 +63,15 @@ import {
+   runSqlIntegrationTestLaneForTesting,
+   sqlIntegrationConnectionUriFromEnvForTesting,
+   sqlIntegrationStepForTesting,
++  withoutUnusableRemoteCacheForTesting,
+   workspaceTaskFiltersForTesting,
+   writeCoverageRegressionBaseline,
+ } from "@beep/repo-cli/test/Quality";
++import {
++  readTurboCacheEnvironmentSync,
++  resolveTurboCachePlan,
++  turboCachePlanArgs,
++} from "@beep/repo-cli/test/SharedInternals";
+ import { DomainError, findRepoRoot } from "@beep/repo-utils";
+ import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+ import { NonNegativeInt } from "@beep/schema/Number";
+@@ -232,24 +238,21 @@ const withEnvVarEffect = <Out, E, R>(
+       })
+   );
+ 
+-const isTurboCacheControlArg = (arg: string): boolean =>
+-  arg === "--no-cache" ||
+-  arg === "--force" ||
+-  Str.startsWith("--force=")(arg) ||
+-  arg === "--remote-only" ||
+-  Str.startsWith("--remote-only=")(arg) ||
+-  arg === "--remote-cache-read-only" ||
+-  Str.startsWith("--remote-cache-read-only=")(arg) ||
+-  Str.startsWith("--cache=")(arg);
+-
+ const isTurboConcurrencyArg = (arg: string): boolean =>
+   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
+ 
++// The cache posture itself is proven in `turbo-cache.test.ts`; these step
++// assertions prove that whatever the resolver decides is what reaches turbo.
++// Deriving it keeps them green on a checkout configured for remote reads
++// instead of pinning the local-only fallback into every expectation.
++const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
++  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: Bun.env.CI === "true" }));
++
+ const expectedTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> => [
+   "turbo",
+   "run",
+   task,
+-  ...(Bun.env.CI === "true" || A.some(args, isTurboCacheControlArg) ? [] : ["--cache=local:rw"]),
++  ...expectedTurboCacheArgs(args),
+   ...args,
+ ];
+ const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+@@ -937,14 +940,7 @@ describe("quality task adapter", () => {
+       command: "bunx",
+       cwd: "/repo",
+     });
+-    expect(steps[0]?.args).toEqual([
+-      "turbo",
+-      "run",
+-      "check",
+-      ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
+-      "--affected",
+-      "--summarize",
+-    ]);
++    expect(steps[0]?.args).toEqual(expectedRootTurboArgs("check", ["--affected", "--summarize"]));
+     expect(A.slice(steps, { start: 1 })).toEqual([
+       expect.objectContaining({
+         label: "check:tsgo:rules",
+@@ -3040,3 +3036,58 @@ describe("quality task adapter", () => {
+       )
+     ));
+ });
++
++describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
++  const remoteStep = (overrides: Partial<{ env: Record<string, string | undefined> }>) =>
++    QualityTaskStep.make({
++      label: "check",
++      command: "bunx",
++      args: ["turbo", "run", "check", "--cache=local:rw,remote:r", "--concurrency=3"],
++      cwd: "/repo",
++      ...overrides,
++    });
++
++  it("rewrites the posture when the credentials still need an op run session", () => {
++    expect(withoutUnusableRemoteCacheForTesting(remoteStep({}), true).args).toEqual([
++      "turbo",
++      "run",
++      "check",
++      "--cache=local:rw",
++      "--concurrency=3",
++    ]);
++  });
++
++  it("leaves the step untouched when the credentials are already resolved", () => {
++    const step = remoteStep({});
++
++    expect(withoutUnusableRemoteCacheForTesting(step, false)).toBe(step);
++  });
++
++  it("leaves a step carrying no remote posture untouched", () => {
++    const step = QualityTaskStep.make({
++      label: "check",
++      command: "bunx",
++      args: ["turbo", "run", "check", "--cache=local:rw"],
++      cwd: "/repo",
++    });
++
++    expect(withoutUnusableRemoteCacheForTesting(step, true)).toBe(step);
++  });
++
++  it("carries the step environment and quarantine policy through a rewrite", () => {
++    const step = QualityTaskStep.make({
++      label: "coverage:ratchet",
++      command: "bunx",
++      args: ["turbo", "run", "coverage", "--cache=local:rw,remote:r"],
++      cwd: "/repo",
++      env: { CI: "true", BEEP_TEST_DATABASE_URL: "postgres://localhost/beep" },
++      flakeQuarantine: "ts2589-no-location",
++    });
++    const rewritten = withoutUnusableRemoteCacheForTesting(step, true);
++
++    expect(rewritten.args).toEqual(["turbo", "run", "coverage", "--cache=local:rw"]);
++    expect(rewritten.env).toEqual(step.env);
++    expect(rewritten.flakeQuarantine).toBe("ts2589-no-location");
++    expect(rewritten.label).toBe(step.label);
++  });
++});
+diff --git a/packages/tooling/tool/cli/test/shared-internals.test.ts b/packages/tooling/tool/cli/test/shared-internals.test.ts
+index 075e30d104..44ef54b7e8 100644
+--- a/packages/tooling/tool/cli/test/shared-internals.test.ts
++++ b/packages/tooling/tool/cli/test/shared-internals.test.ts
+@@ -38,6 +38,7 @@ import {
+   SchemaFirstPolicyFinding,
+   SchemaFirstPolicyIssuePrefix,
+   SchemaFirstPolicySeverity,
++  turboEnvOverrides,
+ } from "@beep/repo-cli/test/SharedInternals";
+ import { describe, expect, it } from "@effect/vitest";
+ import { ConfigProvider, Data, Effect, Layer } from "effect";
+@@ -332,3 +333,77 @@ describe("Github plumbing", () => {
+     expect(exit._tag).toBe("Failure");
+   });
+ });
++
++describe("turboEnvOverrides", () => {
++  const OP_REFERENCE = "op://vault/item/credential";
++  const REMOTE_READ = "local:rw,remote:r";
++
++  const withTurboEnv = (env: Record<string, string>) =>
++    provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)));
++
++  const overridesFor = (
++    env: Record<string, string>,
++    command: string,
++    args: ReadonlyArray<string>
++  ): Record<string, string | undefined> => Effect.runSync(withTurboEnv(env)(turboEnvOverrides(command, args)));
++
++  const opRunArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => [
++    "run",
++    "--env-file=.env",
++    "--",
++    "bunx",
++    "turbo",
++    ...turboArgs,
++  ];
++
++  it("returns nothing for a non-turbo command", () => {
++    expect(overridesFor({}, "git", ["status"])).toEqual({});
++    expect(overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
++    expect(overridesFor({}, "op", ["run", "--env-file=.env", "--", "bun", "run", "build"])).toEqual({});
++  });
++
++  it("guards the TUI on a direct turbo spawn with resolved credentials", () => {
++    expect(
++      overridesFor({ TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ }, "bunx", [
++        "turbo",
++        "run",
++        "check",
++      ])
++    ).toEqual({ TURBO_UI: "false" });
++  });
++
++  it("scrubs unresolved references and pins the cache posture on a direct spawn", () => {
++    expect(
++      overridesFor(
++        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
++        "bunx",
++        ["turbo", "run", "check"]
++      )
++    ).toStrictEqual({
++      TURBO_UI: "false",
++      TURBO_API: undefined,
++      TURBO_TOKEN: undefined,
++      TURBO_CACHE: "local:rw",
++    });
++  });
++
++  // Regression guard: `op run` resolves op:// references out of the environment
++  // it is handed, not only out of --env-file. Scrubbing them from a wrapped
++  // spawn deletes the credential it exists to resolve, leaving the wrapped
++  // turbo with none at all.
++  it("keeps unresolved references intact for an op run wrapped spawn", () => {
++    expect(
++      overridesFor(
++        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
++        "op",
++        opRunArgs(["run", "check"])
++      )
++    ).toStrictEqual({ TURBO_UI: "false" });
++  });
++
++  it("recognizes a wrapped spawn whose turbo arguments contain their own separator", () => {
++    expect(overridesFor({}, "op", opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]))).toEqual({
++      TURBO_UI: "false",
++    });
++  });
++});
+diff --git a/packages/tooling/tool/cli/test/turbo-cache.test.ts b/packages/tooling/tool/cli/test/turbo-cache.test.ts
+new file mode 100644
+index 0000000000..e3150325d8
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/turbo-cache.test.ts
+@@ -0,0 +1,182 @@
++import {
++  hasRemoteTurboCacheArgs,
++  isTurboCacheControlArg,
++  LocalOnlyTurboCache,
++  localOnlyTurboCacheArgs,
++  RemoteReadTurboCache,
++  resolveTurboCachePlan,
++  TurboCacheEnvironment,
++  TurboCacheMode,
++  TurboCachePlan,
++  turboCacheEnvironmentNeedsSecretSession,
++  turboCachePlanArgs,
++  turboCachePlanNeedsSecretSession,
++  turboCacheValueSourceFor,
++} from "@beep/repo-cli/test/SharedInternals";
++import { describe, expect, it } from "@effect/vitest";
++import * as A from "effect/Array";
++import * as S from "effect/Schema";
++import type { TurboCacheEnvName, TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
++
++const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
++const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
++const REMOTE_READ_ARG = `--cache=${REMOTE_READ_MODE}`;
++
++const environmentWith = (token: TurboCacheValueSource, cache: string): TurboCacheEnvironment =>
++  TurboCacheEnvironment.make({ api: "literal", token, team: "literal", cache });
++
++// The fully configured workstation posture: a 1Password-backed read token, a
++// literal endpoint and team, and the sanctioned read-only cache mode.
++const completeEnvironment = environmentWith("secret-reference", REMOTE_READ_MODE);
++
++const incompleteEnvironments: ReadonlyArray<readonly [TurboCacheEnvName, TurboCacheEnvironment]> = [
++  ["TURBO_API", TurboCacheEnvironment.make({ token: "secret-reference", team: "literal", cache: REMOTE_READ_MODE })],
++  ["TURBO_TOKEN", TurboCacheEnvironment.make({ api: "literal", team: "literal", cache: REMOTE_READ_MODE })],
++  ["TURBO_TEAM", TurboCacheEnvironment.make({ api: "literal", token: "secret-reference", cache: REMOTE_READ_MODE })],
++  ["TURBO_CACHE", TurboCacheEnvironment.make({ api: "literal", token: "secret-reference", team: "literal" })],
++];
++
++const localPlan = (environment: TurboCacheEnvironment, args: ReadonlyArray<string> = A.empty()) =>
++  resolveTurboCachePlan(environment, { args, ci: false });
++
++describe("turbo cache plan resolution", () => {
++  it("honors a complete remote-read configuration", () => {
++    const plan = localPlan(completeEnvironment);
++
++    expect(plan).toEqual(RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: true }));
++    expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG]);
++    expect(turboCachePlanNeedsSecretSession(plan)).toBe(true);
++  });
++
++  it("needs no 1Password session when every configured value is literal", () => {
++    const plan = localPlan(environmentWith("literal", REMOTE_READ_MODE));
++
++    expect(plan).toEqual(RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: false }));
++    expect(turboCachePlanNeedsSecretSession(plan)).toBe(false);
++    expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG]);
++  });
++
++  it.each(incompleteEnvironments)("falls back to local-only without %s", (name, environment) => {
++    const plan = localPlan(environment);
++
++    expect(plan).toEqual(LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing: [name] }));
++    expect(turboCachePlanArgs(plan)).toEqual([LOCAL_ONLY_ARG]);
++    expect(turboCachePlanNeedsSecretSession(plan)).toBe(false);
++  });
++
++  it("reports every missing quad member at once", () => {
++    expect(localPlan(TurboCacheEnvironment.make({ team: "literal" }))).toEqual(
++      LocalOnlyTurboCache.make({
++        reason: "incomplete-remote-config",
++        missing: ["TURBO_API", "TURBO_TOKEN", "TURBO_CACHE"],
++      })
++    );
++  });
++
++  it("treats a blank cache mode as missing", () => {
++    expect(localPlan(environmentWith("secret-reference", "   "))).toEqual(
++      LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing: ["TURBO_CACHE"] })
++    );
++  });
++
++  it.each(["local:rw", "remote:r", "local:rw,remote:rw", "remote:rw", "op://vault/item/field"])(
++    "falls back to local-only for the unsupported posture %s",
++    (cache) => {
++      const plan = localPlan(environmentWith("secret-reference", cache));
++
++      expect(plan).toEqual(LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: [] }));
++      expect(turboCachePlanArgs(plan)).toEqual([LOCAL_ONLY_ARG]);
++    }
++  );
++
++  it("tolerates surrounding whitespace in the sanctioned posture", () => {
++    expect(localPlan(environmentWith("secret-reference", `  ${REMOTE_READ_MODE}  `))).toEqual(
++      RemoteReadTurboCache.make({ mode: REMOTE_READ_MODE, requiresSecretSession: true })
++    );
++  });
++
++  it.each(["--cache=local:rw", "--no-cache", "--force", "--force=true", "--remote-only", "--remote-cache-read-only"])(
++    "leaves argv untouched when the caller passes %s",
++    (arg) => {
++      const plan = localPlan(completeEnvironment, ["--filter=@beep/schema", arg]);
++
++      expect(plan._tag).toBe("caller-controlled");
++      expect(turboCachePlanArgs(plan)).toEqual([]);
++      expect(turboCachePlanNeedsSecretSession(plan)).toBe(false);
++    }
++  );
++
++  it("leaves CI untouched even with a complete configuration", () => {
++    const plan = resolveTurboCachePlan(completeEnvironment, { args: A.empty(), ci: true });
++
++    expect(plan._tag).toBe("caller-controlled");
++    expect(turboCachePlanArgs(plan)).toEqual([]);
++  });
++
++  it("prefers the CI verdict over an explicit cache argument", () => {
++    expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true })).toEqual(
++      S.decodeUnknownSync(TurboCachePlan)({ _tag: "caller-controlled", reason: "ci" })
++    );
++  });
++});
++
++describe("turbo cache control arguments", () => {
++  it.each(["--filter=@beep/schema", "--concurrency=3", "--summarize", "check", "--cache-dir=.turbo"])(
++    "does not treat %s as cache control",
++    (arg) => {
++      expect(isTurboCacheControlArg(arg)).toBe(false);
++    }
++  );
++
++  it("recognizes every cache-control spelling", () => {
++    const controls = [
++      "--no-cache",
++      "--force",
++      "--force=false",
++      "--remote-only",
++      "--remote-only=true",
++      "--remote-cache-read-only",
++      "--remote-cache-read-only=true",
++      "--cache=local:rw",
++    ];
++
++    expect(A.filter(controls, isTurboCacheControlArg)).toEqual(controls);
++  });
++});
++
++describe("run-time local-only degradation", () => {
++  it("reports whether the checkout's credentials need an op run session", () => {
++    expect(turboCacheEnvironmentNeedsSecretSession(completeEnvironment)).toBe(true);
++    expect(turboCacheEnvironmentNeedsSecretSession(environmentWith("literal", REMOTE_READ_MODE))).toBe(false);
++    expect(turboCacheEnvironmentNeedsSecretSession(TurboCacheEnvironment.make({}))).toBe(false);
++  });
++
++  it("classifies both value sources", () => {
++    expect(turboCacheValueSourceFor(true)).toBe("secret-reference");
++    expect(turboCacheValueSourceFor(false)).toBe("literal");
++  });
++
++  it("detects arguments that request remote cache access", () => {
++    expect(hasRemoteTurboCacheArgs(["turbo", "run", "check", REMOTE_READ_ARG])).toBe(true);
++    expect(hasRemoteTurboCacheArgs(["turbo", "run", "check", LOCAL_ONLY_ARG])).toBe(false);
++    expect(hasRemoteTurboCacheArgs(["bun", "run", "beep", "quality", "tsgo-rules"])).toBe(false);
++  });
++
++  it("downgrades a remote posture when the 1Password session is unavailable", () => {
++    expect(localOnlyTurboCacheArgs(["turbo", "run", "check", REMOTE_READ_ARG, "--concurrency=3"])).toEqual([
++      "turbo",
++      "run",
++      "check",
++      LOCAL_ONLY_ARG,
++      "--concurrency=3",
++    ]);
++  });
++
++  it("leaves local-only and cache-free invocations unchanged", () => {
++    const localArgs = ["turbo", "run", "check", LOCAL_ONLY_ARG];
++    const forcedArgs = ["turbo", "run", "build", "--force"];
++
++    expect(localOnlyTurboCacheArgs(localArgs)).toEqual(localArgs);
++    expect(localOnlyTurboCacheArgs(forcedArgs)).toEqual(forcedArgs);
++  });
++});
+diff --git a/scripts/enable-turbo-remote-reads.sh b/scripts/enable-turbo-remote-reads.sh
+new file mode 100755
+index 0000000000..8fffd51f7d
+--- /dev/null
++++ b/scripts/enable-turbo-remote-reads.sh
+@@ -0,0 +1,76 @@
++#!/usr/bin/env bash
++# Enable read-only Turbo remote cache reads for one checkout.
++#
++# Writes the four-name quad into <checkout>/.env (git-ignored). The token is
++# stored as a 1Password secret *reference* — this script never resolves, reads,
++# or prints a secret value, and the reference stays a reference on disk so
++# `op run` resolves it at spawn time.
++#
++# Idempotent: an already-present name is reported and left alone.
++# See standards/turbo-remote-cache.md.
++#
++# Usage (from any beep-effect checkout):
++#   TURBO_API=https://<id>.execute-api.<region>.amazonaws.com \
++#   TURBO_TEAM=<team-slug> \
++#   TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
++#     bash scripts/enable-turbo-remote-reads.sh
++#
++#   # or target another checkout explicitly:
++#   ... bash scripts/enable-turbo-remote-reads.sh /path/to/checkout
++
++set -euo pipefail
++
++REPO_ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
++ENV_FILE="${REPO_ROOT}/.env"
++CACHE_MODE="local:rw,remote:r"
++
++log() { printf 'enable-turbo-remote-reads: %s\n' "$*"; }
++die() { printf 'enable-turbo-remote-reads: ERROR: %s\n' "$*" >&2; exit 1; }
++
++[[ -d "${REPO_ROOT}" ]] || die "not a directory: ${REPO_ROOT}"
++[[ -f "${REPO_ROOT}/turbo.json" ]] || die "not a beep-effect checkout: ${REPO_ROOT}"
++
++: "${TURBO_API:?set TURBO_API to the cache endpoint (gh variable list, or the CiTurboCache stack output)}"
++: "${TURBO_TEAM:?set TURBO_TEAM to the cache team slug (gh variable list)}"
++: "${TURBO_TOKEN_REF:?set TURBO_TOKEN_REF to the 1Password reference for the READ-ONLY cache token}"
++
++case "${TURBO_API}" in
++  https://*) ;;
++  *) die "TURBO_API must be an https:// endpoint" ;;
++esac
++
++case "${TURBO_TOKEN_REF}" in
++  op://*) ;;
++  *) die "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/field), never a token value" ;;
++esac
++
++if [[ ! -f "${ENV_FILE}" ]]; then
++  log "creating ${ENV_FILE}"
++  : >"${ENV_FILE}"
++fi
++
++# The workstation posture is read-only by contract: no agent checkout ever
++# holds the trusted write token, and remote writes stay with the main-push CI
++# jobs. The CLI refuses any other posture, so do not hand-edit this value.
++append_name() {
++  local name="$1" value="$2" printable="$3"
++  if grep -Eq "^[[:space:]]*${name}=" "${ENV_FILE}"; then
++    log "${name} already present in .env — leaving it unchanged"
++    return 0
++  fi
++  printf '%s=%s\n' "${name}" "${value}" >>"${ENV_FILE}"
++  log "wrote ${name}=${printable}"
++}
++
++if ! grep -q 'Turbo remote cache' "${ENV_FILE}"; then
++  printf '\n# Turbo remote cache (read-only; standards/turbo-remote-cache.md)\n' >>"${ENV_FILE}"
++fi
++
++append_name TURBO_API "${TURBO_API}" "${TURBO_API}"
++append_name TURBO_TOKEN "${TURBO_TOKEN_REF}" "<1Password reference>"
++append_name TURBO_TEAM "${TURBO_TEAM}" "${TURBO_TEAM}"
++append_name TURBO_CACHE "${CACHE_MODE}" "${CACHE_MODE}"
++
++log "done. Verify without executing a lane:"
++log "  cd ${REPO_ROOT} && bun run beep quality check --filter=@beep/types --dry=json"
++log "and confirm the logged turbo command carries --cache=${CACHE_MODE}."
+diff --git a/standards/turbo-remote-cache.md b/standards/turbo-remote-cache.md
+new file mode 100644
+index 0000000000..af93f1011a
+--- /dev/null
++++ b/standards/turbo-remote-cache.md
+@@ -0,0 +1,111 @@
++# Turbo Remote Cache — Operator Guide
++
++The repo runs its own Turbo remote cache: S3 behind API Gateway with three
++Lambdas (`infra/src/CiTurboCache.ts`). The deployment is deliberately
++asymmetric — either token may **read**, only the trusted token may **write**,
++and the writer is a separate function behind a signed invocation.
++
++Workstations and agent checkouts are **readers only**. No local checkout ever
++holds the trusted write token; remote writes belong to the main-push CI jobs,
++which run full task graphs on every merge and warm the cache for everyone else.
++
++## The per-checkout contract
++
++Remote reads require the whole quad, in one checkout's `.env`:
++
++```dotenv
++TURBO_API=https://<id>.execute-api.<region>.amazonaws.com
++TURBO_TOKEN=op://<vault>/<item>/<field>
++TURBO_TEAM=<team-slug>
++TURBO_CACHE=local:rw,remote:r
++```
++
++`TURBO_TOKEN` is a **1Password secret reference to the read-only token**, not a
++value. It stays a reference on disk; `op run --env-file=.env` resolves it when
++the lane spawns. The read-only token itself lives in the SSM parameter the
++`CiTurboCache` stack is configured with
++(`readOnlyTokenSsmParameterArn` in `infra/ci-runners/Pulumi.production.yaml`);
++mirror it into 1Password once and reference it from every checkout. `TURBO_API`
++and `TURBO_TEAM` are the same values CI uses (`gh variable list`).
++
++## Enabling one checkout
++
++```sh
++TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
++  bash scripts/enable-turbo-remote-reads.sh
++```
++
++Run it from the checkout you want to enable, or pass the checkout path as the
++first argument. It is idempotent: names already present in `.env` are reported
++and left alone. It refuses a `TURBO_TOKEN_REF` that is not an `op://`
++reference, so a resolved secret cannot be written to disk by accident.
++
++Verify without executing a lane:
++
++```sh
++bun run beep quality check --filter=@beep/types --dry=json
++```
++
++The CLI prints the exact turbo command before spawning it. A configured
++checkout shows `--cache=local:rw,remote:r`; anything else shows
++`--cache=local:rw`.
++
++Exported shell variables work too — the CLI reads the ambient environment, not
++only `.env` — but the per-checkout `.env` is the sanctioned path because it
++keeps the token a 1Password reference instead of a live value in every shell.
++
++## How the CLI decides (fail closed)
++
++The decision is one pure resolver, `resolveTurboCachePlan`
++(`packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`), with the matrix
++covered by `packages/tooling/tool/cli/test/turbo-cache.test.ts`:
++
++| Situation | Injected flag |
++| --- | --- |
++| `CI=true` | none — the workflow owns the posture |
++| Caller passed `--cache=…`, `--force`, `--no-cache`, `--remote-only`, `--remote-cache-read-only` | none — the caller owns it |
++| Complete quad, `TURBO_CACHE=local:rw,remote:r` | `--cache=local:rw,remote:r` |
++| Any quad member missing or blank | `--cache=local:rw` |
++| Quad complete, any other posture (including `remote:rw`) | `--cache=local:rw` |
++
++A remote-read plan whose values are still `op://` references makes the lane run
++under `op run`. If the 1Password session is missing, expired, or denied at run
++time, the lane degrades to `--cache=local:rw` and keeps going — it never fails
++for want of a cache. The same fail-closed rule applies in the environment: on a
++*direct* turbo spawn, scrubbing an unresolved credential also pins
++`TURBO_CACHE` to local-only, so turbo is never asked to read a remote cache it
++has no usable token for.
++
++That scrub deliberately does **not** apply to an `op run`-wrapped spawn.
++`op run` resolves `op://` references out of the environment it is handed, not
++only out of its `--env-file`, so scrubbing them there would delete the very
++references the wrapper exists to resolve and leave the wrapped turbo with no
++credential at all.
++
++Steps that carry their own environment (the hosted coverage identity, a
++testcontainer connection URI) are never wrapped in `op run`, because
++`--env-file=.env` would overlay the checkout's dotenv on top of them and clobber
++those values. Those lanes are `cache: false` in `turbo.json`, so they lose no
++remote hits — and because the degradation rule applies to *every* unwrapped
++spawn, they never receive a remote posture they could not use anyway.
++
++## Rules
++
++- Never put the trusted write token on a workstation. A read token that leaks
++  permits downloads, not cache poisoning; a write token permits poisoning every
++  checkout and every CI job.
++- Never commit a resolved secret. `op://` references are references — keep them
++  that way in `.env`, scripts, and docs.
++- `TURBO_CACHE=local:rw,remote:rw` is refused locally by design, not by
++  accident. If you think a workstation needs to write, that is the `beep cache
++  warm` conversation (ship-velocity C3), not a `.env` edit.
++- Yeet still forces dependency-sensitive proof steps with `TURBO_FORCE=true`
++  when `bun.lock` differs from base. Those runs cannot read from any cache;
++  that is a deliberate false-green control, not a misconfiguration.
++
++## Related
++
++- `goals/ship-velocity/research/c4-turbo-cache.md` — the audit this implements.
++- `infra/lambda/turbo-cache/README.md` — token/method matrix on the server.
++- `.github/workflows/check.yml` — CI's own posture (push jobs write, PR jobs
++  are local-only pending ship-velocity C2).
