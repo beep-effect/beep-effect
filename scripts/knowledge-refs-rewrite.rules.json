@@ -1185,62 +1185,6 @@
       "note": "B1/B4: the sibling-clone name was machine-local trivia; the packet targets this repo."
     },
     {
-      "path": "goals/shared-memory-code-kg-wiring/GOAL.md",
-      "find": "- In: `~/YeeBois/memory/beep-shared` (create), `.mcp.json`, `.gitignore`,",
-      "replace": "- In: the shared `beep-shared` store (create; machine-local), `.mcp.json`, `.gitignore`,",
-      "count": 1,
-      "note": "B4: scope bullet names the store."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/GOAL.md",
-      "find": "`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md` and",
-      "replace": "the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md` and",
-      "count": 1,
-      "note": "B4: research corpus named, not pathed; `_research/bakeoff/` on line 23 still reads as 'beside it'."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/GOAL.md",
-      "find": "basic-memory store (`~/YeeBois/memory/beep-shared`) and query one codegraph",
-      "replace": "basic-memory store (project `beep-shared`, machine-local) and query one codegraph",
-      "count": 1,
-      "note": "B4: the store is identified by its basic-memory project name instead of a machine path."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/ops/manifest.json",
-      "find": "The external bake-off evidence at ~/YeeBois/research/codebase_graph_and_memory is unavailable",
-      "replace": "The machine-local codebase-graph/memory bake-off evidence is unavailable",
-      "count": 1,
-      "note": "B4 inside a JSON string; no quotes or backslashes introduced, so the manifest stays valid JSON."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/README.md",
-      "find": "OUTSIDE the repo (`~/YeeBois/memory/beep-shared`) so",
-      "replace": "OUTSIDE the repo (machine-local `beep-shared` store) so",
-      "count": 1,
-      "note": "B4: store named; the 'every clone sees the same memory' point is preserved."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/SPEC.md",
-      "find": "- `~/YeeBois/memory/beep-shared/` (new, outside the repo): the shared",
-      "replace": "- The `beep-shared` store (new, machine-local, outside the repo): the shared",
-      "count": 1,
-      "note": "B4: target-surface bullet names the store."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/SPEC.md",
-      "find": "`~/YeeBois/memory/beep-shared`, git-initialized, with a conventions",
-      "replace": "a machine-local path outside the repo, git-initialized, with a conventions",
-      "count": 1,
-      "note": "B4: line 63 already names the project `beep-shared`, so only the location needs generalizing."
-    },
-    {
-      "path": "goals/shared-memory-code-kg-wiring/SPEC.md",
-      "find": "`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md`. See",
-      "replace": "the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md`. See",
-      "count": 1,
-      "note": "B4: verdict provenance named rather than pathed."
-    },
-    {
       "path": "goals/standards-remediation/ops/reports/P1-detectors/p1-a-dualarity.md",
       "find": "v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect7/packages/tooling/tool/cli",
       "replace": "v4.1.10 <checkout-root>/packages/tooling/tool/cli",

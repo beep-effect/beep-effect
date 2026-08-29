@@ -12,7 +12,7 @@
   "lifecycle": "completed-retained",
   "mergedPullRequest": 604,
   "mission": "Wire basic-memory (shared cross-CLI memory) and codegraph (deterministic code-KG) into all four coding agents, retire cognee as the durable dev-memory, and land the standards update.",
-  "executionCapable": true,
+  "executionCapable": false,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
@@ -32,15 +32,6 @@
     "goals/shared-memory-code-kg-wiring/research/SOURCES.md"
   ],
   "researchReports": ["research/SOURCES.md"],
-  "agentLaunchers": [
-    {
-      "kind": "codex-goal",
-      "path": "GOAL.md",
-      "targetChars": 3500,
-      "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/shared-memory-code-kg-wiring/GOAL.md"
-    }
-  ],
   "phases": [
     {
       "id": "P0",

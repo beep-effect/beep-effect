@@ -1,5 +1,8 @@
 # OVERVIEW Semantic KG Integration Explained
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 ## 1. Why This Document Exists
 This document is a human-first semantic architecture companion for the codegraph effort. It explains how `PROV-O`, `OWL2`, `RDFS`, `SHACL`, `SPARQL`, bounded reasoning, and entity extraction fit into the envisioned TypeScript code knowledge graph enriched with JSDoc fibrational metadata.
 
