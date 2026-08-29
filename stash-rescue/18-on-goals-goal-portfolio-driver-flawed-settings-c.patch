@@ -1,0 +1,90 @@
+diff --git a/.claude/settings.json b/.claude/settings.json
+index d37082533b..0d0c686c2b 100644
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -7,6 +7,9 @@
+     "compound-engineering@compound-engineering-plugin": true
+   },
+   "permissions": {
++    "additionalDirectories": [
++      "/home/elpresidank/YeeBois/projects/beep-effect-worktrees"
++    ],
+     "allow": [
+       "Bash(rg:*)",
+       "Bash(fd:*)",
+@@ -29,7 +32,74 @@
+       "Bash(bun run beep quality dev:*)",
+       "Bash(bun run docgen:local:*)",
+       "Bash(bunx turbo ls:*)",
+-      "Bash(bunx --bun vitest run:*)"
++      "Bash(bunx --bun vitest run:*)",
++      "Bash(git add:*)",
++      "Bash(git commit:*)",
++      "Bash(git push:*)",
++      "Bash(git fetch:*)",
++      "Bash(git rebase:*)",
++      "Bash(git switch:*)",
++      "Bash(git checkout -b:*)",
++      "Bash(git rev-parse:*)",
++      "Bash(git merge-base:*)",
++      "Bash(git stash push:*)",
++      "Bash(git stash show:*)",
++      "Bash(git stash list:*)",
++      "Bash(bun run beep yeet repair:*)",
++      "Bash(bun run beep yeet publish:*)",
++      "Bash(bun run beep yeet monitor:*)",
++      "Bash(bun run beep yeet closeout:*)",
++      "Bash(bun run beep worktree new:*)",
++      "Bash(bun run beep worktree doctor:*)",
++      "Bash(bun run beep worktree remove:*)",
++      "Bash(bun run beep goals:*)",
++      "Bash(bun run beep lint:*)",
++      "Bash(bun run beep laws:*)",
++      "Bash(gh pr create:*)",
++      "Bash(gh pr merge:*)",
++      "Bash(gh pr comment:*)",
++      "Bash(gh pr ready:*)",
++      "Bash(gh issue create:*)",
++      "Bash(gh run rerun:*)",
++      "Bash(gh run watch:*)",
++      "Bash(gh api:*)",
++      "Bash(rm -rf .beep/fallow)",
++      "Bash(bunx commitlint:*)",
++      "Bash(bun install:*)",
++      "Bash(codex exec:*)",
++      "Bash(node /home/elpresidank/.claude/plugins/cache/openai-codex/codex/1.0.4/scripts/codex-companion.mjs:*)"
++    ],
++    "deny": [
++      "Bash(git push --force:*)",
++      "Bash(git push -f:*)",
++      "Bash(git push --force-with-lease:*)",
++      "Bash(git push --mirror:*)",
++      "Bash(git push origin --delete:*)",
++      "Bash(git stash clear:*)",
++      "Bash(git stash drop:*)",
++      "Bash(git stash pop:*)",
++      "Bash(git branch -D:*)",
++      "Bash(git branch -d:*)",
++      "Bash(git worktree prune:*)",
++      "Bash(git worktree remove --force:*)",
++      "Bash(bun run beep worktree remove --force:*)",
++      "Bash(git clean:*)",
++      "Bash(git reset --hard:*)",
++      "Bash(git checkout .)",
++      "Bash(git checkout -- .)",
++      "Bash(gh pr merge --admin:*)",
++      "Bash(gh pr close:*)",
++      "Bash(gh repo delete:*)",
++      "Bash(gh api -X DELETE:*)",
++      "Bash(gh api --method DELETE:*)",
++      "Bash(gh api -X PATCH:*)",
++      "Bash(gh api --method PATCH:*)",
++      "Edit(**/.github/workflows/**)",
++      "Write(**/.github/workflows/**)",
++      "Edit(**/docs/_internal/**)",
++      "Write(**/docs/_internal/**)",
++      "Edit(**/.claude/settings.json)",
++      "Write(**/.claude/settings.json)"
+     ]
+   },
+   "hooks": {
