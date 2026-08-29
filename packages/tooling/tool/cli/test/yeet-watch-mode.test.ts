@@ -5,8 +5,10 @@ import {
   runYeetWatchStream,
   YeetCommandError,
   YeetInboxRowJson,
+  YeetMonitorCommentStateJson,
   YeetWatchEvent,
   yeetInboxPaths,
+  yeetMonitorCommentStatePath,
   yeetWatchExitFailure,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -52,11 +54,23 @@ const stubHandle = (exitCode: number, output: string) =>
     unref: Effect.succeed(Effect.void),
   });
 
-/** The three answers one snapshot collection reads, in spawn order. */
+interface ScriptedAnswer {
+  readonly exitCode: number;
+  readonly output: string;
+}
+
+/**
+ * The answers one watch tick reads, in spawn order: the three snapshot
+ * collections plus the two comment-collection polls that follow them. Comment
+ * answers default to an empty collection so pre-comment-stream scripts stay
+ * terse.
+ */
 interface PollScript {
-  readonly checks: { readonly exitCode: number; readonly output: string };
-  readonly threads: { readonly exitCode: number; readonly output: string };
-  readonly view: { readonly exitCode: number; readonly output: string };
+  readonly checks: ScriptedAnswer;
+  readonly issueComments?: ScriptedAnswer;
+  readonly reviewComments?: ScriptedAnswer;
+  readonly threads: ScriptedAnswer;
+  readonly view: ScriptedAnswer;
 }
 
 const viewJson = (state: string, headSha: string): string =>
@@ -84,28 +98,44 @@ const checksJson = (rows: ReadonlyArray<CheckRowFixture>) =>
 const threadsJson = (nodes: ReadonlyArray<{ readonly id: string; readonly isResolved: boolean }>) =>
   JSON.stringify({ data: { node: { reviewThreads: { nodes } } } });
 
-// One scripted answer set per poll; `gh api graphql` — the last read of each
-// collection — advances the cursor to the next poll's script.
+const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[]" };
+
+// One scripted answer set per poll. Each command family keeps its own served
+// count, because the comment polls run *after* the tick's GraphQL thread read:
+// a single shared cursor advanced by the thread read would hand the comment
+// polls the NEXT tick's script.
 const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
-      const cursor = yield* Ref.make(0);
+      const threadsServed = yield* Ref.make(0);
+      const reviewServed = yield* Ref.make(0);
+      const issueServed = yield* Ref.make(0);
+      const scriptAt = (index: number): PollScript => scripts[Math.min(index, A.length(scripts) - 1)] as PollScript;
       return ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) {
           return Effect.die("the watch never spawns a piped command");
         }
         const line = A.join([command.command, ...command.args], " ");
         return Effect.gen(function* () {
-          const index = Math.min(yield* Ref.get(cursor), A.length(scripts) - 1);
-          const script = scripts[index] as PollScript;
+          if (Str.includes("pulls/751/comments")(line)) {
+            const answer = scriptAt(yield* Ref.getAndUpdate(reviewServed, (value) => value + 1));
+            const review = answer.reviewComments ?? emptyCollection;
+            return stubHandle(review.exitCode, review.output);
+          }
+          if (Str.includes("issues/751/comments")(line)) {
+            const answer = scriptAt(yield* Ref.getAndUpdate(issueServed, (value) => value + 1));
+            const issue = answer.issueComments ?? emptyCollection;
+            return stubHandle(issue.exitCode, issue.output);
+          }
+          const script = scriptAt(yield* Ref.get(threadsServed));
           if (Str.includes("pr view")(line)) {
             return stubHandle(script.view.exitCode, script.view.output);
           }
           if (Str.includes("pr checks")(line)) {
             return stubHandle(script.checks.exitCode, script.checks.output);
           }
-          yield* Ref.update(cursor, (value) => value + 1);
+          yield* Ref.update(threadsServed, (value) => value + 1);
           return stubHandle(script.threads.exitCode, script.threads.output);
         });
       });
@@ -878,6 +908,356 @@ describe("registration patience", () => {
   );
 });
 
+describe("comment rows and --until-event", () => {
+  const decodeLine = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
+
+  const issueCommentsJson = (comments: ReadonlyArray<{ readonly id: number; readonly createdAt: string }>) =>
+    JSON.stringify(
+      A.map(comments, (comment) => ({
+        body: `comment ${comment.id}`,
+        created_at: comment.createdAt,
+        html_url: `https://github.com/beep/beep/pull/751#issuecomment-${comment.id}`,
+        id: comment.id,
+        user: { login: "greptile-apps[bot]" },
+      }))
+    );
+
+  const pendingChecks = checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]);
+
+  it.live("ends immediately when the pull request is already merged", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.reason).toBe("pr-merged");
+        expect(ended.failing).toBe(0);
+        const lines = A.map(yield* TestConsole.logLines, String);
+        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  // The event exit on a red keys on the snapshot while siblings still run —
+  // the whole point of the mode: the supervisor is woken with the failure
+  // capsule already durable instead of waiting out the rest of the wave.
+  it.live("exits with reason event on a red transition while a sibling check is still pending", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent: true });
+
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(1);
+        expect(yeetWatchExitFailure(ended)).toBe(true);
+
+        const lines = A.map(yield* TestConsole.logLines, String);
+        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "check-transition", "watch-ended"]);
+        // The capsule is durable before the exit row is emitted.
+        expect(A.length(yield* readInboxRows(root))).toBe(1);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { bucket: "pending", name: "Coverage", state: "QUEUED" },
+                  { bucket: "pending", name: "Lint", state: "QUEUED" },
+                ]),
+              },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { bucket: "fail", name: "Coverage", state: "FAILURE" },
+                  { bucket: "pending", name: "Lint", state: "QUEUED" },
+                ]),
+              },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  // Lane A's gotcha: the very first snapshot emits no transition rows, so the
+  // event exit must key on the snapshot's census, not on a diff.
+  it.live("exits immediately when the first snapshot already carries a red", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent: true });
+
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(1);
+        const lines = A.map(yield* TestConsole.logLines, String);
+        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
+        expect(A.length(yield* readInboxRows(root))).toBe(1);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { bucket: "fail", name: "Coverage", state: "FAILURE" },
+                  { bucket: "pending", name: "Lint", state: "QUEUED" },
+                ]),
+              },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("reports an all-terminal red as an event wake", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent: true });
+
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(1);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "fail", name: "Coverage", state: "FAILURE" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  // The settle window batches a comment burst into one wake: the second
+  // comment lands inside the window and joins the session instead of costing
+  // a second one. A comment-only exit is a clean zero.
+  it.live("batches a comment burst through the settle window, then exits with reason event", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent: true });
+
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(0);
+        expect(yeetWatchExitFailure(ended)).toBe(false);
+
+        const lines = A.map(yield* TestConsole.logLines, String);
+        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        expect(A.map(events, (event) => event.kind)).toEqual([
+          "watch-started",
+          "comment-posted",
+          "comment-posted",
+          "watch-ended",
+        ]);
+        const first = events[1] as Extract<YeetWatchEvent, { readonly kind: "comment-posted" }>;
+        expect(first.source).toBe("issue");
+        expect(first.author).toBe("greptile-apps[bot]");
+        expect(first.commentId).toBe(44);
+
+        // The durable watermark already excludes the batch, so a relaunched
+        // session resumes past it instead of re-waking on the same comments.
+        const statePath = yield* yeetMonitorCommentStatePath(contextFor(root));
+        const fs = yield* FileSystem.FileSystem;
+        const state = yield* YeetMonitorCommentStateJson.decode(yield* fs.readFileString(statePath));
+        expect(state.prNumber).toBe(751);
+        expect(state.watermark.issue.id).toBe(45);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+              issueComments: {
+                exitCode: 0,
+                output: issueCommentsJson([{ id: 44, createdAt: "2099-01-01T00:00:00Z" }]),
+              },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+              issueComments: {
+                exitCode: 0,
+                output: issueCommentsJson([{ id: 45, createdAt: "2099-01-01T00:00:10Z" }]),
+              },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  // Plain --watch gains the comment rows without the exit contract: the gap
+  // where ordinary PR comments were invisible to the stream is closed, and
+  // the stream still runs to its terminal settle.
+  it.live("emits comment rows in plain watch mode without exiting on them", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.reason).toBe("all-terminal");
+        expect(ended.failing).toBe(0);
+        const lines = A.map(yield* TestConsole.logLines, String);
+        const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+        expect(A.map(events, (event) => event.kind)).toEqual([
+          "watch-started",
+          "comment-posted",
+          "check-transition",
+          "watch-ended",
+        ]);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+              issueComments: {
+                exitCode: 0,
+                output: issueCommentsJson([{ id: 43, createdAt: "2099-01-01T00:00:00Z" }]),
+              },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Coverage", state: "SUCCESS" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  // A comment-poll failure degrades the comment surface alone: the check
+  // watch still reaches its terminal settle, and the operator sees why.
+  it.live("keeps watching checks when the comment poll fails", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.reason).toBe("all-terminal");
+        expect(ended.failing).toBe(0);
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, (line) => Str.includes("watch comment poll failed")(line))).toBe(true);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+              reviewComments: { exitCode: 1, output: "gh: API rate limit exceeded" },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Coverage", state: "SUCCESS" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+              reviewComments: { exitCode: 1, output: "gh: API rate limit exceeded" },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("stops polling comments at the failure bound while checks keep advancing", () => {
+    const failedCommentPoll: PollScript = {
+      view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+      checks: { exitCode: 0, output: pendingChecks },
+      threads: { exitCode: 0, output: threadsJson([]) },
+      reviewComments: { exitCode: 1, output: "gh: API rate limit exceeded" },
+    };
+    return inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.reason).toBe("all-terminal");
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, (line) => Str.includes("stopped after 5 consecutive failed polls")(line))).toBe(true);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            failedCommentPoll,
+            {
+              ...greenScript("aaa111"),
+              reviewComments: { exitCode: 1, output: "gh: API rate limit exceeded" },
+            },
+          ])
+        )
+      )
+    );
+  });
+});
+
 describe("yeetWatchExitFailure", () => {
   it("fails on any red, on a closed PR, and on a poll error; passes a green settle and a merge", () => {
     expect(yeetWatchExitFailure({ failing: 2, reason: "all-terminal" })).toBe(true);
@@ -885,5 +1265,8 @@ describe("yeetWatchExitFailure", () => {
     expect(yeetWatchExitFailure({ failing: 0, reason: "poll-error" })).toBe(true);
     expect(yeetWatchExitFailure({ failing: 0, reason: "all-terminal" })).toBe(false);
     expect(yeetWatchExitFailure({ failing: 0, reason: "pr-merged" })).toBe(false);
+    // An event exit is only a failure when the event was a red.
+    expect(yeetWatchExitFailure({ failing: 1, reason: "event" })).toBe(true);
+    expect(yeetWatchExitFailure({ failing: 0, reason: "event" })).toBe(false);
   });
 });

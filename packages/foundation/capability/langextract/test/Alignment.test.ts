@@ -49,6 +49,15 @@ describe("alignCandidate", () => {
     });
   });
 
+  it("leaves repeated exact candidate text unaligned", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "person", text: "Ada" }),
+      sourceOf("Ada wrote notes. Ada praised Engine.")
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
+  });
+
   it("aligns through the data-last pipeable form", () => {
     const extraction = alignCandidate(sourceOf("Alice founded Acme."))(
       ExtractionCandidate.make({ label: "person", text: "Alice" })
@@ -64,6 +73,15 @@ describe("alignCandidate", () => {
     );
 
     expect(extraction).toMatchObject({ alignmentStatus: "match_lesser", matchedText: "Acme" });
+  });
+
+  it("leaves repeated case-insensitive candidate text unaligned", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "person", text: "ada" }),
+      sourceOf("Ada wrote notes. ADA praised Engine.")
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
   });
 
   it("keeps lesser match spans anchored to source offsets after Unicode lowercase expansion", () => {
@@ -99,6 +117,15 @@ describe("alignCandidate", () => {
     );
 
     expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", matchedText: "Acme." });
+  });
+
+  it("skips fuzzy work when the caller requests exact similarity", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "organization", text: "Acmee" }),
+      AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(1), sourceText: "Alice founded Acme." })
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
   });
 
   it("scores fuzzy matching by Unicode code points", () => {
@@ -155,6 +182,15 @@ describe("alignCandidate", () => {
       ),
       fcRuns(50)
     ));
+
+  it("returns an empty batch when the resolved extraction cap is zero", () => {
+    const aligned = alignCandidates(
+      [ExtractionCandidate.make({ label: "person", text: "Ada" })],
+      AlignmentSource.make({ maxExtractions: NonNegativeInt.make(0), sourceText: "Ada" })
+    );
+
+    expect(aligned).toEqual([]);
+  });
 
   it("resolves the default extraction cap and supports data-last batch alignment", () => {
     const candidates = A.makeBy(Num.increment(DEFAULT_MAX_EXTRACTIONS), () =>

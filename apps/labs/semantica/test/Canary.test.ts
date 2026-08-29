@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -32,7 +33,7 @@ describe("Semantica runtime layer", () => {
         )(LabConfig);
 
         expect(config.corpusRoot).toEqual(O.some("/fixtures/w1"));
-        expect(config.extractorModel).toBe("claude-sonnet-4-5-20250929");
+        expect(config.extractorModel).toBe(ANTHROPIC_DEFAULT_MODEL);
         expect(config.goldDirectory).toBe("fixtures/gold/v1");
         expect(config.goldModel).toBe("grok-4.6");
         expect(config.ledgerRoot).toBe(".beep/semantica/ledger");

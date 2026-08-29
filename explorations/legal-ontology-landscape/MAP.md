@@ -1,15 +1,14 @@
 # Legal Ontology Landscape Map
 
-**Lifecycle annotation (2026-07-14):** research is complete;
-[`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) is
-active with M1 pending; [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md)
-remains a paused stub behind semantic-foundation M3.
+**Lifecycle annotation (2026-08-27):** research and semantic-foundation M1 are
+complete. M2-M4 remain future product-gated capabilities; the trademark
+docketing candidate remains queued behind semantic-foundation M3.
 
 ## Candidate Goal Packets
 
 | Goal | Mission | Dependency / sequencing | Status |
 | --- | --- | --- | --- |
-| [`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) | Shared legal semantic substrate: repo-owned SKOS seed, FOLIO alignments, taxonomy registry/loader, gated classification/docketing/SHACL vocabulary work. | First slice. M1 pending; M2-M4 gated by product metrics and research verdicts. | Active; M1 pending. |
+| [`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) | Shared legal semantic substrate: repo-owned SKOS seed, FOLIO alignments, taxonomy registry/loader, gated classification/docketing/SHACL vocabulary work. | First slice. M1 shipped; M2-M4 remain gated by product metrics. | Completed-retained after M1. |
 | [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md) | TrademarkAsset plus docketing entities and workflows. | Blocks on semantic-foundation M3 because it needs docketing/deadline vocabulary and enduring-party-vs-role semantics. | Paused stub behind M3. |
 
 ## Routed Work
@@ -58,8 +57,8 @@ M1 in `goals/semantic-foundation`:
 - Existing repo capability: `goals/ip-law-knowledge-graph/research/` contains
   ontology and IPC/CPC grounding to mine as reference, but not to edit in this
   graduation.
-- NET-NEW: `@beep/ontology` taxonomy registry models and loader service. The
-  current package surface is FOLIO OpenAPI models only.
+- SHIPPED: `@beep/ontology` taxonomy registry models, loader service, repo-owned
+  seed, filing projection, and librarian fixture loop.
 - NET-NEW later: `goals/trademark-docketing-domain`, gated behind M3.
 
 ## Inherited Risks

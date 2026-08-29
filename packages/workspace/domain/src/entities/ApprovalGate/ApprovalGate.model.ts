@@ -12,7 +12,7 @@ import { ApprovalDecision, CandidateLifecycle } from "@beep/workspace-domain/val
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/ApprovalGate/ApprovalGate.model");
-const ApprovalGateEntity = ProductEntity.make(Workspace.ApprovalGateId);
+const pg = ProductEntity.pg;
 
 /**
  * Human approval gate for candidate work.
@@ -28,24 +28,22 @@ const ApprovalGateEntity = ProductEntity.make(Workspace.ApprovalGateId);
  * @category models
  * @since 0.0.0
  */
-export class ApprovalGate extends ApprovalGateEntity.Entity<ApprovalGate>(ApprovalGateEntity.tableName)(
+export class ApprovalGate extends ProductEntity.Entity<ApprovalGate>()(Workspace.ApprovalGateId)(
   {
     decision: ApprovalDecision.annotateKey({
       description: "Current human approval decision for the candidate work.",
-    }).pipe(ApprovalGateEntity.pg.text()),
+    }).pipe(pg.text()),
     fixtureKey: S.NonEmptyString.annotateKey({
       description: "Stable fixture key for the approval gate.",
-    }).pipe(ApprovalGateEntity.pg.text(), ApprovalGateEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     lifecycle: CandidateLifecycle.annotateKey({
       description: "Candidate lifecycle state when the gate was recorded.",
-    }).pipe(ApprovalGateEntity.pg.text()),
+    }).pipe(pg.text()),
     snapshot: UnknownRecord.annotateKey({
       description: "Opaque runtime proof snapshot captured for the approval gate.",
-    }).pipe(ApprovalGateEntity.pg.jsonb()),
-    ...ApprovalGateEntity.identityFields,
+    }).pipe(pg.jsonb()),
   },
   $I.annote("ApprovalGate", {
     description: "Human approval gate for candidate work.",
-  }),
-  ApprovalGateEntity.entityExtras
+  })
 ) {}

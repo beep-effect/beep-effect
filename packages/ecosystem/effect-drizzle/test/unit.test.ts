@@ -101,6 +101,7 @@ import {
   _repositoryColumnNameOverride,
   _repositoryNonUniqueLocator,
   _repositoryNullableUniqueLocator,
+  _repositoryUniqueIndexLocator,
   _repositoryVersionLocator,
   _reverseRelationCollision,
   _runtimeArrayCarrierMismatch,
@@ -403,6 +404,11 @@ describe("named unique indexes", () => {
     expect(emitted.config.name).toBe("named_unique_record_email_unique_idx");
     expect(emitted.config.unique).toBe(true);
   });
+
+  it("accepts a colocated unique index as a foreign-key target", () => {
+    const config = getTableConfig(effectDrizzleSchema.tables.unique_target);
+    expect(first(config.indexes, "colocated unique index").config.unique).toBe(true);
+  });
 });
 
 describe("enum and custom columns", () => {
@@ -559,7 +565,7 @@ describe("schema assembly", () => {
     expect(_uuidTextFkMismatch).toThrow("uuid");
     expect(_entityFkMismatch).toThrow('entityId<"organization">');
     expect(_reverseRelationCollision).toThrow("collides");
-    expect(_nonUniqueForeignKey).toThrow("primary-key or unique column");
+    expect(_nonUniqueForeignKey).toThrow("primary key, unique field, or single-column unique index");
     expect(_nonUniqueForeignKey).toThrow(pg.SchemaAssemblyError);
     expect(_duplicatePhysicalTableNames).toThrow("Physical table name 'user'");
     expect(_duplicatePhysicalTableNames).toThrow(pg.SchemaAssemblyError);
@@ -652,9 +658,13 @@ describe("schema corroboration and invariants", () => {
 
   it("rejects unsafe optimistic repository construction synchronously", () => {
     expect(_repositoryVersionLocator).toThrow("cannot be the optimistic-version field");
-    expect(_repositoryNonUniqueLocator).toThrow("primary-key or unique field");
+    expect(_repositoryNonUniqueLocator).toThrow("primary key, unique field, or single-column unique index");
     expect(_repositoryNullableUniqueLocator).toThrow("non-null encoded schema");
     expect(_repositoryColumnNameOverride).toThrow("columnName override on 'displayName'");
+  });
+
+  it("accepts a colocated single-column unique index as a repository locator", () => {
+    expect(_repositoryUniqueIndexLocator).not.toThrow();
   });
 
   it("uses Effect's finite-number schema for PostgreSQL floats", () => {

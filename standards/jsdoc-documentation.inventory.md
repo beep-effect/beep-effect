@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-26T09:54:19.299Z
+Generated: 2026-08-27T17:58:10.604Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 71 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2503 |
-| publicExports | 16778 |
+| publicModules | 2512 |
+| publicExports | 16858 |
 | openModules | 398 |
 | openExports | 134 |
 | missingExportExamples | 4 |
@@ -56,7 +56,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Order | Package | Path | Status | Modules | Exports | Open Modules | Open Exports |
 |---:|---|---|---|---:|---:|---:|---:|
 | 1 | `@beep/hubspot` | `packages/drivers/hubspot` | clean | 4 | 23 | 0 | 0 |
-| 2 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 74 | 0 | 0 |
+| 2 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
 | 3 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 10 | 105 | 5 | 9 |
 | 4 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
 | 5 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 7 | 0 | 0 |
@@ -66,14 +66,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 9 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 9 | 62 | 8 | 4 |
 | 10 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 22 | 80 | 1 | 0 |
 | 11 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 100 | 339 | 3 | 2 |
+| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 104 | 367 | 3 | 2 |
 | 13 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 14 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 15 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 0 |
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 212 | 1664 | 46 | 9 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 216 | 1703 | 46 | 9 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -109,7 +109,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 52 | `@beep/agents-tables` | `packages/agents/tables` | clean | 6 | 14 | 0 | 0 |
 | 53 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 54 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 119 | 4 | 4 |
-| 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 25 | 101 | 0 | 0 |
+| 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 25 | 102 | 0 | 0 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 807 | 51 | 36 |
 | 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 256 | 4 | 0 |
@@ -126,7 +126,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 69 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
 | 70 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 71 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 72 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 222 | 0 | 0 |
+| 72 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 223 | 0 | 0 |
 | 73 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 74 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 75 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
@@ -136,12 +136,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 79 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 0 |
 | 80 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 0 |
 | 81 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 29 | 0 | 0 |
-| 82 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 58 | 197 | 25 | 0 |
+| 82 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 58 | 200 | 25 | 0 |
 | 83 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 54 | 236 | 8 | 2 |
-| 84 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 90 | 0 | 0 |
+| 84 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 93 | 0 | 0 |
 | 85 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 64 | 0 | 0 |
 | 86 | `@beep/firecrawl` | `packages/drivers/firecrawl` | clean | 5 | 267 | 0 | 0 |
-| 87 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 138 | 2 | 0 |
+| 87 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 6 | 139 | 2 | 0 |
 | 88 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
 | 89 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 412 | 0 | 0 |
 | 90 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 9 | 0 |
@@ -178,7 +178,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
 | 122 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 0 |
 | 123 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
-| 124 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 48 | 0 | 0 |
+| 124 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
 | 125 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 5 | 37 | 0 | 0 |
 | 126 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
 | 127 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
@@ -186,7 +186,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 129 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
 | 130 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
 | 131 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
-| 132 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 119 | 0 | 0 |
+| 132 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 120 | 0 | 0 |
 | 133 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
 
 ## Open Findings
@@ -364,7 +364,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:637` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:657` `runBunAudit` (const) - 1 documentation section/link violation(s)
 
 ### @beep/pglite
 

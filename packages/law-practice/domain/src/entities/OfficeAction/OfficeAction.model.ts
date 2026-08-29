@@ -10,7 +10,7 @@ import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/OfficeAction/OfficeAction.model");
-const OfficeActionEntity = ProductEntity.make(LawPractice.OfficeActionId);
+const pg = ProductEntity.pg;
 
 /**
  * USPTO office action entity for a patent asset under examination.
@@ -50,24 +50,22 @@ const OfficeActionEntity = ProductEntity.make(LawPractice.OfficeActionId);
  * @category entities
  * @since 0.0.0
  */
-export class OfficeAction extends OfficeActionEntity.Entity<OfficeAction>(OfficeActionEntity.tableName)(
+export class OfficeAction extends ProductEntity.Entity<OfficeAction>()(LawPractice.OfficeActionId)(
   {
     applicationNumber: LawPracticeText.annotateKey({
       description: "Application number text extracted from the office action.",
-    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("application_number")),
+    }).pipe(pg.text(), pg.columnName("application_number")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the office action.",
-    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     matterFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the matter this office action belongs to.",
-    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("matter_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("matter_fixture_key")),
     patentAssetFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the patent asset examined by this office action.",
-    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("patent_asset_fixture_key")),
-    ...OfficeActionEntity.identityFields,
+    }).pipe(pg.text(), pg.columnName("patent_asset_fixture_key")),
   },
   $I.annote("OfficeAction", {
     description: "USPTO office action entity for a patent asset under examination.",
-  }),
-  OfficeActionEntity.entityExtras
+  })
 ) {}

@@ -118,10 +118,12 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   return (
     // Capped at half the chat surface: in a short dock panel the toolbar,
     // editor, and send row otherwise consume the whole panel and starve the
-    // transcript to a ~20px strip (QA closeout P0). The transcript keeps the
-    // other half; overflow inside the composer scrolls internally.
+    // transcript to a ~20px strip (QA closeout P0). The flex column lets the
+    // ChatComposer shrink into the cap — its editable region scrolls
+    // internally while the send row stays visible — rather than scrolling the
+    // whole composer (which pushed Send out of view on short panes).
     <div
-      className="max-h-[50%] shrink-0 overflow-y-auto border-t bg-background/80 p-3 backdrop-blur"
+      className="flex max-h-[50%] shrink-0 flex-col border-t bg-background/80 p-3 backdrop-blur"
       data-testid="composer"
     >
       {shell.isEditing ? (

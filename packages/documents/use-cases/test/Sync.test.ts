@@ -25,6 +25,7 @@ import {
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { SyncItemRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
+  GetVaultSyncStatusPayload,
   GetVaultSyncStatusRpc,
   ListVaultSyncConflictsRpc,
   MarkVaultSyncConflictReviewedPayload,
@@ -72,6 +73,7 @@ const idleStatus = S.decodeSync(VaultSyncStatus)({
   failedOperations: 0,
   openConflicts: 0,
   pendingItems: 0,
+  probedAt: null,
   provider: "box",
   queuedOperations: 0,
 });
@@ -124,12 +126,14 @@ describe("DmsMirror port models", () => {
       }).pipe(Effect.provideService(DmsMirror, mirror));
       expect(page.nextStreamPosition).toBe("now");
 
+      const connectedProbe = Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }));
       const probe = yield* Effect.gen(function* () {
         const service = yield* DmsMirrorAvailability;
         return yield* service.probe;
       }).pipe(
         Effect.provideService(DmsMirrorAvailability, {
-          probe: Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" })),
+          probe: connectedProbe,
+          refresh: connectedProbe,
         })
       );
       expect(probe.connected).toBe(true);
@@ -162,6 +166,7 @@ describe("VaultSyncEngine port", () => {
       failedOperations: 0,
       openConflicts: 0,
       pendingItems: 0,
+      probedAt: null,
       provider: "box",
       queuedOperations: 0,
     });
@@ -172,9 +177,15 @@ describe("VaultSyncEngine port", () => {
     const scanFailed = S.decodeSync(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" }));
     expect(scanFailed._tag).toBe("VaultScanFailed");
 
-    const mirrorDown = S.decodeSync(VaultSyncError)(
-      DmsMirrorUnavailable.make({ provider: "box", reason: "remote rate limit exceeded", retryable: true })
-    );
+    // Wire shape, not an instance: the optional-key disconnectReason encodes
+    // as a bare literal (or an absent key), never as an Option object.
+    const mirrorDown = S.decodeSync(VaultSyncError)({
+      _tag: "DmsMirrorUnavailable",
+      disconnectReason: "transient",
+      provider: "box",
+      reason: "remote rate limit exceeded",
+      retryable: true,
+    });
     expect(mirrorDown._tag).toBe("DmsMirrorUnavailable");
 
     const repositoryDown = S.decodeSync(VaultSyncError)(
@@ -205,11 +216,21 @@ describe("VaultSyncEngine port", () => {
     })
   );
 
+  it("defaults forceProbe to the cached read path", () => {
+    // Both construction and missing-key decoding must stay wire-compatible
+    // with pre-forceProbe callers, which never bypass the probe cache.
+    expect(VaultSyncStatusInput.make({ workspaceId }).forceProbe).toBe(false);
+    expect(S.decodeSync(VaultSyncStatusInput)({ workspaceId: 1 }).forceProbe).toBe(false);
+    expect(S.decodeSync(GetVaultSyncStatusPayload)({ workspaceId: 1 }).forceProbe).toBe(false);
+    expect(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe).toBe(true);
+  });
+
   it("round-trips schema-derived engine inputs", () => {
     assertSchemaArbitraryRoundTrip(SyncOnceInput);
     assertSchemaArbitraryRoundTrip(VaultSyncStatusInput);
     assertSchemaArbitraryRoundTrip(ListOpenConflictsInput);
     assertSchemaArbitraryRoundTrip(MarkConflictReviewedInput);
+    assertSchemaArbitraryRoundTrip(GetVaultSyncStatusPayload);
   });
 });
 

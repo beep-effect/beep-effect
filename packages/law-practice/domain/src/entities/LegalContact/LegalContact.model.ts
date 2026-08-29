@@ -11,7 +11,7 @@ import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fie
 import { LegalContactRole } from "./LegalContact.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.model");
-const LegalContactEntity = ProductEntity.make(LawPractice.LegalContactId);
+const pg = ProductEntity.pg;
 
 /**
  * Legal contact entity attached to a legal client.
@@ -46,24 +46,22 @@ const LegalContactEntity = ProductEntity.make(LawPractice.LegalContactId);
  * @category entities
  * @since 0.0.0
  */
-export class LegalContact extends LegalContactEntity.Entity<LegalContact>(LegalContactEntity.tableName)(
+export class LegalContact extends ProductEntity.Entity<LegalContact>()(LawPractice.LegalContactId)(
   {
     displayName: LawPracticeText.annotateKey({
       description: "Human-readable legal contact display name.",
-    }).pipe(LegalContactEntity.pg.text(), LegalContactEntity.pg.columnName("display_name")),
+    }).pipe(pg.text(), pg.columnName("display_name")),
     fixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Stable fixture key for the legal contact.",
-    }).pipe(LegalContactEntity.pg.text(), LegalContactEntity.pg.columnName("fixture_key")),
+    }).pipe(pg.text(), pg.columnName("fixture_key")),
     legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
       description: "Fixture key for the legal client this contact belongs to.",
-    }).pipe(LegalContactEntity.pg.text(), LegalContactEntity.pg.columnName("legal_client_fixture_key")),
+    }).pipe(pg.text(), pg.columnName("legal_client_fixture_key")),
     role: LegalContactRole.annotateKey({
       description: "Legal contact role.",
-    }).pipe(LegalContactEntity.pg.text()),
-    ...LegalContactEntity.identityFields,
+    }).pipe(pg.text()),
   },
   $I.annote("LegalContact", {
     description: "Legal contact entity attached to a legal client.",
-  }),
-  LegalContactEntity.entityExtras
+  })
 ) {}

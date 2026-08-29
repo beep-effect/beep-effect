@@ -12,6 +12,7 @@ import { Config, Crypto, Effect, Layer, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
@@ -167,6 +168,18 @@ const cachedGenerateText = Effect.fn("LanguageModelCache.cachedGenerateText")(fu
   const onCacheMiss = Effect.fn("LanguageModelCache.cachedGenerateText.onCacheMiss")(function* (key: ProviderCacheKey) {
     const cache = yield* ProviderCache;
     const response = yield* inner.generateText({ prompt });
+    // An empty generation (for example an API-level refusal) can never become a
+    // cache entry: the entry schema requires non-empty text, and replay must
+    // not reproduce an unusable response as success.
+    if (Str.isEmpty(response.text)) {
+      return yield* AiError.AiError.make({
+        method: "generateText",
+        module: "SemanticaProviderCache",
+        reason: AiError.UnknownError.make({
+          description: `The live provider returned an empty generation (finish reason: ${response.finishReason}).`,
+        }),
+      });
+    }
     const cacheKey = yield* contentDigest(ProviderCacheKey)(key).pipe(Effect.orDie);
     yield* cache.store(
       ProviderCacheEntry.make({

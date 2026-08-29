@@ -239,7 +239,11 @@ export const desktopPanelId = (key: DesktopPanelKey): PanelId => PanelId.make(`s
 // Per-panel minima (the M1 kernel capability): a split or edge insertion can
 // never squeeze a content-heavy panel below readability — QA round 1 showed
 // a full-width row insertion clipping Chat to ~155px (finding R1-06).
-const CONTENT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(220) });
+const CONTENT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(180) });
+// Chat's height floor is taller than the rest: its tab strip (~35px) plus the
+// composer chrome (~104px) plus roughly three transcript lines must all stay
+// visible for the panel to read as a conversation.
+const CHAT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(260) });
 
 // The kernel panel for a desktop panel key. Every panel is keep-alive
 // (`renderMode: "always"`): inactive tabs stay mounted so chat streams,
@@ -250,7 +254,7 @@ const desktopPanel = (key: DesktopPanelKey): Panel =>
     title: panelSpec(key).title,
     view: ComponentPanelView.make({ renderer: RendererKey.make(key) }),
     renderMode: "always",
-    constraints: O.some(CONTENT_MIN),
+    constraints: O.some(key === "chat" ? CHAT_MIN : CONTENT_MIN),
   });
 
 const GROUP_ONTOLOGY_LEFT = GroupId.make("desktop-ontology-left");
@@ -280,10 +284,13 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
   root: SplitNode.make({
     splitId: SplitId.make("desktop-rows"),
     layout: VerticalSplitLayout.make({
-      // 62/38 rather than 66/34: the bottom shell row hosts Chat, whose
-      // transcript was unreadable in the default split on short viewports
-      // (QA closeout P0). The ontology cluster keeps the majority share.
-      topRatio: SplitRatio.make(6_200),
+      // 56/44 rather than 62/38: the bottom shell row hosts Chat, whose 260px
+      // minHeight clamp engages only while top (180px ontology floor) + gap +
+      // bottom (260px) fit the viewport; below that feasibility floor the raw
+      // ratio governs, and 44% keeps the composer and a few transcript lines
+      // visible on short viewports (QA closeout P0/P1). The ontology cluster
+      // keeps the majority share.
+      topRatio: SplitRatio.make(5_600),
       top: SplitNode.make({
         splitId: SplitId.make("desktop-ontology-columns"),
         layout: HorizontalSplitLayout.make({
@@ -322,10 +329,12 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
 });
 
 /**
- * The localStorage key holding the persisted dock snapshot. `v2` because the
- * ontology surface split into nine panels: a `v1` snapshot still decodes but
- * references the retired `ontology` renderer key, so it would restore a dead
- * panel — the key bump is the honest invalidation (boot deletes stale keys).
+ * The localStorage key holding the persisted dock snapshot. `v3` because the
+ * per-panel constraints changed (Chat gained a 260px height floor, the rest
+ * dropped to 180px): snapshots serialize `Panel.constraints`, so a `v2`
+ * snapshot still decodes but would pin the old uniform 220px floors — and the
+ * crushed shell row — forever. The key bump is the honest invalidation (boot
+ * deletes stale keys); `v2` bumped for the nine-panel ontology surface.
  *
  * **Example** (Storing under snapshot key)
  *
@@ -339,7 +348,7 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
  * @category constants
  * @since 0.0.0
  */
-export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v2";
+export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v3";
 
 /**
  * Builds the runtime action that clears the saved layout before executing an

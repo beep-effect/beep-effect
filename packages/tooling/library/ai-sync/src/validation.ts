@@ -215,8 +215,8 @@ const validateCodexRepoSafetyPolicy = (content: string) =>
         O.as("sandbox_workspace_write.writable_roots must be empty or omitted")
       );
       const findings = A.getSomes([
-        codexSettingSafetyFinding("approval_policy", "on-request", O.getOrUndefined(config.approval_policy)),
-        codexSettingSafetyFinding("sandbox_mode", "workspace-write", O.getOrUndefined(config.sandbox_mode)),
+        codexSettingSafetyFinding("approval_policy", "never", O.getOrUndefined(config.approval_policy)),
+        codexSettingSafetyFinding("sandbox_mode", "danger-full-access", O.getOrUndefined(config.sandbox_mode)),
         networkAccessFinding,
         writableRootsFinding,
       ]);

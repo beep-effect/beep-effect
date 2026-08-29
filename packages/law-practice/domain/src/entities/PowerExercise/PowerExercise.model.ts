@@ -16,7 +16,7 @@ import {
 } from "./PowerExercise.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PowerExercise/PowerExercise.model");
-const PowerExerciseEntity = ProductEntity.make(LawPractice.PowerExerciseId);
+const pg = ProductEntity.pg;
 
 /**
  * One attempt to exercise a power, recorded whether or not it worked.
@@ -71,32 +71,30 @@ const PowerExerciseEntity = ProductEntity.make(LawPractice.PowerExerciseId);
  * @category entities
  * @since 0.0.0
  */
-export class PowerExercise extends PowerExerciseEntity.Entity<PowerExercise>(PowerExerciseEntity.tableName)(
+export class PowerExercise extends ProductEntity.Entity<PowerExercise>()(LawPractice.PowerExerciseId)(
   {
     attemptedAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Time the act was attempted, recorded for audit and never used to establish effect.",
-    }).pipe(PowerExerciseEntity.pg.bigint("number"), PowerExerciseEntity.pg.columnName("attempted_at")),
+    }).pipe(pg.bigint("number"), pg.columnName("attempted_at")),
     authorityBasis: AssertedAuthorityBasis.annotateKey({
       description: "Authority claimed for the act: role, norm, cited power, and conferring exercise.",
-    }).pipe(PowerExerciseEntity.pg.jsonb(), PowerExerciseEntity.pg.columnName("authority_basis")),
+    }).pipe(pg.jsonb(), pg.columnName("authority_basis")),
     frame: LawPractice.ActFrameId.annotateKey({
       description: "Recorded act frame this attempt instantiates.",
-    }).pipe(PowerExerciseEntity.pg.integer()),
+    }).pipe(pg.integer()),
     preconditionAssertions: S.Array(PreconditionAssertion)
       .annotateKey({
         description: "What was asserted about the frame's conditions on this occasion; unlisted ones are unaddressed.",
       })
-      .pipe(PowerExerciseEntity.pg.jsonb(), PowerExerciseEntity.pg.columnName("precondition_assertions")),
+      .pipe(pg.jsonb(), pg.columnName("precondition_assertions")),
     result: ExerciseResult.annotateKey({
       description: "Required record of what was determined about the attempt, on two axes plus a disposition.",
-    }).pipe(PowerExerciseEntity.pg.jsonb()),
+    }).pipe(pg.jsonb()),
     slotAssignments: S.Array(ActFrameSlotAssignment)
       .annotateKey({ description: "Parties recorded as filling the frame's slots on this occasion." })
-      .pipe(PowerExerciseEntity.pg.jsonb(), PowerExerciseEntity.pg.columnName("slot_assignments")),
-    ...PowerExerciseEntity.identityFields,
+      .pipe(pg.jsonb(), pg.columnName("slot_assignments")),
   },
   $I.annote("PowerExercise", {
     description: "One recorded attempt to exercise a power, kept on the record whether or not it took effect.",
-  }),
-  PowerExerciseEntity.entityExtras
+  })
 ) {}

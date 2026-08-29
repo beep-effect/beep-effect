@@ -321,6 +321,26 @@ describe("per-panel constraints", () => {
     expect(geometry.groups[1]?.box.width).toBe(63);
   });
 
+  it("clamps vertical splits on panel minHeights even when width minima dwarf the height", () => {
+    const constrained = constrainedTabs(
+      groupTwo,
+      constrainedPanel("height-floor", PanelConstraints.make({ minHeight: O.some(40) }))
+    );
+    // Title-strip width floors (386px each) far exceed the 99px-tall container.
+    // Summed vertically they would read as infeasible and abandon clamping,
+    // leaving the bottom group at the raw 19px; horizontally-scoped minima keep
+    // the vertical clamp honest and lift it to its 40px minHeight.
+    const geometry = project(split("vertical", 8_000, tabsOne, constrained), {
+      container: box,
+      minima: () => 386,
+      options: GeometryOptions.make({ gap: 3 }),
+    });
+    const [top, bottom] = geometry.groups;
+    expect(top?.box.height).toBe(56);
+    expect(bottom?.box.height).toBe(40);
+    expect((top?.box.height ?? 0) + 3 + (bottom?.box.height ?? 0)).toBe(box.height);
+  });
+
   it("lets minima win over conflicting maxima and stays total when all siblings are capped", () => {
     const first = constrainedTabs(
       groupOne,

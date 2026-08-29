@@ -3,9 +3,11 @@
   "exploration": {
     "slug": "typed-agent-skill-contracts",
     "title": "Typed Agent Skill Contracts",
-    "status": "graduated",
-    "stage": "graduate",
-    "openQuestions": [],
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [
+      "Does Amendment J graduate as a new skill-contract-gate-certificates goal, or amend an existing later-wave candidate while keeping the QA judge certificate settlement as its first slice?"
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/skill-contract-kernel"],
@@ -13,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-10",
-    "updated": "2026-08-24"
+    "updated": "2026-08-26"
   }
 }

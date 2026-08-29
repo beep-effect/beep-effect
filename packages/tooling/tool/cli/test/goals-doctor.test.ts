@@ -1,5 +1,10 @@
 import { lintCommand } from "@beep/repo-cli";
-import { classifyGoalDoctorFindings, GoalDoctorFinding, goalsCommand } from "@beep/repo-cli/test/Goals";
+import {
+  classifyGoalDoctorFindings,
+  GoalDoctorFinding,
+  goalsCommand,
+  PacketEventStoreLive,
+} from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -15,6 +20,7 @@ const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
   FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
   TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
 );

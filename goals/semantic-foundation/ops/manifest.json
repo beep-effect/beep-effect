@@ -1,15 +1,16 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "semantic-foundation",
     "title": "Semantic Foundation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-08",
-    "updated": "2026-07-14",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantic-foundation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "statusNote": "M1 and R1-R4 are complete. M2-M4 remain future product-gated capabilities outside this M1 outcome.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -79,12 +80,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

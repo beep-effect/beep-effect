@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import {
   ConfigProvider,
@@ -259,6 +260,41 @@ describe("C0 provider cache and language-model boundary", () => {
           })
         )
       )
+    ));
+
+  it("fails typed on an empty live generation and stores nothing", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const stored = yield* Ref.make(0);
+        const trackingCache = Layer.succeed(
+          ProviderCache,
+          ProviderCache.of({
+            lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeed(O.none())),
+            store: Effect.fn("ProviderCache.store")(() => Ref.update(stored, (count) => count + 1)),
+          })
+        );
+        const emptyModel = Layer.effect(
+          LanguageModel.LanguageModel,
+          LanguageModel.make({
+            generateText: () => Effect.succeed([Response.makePart("text", { text: Str.empty })]),
+            streamText: () => Stream.empty,
+          })
+        );
+        const caching = emptyModel.pipe(
+          CachingLanguageModelLive,
+          Layer.provide(ActiveModelIdentityLive(model)),
+          Layer.provide(trackingCache),
+          Layer.provide(BunCrypto.layer)
+        );
+        const failure = yield* provideScopedLayer(caching)(
+          LanguageModel.LanguageModel.pipe(
+            Effect.flatMap((languageModel) => languageModel.generateText({ prompt: "empty generation prompt" })),
+            Effect.flip
+          )
+        );
+        expect(String(failure)).toContain("empty generation");
+        expect(yield* Ref.get(stored)).toBe(0);
+      })
     ));
 
   it("lets a contender observe a healthy slow winner within the lock wait window", () =>

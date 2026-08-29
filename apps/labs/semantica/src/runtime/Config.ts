@@ -1,3 +1,4 @@
+import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Config, Context, Duration, Layer } from "effect";
@@ -29,6 +30,7 @@ export const RuntimeMode = LiteralKit(["live", "replay"]).pipe(
 class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
   {
     corpusRoot: S.OptionFromNullOr(S.NonEmptyString),
+    extractionTimeout: S.Duration,
     extractorModel: S.NonEmptyString,
     goldDirectory: S.NonEmptyString,
     goldGenerationTimeout: S.Duration,
@@ -51,8 +53,10 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
  * `SEMANTICA_CORPUS_ROOT` is optional so the shell can start in a typed degraded
  * mode. `SEMANTICA_PROVIDER_CACHE_DIR` defaults to the repository-local cache
  * directory, `SEMANTICA_XAI_MODEL` defaults to `grok-4.6`,
- * `SEMANTICA_GOLD_GENERATION_TIMEOUT` defaults to 45 minutes, and
- * `SEMANTICA_OFFLINE` selects explicit `replay` mode when true.
+ * `SEMANTICA_GOLD_GENERATION_TIMEOUT` defaults to 45 minutes,
+ * `SEMANTICA_EXTRACTION_TIMEOUT` bounds one hosted extraction generation and
+ * defaults to 15 minutes, and `SEMANTICA_OFFLINE` selects explicit `replay`
+ * mode when true.
  *
  * **Example** (Read runtime configuration)
  *
@@ -71,7 +75,8 @@ export class LabConfig extends Context.Service<LabConfig, LabConfigValue>()($I`L
 
 const labConfig = Config.all({
   corpusRoot: Config.option(Config.nonEmptyString("SEMANTICA_CORPUS_ROOT")),
-  extractorModel: Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault("claude-sonnet-4-5-20250929")),
+  extractionTimeout: Config.duration("SEMANTICA_EXTRACTION_TIMEOUT").pipe(Config.withDefault(Duration.minutes(15))),
+  extractorModel: Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL)),
   goldDirectory: Config.nonEmptyString("SEMANTICA_GOLD_DIR").pipe(Config.withDefault("fixtures/gold/v1")),
   goldGenerationTimeout: Config.duration("SEMANTICA_GOLD_GENERATION_TIMEOUT").pipe(
     Config.withDefault(Duration.minutes(45))

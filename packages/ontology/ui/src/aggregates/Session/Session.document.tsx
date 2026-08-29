@@ -14,7 +14,9 @@ import {
   ontologyPathAtom,
   ontologyRedoStackAtom,
   ontologySessionAtom,
+  ontologySessionIdForPath,
   ontologyViewModeAtom,
+  ontologyWorkbenchAutoOpenAtom,
   openOntologyDocumentAtom,
   openPathInputAtom,
   previewOntologyTurtleAtom,
@@ -24,7 +26,6 @@ import {
   toggleOntologyInferredViewAtom,
   undoOntologyChangeAtom,
 } from "@beep/ontology-client/aggregates/Session";
-import { SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath, OntologyFoldLevel, OntologyViewMode } from "@beep/ontology-use-cases/aggregates/Session";
 import { Badge } from "@beep/ui/components/badge";
 import { Button } from "@beep/ui/components/button";
@@ -33,7 +34,7 @@ import { NativeSelect, NativeSelectOption } from "@beep/ui/components/native-sel
 import { Switch } from "@beep/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/tooltip";
 import { O, Str } from "@beep/utils";
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
@@ -42,18 +43,29 @@ import type { JSX } from "react";
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
 
+const documentBadge = (sessionOpen: boolean, dirty: boolean) => {
+  if (!sessionOpen) {
+    return { label: "No document", variant: "outline" } as const;
+  }
+  return dirty
+    ? ({ label: "Dirty", variant: "destructive" } as const)
+    : ({ label: "Saved", variant: "secondary" } as const);
+};
+
 /**
- * Pure busy/disabled presentation state for the Document toolbar's async
- * actions, derived from the in-flight flags of the open/save/preview atoms
- * and whether a session is open.
+ * Pure presentation state for the Document toolbar: busy/disabled flags for
+ * its async actions, plus the three-state save badge — "No document" until a
+ * session is open, then "Dirty"/"Saved". Without the third state the toolbar
+ * claimed "Saved" while nothing was open at all.
  *
  * **Example** (Compute toolbar busy state)
  *
  * ```ts
  * import { documentToolbarState } from "@beep/ontology-ui/aggregates/Session"
  *
- * const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: false })
+ * const state = documentToolbarState({ opening: false, saving: false, previewing: false, sessionOpen: false, dirty: false })
  * console.log(state.saveDisabled) // true
+ * console.log(state.badge.label) // "No document"
  * ```
  *
  * @category components
@@ -64,6 +76,7 @@ export const documentToolbarState = (input: {
   readonly saving: boolean;
   readonly previewing: boolean;
   readonly sessionOpen: boolean;
+  readonly dirty: boolean;
 }) => ({
   openBusy: input.opening,
   openLabel: input.opening ? "Opening…" : "Open",
@@ -74,10 +87,9 @@ export const documentToolbarState = (input: {
   previewBusy: input.previewing,
   previewLabel: input.previewing ? "Previewing…" : "Preview",
   previewDisabled: !input.sessionOpen || input.previewing,
+  badge: documentBadge(input.sessionOpen, input.dirty),
   sessionHint: input.sessionOpen ? undefined : "Open a document first",
 });
-
-const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromUnknown(`ontology:${path}`);
 
 const isOntologyViewMode = S.is(OntologyViewMode);
 const isOntologyFoldLevel = S.is(OntologyFoldLevel);
@@ -100,6 +112,9 @@ const isOntologyFoldLevel = S.is(OntologyFoldLevel);
 // together so document actions and their error surface remain one region.
 // fallow-ignore-next-line complexity -- toolbar keeps document actions, view controls, dirty state, and errors in one region
 export function OntologyDocumentRegion(): JSX.Element {
+  // First-run bootstrap: opens the seeded tutorial once per app session when
+  // nothing is open. Mounted here because this region owns the open action.
+  useAtomMount(ontologyWorkbenchAutoOpenAtom);
   const pathInput = useAtomValue(openPathInputAtom);
   const documentError = useAtomValue(ontologyDocumentErrorAtom);
   const dirty = useAtomValue(ontologyDirtyAtom);
@@ -129,6 +144,7 @@ export function OntologyDocumentRegion(): JSX.Element {
     saving: AsyncResult.isWaiting(useAtomValue(saveOntologyDocumentAtom)),
     previewing: AsyncResult.isWaiting(useAtomValue(previewOntologyTurtleAtom)),
     sessionOpen: O.isSome(session),
+    dirty,
   });
 
   const runOpen = (): void => {
@@ -144,7 +160,7 @@ export function OntologyDocumentRegion(): JSX.Element {
         onSome: (decodedPath) =>
           openDocument(
             OpenOntologyDocumentInput.make({
-              sessionId: sessionIdFromPath(decodedPath),
+              sessionId: ontologySessionIdForPath(decodedPath),
               path: decodedPath,
             })
           ),
@@ -268,7 +284,7 @@ export function OntologyDocumentRegion(): JSX.Element {
           />
           <span className="text-xs">Inferred</span>
         </div>
-        <Badge variant={dirty ? "destructive" : "secondary"}>{dirty ? "Dirty" : "Saved"}</Badge>
+        <Badge variant={toolbar.badge.variant}>{toolbar.badge.label}</Badge>
       </div>
       {O.isSome(documentError) ? (
         <div

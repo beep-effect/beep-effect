@@ -34,6 +34,8 @@ import type { CapabilityCatalog, EditorProfile, Platform } from "./schemas.ts";
  * @since 0.0.0
  */
 export interface CapabilityComposerProps {
+  /** Accessible name for the editable surface; defaults to `"Editor"`. */
+  readonly ariaLabel?: string;
   readonly catalog?: CapabilityCatalog;
   readonly className?: string;
   readonly initialState?: SerializedEditorState;
@@ -84,6 +86,7 @@ export function CapabilityComposer({
   platform = detectPlatform(),
   placeholder,
   className,
+  ariaLabel = "Editor",
 }: CapabilityComposerProps): JSX.Element {
   const logEditorError = useAtomSet(logEditorErrorFn);
   return Result.match(resolveEditorProfile(catalog, profile), {
@@ -121,6 +124,7 @@ export function CapabilityComposer({
                 contentEditable={
                   <ContentEditable
                     placeholder={placeholder ?? "Start typing ..."}
+                    ariaLabel={ariaLabel}
                     {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })}
                   />
                 }

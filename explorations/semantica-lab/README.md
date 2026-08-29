@@ -2,13 +2,13 @@
 
 ## Status
 
-Stage: `graduate`
-Status: `graduated`
+Stage: `decompose`
+Status: `active`
 
-Source: [`ops/manifest.json`](./ops/manifest.json). `BRIEF.md` v1.1 and `MAP.md` v1.0 ratified
-2026-08-24; graduated the same day into
-[`goals/semantica-canary`](../../goals/semantica-canary/README.md) and
-[`goals/openai-driver`](../../goals/openai-driver/README.md).
+Source: [`ops/manifest.json`](./ops/manifest.json). The exploration graduated
+on 2026-08-24, then returned to `decompose` on 2026-08-26 when the C0
+Extraction probe breaker fired in
+[`semantica-canary`](../../goals/semantica-canary/README.md).
 
 ## Spark
 
@@ -19,14 +19,14 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-None. Both promised-now goals are scaffolded (`semantica-canary`, `openai-driver`); the
-`@beep/nlp` Handoff span fix ships as its own PR (M2) and the lab mint is `semantica-canary`'s
-first step on its own PR (M5). The five queued MAP candidates (`semantica-storage-inversion`,
-`semantica-reasoning-spike`, `semantica-atlas-sync`, OSS `reasoning-package`, OSS
-`evals-harness`) stay gated re-entry points; when a gate fires, reopen this exploration at
-`decompose` rather than scaffolding from an old row. Held with Benjamin, no date: upstream
-posting of `research/drafts/*` (O1/O2/T3) and the Rosetta ratification
-(`research/glossary-rosetta-draft.md`, rides with the async atlas batches per O3/M4).
+Does the evidence-quote candidate's zero-spend preview ground at least one
+relation on at least one frozen paper? The candidate is defined (DECISIONS
+E1-E8, 2026-08-27): a fold alignment tier in the shared aligner, a lab-local
+subject/object/evidence-quote relation contract, endpoints anchored inside
+the evidence span, and a target enumerating the frozen gold predicate
+vocabulary verbatim. The preview and the operator gold spot-check-and-repair
+pass both gate the live probe; the paused `semantica-canary` packet resumes
+only after both clear, and a second park is terminal (E8).
 
 ## Read This First
 
@@ -50,6 +50,29 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-27 (evidence-quote candidate defined): a zero-spend forensic pass
+  replayed the three breaker cache entries against regenerated canonical text
+  and hydrated the frozen gold relation labels. Findings: 10 of 16 retry
+  relation candidates differ from a true span only by whitespace or
+  end-of-line hyphenation; all 13 gold evidence quotes contain both endpoint
+  surfaces (even where gold's anchor offsets sit outside the quote); the
+  frozen predicate vocabulary is 8 exact strings, mostly document-metadata
+  with two content relations and one spelling variant, while the parked
+  candidate hunted a different content-relation set. A grill-with-docs
+  session plus review closeout locked E1-E8 in DECISIONS: fold alignment
+  tier in `@beep/langextract`, lab-local relation evidence contract,
+  endpoint anchoring inside the evidence span, frozen-vocabulary target,
+  preview and spot-check-and-repair gates before the probe, a versioned
+  candidate identity, and bounded re-entry (one candidate; a second park is
+  terminal).
+- 2026-08-26 (C0 Extraction probe breaker): the candidate and its one allowed
+  prompt-tightening retry failed the frozen relation-paper slate. Review
+  invalidated two earlier apparent live/replay passes because repeated endpoint
+  surfaces had been assigned their first occurrence; the final unique-aligner
+  run failed identically live and offline. Per S1, `semantica-canary` paused
+  before the full-W1 gate, Extraction moved to `park`, and this exploration
+  reopened at `decompose` to define a different evidence contract or leave the
+  family parked.
 - 2026-08-24 (PR #802 review closeout): openclaw caught two stale MAP spellings (fixed in
   93f6f0b48e); Codex's three P1s became review amendments R1–R3 — report/telemetry split, full-W1
   gate per stage, `G-projection` before rebuild identity — applied to BRIEF, MAP, shared-schema

@@ -29,6 +29,32 @@ const candidateFields = (candidate: ExtractionCandidate) => ({
   text: candidate.text,
 });
 
+interface UniqueMatchSearch {
+  readonly ambiguous: boolean;
+  readonly match: O.Option<MatchedText>;
+}
+
+const noMatch: UniqueMatchSearch = { ambiguous: false, match: O.none() };
+
+const findUniqueMatch = (
+  sourceText: string,
+  query: string,
+  matchAt: (start: number) => O.Option<MatchedText>
+): UniqueMatchSearch =>
+  O.match(
+    O.all({
+      first: Str.indexOf(query)(sourceText),
+      last: Str.lastIndexOf(query)(sourceText),
+    }),
+    {
+      onNone: () => noMatch,
+      onSome: ({ first, last }) =>
+        Num.Equivalence(first, last)
+          ? { ambiguous: false, match: matchAt(first) }
+          : { ambiguous: true, match: O.none() },
+    }
+  );
+
 /**
  * Convert a matched slice into its half-open source span.
  *
@@ -50,17 +76,18 @@ export const spanFromMatch = ([start, text]: MatchedText): Contract.Span =>
     start,
   });
 
-const findExact = (sourceText: string, query: string): O.Option<MatchedText> =>
-  pipe(
-    sourceText,
-    Str.indexOf(query),
-    O.map((start) => matchedText(start, query))
-  );
+const findExact = (sourceText: string, query: string): UniqueMatchSearch =>
+  findUniqueMatch(sourceText, query, (start) => O.some(matchedText(start, query)));
 
 interface NormalizedSourceOffsets {
   readonly ends: ReadonlyArray<number>;
   readonly starts: ReadonlyArray<number>;
   readonly text: string;
+}
+
+interface PreparedAlignmentSource {
+  readonly lesser: NormalizedSourceOffsets;
+  readonly source: AlignmentSource;
 }
 
 type NormalizedSegment = readonly [sourceStart: number, sourceEnd: number, text: string];
@@ -87,20 +114,23 @@ const lowerWithSourceOffsets = (sourceText: string): NormalizedSourceOffsets =>
     })
   );
 
-const findLesser = (sourceText: string, query: string): O.Option<MatchedText> => {
+const findLesser = (
+  normalizedSource: NormalizedSourceOffsets,
+  sourceText: string,
+  query: string
+): UniqueMatchSearch => {
   const normalizedQuery = lower(query);
   if (Str.isEmpty(normalizedQuery)) {
-    return O.none();
+    return noMatch;
   }
 
-  const normalizedSource = lowerWithSourceOffsets(sourceText);
-  return O.flatMap(Str.indexOf(normalizedQuery)(normalizedSource.text), (normalizedStart) =>
-    pipe(
+  return findUniqueMatch(normalizedSource.text, normalizedQuery, (normalizedStart) =>
+    O.map(
       O.all({
         end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, Str.length(normalizedQuery)))),
         start: A.get(normalizedSource.starts, normalizedStart),
       }),
-      O.map(({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText)))
+      ({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText))
     )
   );
 };
@@ -152,7 +182,11 @@ const wordsWithOffsets: (sourceText: string) => ReadonlyArray<readonly [number, 
 );
 
 const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): O.Option<MatchedText> => {
-  if (Str.length(sourceText) > MAX_FUZZY_SOURCE_LENGTH || Str.length(query) > MAX_FUZZY_QUERY_LENGTH) {
+  if (
+    Num.Equivalence(threshold, 1) ||
+    Str.length(sourceText) > MAX_FUZZY_SOURCE_LENGTH ||
+    Str.length(query) > MAX_FUZZY_QUERY_LENGTH
+  ) {
     return O.none();
   }
 
@@ -194,15 +228,70 @@ const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): 
   return O.map(best, ([start, text]) => matchedText(start, text));
 };
 
-const bestAlignedMatch = (source: AlignmentSource, query: string): O.Option<AlignedMatch> =>
-  pipe(
-    findExact(source.sourceText, query),
+const prepareAlignmentSource = (source: AlignmentSource): PreparedAlignmentSource => ({
+  lesser: lowerWithSourceOffsets(source.sourceText),
+  source,
+});
+
+const bestAlignedMatch = (prepared: PreparedAlignmentSource, query: string): O.Option<AlignedMatch> => {
+  const exact = findExact(prepared.source.sourceText, query);
+  if (exact.ambiguous) {
+    return O.none();
+  }
+
+  return pipe(
+    exact.match,
     O.map((match) => alignedMatch("match_exact", match)),
-    O.orElse(() => O.map(findLesser(source.sourceText, query), (match) => alignedMatch("match_lesser", match))),
-    O.orElse(() =>
-      O.map(findFuzzy(source.sourceText, query, source.fuzzyThreshold), (match) => alignedMatch("match_fuzzy", match))
-    )
+    O.orElse(() => {
+      const lesser = findLesser(prepared.lesser, prepared.source.sourceText, query);
+      if (lesser.ambiguous) {
+        return O.none();
+      }
+      return pipe(
+        lesser.match,
+        O.map((match) => alignedMatch("match_lesser", match)),
+        O.orElse(() =>
+          O.map(findFuzzy(prepared.source.sourceText, query, prepared.source.fuzzyThreshold), (match) =>
+            alignedMatch("match_fuzzy", match)
+          )
+        )
+      );
+    })
   );
+};
+
+const alignPreparedCandidate = (
+  prepared: PreparedAlignmentSource,
+  candidate: ExtractionCandidate
+): GroundedExtraction =>
+  O.match(bestAlignedMatch(prepared, candidate.text), {
+    onNone: () => GroundedExtraction.cases.unaligned.make(candidateFields(candidate)),
+    onSome: ([status, start, text]) =>
+      Match.value(status).pipe(
+        Match.when("match_exact", () =>
+          GroundedExtraction.cases.match_exact.make({
+            ...candidateFields(candidate),
+            matchedText: text,
+            span: spanFromMatch([start, text]),
+          })
+        ),
+        Match.when("match_lesser", () =>
+          GroundedExtraction.cases.match_lesser.make({
+            ...candidateFields(candidate),
+            matchedText: text,
+            span: spanFromMatch([start, text]),
+          })
+        ),
+        Match.when("match_fuzzy", () =>
+          GroundedExtraction.cases.match_fuzzy.make({
+            ...candidateFields(candidate),
+            matchedText: text,
+            span: spanFromMatch([start, text]),
+          })
+        ),
+        Match.exhaustive
+      ),
+  });
 
 /**
  * Align one extraction candidate against an alignment source.
@@ -233,34 +322,7 @@ export const alignCandidate: {
 } = dual(
   2,
   (candidate: ExtractionCandidate, source: AlignmentSource): GroundedExtraction =>
-    O.match(bestAlignedMatch(source, candidate.text), {
-      onNone: () => GroundedExtraction.cases.unaligned.make(candidateFields(candidate)),
-      onSome: ([status, start, text]) =>
-        Match.value(status).pipe(
-          Match.when("match_exact", () =>
-            GroundedExtraction.cases.match_exact.make({
-              ...candidateFields(candidate),
-              matchedText: text,
-              span: spanFromMatch([start, text]),
-            })
-          ),
-          Match.when("match_lesser", () =>
-            GroundedExtraction.cases.match_lesser.make({
-              ...candidateFields(candidate),
-              matchedText: text,
-              span: spanFromMatch([start, text]),
-            })
-          ),
-          Match.when("match_fuzzy", () =>
-            GroundedExtraction.cases.match_fuzzy.make({
-              ...candidateFields(candidate),
-              matchedText: text,
-              span: spanFromMatch([start, text]),
-            })
-          ),
-          Match.exhaustive
-        ),
-    })
+    alignPreparedCandidate(prepareAlignmentSource(source), candidate)
 );
 
 /**
@@ -293,5 +355,11 @@ export const alignCandidates: {
 } = dual(
   2,
   (candidates: ReadonlyArray<ExtractionCandidate>, source: AlignmentSource): ReadonlyArray<GroundedExtraction> =>
-    A.map(A.take(candidates, source.maxExtractions), alignCandidate(source))
+    A.match(A.take(candidates, source.maxExtractions), {
+      onEmpty: A.empty,
+      onNonEmpty: (cappedCandidates) => {
+        const prepared = prepareAlignmentSource(source);
+        return A.map(cappedCandidates, (candidate) => alignPreparedCandidate(prepared, candidate));
+      },
+    })
 );

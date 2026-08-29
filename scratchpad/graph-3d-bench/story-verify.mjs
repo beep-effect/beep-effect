@@ -1,6 +1,6 @@
 import { chromium } from "playwright";
 
-const storyId = process.argv[2] ?? "drivers-graph3d-knowledgegraph--knowledge-graph-2500";
+const storyId = process.argv[2] ?? "drivers-graph3d-knowledgegraph--perf-probe-2500";
 const shot = process.argv[3] ?? "/tmp/story.png";
 const url = `http://localhost:6006/iframe.html?id=${storyId}&viewMode=story`;
 

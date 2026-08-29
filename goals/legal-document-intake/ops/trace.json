@@ -1,0 +1,37 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 4,
+    "furthestStage": "P4",
+    "issues": [],
+    "packet": "legal-document-intake",
+    "resumeStage": "P4",
+    "revision": 1,
+    "root": "goals",
+    "status": "active",
+    "tip": {
+      "id": "4be4bb657c7a12b6184ca628059acc806d4bc2b9fd9974b0cc115937225ca0d0",
+      "seq": 1
+    }
+  },
+  "projectorVersion": 2,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "4be4bb657c7a12b6184ca628059acc806d4bc2b9fd9974b0cc115937225ca0d0",
+    "seq": 1
+  },
+  "timeline": [
+    {
+      "actor": "convention-migration",
+      "at": "2026-08-27T02:06:43.615Z",
+      "body": {
+        "ordinal": 4,
+        "stage": "P4",
+        "status": "active",
+        "type": "packet-created"
+      },
+      "id": "4be4bb657c7a12b6184ca628059acc806d4bc2b9fd9974b0cc115937225ca0d0",
+      "seq": 1
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/EvidenceVerification/EvidenceVerification.model");
-const EvidenceVerificationEntity = ProductEntity.make(Epistemic.EvidenceVerificationId);
+const pg = ProductEntity.pg;
 
 /**
  * Append-only link from an existing evidence row to one exact verified source
@@ -36,24 +36,22 @@ const EvidenceVerificationEntity = ProductEntity.make(Epistemic.EvidenceVerifica
  * @category entities
  * @since 0.0.0
  */
-export class EvidenceVerification extends EvidenceVerificationEntity.Entity<EvidenceVerification>(
-  EvidenceVerificationEntity.tableName
+export class EvidenceVerification extends ProductEntity.Entity<EvidenceVerification>()(
+  Epistemic.EvidenceVerificationId
 )(
   {
     evidenceId: EpistemicIdentity.EvidenceId.annotateKey({
       description: "Existing epistemic evidence row whose source anchor was verified.",
-    }).pipe(EvidenceVerificationEntity.pg.integer(), EvidenceVerificationEntity.pg.columnName("evidence_id")),
+    }).pipe(pg.integer(), pg.columnName("evidence_id")),
     manifestationKey: EvidenceVerificationManifestationKey.annotateKey({
       description: "Digest sealing the evidence id and complete verified anchor payload.",
-    }).pipe(EvidenceVerificationEntity.pg.text(), EvidenceVerificationEntity.pg.columnName("manifestation_key")),
+    }).pipe(pg.text(), pg.columnName("manifestation_key")),
     verifiedAnchor: TextAnchorVerificationReceipt.annotateKey({
       description:
         "Persisted anchor receipt; canonical source text must be resolved and re-verified before runtime use.",
-    }).pipe(EvidenceVerificationEntity.pg.jsonb(), EvidenceVerificationEntity.pg.columnName("verified_anchor")),
-    ...EvidenceVerificationEntity.identityFields,
+    }).pipe(pg.jsonb(), pg.columnName("verified_anchor")),
   },
   $I.annote("EvidenceVerification", {
     description: "Append-only evidence sidecar binding one evidence row to an exact verified text anchor.",
-  }),
-  EvidenceVerificationEntity.entityExtras
+  })
 ) {}

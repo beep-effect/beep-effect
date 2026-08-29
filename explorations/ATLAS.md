@@ -54,12 +54,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
   closed `completed-retained` through its own guarded writer (rung-4
   hardening #848), which satisfied the candidate-2/3 gate and fired the
-  ratified reopen convention. Candidates 2 and 3 are therefore eligible for
-  this decompose pass — the Next Open Question weighs them against the fleet
-  convention-migration campaign; candidate 4 still gates on observed
-  self-hosting friction, and React v2 stays on KSA static-v1 daily-use
-  evidence. The Session B rulings (queued amendments, fleet-campaign charter)
-  land as their own docs PR.
+  ratified reopen convention. Session B chartered
+  [`goals/packet-convention-migration`](../goals/packet-convention-migration/README.md)
+  as candidate 6 and first reopener. H was ratified without generated
+  `GOAL.md`; I was rejected for a named-consumer-gated schema.org successor;
+  J moved to `@beep/skill-contract` and is routed through the existing
+  `typed-agent-skill-contracts` exploration. Candidate 6 begins with the fork
+  applier, while candidates 2–4 and React v2 retain their stated gates
+  (D17–D26).
+- [`semantica-lab`](./semantica-lab/README.md) — reopened at `decompose`
+  2026-08-26 after the C0 Extraction probe breaker fired. The candidate and its
+  one retry failed the frozen relation-paper slate; review invalidated two
+  earlier apparent passes that relied on ambiguous first-occurrence endpoint
+  anchors. [`semantica-canary`](../goals/semantica-canary/README.md) is paused,
+  Extraction is parked, and the next pass decides whether a different evidence
+  contract can justify re-entry. Input remains pending its own canary.
 - [`full-document-editor`](./full-document-editor/README.md) — graduated
   2026-08-24 with its two promised-now packets:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md)
@@ -251,19 +260,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   rehearsal). Both deliver into the proposed `lejeune-bolt-workbench` lab (under
   `apps/labs/`). The M365 pilot and TrustGraph donor remain gated re-entries; a fired gate
   reopens the exploration at `decompose`. Build starts on Benjamin's signal.
-- [`semantica-lab`](./semantica-lab/README.md) — graduated 2026-08-24 into
-  [`goals/semantica-canary`](../goals/semantica-canary/README.md) (the staged
-  Semantica-port canary C0→C1→C2 in the future apps/labs/semantica Tauri lab,
-  headless-first, probe-denominated stop rule) and
-  [`goals/openai-driver`](../goals/openai-driver/README.md) (thin `@beep/openai`
-  driver over `@effect/ai-openai`, C1's embeddings Layer). BRIEF v1.1, MAP v1.0
-  (M1–M6: doc-text-first PDF, `CanonicalText` composed from
-  `ResolvedSourceText` + `TextAnchor`, Handoff span fix as PR A, own driver
-  packet, atlas per O3, three-PR delivery, ROADMAP lab-canary clause). Queued
-  re-entries: `semantica-storage-inversion` and `semantica-reasoning-spike`
-  (behind C2), `semantica-atlas-sync` (semantica 0.6.7+ or atlas-edit need),
-  OSS gates `reasoning-package` and `evals-harness`. A fired gate reopens the
-  packet at `decompose`. Notion page `@beep/semantica` mirrors facts.
 - [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — graduated
   2026-08-24 with
   [`goals/oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)
@@ -275,10 +271,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated 2026-08-24 (spine 2026-08-13) into
   [`skill-contract-kernel`](../goals/skill-contract-kernel/README.md):
   `@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
-  SKILL.md render-as-encode projection — sole promised-now goal, still
-  unexecuted. Waves 2–6 (KG ingestion, ops ladder, browser leases, memory
-  routing, fleet protocols) remain reopen-at-`decompose` MAP points; the MAP's
-  protocol-as-value coordination section governs waves 2/3/4/6 seams.
+  SKILL.md render-as-encode projection. Reopened at `decompose` 2026-08-26 by
+  packet-system-redesign D22/D24 to shape Amendment J's five-outcome gate
+  certificate/reach/apply-plan upgrade. Exact placement (new candidate 7 or an
+  explicit later-wave amendment) is open; the completed kernel goal stays
+  closed. Waves 2–6 retain their existing gates and protocol-as-value seams.
 - [`ci-hang-observability`](./ci-hang-observability/README.md) — graduated
   2026-08-23 into
   [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md): per-step
