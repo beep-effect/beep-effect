@@ -71,13 +71,8 @@
     ],
     "defaultMode": "default"
   },
-  "enabledMcpjsonServers": [
-    "basic-memory",
-    "codegraph",
-    "phoenix-docs",
-    "phoenix"
-  ],
-  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
+  "enabledMcpjsonServers": ["phoenix-docs", "phoenix"],
+  "disabledMcpjsonServers": ["chrome-devtools", "serena", "webstorm"],
   "hooks": {
     "PreToolUse": [
       {
