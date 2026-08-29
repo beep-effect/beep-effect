@@ -355,3 +355,29 @@ selection axis, and ontology graph capability is required.
 ---
 
 _Future decisions should be appended above this line in the same format._
+
+## 2026-08-29: basic-memory + codegraph Removed Entirely (File Memory Is the Memory Layer)
+
+**Context:** A multi-day workstation investigation (Codex census 2026-08-29,
+seven research lanes) established that per-session stdio MCP frontends for
+basic-memory and codegraph were the dominant process-amplification source on
+the operator workstation: 32 + 32 live-owned frontends (~8.1 GiB PSS) under a
+single ChatGPT-embedded Codex app-server, respawned roughly once per
+conversation from the tracked repository `.mcp.json` with no reaping path.
+The 2026-08-27 global config nuke could not stop it because the tracked
+`.mcp.json`, project `enabledMcpjsonServers`, a global Codex prompt-hook, and
+Cursor-compat import in Grok all kept the definitions alive.
+
+**Decision (operator, 2026-08-29):** basic-memory and codegraph are removed
+entirely — server definitions, bootstrap script, doctrine references, skills,
+stores (archived first), per-checkout `.codegraph/` indexes, and binaries.
+**File memory (each agent's `CLAUDE.md` / `MEMORY.md` plus repo docs) is the
+memory layer.** No successor Layer-2 memory system is designated; any future
+one starts as a fresh exploration with its own decision here first.
+
+**Mechanics:** `scripts/setup-agent-memory.sh` is retired; its still-required
+Effect reference-checkout half survives as `scripts/setup-effect-ref.sh`.
+The `.codegraph/` gitignore entry is retained defensively while stale
+machine-local indexes exist. This supersedes the 2026-08-06 role assignment
+above and the operational detail in `07-shared-memory-adoption.md`, which is
+retained as history, not instruction.
