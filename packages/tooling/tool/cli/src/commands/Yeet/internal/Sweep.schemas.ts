@@ -55,7 +55,8 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Sweep.schemas");
  * not checked out anywhere); `delete-local-branch` and `delete-remote-branch`
  * retire the merged feature branch; `lockfile-install` runs `bun install` when
  * the `main` update moved `bun.lock`; `end-state` records where the sweep left
- * the clone.
+ * the clone; `tmpfs-worktrees` checks the current repository's temporary
+ * worktrees through the shared tmpfs idleness policy.
  *
  * **Example** (List the sweep step ids)
  *
@@ -75,6 +76,7 @@ export const SweepStepId = LiteralKit([
   "delete-remote-branch",
   "lockfile-install",
   "end-state",
+  "tmpfs-worktrees",
 ]).pipe(
   $I.annoteSchema("SweepStepId", {
     title: "Sweep Step Id",
