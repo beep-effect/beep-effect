@@ -1,0 +1,227 @@
+diff --git a/packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts b/packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts
+index b7961c5d56..3c4bdd6c29 100644
+--- a/packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts
++++ b/packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts
+@@ -85,7 +85,7 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
+   {},
+   $I.annote("Success", {
+     description: "Successful GovInfo search response body.",
+-    status: HttpStatus2XX.From.Enum.Ok,
++    status: HttpStatus2XX.Map.Ok,
+   })
+ ) {}
+ 
+@@ -111,7 +111,7 @@ export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`Fa
+   "FailureBadRequest",
+   {
+     cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+-    status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
++    status: S.tag(HttpStatus4XX.Map.BadRequest),
+   },
+   $I.annote("FailureBadRequest", {
+     description: "Bad-request failure returned when GovInfo rejects the submitted search payload.",
+@@ -140,7 +140,7 @@ export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`Failur
+   "FailureNotFound",
+   {
+     cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+-    status: S.tag(HttpStatus4XX.From.Enum.NotFound),
++    status: S.tag(HttpStatus4XX.Map.NotFound),
+   },
+   $I.annote("FailureNotFound", {
+     description: "Not-found failure returned when the GovInfo search route or resource is unavailable.",
+@@ -171,7 +171,7 @@ export class FailureInternalServerError extends TaggedErrorClass<FailureInternal
+   "FailureInternalServerError",
+   {
+     cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
+-    status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
++    status: S.tag(HttpStatus5XX.Map.InternalServerError),
+   },
+   $I.annote("FailureInternalServerError", {
+     description: "Internal-server-error failure returned when GovInfo reports an unexpected server-side error.",
+diff --git a/packages/drivers/m365/src/M365.errors.ts b/packages/drivers/m365/src/M365.errors.ts
+index e530b7e8b2..a1407b7e05 100644
+--- a/packages/drivers/m365/src/M365.errors.ts
++++ b/packages/drivers/m365/src/M365.errors.ts
+@@ -120,7 +120,7 @@ class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorO
+ const decodeRetryAfterSecondsOption = S.decodeUnknownOption(NonNegativeInt);
+ const makeHttpStatus: (status: number) => M365HttpStatus = flow(
+   S.decodeUnknownOption(M365HttpStatus),
+-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
++  O.getOrElse(() => HttpStatus.Map.InternalServerError)
+ );
+ const sameM365ErrorReason = S.toEquivalence(M365ErrorReason);
+ const sameOptionalErrorText = S.toEquivalence(S.Option(S.String));
+diff --git a/packages/drivers/runpod/scripts/generate.ts b/packages/drivers/runpod/scripts/generate.ts
+index 1d0eec177a..852cbe6b51 100644
+--- a/packages/drivers/runpod/scripts/generate.ts
++++ b/packages/drivers/runpod/scripts/generate.ts
+@@ -226,7 +226,7 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
+         continue;
+       }
+ 
+-      const method = RunpodGeneratorHttpMethod.Enum[openApiMethod];
++      const method = RunpodGeneratorHttpMethod.Map[openApiMethod];
+       const baseMethodName = lowerFirst(operation.operationId);
+       const disambiguated = disambiguateMethodName({
+         baseMethodName,
+diff --git a/packages/drivers/venice-ai/src/VeniceAI.service.ts b/packages/drivers/venice-ai/src/VeniceAI.service.ts
+index 6058d38822..45f80ac148 100644
+--- a/packages/drivers/venice-ai/src/VeniceAI.service.ts
++++ b/packages/drivers/venice-ai/src/VeniceAI.service.ts
+@@ -59,12 +59,12 @@ export const VENICE_CHAT_MODEL = "venice-uncensored-1-2";
+ const normalizeBaseUrl = Str.replace(/\/+$/, "");
+ const makeVeniceAIBaseUrl = flow(normalizeBaseUrl, URLStr.make);
+ const defaultVeniceAIBaseUrl = makeVeniceAIBaseUrl(VENICE_API_URL);
+-const VeniceAIHttpStatusArbitraryValues = R.values(HttpStatus.From.Enum) as [HttpStatus, ...Array<HttpStatus>];
++const VeniceAIHttpStatusArbitraryValues = R.values(HttpStatus.Map) as [HttpStatus, ...Array<HttpStatus>];
+ const isVeniceAIHttpStatus = (status: number): status is HttpStatus =>
+   pipe(VeniceAIHttpStatusArbitraryValues as ReadonlyArray<number>, A.contains(status));
+ const makeHttpStatus: (status: number) => HttpStatus = flow(
+   O.liftPredicate(isVeniceAIHttpStatus),
+-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
++  O.getOrElse(() => HttpStatus.Map.InternalServerError)
+ );
+ const VeniceAIHttpStatus = S.Literals(VeniceAIHttpStatusArbitraryValues).pipe(
+   $I.annoteSchema("VeniceAIHttpStatus", {
+diff --git a/packages/foundation/modeling/lexical/src/Lexical.codec.ts b/packages/foundation/modeling/lexical/src/Lexical.codec.ts
+index 5e91cad4d0..a2ca78261f 100644
+--- a/packages/foundation/modeling/lexical/src/Lexical.codec.ts
++++ b/packages/foundation/modeling/lexical/src/Lexical.codec.ts
+@@ -116,8 +116,7 @@ const noTableCellHeader = 0 satisfies TableCellHeaderState;
+ const rowTableCellHeader = 1 satisfies TableCellHeaderState;
+ 
+ // Reversible map between the Lexical heading `tag` ("h1".."h6") and the Md
+-// `Heading.level` (1..6): `From.Enum` resolves a tag to its level, `To.Enum`
+-// resolves a level (via its `number{n}` helper key) back to its tag.
++// `Heading.level` (1..6).
+ const HeadingLevelTag = MappedLiteralKit([
+   ["h1", 1],
+   ["h2", 2],
+@@ -306,7 +305,7 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
+   Match.tagsExhaustive({
+     heading: (node) =>
+       Effect.flatMap(inlinesToLexical(node.children, emptyTextFormat), (children) =>
+-        HeadingNode.makeEffect({ tag: HeadingLevelTag.To.Enum[`number${node.level}`], children })
++        HeadingNode.makeEffect({ tag: HeadingLevelTag.ReverseMap[`number${node.level}`], children })
+       ),
+     p: (node) =>
+       O.match(paragraphArtifactRef(node), {
+@@ -561,7 +560,7 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
+   root: (node) => A.flatMap(node.children, nodeToBlocks),
+   paragraph: (node) => [Md.P.make({ children: textRunToInlines(node.children) })],
+   heading: (node) => [
+-    Md.Heading.make({ level: HeadingLevelTag.From.Enum[node.tag], children: textRunToInlines(node.children) }),
++    Md.Heading.make({ level: HeadingLevelTag.Map[node.tag], children: textRunToInlines(node.children) }),
+   ],
+   quote: (node) => [Md.BlockQuote.make({ children: [Md.P.make({ children: textRunToInlines(node.children) })] })],
+   code: (node) => [Md.Pre.make({ value: A.join(A.map(node.children, codeChildText), ""), language: node.language })],
+diff --git a/packages/foundation/modeling/lexical/src/Lexical.model.ts b/packages/foundation/modeling/lexical/src/Lexical.model.ts
+index 5518f197bf..42a7fa11e4 100644
+--- a/packages/foundation/modeling/lexical/src/Lexical.model.ts
++++ b/packages/foundation/modeling/lexical/src/Lexical.model.ts
+@@ -114,7 +114,7 @@ const TextFormatBitMapping = MappedLiteralKit([
+  * @category models
+  * @since 0.0.0
+  */
+-export const TextFormatBits = TextFormatBitMapping.From.Enum;
++export const TextFormatBits = TextFormatBitMapping.Map;
+ 
+ /**
+  * Reusable literal domain for individual Lexical text format bits.
+@@ -207,7 +207,7 @@ const TextDetailBitMapping = MappedLiteralKit([
+  * @category models
+  * @since 0.0.0
+  */
+-export const TextDetailBits = TextDetailBitMapping.From.Enum;
++export const TextDetailBits = TextDetailBitMapping.Map;
+ 
+ /**
+  * Reusable literal domain for individual Lexical text detail bits.
+diff --git a/packages/foundation/modeling/schema/dtslint/MappedLiteralKit.tst.ts b/packages/foundation/modeling/schema/dtslint/MappedLiteralKit.tst.ts
+index 8d2d386d64..7c552b6b60 100644
+--- a/packages/foundation/modeling/schema/dtslint/MappedLiteralKit.tst.ts
++++ b/packages/foundation/modeling/schema/dtslint/MappedLiteralKit.tst.ts
+@@ -7,21 +7,28 @@ describe("MappedLiteralKit", () => {
+     ["WARNING", "01000"],
+   ] as const);
+ 
+-  it("maps From enum members to their To literals", () => {
+-    expect(SqlState.From.Enum.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
+-    expect(SqlState.From.Enum.WARNING).type.toBe<"01000">();
++  it("keeps From enum members on the From literal side", () => {
++    expect(SqlState.From.Enum.SUCCESSFUL_COMPLETION).type.toBe<"SUCCESSFUL_COMPLETION">();
++    expect(SqlState.From.Enum.WARNING).type.toBe<"WARNING">();
+   });
+ 
+-  it("maps To enum members back to From literals", () => {
+-    expect(SqlState.To.Enum["00000"]).type.toBe<"SUCCESSFUL_COMPLETION">();
+-    expect(SqlState.To.Enum["01000"]).type.toBe<"WARNING">();
++  it("keeps To enum members on the To literal side", () => {
++    expect(SqlState.To.Enum["00000"]).type.toBe<"00000">();
++    expect(SqlState.To.Enum["01000"]).type.toBe<"01000">();
+   });
+ 
+-  it("aliases top-level helper surface to From", () => {
+-    expect(SqlState.Enum.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
+-    expect<typeof SqlState.Options>().type.toBe<readonly ["SUCCESSFUL_COMPLETION", "WARNING"]>();
+-    expect(SqlState.is.SUCCESSFUL_COMPLETION).type.toBe<(i: unknown) => i is "SUCCESSFUL_COMPLETION">();
+-    expect(SqlState.$match).type.toBe<typeof SqlState.From.$match>();
++  it("maps directional lookup members explicitly", () => {
++    expect(SqlState.Map.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
++    expect(SqlState.Map.WARNING).type.toBe<"01000">();
++    expect(SqlState.ReverseMap["00000"]).type.toBe<"SUCCESSFUL_COMPLETION">();
++    expect(SqlState.ReverseMap["01000"]).type.toBe<"WARNING">();
++  });
++
++  it("aliases top-level helper surface to To", () => {
++    expect(SqlState.Enum["00000"]).type.toBe<"00000">();
++    expect<typeof SqlState.Options>().type.toBe<readonly ["00000", "01000"]>();
++    expect(SqlState.is["00000"]).type.toBe<(i: unknown) => i is "00000">();
++    expect(SqlState.$match).type.toBe<typeof SqlState.To.$match>();
+   });
+ 
+   it("preserves helper types after annotation", () => {
+@@ -29,10 +36,13 @@ describe("MappedLiteralKit", () => {
+       title: "Annotated SQL state",
+     });
+ 
+-    expect(AnnotatedSqlState.Enum.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
+-    expect<typeof AnnotatedSqlState.Options>().type.toBe<readonly ["SUCCESSFUL_COMPLETION", "WARNING"]>();
++    expect(AnnotatedSqlState.Enum["00000"]).type.toBe<"00000">();
++    expect<typeof AnnotatedSqlState.Options>().type.toBe<readonly ["00000", "01000"]>();
+     expect(AnnotatedSqlState.$match).type.toBe<typeof SqlState.$match>();
+-    expect(AnnotatedSqlState.To.Enum["00000"]).type.toBe<"SUCCESSFUL_COMPLETION">();
++    expect(AnnotatedSqlState.From.Enum.SUCCESSFUL_COMPLETION).type.toBe<"SUCCESSFUL_COMPLETION">();
++    expect(AnnotatedSqlState.To.Enum["00000"]).type.toBe<"00000">();
++    expect(AnnotatedSqlState.Map.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
++    expect(AnnotatedSqlState.ReverseMap["00000"]).type.toBe<"SUCCESSFUL_COMPLETION">();
+   });
+ 
+   it("preserves directional options and guards", () => {
+@@ -45,7 +55,10 @@ describe("MappedLiteralKit", () => {
+     expect<typeof SqlState.Type>().type.toBe<"00000" | "01000">();
+     expect<typeof SqlState.Encoded>().type.toBe<"SUCCESSFUL_COMPLETION" | "WARNING">();
+ 
+-    expect<typeof SqlState.To.Type>().type.toBe<"SUCCESSFUL_COMPLETION" | "WARNING">();
++    expect<typeof SqlState.From.Type>().type.toBe<"SUCCESSFUL_COMPLETION" | "WARNING">();
++    expect<typeof SqlState.From.Encoded>().type.toBe<"SUCCESSFUL_COMPLETION" | "WARNING">();
++
++    expect<typeof SqlState.To.Type>().type.toBe<"00000" | "01000">();
+     expect<typeof SqlState.To.Encoded>().type.toBe<"00000" | "01000">();
+   });
+ 
+@@ -59,9 +72,11 @@ describe("MappedLiteralKit", () => {
+ 
+     const SqlStateFromPairs = MappedLiteralKit(pairArray);
+ 
+-    expect(SqlStateFromPairs.Enum.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
+-    expect(SqlStateFromPairs.From.Enum.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
+-    expect(SqlStateFromPairs.To.Enum["00000"]).type.toBe<"SUCCESSFUL_COMPLETION">();
++    expect(SqlStateFromPairs.Enum["00000"]).type.toBe<"00000">();
++    expect(SqlStateFromPairs.From.Enum.SUCCESSFUL_COMPLETION).type.toBe<"SUCCESSFUL_COMPLETION">();
++    expect(SqlStateFromPairs.To.Enum["00000"]).type.toBe<"00000">();
++    expect(SqlStateFromPairs.Map.SUCCESSFUL_COMPLETION).type.toBe<"00000">();
++    expect(SqlStateFromPairs.ReverseMap["00000"]).type.toBe<"SUCCESSFUL_COMPLETION">();
+   });
+ });
+ 
