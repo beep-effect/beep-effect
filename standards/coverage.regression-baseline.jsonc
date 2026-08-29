@@ -4,8 +4,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-29T18:52:33.433Z",
-  "git_sha": "fc984a2a0279915d9093fceebacb251202d20cbc",
+  "generated_at": "2026-08-29T21:28:35.866Z",
+  "git_sha": "838a4a17710e6e7ca19ee1e825da6dc9b207d94c",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {

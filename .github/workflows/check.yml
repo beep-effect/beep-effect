@@ -48,7 +48,7 @@ jobs:
     name: Heavy
     permissions:
       contents: read
-    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    uses: ./.github/workflows/heavy.yml
     secrets: inherit
 
   verify:
