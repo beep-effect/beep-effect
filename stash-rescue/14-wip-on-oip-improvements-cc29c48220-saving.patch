@@ -1,0 +1,16 @@
+diff --git a/.mcp.json b/.mcp.json
+index cd65e85160..72d8d2e167 100644
+--- a/.mcp.json
++++ b/.mcp.json
+@@ -3,6 +3,11 @@
+     "graphiti-memory": {
+       "type": "http",
+       "url": "http://localhost:8123/mcp"
++    },
++    "serena": {
++      "type": "stdio",
++      "command": "serena",
++      "args": ["start-mcp-server", "--context=jb-copilot-plugin"]
+     }
+   }
+ }
