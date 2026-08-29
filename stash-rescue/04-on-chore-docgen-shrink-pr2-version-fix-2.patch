@@ -1,0 +1,188 @@
+diff --git a/packages/tooling/tool/docgen/src/CLI.ts b/packages/tooling/tool/docgen/src/CLI.ts
+index fa6ce7e9ab..c24a12f4c4 100644
+--- a/packages/tooling/tool/docgen/src/CLI.ts
++++ b/packages/tooling/tool/docgen/src/CLI.ts
+@@ -16,7 +16,6 @@ import { Command, Flag } from "effect/unstable/cli";
+ import * as Configuration from "./Configuration.ts";
+ import * as Core from "./Core.ts";
+ import * as Domain from "./Domain.ts";
+-import * as InternalVersion from "./internal/version.ts";
+ 
+ const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
+ 
+@@ -213,13 +212,13 @@ export const docgenCommand = Command.make(
+  * import { Effect } from "effect"
+  * import { cli } from "@beep/repo-docgen/CLI"
+  *
+- * const helpProgram = cli(["--help"]).pipe(Effect.result)
++ * const helpProgram = cli("0.0.2")(["--help"]).pipe(Effect.result)
+  * console.log(helpProgram)
+  * ```
+  *
++ * @param version - The package version displayed by the command.
++ * @returns A command runner accepting an explicit argument array.
+  * @category cli-commands
+  * @since 0.0.0
+  */
+-export const cli = Command.runWith(docgenCommand, {
+-  version: `v${InternalVersion.moduleVersion}`,
+-});
++export const cli = (version: string) => Command.runWith(docgenCommand, { version: `v${version}` });
+diff --git a/packages/tooling/tool/docgen/src/ProofManifest.ts b/packages/tooling/tool/docgen/src/ProofManifest.ts
+index 0935de8dff..295ca1c1c1 100644
+--- a/packages/tooling/tool/docgen/src/ProofManifest.ts
++++ b/packages/tooling/tool/docgen/src/ProofManifest.ts
+@@ -383,13 +383,13 @@ const collectFileDigests = Effect.fn("DocgenProofManifest.collectFileDigests")(f
+   return sortedFileDigests(digests);
+ });
+ 
+-const fingerprintForFiles = (options: {
++const fingerprintForFiles = Effect.fn("DocgenProofManifest.fingerprintForFiles")(function* (options: {
+   readonly inputs: ReadonlyArray<DocgenProofManifestFile>;
+   readonly outputs: ReadonlyArray<DocgenProofManifestFile>;
+-}): DocgenProofManifestFingerprint => {
++}) {
+   const inputSha256 = sha256Json(options.inputs);
+   const outputSha256 = sha256Json(options.outputs);
+-  const toolVersion = InternalVersion.moduleVersion;
++  const toolVersion = yield* InternalVersion.readModuleVersion();
+ 
+   return DocgenProofManifestFingerprint.make({
+     sha256: sha256Json({ inputSha256, outputSha256, toolVersion }),
+@@ -399,18 +399,19 @@ const fingerprintForFiles = (options: {
+     outputFileCount: NonNegativeInt.make(options.outputs.length),
+     toolVersion,
+   });
+-};
++});
+ 
+ const computeDocgenProofPayload = Effect.fn("DocgenProofManifest.computeDocgenProofPayload")(function* (
+   packagePath: string
+ ) {
+   const inputs = yield* collectFileDigests(packagePath, DOCGEN_PROOF_INPUT_GLOBS);
+   const outputs = yield* collectFileDigests(packagePath, DOCGEN_PROOF_OUTPUT_GLOBS);
++  const fingerprint = yield* fingerprintForFiles({ inputs, outputs });
+ 
+   return {
+     inputs,
+     outputs,
+-    fingerprint: fingerprintForFiles({ inputs, outputs }),
++    fingerprint,
+   } as const;
+ });
+ 
+diff --git a/packages/tooling/tool/docgen/src/bin.ts b/packages/tooling/tool/docgen/src/bin.ts
+index de13daea4b..d1912a26a5 100755
+--- a/packages/tooling/tool/docgen/src/bin.ts
++++ b/packages/tooling/tool/docgen/src/bin.ts
+@@ -21,9 +21,8 @@ const program = Effect.scoped(
+   Layer.build(DerivedLayers).pipe(
+     Effect.flatMap(
+       Effect.fnUntraced(function* (context) {
+-        return yield* Command.run(docgenCommand, { version: `v${InternalVersion.moduleVersion}` }).pipe(
+-          Effect.provide(context)
+-        );
++        const version = yield* InternalVersion.readModuleVersion().pipe(Effect.provide(context));
++        return yield* Command.run(docgenCommand, { version: `v${version}` }).pipe(Effect.provide(context));
+       })
+     )
+   )
+diff --git a/packages/tooling/tool/docgen/src/internal/version.ts b/packages/tooling/tool/docgen/src/internal/version.ts
+index e321d87495..31c126310c 100644
+--- a/packages/tooling/tool/docgen/src/internal/version.ts
++++ b/packages/tooling/tool/docgen/src/internal/version.ts
+@@ -4,21 +4,70 @@
+  * @packageDocumentation
+  * @since 0.0.0
+  */
+-import packageJson from "../../package.json" with { type: "json" };
++import { $RepoDocgenId } from "@beep/identity/packages";
++import { Effect, FileSystem, Path } from "effect";
++import * as S from "effect/Schema";
++import * as Domain from "../Domain.ts";
++
++const $I = $RepoDocgenId.create("InternalVersion");
++
++const PackageManifestVersion = S.Struct({ version: S.String }).pipe(
++  $I.annoteSchema("PackageManifestVersion", {
++    description: "Required package manifest fields used to identify the running docgen version.",
++  })
++);
++
++const decodePackageManifestVersion = S.decodeUnknownEffect(S.fromJsonString(PackageManifestVersion));
+ 
+ /**
+- * Runtime package version shown in the CLI banner.
++ * Reads the runtime package version shown in the CLI banner and proof manifests.
+  *
+  * **Example** (Log package version)
+  *
+  * ```ts
+- * import { moduleVersion } from "../../src/internal/version.ts"
++ * import { BunServices } from "@effect/platform-bun"
++ * import { Effect } from "effect"
++ * import { readModuleVersion } from "../../src/internal/version.ts"
+  *
+- * console.log(moduleVersion)
++ * const version = await Effect.runPromise(
++ *   readModuleVersion().pipe(Effect.provide(BunServices.layer))
++ * )
++ * console.log(version)
+  * ```
+  *
+  * @internal
+  * @category configuration
+  * @since 0.0.0
+  */
+-export const moduleVersion = packageJson.version;
++export const readModuleVersion = Effect.fn("InternalVersion.readModuleVersion")(function* (): Effect.fn.Return<
++  string,
++  Domain.DocgenError,
++  FileSystem.FileSystem | Path.Path
++> {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const manifestUrl = new URL("../../package.json", import.meta.url);
++  const manifestPath = yield* path.fromFileUrl(manifestUrl).pipe(
++    Effect.mapError((cause) =>
++      Domain.DocgenError.make({
++        message: `[InternalVersion.readModuleVersion] Failed to resolve manifest path '${manifestUrl.pathname}'\n${String(cause)}`,
++      })
++    )
++  );
++  const manifestJson = yield* fs.readFileString(manifestPath).pipe(
++    Effect.mapError((cause) =>
++      Domain.DocgenError.make({
++        message: `[InternalVersion.readModuleVersion] Failed to read manifest '${manifestPath}'\n${String(cause)}`,
++      })
++    )
++  );
++  const manifest = yield* decodePackageManifestVersion(manifestJson).pipe(
++    Effect.mapError((cause) =>
++      Domain.DocgenError.make({
++        message: `[InternalVersion.readModuleVersion] Failed to decode manifest '${manifestPath}'\n${cause.message}`,
++      })
++    )
++  );
++
++  return manifest.version;
++});
+diff --git a/packages/tooling/tool/docgen/test/version.test.ts b/packages/tooling/tool/docgen/test/version.test.ts
+new file mode 100644
+index 0000000000..add4141dfb
+--- /dev/null
++++ b/packages/tooling/tool/docgen/test/version.test.ts
+@@ -0,0 +1,13 @@
++import { readModuleVersion } from "@beep/repo-docgen/internal/version";
++import * as BunServices from "@effect/platform-bun/BunServices";
++import { expect, it } from "@effect/vitest";
++import { Effect } from "effect";
++
++it.effect("reads the docgen package version from its manifest", () =>
++  readModuleVersion().pipe(
++    Effect.provide(BunServices.layer),
++    Effect.map((version) => {
++      expect(version).toBe("0.0.2");
++    })
++  )
++);
