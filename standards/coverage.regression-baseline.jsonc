@@ -4,8 +4,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-29T16:55:00.153Z",
-  "git_sha": "370d04baf17bed1efdf3698179c6c9ee8080f4cc",
+  "generated_at": "2026-08-29T18:52:33.433Z",
+  "git_sha": "fc984a2a0279915d9093fceebacb251202d20cbc",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -20499,13 +20499,13 @@
       "path": "packages/tooling/tool/cli",
       "lines": 76,
       "statements": 75.74,
-      "branches": 63.06,
-      "functions": 69.44,
+      "branches": 63.07,
+      "functions": 69.45,
       "uncovered": {
-        "lines": 8194,
-        "statements": 8646,
-        "branches": 4660,
-        "functions": 3153
+        "lines": 8193,
+        "statements": 8644,
+        "branches": 4659,
+        "functions": 3152
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -26089,15 +26089,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 88.41,
-          "statements": 88.05,
-          "branches": 81.13,
-          "functions": 79.31,
+          "lines": 88.7,
+          "statements": 88.61,
+          "branches": 82.07,
+          "functions": 80.17,
           "uncovered": {
-            "lines": 41,
-            "statements": 43,
-            "branches": 20,
-            "functions": 24
+            "lines": 40,
+            "statements": 41,
+            "branches": 19,
+            "functions": 23
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
