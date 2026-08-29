@@ -573,6 +573,29 @@ describe("commands/Qa judge ingest and lint", () => {
     })
   );
 
+  it.effect("preserves the ingest-specific declared-round error and writes no inventory", () =>
+    withTempCwd(
+      Effect.fnUntraced(function* (cwd) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { layout } = yield* prepareRound(cwd, 1);
+        const transcript = path.join(cwd, "judge-stdout.txt");
+        const inventoryPath = path.join(layout.root, "inventory.json");
+        const inventoryMarkdownPath = path.join(layout.root, "inventory.md");
+        yield* fs.writeFileString(transcript, yield* inventoryText(2));
+
+        const error = yield* runQaJudgeIngest(
+          cwd,
+          QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
+        ).pipe(Effect.flip);
+
+        expect(error.message).toBe("qa judge-ingest was asked for round 1 but the inventory declares round 2.");
+        expect(yield* fs.exists(inventoryPath)).toBe(false);
+        expect(yield* fs.exists(inventoryMarkdownPath)).toBe(false);
+      })
+    )
+  );
+
   it("fails judge-lint when the committed inventory declares another round", () =>
     Effect.runPromise(
       withTempCwd(

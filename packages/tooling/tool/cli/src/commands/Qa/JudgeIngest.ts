@@ -17,8 +17,16 @@ import { A, O } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
 import { printLines } from "../../internal/cli/Printer.ts";
-import { decodeQaInventory, encodeQaInventory } from "./Inventory.schemas.ts";
+import { encodeQaInventory } from "./Inventory.schemas.ts";
 import { crossCheckAgainstRound, extractLastJsonBlock, raiseCrossCheckFailure } from "./JudgeCheck.ts";
+import {
+  DeclaredRoundCoherentInput,
+  DeclaredRoundCoherentVerdict,
+  evaluateDeclaredRoundCoherent,
+  evaluateJudgeOutputInventoryDecodes,
+  JudgeOutputInventoryDecodesInput,
+  JudgeOutputInventoryDecodesVerdict,
+} from "./JudgeContract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import { renderInventoryMarkdown } from "./Qa.render.ts";
 import { qaRootPath, readEventLog } from "./Qa.session.ts";
@@ -121,14 +129,13 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
       ),
     onSome: Effect.succeed,
   });
-  const parsed = yield* Unknown.decodeEffectFromJsonString(block).pipe(
-    QaCommandError.mapError("qa judge-ingest could not parse the judge's final JSON block.")
+  const verdict = yield* evaluateJudgeOutputInventoryDecodes(
+    JudgeOutputInventoryDecodesInput.make({ candidate: block })
   );
-  return yield* decodeQaInventory(parsed).pipe(
-    QaCommandError.mapError(
-      "qa judge-ingest rejected the judge inventory. Check schemaVersion, finding ids (R<round>-<nn>), lens values, and that requiredCount equals the P0+P1 count."
-    )
-  );
+  return yield* JudgeOutputInventoryDecodesVerdict.match(verdict, {
+    allowed: ({ audit }) => Effect.succeed(audit.detail.inventory),
+    denied: ({ audit }) => Effect.fail(QaCommandError.make({ message: audit.reason })),
+  });
 });
 
 /**
@@ -165,11 +172,18 @@ export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
     .pipe(QaCommandError.mapError(`qa judge-ingest could not read the judge output at ${options.from}.`));
   const inventory = yield* parseJudgeOutput(raw);
 
-  if (inventory.round !== options.round) {
-    return yield* QaCommandError.make({
-      message: `qa judge-ingest was asked for round ${options.round} but the inventory declares round ${inventory.round}.`,
-    });
-  }
+  const roundVerdict = yield* evaluateDeclaredRoundCoherent(
+    DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: options.round })
+  );
+  yield* DeclaredRoundCoherentVerdict.match(roundVerdict, {
+    allowed: () => Effect.void,
+    denied: ({ audit }) =>
+      Effect.fail(
+        QaCommandError.make({
+          message: `qa judge-ingest was asked for round ${audit.detail.requestedRound} but the inventory declares round ${audit.detail.declaredRound}.`,
+        })
+      ),
+  });
 
   const eventLog = yield* readEventLog(layout.eventsPath);
   const check = yield* crossCheckAgainstRound(layout, inventory, eventLog);

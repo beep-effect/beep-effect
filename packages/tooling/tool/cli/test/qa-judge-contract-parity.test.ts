@@ -3,24 +3,42 @@ import {
   CitedArtifactExistsGate,
   CitedArtifactExistsInput,
   CitedArtifactExistsVerdict,
+  CitedEventIdExistsInput,
+  CitedEventIdExistsVerdict,
   citedArtifactVerdictToCrossCheck,
   crossCheckAgainstRound,
   crossCheckEvidence,
+  DeclaredRoundCoherentInput,
+  DeclaredRoundCoherentVerdict,
+  EvidenceCrossCheckCleanInput,
+  EvidenceCrossCheckCleanVerdict,
   evaluateCitedArtifactExists,
+  evaluateCitedEventIdExists,
+  evaluateDeclaredRoundCoherent,
+  evaluateEvidenceCrossCheckClean,
+  evaluateJudgeOutputInventoryDecodes,
+  JudgeOutputInventoryDecodesInput,
+  JudgeOutputInventoryDecodesVerdict,
   QaEventLog,
   QaFindingId,
   QaInventory,
+  QaJudgeContract,
   QaJudgeRef,
   raiseCrossCheckFailure,
   renderCrossCheckFailure,
 } from "@beep/repo-cli/commands/Qa";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { provideScopedLayer } from "@beep/test-utils";
+import { Unknown } from "@beep/schema/Unknown";
+import { GateRegistry, SkillContract } from "@beep/skill-contract";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { A } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, FileSystem, HashSet, Layer, Path } from "effect";
+import { Effect, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -210,4 +228,221 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
       missingPaths: ["frames/ghost.png"],
     });
   });
+
+  it.effect("treats regular-file existence as sufficient without claiming content integrity", () =>
+    withTempDir(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const artifact = path.join(root, "frame.png");
+        const input = CitedArtifactExistsInput.make({ citedPaths: ["frame.png"], roundRoot: root });
+        yield* fs.writeFileString(artifact, "first contents");
+        const before = yield* evaluateCitedArtifactExists(input);
+        yield* fs.writeFileString(artifact, "different contents");
+        const after = yield* evaluateCitedArtifactExists(input);
+
+        expect(before.verdict).toBe("allowed");
+        expect(after.verdict).toBe("allowed");
+      })
+    )
+  );
+});
+
+describe("commands/Qa complete judge contract parity", () => {
+  it("composes the five declarations from the single ordered gate-id registry", () => {
+    expect(QaJudgeContract.id).toBe("https://beep-effect.dev/contracts/qa-inventory/v1");
+    expect(A.map(QaJudgeContract.gates.declarations, (gate) => gate.id)).toEqual([
+      "cited-artifact-exists",
+      "cited-event-id-exists",
+      "declared-round-coherent",
+      "evidence-cross-check-clean",
+      "judge-output-inventory-decodes",
+    ]);
+    expect(A.map(QaJudgeContract.gates.declarations, (gate) => gate.severity)).toEqual([
+      "blocking",
+      "blocking",
+      "blocking",
+      "blocking",
+      "blocking",
+    ]);
+    expect(A.map(QaJudgeContract.gates.declarations, (gate) => gate.applicability.kind)).toEqual([
+      "always",
+      "always",
+      "always",
+      "always",
+      "conditional",
+    ]);
+  });
+
+  it.effect("detects missing event ids in first-citation order and deduplicates repeats", () =>
+    Effect.gen(function* () {
+      const verdict = yield* evaluateCitedEventIdExists(
+        CitedEventIdExistsInput.make({ citedEventIds: [9, 2, 9, 7], knownEventIds: [2, 3] })
+      );
+
+      expect(verdict.verdict).toBe("denied");
+      expect(
+        CitedEventIdExistsVerdict.match(verdict, {
+          allowed: () => [],
+          denied: ({ audit }) => audit.detail.checkedEventIds,
+        })
+      ).toEqual([9, 2, 7]);
+      expect(
+        CitedEventIdExistsVerdict.match(verdict, {
+          allowed: () => [],
+          denied: ({ audit }) => audit.detail.missingEventIds,
+        })
+      ).toEqual([9, 7]);
+    })
+  );
+
+  it.effect("allows a coherent declared round and denies a copied inventory round", () =>
+    Effect.gen(function* () {
+      const allowed = yield* evaluateDeclaredRoundCoherent(
+        DeclaredRoundCoherentInput.make({ declaredRound: 4, requestedRound: 4 })
+      );
+      const denied = yield* evaluateDeclaredRoundCoherent(
+        DeclaredRoundCoherentInput.make({ declaredRound: 5, requestedRound: 4 })
+      );
+
+      expect(allowed.verdict).toBe("allowed");
+      expect(denied.verdict).toBe("denied");
+      expect(
+        DeclaredRoundCoherentVerdict.match(denied, {
+          allowed: () => ({ declaredRound: 0, requestedRound: 0 }),
+          denied: ({ audit }) => audit.detail,
+        })
+      ).toMatchObject({ declaredRound: 5, requestedRound: 4 });
+    })
+  );
+
+  it.effect("keeps aggregate settlement distinct from the artifact and event leaf verdicts", () =>
+    withTempDir(
+      Effect.fnUntraced(function* (root) {
+        const artifactVerdict = yield* evaluateCitedArtifactExists(
+          CitedArtifactExistsInput.make({ citedPaths: ["frames/ghost.png"], roundRoot: root })
+        );
+        const eventIdVerdict = yield* evaluateCitedEventIdExists(
+          CitedEventIdExistsInput.make({ citedEventIds: [8], knownEventIds: [] })
+        );
+        const aggregate = yield* evaluateEvidenceCrossCheckClean(
+          EvidenceCrossCheckCleanInput.make({ artifactVerdict, eventIdVerdict })
+        );
+
+        expect(artifactVerdict.audit.gateId).toBe("cited-artifact-exists");
+        expect(eventIdVerdict.audit.gateId).toBe("cited-event-id-exists");
+        expect(aggregate.audit.gateId).toBe("evidence-cross-check-clean");
+        expect(aggregate.verdict).toBe("denied");
+        expect(
+          EvidenceCrossCheckCleanVerdict.match(aggregate, {
+            allowed: () => ({ missingEventIds: [], missingPaths: [] }),
+            denied: ({ audit }) => audit.detail,
+          })
+        ).toMatchObject({ missingEventIds: [8], missingPaths: ["frames/ghost.png"] });
+      })
+    )
+  );
+
+  it.effect("decodes valid output and denies malformed JSON, empty evidence, and incoherent P0/P1 counts", () =>
+    Effect.gen(function* () {
+      const finding = {
+        evidence: [{ eventIds: [2], kind: "strip", path: "frames/a.png" }],
+        fix: "Fix the drag behavior.",
+        id: "R4-01",
+        lens: "selection-smear",
+        repro: "Drag the sash.",
+        severity: "P0",
+        title: "Selection smear",
+      };
+      const inventory = {
+        findings: [finding],
+        judge: { effort: "high", model: "gpt-5.6-sol" },
+        requiredCount: 1,
+        round: 4,
+        schemaVersion: "qa-inventory/v1",
+        sessionRef: "session.json",
+      };
+      const validCandidate = yield* Unknown.encodeEffectFromJsonString(inventory);
+      const emptyEvidenceCandidate = yield* Unknown.encodeEffectFromJsonString({
+        ...inventory,
+        findings: [{ ...finding, evidence: [] }],
+      });
+      const wrongCountCandidate = yield* Unknown.encodeEffectFromJsonString({ ...inventory, requiredCount: 0 });
+      const allowed = yield* evaluateJudgeOutputInventoryDecodes(
+        JudgeOutputInventoryDecodesInput.make({ candidate: validCandidate })
+      );
+      const malformed = yield* evaluateJudgeOutputInventoryDecodes(
+        JudgeOutputInventoryDecodesInput.make({ candidate: "{" })
+      );
+      const emptyEvidence = yield* evaluateJudgeOutputInventoryDecodes(
+        JudgeOutputInventoryDecodesInput.make({ candidate: emptyEvidenceCandidate })
+      );
+      const wrongCount = yield* evaluateJudgeOutputInventoryDecodes(
+        JudgeOutputInventoryDecodesInput.make({ candidate: wrongCountCandidate })
+      );
+
+      expect(allowed.verdict).toBe("allowed");
+      expect(malformed.verdict).toBe("denied");
+      expect(malformed.audit.reason).toBe("qa judge-ingest could not parse the judge's final JSON block.");
+      expect(emptyEvidence.verdict).toBe("denied");
+      expect(wrongCount.verdict).toBe("denied");
+      expect(emptyEvidence.audit.reason).toContain("rejected the judge inventory");
+      expect(wrongCount.audit.reason).toContain("requiredCount equals the P0+P1 count");
+    })
+  );
+
+  it.effect("accepts coherent P0 and P1 required counts while excluding P2", () =>
+    Effect.gen(function* () {
+      const finding = (id: string, severity: "P0" | "P1" | "P2") => ({
+        evidence: [{ eventIds: [], kind: "frame", path: `frames/${id}.png` }],
+        fix: "Fix it.",
+        id,
+        lens: "drag-ghost",
+        repro: "Drag it.",
+        severity,
+        title: id,
+      });
+      const candidate = yield* Unknown.encodeEffectFromJsonString({
+        findings: [finding("R4-01", "P0"), finding("R4-02", "P1"), finding("R4-03", "P2")],
+        judge: { effort: "high", model: "gpt-5.6-sol" },
+        requiredCount: 2,
+        round: 4,
+        schemaVersion: "qa-inventory/v1",
+        sessionRef: "session.json",
+      });
+      const verdict = yield* evaluateJudgeOutputInventoryDecodes(JudgeOutputInventoryDecodesInput.make({ candidate }));
+
+      expect(verdict.verdict).toBe("allowed");
+      expect(
+        JudgeOutputInventoryDecodesVerdict.match(verdict, {
+          allowed: ({ audit }) => audit.detail.inventory.requiredCount,
+          denied: () => -1,
+        })
+      ).toBe(2);
+    })
+  );
+
+  it.effect("round-trips the contract and rejects duplicate QA gate ids at external decode", () =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeUnknownEffect(SkillContract)(QaJudgeContract);
+      const decoded = yield* S.decodeEffect(SkillContract)(encoded);
+      const duplicate = yield* S.decodeUnknownEffect(GateRegistry)({
+        declarations: [CitedArtifactExistsGate, CitedArtifactExistsGate],
+      }).pipe(Effect.flip);
+
+      expect(S.toEquivalence(SkillContract)(decoded, QaJudgeContract)).toBe(true);
+      expect(duplicate.message).toContain("unique gate ids");
+    })
+  );
+
+  it("round-trips schema-derived event gate inputs", () =>
+    fc.assert(
+      fc.property(S.toArbitrary(CitedEventIdExistsInput)(fc), (candidate) => {
+        const encoded = Result.getOrThrow(S.encodeUnknownResult(CitedEventIdExistsInput)(candidate));
+        const decoded = Result.getOrThrow(S.decodeResult(CitedEventIdExistsInput)(encoded));
+
+        expect(S.toEquivalence(CitedEventIdExistsInput)(decoded, candidate)).toBe(true);
+      }),
+      fcRuns(25)
+    ));
 });

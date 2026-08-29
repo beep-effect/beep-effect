@@ -13,8 +13,8 @@ import { makeGateId } from "@beep/skill-contract";
  *
  * **Details**
  *
- * PR 1 contains only the migrated cited-artifact gate. PR 2 widens this one
- * registry-owned domain when the remaining judge rules become typed gates.
+ * This is the only gate-id literal domain for the QA judge. Declarations,
+ * evaluators, and the aggregate contract all derive their ids from it.
  *
  * **Example** (Construct the cited-artifact gate id)
  *
@@ -27,7 +27,15 @@ import { makeGateId } from "@beep/skill-contract";
  * @category identifiers
  * @since 0.0.0
  */
-export const QaJudgeGateId = makeGateId(LiteralKit(["cited-artifact-exists"]));
+export const QaJudgeGateId = makeGateId(
+  LiteralKit([
+    "cited-artifact-exists",
+    "cited-event-id-exists",
+    "declared-round-coherent",
+    "evidence-cross-check-clean",
+    "judge-output-inventory-decodes",
+  ])
+);
 
 /**
  * Runtime type decoded by {@link QaJudgeGateId}.
