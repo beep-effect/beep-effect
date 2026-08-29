@@ -55,22 +55,46 @@ fi
 # 4. Install the 1Password CLI (op) for secret-backed runs. Secrets are provided
 #    to the VM via the OP_SERVICE_ACCOUNT_TOKEN environment secret; the repo
 #    resolves op:// references in a gitignored .env with `op run --env-file=.env`.
-#    Best-effort and non-fatal: the core toolchain does not depend on it.
+#    The downloaded binary is GPG-verified against 1Password's pinned code-signing
+#    key before it is placed on PATH, so a substituted distribution response fails
+#    closed and never runs with access to OP_SERVICE_ACCOUNT_TOKEN. Best-effort and
+#    non-fatal: the core toolchain does not depend on it.
+#    Pinned 1Password code-signing key (https://downloads.1password.com/linux/keys/1password.asc).
+OP_PINNED_VERSION="2.39.0"
+OP_GPG_FINGERPRINT="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
+OP_GPG_KEY_URL="https://downloads.1password.com/linux/keys/1password.asc"
 if ! command -v op >/dev/null 2>&1; then
   set +e
-  OP_LATEST="$(curl -fsSL https://app-updates.agilebits.com/check/1/0/CLI2/en/2.0.0/N 2>/dev/null | grep -oE '"version":"[0-9.]+"' | head -1 | grep -oE '[0-9.]+')"
-  OP_VER="v${OP_LATEST:-2.39.0}"
-  if curl -fsSLo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/pkg/${OP_VER}/op_linux_amd64_${OP_VER}.zip" \
-    && unzip -o /tmp/op.zip op -d /tmp/opbin >/dev/null; then
-    if command -v sudo >/dev/null 2>&1; then
-      sudo mv /tmp/opbin/op /usr/local/bin/op && sudo chmod +x /usr/local/bin/op
+  op_work="$(mktemp -d)"
+  op_ver="v${OP_PINNED_VERSION}"
+  op_ok=0
+  if curl -fsSLo "${op_work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/${op_ver}/op_linux_amd64_${op_ver}.zip" \
+    && unzip -oq "${op_work}/op.zip" op op.sig -d "${op_work}" \
+    && [ -f "${op_work}/op" ] && [ -f "${op_work}/op.sig" ]; then
+    # Import the pinned signing key into an ephemeral keyring, assert the imported
+    # fingerprint matches, then require a VALIDSIG from that exact key.
+    export GNUPGHOME="${op_work}/gnupg"
+    mkdir -p "${GNUPGHOME}" && chmod 700 "${GNUPGHOME}"
+    if curl -fsSL "${OP_GPG_KEY_URL}" | gpg --batch --import >/dev/null 2>&1 \
+      && gpg --batch --with-colons --fingerprint 2>/dev/null | grep -q "^fpr:::::::::${OP_GPG_FINGERPRINT}:" \
+      && gpg --batch --status-fd=1 --verify "${op_work}/op.sig" "${op_work}/op" 2>/dev/null \
+        | grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"; then
+      op_ok=1
     else
-      mv /tmp/opbin/op "${BUN_INSTALL}/bin/op" && chmod +x "${BUN_INSTALL}/bin/op"
+      echo "WARN: 1Password CLI signature verification failed; refusing to install op."
     fi
+    unset GNUPGHOME
   else
     echo "WARN: 1Password CLI download failed; skipping (op-backed secret runs unavailable)."
   fi
-  rm -f /tmp/op.zip
+  if [ "${op_ok}" = "1" ]; then
+    if command -v sudo >/dev/null 2>&1; then
+      sudo install -m 0755 "${op_work}/op" /usr/local/bin/op
+    else
+      install -m 0755 "${op_work}/op" "${BUN_INSTALL}/bin/op"
+    fi
+  fi
+  rm -rf "${op_work}"
   set -e
 fi
 
