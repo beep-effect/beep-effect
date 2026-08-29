@@ -1,3 +1,4 @@
+import { $OntologyId } from "@beep/identity/packages";
 import { NamedNode } from "@beep/rdf/Rdf";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
@@ -7,6 +8,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  IRI,
   isOntologyReference,
   isOntologyReferenceTarget,
   makeIri,
@@ -14,34 +16,71 @@ import {
   makeOntologyTermName,
   makeTermIri,
   OntologyAssemblyError,
-  OntologyIriReferenceTarget,
-  OntologySchemaReferenceTarget,
-  OntologyTermReferenceTarget,
-} from "./model.js";
-import type {
-  IRI,
   OntologyAssemblyErrorReason,
+  OntologyIriReferenceTarget,
   OntologyReference,
   OntologyReferenceTarget,
+  OntologySchemaReferenceTarget,
   OntologyTermName,
+  OntologyTermReferenceTarget,
 } from "./model.js";
 
+const $I = $OntologyId.create("references");
+
 const isNamedNode = S.is(NamedNode);
+export const OntologyIriInput = S.Union([S.String, NamedNode]).pipe(
+  $I.annoteSchema("OntologyIriInput", {
+    description: "Input type for ontology IRI references, which can be a string or a NamedNode.",
+  })
+);
 
-export type OntologyIriInput = string | NamedNode;
-export type OntologyTermNameInput = string | OntologyTermName;
-export type OntologyReferenceTargetInput =
-  | OntologyIriInput
-  | OntologyTermNameInput
-  | OntologyReference
-  | OntologyReferenceTarget
-  | S.Top;
+export type OntologyIriInput = typeof OntologyIriInput.Type;
 
-type ReferenceResolutionContextFields = {
-  readonly baseIri: IRI;
-  readonly classesBySchemaIdentity: Readonly<Record<string, { readonly iri: IRI }>>;
-};
-export type ReferenceResolutionContext = ReferenceResolutionContextFields & {};
+export const OntologyTermNameInput = S.Union([S.String, OntologyTermName]).pipe(
+  $I.annoteSchema("OntologyTermNameInput", {
+    description: "Input type for ontology term names, which can be a string or an OntologyTermName object.",
+  })
+);
+
+export type OntologyTermNameInput = typeof OntologyTermNameInput.Type;
+
+export const OntologyReferenceTargetInput = S.Union([
+  OntologyIriInput,
+  OntologyTermNameInput,
+  OntologyReference,
+  OntologyReferenceTarget,
+  S.declare(
+    /* istanbul ignore next -- reference target schema inputs are accepted directly and not decoded through this union */
+    (u: unknown): u is S.Top => S.isSchema(u)
+  ),
+]).pipe(
+  $I.annoteSchema("OntologyReferenceTargetInput", {
+    description:
+      "Input type for ontology reference targets, which can be an IRI, term name, reference, reference target, or schema top type.",
+  })
+);
+export type OntologyReferenceTargetInput = typeof OntologyReferenceTargetInput.Type;
+
+class ReferenceResolutionClassMetadata extends S.Class<ReferenceResolutionClassMetadata>(
+  $I`ReferenceResolutionClassMetadata`
+)(
+  {
+    iri: IRI,
+  },
+  $I.annote("ReferenceResolutionClassMetadata", {
+    description: "Class metadata stored in the ontology reference-resolution index.",
+  })
+) {}
+
+export class ReferenceResolutionContext extends S.Class<ReferenceResolutionContext>($I`ReferenceResolutionContext`)(
+  {
+    baseIri: IRI,
+    classesBySchemaIdentity: S.Record(S.String, ReferenceResolutionClassMetadata),
+  },
+  $I.annote("ReferenceResolutionContext", {
+    description: "Ontology reference-resolution context built during assembly.",
+  })
+) {}
 
 export const schemaIdentifier = (schema: S.Top): O.Option<string> =>
   pipe(S.resolveAnnotations(schema)?.identifier, O.fromUndefinedOr, O.filter(P.isString));
@@ -85,7 +124,10 @@ export const makeReferenceTarget = (target: OntologyReferenceTargetInput): Ontol
   if (P.isString(target)) {
     return pipe(target, Str.includes(":"))
       ? OntologyIriReferenceTarget.make({ kind: "iri", iri: makeIri(target) })
-      : OntologyTermReferenceTarget.make({ kind: "term", termName: makeOntologyTermName(target) });
+      : OntologyTermReferenceTarget.make({
+          kind: "term",
+          termName: makeOntologyTermName(target),
+        });
   }
 
   return OntologySchemaReferenceTarget.make({
@@ -105,73 +147,95 @@ export const optionalReferenceTargetsOption = (
 ): O.Option<ReadonlyArray<OntologyReferenceTarget>> =>
   pipe(O.fromUndefinedOr(value), O.map(A.map(makeReferenceTarget)));
 
-type FailAssemblyInput = {
-  readonly reason: OntologyAssemblyErrorReason;
-  readonly message: string;
-  readonly schemaIdentifier: O.Option<string>;
-  readonly fieldName?: O.Option<string> | undefined;
-};
+class FailAssemblyInput extends S.Class<FailAssemblyInput>($I`FailAssemblyInput`)(
+  {
+    reason: OntologyAssemblyErrorReason,
+    message: S.NonEmptyString,
+    schemaIdentifier: S.Option(S.String),
+    fieldName: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+  },
+  $I.annote("FailAssemblyInput", {
+    description: "Normalized input payload for ontology assembly failures.",
+  })
+) {}
 
-export const failAssembly = (input: FailAssemblyInput): Effect.Effect<never, OntologyAssemblyError> =>
-  Effect.fail(
+type FailAssemblyInputConstructorInput = Parameters<typeof FailAssemblyInput.make>[0];
+
+export const failAssembly = (input: FailAssemblyInputConstructorInput): Effect.Effect<never, OntologyAssemblyError> => {
+  const normalizedInput = FailAssemblyInput.make(input);
+
+  return Effect.fail(
     OntologyAssemblyError.make({
-      reason: input.reason,
-      message: input.message,
-      schemaIdentifier: input.schemaIdentifier,
-      fieldName: pipe(O.fromUndefinedOr(input.fieldName), O.getOrElse(O.none<string>)),
+      reason: normalizedInput.reason,
+      message: normalizedInput.message,
+      schemaIdentifier: normalizedInput.schemaIdentifier,
+      fieldName: normalizedInput.fieldName,
     })
   );
+};
 
 export const resolveReferenceTarget = Effect.fn("Ontology.resolveReferenceTarget")(function* (
   context: ReferenceResolutionContext,
   ownerSchemaId: O.Option<string>,
   target: OntologyReferenceTarget
 ) {
-  if (target.kind === "iri") {
-    return makeOntologyReference(target.iri);
-  }
+  return yield* OntologyReferenceTarget.match(target, {
+    iri: (current) => Effect.succeed(makeOntologyReference(current.iri)),
+    schema: Effect.fn("Ontology.resolveSchemaReferenceTarget")(function* (current) {
+      const targetSchemaIdentity = yield* pipe(
+        current.schemaIdentity,
+        O.match({
+          onNone: () =>
+            failAssembly({
+              reason: "unresolvedReferenceTarget",
+              message: "Relationship target schema is missing identity metadata.",
+              schemaIdentifier: ownerSchemaId,
+            }),
+          onSome: Effect.succeed,
+        })
+      );
 
-  if (target.kind === "term") {
-    return makeOntologyReference(makeTermIri(context.baseIri, target.termName));
-  }
-
-  const targetSchemaIdentity = yield* pipe(
-    target.schemaIdentity,
-    O.match({
-      onNone: () =>
-        failAssembly({
-          reason: "unresolvedReferenceTarget",
-          message: "Relationship target schema is missing identity metadata.",
-          schemaIdentifier: ownerSchemaId,
-        }),
-      onSome: Effect.succeed,
-    })
-  );
-
-  return yield* pipe(
-    R.get(context.classesBySchemaIdentity, targetSchemaIdentity),
-    O.map((metadata) => makeOntologyReference(metadata.iri)),
-    O.match({
-      onNone: () =>
-        failAssembly({
-          reason: "unresolvedReferenceTarget",
-          message: `Relationship target schema was not included in this ontology build: ${targetSchemaIdentity}`,
-          schemaIdentifier: ownerSchemaId,
-        }),
-      onSome: Effect.succeed,
-    })
-  );
+      return yield* pipe(
+        R.get(context.classesBySchemaIdentity, targetSchemaIdentity),
+        O.map((metadata) => makeOntologyReference(metadata.iri)),
+        O.match({
+          onNone: () =>
+            failAssembly({
+              reason: "unresolvedReferenceTarget",
+              message: `Relationship target schema was not included in this ontology build: ${targetSchemaIdentity}`,
+              schemaIdentifier: ownerSchemaId,
+            }),
+          onSome: Effect.succeed,
+        })
+      );
+    }),
+    term: (current) => Effect.succeed(makeOntologyReference(makeTermIri(context.baseIri, current.termName))),
+  });
 });
 
-type ResolveReferenceTargetsInput = {
-  readonly context: ReferenceResolutionContext;
-  readonly ownerSchemaId: O.Option<string>;
-  readonly targets: ReadonlyArray<OntologyReferenceTarget>;
-};
+class ResolveReferenceTargetsInput extends S.Class<ResolveReferenceTargetsInput>($I`ResolveReferenceTargetsInput`)(
+  {
+    context: ReferenceResolutionContext,
+    ownerSchemaId: S.Option(S.String),
+    targets: S.Array(OntologyReferenceTarget),
+  },
+  $I.annote("ResolveReferenceTargetsInput", {
+    description: "Input payload for resolving ontology reference targets.",
+  })
+) {}
+
+type ResolveReferenceTargetsConstructorInput = Parameters<typeof ResolveReferenceTargetsInput.make>[0];
 
 export const resolveReferenceTargets = (
-  input: ResolveReferenceTargetsInput
-): Effect.Effect<ReadonlyArray<OntologyReference>, OntologyAssemblyError> =>
-  Effect.forEach(input.targets, (target) => resolveReferenceTarget(input.context, input.ownerSchemaId, target), {
-    concurrency: 1,
-  });
+  input: ResolveReferenceTargetsConstructorInput
+): Effect.Effect<ReadonlyArray<OntologyReference>, OntologyAssemblyError> => {
+  const normalizedInput = ResolveReferenceTargetsInput.make(input);
+
+  return Effect.forEach(
+    normalizedInput.targets,
+    (target) => resolveReferenceTarget(normalizedInput.context, normalizedInput.ownerSchemaId, target),
+    {
+      concurrency: 1,
+    }
+  );
+};

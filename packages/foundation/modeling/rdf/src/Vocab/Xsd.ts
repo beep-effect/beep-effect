@@ -11,6 +11,7 @@ import { makeNamedNode } from "../Rdf.ts";
 /**
  * XSD namespace IRI.
  *
+ * @see https://www.w3.org/2001/XMLSchema#
  * @example
  * ```ts
  * import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd"

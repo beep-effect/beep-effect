@@ -41,6 +41,13 @@ export {
  */
 export { parseJsonLdOntology, projectJsonLdContext, projectJsonLdOntology } from "./projections/jsonld.ts";
 /**
+ * Markdown documentation projection helper.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export { projectMarkdown } from "./projections/markdown.ts";
+/**
  * Turtle projection helper.
  *
  * @category projections

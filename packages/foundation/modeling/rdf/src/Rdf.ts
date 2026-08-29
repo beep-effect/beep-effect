@@ -854,6 +854,7 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
 export const makeLiteral: {
   (value: string, datatype: string): Literal;
   (value: string, datatype: string, options: MakeLiteralOptions): Literal;
+  (value: string, datatype: string, language: string): Literal;
   (datatype: string): (value: string) => Literal;
   (datatype: string, options: MakeLiteralOptions): (value: string) => Literal;
 } = dual(isMakeLiteralDataFirst, makeLiteralInternal);

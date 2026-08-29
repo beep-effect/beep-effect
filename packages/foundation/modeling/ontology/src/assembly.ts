@@ -15,12 +15,19 @@ import {
   getOntologyMetadata,
   isOntologyClassAnnotationDraft,
   isOntologyPredicateAnnotationDraft,
-  makeOntologyClassMetadata,
   makeOntologyDatatypePredicateMetadata,
   makeOntologyObjectPredicateMetadata,
   makeOntologyTermName,
   makeTermIri,
+  OntologyClassMetadata,
   OntologyIriReferenceTarget,
+  OntologyJsonSchemaDocument,
+  OntologyJsonSchemaSidecar,
+  OntologyJsonSchemaSidecarOptions,
+  OntologySkosConceptProfile,
+  OntologySkosConceptSchemeProfile,
+  OntologyValidationIssue,
+  OntologyValidationReport,
 } from "./model.js";
 import {
   failAssembly,
@@ -41,6 +48,10 @@ import type {
   OntologyPredicateAnnotationDraft,
   OntologyReference,
   OntologyReferenceTarget,
+  OntologySkosProfile,
+  OntologySkosProfileDraft,
+  OntologyValidationIssueCode,
+  OntologyValidationIssueSeverity,
 } from "./model.js";
 import type { ReferenceResolutionContext } from "./references.js";
 
@@ -66,6 +77,83 @@ const resolveTargets = (
   targets: ReadonlyArray<OntologyReferenceTarget>
 ): Effect.Effect<ReadonlyArray<OntologyReference>, OntologyAssemblyError> =>
   resolveReferenceTargets({ context, ownerSchemaId, targets });
+
+const jsonSchemaSidecarOptions = {
+  additionalProperties: false,
+  generateDescriptions: true,
+  includeAnnotationKey: (key: string) => pipe(key, Str.startsWith("x-")),
+};
+
+const jsonSchemaSidecarOptionsSummary = OntologyJsonSchemaSidecarOptions.make({
+  additionalProperties: false,
+  generateDescriptions: true,
+  includedAnnotationKeys: ["x-*"],
+});
+
+const makeJsonSchemaSidecar = (seed: ClassAssemblySeed): OntologyJsonSchemaSidecar => {
+  const document = S.toJsonSchemaDocument(seed.schema, jsonSchemaSidecarOptions);
+
+  return OntologyJsonSchemaSidecar.make({
+    classIri: seed.iri,
+    schemaIdentity: seed.schemaIdentity,
+    document: OntologyJsonSchemaDocument.make({
+      dialect: document.dialect,
+      schema: document.schema,
+      definitions: document.definitions,
+    }),
+    options: jsonSchemaSidecarOptionsSummary,
+  });
+};
+
+const resolveSkosProfile = Effect.fn("Ontology.resolveSkosProfile")(function* (
+  context: ReferenceResolutionContext,
+  ownerSchemaId: O.Option<string>,
+  profile: O.Option<OntologySkosProfileDraft>
+) {
+  if (O.isNone(profile)) {
+    return O.none<OntologySkosProfile>();
+  }
+
+  const current = profile.value;
+  if (current.kind === "concept") {
+    const resolvedProfile: OntologySkosProfile = OntologySkosConceptProfile.make({
+      kind: "concept",
+      prefLabels: current.prefLabels,
+      altLabels: current.altLabels,
+      hiddenLabels: current.hiddenLabels,
+      definitions: current.definitions,
+      scopeNotes: current.scopeNotes,
+      editorialNotes: current.editorialNotes,
+      historyNotes: current.historyNotes,
+      broader: yield* resolveTargets(context, ownerSchemaId, current.broader),
+      narrower: yield* resolveTargets(context, ownerSchemaId, current.narrower),
+      related: yield* resolveTargets(context, ownerSchemaId, current.related),
+      exactMatches: yield* resolveTargets(context, ownerSchemaId, current.exactMatches),
+      closeMatches: yield* resolveTargets(context, ownerSchemaId, current.closeMatches),
+      broadMatches: yield* resolveTargets(context, ownerSchemaId, current.broadMatches),
+      narrowMatches: yield* resolveTargets(context, ownerSchemaId, current.narrowMatches),
+      relatedMatches: yield* resolveTargets(context, ownerSchemaId, current.relatedMatches),
+      inSchemes: yield* resolveTargets(context, ownerSchemaId, current.inSchemes),
+      topConceptOf: yield* resolveTargets(context, ownerSchemaId, current.topConceptOf),
+    });
+
+    return O.some(resolvedProfile);
+  }
+
+  const resolvedProfile: OntologySkosProfile = OntologySkosConceptSchemeProfile.make({
+    kind: "conceptScheme",
+    prefLabels: current.prefLabels,
+    altLabels: current.altLabels,
+    hiddenLabels: current.hiddenLabels,
+    definitions: current.definitions,
+    scopeNotes: current.scopeNotes,
+    editorialNotes: current.editorialNotes,
+    historyNotes: current.historyNotes,
+    hasTopConcepts: yield* resolveTargets(context, ownerSchemaId, current.hasTopConcepts),
+  });
+
+  return O.some(resolvedProfile);
+});
 
 const requireSchemaIdentifier = Effect.fn("Ontology.requireSchemaIdentifier")(function* (schema: S.Top) {
   return yield* pipe(
@@ -162,8 +250,9 @@ const finalizeClassMetadata = Effect.fn("Ontology.finalizeClassMetadata")(functi
   const exactMatches = yield* resolveTargets(context, ownerSchemaId, draft.exactMatches);
   const closeMatches = yield* resolveTargets(context, ownerSchemaId, draft.closeMatches);
   const sameAs = yield* resolveTargets(context, ownerSchemaId, draft.sameAs);
+  const skosProfile = yield* resolveSkosProfile(context, ownerSchemaId, draft.skosProfile);
 
-  return makeOntologyClassMetadata({
+  return OntologyClassMetadata.make({
     kind: "class",
     schemaIdentity: seed.schemaIdentity,
     termName: seed.termName,
@@ -182,9 +271,11 @@ const finalizeClassMetadata = Effect.fn("Ontology.finalizeClassMetadata")(functi
     exactMatches,
     closeMatches,
     sameAs,
-    ...R.getSomes({ comment }),
-    ...R.getSomes({ definition: draft.definition }),
-    ...R.getSomes({ source: draft.source }),
+    comment,
+    definition: draft.definition,
+    source: draft.source,
+    skosProfile,
+    provenance: draft.provenance,
   });
 });
 
@@ -395,9 +486,230 @@ const assembleClass = Effect.fn("Ontology.assembleClass")(function* (
     exactMatches: classMetadata.exactMatches,
     closeMatches: classMetadata.closeMatches,
     sameAs: classMetadata.sameAs,
+    skosProfile: classMetadata.skosProfile,
+    provenance: classMetadata.provenance,
+    jsonSchemaSidecar: O.some(makeJsonSchemaSidecar(seed)),
     predicates,
   });
 });
+
+const issueForClass = (
+  ontologyClass: AssembledOntologyClass,
+  code: OntologyValidationIssueCode,
+  severity: OntologyValidationIssueSeverity,
+  message: string
+): OntologyValidationIssue =>
+  OntologyValidationIssue.make({
+    code,
+    severity,
+    message,
+    classIri: O.some(ontologyClass.iri),
+    schemaIdentity: O.some(ontologyClass.schemaIdentity),
+  });
+
+const literalLanguageKey = (literal: { readonly language: O.Option<string> }): string =>
+  pipe(
+    literal.language,
+    O.getOrElse(() => "")
+  );
+
+const literalConflictKey = (literal: { readonly value: string; readonly language: O.Option<string> }): string =>
+  `${literalLanguageKey(literal)}\u0000${literal.value}`;
+
+const duplicatePrefLabelIssues = (
+  ontologyClass: AssembledOntologyClass,
+  profile: OntologySkosProfile
+): ReadonlyArray<OntologyValidationIssue> => {
+  const duplicateLanguages = pipe(
+    profile.prefLabels,
+    A.reduce(
+      {
+        seen: A.empty<string>(),
+        duplicates: A.empty<string>(),
+      },
+      (state, literal) => {
+        const language = literalLanguageKey(literal);
+        if (pipe(state.seen, A.contains(language))) {
+          return pipe(state.duplicates, A.contains(language))
+            ? state
+            : {
+                ...state,
+                duplicates: pipe(state.duplicates, A.append(language)),
+              };
+        }
+
+        return {
+          ...state,
+          seen: pipe(state.seen, A.append(language)),
+        };
+      }
+    ),
+    (state) => state.duplicates
+  );
+
+  return pipe(
+    duplicateLanguages,
+    A.map((language) =>
+      issueForClass(
+        ontologyClass,
+        "duplicatePrefLabel",
+        "error",
+        pipe(language, Str.isEmpty)
+          ? "SKOS concepts and schemes may only have one preferred label without a language tag."
+          : `SKOS concepts and schemes may only have one preferred label for language '${language}'.`
+      )
+    )
+  );
+};
+
+const hasLiteralConflict = (
+  left: { readonly value: string; readonly language: O.Option<string> },
+  right: { readonly value: string; readonly language: O.Option<string> }
+): boolean => literalConflictKey(left) === literalConflictKey(right);
+
+const labelBucketConflictIssues = (
+  ontologyClass: AssembledOntologyClass,
+  profile: OntologySkosProfile
+): ReadonlyArray<OntologyValidationIssue> => {
+  const prefAlt = pipe(
+    profile.prefLabels,
+    A.filter((literal) =>
+      pipe(
+        profile.altLabels,
+        A.some((candidate) => hasLiteralConflict(literal, candidate))
+      )
+    )
+  );
+  const prefHidden = pipe(
+    profile.prefLabels,
+    A.filter((literal) =>
+      pipe(
+        profile.hiddenLabels,
+        A.some((candidate) => hasLiteralConflict(literal, candidate))
+      )
+    )
+  );
+  const altHidden = pipe(
+    profile.altLabels,
+    A.filter((literal) =>
+      pipe(
+        profile.hiddenLabels,
+        A.some((candidate) => hasLiteralConflict(literal, candidate))
+      )
+    )
+  );
+
+  return pipe(
+    [...prefAlt, ...prefHidden, ...altHidden],
+    A.map((literal) =>
+      issueForClass(
+        ontologyClass,
+        "conflictingLabelLiteral",
+        "error",
+        `SKOS label literal '${literal.value}' appears in conflicting pref/alt/hidden label buckets.`
+      )
+    )
+  );
+};
+
+const referenceIriEquals = (reference: OntologyReference, iri: IRI): boolean => reference.iri === iri;
+
+const hasReference = (references: ReadonlyArray<OntologyReference>, iri: IRI): boolean =>
+  pipe(
+    references,
+    A.some((reference) => referenceIriEquals(reference, iri))
+  );
+
+const skosWarningIssues = (
+  ontologyClass: AssembledOntologyClass,
+  profile: OntologySkosProfile
+): ReadonlyArray<OntologyValidationIssue> => {
+  const missingPrefLabel =
+    A.length(profile.prefLabels) === 0
+      ? [
+          issueForClass(
+            ontologyClass,
+            "missingSkosPrefLabel",
+            "warning",
+            "SKOS profile has no preferred label; browser display will fall back to the class label."
+          ),
+        ]
+      : A.empty<OntologyValidationIssue>();
+
+  if (profile.kind === "conceptScheme") {
+    return missingPrefLabel;
+  }
+
+  const missingScheme =
+    A.length(profile.inSchemes) === 0
+      ? [
+          issueForClass(
+            ontologyClass,
+            "missingConceptScheme",
+            "warning",
+            "SKOS concept has no concept-scheme membership."
+          ),
+        ]
+      : A.empty<OntologyValidationIssue>();
+
+  const selfHierarchy =
+    hasReference(profile.broader, ontologyClass.iri) || hasReference(profile.narrower, ontologyClass.iri)
+      ? [
+          issueForClass(
+            ontologyClass,
+            "hierarchyCycle",
+            "warning",
+            "SKOS concept references itself through broader or narrower hierarchy."
+          ),
+        ]
+      : A.empty<OntologyValidationIssue>();
+
+  const relatedHierarchy = pipe(
+    profile.related,
+    A.filter(
+      (reference) => hasReference(profile.broader, reference.iri) || hasReference(profile.narrower, reference.iri)
+    )
+  );
+  const relatedHierarchyIssues =
+    A.length(relatedHierarchy) > 0
+      ? [
+          issueForClass(
+            ontologyClass,
+            "relatedDuplicatesHierarchy",
+            "warning",
+            "SKOS related links duplicate direct broader or narrower hierarchy."
+          ),
+        ]
+      : A.empty<OntologyValidationIssue>();
+
+  return [...missingPrefLabel, ...missingScheme, ...selfHierarchy, ...relatedHierarchyIssues];
+};
+
+const validateClassSkosProfile = (ontologyClass: AssembledOntologyClass): ReadonlyArray<OntologyValidationIssue> =>
+  pipe(
+    ontologyClass.skosProfile,
+    O.map((profile) => [
+      ...duplicatePrefLabelIssues(ontologyClass, profile),
+      ...labelBucketConflictIssues(ontologyClass, profile),
+      ...skosWarningIssues(ontologyClass, profile),
+    ]),
+    O.getOrElse(A.empty<OntologyValidationIssue>)
+  );
+
+const validateSkosProfiles = (classes: ReadonlyArray<AssembledOntologyClass>): OntologyValidationReport => {
+  const issues = pipe(classes, A.flatMap(validateClassSkosProfile));
+
+  return OntologyValidationReport.make({
+    errors: pipe(
+      issues,
+      A.filter((issue) => issue.severity === "error")
+    ),
+    warnings: pipe(
+      issues,
+      A.filter((issue) => issue.severity === "warning")
+    ),
+  });
+};
 
 export const assembleOntology = Effect.fn("Ontology.assembleOntology")(function* (
   metadata: OntologyDefinitionMetadata,
@@ -411,9 +723,25 @@ export const assembleOntology = Effect.fn("Ontology.assembleOntology")(function*
     classesBySchemaIdentity: classReferenceIndex(seeds),
   };
   const classes = yield* Effect.forEach(seeds, (seed) => assembleClass(context, seed), { concurrency: 1 });
+  const validation = validateSkosProfiles(classes);
+
+  if (A.length(validation.errors) > 0) {
+    const firstError = yield* pipe(
+      validation.errors,
+      A.head,
+      O.match({
+        onNone: () =>
+          fail("invalidSkosProfile", "SKOS profile validation failed.", O.some(metadata.schemaIdentity), O.none()),
+        onSome: Effect.succeed,
+      })
+    );
+
+    return yield* fail("invalidSkosProfile", firstError.message, firstError.schemaIdentity, O.none());
+  }
 
   return AssembledOntology.make({
     metadata,
     classes,
+    validation,
   });
 });

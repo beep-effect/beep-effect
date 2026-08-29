@@ -140,6 +140,7 @@ const normalizeAbsoluteUri = (value: string): string => {
     return `${scheme}${normalizePercentEncoding(url.pathname)}${search}${hash}`;
   }
 
+  /* istanbul ignore next -- URL.host strips default http/https ports before this normalization guard */
   const normalizedHost =
     (scheme === "http:" && pipe(host, Str.endsWith(":80"))) || (scheme === "https:" && pipe(host, Str.endsWith(":443")))
       ? pipe(host, Str.replace(/:(80|443)$/, ""))

@@ -1,8 +1,13 @@
 import { describe, expect, it } from "tstyche";
+import type * as CoreIdentity from "@beep/identity";
 import type * as EntityId from "@beep/shared-domain/entity/EntityId";
 import type * as Identity from "@beep/shared-domain/identity";
 
 describe("P3 identity namespace types", () => {
+  it("exports the runtime AnyIdentityComposer schema type", () => {
+    expect<Identity.AnyIdentityComposer>().type.toBe<CoreIdentity.IdentityComposer<string>>();
+  });
+
   it("preserves AgentCapability companion aliases and literals", () => {
     expect<Identity.AgentCapability.AgentId>().type.toBe<EntityId.EntityIdValueFor<"AgentCapabilityAgentId">>();
     expect<Identity.AgentCapability.SkillId>().type.toBe<EntityId.EntityIdValueFor<"AgentCapabilitySkillId">>();

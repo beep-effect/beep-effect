@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "ontology-interop-roadmap",
+    "title": "Ontology Interop Roadmap",
+    "status": "completed-retained",
+    "created": "2026-06-04",
+    "updated": "2026-06-04",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "mission": "Retain the implemented @beep/rdf and @beep/ontology interop v1: SKOS profile behavior, Markdown documentation projection, JSON Schema sidecars, and domain-agnostic provenance hooks.",
+  "packetPath": "goals/ontology-interop-roadmap",
+  "lifecycle": "completed-retained",
+  "executionCapable": true,
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/ARCHITECTURE.md",
+    "goals/README.md",
+    "goals/ontology-interop-roadmap/README.md",
+    "goals/ontology-interop-roadmap/SPEC.md",
+    "goals/ontology-interop-roadmap/PLAN.md",
+    "goals/ontology-interop-roadmap/GOAL.md",
+    "goals/ontology-interop-roadmap/research/roadmap-synthesis.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ontology-interop-roadmap/GOAL.md"
+    }
+  ],
+  "packages": [
+    {
+      "name": "@beep/rdf",
+      "path": "packages/foundation/modeling/rdf",
+      "family": "foundation",
+      "kind": "modeling",
+      "role": "rdf-values-vocabularies-and-pure-syntax"
+    },
+    {
+      "name": "@beep/ontology",
+      "path": "packages/foundation/modeling/ontology",
+      "family": "foundation",
+      "kind": "modeling",
+      "role": "schema-backed-ontology-authoring-profiles-and-projections"
+    },
+    {
+      "name": "@beep/semantic-web",
+      "path": "packages/foundation/capability/semantic-web",
+      "family": "foundation",
+      "kind": "capability",
+      "role": "runtime-validation-reasoners-and-compatibility-home"
+    }
+  ],
+  "researchArtifacts": [
+    "research/current-surface-gap-analysis.md",
+    "research/folio-export-benchmark.md",
+    "research/standards-format-inventory.md",
+    "research/skos-profile-research.md",
+    "research/effect-json-schema-metadata.md",
+    "research/oip-workflow-fit.md",
+    "research/roadmap-synthesis.md"
+  ],
+  "decisions": {
+    "packageHome": "existing-foundation-modeling-packages",
+    "v1Spine": "skos-docs-schema",
+    "markdownProjection": "markdown-only-dual-link-mode",
+    "skosProfile": "opt-in-beside-current-class-model",
+    "skosValidation": "hard-errors-plus-warnings",
+    "jsonSchema": "non-rdf-sidecar",
+    "provenance": "domain-agnostic-core-hooks"
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research Packet",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "RDF Vocabulary Foundation",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Ontology SKOS Profile",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Markdown Documentation Projection",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "JSON Schema Sidecars And Provenance",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Focused Verification",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "jq . goals/ontology-interop-roadmap/ops/manifest.json",
+    "test \"$(wc -m < goals/ontology-interop-roadmap/GOAL.md)\" -le 4000",
+    "rg -n \"ontology-interop-roadmap|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ontology-interop-roadmap",
+    "git diff --check -- goals/ontology-interop-roadmap"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed the named v1 scope.",
+    "Runtime validation, reasoner, browser, or server endpoint work becomes necessary to finish v1.",
+    "Legal/OIP-specific concepts start leaking into foundation modeling APIs.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

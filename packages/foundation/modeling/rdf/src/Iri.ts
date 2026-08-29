@@ -207,6 +207,7 @@ const scanComponent = (
   while (index < Str.length(input)) {
     const codePoint = codePointAt(input, index);
 
+    /* istanbul ignore next -- loop bounds keep the code point lookup in range */
     if (codePoint === undefined) {
       return undefined;
     }
@@ -239,14 +240,14 @@ const scanComponent = (
     consumed += width;
   }
 
-  /* v8 ignore start -- callers gate required-empty segments before scanning */
+  /* istanbul ignore else -- callers gate required-empty segments before scanning */
   if (consumed >= minimumLength) {
     return index;
   }
 
+  /* istanbul ignore next -- callers gate required-empty segments before scanning */
   return undefined;
 };
-/* v8 ignore stop */
 
 const scanEntireComponent = (input: string, allowCodePoint: CodePointPredicate): boolean => {
   const end = scanComponent(input, 0, allowCodePoint, () => false);

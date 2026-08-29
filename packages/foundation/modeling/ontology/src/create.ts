@@ -5,11 +5,15 @@ import {
   makeClassDraft,
   makeDatatypePredicateDraft,
   makeObjectPredicateDraft,
+  makeProvenanceMetadata,
+  makeSkosConceptProfileDraft,
+  makeSkosConceptSchemeProfileDraft,
   optionalString,
 } from "./annotations.js";
 import { assembleOntology } from "./assembly.js";
 import { makeOntologyDefinitionMetadata, makeTermIri } from "./model.js";
 import { parseJsonLdOntology, projectJsonLdOntology } from "./projections/jsonld.js";
+import { projectMarkdown } from "./projections/markdown.js";
 import { projectTurtle } from "./projections/turtle.js";
 import { makeReferenceTarget, normalizeIriInput, normalizeTermNameInput } from "./references.js";
 import type { Effect } from "effect";
@@ -20,6 +24,9 @@ import type {
   OntologyCreateInput,
   OntologyDatatypePredicateAnnotationInput,
   OntologyObjectPredicateAnnotationInput,
+  OntologyProvenanceMetadataInput,
+  OntologySkosConceptProfileInput,
+  OntologySkosConceptSchemeProfileInput,
 } from "./annotations.js";
 import type {
   AssembledOntology,
@@ -28,7 +35,10 @@ import type {
   OntologyClassAnnotationDraft,
   OntologyDatatypePredicateAnnotationDraft,
   OntologyObjectPredicateAnnotationDraft,
+  OntologyProvenanceMetadata,
   OntologyReferenceTarget,
+  OntologySkosConceptProfileDraft,
+  OntologySkosConceptSchemeProfileDraft,
 } from "./model.js";
 import type { OntologyIriInput, OntologyReferenceTargetInput, OntologyTermNameInput } from "./references.js";
 
@@ -64,6 +74,11 @@ export const Ontology = {
       exact: (target: OntologyReferenceTargetInput): OntologyReferenceTarget => makeReferenceTarget(target),
       closeMatch: (target: OntologyReferenceTargetInput): OntologyReferenceTarget => makeReferenceTarget(target),
       sameAs: (target: OntologyReferenceTargetInput): OntologyReferenceTarget => makeReferenceTarget(target),
+      skosConcept: (input: OntologySkosConceptProfileInput): OntologySkosConceptProfileDraft =>
+        makeSkosConceptProfileDraft(input),
+      skosConceptScheme: (input: OntologySkosConceptSchemeProfileInput): OntologySkosConceptSchemeProfileDraft =>
+        makeSkosConceptSchemeProfileDraft(input),
+      provenance: (input: OntologyProvenanceMetadataInput): OntologyProvenanceMetadata => makeProvenanceMetadata(input),
       class: (classInput: OntologyClassAnnotationInput): OntologyClassAnnotationDraft => makeClassDraft(classInput),
       dataPredicate: (predicate: OntologyDatatypePredicateAnnotationInput): OntologyDatatypePredicateAnnotationDraft =>
         makeDatatypePredicateDraft(predicate),
@@ -74,6 +89,7 @@ export const Ontology = {
       toJsonLD: projectJsonLdOntology,
       fromJsonLD: parseJsonLdOntology,
       toTurtle: projectTurtle,
+      toMarkdown: projectMarkdown,
     };
     const $I = createOntologyIdentity(input.identity);
 

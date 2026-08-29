@@ -16,6 +16,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RdfId.create("semantic-schema-metadata");
+/* istanbul ignore next -- public callers receive schema issues through Result decoding */
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
@@ -367,6 +368,7 @@ const findSemanticSchemaMetadata = (
   visited: WeakSet<object>
 ): SemanticSchemaMetadataAnnotationPayload | undefined => {
   if (A.isArray(value)) {
+    /* istanbul ignore next -- Effect Schema AST arrays are acyclic through public schema constructors */
     if (visited.has(value)) {
       return;
     }
@@ -387,6 +389,7 @@ const findSemanticSchemaMetadata = (
     return;
   }
 
+  /* istanbul ignore next -- Effect Schema AST objects are acyclic through public schema constructors */
   if (visited.has(value)) {
     return;
   }

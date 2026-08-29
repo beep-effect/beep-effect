@@ -26,9 +26,9 @@
     "packagesWithPublicExports": 82,
     "packagesWithoutPublicExports": 6,
     "missingWorkspaceMetadata": 4,
-    "importSpecifiers": 1075,
-    "publicExportEntries": 14977,
-    "uniquePackageSymbols": 6461
+    "importSpecifiers": 1078,
+    "publicExportEntries": 15059,
+    "uniquePackageSymbols": 6512
   },
   "packages": [
     {
@@ -1312,9 +1312,9 @@
         "@beep/ontology"
       ],
       "counts": {
-        "publicExportEntries": 11,
-        "uniqueSymbols": 11,
-        "sourceFiles": 8
+        "publicExportEntries": 12,
+        "uniqueSymbols": 12,
+        "sourceFiles": 9
       },
       "exports": [
         {
@@ -1327,7 +1327,7 @@
           "symbolName": "getOntologyKeyMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/model.ts",
-          "sourceLine": 352,
+          "sourceLine": 591,
           "summary": "Reads ontology metadata from a schema property-key annotation display map.",
           "categories": [
             "utilities"
@@ -1351,7 +1351,7 @@
           "symbolName": "getOntologyMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/model.ts",
-          "sourceLine": 343,
+          "sourceLine": 582,
           "summary": "Reads ontology metadata from an Effect Schema annotation display map.",
           "categories": [
             "utilities"
@@ -1375,7 +1375,7 @@
           "symbolName": "isOntologyClassAnnotationDraft",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/model.ts",
-          "sourceLine": 276,
+          "sourceLine": 518,
           "summary": "",
           "categories": [],
           "since": [],
@@ -1392,7 +1392,7 @@
           "symbolName": "isOntologyPredicateAnnotationDraft",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/model.ts",
-          "sourceLine": 277,
+          "sourceLine": 519,
           "summary": "",
           "categories": [],
           "since": [],
@@ -1409,7 +1409,7 @@
           "symbolName": "Ontology",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/create.ts",
-          "sourceLine": 42,
+          "sourceLine": 52,
           "summary": "Creates an ontology authoring scope with identity-aware annotation helpers,",
           "categories": [
             "constructors"
@@ -1433,7 +1433,7 @@
           "symbolName": "OntologyAssemblyError",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/ontology/src/model.ts",
-          "sourceLine": 370,
+          "sourceLine": 610,
           "summary": "",
           "categories": [],
           "since": [],
@@ -1450,7 +1450,7 @@
           "symbolName": "parseJsonLdOntology",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/projections/jsonld.ts",
-          "sourceLine": 273,
+          "sourceLine": 487,
           "summary": "Parses the POC JSON-LD graph representation back into an assembled ontology result.",
           "categories": [
             "projections"
@@ -1474,7 +1474,7 @@
           "symbolName": "projectJsonLdContext",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/projections/jsonld.ts",
-          "sourceLine": 59,
+          "sourceLine": 69,
           "summary": "Projects an assembled ontology into a reusable JSON-LD context document.",
           "categories": [
             "projections"
@@ -1498,7 +1498,7 @@
           "symbolName": "projectJsonLdOntology",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/projections/jsonld.ts",
-          "sourceLine": 148,
+          "sourceLine": 264,
           "summary": "Projects an assembled ontology into the POC JSON-LD graph representation.",
           "categories": [
             "projections"
@@ -1519,10 +1519,34 @@
           "importSpecifier": "@beep/ontology",
           "exportSubpath": ".",
           "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
+          "symbolName": "projectMarkdown",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/ontology/src/projections/markdown.ts",
+          "sourceLine": 351,
+          "summary": "Projects an assembled ontology into deterministic Markdown documentation.",
+          "categories": [
+            "projections"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/ontology packages/foundation/modeling/ontology @beep/ontology . projectmarkdown const projects an assembled ontology into deterministic markdown documentation. projections packages/foundation/modeling/ontology/src/projections/markdown.ts"
+        },
+        {
+          "packageName": "@beep/ontology",
+          "packagePath": "packages/foundation/modeling/ontology",
+          "topoOrder": 6,
+          "importSpecifier": "@beep/ontology",
+          "exportSubpath": ".",
+          "exportedFromPath": "packages/foundation/modeling/ontology/src/index.ts",
           "symbolName": "projectTurtle",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/ontology/src/projections/turtle.ts",
-          "sourceLine": 125,
+          "sourceLine": 260,
           "summary": "Projects an assembled ontology into a compact Turtle document.",
           "categories": [
             "projections"
@@ -5877,8 +5901,8 @@
         "@beep/shared-domain/values/OnePasswordReference/OnePasswordReference.model"
       ],
       "counts": {
-        "publicExportEntries": 291,
-        "uniqueSymbols": 111,
+        "publicExportEntries": 297,
+        "uniqueSymbols": 113,
         "sourceFiles": 37
       },
       "exports": [
@@ -5977,7 +6001,7 @@
           "symbolName": "Identity",
           "exportKind": "SourceFile",
           "sourcePath": "packages/shared/domain/src/identity/index.ts",
-          "sourceLine": 21,
+          "sourceLine": 8,
           "summary": "",
           "categories": [],
           "since": [],
@@ -8524,6 +8548,56 @@
           "importSpecifier": "@beep/shared-domain/identity",
           "exportSubpath": "./identity",
           "exportedFromPath": "packages/shared/domain/src/identity.ts",
+          "symbolName": "AnyIdentityComposer",
+          "exportKind": "const",
+          "sourcePath": "packages/shared/domain/src/identity/index.ts",
+          "sourceLine": 115,
+          "summary": "Effect Schema for validating any runtime {@link IdentityComposerType} value.",
+          "categories": [
+            "schemas"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity ./identity anyidentitycomposer const effect schema for validating any runtime {@link identitycomposertype} value. schemas packages/shared/domain/src/identity/index.ts"
+        },
+        {
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "topoOrder": 13,
+          "importSpecifier": "@beep/shared-domain/identity",
+          "exportSubpath": "./identity",
+          "exportedFromPath": "packages/shared/domain/src/identity.ts",
+          "symbolName": "AnyIdentityComposer",
+          "exportKind": "type",
+          "sourcePath": "packages/shared/domain/src/identity/index.ts",
+          "sourceLine": 135,
+          "summary": "Runtime type for {@link AnyIdentityComposer}.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity ./identity anyidentitycomposer type runtime type for {@link anyidentitycomposer}. models packages/shared/domain/src/identity/index.ts"
+        },
+        {
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "topoOrder": 13,
+          "importSpecifier": "@beep/shared-domain/identity",
+          "exportSubpath": "./identity",
+          "exportedFromPath": "packages/shared/domain/src/identity.ts",
           "symbolName": "Epistemic",
           "exportKind": "SourceFile",
           "sourcePath": "packages/shared/domain/src/identity/Epistemic.ts",
@@ -8533,6 +8607,32 @@
           "since": [],
           "tags": [],
           "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity ./identity epistemic sourcefile packages/shared/domain/src/identity/epistemic.ts"
+        },
+        {
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "topoOrder": 13,
+          "importSpecifier": "@beep/shared-domain/identity",
+          "exportSubpath": "./identity",
+          "exportedFromPath": "packages/shared/domain/src/identity.ts",
+          "symbolName": "isIdentityComposer",
+          "exportKind": "const",
+          "sourcePath": "packages/shared/domain/src/identity/index.ts",
+          "sourceLine": 81,
+          "summary": "Guard for runtime identity composer values.",
+          "categories": [
+            "guards"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@remarks",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity ./identity isidentitycomposer const guard for runtime identity composer values. guards packages/shared/domain/src/identity/index.ts"
         },
         {
           "packageName": "@beep/shared-domain",
@@ -8926,6 +9026,56 @@
           "importSpecifier": "@beep/shared-domain/identity/index",
           "exportSubpath": "./identity/index",
           "exportedFromPath": "packages/shared/domain/src/identity/index.ts",
+          "symbolName": "AnyIdentityComposer",
+          "exportKind": "const",
+          "sourcePath": "packages/shared/domain/src/identity/index.ts",
+          "sourceLine": 115,
+          "summary": "Effect Schema for validating any runtime {@link IdentityComposerType} value.",
+          "categories": [
+            "schemas"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity/index ./identity/index anyidentitycomposer const effect schema for validating any runtime {@link identitycomposertype} value. schemas packages/shared/domain/src/identity/index.ts"
+        },
+        {
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "topoOrder": 13,
+          "importSpecifier": "@beep/shared-domain/identity/index",
+          "exportSubpath": "./identity/index",
+          "exportedFromPath": "packages/shared/domain/src/identity/index.ts",
+          "symbolName": "AnyIdentityComposer",
+          "exportKind": "type",
+          "sourcePath": "packages/shared/domain/src/identity/index.ts",
+          "sourceLine": 135,
+          "summary": "Runtime type for {@link AnyIdentityComposer}.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity/index ./identity/index anyidentitycomposer type runtime type for {@link anyidentitycomposer}. models packages/shared/domain/src/identity/index.ts"
+        },
+        {
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "topoOrder": 13,
+          "importSpecifier": "@beep/shared-domain/identity/index",
+          "exportSubpath": "./identity/index",
+          "exportedFromPath": "packages/shared/domain/src/identity/index.ts",
           "symbolName": "Epistemic",
           "exportKind": "SourceFile",
           "sourcePath": "packages/shared/domain/src/identity/Epistemic.ts",
@@ -8935,6 +9085,32 @@
           "since": [],
           "tags": [],
           "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity/index ./identity/index epistemic sourcefile packages/shared/domain/src/identity/epistemic.ts"
+        },
+        {
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "topoOrder": 13,
+          "importSpecifier": "@beep/shared-domain/identity/index",
+          "exportSubpath": "./identity/index",
+          "exportedFromPath": "packages/shared/domain/src/identity/index.ts",
+          "symbolName": "isIdentityComposer",
+          "exportKind": "const",
+          "sourcePath": "packages/shared/domain/src/identity/index.ts",
+          "sourceLine": 81,
+          "summary": "Guard for runtime identity composer values.",
+          "categories": [
+            "guards"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@remarks",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/shared-domain packages/shared/domain @beep/shared-domain/identity/index ./identity/index isidentitycomposer const guard for runtime identity composer values. guards packages/shared/domain/src/identity/index.ts"
         },
         {
           "packageName": "@beep/shared-domain",
@@ -10349,7 +10525,7 @@
           "symbolName": "Identity",
           "exportKind": "SourceFile",
           "sourcePath": "packages/shared/domain/src/identity/index.ts",
-          "sourceLine": 21,
+          "sourceLine": 8,
           "summary": "",
           "categories": [],
           "since": [],
@@ -115740,7 +115916,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 935,
+          "sourceLine": 936,
           "summary": "RFC 3987 `absolute-IRI` schema without a fragment component.",
           "categories": [
             "validation"
@@ -115765,7 +115941,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 956,
+          "sourceLine": 957,
           "summary": "RFC 3987 `absolute-IRI` syntax without a fragment component.",
           "categories": [
             "models"
@@ -115790,7 +115966,7 @@
           "symbolName": "IRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 973,
+          "sourceLine": 974,
           "summary": "RFC 3987 `IRI` schema.",
           "categories": [
             "validation"
@@ -115815,7 +115991,7 @@
           "symbolName": "IRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 994,
+          "sourceLine": 995,
           "summary": "RFC 3987 `IRI` syntax.",
           "categories": [
             "models"
@@ -115840,7 +116016,7 @@
           "symbolName": "IRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 859,
+          "sourceLine": 860,
           "summary": "RFC 3987 `IRI-reference` schema, including absolute and relative forms.",
           "categories": [
             "validation"
@@ -115865,7 +116041,7 @@
           "symbolName": "IRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 880,
+          "sourceLine": 881,
           "summary": "RFC 3987 `IRI-reference` syntax, including absolute and relative forms.",
           "categories": [
             "models"
@@ -115890,7 +116066,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 897,
+          "sourceLine": 898,
           "summary": "RFC 3987 `irelative-ref` schema.",
           "categories": [
             "validation"
@@ -115915,7 +116091,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 918,
+          "sourceLine": 919,
           "summary": "RFC 3987 `irelative-ref` syntax.",
           "categories": [
             "models"
@@ -116702,7 +116878,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 935,
+          "sourceLine": 936,
           "summary": "RFC 3987 `absolute-IRI` schema without a fragment component.",
           "categories": [
             "validation"
@@ -116727,7 +116903,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 956,
+          "sourceLine": 957,
           "summary": "RFC 3987 `absolute-IRI` syntax without a fragment component.",
           "categories": [
             "models"
@@ -116752,7 +116928,7 @@
           "symbolName": "IRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 973,
+          "sourceLine": 974,
           "summary": "RFC 3987 `IRI` schema.",
           "categories": [
             "validation"
@@ -116777,7 +116953,7 @@
           "symbolName": "IRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 994,
+          "sourceLine": 995,
           "summary": "RFC 3987 `IRI` syntax.",
           "categories": [
             "models"
@@ -116802,7 +116978,7 @@
           "symbolName": "IRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 859,
+          "sourceLine": 860,
           "summary": "RFC 3987 `IRI-reference` schema, including absolute and relative forms.",
           "categories": [
             "validation"
@@ -116827,7 +117003,7 @@
           "symbolName": "IRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 880,
+          "sourceLine": 881,
           "summary": "RFC 3987 `IRI-reference` syntax, including absolute and relative forms.",
           "categories": [
             "models"
@@ -116852,7 +117028,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 897,
+          "sourceLine": 898,
           "summary": "RFC 3987 `irelative-ref` schema.",
           "categories": [
             "validation"
@@ -116877,7 +117053,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 918,
+          "sourceLine": 919,
           "summary": "RFC 3987 `irelative-ref` syntax.",
           "categories": [
             "models"
@@ -116902,7 +117078,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 935,
+          "sourceLine": 936,
           "summary": "RFC 3987 `absolute-IRI` schema without a fragment component.",
           "categories": [
             "validation"
@@ -116927,7 +117103,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 956,
+          "sourceLine": 957,
           "summary": "RFC 3987 `absolute-IRI` syntax without a fragment component.",
           "categories": [
             "models"
@@ -116952,7 +117128,7 @@
           "symbolName": "IRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 973,
+          "sourceLine": 974,
           "summary": "RFC 3987 `IRI` schema.",
           "categories": [
             "validation"
@@ -116977,7 +117153,7 @@
           "symbolName": "IRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 994,
+          "sourceLine": 995,
           "summary": "RFC 3987 `IRI` syntax.",
           "categories": [
             "models"
@@ -117002,7 +117178,7 @@
           "symbolName": "IRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 859,
+          "sourceLine": 860,
           "summary": "RFC 3987 `IRI-reference` schema, including absolute and relative forms.",
           "categories": [
             "validation"
@@ -117027,7 +117203,7 @@
           "symbolName": "IRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 880,
+          "sourceLine": 881,
           "summary": "RFC 3987 `IRI-reference` syntax, including absolute and relative forms.",
           "categories": [
             "models"
@@ -117052,7 +117228,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 897,
+          "sourceLine": 898,
           "summary": "RFC 3987 `irelative-ref` schema.",
           "categories": [
             "validation"
@@ -117077,7 +117253,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 918,
+          "sourceLine": 919,
           "summary": "RFC 3987 `irelative-ref` syntax.",
           "categories": [
             "models"
@@ -118252,7 +118428,7 @@
           "symbolName": "areDatasetsEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1043,
+          "sourceLine": 1044,
           "summary": "Compare datasets by sorted quad serialization.",
           "categories": [
             "utilities"
@@ -118556,7 +118732,7 @@
           "symbolName": "makeDataset",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 951,
+          "sourceLine": 952,
           "summary": "Build a dataset from quads.",
           "categories": [
             "utilities"
@@ -118662,7 +118838,7 @@
           "symbolName": "makeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 915,
+          "sourceLine": 916,
           "summary": "Build an RDF quad.",
           "categories": [
             "utilities"
@@ -118689,7 +118865,7 @@
           "symbolName": "MakeQuadOptions",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 875,
+          "sourceLine": 876,
           "summary": "Object and optional graph settings for {@link makeQuad}.",
           "categories": [
             "utilities"
@@ -118939,7 +119115,7 @@
           "symbolName": "serializeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1000,
+          "sourceLine": 1001,
           "summary": "Serialize an RDF quad to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -118966,7 +119142,7 @@
           "symbolName": "serializeTerm",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 969,
+          "sourceLine": 970,
           "summary": "Serialize an RDF term to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -118993,7 +119169,7 @@
           "symbolName": "sortDatasetQuads",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1022,
+          "sourceLine": 1023,
           "summary": "Sort dataset quads by deterministic quad serialization.",
           "categories": [
             "utilities"
@@ -119120,7 +119296,7 @@
           "symbolName": "annotateSemanticSchema",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 346,
+          "sourceLine": 347,
           "summary": "Attach validated semantic metadata to any Effect schema.",
           "categories": [
             "utilities"
@@ -119147,7 +119323,7 @@
           "symbolName": "getSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 427,
+          "sourceLine": 430,
           "summary": "Read semantic metadata from any Effect schema, if present.",
           "categories": [
             "utilities"
@@ -119174,7 +119350,7 @@
           "symbolName": "makeSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 316,
+          "sourceLine": 317,
           "summary": "Validate a metadata payload before attaching it to a public schema.",
           "categories": [
             "utilities"
@@ -119201,7 +119377,7 @@
           "symbolName": "SemanticRepresentation",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 220,
+          "sourceLine": 221,
           "summary": "Single representation note attached to semantic-web schemas.",
           "categories": [
             "models"
@@ -119226,7 +119402,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 151,
+          "sourceLine": 152,
           "summary": "Representation label for semantic-web values.",
           "categories": [
             "models"
@@ -119251,7 +119427,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 178,
+          "sourceLine": 179,
           "summary": "Type for {@link SemanticRepresentationKind}.",
           "categories": [
             "models"
@@ -119276,7 +119452,7 @@
           "symbolName": "SemanticSchemaMetadata",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "Typed metadata payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -119301,7 +119477,7 @@
           "symbolName": "SemanticSchemaMetadataAnnotationPayload",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 281,
+          "sourceLine": 282,
           "summary": "Payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -119326,7 +119502,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 37,
+          "sourceLine": 38,
           "summary": "Closed v1 metadata kind domain for semantic-web schemas.",
           "categories": [
             "models"
@@ -119351,7 +119527,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 66,
+          "sourceLine": 67,
           "summary": "Type for {@link SemanticSchemaMetadataKind}.",
           "categories": [
             "models"
@@ -119376,7 +119552,7 @@
           "symbolName": "SemanticSchemaSpecification",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 193,
+          "sourceLine": 194,
           "summary": "Single specification reference attached to public semantic-web schemas.",
           "categories": [
             "models"
@@ -119401,7 +119577,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 116,
+          "sourceLine": 117,
           "summary": "Specification disposition attached to a semantic schema reference.",
           "categories": [
             "models"
@@ -119426,7 +119602,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 136,
+          "sourceLine": 137,
           "summary": "Type for {@link SemanticSchemaSpecificationDisposition}.",
           "categories": [
             "models"
@@ -119451,7 +119627,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 81,
+          "sourceLine": 82,
           "summary": "Stability classification for semantic-web schema metadata.",
           "categories": [
             "models"
@@ -119476,7 +119652,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 101,
+          "sourceLine": 102,
           "summary": "Type for {@link SemanticSchemaStatus}.",
           "categories": [
             "models"
@@ -121551,7 +121727,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 282,
+          "sourceLine": 283,
           "summary": "RFC 3986 `absolute-URI` schema without a fragment component.",
           "categories": [
             "models"
@@ -121576,7 +121752,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 304,
+          "sourceLine": 305,
           "summary": "Type for {@link AbsoluteURI}.",
           "categories": [
             "models"
@@ -121601,7 +121777,7 @@
           "symbolName": "areUrisEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 405,
+          "sourceLine": 406,
           "summary": "Compare two URI values using URI-family normalization rules.",
           "categories": [
             "utilities"
@@ -121628,7 +121804,7 @@
           "symbolName": "normalizeUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 361,
+          "sourceLine": 362,
           "summary": "Normalize a URI or URI reference for transport-oriented comparisons.",
           "categories": [
             "utilities"
@@ -121655,7 +121831,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "RFC 3986 `relative-ref` schema.",
           "categories": [
             "models"
@@ -121680,7 +121856,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 265,
+          "sourceLine": 266,
           "summary": "Type for {@link RelativeURIReference}.",
           "categories": [
             "models"
@@ -121705,7 +121881,7 @@
           "symbolName": "resolveUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 381,
+          "sourceLine": 382,
           "summary": "Resolve a URI reference against an absolute base URI.",
           "categories": [
             "utilities"
@@ -121732,7 +121908,7 @@
           "symbolName": "URI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 321,
+          "sourceLine": 322,
           "summary": "RFC 3986 `URI` schema.",
           "categories": [
             "models"
@@ -121757,7 +121933,7 @@
           "symbolName": "URI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 343,
+          "sourceLine": 344,
           "summary": "Type for {@link URI}.",
           "categories": [
             "models"
@@ -121782,7 +121958,7 @@
           "symbolName": "URIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 204,
+          "sourceLine": 205,
           "summary": "RFC 3986 `URI-reference` schema, including absolute and relative forms.",
           "categories": [
             "models"
@@ -121807,7 +121983,7 @@
           "symbolName": "URIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 226,
+          "sourceLine": 227,
           "summary": "Type for {@link URIReference}.",
           "categories": [
             "models"
@@ -122407,7 +122583,7 @@
           "symbolName": "XSD_ANY_URI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 54,
+          "sourceLine": 55,
           "summary": "`xsd:anyURI`",
           "categories": [
             "models"
@@ -122432,7 +122608,7 @@
           "symbolName": "XSD_BOOLEAN",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 69,
+          "sourceLine": 70,
           "summary": "`xsd:boolean`",
           "categories": [
             "models"
@@ -122457,7 +122633,7 @@
           "symbolName": "XSD_DOUBLE",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 99,
+          "sourceLine": 100,
           "summary": "`xsd:double`",
           "categories": [
             "models"
@@ -122482,7 +122658,7 @@
           "symbolName": "XSD_INTEGER",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 84,
+          "sourceLine": 85,
           "summary": "`xsd:integer`",
           "categories": [
             "models"
@@ -122507,7 +122683,7 @@
           "symbolName": "XSD_NAMESPACE",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 24,
+          "sourceLine": 25,
           "summary": "XSD namespace IRI.",
           "categories": [
             "configuration"
@@ -122516,6 +122692,7 @@
             "0.0.0"
           ],
           "tags": [
+            "@see",
             "@example",
             "@since",
             "@category"
@@ -122532,7 +122709,7 @@
           "symbolName": "XSD_STRING",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 39,
+          "sourceLine": 40,
           "summary": "`xsd:string`",
           "categories": [
             "models"
@@ -321593,12 +321770,13 @@
         "@beep/rdf/Vocab/Prov",
         "@beep/rdf/Vocab/Rdf",
         "@beep/rdf/Vocab/Rdfs",
+        "@beep/rdf/Vocab/Skos",
         "@beep/rdf/Vocab/Xsd"
       ],
       "counts": {
-        "publicExportEntries": 280,
-        "uniqueSymbols": 89,
-        "sourceFiles": 12
+        "publicExportEntries": 301,
+        "uniqueSymbols": 110,
+        "sourceFiles": 13
       },
       "exports": [
         {
@@ -321611,7 +321789,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 935,
+          "sourceLine": 936,
           "summary": "RFC 3987 `absolute-IRI` schema without a fragment component.",
           "categories": [
             "validation"
@@ -321636,7 +321814,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 956,
+          "sourceLine": 957,
           "summary": "RFC 3987 `absolute-IRI` syntax without a fragment component.",
           "categories": [
             "models"
@@ -321661,7 +321839,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 282,
+          "sourceLine": 283,
           "summary": "RFC 3986 `absolute-URI` schema without a fragment component.",
           "categories": [
             "models"
@@ -321686,7 +321864,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 304,
+          "sourceLine": 305,
           "summary": "Type for {@link AbsoluteURI}.",
           "categories": [
             "models"
@@ -321711,7 +321889,7 @@
           "symbolName": "annotateSemanticSchema",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 346,
+          "sourceLine": 347,
           "summary": "Attach validated semantic metadata to any Effect schema.",
           "categories": [
             "utilities"
@@ -321738,7 +321916,7 @@
           "symbolName": "areDatasetsEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1043,
+          "sourceLine": 1044,
           "summary": "Compare datasets by sorted quad serialization.",
           "categories": [
             "utilities"
@@ -321765,7 +321943,7 @@
           "symbolName": "areUrisEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 405,
+          "sourceLine": 406,
           "summary": "Compare two URI values using URI-family normalization rules.",
           "categories": [
             "utilities"
@@ -321917,7 +322095,7 @@
           "symbolName": "getSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 427,
+          "sourceLine": 430,
           "summary": "Read semantic metadata from any Effect schema, if present.",
           "categories": [
             "utilities"
@@ -321994,7 +322172,7 @@
           "symbolName": "IRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 973,
+          "sourceLine": 974,
           "summary": "RFC 3987 `IRI` schema.",
           "categories": [
             "validation"
@@ -322019,7 +322197,7 @@
           "symbolName": "IRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 994,
+          "sourceLine": 995,
           "summary": "RFC 3987 `IRI` syntax.",
           "categories": [
             "models"
@@ -322044,7 +322222,7 @@
           "symbolName": "IRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 859,
+          "sourceLine": 860,
           "summary": "RFC 3987 `IRI-reference` schema, including absolute and relative forms.",
           "categories": [
             "validation"
@@ -322069,7 +322247,7 @@
           "symbolName": "IRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 880,
+          "sourceLine": 881,
           "summary": "RFC 3987 `IRI-reference` syntax, including absolute and relative forms.",
           "categories": [
             "models"
@@ -322571,7 +322749,7 @@
           "symbolName": "makeDataset",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 951,
+          "sourceLine": 952,
           "summary": "Build a dataset from quads.",
           "categories": [
             "utilities"
@@ -322677,7 +322855,7 @@
           "symbolName": "makeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 915,
+          "sourceLine": 916,
           "summary": "Build an RDF quad.",
           "categories": [
             "utilities"
@@ -322704,7 +322882,7 @@
           "symbolName": "MakeQuadOptions",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 875,
+          "sourceLine": 876,
           "summary": "Object and optional graph settings for {@link makeQuad}.",
           "categories": [
             "utilities"
@@ -322729,7 +322907,7 @@
           "symbolName": "makeSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 316,
+          "sourceLine": 317,
           "summary": "Validate a metadata payload before attaching it to a public schema.",
           "categories": [
             "utilities"
@@ -322806,7 +322984,7 @@
           "symbolName": "normalizeUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 361,
+          "sourceLine": 362,
           "summary": "Normalize a URI or URI reference for transport-oriented comparisons.",
           "categories": [
             "utilities"
@@ -323008,7 +323186,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 897,
+          "sourceLine": 898,
           "summary": "RFC 3987 `irelative-ref` schema.",
           "categories": [
             "validation"
@@ -323033,7 +323211,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 918,
+          "sourceLine": 919,
           "summary": "RFC 3987 `irelative-ref` syntax.",
           "categories": [
             "models"
@@ -323058,7 +323236,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "RFC 3986 `relative-ref` schema.",
           "categories": [
             "models"
@@ -323083,7 +323261,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 265,
+          "sourceLine": 266,
           "summary": "Type for {@link RelativeURIReference}.",
           "categories": [
             "models"
@@ -323108,7 +323286,7 @@
           "symbolName": "resolveUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 381,
+          "sourceLine": 382,
           "summary": "Resolve a URI reference against an absolute base URI.",
           "categories": [
             "utilities"
@@ -323135,7 +323313,7 @@
           "symbolName": "SemanticRepresentation",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 220,
+          "sourceLine": 221,
           "summary": "Single representation note attached to semantic-web schemas.",
           "categories": [
             "models"
@@ -323160,7 +323338,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 151,
+          "sourceLine": 152,
           "summary": "Representation label for semantic-web values.",
           "categories": [
             "models"
@@ -323185,7 +323363,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 178,
+          "sourceLine": 179,
           "summary": "Type for {@link SemanticRepresentationKind}.",
           "categories": [
             "models"
@@ -323210,7 +323388,7 @@
           "symbolName": "SemanticSchemaMetadata",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "Typed metadata payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -323235,7 +323413,7 @@
           "symbolName": "SemanticSchemaMetadataAnnotationPayload",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 281,
+          "sourceLine": 282,
           "summary": "Payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -323260,7 +323438,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 37,
+          "sourceLine": 38,
           "summary": "Closed v1 metadata kind domain for semantic-web schemas.",
           "categories": [
             "models"
@@ -323285,7 +323463,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 66,
+          "sourceLine": 67,
           "summary": "Type for {@link SemanticSchemaMetadataKind}.",
           "categories": [
             "models"
@@ -323310,7 +323488,7 @@
           "symbolName": "SemanticSchemaSpecification",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 193,
+          "sourceLine": 194,
           "summary": "Single specification reference attached to public semantic-web schemas.",
           "categories": [
             "models"
@@ -323335,7 +323513,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 116,
+          "sourceLine": 117,
           "summary": "Specification disposition attached to a semantic schema reference.",
           "categories": [
             "models"
@@ -323360,7 +323538,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 136,
+          "sourceLine": 137,
           "summary": "Type for {@link SemanticSchemaSpecificationDisposition}.",
           "categories": [
             "models"
@@ -323385,7 +323563,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 81,
+          "sourceLine": 82,
           "summary": "Stability classification for semantic-web schema metadata.",
           "categories": [
             "models"
@@ -323410,7 +323588,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 101,
+          "sourceLine": 102,
           "summary": "Type for {@link SemanticSchemaStatus}.",
           "categories": [
             "models"
@@ -323435,7 +323613,7 @@
           "symbolName": "serializeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1000,
+          "sourceLine": 1001,
           "summary": "Serialize an RDF quad to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -323462,7 +323640,7 @@
           "symbolName": "serializeTerm",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 969,
+          "sourceLine": 970,
           "summary": "Serialize an RDF term to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -323489,7 +323667,7 @@
           "symbolName": "sortDatasetQuads",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1022,
+          "sourceLine": 1023,
           "summary": "Sort dataset quads by deterministic quad serialization.",
           "categories": [
             "utilities"
@@ -323616,7 +323794,7 @@
           "symbolName": "URI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 321,
+          "sourceLine": 322,
           "summary": "RFC 3986 `URI` schema.",
           "categories": [
             "models"
@@ -323641,7 +323819,7 @@
           "symbolName": "URI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 343,
+          "sourceLine": 344,
           "summary": "Type for {@link URI}.",
           "categories": [
             "models"
@@ -323666,7 +323844,7 @@
           "symbolName": "URIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 204,
+          "sourceLine": 205,
           "summary": "RFC 3986 `URI-reference` schema, including absolute and relative forms.",
           "categories": [
             "models"
@@ -323691,7 +323869,7 @@
           "symbolName": "URIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 226,
+          "sourceLine": 227,
           "summary": "Type for {@link URIReference}.",
           "categories": [
             "models"
@@ -323740,7 +323918,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 935,
+          "sourceLine": 936,
           "summary": "RFC 3987 `absolute-IRI` schema without a fragment component.",
           "categories": [
             "validation"
@@ -323765,7 +323943,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 956,
+          "sourceLine": 957,
           "summary": "RFC 3987 `absolute-IRI` syntax without a fragment component.",
           "categories": [
             "models"
@@ -323790,7 +323968,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 282,
+          "sourceLine": 283,
           "summary": "RFC 3986 `absolute-URI` schema without a fragment component.",
           "categories": [
             "models"
@@ -323815,7 +323993,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 304,
+          "sourceLine": 305,
           "summary": "Type for {@link AbsoluteURI}.",
           "categories": [
             "models"
@@ -323840,7 +324018,7 @@
           "symbolName": "annotateSemanticSchema",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 346,
+          "sourceLine": 347,
           "summary": "Attach validated semantic metadata to any Effect schema.",
           "categories": [
             "utilities"
@@ -323867,7 +324045,7 @@
           "symbolName": "areDatasetsEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1043,
+          "sourceLine": 1044,
           "summary": "Compare datasets by sorted quad serialization.",
           "categories": [
             "utilities"
@@ -323894,7 +324072,7 @@
           "symbolName": "areUrisEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 405,
+          "sourceLine": 406,
           "summary": "Compare two URI values using URI-family normalization rules.",
           "categories": [
             "utilities"
@@ -324046,7 +324224,7 @@
           "symbolName": "getSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 427,
+          "sourceLine": 430,
           "summary": "Read semantic metadata from any Effect schema, if present.",
           "categories": [
             "utilities"
@@ -324123,7 +324301,7 @@
           "symbolName": "IRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 973,
+          "sourceLine": 974,
           "summary": "RFC 3987 `IRI` schema.",
           "categories": [
             "validation"
@@ -324148,7 +324326,7 @@
           "symbolName": "IRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 994,
+          "sourceLine": 995,
           "summary": "RFC 3987 `IRI` syntax.",
           "categories": [
             "models"
@@ -324173,7 +324351,7 @@
           "symbolName": "IRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 859,
+          "sourceLine": 860,
           "summary": "RFC 3987 `IRI-reference` schema, including absolute and relative forms.",
           "categories": [
             "validation"
@@ -324198,7 +324376,7 @@
           "symbolName": "IRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 880,
+          "sourceLine": 881,
           "summary": "RFC 3987 `IRI-reference` syntax, including absolute and relative forms.",
           "categories": [
             "models"
@@ -324700,7 +324878,7 @@
           "symbolName": "makeDataset",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 951,
+          "sourceLine": 952,
           "summary": "Build a dataset from quads.",
           "categories": [
             "utilities"
@@ -324806,7 +324984,7 @@
           "symbolName": "makeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 915,
+          "sourceLine": 916,
           "summary": "Build an RDF quad.",
           "categories": [
             "utilities"
@@ -324833,7 +325011,7 @@
           "symbolName": "MakeQuadOptions",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 875,
+          "sourceLine": 876,
           "summary": "Object and optional graph settings for {@link makeQuad}.",
           "categories": [
             "utilities"
@@ -324858,7 +325036,7 @@
           "symbolName": "makeSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 316,
+          "sourceLine": 317,
           "summary": "Validate a metadata payload before attaching it to a public schema.",
           "categories": [
             "utilities"
@@ -324935,7 +325113,7 @@
           "symbolName": "normalizeUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 361,
+          "sourceLine": 362,
           "summary": "Normalize a URI or URI reference for transport-oriented comparisons.",
           "categories": [
             "utilities"
@@ -325137,7 +325315,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 897,
+          "sourceLine": 898,
           "summary": "RFC 3987 `irelative-ref` schema.",
           "categories": [
             "validation"
@@ -325162,7 +325340,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 918,
+          "sourceLine": 919,
           "summary": "RFC 3987 `irelative-ref` syntax.",
           "categories": [
             "models"
@@ -325187,7 +325365,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "RFC 3986 `relative-ref` schema.",
           "categories": [
             "models"
@@ -325212,7 +325390,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 265,
+          "sourceLine": 266,
           "summary": "Type for {@link RelativeURIReference}.",
           "categories": [
             "models"
@@ -325237,7 +325415,7 @@
           "symbolName": "resolveUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 381,
+          "sourceLine": 382,
           "summary": "Resolve a URI reference against an absolute base URI.",
           "categories": [
             "utilities"
@@ -325264,7 +325442,7 @@
           "symbolName": "SemanticRepresentation",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 220,
+          "sourceLine": 221,
           "summary": "Single representation note attached to semantic-web schemas.",
           "categories": [
             "models"
@@ -325289,7 +325467,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 151,
+          "sourceLine": 152,
           "summary": "Representation label for semantic-web values.",
           "categories": [
             "models"
@@ -325314,7 +325492,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 178,
+          "sourceLine": 179,
           "summary": "Type for {@link SemanticRepresentationKind}.",
           "categories": [
             "models"
@@ -325339,7 +325517,7 @@
           "symbolName": "SemanticSchemaMetadata",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "Typed metadata payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -325364,7 +325542,7 @@
           "symbolName": "SemanticSchemaMetadataAnnotationPayload",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 281,
+          "sourceLine": 282,
           "summary": "Payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -325389,7 +325567,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 37,
+          "sourceLine": 38,
           "summary": "Closed v1 metadata kind domain for semantic-web schemas.",
           "categories": [
             "models"
@@ -325414,7 +325592,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 66,
+          "sourceLine": 67,
           "summary": "Type for {@link SemanticSchemaMetadataKind}.",
           "categories": [
             "models"
@@ -325439,7 +325617,7 @@
           "symbolName": "SemanticSchemaSpecification",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 193,
+          "sourceLine": 194,
           "summary": "Single specification reference attached to public semantic-web schemas.",
           "categories": [
             "models"
@@ -325464,7 +325642,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 116,
+          "sourceLine": 117,
           "summary": "Specification disposition attached to a semantic schema reference.",
           "categories": [
             "models"
@@ -325489,7 +325667,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 136,
+          "sourceLine": 137,
           "summary": "Type for {@link SemanticSchemaSpecificationDisposition}.",
           "categories": [
             "models"
@@ -325514,7 +325692,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 81,
+          "sourceLine": 82,
           "summary": "Stability classification for semantic-web schema metadata.",
           "categories": [
             "models"
@@ -325539,7 +325717,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 101,
+          "sourceLine": 102,
           "summary": "Type for {@link SemanticSchemaStatus}.",
           "categories": [
             "models"
@@ -325564,7 +325742,7 @@
           "symbolName": "serializeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1000,
+          "sourceLine": 1001,
           "summary": "Serialize an RDF quad to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -325591,7 +325769,7 @@
           "symbolName": "serializeTerm",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 969,
+          "sourceLine": 970,
           "summary": "Serialize an RDF term to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -325618,7 +325796,7 @@
           "symbolName": "sortDatasetQuads",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1022,
+          "sourceLine": 1023,
           "summary": "Sort dataset quads by deterministic quad serialization.",
           "categories": [
             "utilities"
@@ -325745,7 +325923,7 @@
           "symbolName": "URI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 321,
+          "sourceLine": 322,
           "summary": "RFC 3986 `URI` schema.",
           "categories": [
             "models"
@@ -325770,7 +325948,7 @@
           "symbolName": "URI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 343,
+          "sourceLine": 344,
           "summary": "Type for {@link URI}.",
           "categories": [
             "models"
@@ -325795,7 +325973,7 @@
           "symbolName": "URIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 204,
+          "sourceLine": 205,
           "summary": "RFC 3986 `URI-reference` schema, including absolute and relative forms.",
           "categories": [
             "models"
@@ -325820,7 +325998,7 @@
           "symbolName": "URIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 226,
+          "sourceLine": 227,
           "summary": "Type for {@link URIReference}.",
           "categories": [
             "models"
@@ -325869,7 +326047,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 935,
+          "sourceLine": 936,
           "summary": "RFC 3987 `absolute-IRI` schema without a fragment component.",
           "categories": [
             "validation"
@@ -325894,7 +326072,7 @@
           "symbolName": "AbsoluteIRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 956,
+          "sourceLine": 957,
           "summary": "RFC 3987 `absolute-IRI` syntax without a fragment component.",
           "categories": [
             "models"
@@ -325919,7 +326097,7 @@
           "symbolName": "IRI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 973,
+          "sourceLine": 974,
           "summary": "RFC 3987 `IRI` schema.",
           "categories": [
             "validation"
@@ -325944,7 +326122,7 @@
           "symbolName": "IRI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 994,
+          "sourceLine": 995,
           "summary": "RFC 3987 `IRI` syntax.",
           "categories": [
             "models"
@@ -325969,7 +326147,7 @@
           "symbolName": "IRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 859,
+          "sourceLine": 860,
           "summary": "RFC 3987 `IRI-reference` schema, including absolute and relative forms.",
           "categories": [
             "validation"
@@ -325994,7 +326172,7 @@
           "symbolName": "IRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 880,
+          "sourceLine": 881,
           "summary": "RFC 3987 `IRI-reference` syntax, including absolute and relative forms.",
           "categories": [
             "models"
@@ -326019,7 +326197,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 897,
+          "sourceLine": 898,
           "summary": "RFC 3987 `irelative-ref` schema.",
           "categories": [
             "validation"
@@ -326044,7 +326222,7 @@
           "symbolName": "RelativeIRIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Iri.ts",
-          "sourceLine": 918,
+          "sourceLine": 919,
           "summary": "RFC 3987 `irelative-ref` syntax.",
           "categories": [
             "models"
@@ -326444,7 +326622,7 @@
           "symbolName": "areDatasetsEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1043,
+          "sourceLine": 1044,
           "summary": "Compare datasets by sorted quad serialization.",
           "categories": [
             "utilities"
@@ -326748,7 +326926,7 @@
           "symbolName": "makeDataset",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 951,
+          "sourceLine": 952,
           "summary": "Build a dataset from quads.",
           "categories": [
             "utilities"
@@ -326854,7 +327032,7 @@
           "symbolName": "makeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 915,
+          "sourceLine": 916,
           "summary": "Build an RDF quad.",
           "categories": [
             "utilities"
@@ -326881,7 +327059,7 @@
           "symbolName": "MakeQuadOptions",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 875,
+          "sourceLine": 876,
           "summary": "Object and optional graph settings for {@link makeQuad}.",
           "categories": [
             "utilities"
@@ -327131,7 +327309,7 @@
           "symbolName": "serializeQuad",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1000,
+          "sourceLine": 1001,
           "summary": "Serialize an RDF quad to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -327158,7 +327336,7 @@
           "symbolName": "serializeTerm",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 969,
+          "sourceLine": 970,
           "summary": "Serialize an RDF term to a deterministic lexical form.",
           "categories": [
             "utilities"
@@ -327185,7 +327363,7 @@
           "symbolName": "sortDatasetQuads",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Rdf.ts",
-          "sourceLine": 1022,
+          "sourceLine": 1023,
           "summary": "Sort dataset quads by deterministic quad serialization.",
           "categories": [
             "utilities"
@@ -327312,7 +327490,7 @@
           "symbolName": "annotateSemanticSchema",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 346,
+          "sourceLine": 347,
           "summary": "Attach validated semantic metadata to any Effect schema.",
           "categories": [
             "utilities"
@@ -327339,7 +327517,7 @@
           "symbolName": "getSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 427,
+          "sourceLine": 430,
           "summary": "Read semantic metadata from any Effect schema, if present.",
           "categories": [
             "utilities"
@@ -327366,7 +327544,7 @@
           "symbolName": "makeSemanticSchemaMetadata",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 316,
+          "sourceLine": 317,
           "summary": "Validate a metadata payload before attaching it to a public schema.",
           "categories": [
             "utilities"
@@ -327393,7 +327571,7 @@
           "symbolName": "SemanticRepresentation",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 220,
+          "sourceLine": 221,
           "summary": "Single representation note attached to semantic-web schemas.",
           "categories": [
             "models"
@@ -327418,7 +327596,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 151,
+          "sourceLine": 152,
           "summary": "Representation label for semantic-web values.",
           "categories": [
             "models"
@@ -327443,7 +327621,7 @@
           "symbolName": "SemanticRepresentationKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 178,
+          "sourceLine": 179,
           "summary": "Type for {@link SemanticRepresentationKind}.",
           "categories": [
             "models"
@@ -327468,7 +327646,7 @@
           "symbolName": "SemanticSchemaMetadata",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "Typed metadata payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -327493,7 +327671,7 @@
           "symbolName": "SemanticSchemaMetadataAnnotationPayload",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 281,
+          "sourceLine": 282,
           "summary": "Payload stored in the `semanticSchemaMetadata` annotation key.",
           "categories": [
             "models"
@@ -327518,7 +327696,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 37,
+          "sourceLine": 38,
           "summary": "Closed v1 metadata kind domain for semantic-web schemas.",
           "categories": [
             "models"
@@ -327543,7 +327721,7 @@
           "symbolName": "SemanticSchemaMetadataKind",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 66,
+          "sourceLine": 67,
           "summary": "Type for {@link SemanticSchemaMetadataKind}.",
           "categories": [
             "models"
@@ -327568,7 +327746,7 @@
           "symbolName": "SemanticSchemaSpecification",
           "exportKind": "class",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 193,
+          "sourceLine": 194,
           "summary": "Single specification reference attached to public semantic-web schemas.",
           "categories": [
             "models"
@@ -327593,7 +327771,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 116,
+          "sourceLine": 117,
           "summary": "Specification disposition attached to a semantic schema reference.",
           "categories": [
             "models"
@@ -327618,7 +327796,7 @@
           "symbolName": "SemanticSchemaSpecificationDisposition",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 136,
+          "sourceLine": 137,
           "summary": "Type for {@link SemanticSchemaSpecificationDisposition}.",
           "categories": [
             "models"
@@ -327643,7 +327821,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 81,
+          "sourceLine": 82,
           "summary": "Stability classification for semantic-web schema metadata.",
           "categories": [
             "models"
@@ -327668,7 +327846,7 @@
           "symbolName": "SemanticSchemaStatus",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-          "sourceLine": 101,
+          "sourceLine": 102,
           "summary": "Type for {@link SemanticSchemaStatus}.",
           "categories": [
             "models"
@@ -327693,7 +327871,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 282,
+          "sourceLine": 283,
           "summary": "RFC 3986 `absolute-URI` schema without a fragment component.",
           "categories": [
             "models"
@@ -327718,7 +327896,7 @@
           "symbolName": "AbsoluteURI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 304,
+          "sourceLine": 305,
           "summary": "Type for {@link AbsoluteURI}.",
           "categories": [
             "models"
@@ -327743,7 +327921,7 @@
           "symbolName": "areUrisEquivalent",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 405,
+          "sourceLine": 406,
           "summary": "Compare two URI values using URI-family normalization rules.",
           "categories": [
             "utilities"
@@ -327770,7 +327948,7 @@
           "symbolName": "normalizeUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 361,
+          "sourceLine": 362,
           "summary": "Normalize a URI or URI reference for transport-oriented comparisons.",
           "categories": [
             "utilities"
@@ -327797,7 +327975,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 243,
+          "sourceLine": 244,
           "summary": "RFC 3986 `relative-ref` schema.",
           "categories": [
             "models"
@@ -327822,7 +328000,7 @@
           "symbolName": "RelativeURIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 265,
+          "sourceLine": 266,
           "summary": "Type for {@link RelativeURIReference}.",
           "categories": [
             "models"
@@ -327847,7 +328025,7 @@
           "symbolName": "resolveUriReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 381,
+          "sourceLine": 382,
           "summary": "Resolve a URI reference against an absolute base URI.",
           "categories": [
             "utilities"
@@ -327874,7 +328052,7 @@
           "symbolName": "URI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 321,
+          "sourceLine": 322,
           "summary": "RFC 3986 `URI` schema.",
           "categories": [
             "models"
@@ -327899,7 +328077,7 @@
           "symbolName": "URI",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 343,
+          "sourceLine": 344,
           "summary": "Type for {@link URI}.",
           "categories": [
             "models"
@@ -327924,7 +328102,7 @@
           "symbolName": "URIReference",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 204,
+          "sourceLine": 205,
           "summary": "RFC 3986 `URI-reference` schema, including absolute and relative forms.",
           "categories": [
             "models"
@@ -327949,7 +328127,7 @@
           "symbolName": "URIReference",
           "exportKind": "type",
           "sourcePath": "packages/foundation/modeling/rdf/src/Uri.ts",
-          "sourceLine": 226,
+          "sourceLine": 227,
           "summary": "Type for {@link URIReference}.",
           "categories": [
             "models"
@@ -328543,13 +328721,519 @@
           "packageName": "@beep/rdf",
           "packagePath": "packages/foundation/modeling/rdf",
           "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_ALT_LABEL",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 56,
+          "summary": "`skos:altLabel`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_alt_label const `skos:altlabel` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_BROAD_MATCH",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 144,
+          "summary": "`skos:broadMatch`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_broad_match const `skos:broadmatch` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_BROADER",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 104,
+          "summary": "`skos:broader`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_broader const `skos:broader` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_CLOSE_MATCH",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 136,
+          "summary": "`skos:closeMatch`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_close_match const `skos:closematch` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_CONCEPT",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 32,
+          "summary": "`skos:Concept`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_concept const `skos:concept` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_CONCEPT_SCHEME",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 40,
+          "summary": "`skos:ConceptScheme`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_concept_scheme const `skos:conceptscheme` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_DEFINITION",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 72,
+          "summary": "`skos:definition`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_definition const `skos:definition` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_EDITORIAL_NOTE",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 88,
+          "summary": "`skos:editorialNote`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_editorial_note const `skos:editorialnote` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_EXACT_MATCH",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 128,
+          "summary": "`skos:exactMatch`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_exact_match const `skos:exactmatch` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_HAS_TOP_CONCEPT",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 176,
+          "summary": "`skos:hasTopConcept`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_has_top_concept const `skos:hastopconcept` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_HIDDEN_LABEL",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 64,
+          "summary": "`skos:hiddenLabel`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_hidden_label const `skos:hiddenlabel` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_HISTORY_NOTE",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 96,
+          "summary": "`skos:historyNote`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_history_note const `skos:historynote` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_IN_SCHEME",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 168,
+          "summary": "`skos:inScheme`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_in_scheme const `skos:inscheme` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_NAMESPACE",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 24,
+          "summary": "SKOS namespace IRI.",
+          "categories": [
+            "configuration"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@see",
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_namespace const skos namespace iri. configuration packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_NARROW_MATCH",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 152,
+          "summary": "`skos:narrowMatch`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_narrow_match const `skos:narrowmatch` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_NARROWER",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 112,
+          "summary": "`skos:narrower`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_narrower const `skos:narrower` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_PREF_LABEL",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 48,
+          "summary": "`skos:prefLabel`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_pref_label const `skos:preflabel` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_RELATED",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 120,
+          "summary": "`skos:related`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_related const `skos:related` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_RELATED_MATCH",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 160,
+          "summary": "`skos:relatedMatch`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_related_match const `skos:relatedmatch` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_SCOPE_NOTE",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 80,
+          "summary": "`skos:scopeNote`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_scope_note const `skos:scopenote` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
+          "importSpecifier": "@beep/rdf/Vocab/Skos",
+          "exportSubpath": "./Vocab/Skos",
+          "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "symbolName": "SKOS_TOP_CONCEPT_OF",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+          "sourceLine": 184,
+          "summary": "`skos:topConceptOf`",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@since",
+            "@category"
+          ],
+          "searchText": "@beep/rdf packages/foundation/modeling/rdf @beep/rdf/vocab/skos ./vocab/skos skos_top_concept_of const `skos:topconceptof` models packages/foundation/modeling/rdf/src/vocab/skos.ts"
+        },
+        {
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "topoOrder": 67,
           "importSpecifier": "@beep/rdf/Vocab/Xsd",
           "exportSubpath": "./Vocab/Xsd",
           "exportedFromPath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
           "symbolName": "XSD_ANY_URI",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 54,
+          "sourceLine": 55,
           "summary": "`xsd:anyURI`",
           "categories": [
             "models"
@@ -328574,7 +329258,7 @@
           "symbolName": "XSD_BOOLEAN",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 69,
+          "sourceLine": 70,
           "summary": "`xsd:boolean`",
           "categories": [
             "models"
@@ -328599,7 +329283,7 @@
           "symbolName": "XSD_DOUBLE",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 99,
+          "sourceLine": 100,
           "summary": "`xsd:double`",
           "categories": [
             "models"
@@ -328624,7 +329308,7 @@
           "symbolName": "XSD_INTEGER",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 84,
+          "sourceLine": 85,
           "summary": "`xsd:integer`",
           "categories": [
             "models"
@@ -328649,7 +329333,7 @@
           "symbolName": "XSD_NAMESPACE",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 24,
+          "sourceLine": 25,
           "summary": "XSD namespace IRI.",
           "categories": [
             "configuration"
@@ -328658,6 +329342,7 @@
             "0.0.0"
           ],
           "tags": [
+            "@see",
             "@example",
             "@since",
             "@category"
@@ -328674,7 +329359,7 @@
           "symbolName": "XSD_STRING",
           "exportKind": "const",
           "sourcePath": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
-          "sourceLine": 39,
+          "sourceLine": 40,
           "summary": "`xsd:string`",
           "categories": [
             "models"
@@ -330154,14 +330839,16 @@
         "@beep/data/Calendar",
         "@beep/data/CurrencyCodes",
         "@beep/data/generated/iso4217",
+        "@beep/data/HotKey",
         "@beep/data/index",
+        "@beep/data/KeyboardShortcuts",
         "@beep/data/MimeTypes",
         "@beep/data/Timezones"
       ],
       "counts": {
-        "publicExportEntries": 44,
-        "uniqueSymbols": 38,
-        "sourceFiles": 22
+        "publicExportEntries": 98,
+        "uniqueSymbols": 65,
+        "sourceFiles": 25
       },
       "exports": [
         {
@@ -330214,6 +330901,23 @@
           "since": [],
           "tags": [],
           "searchText": "@beep/data packages/foundation/primitive/data @beep/data . currencycodes sourcefile packages/foundation/primitive/data/src/currencycodes.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data",
+          "exportSubpath": ".",
+          "exportedFromPath": "packages/foundation/primitive/data/src/index.ts",
+          "symbolName": "KeyboardShortcuts",
+          "exportKind": "SourceFile",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 13,
+          "summary": "",
+          "categories": [],
+          "since": [],
+          "tags": [],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data . keyboardshortcuts sourcefile packages/foundation/primitive/data/src/keyboardshortcuts.ts"
         },
         {
           "packageName": "@beep/data",
@@ -330728,6 +331432,656 @@
           "packageName": "@beep/data",
           "packagePath": "packages/foundation/primitive/data",
           "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutCategory",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 81,
+          "summary": "Shortcut category identifiers used for grouping command rows.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutcategory type shortcut category identifiers used for grouping command rows. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutCategoryValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 295,
+          "summary": "Shortcut category identifiers.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutcategoryvalues const shortcut category identifiers. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutChordData",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 161,
+          "summary": "A platform-specific shortcut chord for one command.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutchorddata type a platform-specific shortcut chord for one command. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutCommandLabel",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 145,
+          "summary": "PascalCase command label derived from a shortcut command name.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutcommandlabel type pascalcase command label derived from a shortcut command name. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutCommandLabelValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 343,
+          "summary": "PascalCase shortcut command labels.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutcommandlabelvalues const pascalcase shortcut command labels. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutCommandName",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 129,
+          "summary": "Lower-camel command name used as the stable shortcut command id.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutcommandname type lower-camel command name used as the stable shortcut command id. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutCommandNameValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 327,
+          "summary": "Stable shortcut command names.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutcommandnamevalues const stable shortcut command names. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutData",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 228,
+          "summary": "A curated shortcut command row for a single platform and command name.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutdata type a curated shortcut command row for a single platform and command name. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 440,
+          "summary": "Combined shortcut command data across all supported platform datasets.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutdatavalues const combined shortcut command data across all supported platform datasets. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutDisplay",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 193,
+          "summary": "Platform display literal for rendering a shortcut hint.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutdisplay type platform display literal for rendering a shortcut hint. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutPlatform",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 33,
+          "summary": "Supported shortcut platform identifiers.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutplatform type supported shortcut platform identifiers. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutPlatformValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 247,
+          "summary": "Supported shortcut platform identifiers.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutplatformvalues const supported shortcut platform identifiers. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutRuntimeSupport",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 65,
+          "summary": "Runtime registration support status for a shortcut chord.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutruntimesupport type runtime registration support status for a shortcut chord. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutRuntimeSupportValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 279,
+          "summary": "Runtime registration support statuses.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutruntimesupportvalues const runtime registration support statuses. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutScope",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 49,
+          "summary": "Shortcut scope identifiers.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutscope type shortcut scope identifiers. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutScopeValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 263,
+          "summary": "Shortcut scope identifiers.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutscopevalues const shortcut scope identifiers. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutSource",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 97,
+          "summary": "Source metadata entry for a curated shortcut reference.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutsource type source metadata entry for a curated shortcut reference. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutSourceId",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 113,
+          "summary": "Source identifier used by shortcut data rows.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutsourceid type source identifier used by shortcut data rows. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutSourceValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 311,
+          "summary": "Source metadata for curated shortcut references.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutsourcevalues const source metadata for curated shortcut references. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutTauriAccelerator",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 209,
+          "summary": "Tauri/muda accelerator literal for chords that can be represented at runtime.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcuttauriaccelerator type tauri/muda accelerator literal for chords that can be represented at runtime. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "KeyboardShortcutValue",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 177,
+          "summary": "Canonical WAI-ARIA/UI Events shortcut literal.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey keyboardshortcutvalue type canonical wai-aria/ui events shortcut literal. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "LinuxGnomeKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 407,
+          "summary": "GNOME-specific app and shell shortcut defaults.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey linuxgnomekeyboardshortcutdatavalues const gnome-specific app and shell shortcut defaults. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "LinuxKdePlasmaKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 423,
+          "summary": "KDE Plasma and KStandardShortcut defaults.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey linuxkdeplasmakeyboardshortcutdatavalues const kde plasma and kstandardshortcut defaults. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "LinuxKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 391,
+          "summary": "Portable Linux app shortcut defaults where GNOME and KDE broadly agree.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey linuxkeyboardshortcutdatavalues const portable linux app shortcut defaults where gnome and kde broadly agree. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "MacOSKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 359,
+          "summary": "macOS shortcut command data.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey macoskeyboardshortcutdatavalues const macos shortcut command data. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/HotKey",
+          "exportSubpath": "./HotKey",
+          "exportedFromPath": "packages/foundation/primitive/data/src/HotKey.ts",
+          "symbolName": "WindowsKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 375,
+          "summary": "Windows shortcut command data.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/hotkey ./hotkey windowskeyboardshortcutdatavalues const windows shortcut command data. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
           "importSpecifier": "@beep/data/index",
           "exportSubpath": "./index",
           "exportedFromPath": "packages/foundation/primitive/data/src/index.ts",
@@ -330782,6 +332136,23 @@
           "importSpecifier": "@beep/data/index",
           "exportSubpath": "./index",
           "exportedFromPath": "packages/foundation/primitive/data/src/index.ts",
+          "symbolName": "KeyboardShortcuts",
+          "exportKind": "SourceFile",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 13,
+          "summary": "",
+          "categories": [],
+          "since": [],
+          "tags": [],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/index ./index keyboardshortcuts sourcefile packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/index",
+          "exportSubpath": "./index",
+          "exportedFromPath": "packages/foundation/primitive/data/src/index.ts",
           "symbolName": "MimeTypesData",
           "exportKind": "SourceFile",
           "sourcePath": "packages/foundation/primitive/data/src/MimeTypes.ts",
@@ -330808,6 +332179,656 @@
           "since": [],
           "tags": [],
           "searchText": "@beep/data packages/foundation/primitive/data @beep/data/index ./index timezones sourcefile packages/foundation/primitive/data/src/timezones.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutCategory",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 81,
+          "summary": "Shortcut category identifiers used for grouping command rows.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutcategory type shortcut category identifiers used for grouping command rows. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutCategoryValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 295,
+          "summary": "Shortcut category identifiers.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutcategoryvalues const shortcut category identifiers. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutChordData",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 161,
+          "summary": "A platform-specific shortcut chord for one command.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutchorddata type a platform-specific shortcut chord for one command. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutCommandLabel",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 145,
+          "summary": "PascalCase command label derived from a shortcut command name.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutcommandlabel type pascalcase command label derived from a shortcut command name. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutCommandLabelValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 343,
+          "summary": "PascalCase shortcut command labels.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutcommandlabelvalues const pascalcase shortcut command labels. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutCommandName",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 129,
+          "summary": "Lower-camel command name used as the stable shortcut command id.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutcommandname type lower-camel command name used as the stable shortcut command id. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutCommandNameValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 327,
+          "summary": "Stable shortcut command names.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutcommandnamevalues const stable shortcut command names. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutData",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 228,
+          "summary": "A curated shortcut command row for a single platform and command name.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutdata type a curated shortcut command row for a single platform and command name. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 440,
+          "summary": "Combined shortcut command data across all supported platform datasets.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutdatavalues const combined shortcut command data across all supported platform datasets. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutDisplay",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 193,
+          "summary": "Platform display literal for rendering a shortcut hint.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutdisplay type platform display literal for rendering a shortcut hint. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutPlatform",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 33,
+          "summary": "Supported shortcut platform identifiers.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutplatform type supported shortcut platform identifiers. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutPlatformValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 247,
+          "summary": "Supported shortcut platform identifiers.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutplatformvalues const supported shortcut platform identifiers. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutRuntimeSupport",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 65,
+          "summary": "Runtime registration support status for a shortcut chord.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutruntimesupport type runtime registration support status for a shortcut chord. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutRuntimeSupportValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 279,
+          "summary": "Runtime registration support statuses.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutruntimesupportvalues const runtime registration support statuses. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutScope",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 49,
+          "summary": "Shortcut scope identifiers.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutscope type shortcut scope identifiers. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutScopeValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 263,
+          "summary": "Shortcut scope identifiers.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutscopevalues const shortcut scope identifiers. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutSource",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 97,
+          "summary": "Source metadata entry for a curated shortcut reference.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutsource type source metadata entry for a curated shortcut reference. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutSourceId",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 113,
+          "summary": "Source identifier used by shortcut data rows.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutsourceid type source identifier used by shortcut data rows. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutSourceValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 311,
+          "summary": "Source metadata for curated shortcut references.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutsourcevalues const source metadata for curated shortcut references. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutTauriAccelerator",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 209,
+          "summary": "Tauri/muda accelerator literal for chords that can be represented at runtime.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcuttauriaccelerator type tauri/muda accelerator literal for chords that can be represented at runtime. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "KeyboardShortcutValue",
+          "exportKind": "type",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 177,
+          "summary": "Canonical WAI-ARIA/UI Events shortcut literal.",
+          "categories": [
+            "models"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts keyboardshortcutvalue type canonical wai-aria/ui events shortcut literal. models packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "LinuxGnomeKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 407,
+          "summary": "GNOME-specific app and shell shortcut defaults.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts linuxgnomekeyboardshortcutdatavalues const gnome-specific app and shell shortcut defaults. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "LinuxKdePlasmaKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 423,
+          "summary": "KDE Plasma and KStandardShortcut defaults.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts linuxkdeplasmakeyboardshortcutdatavalues const kde plasma and kstandardshortcut defaults. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "LinuxKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 391,
+          "summary": "Portable Linux app shortcut defaults where GNOME and KDE broadly agree.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts linuxkeyboardshortcutdatavalues const portable linux app shortcut defaults where gnome and kde broadly agree. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "MacOSKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 359,
+          "summary": "macOS shortcut command data.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts macoskeyboardshortcutdatavalues const macos shortcut command data. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
+        },
+        {
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "topoOrder": 71,
+          "importSpecifier": "@beep/data/KeyboardShortcuts",
+          "exportSubpath": "./KeyboardShortcuts",
+          "exportedFromPath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "symbolName": "WindowsKeyboardShortcutDataValues",
+          "exportKind": "const",
+          "sourcePath": "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+          "sourceLine": 375,
+          "summary": "Windows shortcut command data.",
+          "categories": [
+            "constants"
+          ],
+          "since": [
+            "0.0.0"
+          ],
+          "tags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "searchText": "@beep/data packages/foundation/primitive/data @beep/data/keyboardshortcuts ./keyboardshortcuts windowskeyboardshortcutdatavalues const windows shortcut command data. constants packages/foundation/primitive/data/src/keyboardshortcuts.ts"
         },
         {
           "packageName": "@beep/data",

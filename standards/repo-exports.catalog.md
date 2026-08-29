@@ -20,9 +20,9 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | packagesWithPublicExports | 82 |
 | packagesWithoutPublicExports | 6 |
 | missingWorkspaceMetadata | 4 |
-| importSpecifiers | 1075 |
-| publicExportEntries | 14977 |
-| uniquePackageSymbols | 6461 |
+| importSpecifiers | 1078 |
+| publicExportEntries | 15059 |
+| uniquePackageSymbols | 6512 |
 
 ## Seed Discovery Proof
 
@@ -42,14 +42,14 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | 3 | `dependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 |
 | 4 | `optionalDependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 |
 | 5 | `@beep/hubspot` | `packages/drivers/hubspot` | has-public-exports | 5 | 48 | 15 |
-| 6 | `@beep/ontology` | `packages/foundation/modeling/ontology` | has-public-exports | 1 | 11 | 11 |
+| 6 | `@beep/ontology` | `packages/foundation/modeling/ontology` | has-public-exports | 1 | 12 | 12 |
 | 7 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | has-public-exports | 2 | 6 | 5 |
 | 8 | `@beep/root` | `.` | no-public-exports | 0 | 0 | 0 |
 | 9 | `@beep/canvas-domain` | `packages/canvas/domain` | has-public-exports | 5 | 35 | 24 |
 | 10 | `@beep/workspace-tables` | `packages/workspace/tables` | has-public-exports | 4 | 7 | 5 |
 | 11 | `@beep/db-admin` | `packages/_internal/db-admin` | has-public-exports | 5 | 13 | 5 |
 | 12 | `@beep/repo-codegraph` | `packages/tooling/library/repo-codegraph` | has-public-exports | 6 | 108 | 31 |
-| 13 | `@beep/shared-domain` | `packages/shared/domain` | has-public-exports | 41 | 291 | 111 |
+| 13 | `@beep/shared-domain` | `packages/shared/domain` | has-public-exports | 41 | 297 | 113 |
 | 14 | `@beep/discord` | `packages/drivers/discord` | has-public-exports | 5 | 27 | 8 |
 | 15 | `@beep/face-detection` | `packages/drivers/face-detection` | has-public-exports | 5 | 72 | 20 |
 | 16 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | has-public-exports | 2 | 6 | 6 |
@@ -103,11 +103,11 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | 64 | `@beep/runpod` | `packages/drivers/runpod` | has-public-exports | 1 | 169 | 149 |
 | 65 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | has-public-exports | 67 | 1751 | 512 |
 | 66 | `@beep/schema` | `packages/foundation/modeling/schema` | has-public-exports | 118 | 1748 | 719 |
-| 67 | `@beep/rdf` | `packages/foundation/modeling/rdf` | has-public-exports | 13 | 280 | 89 |
+| 67 | `@beep/rdf` | `packages/foundation/modeling/rdf` | has-public-exports | 14 | 301 | 110 |
 | 68 | `@beep/codedank-web` | `apps/codedank-web` | no-public-exports | 0 | 0 | 0 |
 | 69 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | has-public-exports | 5 | 27 | 8 |
 | 70 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | has-public-exports | 7 | 29 | 13 |
-| 71 | `@beep/data` | `packages/foundation/primitive/data` | has-public-exports | 8 | 44 | 38 |
+| 71 | `@beep/data` | `packages/foundation/primitive/data` | has-public-exports | 10 | 98 | 65 |
 | 72 | `@beep/xai` | `packages/drivers/xai` | has-public-exports | 1 | 53 | 40 |
 | 73 | `@beep/wealth-management-domain` | `packages/wealth-management/domain` | has-public-exports | 6 | 36 | 8 |
 | 74 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | has-public-exports | 5 | 26 | 24 |
@@ -189,16 +189,17 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 
 | Import | Symbol | Kind | Source | Summary |
 |---|---|---|---|---|
-| `@beep/ontology` | `getOntologyKeyMetadata` | const | `packages/foundation/modeling/ontology/src/model.ts:352` | Reads ontology metadata from a schema property-key annotation display map. |
-| `@beep/ontology` | `getOntologyMetadata` | const | `packages/foundation/modeling/ontology/src/model.ts:343` | Reads ontology metadata from an Effect Schema annotation display map. |
-| `@beep/ontology` | `isOntologyClassAnnotationDraft` | const | `packages/foundation/modeling/ontology/src/model.ts:276` |  |
-| `@beep/ontology` | `isOntologyPredicateAnnotationDraft` | const | `packages/foundation/modeling/ontology/src/model.ts:277` |  |
-| `@beep/ontology` | `Ontology` | const | `packages/foundation/modeling/ontology/src/create.ts:42` | Creates an ontology authoring scope with identity-aware annotation helpers, |
-| `@beep/ontology` | `OntologyAssemblyError` | class | `packages/foundation/modeling/ontology/src/model.ts:370` |  |
-| `@beep/ontology` | `parseJsonLdOntology` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:273` | Parses the POC JSON-LD graph representation back into an assembled ontology result. |
-| `@beep/ontology` | `projectJsonLdContext` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:59` | Projects an assembled ontology into a reusable JSON-LD context document. |
-| `@beep/ontology` | `projectJsonLdOntology` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:148` | Projects an assembled ontology into the POC JSON-LD graph representation. |
-| `@beep/ontology` | `projectTurtle` | const | `packages/foundation/modeling/ontology/src/projections/turtle.ts:125` | Projects an assembled ontology into a compact Turtle document. |
+| `@beep/ontology` | `getOntologyKeyMetadata` | const | `packages/foundation/modeling/ontology/src/model.ts:591` | Reads ontology metadata from a schema property-key annotation display map. |
+| `@beep/ontology` | `getOntologyMetadata` | const | `packages/foundation/modeling/ontology/src/model.ts:582` | Reads ontology metadata from an Effect Schema annotation display map. |
+| `@beep/ontology` | `isOntologyClassAnnotationDraft` | const | `packages/foundation/modeling/ontology/src/model.ts:518` |  |
+| `@beep/ontology` | `isOntologyPredicateAnnotationDraft` | const | `packages/foundation/modeling/ontology/src/model.ts:519` |  |
+| `@beep/ontology` | `Ontology` | const | `packages/foundation/modeling/ontology/src/create.ts:52` | Creates an ontology authoring scope with identity-aware annotation helpers, |
+| `@beep/ontology` | `OntologyAssemblyError` | class | `packages/foundation/modeling/ontology/src/model.ts:610` |  |
+| `@beep/ontology` | `parseJsonLdOntology` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:487` | Parses the POC JSON-LD graph representation back into an assembled ontology result. |
+| `@beep/ontology` | `projectJsonLdContext` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:69` | Projects an assembled ontology into a reusable JSON-LD context document. |
+| `@beep/ontology` | `projectJsonLdOntology` | const | `packages/foundation/modeling/ontology/src/projections/jsonld.ts:264` | Projects an assembled ontology into the POC JSON-LD graph representation. |
+| `@beep/ontology` | `projectMarkdown` | const | `packages/foundation/modeling/ontology/src/projections/markdown.ts:351` | Projects an assembled ontology into deterministic Markdown documentation. |
+| `@beep/ontology` | `projectTurtle` | const | `packages/foundation/modeling/ontology/src/projections/turtle.ts:260` | Projects an assembled ontology into a compact Turtle document. |
 | `@beep/ontology` | `VERSION` | const | `packages/foundation/modeling/ontology/src/index.ts:14` | Package version. |
 
 ### @beep/architecture-lab-ui
@@ -404,7 +405,7 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/shared-domain` | `Entities` | SourceFile | `packages/shared/domain/src/entities/index.ts:14` |  |
 | `@beep/shared-domain` | `EntityId` | SourceFile | `packages/shared/domain/src/entity/EntityId.ts:8` |  |
 | `@beep/shared-domain` | `EntityRef` | SourceFile | `packages/shared/domain/src/entity/EntityRef.ts:8` |  |
-| `@beep/shared-domain` | `Identity` | SourceFile | `packages/shared/domain/src/identity/index.ts:21` |  |
+| `@beep/shared-domain` | `Identity` | SourceFile | `packages/shared/domain/src/identity/index.ts:8` |  |
 | `@beep/shared-domain` | `Principal` | SourceFile | `packages/shared/domain/src/entity/Principal.ts:8` |  |
 | `@beep/shared-domain` | `SourceKind` | SourceFile | `packages/shared/domain/src/entity/SourceKind.ts:8` |  |
 | `@beep/shared-domain` | `Values` | SourceFile | `packages/shared/domain/src/values/index.ts:21` |  |
@@ -513,7 +514,10 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/shared-domain/entity/SourceKind` | `SourceKind` | const | `packages/shared/domain/src/entity/SourceKind.ts:26` | Denormalized source facet used by BaseEntity rows and audit filters. |
 | `@beep/shared-domain/entity/SourceKind` | `SourceKind` | type | `packages/shared/domain/src/entity/SourceKind.ts:46` | Runtime type for {@link SourceKind}. |
 | `@beep/shared-domain/identity` | `AgentCapability` | SourceFile | `packages/shared/domain/src/identity/AgentCapability.ts:8` |  |
+| `@beep/shared-domain/identity` | `AnyIdentityComposer` | const | `packages/shared/domain/src/identity/index.ts:115` | Effect Schema for validating any runtime {@link IdentityComposerType} value. |
+| `@beep/shared-domain/identity` | `AnyIdentityComposer` | type | `packages/shared/domain/src/identity/index.ts:135` | Runtime type for {@link AnyIdentityComposer}. |
 | `@beep/shared-domain/identity` | `Epistemic` | SourceFile | `packages/shared/domain/src/identity/Epistemic.ts:8` |  |
+| `@beep/shared-domain/identity` | `isIdentityComposer` | const | `packages/shared/domain/src/identity/index.ts:81` | Guard for runtime identity composer values. |
 | `@beep/shared-domain/identity` | `LawPractice` | SourceFile | `packages/shared/domain/src/identity/LawPractice.ts:8` |  |
 | `@beep/shared-domain/identity` | `Shared` | SourceFile | `packages/shared/domain/src/identity/Shared.ts:8` |  |
 | `@beep/shared-domain/identity` | `WealthManagement` | SourceFile | `packages/shared/domain/src/identity/WealthManagement.ts:8` |  |
@@ -531,7 +535,10 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/shared-domain/identity/Epistemic` | `UsageRecordId` | const | `packages/shared/domain/src/identity/Epistemic.ts:141` | Usage record entity identifier. |
 | `@beep/shared-domain/identity/Epistemic` | `UsageRecordId` | type | `packages/shared/domain/src/identity/Epistemic.ts:164` | Runtime type for {@link UsageRecordId}. |
 | `@beep/shared-domain/identity/index` | `AgentCapability` | SourceFile | `packages/shared/domain/src/identity/AgentCapability.ts:8` |  |
+| `@beep/shared-domain/identity/index` | `AnyIdentityComposer` | const | `packages/shared/domain/src/identity/index.ts:115` | Effect Schema for validating any runtime {@link IdentityComposerType} value. |
+| `@beep/shared-domain/identity/index` | `AnyIdentityComposer` | type | `packages/shared/domain/src/identity/index.ts:135` | Runtime type for {@link AnyIdentityComposer}. |
 | `@beep/shared-domain/identity/index` | `Epistemic` | SourceFile | `packages/shared/domain/src/identity/Epistemic.ts:8` |  |
+| `@beep/shared-domain/identity/index` | `isIdentityComposer` | const | `packages/shared/domain/src/identity/index.ts:81` | Guard for runtime identity composer values. |
 | `@beep/shared-domain/identity/index` | `LawPractice` | SourceFile | `packages/shared/domain/src/identity/LawPractice.ts:8` |  |
 | `@beep/shared-domain/identity/index` | `Shared` | SourceFile | `packages/shared/domain/src/identity/Shared.ts:8` |  |
 | `@beep/shared-domain/identity/index` | `WealthManagement` | SourceFile | `packages/shared/domain/src/identity/WealthManagement.ts:8` |  |
@@ -591,7 +598,7 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/shared-domain/index` | `Entities` | SourceFile | `packages/shared/domain/src/entities/index.ts:14` |  |
 | `@beep/shared-domain/index` | `EntityId` | SourceFile | `packages/shared/domain/src/entity/EntityId.ts:8` |  |
 | `@beep/shared-domain/index` | `EntityRef` | SourceFile | `packages/shared/domain/src/entity/EntityRef.ts:8` |  |
-| `@beep/shared-domain/index` | `Identity` | SourceFile | `packages/shared/domain/src/identity/index.ts:21` |  |
+| `@beep/shared-domain/index` | `Identity` | SourceFile | `packages/shared/domain/src/identity/index.ts:8` |  |
 | `@beep/shared-domain/index` | `Principal` | SourceFile | `packages/shared/domain/src/entity/Principal.ts:8` |  |
 | `@beep/shared-domain/index` | `SourceKind` | SourceFile | `packages/shared/domain/src/entity/SourceKind.ts:8` |  |
 | `@beep/shared-domain/index` | `Values` | SourceFile | `packages/shared/domain/src/values/index.ts:21` |  |
@@ -4907,14 +4914,14 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 
 | Import | Symbol | Kind | Source | Summary |
 |---|---|---|---|---|
-| `@beep/semantic-web` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:935` | RFC 3987 `absolute-IRI` schema without a fragment component. |
-| `@beep/semantic-web` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:956` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
-| `@beep/semantic-web` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:973` | RFC 3987 `IRI` schema. |
-| `@beep/semantic-web` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:994` | RFC 3987 `IRI` syntax. |
-| `@beep/semantic-web` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:859` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
-| `@beep/semantic-web` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:880` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
-| `@beep/semantic-web` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:897` | RFC 3987 `irelative-ref` schema. |
-| `@beep/semantic-web` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:918` | RFC 3987 `irelative-ref` syntax. |
+| `@beep/semantic-web` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:936` | RFC 3987 `absolute-IRI` schema without a fragment component. |
+| `@beep/semantic-web` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:957` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
+| `@beep/semantic-web` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:974` | RFC 3987 `IRI` schema. |
+| `@beep/semantic-web` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:995` | RFC 3987 `IRI` syntax. |
+| `@beep/semantic-web` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:860` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
+| `@beep/semantic-web` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:881` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
+| `@beep/semantic-web` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:898` | RFC 3987 `irelative-ref` schema. |
+| `@beep/semantic-web` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:919` | RFC 3987 `irelative-ref` syntax. |
 | `@beep/semantic-web/adapters/canonicalization` | `CanonicalizationServiceLive` | const | `packages/foundation/capability/semantic-web/src/adapters/canonicalization.ts:250` | Canonicalization service live layer. |
 | `@beep/semantic-web/adapters/jsonld-context` | `JsonLdContextServiceLive` | const | `packages/foundation/capability/semantic-web/src/adapters/jsonld-context.ts:132` | JSON-LD context service live layer. |
 | `@beep/semantic-web/adapters/jsonld-document` | `JsonLdDocumentServiceLive` | const | `packages/foundation/capability/semantic-web/src/adapters/jsonld-document.ts:748` | JSON-LD document service live layer. |
@@ -4945,22 +4952,22 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/semantic-web/evidence` | `FragmentSelector` | class | `packages/foundation/capability/semantic-web/src/evidence.ts:154` | Fragment selector for evidence anchors. |
 | `@beep/semantic-web/evidence` | `TextPositionSelector` | class | `packages/foundation/capability/semantic-web/src/evidence.ts:114` | Text-position selector for evidence anchors. |
 | `@beep/semantic-web/evidence` | `TextQuoteSelector` | class | `packages/foundation/capability/semantic-web/src/evidence.ts:72` | Text-quote selector for evidence anchors. |
-| `@beep/semantic-web/index` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:935` | RFC 3987 `absolute-IRI` schema without a fragment component. |
-| `@beep/semantic-web/index` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:956` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
-| `@beep/semantic-web/index` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:973` | RFC 3987 `IRI` schema. |
-| `@beep/semantic-web/index` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:994` | RFC 3987 `IRI` syntax. |
-| `@beep/semantic-web/index` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:859` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
-| `@beep/semantic-web/index` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:880` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
-| `@beep/semantic-web/index` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:897` | RFC 3987 `irelative-ref` schema. |
-| `@beep/semantic-web/index` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:918` | RFC 3987 `irelative-ref` syntax. |
-| `@beep/semantic-web/iri` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:935` | RFC 3987 `absolute-IRI` schema without a fragment component. |
-| `@beep/semantic-web/iri` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:956` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
-| `@beep/semantic-web/iri` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:973` | RFC 3987 `IRI` schema. |
-| `@beep/semantic-web/iri` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:994` | RFC 3987 `IRI` syntax. |
-| `@beep/semantic-web/iri` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:859` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
-| `@beep/semantic-web/iri` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:880` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
-| `@beep/semantic-web/iri` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:897` | RFC 3987 `irelative-ref` schema. |
-| `@beep/semantic-web/iri` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:918` | RFC 3987 `irelative-ref` syntax. |
+| `@beep/semantic-web/index` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:936` | RFC 3987 `absolute-IRI` schema without a fragment component. |
+| `@beep/semantic-web/index` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:957` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
+| `@beep/semantic-web/index` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:974` | RFC 3987 `IRI` schema. |
+| `@beep/semantic-web/index` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:995` | RFC 3987 `IRI` syntax. |
+| `@beep/semantic-web/index` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:860` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
+| `@beep/semantic-web/index` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:881` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
+| `@beep/semantic-web/index` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:898` | RFC 3987 `irelative-ref` schema. |
+| `@beep/semantic-web/index` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:919` | RFC 3987 `irelative-ref` syntax. |
+| `@beep/semantic-web/iri` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:936` | RFC 3987 `absolute-IRI` schema without a fragment component. |
+| `@beep/semantic-web/iri` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:957` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
+| `@beep/semantic-web/iri` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:974` | RFC 3987 `IRI` schema. |
+| `@beep/semantic-web/iri` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:995` | RFC 3987 `IRI` syntax. |
+| `@beep/semantic-web/iri` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:860` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
+| `@beep/semantic-web/iri` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:881` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
+| `@beep/semantic-web/iri` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:898` | RFC 3987 `irelative-ref` schema. |
+| `@beep/semantic-web/iri` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:919` | RFC 3987 `irelative-ref` syntax. |
 | `@beep/semantic-web/jsonld` | `JsonLdBlankNodeIdentifier` | const | `packages/foundation/modeling/rdf/src/JsonLd.ts:168` | JSON-LD blank-node identifier used by the bounded document model. |
 | `@beep/semantic-web/jsonld` | `JsonLdBlankNodeIdentifier` | type | `packages/foundation/modeling/rdf/src/JsonLd.ts:199` | Type for {@link JsonLdBlankNodeIdentifier}. |
 | `@beep/semantic-web/jsonld` | `JsonLdContext` | class | `packages/foundation/modeling/rdf/src/JsonLd.ts:134` | Normalized JSON-LD context model with bounded base, vocab, and term bindings. |
@@ -5007,7 +5014,7 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/semantic-web/prov` | `SoftwareAgent` | class | `packages/foundation/capability/semantic-web/src/prov.ts:374` | PROV software agent. |
 | `@beep/semantic-web/prov` | `Start` | class | `packages/foundation/capability/semantic-web/src/prov.ts:770` | PROV start relation. |
 | `@beep/semantic-web/prov` | `Usage` | class | `packages/foundation/capability/semantic-web/src/prov.ts:550` | PROV usage relation. |
-| `@beep/semantic-web/rdf` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1043` | Compare datasets by sorted quad serialization. |
+| `@beep/semantic-web/rdf` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1044` | Compare datasets by sorted quad serialization. |
 | `@beep/semantic-web/rdf` | `BlankNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:374` | RDF blank node value. |
 | `@beep/semantic-web/rdf` | `Curie` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:263` | CURIE-style compact IRI expression. |
 | `@beep/semantic-web/rdf` | `Curie` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:285` | Type for {@link Curie}. |
@@ -5019,12 +5026,12 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/semantic-web/rdf` | `LanguageTag` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:335` | Type for {@link LanguageTag}. |
 | `@beep/semantic-web/rdf` | `Literal` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:413` | RDF literal value. |
 | `@beep/semantic-web/rdf` | `makeBlankNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:791` | Build a blank node from a non-empty label. |
-| `@beep/semantic-web/rdf` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:951` | Build a dataset from quads. |
+| `@beep/semantic-web/rdf` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:952` | Build a dataset from quads. |
 | `@beep/semantic-web/rdf` | `makeLiteral` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:854` | Build an RDF literal. |
 | `@beep/semantic-web/rdf` | `MakeLiteralOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:811` | Optional language settings for {@link makeLiteral}. |
 | `@beep/semantic-web/rdf` | `makeNamedNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:765` | Build a named node from an IRI string. |
-| `@beep/semantic-web/rdf` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:915` | Build an RDF quad. |
-| `@beep/semantic-web/rdf` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:875` | Object and optional graph settings for {@link makeQuad}. |
+| `@beep/semantic-web/rdf` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:916` | Build an RDF quad. |
+| `@beep/semantic-web/rdf` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:876` | Object and optional graph settings for {@link makeQuad}. |
 | `@beep/semantic-web/rdf` | `NamedNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:350` | RDF named node value. |
 | `@beep/semantic-web/rdf` | `NamespaceBinding` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:685` | Prefix-to-namespace binding for RDF compaction and expansion. |
 | `@beep/semantic-web/rdf` | `ObjectTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:564` | RDF object term union. |
@@ -5034,28 +5041,28 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/semantic-web/rdf` | `PrefixMap` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:709` | Prefix map keyed by {@link PrefixLabel}. |
 | `@beep/semantic-web/rdf` | `PrefixMap` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:743` | Type for {@link PrefixMap}. |
 | `@beep/semantic-web/rdf` | `Quad` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:636` | RDF quad value aligned with RDF/JS. |
-| `@beep/semantic-web/rdf` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1000` | Serialize an RDF quad to a deterministic lexical form. |
-| `@beep/semantic-web/rdf` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:969` | Serialize an RDF term to a deterministic lexical form. |
-| `@beep/semantic-web/rdf` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1022` | Sort dataset quads by deterministic quad serialization. |
+| `@beep/semantic-web/rdf` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1001` | Serialize an RDF quad to a deterministic lexical form. |
+| `@beep/semantic-web/rdf` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:970` | Serialize an RDF term to a deterministic lexical form. |
+| `@beep/semantic-web/rdf` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1023` | Sort dataset quads by deterministic quad serialization. |
 | `@beep/semantic-web/rdf` | `Subject` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:528` | RDF subject term union. |
 | `@beep/semantic-web/rdf` | `Subject` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:549` | Type for {@link Subject}. |
 | `@beep/semantic-web/rdf` | `Term` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:476` | RDF term union. |
 | `@beep/semantic-web/rdf` | `Term` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:513` | Type for {@link Term}. |
-| `@beep/semantic-web/semantic-schema-metadata` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:346` | Attach validated semantic metadata to any Effect schema. |
-| `@beep/semantic-web/semantic-schema-metadata` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:427` | Read semantic metadata from any Effect schema, if present. |
-| `@beep/semantic-web/semantic-schema-metadata` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:316` | Validate a metadata payload before attaching it to a public schema. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:220` | Single representation note attached to semantic-web schemas. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:151` | Representation label for semantic-web values. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:178` | Type for {@link SemanticRepresentationKind}. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:243` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:281` | Payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:37` | Closed v1 metadata kind domain for semantic-web schemas. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:66` | Type for {@link SemanticSchemaMetadataKind}. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:193` | Single specification reference attached to public semantic-web schemas. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:116` | Specification disposition attached to a semantic schema reference. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:136` | Type for {@link SemanticSchemaSpecificationDisposition}. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:81` | Stability classification for semantic-web schema metadata. |
-| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:101` | Type for {@link SemanticSchemaStatus}. |
+| `@beep/semantic-web/semantic-schema-metadata` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:347` | Attach validated semantic metadata to any Effect schema. |
+| `@beep/semantic-web/semantic-schema-metadata` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:430` | Read semantic metadata from any Effect schema, if present. |
+| `@beep/semantic-web/semantic-schema-metadata` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:317` | Validate a metadata payload before attaching it to a public schema. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:221` | Single representation note attached to semantic-web schemas. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:152` | Representation label for semantic-web values. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:179` | Type for {@link SemanticRepresentationKind}. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:244` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:282` | Payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:38` | Closed v1 metadata kind domain for semantic-web schemas. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:67` | Type for {@link SemanticSchemaMetadataKind}. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:194` | Single specification reference attached to public semantic-web schemas. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:117` | Specification disposition attached to a semantic schema reference. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:137` | Type for {@link SemanticSchemaSpecificationDisposition}. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:82` | Stability classification for semantic-web schema metadata. |
+| `@beep/semantic-web/semantic-schema-metadata` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:102` | Type for {@link SemanticSchemaStatus}. |
 | `@beep/semantic-web/services/canonicalization` | `CanonicalDatasetResult` | class | `packages/foundation/capability/semantic-web/src/services/canonicalization.ts:148` | Canonical dataset output. |
 | `@beep/semantic-web/services/canonicalization` | `CanonicalizationAlgorithm` | const | `packages/foundation/capability/semantic-web/src/services/canonicalization.ts:48` | Canonicalization algorithm name. |
 | `@beep/semantic-web/services/canonicalization` | `CanonicalizationError` | class | `packages/foundation/capability/semantic-web/src/services/canonicalization.ts:67` | Typed canonicalization error. |
@@ -5138,17 +5145,17 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/semantic-web/services/sparql-query` | `SparqlQueryServiceShape` | interface | `packages/foundation/capability/semantic-web/src/services/sparql-query.ts:221` | SPARQL query service contract shape. |
 | `@beep/semantic-web/services/sparql-query` | `SparqlSelectResult` | class | `packages/foundation/capability/semantic-web/src/services/sparql-query.ts:87` | SPARQL select result. |
 | `@beep/semantic-web/services/sparql-query` | `UnsupportedSparqlQueryServiceLive` | const | `packages/foundation/capability/semantic-web/src/services/sparql-query.ts:255` | Unsupported default live layer for the minimal v1 SPARQL contract. |
-| `@beep/semantic-web/uri` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:282` | RFC 3986 `absolute-URI` schema without a fragment component. |
-| `@beep/semantic-web/uri` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:304` | Type for {@link AbsoluteURI}. |
-| `@beep/semantic-web/uri` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:405` | Compare two URI values using URI-family normalization rules. |
-| `@beep/semantic-web/uri` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:361` | Normalize a URI or URI reference for transport-oriented comparisons. |
-| `@beep/semantic-web/uri` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:243` | RFC 3986 `relative-ref` schema. |
-| `@beep/semantic-web/uri` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:265` | Type for {@link RelativeURIReference}. |
-| `@beep/semantic-web/uri` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:381` | Resolve a URI reference against an absolute base URI. |
-| `@beep/semantic-web/uri` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:321` | RFC 3986 `URI` schema. |
-| `@beep/semantic-web/uri` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:343` | Type for {@link URI}. |
-| `@beep/semantic-web/uri` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:204` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
-| `@beep/semantic-web/uri` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:226` | Type for {@link URIReference}. |
+| `@beep/semantic-web/uri` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:283` | RFC 3986 `absolute-URI` schema without a fragment component. |
+| `@beep/semantic-web/uri` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:305` | Type for {@link AbsoluteURI}. |
+| `@beep/semantic-web/uri` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:406` | Compare two URI values using URI-family normalization rules. |
+| `@beep/semantic-web/uri` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:362` | Normalize a URI or URI reference for transport-oriented comparisons. |
+| `@beep/semantic-web/uri` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:244` | RFC 3986 `relative-ref` schema. |
+| `@beep/semantic-web/uri` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:266` | Type for {@link RelativeURIReference}. |
+| `@beep/semantic-web/uri` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:382` | Resolve a URI reference against an absolute base URI. |
+| `@beep/semantic-web/uri` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:322` | RFC 3986 `URI` schema. |
+| `@beep/semantic-web/uri` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:344` | Type for {@link URI}. |
+| `@beep/semantic-web/uri` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:205` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
+| `@beep/semantic-web/uri` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:227` | Type for {@link URIReference}. |
 | `@beep/semantic-web/vocab/oa` | `OA_ANNOTATION` | const | `packages/foundation/modeling/rdf/src/Vocab/Oa.ts:39` | `oa:Annotation` |
 | `@beep/semantic-web/vocab/oa` | `OA_HAS_SELECTOR` | const | `packages/foundation/modeling/rdf/src/Vocab/Oa.ts:69` | `oa:hasSelector` |
 | `@beep/semantic-web/vocab/oa` | `OA_HAS_TARGET` | const | `packages/foundation/modeling/rdf/src/Vocab/Oa.ts:54` | `oa:hasTarget` |
@@ -5172,12 +5179,12 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/semantic-web/vocab/rdfs` | `RDFS_COMMENT` | const | `packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts:54` | `rdfs:comment` |
 | `@beep/semantic-web/vocab/rdfs` | `RDFS_LABEL` | const | `packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts:39` | `rdfs:label` |
 | `@beep/semantic-web/vocab/rdfs` | `RDFS_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts:24` | RDFS namespace IRI. |
-| `@beep/semantic-web/vocab/xsd` | `XSD_ANY_URI` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:54` | `xsd:anyURI` |
-| `@beep/semantic-web/vocab/xsd` | `XSD_BOOLEAN` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:69` | `xsd:boolean` |
-| `@beep/semantic-web/vocab/xsd` | `XSD_DOUBLE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:99` | `xsd:double` |
-| `@beep/semantic-web/vocab/xsd` | `XSD_INTEGER` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:84` | `xsd:integer` |
-| `@beep/semantic-web/vocab/xsd` | `XSD_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:24` | XSD namespace IRI. |
-| `@beep/semantic-web/vocab/xsd` | `XSD_STRING` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:39` | `xsd:string` |
+| `@beep/semantic-web/vocab/xsd` | `XSD_ANY_URI` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:55` | `xsd:anyURI` |
+| `@beep/semantic-web/vocab/xsd` | `XSD_BOOLEAN` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:70` | `xsd:boolean` |
+| `@beep/semantic-web/vocab/xsd` | `XSD_DOUBLE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:100` | `xsd:double` |
+| `@beep/semantic-web/vocab/xsd` | `XSD_INTEGER` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:85` | `xsd:integer` |
+| `@beep/semantic-web/vocab/xsd` | `XSD_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:25` | XSD namespace IRI. |
+| `@beep/semantic-web/vocab/xsd` | `XSD_STRING` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:40` | `xsd:string` |
 
 ### @beep/utils
 
@@ -13292,25 +13299,25 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 
 | Import | Symbol | Kind | Source | Summary |
 |---|---|---|---|---|
-| `@beep/rdf` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:935` | RFC 3987 `absolute-IRI` schema without a fragment component. |
-| `@beep/rdf` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:956` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
-| `@beep/rdf` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:282` | RFC 3986 `absolute-URI` schema without a fragment component. |
-| `@beep/rdf` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:304` | Type for {@link AbsoluteURI}. |
-| `@beep/rdf` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:346` | Attach validated semantic metadata to any Effect schema. |
-| `@beep/rdf` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1043` | Compare datasets by sorted quad serialization. |
-| `@beep/rdf` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:405` | Compare two URI values using URI-family normalization rules. |
+| `@beep/rdf` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:936` | RFC 3987 `absolute-IRI` schema without a fragment component. |
+| `@beep/rdf` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:957` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
+| `@beep/rdf` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:283` | RFC 3986 `absolute-URI` schema without a fragment component. |
+| `@beep/rdf` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:305` | Type for {@link AbsoluteURI}. |
+| `@beep/rdf` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:347` | Attach validated semantic metadata to any Effect schema. |
+| `@beep/rdf` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1044` | Compare datasets by sorted quad serialization. |
+| `@beep/rdf` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:406` | Compare two URI values using URI-family normalization rules. |
 | `@beep/rdf` | `BlankNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:374` | RDF blank node value. |
 | `@beep/rdf` | `Curie` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:263` | CURIE-style compact IRI expression. |
 | `@beep/rdf` | `Curie` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:285` | Type for {@link Curie}. |
 | `@beep/rdf` | `Dataset` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:662` | Dataset wrapper for RDF quads. |
 | `@beep/rdf` | `DefaultGraph` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:439` | RDF default graph term. |
-| `@beep/rdf` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:427` | Read semantic metadata from any Effect schema, if present. |
+| `@beep/rdf` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:430` | Read semantic metadata from any Effect schema, if present. |
 | `@beep/rdf` | `GraphTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:600` | RDF graph term union. |
 | `@beep/rdf` | `GraphTerm` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:621` | Type for {@link GraphTerm}. |
-| `@beep/rdf` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:973` | RFC 3987 `IRI` schema. |
-| `@beep/rdf` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:994` | RFC 3987 `IRI` syntax. |
-| `@beep/rdf` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:859` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
-| `@beep/rdf` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:880` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
+| `@beep/rdf` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:974` | RFC 3987 `IRI` schema. |
+| `@beep/rdf` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:995` | RFC 3987 `IRI` syntax. |
+| `@beep/rdf` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:860` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
+| `@beep/rdf` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:881` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
 | `@beep/rdf` | `JsonLdBlankNodeIdentifier` | const | `packages/foundation/modeling/rdf/src/JsonLd.ts:168` | JSON-LD blank-node identifier used by the bounded document model. |
 | `@beep/rdf` | `JsonLdBlankNodeIdentifier` | type | `packages/foundation/modeling/rdf/src/JsonLd.ts:199` | Type for {@link JsonLdBlankNodeIdentifier}. |
 | `@beep/rdf` | `JsonLdContext` | class | `packages/foundation/modeling/rdf/src/JsonLd.ts:134` | Normalized JSON-LD context model with bounded base, vocab, and term bindings. |
@@ -13330,16 +13337,16 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf` | `LanguageTag` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:335` | Type for {@link LanguageTag}. |
 | `@beep/rdf` | `Literal` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:413` | RDF literal value. |
 | `@beep/rdf` | `makeBlankNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:791` | Build a blank node from a non-empty label. |
-| `@beep/rdf` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:951` | Build a dataset from quads. |
+| `@beep/rdf` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:952` | Build a dataset from quads. |
 | `@beep/rdf` | `makeLiteral` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:854` | Build an RDF literal. |
 | `@beep/rdf` | `MakeLiteralOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:811` | Optional language settings for {@link makeLiteral}. |
 | `@beep/rdf` | `makeNamedNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:765` | Build a named node from an IRI string. |
-| `@beep/rdf` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:915` | Build an RDF quad. |
-| `@beep/rdf` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:875` | Object and optional graph settings for {@link makeQuad}. |
-| `@beep/rdf` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:316` | Validate a metadata payload before attaching it to a public schema. |
+| `@beep/rdf` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:916` | Build an RDF quad. |
+| `@beep/rdf` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:876` | Object and optional graph settings for {@link makeQuad}. |
+| `@beep/rdf` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:317` | Validate a metadata payload before attaching it to a public schema. |
 | `@beep/rdf` | `NamedNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:350` | RDF named node value. |
 | `@beep/rdf` | `NamespaceBinding` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:685` | Prefix-to-namespace binding for RDF compaction and expansion. |
-| `@beep/rdf` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:361` | Normalize a URI or URI reference for transport-oriented comparisons. |
+| `@beep/rdf` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:362` | Normalize a URI or URI reference for transport-oriented comparisons. |
 | `@beep/rdf` | `ObjectTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:564` | RDF object term union. |
 | `@beep/rdf` | `ObjectTerm` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:585` | Type for {@link ObjectTerm}. |
 | `@beep/rdf` | `PrefixLabel` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:214` | Prefix label used by RDF namespace bindings. |
@@ -13347,54 +13354,54 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf` | `PrefixMap` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:709` | Prefix map keyed by {@link PrefixLabel}. |
 | `@beep/rdf` | `PrefixMap` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:743` | Type for {@link PrefixMap}. |
 | `@beep/rdf` | `Quad` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:636` | RDF quad value aligned with RDF/JS. |
-| `@beep/rdf` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:897` | RFC 3987 `irelative-ref` schema. |
-| `@beep/rdf` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:918` | RFC 3987 `irelative-ref` syntax. |
-| `@beep/rdf` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:243` | RFC 3986 `relative-ref` schema. |
-| `@beep/rdf` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:265` | Type for {@link RelativeURIReference}. |
-| `@beep/rdf` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:381` | Resolve a URI reference against an absolute base URI. |
-| `@beep/rdf` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:220` | Single representation note attached to semantic-web schemas. |
-| `@beep/rdf` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:151` | Representation label for semantic-web values. |
-| `@beep/rdf` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:178` | Type for {@link SemanticRepresentationKind}. |
-| `@beep/rdf` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:243` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/rdf` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:281` | Payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/rdf` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:37` | Closed v1 metadata kind domain for semantic-web schemas. |
-| `@beep/rdf` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:66` | Type for {@link SemanticSchemaMetadataKind}. |
-| `@beep/rdf` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:193` | Single specification reference attached to public semantic-web schemas. |
-| `@beep/rdf` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:116` | Specification disposition attached to a semantic schema reference. |
-| `@beep/rdf` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:136` | Type for {@link SemanticSchemaSpecificationDisposition}. |
-| `@beep/rdf` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:81` | Stability classification for semantic-web schema metadata. |
-| `@beep/rdf` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:101` | Type for {@link SemanticSchemaStatus}. |
-| `@beep/rdf` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1000` | Serialize an RDF quad to a deterministic lexical form. |
-| `@beep/rdf` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:969` | Serialize an RDF term to a deterministic lexical form. |
-| `@beep/rdf` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1022` | Sort dataset quads by deterministic quad serialization. |
+| `@beep/rdf` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:898` | RFC 3987 `irelative-ref` schema. |
+| `@beep/rdf` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:919` | RFC 3987 `irelative-ref` syntax. |
+| `@beep/rdf` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:244` | RFC 3986 `relative-ref` schema. |
+| `@beep/rdf` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:266` | Type for {@link RelativeURIReference}. |
+| `@beep/rdf` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:382` | Resolve a URI reference against an absolute base URI. |
+| `@beep/rdf` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:221` | Single representation note attached to semantic-web schemas. |
+| `@beep/rdf` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:152` | Representation label for semantic-web values. |
+| `@beep/rdf` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:179` | Type for {@link SemanticRepresentationKind}. |
+| `@beep/rdf` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:244` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/rdf` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:282` | Payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/rdf` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:38` | Closed v1 metadata kind domain for semantic-web schemas. |
+| `@beep/rdf` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:67` | Type for {@link SemanticSchemaMetadataKind}. |
+| `@beep/rdf` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:194` | Single specification reference attached to public semantic-web schemas. |
+| `@beep/rdf` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:117` | Specification disposition attached to a semantic schema reference. |
+| `@beep/rdf` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:137` | Type for {@link SemanticSchemaSpecificationDisposition}. |
+| `@beep/rdf` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:82` | Stability classification for semantic-web schema metadata. |
+| `@beep/rdf` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:102` | Type for {@link SemanticSchemaStatus}. |
+| `@beep/rdf` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1001` | Serialize an RDF quad to a deterministic lexical form. |
+| `@beep/rdf` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:970` | Serialize an RDF term to a deterministic lexical form. |
+| `@beep/rdf` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1023` | Sort dataset quads by deterministic quad serialization. |
 | `@beep/rdf` | `Subject` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:528` | RDF subject term union. |
 | `@beep/rdf` | `Subject` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:549` | Type for {@link Subject}. |
 | `@beep/rdf` | `Term` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:476` | RDF term union. |
 | `@beep/rdf` | `Term` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:513` | Type for {@link Term}. |
-| `@beep/rdf` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:321` | RFC 3986 `URI` schema. |
-| `@beep/rdf` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:343` | Type for {@link URI}. |
-| `@beep/rdf` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:204` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
-| `@beep/rdf` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:226` | Type for {@link URIReference}. |
+| `@beep/rdf` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:322` | RFC 3986 `URI` schema. |
+| `@beep/rdf` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:344` | Type for {@link URI}. |
+| `@beep/rdf` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:205` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
+| `@beep/rdf` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:227` | Type for {@link URIReference}. |
 | `@beep/rdf` | `VERSION` | const | `packages/foundation/modeling/rdf/src/index.ts:14` | Package version. |
-| `@beep/rdf/index` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:935` | RFC 3987 `absolute-IRI` schema without a fragment component. |
-| `@beep/rdf/index` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:956` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
-| `@beep/rdf/index` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:282` | RFC 3986 `absolute-URI` schema without a fragment component. |
-| `@beep/rdf/index` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:304` | Type for {@link AbsoluteURI}. |
-| `@beep/rdf/index` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:346` | Attach validated semantic metadata to any Effect schema. |
-| `@beep/rdf/index` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1043` | Compare datasets by sorted quad serialization. |
-| `@beep/rdf/index` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:405` | Compare two URI values using URI-family normalization rules. |
+| `@beep/rdf/index` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:936` | RFC 3987 `absolute-IRI` schema without a fragment component. |
+| `@beep/rdf/index` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:957` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
+| `@beep/rdf/index` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:283` | RFC 3986 `absolute-URI` schema without a fragment component. |
+| `@beep/rdf/index` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:305` | Type for {@link AbsoluteURI}. |
+| `@beep/rdf/index` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:347` | Attach validated semantic metadata to any Effect schema. |
+| `@beep/rdf/index` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1044` | Compare datasets by sorted quad serialization. |
+| `@beep/rdf/index` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:406` | Compare two URI values using URI-family normalization rules. |
 | `@beep/rdf/index` | `BlankNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:374` | RDF blank node value. |
 | `@beep/rdf/index` | `Curie` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:263` | CURIE-style compact IRI expression. |
 | `@beep/rdf/index` | `Curie` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:285` | Type for {@link Curie}. |
 | `@beep/rdf/index` | `Dataset` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:662` | Dataset wrapper for RDF quads. |
 | `@beep/rdf/index` | `DefaultGraph` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:439` | RDF default graph term. |
-| `@beep/rdf/index` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:427` | Read semantic metadata from any Effect schema, if present. |
+| `@beep/rdf/index` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:430` | Read semantic metadata from any Effect schema, if present. |
 | `@beep/rdf/index` | `GraphTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:600` | RDF graph term union. |
 | `@beep/rdf/index` | `GraphTerm` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:621` | Type for {@link GraphTerm}. |
-| `@beep/rdf/index` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:973` | RFC 3987 `IRI` schema. |
-| `@beep/rdf/index` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:994` | RFC 3987 `IRI` syntax. |
-| `@beep/rdf/index` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:859` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
-| `@beep/rdf/index` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:880` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
+| `@beep/rdf/index` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:974` | RFC 3987 `IRI` schema. |
+| `@beep/rdf/index` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:995` | RFC 3987 `IRI` syntax. |
+| `@beep/rdf/index` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:860` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
+| `@beep/rdf/index` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:881` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
 | `@beep/rdf/index` | `JsonLdBlankNodeIdentifier` | const | `packages/foundation/modeling/rdf/src/JsonLd.ts:168` | JSON-LD blank-node identifier used by the bounded document model. |
 | `@beep/rdf/index` | `JsonLdBlankNodeIdentifier` | type | `packages/foundation/modeling/rdf/src/JsonLd.ts:199` | Type for {@link JsonLdBlankNodeIdentifier}. |
 | `@beep/rdf/index` | `JsonLdContext` | class | `packages/foundation/modeling/rdf/src/JsonLd.ts:134` | Normalized JSON-LD context model with bounded base, vocab, and term bindings. |
@@ -13414,16 +13421,16 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf/index` | `LanguageTag` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:335` | Type for {@link LanguageTag}. |
 | `@beep/rdf/index` | `Literal` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:413` | RDF literal value. |
 | `@beep/rdf/index` | `makeBlankNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:791` | Build a blank node from a non-empty label. |
-| `@beep/rdf/index` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:951` | Build a dataset from quads. |
+| `@beep/rdf/index` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:952` | Build a dataset from quads. |
 | `@beep/rdf/index` | `makeLiteral` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:854` | Build an RDF literal. |
 | `@beep/rdf/index` | `MakeLiteralOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:811` | Optional language settings for {@link makeLiteral}. |
 | `@beep/rdf/index` | `makeNamedNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:765` | Build a named node from an IRI string. |
-| `@beep/rdf/index` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:915` | Build an RDF quad. |
-| `@beep/rdf/index` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:875` | Object and optional graph settings for {@link makeQuad}. |
-| `@beep/rdf/index` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:316` | Validate a metadata payload before attaching it to a public schema. |
+| `@beep/rdf/index` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:916` | Build an RDF quad. |
+| `@beep/rdf/index` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:876` | Object and optional graph settings for {@link makeQuad}. |
+| `@beep/rdf/index` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:317` | Validate a metadata payload before attaching it to a public schema. |
 | `@beep/rdf/index` | `NamedNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:350` | RDF named node value. |
 | `@beep/rdf/index` | `NamespaceBinding` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:685` | Prefix-to-namespace binding for RDF compaction and expansion. |
-| `@beep/rdf/index` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:361` | Normalize a URI or URI reference for transport-oriented comparisons. |
+| `@beep/rdf/index` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:362` | Normalize a URI or URI reference for transport-oriented comparisons. |
 | `@beep/rdf/index` | `ObjectTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:564` | RDF object term union. |
 | `@beep/rdf/index` | `ObjectTerm` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:585` | Type for {@link ObjectTerm}. |
 | `@beep/rdf/index` | `PrefixLabel` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:214` | Prefix label used by RDF namespace bindings. |
@@ -13431,43 +13438,43 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf/index` | `PrefixMap` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:709` | Prefix map keyed by {@link PrefixLabel}. |
 | `@beep/rdf/index` | `PrefixMap` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:743` | Type for {@link PrefixMap}. |
 | `@beep/rdf/index` | `Quad` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:636` | RDF quad value aligned with RDF/JS. |
-| `@beep/rdf/index` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:897` | RFC 3987 `irelative-ref` schema. |
-| `@beep/rdf/index` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:918` | RFC 3987 `irelative-ref` syntax. |
-| `@beep/rdf/index` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:243` | RFC 3986 `relative-ref` schema. |
-| `@beep/rdf/index` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:265` | Type for {@link RelativeURIReference}. |
-| `@beep/rdf/index` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:381` | Resolve a URI reference against an absolute base URI. |
-| `@beep/rdf/index` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:220` | Single representation note attached to semantic-web schemas. |
-| `@beep/rdf/index` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:151` | Representation label for semantic-web values. |
-| `@beep/rdf/index` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:178` | Type for {@link SemanticRepresentationKind}. |
-| `@beep/rdf/index` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:243` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/rdf/index` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:281` | Payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/rdf/index` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:37` | Closed v1 metadata kind domain for semantic-web schemas. |
-| `@beep/rdf/index` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:66` | Type for {@link SemanticSchemaMetadataKind}. |
-| `@beep/rdf/index` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:193` | Single specification reference attached to public semantic-web schemas. |
-| `@beep/rdf/index` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:116` | Specification disposition attached to a semantic schema reference. |
-| `@beep/rdf/index` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:136` | Type for {@link SemanticSchemaSpecificationDisposition}. |
-| `@beep/rdf/index` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:81` | Stability classification for semantic-web schema metadata. |
-| `@beep/rdf/index` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:101` | Type for {@link SemanticSchemaStatus}. |
-| `@beep/rdf/index` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1000` | Serialize an RDF quad to a deterministic lexical form. |
-| `@beep/rdf/index` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:969` | Serialize an RDF term to a deterministic lexical form. |
-| `@beep/rdf/index` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1022` | Sort dataset quads by deterministic quad serialization. |
+| `@beep/rdf/index` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:898` | RFC 3987 `irelative-ref` schema. |
+| `@beep/rdf/index` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:919` | RFC 3987 `irelative-ref` syntax. |
+| `@beep/rdf/index` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:244` | RFC 3986 `relative-ref` schema. |
+| `@beep/rdf/index` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:266` | Type for {@link RelativeURIReference}. |
+| `@beep/rdf/index` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:382` | Resolve a URI reference against an absolute base URI. |
+| `@beep/rdf/index` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:221` | Single representation note attached to semantic-web schemas. |
+| `@beep/rdf/index` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:152` | Representation label for semantic-web values. |
+| `@beep/rdf/index` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:179` | Type for {@link SemanticRepresentationKind}. |
+| `@beep/rdf/index` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:244` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/rdf/index` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:282` | Payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/rdf/index` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:38` | Closed v1 metadata kind domain for semantic-web schemas. |
+| `@beep/rdf/index` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:67` | Type for {@link SemanticSchemaMetadataKind}. |
+| `@beep/rdf/index` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:194` | Single specification reference attached to public semantic-web schemas. |
+| `@beep/rdf/index` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:117` | Specification disposition attached to a semantic schema reference. |
+| `@beep/rdf/index` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:137` | Type for {@link SemanticSchemaSpecificationDisposition}. |
+| `@beep/rdf/index` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:82` | Stability classification for semantic-web schema metadata. |
+| `@beep/rdf/index` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:102` | Type for {@link SemanticSchemaStatus}. |
+| `@beep/rdf/index` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1001` | Serialize an RDF quad to a deterministic lexical form. |
+| `@beep/rdf/index` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:970` | Serialize an RDF term to a deterministic lexical form. |
+| `@beep/rdf/index` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1023` | Sort dataset quads by deterministic quad serialization. |
 | `@beep/rdf/index` | `Subject` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:528` | RDF subject term union. |
 | `@beep/rdf/index` | `Subject` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:549` | Type for {@link Subject}. |
 | `@beep/rdf/index` | `Term` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:476` | RDF term union. |
 | `@beep/rdf/index` | `Term` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:513` | Type for {@link Term}. |
-| `@beep/rdf/index` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:321` | RFC 3986 `URI` schema. |
-| `@beep/rdf/index` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:343` | Type for {@link URI}. |
-| `@beep/rdf/index` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:204` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
-| `@beep/rdf/index` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:226` | Type for {@link URIReference}. |
+| `@beep/rdf/index` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:322` | RFC 3986 `URI` schema. |
+| `@beep/rdf/index` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:344` | Type for {@link URI}. |
+| `@beep/rdf/index` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:205` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
+| `@beep/rdf/index` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:227` | Type for {@link URIReference}. |
 | `@beep/rdf/index` | `VERSION` | const | `packages/foundation/modeling/rdf/src/index.ts:14` | Package version. |
-| `@beep/rdf/Iri` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:935` | RFC 3987 `absolute-IRI` schema without a fragment component. |
-| `@beep/rdf/Iri` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:956` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
-| `@beep/rdf/Iri` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:973` | RFC 3987 `IRI` schema. |
-| `@beep/rdf/Iri` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:994` | RFC 3987 `IRI` syntax. |
-| `@beep/rdf/Iri` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:859` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
-| `@beep/rdf/Iri` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:880` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
-| `@beep/rdf/Iri` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:897` | RFC 3987 `irelative-ref` schema. |
-| `@beep/rdf/Iri` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:918` | RFC 3987 `irelative-ref` syntax. |
+| `@beep/rdf/Iri` | `AbsoluteIRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:936` | RFC 3987 `absolute-IRI` schema without a fragment component. |
+| `@beep/rdf/Iri` | `AbsoluteIRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:957` | RFC 3987 `absolute-IRI` syntax without a fragment component. |
+| `@beep/rdf/Iri` | `IRI` | const | `packages/foundation/modeling/rdf/src/Iri.ts:974` | RFC 3987 `IRI` schema. |
+| `@beep/rdf/Iri` | `IRI` | type | `packages/foundation/modeling/rdf/src/Iri.ts:995` | RFC 3987 `IRI` syntax. |
+| `@beep/rdf/Iri` | `IRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:860` | RFC 3987 `IRI-reference` schema, including absolute and relative forms. |
+| `@beep/rdf/Iri` | `IRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:881` | RFC 3987 `IRI-reference` syntax, including absolute and relative forms. |
+| `@beep/rdf/Iri` | `RelativeIRIReference` | const | `packages/foundation/modeling/rdf/src/Iri.ts:898` | RFC 3987 `irelative-ref` schema. |
+| `@beep/rdf/Iri` | `RelativeIRIReference` | type | `packages/foundation/modeling/rdf/src/Iri.ts:919` | RFC 3987 `irelative-ref` syntax. |
 | `@beep/rdf/JsonLd` | `JsonLdBlankNodeIdentifier` | const | `packages/foundation/modeling/rdf/src/JsonLd.ts:168` | JSON-LD blank-node identifier used by the bounded document model. |
 | `@beep/rdf/JsonLd` | `JsonLdBlankNodeIdentifier` | type | `packages/foundation/modeling/rdf/src/JsonLd.ts:199` | Type for {@link JsonLdBlankNodeIdentifier}. |
 | `@beep/rdf/JsonLd` | `JsonLdContext` | class | `packages/foundation/modeling/rdf/src/JsonLd.ts:134` | Normalized JSON-LD context model with bounded base, vocab, and term bindings. |
@@ -13483,7 +13490,7 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf/JsonLd` | `JsonLdPropertyValue` | type | `packages/foundation/modeling/rdf/src/JsonLd.ts:344` | Type for {@link JsonLdPropertyValue}. |
 | `@beep/rdf/JsonLd` | `JsonLdReferenceValue` | class | `packages/foundation/modeling/rdf/src/JsonLd.ts:259` | JSON-LD node reference value. |
 | `@beep/rdf/JsonLd` | `JsonLdTermDefinition` | class | `packages/foundation/modeling/rdf/src/JsonLd.ts:102` | Normalized JSON-LD term definition used by the bounded context model. |
-| `@beep/rdf/Rdf` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1043` | Compare datasets by sorted quad serialization. |
+| `@beep/rdf/Rdf` | `areDatasetsEquivalent` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1044` | Compare datasets by sorted quad serialization. |
 | `@beep/rdf/Rdf` | `BlankNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:374` | RDF blank node value. |
 | `@beep/rdf/Rdf` | `Curie` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:263` | CURIE-style compact IRI expression. |
 | `@beep/rdf/Rdf` | `Curie` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:285` | Type for {@link Curie}. |
@@ -13495,12 +13502,12 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf/Rdf` | `LanguageTag` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:335` | Type for {@link LanguageTag}. |
 | `@beep/rdf/Rdf` | `Literal` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:413` | RDF literal value. |
 | `@beep/rdf/Rdf` | `makeBlankNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:791` | Build a blank node from a non-empty label. |
-| `@beep/rdf/Rdf` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:951` | Build a dataset from quads. |
+| `@beep/rdf/Rdf` | `makeDataset` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:952` | Build a dataset from quads. |
 | `@beep/rdf/Rdf` | `makeLiteral` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:854` | Build an RDF literal. |
 | `@beep/rdf/Rdf` | `MakeLiteralOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:811` | Optional language settings for {@link makeLiteral}. |
 | `@beep/rdf/Rdf` | `makeNamedNode` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:765` | Build a named node from an IRI string. |
-| `@beep/rdf/Rdf` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:915` | Build an RDF quad. |
-| `@beep/rdf/Rdf` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:875` | Object and optional graph settings for {@link makeQuad}. |
+| `@beep/rdf/Rdf` | `makeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:916` | Build an RDF quad. |
+| `@beep/rdf/Rdf` | `MakeQuadOptions` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:876` | Object and optional graph settings for {@link makeQuad}. |
 | `@beep/rdf/Rdf` | `NamedNode` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:350` | RDF named node value. |
 | `@beep/rdf/Rdf` | `NamespaceBinding` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:685` | Prefix-to-namespace binding for RDF compaction and expansion. |
 | `@beep/rdf/Rdf` | `ObjectTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:564` | RDF object term union. |
@@ -13510,39 +13517,39 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf/Rdf` | `PrefixMap` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:709` | Prefix map keyed by {@link PrefixLabel}. |
 | `@beep/rdf/Rdf` | `PrefixMap` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:743` | Type for {@link PrefixMap}. |
 | `@beep/rdf/Rdf` | `Quad` | class | `packages/foundation/modeling/rdf/src/Rdf.ts:636` | RDF quad value aligned with RDF/JS. |
-| `@beep/rdf/Rdf` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1000` | Serialize an RDF quad to a deterministic lexical form. |
-| `@beep/rdf/Rdf` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:969` | Serialize an RDF term to a deterministic lexical form. |
-| `@beep/rdf/Rdf` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1022` | Sort dataset quads by deterministic quad serialization. |
+| `@beep/rdf/Rdf` | `serializeQuad` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1001` | Serialize an RDF quad to a deterministic lexical form. |
+| `@beep/rdf/Rdf` | `serializeTerm` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:970` | Serialize an RDF term to a deterministic lexical form. |
+| `@beep/rdf/Rdf` | `sortDatasetQuads` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:1023` | Sort dataset quads by deterministic quad serialization. |
 | `@beep/rdf/Rdf` | `Subject` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:528` | RDF subject term union. |
 | `@beep/rdf/Rdf` | `Subject` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:549` | Type for {@link Subject}. |
 | `@beep/rdf/Rdf` | `Term` | const | `packages/foundation/modeling/rdf/src/Rdf.ts:476` | RDF term union. |
 | `@beep/rdf/Rdf` | `Term` | type | `packages/foundation/modeling/rdf/src/Rdf.ts:513` | Type for {@link Term}. |
-| `@beep/rdf/SemanticSchemaMetadata` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:346` | Attach validated semantic metadata to any Effect schema. |
-| `@beep/rdf/SemanticSchemaMetadata` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:427` | Read semantic metadata from any Effect schema, if present. |
-| `@beep/rdf/SemanticSchemaMetadata` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:316` | Validate a metadata payload before attaching it to a public schema. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:220` | Single representation note attached to semantic-web schemas. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:151` | Representation label for semantic-web values. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:178` | Type for {@link SemanticRepresentationKind}. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:243` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:281` | Payload stored in the `semanticSchemaMetadata` annotation key. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:37` | Closed v1 metadata kind domain for semantic-web schemas. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:66` | Type for {@link SemanticSchemaMetadataKind}. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:193` | Single specification reference attached to public semantic-web schemas. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:116` | Specification disposition attached to a semantic schema reference. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:136` | Type for {@link SemanticSchemaSpecificationDisposition}. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:81` | Stability classification for semantic-web schema metadata. |
-| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:101` | Type for {@link SemanticSchemaStatus}. |
-| `@beep/rdf/Uri` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:282` | RFC 3986 `absolute-URI` schema without a fragment component. |
-| `@beep/rdf/Uri` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:304` | Type for {@link AbsoluteURI}. |
-| `@beep/rdf/Uri` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:405` | Compare two URI values using URI-family normalization rules. |
-| `@beep/rdf/Uri` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:361` | Normalize a URI or URI reference for transport-oriented comparisons. |
-| `@beep/rdf/Uri` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:243` | RFC 3986 `relative-ref` schema. |
-| `@beep/rdf/Uri` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:265` | Type for {@link RelativeURIReference}. |
-| `@beep/rdf/Uri` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:381` | Resolve a URI reference against an absolute base URI. |
-| `@beep/rdf/Uri` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:321` | RFC 3986 `URI` schema. |
-| `@beep/rdf/Uri` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:343` | Type for {@link URI}. |
-| `@beep/rdf/Uri` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:204` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
-| `@beep/rdf/Uri` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:226` | Type for {@link URIReference}. |
+| `@beep/rdf/SemanticSchemaMetadata` | `annotateSemanticSchema` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:347` | Attach validated semantic metadata to any Effect schema. |
+| `@beep/rdf/SemanticSchemaMetadata` | `getSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:430` | Read semantic metadata from any Effect schema, if present. |
+| `@beep/rdf/SemanticSchemaMetadata` | `makeSemanticSchemaMetadata` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:317` | Validate a metadata payload before attaching it to a public schema. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticRepresentation` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:221` | Single representation note attached to semantic-web schemas. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticRepresentationKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:152` | Representation label for semantic-web values. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticRepresentationKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:179` | Type for {@link SemanticRepresentationKind}. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadata` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:244` | Typed metadata payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadataAnnotationPayload` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:282` | Payload stored in the `semanticSchemaMetadata` annotation key. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadataKind` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:38` | Closed v1 metadata kind domain for semantic-web schemas. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaMetadataKind` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:67` | Type for {@link SemanticSchemaMetadataKind}. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaSpecification` | class | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:194` | Single specification reference attached to public semantic-web schemas. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaSpecificationDisposition` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:117` | Specification disposition attached to a semantic schema reference. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaSpecificationDisposition` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:137` | Type for {@link SemanticSchemaSpecificationDisposition}. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaStatus` | const | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:82` | Stability classification for semantic-web schema metadata. |
+| `@beep/rdf/SemanticSchemaMetadata` | `SemanticSchemaStatus` | type | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:102` | Type for {@link SemanticSchemaStatus}. |
+| `@beep/rdf/Uri` | `AbsoluteURI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:283` | RFC 3986 `absolute-URI` schema without a fragment component. |
+| `@beep/rdf/Uri` | `AbsoluteURI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:305` | Type for {@link AbsoluteURI}. |
+| `@beep/rdf/Uri` | `areUrisEquivalent` | const | `packages/foundation/modeling/rdf/src/Uri.ts:406` | Compare two URI values using URI-family normalization rules. |
+| `@beep/rdf/Uri` | `normalizeUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:362` | Normalize a URI or URI reference for transport-oriented comparisons. |
+| `@beep/rdf/Uri` | `RelativeURIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:244` | RFC 3986 `relative-ref` schema. |
+| `@beep/rdf/Uri` | `RelativeURIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:266` | Type for {@link RelativeURIReference}. |
+| `@beep/rdf/Uri` | `resolveUriReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:382` | Resolve a URI reference against an absolute base URI. |
+| `@beep/rdf/Uri` | `URI` | const | `packages/foundation/modeling/rdf/src/Uri.ts:322` | RFC 3986 `URI` schema. |
+| `@beep/rdf/Uri` | `URI` | type | `packages/foundation/modeling/rdf/src/Uri.ts:344` | Type for {@link URI}. |
+| `@beep/rdf/Uri` | `URIReference` | const | `packages/foundation/modeling/rdf/src/Uri.ts:205` | RFC 3986 `URI-reference` schema, including absolute and relative forms. |
+| `@beep/rdf/Uri` | `URIReference` | type | `packages/foundation/modeling/rdf/src/Uri.ts:227` | Type for {@link URIReference}. |
 | `@beep/rdf/Vocab/Oa` | `OA_ANNOTATION` | const | `packages/foundation/modeling/rdf/src/Vocab/Oa.ts:39` | `oa:Annotation` |
 | `@beep/rdf/Vocab/Oa` | `OA_HAS_SELECTOR` | const | `packages/foundation/modeling/rdf/src/Vocab/Oa.ts:69` | `oa:hasSelector` |
 | `@beep/rdf/Vocab/Oa` | `OA_HAS_TARGET` | const | `packages/foundation/modeling/rdf/src/Vocab/Oa.ts:54` | `oa:hasTarget` |
@@ -13566,12 +13573,33 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/rdf/Vocab/Rdfs` | `RDFS_COMMENT` | const | `packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts:54` | `rdfs:comment` |
 | `@beep/rdf/Vocab/Rdfs` | `RDFS_LABEL` | const | `packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts:39` | `rdfs:label` |
 | `@beep/rdf/Vocab/Rdfs` | `RDFS_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts:24` | RDFS namespace IRI. |
-| `@beep/rdf/Vocab/Xsd` | `XSD_ANY_URI` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:54` | `xsd:anyURI` |
-| `@beep/rdf/Vocab/Xsd` | `XSD_BOOLEAN` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:69` | `xsd:boolean` |
-| `@beep/rdf/Vocab/Xsd` | `XSD_DOUBLE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:99` | `xsd:double` |
-| `@beep/rdf/Vocab/Xsd` | `XSD_INTEGER` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:84` | `xsd:integer` |
-| `@beep/rdf/Vocab/Xsd` | `XSD_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:24` | XSD namespace IRI. |
-| `@beep/rdf/Vocab/Xsd` | `XSD_STRING` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:39` | `xsd:string` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_ALT_LABEL` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:56` | `skos:altLabel` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_BROAD_MATCH` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:144` | `skos:broadMatch` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_BROADER` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:104` | `skos:broader` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_CLOSE_MATCH` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:136` | `skos:closeMatch` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_CONCEPT` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:32` | `skos:Concept` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_CONCEPT_SCHEME` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:40` | `skos:ConceptScheme` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_DEFINITION` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:72` | `skos:definition` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_EDITORIAL_NOTE` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:88` | `skos:editorialNote` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_EXACT_MATCH` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:128` | `skos:exactMatch` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_HAS_TOP_CONCEPT` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:176` | `skos:hasTopConcept` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_HIDDEN_LABEL` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:64` | `skos:hiddenLabel` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_HISTORY_NOTE` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:96` | `skos:historyNote` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_IN_SCHEME` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:168` | `skos:inScheme` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:24` | SKOS namespace IRI. |
+| `@beep/rdf/Vocab/Skos` | `SKOS_NARROW_MATCH` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:152` | `skos:narrowMatch` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_NARROWER` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:112` | `skos:narrower` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_PREF_LABEL` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:48` | `skos:prefLabel` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_RELATED` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:120` | `skos:related` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_RELATED_MATCH` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:160` | `skos:relatedMatch` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_SCOPE_NOTE` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:80` | `skos:scopeNote` |
+| `@beep/rdf/Vocab/Skos` | `SKOS_TOP_CONCEPT_OF` | const | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts:184` | `skos:topConceptOf` |
+| `@beep/rdf/Vocab/Xsd` | `XSD_ANY_URI` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:55` | `xsd:anyURI` |
+| `@beep/rdf/Vocab/Xsd` | `XSD_BOOLEAN` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:70` | `xsd:boolean` |
+| `@beep/rdf/Vocab/Xsd` | `XSD_DOUBLE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:100` | `xsd:double` |
+| `@beep/rdf/Vocab/Xsd` | `XSD_INTEGER` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:85` | `xsd:integer` |
+| `@beep/rdf/Vocab/Xsd` | `XSD_NAMESPACE` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:25` | XSD namespace IRI. |
+| `@beep/rdf/Vocab/Xsd` | `XSD_STRING` | const | `packages/foundation/modeling/rdf/src/Vocab/Xsd.ts:40` | `xsd:string` |
 
 ### @beep/onepassword-cli
 
@@ -13646,6 +13674,7 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/data` | `Blockchain` | SourceFile | `packages/foundation/primitive/data/src/Blockchain.ts:25` |  |
 | `@beep/data` | `Calendar` | SourceFile | `packages/foundation/primitive/data/src/Calendar.ts:13` |  |
 | `@beep/data` | `CurrencyCodes` | SourceFile | `packages/foundation/primitive/data/src/CurrencyCodes.ts:12` |  |
+| `@beep/data` | `KeyboardShortcuts` | SourceFile | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:13` |  |
 | `@beep/data` | `MimeTypesData` | SourceFile | `packages/foundation/primitive/data/src/MimeTypes.ts:12` |  |
 | `@beep/data` | `Timezones` | SourceFile | `packages/foundation/primitive/data/src/Timezones.ts:11` |  |
 | `@beep/data/Blockchain` | `Networks` | const | `packages/foundation/primitive/data/src/Blockchain.ts:25` | Common blockchain network ticker metadata. |
@@ -13667,11 +13696,64 @@ The package universe is the current `bun run topo-sort` output. This catalog exi
 | `@beep/data/generated/iso4217` | `CurrencyCodeDataPublished` | const | `packages/foundation/primitive/data/src/generated/iso4217.ts:25` | Published date reported by the official ISO 4217 List One feed. |
 | `@beep/data/generated/iso4217` | `CurrencyCodeDataSourceUrl` | const | `packages/foundation/primitive/data/src/generated/iso4217.ts:40` | Official source URL for the ISO 4217 List One feed. |
 | `@beep/data/generated/iso4217` | `CurrencyCodeDataValues` | const | `packages/foundation/primitive/data/src/generated/iso4217.ts:55` | Normalized ISO 4217 currency entries emitted from the official feed. |
+| `@beep/data/HotKey` | `KeyboardShortcutCategory` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:81` | Shortcut category identifiers used for grouping command rows. |
+| `@beep/data/HotKey` | `KeyboardShortcutCategoryValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:295` | Shortcut category identifiers. |
+| `@beep/data/HotKey` | `KeyboardShortcutChordData` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:161` | A platform-specific shortcut chord for one command. |
+| `@beep/data/HotKey` | `KeyboardShortcutCommandLabel` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:145` | PascalCase command label derived from a shortcut command name. |
+| `@beep/data/HotKey` | `KeyboardShortcutCommandLabelValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:343` | PascalCase shortcut command labels. |
+| `@beep/data/HotKey` | `KeyboardShortcutCommandName` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:129` | Lower-camel command name used as the stable shortcut command id. |
+| `@beep/data/HotKey` | `KeyboardShortcutCommandNameValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:327` | Stable shortcut command names. |
+| `@beep/data/HotKey` | `KeyboardShortcutData` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:228` | A curated shortcut command row for a single platform and command name. |
+| `@beep/data/HotKey` | `KeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:440` | Combined shortcut command data across all supported platform datasets. |
+| `@beep/data/HotKey` | `KeyboardShortcutDisplay` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:193` | Platform display literal for rendering a shortcut hint. |
+| `@beep/data/HotKey` | `KeyboardShortcutPlatform` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:33` | Supported shortcut platform identifiers. |
+| `@beep/data/HotKey` | `KeyboardShortcutPlatformValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:247` | Supported shortcut platform identifiers. |
+| `@beep/data/HotKey` | `KeyboardShortcutRuntimeSupport` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:65` | Runtime registration support status for a shortcut chord. |
+| `@beep/data/HotKey` | `KeyboardShortcutRuntimeSupportValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:279` | Runtime registration support statuses. |
+| `@beep/data/HotKey` | `KeyboardShortcutScope` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:49` | Shortcut scope identifiers. |
+| `@beep/data/HotKey` | `KeyboardShortcutScopeValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:263` | Shortcut scope identifiers. |
+| `@beep/data/HotKey` | `KeyboardShortcutSource` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:97` | Source metadata entry for a curated shortcut reference. |
+| `@beep/data/HotKey` | `KeyboardShortcutSourceId` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:113` | Source identifier used by shortcut data rows. |
+| `@beep/data/HotKey` | `KeyboardShortcutSourceValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:311` | Source metadata for curated shortcut references. |
+| `@beep/data/HotKey` | `KeyboardShortcutTauriAccelerator` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:209` | Tauri/muda accelerator literal for chords that can be represented at runtime. |
+| `@beep/data/HotKey` | `KeyboardShortcutValue` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:177` | Canonical WAI-ARIA/UI Events shortcut literal. |
+| `@beep/data/HotKey` | `LinuxGnomeKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:407` | GNOME-specific app and shell shortcut defaults. |
+| `@beep/data/HotKey` | `LinuxKdePlasmaKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:423` | KDE Plasma and KStandardShortcut defaults. |
+| `@beep/data/HotKey` | `LinuxKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:391` | Portable Linux app shortcut defaults where GNOME and KDE broadly agree. |
+| `@beep/data/HotKey` | `MacOSKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:359` | macOS shortcut command data. |
+| `@beep/data/HotKey` | `WindowsKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:375` | Windows shortcut command data. |
 | `@beep/data/index` | `Blockchain` | SourceFile | `packages/foundation/primitive/data/src/Blockchain.ts:25` |  |
 | `@beep/data/index` | `Calendar` | SourceFile | `packages/foundation/primitive/data/src/Calendar.ts:13` |  |
 | `@beep/data/index` | `CurrencyCodes` | SourceFile | `packages/foundation/primitive/data/src/CurrencyCodes.ts:12` |  |
+| `@beep/data/index` | `KeyboardShortcuts` | SourceFile | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:13` |  |
 | `@beep/data/index` | `MimeTypesData` | SourceFile | `packages/foundation/primitive/data/src/MimeTypes.ts:12` |  |
 | `@beep/data/index` | `Timezones` | SourceFile | `packages/foundation/primitive/data/src/Timezones.ts:11` |  |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutCategory` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:81` | Shortcut category identifiers used for grouping command rows. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutCategoryValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:295` | Shortcut category identifiers. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutChordData` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:161` | A platform-specific shortcut chord for one command. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutCommandLabel` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:145` | PascalCase command label derived from a shortcut command name. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutCommandLabelValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:343` | PascalCase shortcut command labels. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutCommandName` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:129` | Lower-camel command name used as the stable shortcut command id. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutCommandNameValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:327` | Stable shortcut command names. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutData` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:228` | A curated shortcut command row for a single platform and command name. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:440` | Combined shortcut command data across all supported platform datasets. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutDisplay` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:193` | Platform display literal for rendering a shortcut hint. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutPlatform` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:33` | Supported shortcut platform identifiers. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutPlatformValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:247` | Supported shortcut platform identifiers. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutRuntimeSupport` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:65` | Runtime registration support status for a shortcut chord. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutRuntimeSupportValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:279` | Runtime registration support statuses. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutScope` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:49` | Shortcut scope identifiers. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutScopeValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:263` | Shortcut scope identifiers. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutSource` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:97` | Source metadata entry for a curated shortcut reference. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutSourceId` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:113` | Source identifier used by shortcut data rows. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutSourceValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:311` | Source metadata for curated shortcut references. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutTauriAccelerator` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:209` | Tauri/muda accelerator literal for chords that can be represented at runtime. |
+| `@beep/data/KeyboardShortcuts` | `KeyboardShortcutValue` | type | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:177` | Canonical WAI-ARIA/UI Events shortcut literal. |
+| `@beep/data/KeyboardShortcuts` | `LinuxGnomeKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:407` | GNOME-specific app and shell shortcut defaults. |
+| `@beep/data/KeyboardShortcuts` | `LinuxKdePlasmaKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:423` | KDE Plasma and KStandardShortcut defaults. |
+| `@beep/data/KeyboardShortcuts` | `LinuxKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:391` | Portable Linux app shortcut defaults where GNOME and KDE broadly agree. |
+| `@beep/data/KeyboardShortcuts` | `MacOSKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:359` | macOS shortcut command data. |
+| `@beep/data/KeyboardShortcuts` | `WindowsKeyboardShortcutDataValues` | const | `packages/foundation/primitive/data/src/KeyboardShortcuts.ts:375` | Windows shortcut command data. |
 | `@beep/data/MimeTypes` | `application` | const | `packages/foundation/primitive/data/src/MimeTypes.ts:71` | Record of `application/*` MIME type definitions sourced from IANA, Apache, |
 | `@beep/data/MimeTypes` | `audio` | const | `packages/foundation/primitive/data/src/MimeTypes.ts:87` | Record of `audio/*` MIME type definitions sourced from IANA, Apache, |
 | `@beep/data/MimeTypes` | `FileExtension` | type | `packages/foundation/primitive/data/src/MimeTypes.ts:51` | Union of all known file extension strings (without leading dot) derived |

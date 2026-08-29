@@ -1,5 +1,7 @@
 import { $OntologyId } from "@beep/identity/packages";
 import { IRI } from "@beep/rdf/Iri";
+import { LanguageTag } from "@beep/rdf/Rdf";
+import { URI } from "@beep/rdf/Uri";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
@@ -14,13 +16,45 @@ import * as Str from "effect/String";
 // cspell:words SKOS DCTERMS skos dcterms
 
 export { IRI } from "@beep/rdf/Iri";
+export { URI } from "@beep/rdf/Uri";
+export {
+  SKOS_ALT_LABEL,
+  SKOS_BROAD_MATCH,
+  SKOS_BROADER,
+  SKOS_CLOSE_MATCH,
+  SKOS_CONCEPT,
+  SKOS_CONCEPT_SCHEME,
+  SKOS_DEFINITION,
+  SKOS_EDITORIAL_NOTE,
+  SKOS_EXACT_MATCH,
+  SKOS_HAS_TOP_CONCEPT,
+  SKOS_HIDDEN_LABEL,
+  SKOS_HISTORY_NOTE,
+  SKOS_IN_SCHEME,
+  SKOS_NAMESPACE,
+  SKOS_NARROW_MATCH,
+  SKOS_NARROWER,
+  SKOS_PREF_LABEL,
+  SKOS_RELATED,
+  SKOS_RELATED_MATCH,
+  SKOS_SCOPE_NOTE,
+  SKOS_TOP_CONCEPT_OF,
+} from "@beep/rdf/Vocab/Skos";
 
 const $I = $OntologyId.create("model");
 
 const decodeIriResult = S.decodeUnknownResult(IRI);
+const decodeUriResult = S.decodeUnknownResult(URI);
 
-export const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
+export const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError => {
+  /* istanbul ignore else -- public schema decoders surface SchemaError instances in this package */
+  if (cause instanceof S.SchemaError) {
+    return cause;
+  }
+
+  /* istanbul ignore next -- public schema decoders surface SchemaError instances in this package */
+  return new S.SchemaError(cause);
+};
 
 export const OntologyTermName = S.NonEmptyString.check(
   S.isPattern(/^[A-Za-z][A-Za-z0-9._-]*$/, {
@@ -69,6 +103,45 @@ export class OntologyReference extends S.Class<OntologyReference>($I`OntologyRef
   })
 ) {}
 
+export class OntologyLanguageLiteral extends S.Class<OntologyLanguageLiteral>($I`OntologyLanguageLiteral`)(
+  {
+    value: S.NonEmptyString,
+    language: S.OptionFromOptionalKey(LanguageTag),
+  },
+  $I.annote("OntologyLanguageLiteral", {
+    description: "Language-aware literal used for SKOS labels and notes.",
+  })
+) {}
+
+export const OntologyProvenanceVerificationStatus = LiteralKit([
+  "unverified",
+  "machine-extracted",
+  "human-reviewed",
+  "verified",
+]).pipe(
+  $I.annoteSchema("OntologyProvenanceVerificationStatus", {
+    description: "Review and verification state for optional ontology provenance metadata.",
+  })
+);
+export type OntologyProvenanceVerificationStatus = typeof OntologyProvenanceVerificationStatus.Type;
+
+export class OntologyProvenanceMetadata extends S.Class<OntologyProvenanceMetadata>($I`OntologyProvenanceMetadata`)(
+  {
+    sourceIri: S.OptionFromOptionalKey(IRI),
+    sourceUri: S.OptionFromOptionalKey(URI),
+    sourceLabel: S.OptionFromOptionalKey(S.NonEmptyString),
+    sourceCitation: S.OptionFromOptionalKey(S.NonEmptyString),
+    sourceSpan: S.OptionFromOptionalKey(S.NonEmptyString),
+    sourceSelector: S.OptionFromOptionalKey(S.NonEmptyString),
+    extractionMethod: S.OptionFromOptionalKey(S.NonEmptyString),
+    verificationStatus: S.OptionFromOptionalKey(OntologyProvenanceVerificationStatus),
+    updatedAt: S.OptionFromOptionalKey(S.NonEmptyString),
+  },
+  $I.annote("OntologyProvenanceMetadata", {
+    description: "Optional domain-agnostic source and curation metadata for ontology classes.",
+  })
+) {}
+
 export class OntologyIriReferenceTarget extends S.Class<OntologyIriReferenceTarget>($I`OntologyIriReferenceTarget`)(
   {
     kind: S.tag("iri"),
@@ -107,11 +180,159 @@ export const OntologyReferenceTarget = S.Union([
   OntologyTermReferenceTarget,
   OntologySchemaReferenceTarget,
 ]).pipe(
+  S.toTaggedUnion("kind"),
   $I.annoteSchema("OntologyReferenceTarget", {
     description: "Deferred ontology relationship reference target.",
   })
 );
 export type OntologyReferenceTarget = typeof OntologyReferenceTarget.Type;
+
+export class OntologySkosConceptProfile extends S.Class<OntologySkosConceptProfile>($I`OntologySkosConceptProfile`)(
+  {
+    kind: S.tag("concept"),
+    prefLabels: S.Array(OntologyLanguageLiteral),
+    altLabels: S.Array(OntologyLanguageLiteral),
+    hiddenLabels: S.Array(OntologyLanguageLiteral),
+    definitions: S.Array(OntologyLanguageLiteral),
+    scopeNotes: S.Array(OntologyLanguageLiteral),
+    editorialNotes: S.Array(OntologyLanguageLiteral),
+    historyNotes: S.Array(OntologyLanguageLiteral),
+    broader: S.Array(OntologyReference),
+    narrower: S.Array(OntologyReference),
+    related: S.Array(OntologyReference),
+    exactMatches: S.Array(OntologyReference),
+    closeMatches: S.Array(OntologyReference),
+    broadMatches: S.Array(OntologyReference),
+    narrowMatches: S.Array(OntologyReference),
+    relatedMatches: S.Array(OntologyReference),
+    inSchemes: S.Array(OntologyReference),
+    topConceptOf: S.Array(OntologyReference),
+  },
+  $I.annote("OntologySkosConceptProfile", {
+    description: "Opt-in SKOS concept profile metadata for an assembled ontology class.",
+  })
+) {}
+
+export class OntologySkosConceptSchemeProfile extends S.Class<OntologySkosConceptSchemeProfile>(
+  $I`OntologySkosConceptSchemeProfile`
+)(
+  {
+    kind: S.tag("conceptScheme"),
+    prefLabels: S.Array(OntologyLanguageLiteral),
+    altLabels: S.Array(OntologyLanguageLiteral),
+    hiddenLabels: S.Array(OntologyLanguageLiteral),
+    definitions: S.Array(OntologyLanguageLiteral),
+    scopeNotes: S.Array(OntologyLanguageLiteral),
+    editorialNotes: S.Array(OntologyLanguageLiteral),
+    historyNotes: S.Array(OntologyLanguageLiteral),
+    hasTopConcepts: S.Array(OntologyReference),
+  },
+  $I.annote("OntologySkosConceptSchemeProfile", {
+    description: "Opt-in SKOS concept scheme profile metadata for an assembled ontology class.",
+  })
+) {}
+
+export const OntologySkosProfile = S.Union([OntologySkosConceptProfile, OntologySkosConceptSchemeProfile]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("OntologySkosProfile", {
+    description: "Opt-in SKOS concept or concept-scheme profile metadata.",
+  })
+);
+export type OntologySkosProfile = typeof OntologySkosProfile.Type;
+
+export class OntologySkosConceptProfileDraft extends S.Class<OntologySkosConceptProfileDraft>(
+  $I`OntologySkosConceptProfileDraft`
+)(
+  {
+    kind: S.tag("concept"),
+    prefLabels: S.Array(OntologyLanguageLiteral),
+    altLabels: S.Array(OntologyLanguageLiteral),
+    hiddenLabels: S.Array(OntologyLanguageLiteral),
+    definitions: S.Array(OntologyLanguageLiteral),
+    scopeNotes: S.Array(OntologyLanguageLiteral),
+    editorialNotes: S.Array(OntologyLanguageLiteral),
+    historyNotes: S.Array(OntologyLanguageLiteral),
+    broader: S.Array(OntologyReferenceTarget),
+    narrower: S.Array(OntologyReferenceTarget),
+    related: S.Array(OntologyReferenceTarget),
+    exactMatches: S.Array(OntologyReferenceTarget),
+    closeMatches: S.Array(OntologyReferenceTarget),
+    broadMatches: S.Array(OntologyReferenceTarget),
+    narrowMatches: S.Array(OntologyReferenceTarget),
+    relatedMatches: S.Array(OntologyReferenceTarget),
+    inSchemes: S.Array(OntologyReferenceTarget),
+    topConceptOf: S.Array(OntologyReferenceTarget),
+  },
+  $I.annote("OntologySkosConceptProfileDraft", {
+    description: "Unresolved SKOS concept profile metadata stored in schema annotations.",
+  })
+) {}
+
+export class OntologySkosConceptSchemeProfileDraft extends S.Class<OntologySkosConceptSchemeProfileDraft>(
+  $I`OntologySkosConceptSchemeProfileDraft`
+)(
+  {
+    kind: S.tag("conceptScheme"),
+    prefLabels: S.Array(OntologyLanguageLiteral),
+    altLabels: S.Array(OntologyLanguageLiteral),
+    hiddenLabels: S.Array(OntologyLanguageLiteral),
+    definitions: S.Array(OntologyLanguageLiteral),
+    scopeNotes: S.Array(OntologyLanguageLiteral),
+    editorialNotes: S.Array(OntologyLanguageLiteral),
+    historyNotes: S.Array(OntologyLanguageLiteral),
+    hasTopConcepts: S.Array(OntologyReferenceTarget),
+  },
+  $I.annote("OntologySkosConceptSchemeProfileDraft", {
+    description: "Unresolved SKOS concept scheme profile metadata stored in schema annotations.",
+  })
+) {}
+
+export const OntologySkosProfileDraft = S.Union([
+  OntologySkosConceptProfileDraft,
+  OntologySkosConceptSchemeProfileDraft,
+]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("OntologySkosProfileDraft", {
+    description: "Unresolved opt-in SKOS profile metadata stored in schema annotations.",
+  })
+);
+export type OntologySkosProfileDraft = typeof OntologySkosProfileDraft.Type;
+
+export class OntologyJsonSchemaDocument extends S.Class<OntologyJsonSchemaDocument>($I`OntologyJsonSchemaDocument`)(
+  {
+    dialect: S.Literal("draft-2020-12"),
+    schema: S.Record(S.String, S.Unknown),
+    definitions: S.Record(S.String, S.Record(S.String, S.Unknown)),
+  },
+  $I.annote("OntologyJsonSchemaDocument", {
+    description: "Effect-derived Draft 2020-12 JSON Schema document attached outside RDF projections.",
+  })
+) {}
+
+export class OntologyJsonSchemaSidecarOptions extends S.Class<OntologyJsonSchemaSidecarOptions>(
+  $I`OntologyJsonSchemaSidecarOptions`
+)(
+  {
+    additionalProperties: S.Boolean,
+    generateDescriptions: S.Boolean,
+    includedAnnotationKeys: S.Array(S.NonEmptyString),
+  },
+  $I.annote("OntologyJsonSchemaSidecarOptions", {
+    description: "Stable summary of the options used to derive a JSON Schema sidecar.",
+  })
+) {}
+
+export class OntologyJsonSchemaSidecar extends S.Class<OntologyJsonSchemaSidecar>($I`OntologyJsonSchemaSidecar`)(
+  {
+    classIri: IRI,
+    schemaIdentity: S.NonEmptyString,
+    document: OntologyJsonSchemaDocument,
+    options: OntologyJsonSchemaSidecarOptions,
+  },
+  $I.annote("OntologyJsonSchemaSidecar", {
+    description: "Non-RDF JSON Schema sidecar attached to an assembled ontology class.",
+  })
+) {}
 
 export class OntologyClassMetadata extends S.Class<OntologyClassMetadata>($I`OntologyClassMetadata`)(
   {
@@ -133,6 +354,8 @@ export class OntologyClassMetadata extends S.Class<OntologyClassMetadata>($I`Ont
     exactMatches: S.Array(OntologyReference),
     closeMatches: S.Array(OntologyReference),
     sameAs: S.Array(OntologyReference),
+    skosProfile: S.OptionFromOptionalKey(OntologySkosProfile),
+    provenance: S.OptionFromOptionalKey(OntologyProvenanceMetadata),
   },
   $I.annote("OntologyClassMetadata", {
     description: "Final class metadata attached to an assembled ontology class.",
@@ -177,6 +400,7 @@ export const OntologyPredicateMetadata = S.Union([
   OntologyDatatypePredicateMetadata,
   OntologyObjectPredicateMetadata,
 ]).pipe(
+  S.toTaggedUnion("kind"),
   $I.annoteSchema("OntologyPredicateMetadata", {
     description: "Final predicate metadata attached to Effect Schema field keys.",
   })
@@ -205,6 +429,8 @@ export class OntologyClassAnnotationDraft extends S.Class<OntologyClassAnnotatio
     exactMatches: S.Array(OntologyReferenceTarget),
     closeMatches: S.Array(OntologyReferenceTarget),
     sameAs: S.Array(OntologyReferenceTarget),
+    skosProfile: S.OptionFromOptionalKey(OntologySkosProfileDraft),
+    provenance: S.OptionFromOptionalKey(OntologyProvenanceMetadata),
   },
   $I.annote("OntologyClassAnnotationDraft", {
     description: "Class authoring metadata draft stored directly in schema annotations.",
@@ -249,13 +475,14 @@ export const OntologyPredicateAnnotationDraft = S.Union([
   OntologyDatatypePredicateAnnotationDraft,
   OntologyObjectPredicateAnnotationDraft,
 ]).pipe(
+  S.toTaggedUnion("kind"),
   $I.annoteSchema("OntologyPredicateAnnotationDraft", {
     description: "Predicate authoring metadata draft stored in key annotations.",
   })
 );
 export type OntologyPredicateAnnotationDraft = typeof OntologyPredicateAnnotationDraft.Type;
 
-export type OntologyMetadataAnnotationPayload =
+type OntologyMetadataAnnotationValue =
   | OntologyClassAnnotationDraft
   | OntologyDatatypePredicateAnnotationDraft
   | OntologyObjectPredicateAnnotationDraft
@@ -263,10 +490,25 @@ export type OntologyMetadataAnnotationPayload =
   | OntologyDatatypePredicateMetadata
   | OntologyObjectPredicateMetadata;
 
+export const OntologyMetadataAnnotationPayload = S.Union([
+  OntologyClassAnnotationDraft,
+  OntologyDatatypePredicateAnnotationDraft,
+  OntologyObjectPredicateAnnotationDraft,
+  OntologyClassMetadata,
+  OntologyDatatypePredicateMetadata,
+  OntologyObjectPredicateMetadata,
+]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("OntologyMetadataAnnotationPayload", {
+    description: "Tagged ontology metadata payload stored in Effect Schema annotations.",
+  })
+);
+export type OntologyMetadataAnnotationPayload = typeof OntologyMetadataAnnotationPayload.Type;
+
 declare module "effect/Schema" {
   namespace Annotations {
     interface Annotations {
-      readonly ontologyMetadata?: OntologyMetadataAnnotationPayload | undefined;
+      readonly ontologyMetadata?: OntologyMetadataAnnotationValue | undefined;
     }
   }
 }
@@ -284,6 +526,8 @@ const decodeOntologyDatatypePredicateMetadataResult = S.decodeUnknownResult(Onto
 const decodeOntologyObjectPredicateMetadataResult = S.decodeUnknownResult(OntologyObjectPredicateMetadata);
 
 export const makeIri = (value: string): IRI => pipe(decodeIriResult(value), Result.getOrThrowWith(schemaIssueToError));
+
+export const makeUri = (value: string): URI => pipe(decodeUriResult(value), Result.getOrThrowWith(schemaIssueToError));
 
 export const makeOntologyTermName = (value: string): OntologyTermName =>
   pipe(decodeOntologyTermNameResult(value), Result.getOrThrowWith(schemaIssueToError));
@@ -304,11 +548,6 @@ export const RDFS_IS_DEFINED_BY = makeIri(`${RDFS_NAMESPACE}isDefinedBy`);
 export const OWL_THING = makeIri(`${OWL_NAMESPACE}Thing`);
 export const OWL_EQUIVALENT_CLASS = makeIri(`${OWL_NAMESPACE}equivalentClass`);
 export const OWL_SAME_AS = makeIri(`${OWL_NAMESPACE}sameAs`);
-export const SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#";
-export const SKOS_ALT_LABEL = makeIri(`${SKOS_NAMESPACE}altLabel`);
-export const SKOS_DEFINITION = makeIri(`${SKOS_NAMESPACE}definition`);
-export const SKOS_EXACT_MATCH = makeIri(`${SKOS_NAMESPACE}exactMatch`);
-export const SKOS_CLOSE_MATCH = makeIri(`${SKOS_NAMESPACE}closeMatch`);
 export const DCTERMS_NAMESPACE = "http://purl.org/dc/terms/";
 export const DCTERMS_SOURCE = makeIri(`${DCTERMS_NAMESPACE}source`);
 export const RDF_PREFIX_IRI = makeIri(RDF_NAMESPACE);
@@ -360,6 +599,7 @@ export const OntologyAssemblyErrorReason = LiteralKit([
   "missingPredicateMetadata",
   "invalidPredicateMetadata",
   "unresolvedReferenceTarget",
+  "invalidSkosProfile",
 ]).pipe(
   $I.annoteSchema("OntologyAssemblyErrorReason", {
     description: "Assembly failure reason for the ontology collector.",
@@ -377,6 +617,50 @@ export class OntologyAssemblyError extends TaggedErrorClass<OntologyAssemblyErro
   },
   $I.annote("OntologyAssemblyError", {
     description: "Typed assembly failure for the schema-backed ontology collector.",
+  })
+) {}
+
+export const OntologyValidationIssueSeverity = LiteralKit(["error", "warning"]).pipe(
+  $I.annoteSchema("OntologyValidationIssueSeverity", {
+    description: "Severity for ontology profile validation findings.",
+  })
+);
+export type OntologyValidationIssueSeverity = typeof OntologyValidationIssueSeverity.Type;
+
+export const OntologyValidationIssueCode = LiteralKit([
+  "duplicatePrefLabel",
+  "conflictingLabelLiteral",
+  "hierarchyCycle",
+  "relatedDuplicatesHierarchy",
+  "missingSkosPrefLabel",
+  "missingConceptScheme",
+]).pipe(
+  $I.annoteSchema("OntologyValidationIssueCode", {
+    description: "Stable code for ontology SKOS profile validation findings.",
+  })
+);
+export type OntologyValidationIssueCode = typeof OntologyValidationIssueCode.Type;
+
+export class OntologyValidationIssue extends S.Class<OntologyValidationIssue>($I`OntologyValidationIssue`)(
+  {
+    severity: OntologyValidationIssueSeverity,
+    code: OntologyValidationIssueCode,
+    message: S.NonEmptyString,
+    classIri: S.OptionFromOptionalKey(IRI),
+    schemaIdentity: S.OptionFromOptionalKey(S.NonEmptyString),
+  },
+  $I.annote("OntologyValidationIssue", {
+    description: "Profile validation issue produced while assembling an ontology.",
+  })
+) {}
+
+export class OntologyValidationReport extends S.Class<OntologyValidationReport>($I`OntologyValidationReport`)(
+  {
+    errors: S.Array(OntologyValidationIssue),
+    warnings: S.Array(OntologyValidationIssue),
+  },
+  $I.annote("OntologyValidationReport", {
+    description: "Validation report attached to an assembled ontology.",
   })
 ) {}
 
@@ -415,6 +699,7 @@ export class AssembledObjectPredicate extends S.Class<AssembledObjectPredicate>(
 ) {}
 
 export const AssembledOntologyPredicate = S.Union([AssembledDatatypePredicate, AssembledObjectPredicate]).pipe(
+  S.toTaggedUnion("kind"),
   $I.annoteSchema("AssembledOntologyPredicate", {
     description: "Assembled ontology predicate union.",
   })
@@ -440,6 +725,9 @@ export class AssembledOntologyClass extends S.Class<AssembledOntologyClass>($I`A
     exactMatches: S.Array(OntologyReference),
     closeMatches: S.Array(OntologyReference),
     sameAs: S.Array(OntologyReference),
+    skosProfile: S.OptionFromOptionalKey(OntologySkosProfile),
+    provenance: S.OptionFromOptionalKey(OntologyProvenanceMetadata),
+    jsonSchemaSidecar: S.OptionFromOptionalKey(OntologyJsonSchemaSidecar),
     predicates: S.Array(AssembledOntologyPredicate),
   },
   $I.annote("AssembledOntologyClass", {
@@ -451,6 +739,7 @@ export class AssembledOntology extends S.Class<AssembledOntology>($I`AssembledOn
   {
     metadata: OntologyDefinitionMetadata,
     classes: S.NonEmptyArray(AssembledOntologyClass),
+    validation: OntologyValidationReport,
   },
   $I.annote("AssembledOntology", {
     description: "Normalized schema-backed ontology assembled from annotated Effect schemas.",
@@ -502,16 +791,64 @@ export class JsonLdIdReference extends S.Class<JsonLdIdReference>($I`JsonLdIdRef
   })
 ) {}
 
+export class JsonLdLanguageLiteral extends S.Class<JsonLdLanguageLiteral>($I`JsonLdLanguageLiteral`)(
+  {
+    "@value": S.NonEmptyString,
+    "@language": S.OptionFromOptionalKey(LanguageTag),
+  },
+  $I.annote("JsonLdLanguageLiteral", {
+    description: "JSON-LD language literal emitted for SKOS labels and notes.",
+  })
+) {}
+
+export const JsonLdLabelValue = S.Union([S.NonEmptyString, JsonLdLanguageLiteral]).pipe(
+  $I.annoteSchema("JsonLdLabelValue", {
+    description: "JSON-LD label value that preserves legacy plain strings and multilingual SKOS literals.",
+  })
+);
+export type JsonLdLabelValue = typeof JsonLdLabelValue.Type;
+
+export const JsonLdClassType = S.Union([
+  S.Literal("rdfs:Class"),
+  S.Array(S.Union([S.Literal("rdfs:Class"), S.Literal("skos:Concept"), S.Literal("skos:ConceptScheme")])),
+]).pipe(
+  $I.annoteSchema("JsonLdClassType", {
+    description: "JSON-LD class node type, optionally enriched with an explicit SKOS profile type.",
+  })
+);
+export type JsonLdClassType = typeof JsonLdClassType.Type;
+
+export const JsonLdDefinitionValue = S.Union([S.NonEmptyString, S.Array(JsonLdLabelValue)]).pipe(
+  $I.annoteSchema("JsonLdDefinitionValue", {
+    description: "JSON-LD SKOS definition value preserving legacy string definitions and multilingual literals.",
+  })
+);
+export type JsonLdDefinitionValue = typeof JsonLdDefinitionValue.Type;
+
 export class JsonLdClassNode extends S.Class<JsonLdClassNode>($I`JsonLdClassNode`)(
   {
     "@id": IRI,
-    "@type": S.Literal("rdfs:Class"),
+    "@type": JsonLdClassType,
     schemaIdentity: S.NonEmptyString,
     termName: OntologyTermName,
     "rdfs:label": S.NonEmptyString,
     "rdfs:comment": S.OptionFromOptionalKey(S.NonEmptyString),
-    "skos:altLabel": S.Array(S.NonEmptyString),
-    "skos:definition": S.OptionFromOptionalKey(S.NonEmptyString),
+    "skos:prefLabel": S.Array(JsonLdLanguageLiteral),
+    "skos:altLabel": S.Array(JsonLdLabelValue),
+    "skos:hiddenLabel": S.Array(JsonLdLanguageLiteral),
+    "skos:definition": S.OptionFromOptionalKey(JsonLdDefinitionValue),
+    "skos:scopeNote": S.Array(JsonLdLanguageLiteral),
+    "skos:editorialNote": S.Array(JsonLdLanguageLiteral),
+    "skos:historyNote": S.Array(JsonLdLanguageLiteral),
+    "skos:broader": S.Array(JsonLdIdReference),
+    "skos:narrower": S.Array(JsonLdIdReference),
+    "skos:related": S.Array(JsonLdIdReference),
+    "skos:broadMatch": S.Array(JsonLdIdReference),
+    "skos:narrowMatch": S.Array(JsonLdIdReference),
+    "skos:relatedMatch": S.Array(JsonLdIdReference),
+    "skos:inScheme": S.Array(JsonLdIdReference),
+    "skos:topConceptOf": S.Array(JsonLdIdReference),
+    "skos:hasTopConcept": S.Array(JsonLdIdReference),
     "owl:deprecated": S.Boolean,
     "dcterms:source": S.OptionFromOptionalKey(IRI),
     "rdfs:subClassOf": S.Array(JsonLdIdReference),
@@ -522,6 +859,7 @@ export class JsonLdClassNode extends S.Class<JsonLdClassNode>($I`JsonLdClassNode
     "skos:exactMatch": S.Array(JsonLdIdReference),
     "skos:closeMatch": S.Array(JsonLdIdReference),
     "owl:sameAs": S.Array(JsonLdIdReference),
+    provenance: S.OptionFromOptionalKey(OntologyProvenanceMetadata),
   },
   $I.annote("JsonLdClassNode", {
     description: "JSON-LD class node emitted by ontology projections.",

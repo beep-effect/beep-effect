@@ -90,7 +90,14 @@ export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`Y
   })
 ) {}
 
-const sharedFeedbackTurboArgs = ["--continue=dependencies-successful", "--summarize", "--ui=stream"] as const;
+const YEET_TURBO_CONCURRENCY = "3" as const;
+
+const sharedFeedbackTurboArgs = [
+  `--concurrency=${YEET_TURBO_CONCURRENCY}`,
+  "--continue=dependencies-successful",
+  "--summarize",
+  "--ui=stream",
+] as const;
 
 const affectedArgs = (): ReadonlyArray<string> => ["--affected", ...sharedFeedbackTurboArgs];
 
