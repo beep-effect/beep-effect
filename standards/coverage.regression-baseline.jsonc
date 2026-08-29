@@ -20410,10 +20410,10 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 75.91,
-      "statements": 75.64,
-      "branches": 63.35,
-      "functions": 69.44,
+      "lines": 75.97,
+      "statements": 75.69,
+      "branches": 63.38,
+      "functions": 69.5,
       "uncovered": {
         "lines": 8422,
         "statements": 8897,
@@ -23592,7 +23592,7 @@
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
           "lines": 81.27,
           "statements": 81.79,
-          "branches": 72.91,
+          "branches": 72.75,
           "functions": 84.42,
           "uncovered": {
             "lines": 147,
@@ -26049,6 +26049,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts": {
           "lines": 100,
           "statements": 100,
@@ -26086,10 +26098,10 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 88.25,
-          "statements": 87.88,
+          "lines": 88.41,
+          "statements": 88.05,
           "branches": 81.13,
-          "functions": 78.94,
+          "functions": 79.31,
           "uncovered": {
             "lines": 41,
             "statements": 43,

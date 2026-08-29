@@ -3067,13 +3067,13 @@ describe("quality task adapter", () => {
         expect(A.every(A.drop(steps, 1), (step) => step.env?.VITEST_COVERAGE_REPORT_ONLY === undefined)).toBe(true);
       }));
 
-    it("keeps a wide local ratchet on Turbo's own scheduling but shards a wide baseline write", () => {
+    it("uses the same shard topology for wide local ratchets and baseline writes", () => {
       const packageNames = ["@beep/repo-cli", "@beep/a"];
       const localOptions = { hosted: false, writeBaseline: false };
 
       expect(
         A.map(coverageSelectedStepsForTesting("/repo", packageNames, [], localOptions), (step) => step.label)
-      ).toEqual(["coverage:ratchet"]);
+      ).toEqual(["coverage:prebuild", "coverage:shard-1", "coverage:shard-2"]);
       const writeSteps = coverageSelectedStepsForTesting("/repo", packageNames, [], {
         hosted: false,
         writeBaseline: true,

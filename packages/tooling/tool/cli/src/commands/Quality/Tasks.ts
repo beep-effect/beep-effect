@@ -2400,10 +2400,11 @@ const coverageSelectedShardedSteps = (
     packageFilterArgs(options.expectedPackageNames)
   );
 
-// Mirrors the full-run rule: hosted runs and baseline writes take the weighted
-// shard executor; a local ratchet keeps turbo's own scheduling. `hosted` is
-// passed in (production reads `isCi()`) so the decision is a pure function.
-const usesShardedCoverageExecutor = (hosted: boolean, writeBaseline: boolean): boolean => hosted || writeBaseline;
+// Baseline writes and ratchet checks must use the same worker topology. Repo-cli
+// deliberately changes file parallelism in the weighted executor; falling back
+// to Turbo's local scheduling therefore produces a different per-file V8
+// coverage snapshot that the writer's own baseline cannot satisfy.
+const usesShardedCoverageExecutor = (_hosted: boolean, _writeBaseline: boolean): boolean => true;
 
 const isWideSelectedCoverage = (options: CoverageTaskOptions): boolean =>
   options.scoped &&
