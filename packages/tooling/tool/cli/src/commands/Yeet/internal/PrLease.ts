@@ -113,7 +113,8 @@ const replaceLeaseGenerationUnderMutex = Effect.fn("PrLease.replaceGenerationUnd
   temporary: string,
   leasePath: string,
   checkoutRoot: string,
-  expectedHeadSha: string
+  expectedHeadSha: string,
+  waitForMutex = false
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -148,8 +149,7 @@ mv -- "$temporary" "$lease"
   const exitCode = yield* runToExit({
     command: "flock",
     args: [
-      "-w",
-      "2",
+      ...(waitForMutex === true ? [] : ["-w", "2"]),
       path.join(inbox, "hook-mutex.lock"),
       "sh",
       "-c",
@@ -211,7 +211,8 @@ const persistLeaseTransition = Effect.fn("PrLease.persistTransition")(function* 
   allowedStatuses: ReadonlyArray<typeof YeetPrLeaseStatus.Type>,
   temporaryPrefix: string,
   checkoutRoot: string,
-  expectedHeadSha: string
+  expectedHeadSha: string,
+  waitForMutex = false
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -229,7 +230,8 @@ const persistLeaseTransition = Effect.fn("PrLease.persistTransition")(function* 
     temporary,
     leasePath,
     checkoutRoot,
-    expectedHeadSha
+    expectedHeadSha,
+    waitForMutex
   );
 });
 
@@ -402,9 +404,10 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
   targetHeadSha: string,
   reason: string,
   expectedGeneration: O.Option<string> = O.none(),
-  verifyCheckoutHead = true
+  verifyCheckoutHead = true,
+  settleContention = false
 ) {
-  const result = yield* Effect.gen(function* () {
+  const transition = Effect.gen(function* () {
     const current = yield* readLease(leasePath);
     if (O.isNone(current)) {
       return yield* YeetCommandError.make({
@@ -444,17 +447,24 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
       ["active"],
       "pr-lease-retired",
       checkoutRoot,
-      verifyCheckoutHead === true ? targetHeadSha : ""
+      verifyCheckoutHead === true ? targetHeadSha : "",
+      settleContention
     );
     return { changed: true, generationId: current.value.generationId, preservedNewer: false } as const;
-  }).pipe(
-    Effect.retry({ times: 3, while: P.isTagged("PrLeaseTransitionContendedError") }),
-    Effect.catchTag("PrLeaseTransitionContendedError", (error) =>
-      YeetCommandError.make({
-        message: `Could not retire the current PR ownership generation after repeated contention (${error.expectedGeneration}).`,
-      })
-    )
-  );
+  });
+  const result = yield* settleContention === true
+    ? transition.pipe(
+        Effect.retry({ while: P.isTagged("PrLeaseTransitionContendedError") }),
+        Effect.catchTag("PrLeaseTransitionContendedError", () => Effect.never)
+      )
+    : transition.pipe(
+        Effect.retry({ times: 3, while: P.isTagged("PrLeaseTransitionContendedError") }),
+        Effect.catchTag("PrLeaseTransitionContendedError", (error) =>
+          YeetCommandError.make({
+            message: `Could not retire the current PR ownership generation after repeated contention (${error.expectedGeneration}).`,
+          })
+        )
+      );
   yield* Console.log(
     result.preservedNewer
       ? `[yeet] preserved newer published-PR lease while retiring generation ${result.generationId}: ${reason}`
@@ -478,7 +488,8 @@ const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(f
   headSha: string,
   reason: string,
   expectedGeneration: O.Option<string>,
-  verifyCheckoutHead: boolean
+  verifyCheckoutHead: boolean,
+  settleContention = false
 ) {
   const path = yield* Path.Path;
   const inbox = path.join(context.repoRoot, ".beep", "inbox");
@@ -490,7 +501,8 @@ const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(f
     headSha,
     reason,
     expectedGeneration,
-    verifyCheckoutHead
+    verifyCheckoutHead,
+    settleContention
   );
 });
 
@@ -528,6 +540,7 @@ export const retirePublishedPrLeaseReceipt = Effect.fn("PrLease.retirePublishedR
     receipt.headSha,
     reason,
     O.some(receipt.generationId),
-    false
+    false,
+    true
   );
 });

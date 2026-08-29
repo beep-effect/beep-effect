@@ -527,11 +527,31 @@ esac
           yield* fs.writeFileString(gitPath, "#!/bin/sh\nexit 99\n");
           yield* fs.writeFileString(ghPath, "#!/bin/sh\nexit 98\n");
           yield* fs.chmod(gitPath, 0o755);
+          const mutexReadyPath = path.join(tmpDir, ".beep", "inbox", "mutex-ready");
+          const mutexHolder = Bun.spawn(
+            [
+              "flock",
+              path.join(tmpDir, ".beep", "inbox", "hook-mutex.lock"),
+              "sh",
+              "-c",
+              'touch "$1"; sleep 3',
+              "yeet-test-mutex-holder",
+              mutexReadyPath,
+            ],
+            { cwd: tmpDir, stdin: "ignore", stdout: "ignore", stderr: "ignore" }
+          );
+          let mutexReady = false;
+          for (let attempt = 0; attempt < 200 && !mutexReady; attempt += 1) {
+            mutexReady = yield* fs.exists(mutexReadyPath);
+            if (!mutexReady) yield* Effect.sleep("10 millis");
+          }
+          expect(mutexReady).toBe(true);
           yield* withEnvVarEffect(
             "PATH",
             `${bin}:${Bun.env.PATH ?? ""}`,
             retirePublishedPrLeaseReceipt(tempContext, finalReceipt, "start-pr-early-failed")
           );
+          expect(yield* Effect.promise(() => mutexHolder.exited)).toBe(0);
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
             generationId: finalReceipt.generationId,
             status: "retired",
