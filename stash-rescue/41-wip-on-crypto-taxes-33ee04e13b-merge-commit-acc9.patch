@@ -1,0 +1,58 @@
+diff --git a/.repos/visual-effect/tailwind.config.js b/.repos/visual-effect/tailwind.config.js
+deleted file mode 100644
+index d25beb1aee..0000000000
+--- a/.repos/visual-effect/tailwind.config.js
++++ /dev/null
+@@ -1,12 +0,0 @@
+-/** @type {import('tailwindcss').Config} */
+-export default {
+-  content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./src/**/*.{js,ts,jsx,tsx}"],
+-  theme: {
+-    extend: {
+-      backgroundImage: {
+-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+-      },
+-    },
+-  },
+-  plugins: [],
+-}
+diff --git a/.repos/visual-effect/tsconfig.json b/.repos/visual-effect/tsconfig.json
+index 1a74b5d6f2..5138052d6d 100644
+--- a/.repos/visual-effect/tsconfig.json
++++ b/.repos/visual-effect/tsconfig.json
+@@ -22,11 +22,6 @@
+     "plugins": [
+       {
+         "name": "next"
+-      },
+-      {
+-        "name": "@effect/language-service",
+-        "transform": "@effect/language-service/transform",
+-        "namespaceImportPackages": ["effect", "@effect/*"]
+       }
+     ],
+     /* Path mapping */
+diff --git a/apps/web/next-env.d.ts b/apps/web/next-env.d.ts
+deleted file mode 100644
+index 9edff1c7ca..0000000000
+--- a/apps/web/next-env.d.ts
++++ /dev/null
+@@ -1,6 +0,0 @@
+-/// <reference types="next" />
+-/// <reference types="next/image-types/global" />
+-import "./.next/types/routes.d.ts";
+-
+-// NOTE: This file should not be edited
+-// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+diff --git a/apps/web/package.json b/apps/web/package.json
+deleted file mode 100644
+index 0947f4916a..0000000000
+--- a/apps/web/package.json
++++ /dev/null
+@@ -1,6 +0,0 @@
+-{
+-  "name": "@beep/web",
+-  "private": true,
+-  "type": "module",
+-  "version": "0.0.0"
+-}
