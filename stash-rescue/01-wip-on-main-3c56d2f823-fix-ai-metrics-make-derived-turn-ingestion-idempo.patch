@@ -1,0 +1,29 @@
+diff --git a/explorations/ATLAS.md b/explorations/ATLAS.md
+index 2fd9165fea..442a70b988 100644
+--- a/explorations/ATLAS.md
++++ b/explorations/ATLAS.md
+@@ -40,6 +40,24 @@ The lego pieces already built. Authoritative inventories (link, never copy):
+ 
+ ### Active
+ 
++- [`graphnosis-prior-art`](./graphnosis-prior-art/README.md) — align-stage prior-art mining of
++  [Graphnosis](https://github.com/nehloo/Graphnosis) (Apache-2.0 dual-graph agent memory, v0.11.0),
++  its whitepaper and trained-skills PDF, plus RAPTOR and Chronocept — opened and researched
++  2026-08-06. Headline: **beep-effect is at partial-or-better on 78% of 191 mappings**, so the
++  yield is refinements to systems we own, not a build list; ~20 of the 32 gaps exist only because
++  the code is unwritten, which is what makes a SPEC sentence now cheaper than a migration later.
++  Produced a ranked inventory ([`research/SYNTHESIS.md`](./graphnosis-prior-art/research/SYNTHESIS.md))
++  and **26 concrete amendments** ([`research/AMENDMENTS.json`](./graphnosis-prior-art/research/AMENDMENTS.json))
++  split across open-packet SPEC deltas and shipped `packages/**` code, each quoting its target at
++  `path:line`. Three live defects surfaced (insertion-order tie-break in `WinkCorpus`, pdfjs proxy
++  leak on the success path in `DocText`, law scanners with no non-vacuity assertion). Highest-value
++  single item: name the fusion core's tie-break comparator on provenance rather than a surrogate id
++  — a defect the donor shipped, measured, and reverted. Q1 (dissolve into amendments vs graduate as
++  one packet; recommended: dissolve, with two graduations —
++  `epistemic-contradiction-detection` and a repo-law bundle) is next. Carries three standing
++  caveats: the challenge phase is unusable as a vote (id-collision bug), both Graphnosis PDFs are
++  vendor-authored with a `re-measuring` benchmark badge, and `SPEC.md` §8 is an unimplemented
++  proposal.
+ - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
+   initiative for a configurable full-document substrate and eventual
+   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
