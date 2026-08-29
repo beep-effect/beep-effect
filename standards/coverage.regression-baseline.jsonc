@@ -20410,15 +20410,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 75.69,
-      "statements": 75.46,
-      "branches": 62.66,
-      "functions": 69.25,
+      "lines": 76.01,
+      "statements": 75.77,
+      "branches": 63.17,
+      "functions": 69.66,
       "uncovered": {
-        "lines": 8248,
-        "statements": 8690,
-        "branches": 4739,
-        "functions": 3129
+        "lines": 8258,
+        "statements": 8703,
+        "branches": 4732,
+        "functions": 3134
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -23470,15 +23470,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 33.16,
-          "statements": 32.85,
-          "branches": 16.66,
-          "functions": 21.38,
+          "lines": 32.64,
+          "statements": 32.33,
+          "branches": 16.29,
+          "functions": 20.55,
           "uncovered": {
-            "lines": 407,
-            "statements": 417,
-            "branches": 145,
-            "functions": 136
+            "lines": 421,
+            "statements": 431,
+            "branches": 149,
+            "functions": 143
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
@@ -24778,15 +24778,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts": {
-          "lines": 92.04,
-          "statements": 83.5,
-          "branches": 0,
-          "functions": 6.25,
+          "lines": 96,
+          "statements": 88.07,
+          "branches": 100,
+          "functions": 43.47,
           "uncovered": {
-            "lines": 7,
-            "statements": 16,
-            "branches": 14,
-            "functions": 15
+            "lines": 4,
+            "statements": 13,
+            "branches": 0,
+            "functions": 13
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts": {
@@ -24946,8 +24946,8 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts": {
-          "lines": 83.72,
-          "statements": 83.72,
+          "lines": 84.78,
+          "statements": 84.78,
           "branches": 61.53,
           "functions": 88.88,
           "uncovered": {
@@ -25066,27 +25066,27 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts": {
-          "lines": 95.57,
-          "statements": 95,
-          "branches": 78.94,
-          "functions": 88.88,
+          "lines": 96,
+          "statements": 95.45,
+          "branches": 84.21,
+          "functions": 89.36,
           "uncovered": {
             "lines": 5,
             "statements": 6,
-            "branches": 4,
+            "branches": 3,
             "functions": 5
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts": {
-          "lines": 44.23,
-          "statements": 42.24,
-          "branches": 33.33,
-          "functions": 31.11,
+          "lines": 67.25,
+          "statements": 64.75,
+          "branches": 78.26,
+          "functions": 59.18,
           "uncovered": {
-            "lines": 58,
-            "statements": 67,
-            "branches": 24,
-            "functions": 31
+            "lines": 37,
+            "statements": 43,
+            "branches": 10,
+            "functions": 20
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts": {
@@ -25102,14 +25102,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts": {
-          "lines": 40,
-          "statements": 39.02,
-          "branches": 12.5,
+          "lines": 43.9,
+          "statements": 42.85,
+          "branches": 13.33,
           "functions": 9.09,
           "uncovered": {
-            "lines": 24,
-            "statements": 25,
-            "branches": 14,
+            "lines": 23,
+            "statements": 24,
+            "branches": 13,
             "functions": 10
           }
         },
@@ -25222,15 +25222,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
-          "lines": 52.75,
-          "statements": 52.65,
-          "branches": 47.36,
-          "functions": 40.96,
+          "lines": 54.12,
+          "statements": 53.98,
+          "branches": 50.52,
+          "functions": 42.16,
           "uncovered": {
-            "lines": 103,
-            "statements": 107,
-            "branches": 50,
-            "functions": 49
+            "lines": 100,
+            "statements": 104,
+            "branches": 47,
+            "functions": 48
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts": {
@@ -25246,15 +25246,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts": {
-          "lines": 93.68,
-          "statements": 93.63,
-          "branches": 84.93,
-          "functions": 88.28,
+          "lines": 92.79,
+          "statements": 92.82,
+          "branches": 83.13,
+          "functions": 88.13,
           "uncovered": {
-            "lines": 13,
-            "statements": 14,
-            "branches": 11,
-            "functions": 13
+            "lines": 16,
+            "statements": 17,
+            "branches": 14,
+            "functions": 14
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts": {
@@ -25965,6 +25965,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts": {
           "lines": 100,
           "statements": 100,
@@ -26002,10 +26014,10 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 88.38,
-          "statements": 88.02,
+          "lines": 88.41,
+          "statements": 88.05,
           "branches": 81.13,
-          "functions": 79.66,
+          "functions": 79.31,
           "uncovered": {
             "lines": 41,
             "statements": 43,
@@ -26047,6 +26059,30 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
+          "lines": 92.52,
+          "statements": 91.02,
+          "branches": 80.61,
+          "functions": 88.65,
+          "uncovered": {
+            "lines": 21,
+            "statements": 27,
+            "branches": 19,
+            "functions": 11
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {

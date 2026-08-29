@@ -1115,50 +1115,73 @@ const runEndStateStep = (
         )
       );
 
-const runTmpfsWorktreesStep = (
-  cwd: string
-): Effect.Effect<
+/**
+ * Reap the current repository's idle tmpfs-resident Git worktrees.
+ *
+ * Lists this checkout's registered worktrees, hands the ones under the
+ * temporary root to the tmpfs janitor's `git-worktree` class, and reports the
+ * outcome in sweep-step shape. The janitor keeps ownership of liveness,
+ * cleanliness, age, and removal semantics.
+ *
+ * **Example** (Build the sweep step effect)
+ *
+ * ```ts
+ * import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runTmpfsWorktreesStep("/tmp/example-repo"))) // true
+ * ```
+ *
+ * @param cwd - Repository whose registered worktrees are inspected.
+ * @param tmpRoot - Optional temporary-root override, primarily for fixtures.
+ * @returns The executed/skipped outcome for the sweep report.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(function* (
+  cwd: string,
+  tmpRoot?: string
+): Effect.fn.Return<
   SweepStepOutcome,
   never,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> => {
-  const worktreeList = captureGit(cwd, ["worktree", "list", "--porcelain"]);
-  return worktreeList.pipe(
-    Effect.flatMap((probe) => {
-      if (probeUnreliable(probe)) {
-        return Effect.succeed<SweepStepOutcome>(
-          SweepStepSkipped.make({
-            reason: `${worktreeProbeCommand} failed or was truncated: ${probeFailureText(probe)}`,
-          })
-        );
-      }
-      const worktreePaths = A.map(parseWorktreeList(probe.output), (entry) => entry.path);
-      return runTmpfsReap({ apply: true, classes: ["git-worktree"], gitWorktreePaths: worktreePaths }).pipe(
-        Effect.matchCause({
-          onFailure: (cause): SweepStepOutcome =>
-            SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${firstLine(Cause.pretty(cause))}` }),
-          onSuccess: (report): SweepStepOutcome => {
-            if (report.reapedCount > 0) {
-              return SweepStepExecuted.make({
-                detail: O.some(
-                  `reaped ${report.reapedCount} idle tmpfs worktree(s), reclaimed ${report.reclaimedBytes} bytes`
-                ),
-              });
-            }
-            if (!A.isReadonlyArrayEmpty(report.warnings)) {
-              return SweepStepSkipped.make({ reason: A.join(report.warnings, "; ") });
-            }
-            return SweepStepSkipped.make({
-              reason: A.isReadonlyArrayEmpty(report.candidates)
-                ? "no current-repo Git worktrees are under TMPDIR"
-                : "no current-repo TMPDIR worktrees passed the conjunctive idleness test",
-            });
-          },
-        })
-      );
+> {
+  const probe = yield* captureGit(cwd, ["worktree", "list", "--porcelain"]);
+  if (probeUnreliable(probe)) {
+    return SweepStepSkipped.make({
+      reason: `${worktreeProbeCommand} failed or was truncated: ${probeFailureText(probe)}`,
+    });
+  }
+  const worktreePaths = A.map(parseWorktreeList(probe.output), (entry) => entry.path);
+  return yield* runTmpfsReap({
+    apply: true,
+    classes: ["git-worktree"],
+    gitWorktreePaths: worktreePaths,
+    ...(tmpRoot === undefined ? {} : { tmpRoot }),
+  }).pipe(
+    Effect.matchCause({
+      onFailure: (cause): SweepStepOutcome =>
+        SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${firstLine(Cause.pretty(cause))}` }),
+      onSuccess: (report): SweepStepOutcome => {
+        if (report.reapedCount > 0) {
+          return SweepStepExecuted.make({
+            detail: O.some(
+              `reaped ${report.reapedCount} idle tmpfs worktree(s), reclaimed ${report.reclaimedBytes} bytes`
+            ),
+          });
+        }
+        if (!A.isReadonlyArrayEmpty(report.warnings)) {
+          return SweepStepSkipped.make({ reason: A.join(report.warnings, "; ") });
+        }
+        return SweepStepSkipped.make({
+          reason: A.isReadonlyArrayEmpty(report.candidates)
+            ? "no current-repo Git worktrees are under TMPDIR"
+            : "no current-repo TMPDIR worktrees passed the conjunctive idleness test",
+        });
+      },
     })
   );
-};
+});
 
 const performSweepStep = (
   context: RepoRunContext,

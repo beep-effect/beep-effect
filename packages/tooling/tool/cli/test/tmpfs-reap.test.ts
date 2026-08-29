@@ -1,4 +1,5 @@
 import { runRepoCommandCapture, runTmpfsReap } from "@beep/repo-cli/test/RepoRun";
+import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -238,6 +239,62 @@ describe("tmpfs reap", () => {
         expect(yield* fs.exists(worktree)).toBe(false);
         const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
         expect(Str.includes(worktree)(worktreeList)).toBe(false);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+  // it.live: the sweep step consults the real clock, and the fixture ages are wall-clock relative.
+  it.live("sweep step reaps this repo's idle tmpfs worktree and reports the reclaim", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpRoot = path.join(root, "tmp");
+        const repo = path.join(root, "sweep-repo");
+        const worktree = path.join(tmpRoot, "sweep-worktree");
+        yield* Effect.forEach([tmpRoot, repo], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+          discard: true,
+        });
+        yield* runCommand("git", ["init", "--quiet"], repo);
+        yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
+        yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
+        yield* runCommand("git", ["add", "README.md"], repo);
+        yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
+        yield* runCommand("git", ["worktree", "add", "--quiet", "-b", "sweep-branch", worktree], repo);
+        // The step runs against the real clock, so age the worktree relative to it.
+        yield* runCommand("touch", ["-d", "3 hours ago", worktree], root);
+
+        const outcome = yield* runTmpfsWorktreesStep(repo, tmpRoot);
+        expect(outcome.status === "skipped" ? outcome.reason : "executed").toBe("executed");
+        expect(yield* fs.exists(worktree)).toBe(false);
+        const worktreeList = yield* runCommand("git", ["worktree", "list", "--porcelain"], repo);
+        expect(Str.includes(worktree)(worktreeList)).toBe(false);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.live("sweep step skips when no repo worktree lives under the temporary root", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpRoot = path.join(root, "tmp");
+        const repo = path.join(root, "sweep-repo");
+        const diskWorktree = path.join(root, "disk-worktree");
+        yield* Effect.forEach([tmpRoot, repo], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+          discard: true,
+        });
+        yield* runCommand("git", ["init", "--quiet"], repo);
+        yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
+        yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
+        yield* runCommand("git", ["add", "README.md"], repo);
+        yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
+        yield* runCommand("git", ["worktree", "add", "--quiet", "-b", "disk-branch", diskWorktree], repo);
+
+        const outcome = yield* runTmpfsWorktreesStep(repo, tmpRoot);
+        expect(outcome.status).toBe("skipped");
+        expect(yield* fs.exists(diskWorktree)).toBe(true);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
