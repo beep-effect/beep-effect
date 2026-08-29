@@ -10,7 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
-import { Clock, Console, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref } from "effect";
+import { Clock, Console, DateTime, Duration, Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -109,7 +109,7 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import { ensurePullRequest } from "./PullRequest.ts";
+import { ensurePullRequest, runGhPullRequestView } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
@@ -579,6 +579,14 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
   );
 });
 
+const retireFailedStartPrEarlyLease = Effect.fn("Yeet.retireFailedStartPrEarlyLease")(function* (
+  context: RepoRunContext
+) {
+  const pullRequest = yield* runGhPullRequestView(context);
+  const headSha = yield* currentCommitSha(context);
+  yield* retirePublishedPrLease(context, pullRequest.number, headSha, "start-pr-early-failed");
+});
+
 const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForReusablePublish")(function* (
   context: RepoRunContext,
   options: YeetRunOptions
@@ -759,22 +767,29 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
       }
 
-      yield* runWithFullProofCoordinator(
-        plan.context,
-        fullSteps,
-        Effect.gen(function* () {
-          yield* runRequiredProofPhase(
-            plan.context,
-            fullSteps,
-            recorder,
-            "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
-          );
-          yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
-        }),
-        { priority: "publish" }
-      );
+      return yield* Effect.gen(function* () {
+        yield* runWithFullProofCoordinator(
+          plan.context,
+          fullSteps,
+          Effect.gen(function* () {
+            yield* runRequiredProofPhase(
+              plan.context,
+              fullSteps,
+              recorder,
+              "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
+            );
+            yield* validatePostCommitProofDidNotChangeWorktree(
+              plan.context,
+              postCommitProofChangedAfterEarlyPushMessage
+            );
+          }),
+          { priority: "publish" }
+        );
 
-      return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+        return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+      }).pipe(
+        Effect.onExit((exit) => (Exit.isFailure(exit) ? retireFailedStartPrEarlyLease(plan.context) : Effect.void))
+      );
     }
 
     yield* runWithFullProofCoordinator(

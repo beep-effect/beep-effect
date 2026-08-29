@@ -773,22 +773,24 @@ describe("quality task adapter", () => {
   });
 
   it("carries a quarantine package filter into the nested check lane's Turbo invocation", () => {
-    const steps = withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
-      ciLaneStepsForTesting(
-        "/repo",
-        "check",
-        CiLaneRunOptions.make({
-          affected: true,
-          base: "origin/main",
-          head: "HEAD",
-          summarize: true,
-          mode: "affected",
-          to: "HEAD",
-          last: false,
-          changesetStatus: false,
-          validateEnvelopes: false,
-          filter: "@beep/schema",
-        })
+    const steps = withEnvVar("GITHUB_ACTIONS", undefined, () =>
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+        ciLaneStepsForTesting(
+          "/repo",
+          "check",
+          CiLaneRunOptions.make({
+            affected: true,
+            base: "origin/main",
+            head: "HEAD",
+            summarize: true,
+            mode: "affected",
+            to: "HEAD",
+            last: false,
+            changesetStatus: false,
+            validateEnvelopes: false,
+            filter: "@beep/schema",
+          })
+        )
       )
     );
 

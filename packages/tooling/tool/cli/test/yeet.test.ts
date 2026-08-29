@@ -121,7 +121,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 );
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeLeaseSummary = S.decodeUnknownSync(
-  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Number }))
+  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Finite }))
 );
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>

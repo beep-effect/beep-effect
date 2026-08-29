@@ -229,12 +229,23 @@ describe("CI lane descriptors", () => {
 });
 
 describe("ciLaneStepsForTesting", () => {
-  it("serializes the PR-shape check lane on fleet workers", () => {
-    const step = withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
-      firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions))
+  it("uses the local PR-shape check concurrency outside GitHub Actions", () => {
+    const step = withEnvVar("GITHUB_ACTIONS", undefined, () =>
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+        firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions))
+      )
     );
     expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=3", "--affected", "--summarize"]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
+  });
+
+  it("uses the hosted PR-shape check concurrency in GitHub Actions", () => {
+    const step = withEnvVar("GITHUB_ACTIONS", "true", () =>
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+        firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions))
+      )
+    );
+    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=2", "--affected", "--summarize"]);
   });
 
   it("lowers Check to c2 under a contended admission profile", () => {

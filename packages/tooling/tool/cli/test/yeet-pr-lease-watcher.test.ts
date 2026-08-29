@@ -38,12 +38,16 @@ const runWatcher = Effect.fn("PrLeaseWatcherTest.run")(function* (root: string, 
 });
 
 describe("Yeet PR lease watcher", () => {
-  it("keeps fallback repair pushes on the leased PR branch and restores unregistered claims", async () => {
-    const script = await Bun.file(watcherPath).text();
-    expect(script).toContain('BEEP_YEET_PUSH_REFSPEC="HEAD:refs/heads/${head_branch}"');
-    expect(script).toContain('mv -f "$original_lease" "$lease"');
-    expect(script).toContain('parse_timestamp_epoch "$refreshed_at"');
-  });
+  it("keeps fallback repair pushes on the leased PR branch and restores unregistered claims", () =>
+    Effect.runPromise(
+      Effect.promise(() => Bun.file(watcherPath).text()).pipe(
+        Effect.map((script) => {
+          expect(script).toContain('BEEP_YEET_PUSH_REFSPEC="HEAD:refs/heads/${head_branch}"');
+          expect(script).toContain('mv -f "$original_lease" "$lease"');
+          expect(script).toContain('parse_timestamp_epoch "$refreshed_at"');
+        })
+      )
+    ));
 
   it(
     "requires stale live P0 evidence and CAS-transfers a dead owner to a resumed fixer",
