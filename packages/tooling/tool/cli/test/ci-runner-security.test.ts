@@ -80,6 +80,15 @@ describe("CI runner security", () => {
       git(["commit", "-m", "goal metadata"]);
       assert.strictEqual(profile("pull_request"), "goals_only=true");
 
+      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "fixtures"));
+      yield* fs.writeFileString(
+        path.join(tempRoot, "goals", "example", "fixtures", "expected.md"),
+        "# Executable test fixture\n"
+      );
+      git(["add", "."]);
+      git(["commit", "-m", "goal markdown fixture"]);
+      assert.strictEqual(profile("pull_request"), "goals_only=false");
+
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
       git(["add", "."]);
