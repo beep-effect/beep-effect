@@ -5,6 +5,7 @@ import {
   RepoRunContext,
   renderYeetMergePreviewConflict,
   validateMonitorGuards,
+  YEET_MERGED_PREVIEW_COMMIT_MESSAGE,
   YEET_MERGED_PREVIEW_DIR_NAME,
   YeetMergePreview,
   YeetMergeTreeConflicted,
@@ -126,6 +127,11 @@ describe("yeet merge-tree parsing", () => {
 });
 
 describe("yeet merged preview context", () => {
+  it("uses a conventional subject for the synthetic preview commit", () => {
+    expect(YEET_MERGED_PREVIEW_COMMIT_MESSAGE).toBe("chore(yeet): verify merged preview");
+    expect(YEET_MERGED_PREVIEW_COMMIT_MESSAGE.length).toBeLessThanOrEqual(100);
+  });
+
   it("isolates the preview directory by process", () => {
     expect(YEET_MERGED_PREVIEW_DIR_NAME).toBe(`merged-preview-${process.pid}`);
   });
