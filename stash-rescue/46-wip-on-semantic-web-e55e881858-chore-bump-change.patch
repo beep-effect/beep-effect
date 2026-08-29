@@ -1,0 +1,483 @@
+diff --git a/bun.lock b/bun.lock
+index da7f29effe..b4aeaccaca 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -453,7 +453,7 @@
+     "@lancedb/lancedb": "^0.26.2",
+     "@modelcontextprotocol/sdk": "^1.27.1",
+     "@neondatabase/serverless": "^1.0.2",
+-    "@next/bundle-analyzer": "16.2.0-canary.72",
++    "@next/bundle-analyzer": "16.2.0-canary.73",
+     "@openai/codex-sdk": "^0.107.0",
+     "@opentelemetry/api": "^1.9.0",
+     "@opentelemetry/api-logs": "^0.212.0",
+@@ -495,7 +495,7 @@
+     "drizzle-orm": "^1.0.0-beta.9-e89174b",
+     "effect": "^4.0.0-beta.25",
+     "eslint": "^10.0.2",
+-    "eslint-config-next": "16.2.0-canary.72",
++    "eslint-config-next": "16.2.0-canary.73",
+     "eslint-plugin-jsdoc": "^62.7.1",
+     "fast-check": "^4.5.3",
+     "glob": "^13.0.6",
+@@ -507,7 +507,7 @@
+     "lost-pixel": "^3.8.3-beta.1",
+     "madge": "^8.0.0",
+     "markdownlint-cli2": "^0.21.0",
+-    "next": "16.2.0-canary.72",
++    "next": "16.2.0-canary.73",
+     "pg-connection-string": "^2.11.0",
+     "pg-protocol": "^1.12.0",
+     "picocolors": "^1.1.1",
+@@ -1221,27 +1221,27 @@
+ 
+     "@neondatabase/serverless": ["@neondatabase/serverless@1.0.2", "", { "dependencies": { "@types/node": "^22.15.30", "@types/pg": "^8.8.0" } }, "sha512-I5sbpSIAHiB+b6UttofhrN/UJXII+4tZPAq1qugzwCwLIL8EZLV7F/JyHUrEIiGgQpEXzpnjlJ+zwcEhheGvCw=="],
+ 
+-    "@next/bundle-analyzer": ["@next/bundle-analyzer@16.2.0-canary.72", "", { "dependencies": { "webpack-bundle-analyzer": "4.10.1" } }, "sha512-XYzg+VD97s4zBT88RAimQC4wjBmmNGiZ5jY6jElxacGwkYb8JEun8V6HdzHLVujtANeO5dH9657vWxV1jPY7HA=="],
++    "@next/bundle-analyzer": ["@next/bundle-analyzer@16.2.0-canary.73", "", { "dependencies": { "webpack-bundle-analyzer": "4.10.1" } }, "sha512-5ZzsddKTUckRm0zL1QvjIq0gSimxiueIC2S2aEHnv6/1t7WRNtqypGnJx/ze4ko5dC1+HquoW1ieNjh8Ai/ckw=="],
+ 
+-    "@next/env": ["@next/env@16.2.0-canary.72", "", {}, "sha512-ziZkoNPgTIb0wHbdewbn5afjqnepl/ojlwDt3EBKI0sPFvQS5TEDfb4T8aqTiSwcpeh0Cv6K7V4DkUzmm53S+w=="],
++    "@next/env": ["@next/env@16.2.0-canary.73", "", {}, "sha512-s6NmhCupFQNbhbdM01BjqAq2Kr7WzLp/z/a/ysu6uA6IYXzr4FNIaGMi6COJnEKliqAOjgQ9OooS7s9NTEfuNw=="],
+ 
+-    "@next/eslint-plugin-next": ["@next/eslint-plugin-next@16.2.0-canary.72", "", { "dependencies": { "fast-glob": "3.3.1" } }, "sha512-hqVMN6gEWNdvO6T+o8hWMQc1GUuIva7OXvElK70T+s7toHnNXMwnsij3iNNpDj3XeR3v6dLdQvsheTVmSyzapA=="],
++    "@next/eslint-plugin-next": ["@next/eslint-plugin-next@16.2.0-canary.73", "", { "dependencies": { "fast-glob": "3.3.1" } }, "sha512-r9i8b4FBxqauiLQ651XO7g903y6fsI/vjNeE7AK494OqF1aEj4QarHFnZeiBuVCLMiXCEZs+n3JlNktQ4hCyEw=="],
+ 
+-    "@next/swc-darwin-arm64": ["@next/swc-darwin-arm64@16.2.0-canary.72", "", { "os": "darwin", "cpu": "arm64" }, "sha512-SomEzsII0pL/1b+nKNQ9DXtUjd9qpBfjOzVCFnLT/dneBVhitSMBd2CRkCuPQyQO5Q9pyubWN6Z7nUFVWjS+JQ=="],
++    "@next/swc-darwin-arm64": ["@next/swc-darwin-arm64@16.2.0-canary.73", "", { "os": "darwin", "cpu": "arm64" }, "sha512-W2T9ZCrR697jzd4knilEoAaip4H1p9oxPhWphwNXj0o57Hg+V/AyYFv/vaYCWPaFH0al790Q4nh/SJ1yThbFZA=="],
+ 
+-    "@next/swc-darwin-x64": ["@next/swc-darwin-x64@16.2.0-canary.72", "", { "os": "darwin", "cpu": "x64" }, "sha512-n/p0parpLNs4VXtO36JTgjrVyHoqj8vaORZ7lMmTQbmU3QdzAoXptZI7zRWf1LzsXB3VCbLLllICcynNmkYlnw=="],
++    "@next/swc-darwin-x64": ["@next/swc-darwin-x64@16.2.0-canary.73", "", { "os": "darwin", "cpu": "x64" }, "sha512-uer5CGA3tV/n6AbGaIqtvVoljfb1I6j6R2HHTiz8CIuvFY4ft8U4y9zU5HRJWVZdqSJUtagTxjF+vDp99ZB8SA=="],
+ 
+-    "@next/swc-linux-arm64-gnu": ["@next/swc-linux-arm64-gnu@16.2.0-canary.72", "", { "os": "linux", "cpu": "arm64" }, "sha512-gBr4CpvQxEJb2iqrrZvu6TIk+q+FpZv4lRlNVcQNMiZtVsssa+OH2ZkhU1tIKMKzzGEqYzgAf3UjjRK9nkZGCw=="],
++    "@next/swc-linux-arm64-gnu": ["@next/swc-linux-arm64-gnu@16.2.0-canary.73", "", { "os": "linux", "cpu": "arm64" }, "sha512-l6z4dvQJlxcpWAwRn24w685CCZN7CQ2jmQoqlDDxhudQWa2d3EZMMZMkbXHuxfDDPrZ4/0pqK+P4qOgDnZhQCw=="],
+ 
+-    "@next/swc-linux-arm64-musl": ["@next/swc-linux-arm64-musl@16.2.0-canary.72", "", { "os": "linux", "cpu": "arm64" }, "sha512-wevKReHH3Rx/6hVXDwxXTz1XCUpcNbgrZAkpaewQEDasr62/NIRyayFE+tryF+0cUh1mQNbVHHhy6mN8clf5dg=="],
++    "@next/swc-linux-arm64-musl": ["@next/swc-linux-arm64-musl@16.2.0-canary.73", "", { "os": "linux", "cpu": "arm64" }, "sha512-c+TzsMDzSWQTC0Vv5yf0nuE2NP44//KQuIZ+Zwa5YKxFw3oNt4ELb2iPvwg1fmZEbpb0Bbw1rqzuIWQlyqIChw=="],
+ 
+-    "@next/swc-linux-x64-gnu": ["@next/swc-linux-x64-gnu@16.2.0-canary.72", "", { "os": "linux", "cpu": "x64" }, "sha512-KA7AElne0pY4W0pYYflfwN6Mu28JcBOW7wDhV2f9OQqj2iqLJthrrRv4dqmMNIwfb8uKT2X60mHVpQ4Sk8HCzA=="],
++    "@next/swc-linux-x64-gnu": ["@next/swc-linux-x64-gnu@16.2.0-canary.73", "", { "os": "linux", "cpu": "x64" }, "sha512-zyZlXFk98eK0kheZdFpCj6GJf1MUNLA3zkcv4ees1Hdsy0dmWBl0CJNN3WxsValrqwoIL4LrRmF8uGagbhHC7g=="],
+ 
+-    "@next/swc-linux-x64-musl": ["@next/swc-linux-x64-musl@16.2.0-canary.72", "", { "os": "linux", "cpu": "x64" }, "sha512-qFZeXPsFDa0EN/M7CxSPzbiYhT9KsQuHQR8QVjAStMg/mCYitfRbQVuWkXxgdGy9SccRtWCMQ6gdh0tfXOeQDQ=="],
++    "@next/swc-linux-x64-musl": ["@next/swc-linux-x64-musl@16.2.0-canary.73", "", { "os": "linux", "cpu": "x64" }, "sha512-7YrT5MO5yOWzdEHWjQukS9j3tFdL9aii3OYq6ZixwBydXusuG6UvBsdnzwmf86+nZF6Rc0ZH7VWgUHLQ7rHH1g=="],
+ 
+-    "@next/swc-win32-arm64-msvc": ["@next/swc-win32-arm64-msvc@16.2.0-canary.72", "", { "os": "win32", "cpu": "arm64" }, "sha512-yKWDXTH39DqURY0tGJEkptyhh5wJ/N0nHLOOXR28hXJm0suBM5HimMdDkYreC3AHo/fITfA2sFQRpfWScLPQ4A=="],
++    "@next/swc-win32-arm64-msvc": ["@next/swc-win32-arm64-msvc@16.2.0-canary.73", "", { "os": "win32", "cpu": "arm64" }, "sha512-FtZiqSEUSTBGNW6owcverXj4en+gXKFWkC+FJtAgXkw95NCnC6aKPOMlQL6z5WR7OGN+OWxCBEy9ZVcqcjQVOw=="],
+ 
+-    "@next/swc-win32-x64-msvc": ["@next/swc-win32-x64-msvc@16.2.0-canary.72", "", { "os": "win32", "cpu": "x64" }, "sha512-miWW/gvHoGdFZcYspygXy47n8Sc/kjtJvtAk6Kxc0Wba05PgVYXir9yqyjB0/inhW6apRcMll0m1vyDUB6YZdw=="],
++    "@next/swc-win32-x64-msvc": ["@next/swc-win32-x64-msvc@16.2.0-canary.73", "", { "os": "win32", "cpu": "x64" }, "sha512-6s15KWwwIktvfRPl31pS+selzN9/GUstufMrNMRHavWqFJDVGleqczZZgeIFPE/rcOUlEQ0kbs2RJf1KIJVkeA=="],
+ 
+     "@nicolo-ribaudo/chokidar-2": ["@nicolo-ribaudo/chokidar-2@2.1.8-no-fsevents.3", "", {}, "sha512-s88O1aVtXftvp5bCPB7WnmXc5IwOZZ7YPuwNPt+GtOOXpPvad1LfbmjYv+qII7zP6RU2QGnqve27dnLycEnyEQ=="],
+ 
+@@ -2103,7 +2103,7 @@
+ 
+     "eslint": ["eslint@10.0.2", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.8.0", "@eslint-community/regexpp": "^4.12.2", "@eslint/config-array": "^0.23.2", "@eslint/config-helpers": "^0.5.2", "@eslint/core": "^1.1.0", "@eslint/plugin-kit": "^0.6.0", "@humanfs/node": "^0.16.6", "@humanwhocodes/module-importer": "^1.0.1", "@humanwhocodes/retry": "^0.4.2", "@types/estree": "^1.0.6", "ajv": "^6.14.0", "cross-spawn": "^7.0.6", "debug": "^4.3.2", "escape-string-regexp": "^4.0.0", "eslint-scope": "^9.1.1", "eslint-visitor-keys": "^5.0.1", "espree": "^11.1.1", "esquery": "^1.7.0", "esutils": "^2.0.2", "fast-deep-equal": "^3.1.3", "file-entry-cache": "^8.0.0", "find-up": "^5.0.0", "glob-parent": "^6.0.2", "ignore": "^5.2.0", "imurmurhash": "^0.1.4", "is-glob": "^4.0.0", "json-stable-stringify-without-jsonify": "^1.0.1", "minimatch": "^10.2.1", "natural-compare": "^1.4.0", "optionator": "^0.9.3" }, "peerDependencies": { "jiti": "*" }, "optionalPeers": ["jiti"], "bin": { "eslint": "bin/eslint.js" } }, "sha512-uYixubwmqJZH+KLVYIVKY1JQt7tysXhtj21WSvjcSmU5SVNzMus1bgLe+pAt816yQ8opKfheVVoPLqvVMGejYw=="],
+ 
+-    "eslint-config-next": ["eslint-config-next@16.2.0-canary.72", "", { "dependencies": { "@next/eslint-plugin-next": "16.2.0-canary.72", "eslint-import-resolver-node": "^0.3.6", "eslint-import-resolver-typescript": "^3.5.2", "eslint-plugin-import": "^2.32.0", "eslint-plugin-jsx-a11y": "^6.10.0", "eslint-plugin-react": "^7.37.0", "eslint-plugin-react-hooks": "^7.0.0", "globals": "16.4.0", "typescript-eslint": "^8.46.0" }, "peerDependencies": { "eslint": ">=9.0.0", "typescript": ">=3.3.1" }, "optionalPeers": ["typescript"] }, "sha512-Mar8wQjegy3F0kt5kkLWdZGwuKiCkwUoRCN5z6uKhRi5HVqSwShSi/GUY7+WZUJQeu94CN6JFdzY4Gw96sAYJQ=="],
++    "eslint-config-next": ["eslint-config-next@16.2.0-canary.73", "", { "dependencies": { "@next/eslint-plugin-next": "16.2.0-canary.73", "eslint-import-resolver-node": "^0.3.6", "eslint-import-resolver-typescript": "^3.5.2", "eslint-plugin-import": "^2.32.0", "eslint-plugin-jsx-a11y": "^6.10.0", "eslint-plugin-react": "^7.37.0", "eslint-plugin-react-hooks": "^7.0.0", "globals": "16.4.0", "typescript-eslint": "^8.46.0" }, "peerDependencies": { "eslint": ">=9.0.0", "typescript": ">=3.3.1" }, "optionalPeers": ["typescript"] }, "sha512-poB2H1gOEsQp08Cp1o439b071rDzZAk9zAE31mArw1dFyYL03BNF7uYWOlHl/KZ0LvRwq/4MQPSRHTE7tyTy1A=="],
+ 
+     "eslint-import-resolver-node": ["eslint-import-resolver-node@0.3.9", "", { "dependencies": { "debug": "^3.2.7", "is-core-module": "^2.13.0", "resolve": "^1.22.4" } }, "sha512-WFj2isz22JahUv+B788TlO3N6zL3nNJGU8CcZbPZvVEkBPaJdCV4vy5wyghty5ROFbCRnm132v8BScu5/1BQ8g=="],
+ 
+@@ -2851,7 +2851,7 @@
+ 
+     "neo-async": ["neo-async@2.6.2", "", {}, "sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw=="],
+ 
+-    "next": ["next@16.2.0-canary.72", "", { "dependencies": { "@next/env": "16.2.0-canary.72", "@swc/helpers": "0.5.15", "baseline-browser-mapping": "^2.9.19", "caniuse-lite": "^1.0.30001579", "postcss": "8.4.31", "styled-jsx": "5.1.6" }, "optionalDependencies": { "@next/swc-darwin-arm64": "16.2.0-canary.72", "@next/swc-darwin-x64": "16.2.0-canary.72", "@next/swc-linux-arm64-gnu": "16.2.0-canary.72", "@next/swc-linux-arm64-musl": "16.2.0-canary.72", "@next/swc-linux-x64-gnu": "16.2.0-canary.72", "@next/swc-linux-x64-musl": "16.2.0-canary.72", "@next/swc-win32-arm64-msvc": "16.2.0-canary.72", "@next/swc-win32-x64-msvc": "16.2.0-canary.72", "sharp": "^0.34.5" }, "peerDependencies": { "@opentelemetry/api": "^1.1.0", "@playwright/test": "^1.51.1", "babel-plugin-react-compiler": "*", "react": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "react-dom": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "sass": "^1.3.0" }, "optionalPeers": ["@opentelemetry/api", "@playwright/test", "babel-plugin-react-compiler", "sass"], "bin": { "next": "dist/bin/next" } }, "sha512-dBoUPNrWxuIiWUrA5US3QC2ww6y/jry15M/8TqXCPdZrLBni8TfR9e+Ya/EpWTPNOZunnE+3kfIRHUxEXumIyQ=="],
++    "next": ["next@16.2.0-canary.73", "", { "dependencies": { "@next/env": "16.2.0-canary.73", "@swc/helpers": "0.5.15", "baseline-browser-mapping": "^2.9.19", "caniuse-lite": "^1.0.30001579", "postcss": "8.4.31", "styled-jsx": "5.1.6" }, "optionalDependencies": { "@next/swc-darwin-arm64": "16.2.0-canary.73", "@next/swc-darwin-x64": "16.2.0-canary.73", "@next/swc-linux-arm64-gnu": "16.2.0-canary.73", "@next/swc-linux-arm64-musl": "16.2.0-canary.73", "@next/swc-linux-x64-gnu": "16.2.0-canary.73", "@next/swc-linux-x64-musl": "16.2.0-canary.73", "@next/swc-win32-arm64-msvc": "16.2.0-canary.73", "@next/swc-win32-x64-msvc": "16.2.0-canary.73", "sharp": "^0.34.5" }, "peerDependencies": { "@opentelemetry/api": "^1.1.0", "@playwright/test": "^1.51.1", "babel-plugin-react-compiler": "*", "react": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "react-dom": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "sass": "^1.3.0" }, "optionalPeers": ["@opentelemetry/api", "@playwright/test", "babel-plugin-react-compiler", "sass"], "bin": { "next": "dist/bin/next" } }, "sha512-FPYVzi97mqemNEebZ35KLNSQhRTDGu0C10gc7K+D7Q6viDwQ6xTDuEayNfwEkMW+VC4K2sx0n0zbGK9U7L8rtA=="],
+ 
+     "node-domexception": ["node-domexception@1.0.0", "", {}, "sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ=="],
+ 
+diff --git a/package.json b/package.json
+index 3aee4ae31f..4fdf3fa01b 100644
+--- a/package.json
++++ b/package.json
+@@ -235,7 +235,7 @@
+     "copyfiles": "^2.4.1",
+     "doctrine": "^3.0.0",
+     "eslint": "^10.0.2",
+-    "eslint-config-next": "16.2.0-canary.72",
++    "eslint-config-next": "16.2.0-canary.73",
+     "drizzle-kit": "^1.0.0-beta.9-e89174b",
+     "eslint-plugin-jsdoc": "^62.7.1",
+     "glob": "^13.0.6",
+@@ -244,7 +244,7 @@
+     "jscodeshift": "^17.3.0",
+     "lefthook": "^2.1.2",
+     "madge": "^8.0.0",
+-    "next": "16.2.0-canary.72",
++    "next": "16.2.0-canary.73",
+     "react": "19.2.4",
+     "react-dom": "19.2.4",
+     "react-force-graph-2d": "^1.29.1",
+@@ -263,7 +263,7 @@
+     "vite-tsconfig-paths": "^6.1.1",
+     "wink-bm25-text-search": "^3.1.2",
+     "fast-check": "^4.5.3",
+-    "@next/bundle-analyzer": "16.2.0-canary.72",
++    "@next/bundle-analyzer": "16.2.0-canary.73",
+     "@playwright/test": "^1.58.2",
+     "yaml": "^2.8.2",
+     "publint": "^0.3.18",
+diff --git a/specs/pending/repo-codegraph-jsdoc/deep-research-report.md b/specs/pending/repo-codegraph-jsdoc/deep-research-report.md
+new file mode 100644
+index 0000000000..d53771aef0
+--- /dev/null
++++ b/specs/pending/repo-codegraph-jsdoc/deep-research-report.md
+@@ -0,0 +1,357 @@
++# Updated engineer-facing white paper draft for the beep-effect system
++
++## Executive summary
++
++This draft rewrites and tightens the provided “Research foundations for the beep-effect white paper” into a publication-ready, engineer-facing narrative that is both testable and citation-grounded. It keeps the original thesis—beep-effect is best understood as a *deterministic-first*, *schema-constrained*, *knowledge-graph-grounded* documentation system with a *closed verification loop*—but removes absolute/marketing-style statements and replaces them with measurable definitions, falsifiable checklists, and an evaluation plan.
++
++The problem is real and costly: Stripe’s widely cited “Developer Coefficient” report estimated large economic losses from developer time spent on “bad code” and technical debt, including an estimate of **$85B/year** in wasted effort. citeturn1search0 Atlassian’s 2024 developer experience research similarly reports widespread weekly time loss due to inefficiencies (including time spent searching for information and dealing with technical debt). citeturn2search0 Meanwhile, the TypeScript ecosystem’s scale materially increases the surface area where missing or stale API docs become a productivity and safety issue: the official npm downloads API reports **138,108,727 downloads** of the `typescript` package in the last week ending **2026‑03‑02**—a direct, verifiable indicator of adoption and churn pressure across the ecosystem. citeturn3view0
++
++Naïve “LLM in → text out” documentation generation fails in predictable ways aligned with published hallucination taxonomies and security analyses: CodeHalu formalizes multiple hallucination categories in code generation (including naming and resource errors), and the USENIX 2025 “package hallucinations” work shows that hallucinated dependencies can create real supply-chain risk (“slopsquatting”), with nontrivial hallucination rates across tested models. citeturn6search4turn6search5turn6search9 Those results motivate beep-effect’s core design: maximize deterministic extraction of structural truths, constrain model outputs with schemas, and verify claims against code-derived ground truth before writing JSDoc.
++
++The remainder of this draft provides: a verified problem statement (flagging numbers that remain unverified); precise, measurable definitions of the “four pillars”; a competitive checklist with vendor-by-vendor evidence; primary-source foundations (OWL 2 RL, incremental materialization, equality rewriting, and a “math appendix” framing for fibrations); a pragmatic system architecture with explicit risks/mitigations; a multi-layer extraction + LLM enrichment + De‑Hallucinator pipeline; provider constraints (OpenAI and Anthropic) and the `toAgentOutputSchema` workaround; and an evaluation plan designed to demonstrate novelty via ablations and reproducible metrics.
++
++## Problem statement with verified ecosystem constraints
++
++Documentation debt is a first-order engineering cost because it increases time-to-comprehension, error rates, and onboarding friction. A recurring empirical theme in software engineering research is that *comprehension dominates editing*. For example, a Communications of the ACM article summarizes evidence that developers spend **58%–70%** of their time comprehending code and a small fraction actually editing it, emphasizing comprehension as a major cost driver. citeturn17search12
++
++Industry reports align with that intuition by quantifying large productivity losses. Stripe’s “Developer Coefficient” report estimates **$85B/year** in lost productivity due to time spent dealing with “bad code” and technical debt. citeturn1search0 Atlassian’s 2024 developer experience reporting describes widespread inefficiency and large weekly time loss, including time lost to searching for information and workflow fragmentation—directly affected by documentation quality and discoverability. citeturn2search0
++
++In TypeScript specifically, missing or misleading docs are amplified by ecosystem scale. The most defensible, directly verifiable indicator available in public infrastructure is package download intensity: npm’s official downloads API reports **138,108,727** weekly downloads for the `typescript` package (period **2026‑02‑24** to **2026‑03‑02**). citeturn3view0 This does not directly measure documentation coverage, but it strongly indicates that even small per-package documentation inefficiencies multiply across an enormous user base.
++
++Some ecosystem-scale numbers from the original draft remain **unverified** or rely on non-primary sources:
++
++- **“2.5+ million live packages” and “184+ billion downloads per month”**: figures of this kind are commonly reported by third parties; one example is a Socket analysis discussing npm ecosystem scale and risk. Treat these as *context*, not ground truth, unless you independently reproduce them from registry telemetry or an official npm statement. citeturn2search1  
++- **“85% of top 1,000 npm packages ship with TypeScript types”**: (unverified). I did not locate a primary study or a widely cited reproducible methodology for this exact percentage as of **2026‑03‑03**. This claim should either be removed, replaced with a smaller and clearly sourced assertion, or moved to a “measurement work” subsection with a proposed method for replication.
++
++A key gap in the original narrative is that it treats the “TypeScript documentation crisis” as self-evident without offering TypeScript-specific measurement. That gap can be reframed as an engineering opportunity: **define measurable baselines** (e.g., JSDoc/TSDoc coverage and accuracy metrics) and publish them as part of beep-effect’s evaluation program (see Evaluation section).
++
++## Four pillars with measurable criteria
++
++This section replaces “beep-effect is unique” with *operational definitions* that let readers test whether a system truly implements the pillars.
++
++### Knowledge-graph reasoning
++
++A system satisfies **knowledge-graph reasoning** if it:
++
++- Builds an explicit **typed graph** of code elements (e.g., modules, classes, functions, parameters) and relationships (e.g., containment, calls, imports, overrides).  
++- Supports **explicit inference** beyond raw edges (e.g., transitive dependency, inherited contracts, alias resolution), using a declared rule set (e.g., RDFS/OWL RL-style rules or Datalog). citeturn4search11turn15search19  
++- Exposes a stable **query interface** (Cypher/SPARQL/Datalog) usable by downstream components (LLM agent, validators, CI).  
++
++**Measurable criteria**:
++- *Graph completeness*: percent of resolvable symbols and edges captured vs compiler ground truth (e.g., “% of call edges captured where TypeScript checker can resolve callee”).  
++- *Inference coverage*: number of additional derived facts used by documentation generation (e.g., “% of @inheritDoc resolutions supported automatically”).  
++- *Query latency under incremental refresh*: p50/p95 query time for common ego-network retrieval workloads.
++
++### Structured output schemas
++
++A system satisfies **structured output schemas** if it:
++
++- Enforces a **machine-validated schema** for documentation outputs (e.g., JSON Schema) rather than free-form text. citeturn12view0turn14view1  
++- Carries tag-level metadata (e.g., doc tag constraints) into the schema so that invalid outputs are *detectable and rejectable* automatically.  
++- Produces a stable **typed intermediate representation** (IR) used to write JSDoc via an AST tool, rather than trusting raw model text.  
++
++**Measurable criteria**:
++- *Schema compliance rate*: percent of generations that parse as valid without post-editing/retries.  
++- *Schema expressivity coverage*: proportion of desired doc fields representable under provider schema subsets (see provider constraints section). citeturn14view1turn11search2  
++- *Round-trip determinism*: identical IR yields identical emitted JSDoc output across runs (byte-for-byte diff).
++
++### Deterministic-first extraction
++
++A system satisfies **deterministic-first extraction** if it:
++
++- Extracts structural facts from code using compilers/parsers (AST + type checker) before any model call.  
++- Treats LLM enrichment as *optional* and bounded to semantic content that cannot be deterministically derived.  
++- Prevents the model from inventing structural facts by making them **inputs** (pre-filled) or hard constraints.  
++
++Primary enabling technologies include incremental parsing and full type-checking. Tree-sitter is an incremental parsing system designed to update syntax trees efficiently as code changes, and ts-morph wraps the TypeScript compiler API to simplify AST navigation/manipulation and type-aware analysis. citeturn20search0turn19search2  
++
++**Measurable criteria**:
++- *Structural accuracy*: parameter names/types/return types match compiler truth with near-100% correctness on supported constructs.  
++- *LLM surface reduction*: percent of doc fields filled deterministically vs generated.  
++- *Regression stability*: changes in docs are triggered only by code changes or rule/schema changes (not by model nondeterminism).
++
++### Closed-loop hallucination verification
++
++A system satisfies **closed-loop hallucination verification** if it:
++
++- Decomposes generated documentation into **claims**.  
++- Verifies claims against a **grounding source** (code facts, graph facts, static analysis results, or tests), rejecting or revising outputs that fail verification.  
++- Has a defined failure policy (retry with tighter constraints, escalate to human review, or emit “unknown”).  
++
++This pillar is motivated by published analyses of hallucinations and security risks in code generation. CodeHalu categorizes code hallucinations (including naming/resource errors). citeturn6search4turn6search12 USENIX’s package hallucination work shows dependency hallucinations as a systemic risk affecting many models. citeturn6search5turn6search17 For claim-based verification, FActScore introduced atomic-fact decomposition and scoring; SAFE adds search-augmented verification; VeriScore focuses evaluation on verifiable claims; and Claimify improves extraction quality by explicitly handling ambiguity. citeturn6search10turn6search7turn7search8turn7search1
++
++**Measurable criteria**:
++- *Verification precision/recall*: how often the verifier correctly flags wrong claims and passes correct claims, measured on a labeled dataset.  
++- *Auto-correction yield*: fraction of initially failing docs that are repaired automatically within N retries.  
++- *Residual-risk reporting*: every emitted doc includes traceable provenance and confidence tiers.
++
++## Competitive landscape as a testable checklist
++
++Instead of “no tool does X,” this section defines a verification checklist and applies it to representative systems using publicly available documentation/papers.
++
++### Capability checklist
++
++A candidate system is evaluated on whether it has **public evidence** of:
++
++- **KG**: explicit code graph with queryable relations and inference rules used for doc generation.
++- **Schema**: enforced structured schema for doc output that is validated automatically.
++- **Deterministic-first**: compiler/AST-derived facts filled before LLM generation.
++- **Closed-loop verification**: claim checking against code/graph, with reject/retry policies.
++
++The checklist is intentionally conservative: lack of evidence ≠ absence, but it means the white paper should not claim the competitor “doesn’t have it” without further testing.
++
++### Vendor-by-vendor verification notes
++
++**Mintlify**: The “Doc Writer” product is marketed as generating docstrings from code in an IDE context (e.g., VS Code extension listing). Public materials emphasize doc generation, but do not clearly document a code knowledge-graph reasoner, formal inference rules, or a closed-loop verifier that checks claims against code before writing. citeturn4search11turn4search18 Mintlify’s fundraising and product direction are well documented (Series A reporting and blog), but funding is not capability evidence. citeturn18search0turn18search1
++
++**JetBrains AI**: JetBrains documents a “Generate Documentation” capability in its AI Assistant feature set. The surrounding IDE context implies access to symbol/type information, but public docs do not specify schema-constrained doc IR + verification loops or KG reasoning with formal inference. citeturn4search35
++
++**GitHub Copilot**: Public training materials describe using Copilot to generate documentation/comments. However, Copilot documentation geared toward end users does not describe emitting schema-validated IR or systematically verifying claims against repository facts prior to insertion. citeturn4search37
++
++**TypeDoc** (adjacent baseline): TypeDoc is a deterministic documentation generator for TypeScript projects—useful as a baseline comparator for deterministic extraction and structural correctness, even though it targets generated reference docs rather than automated JSDoc insertion. citeturn16search16
++
++**CodexGraph**: The CodexGraph paper describes building a **code knowledge graph** and querying it (e.g., with Neo4j) to support repository-scale tasks, but the target is repo navigation and coding assistance rather than JSDoc generation, and the paper does not position a closed-loop docstring verifier. citeturn5search0
++
++**RepoAgent**: RepoAgent is explicitly about repository-level documentation generation with structural analysis and generation; it is close in spirit to beep-effect’s goal, but (based on the published paper) it is not framed as a KG reasoning + OWL/RDFS/Datalog inference approach nor as schema-first structured outputs with a De-Hallucinator loop. citeturn5search1
++
++**ETF**: ETF is directly relevant because it operationalizes hallucination detection in code summaries using entity tracing between code-derived entities and summary entities, demonstrating measurable improvements in factuality detection. It is a verifier/detector, not a full doc generator system. citeturn5search2
++
++**FORGE**: FORGE (arXiv / forthcoming venue context) focuses on deterministic AST analysis to detect/correct hallucinations in generated code; it supports the deterministic-first + verification thesis, but it is not a productized JSDoc generation pipeline. citeturn5search3
++
++### Comparison table
++
++| System | KG reasoning (evidence) | Structured schema output (evidence) | Deterministic-first extraction (evidence) | Closed-loop verification (evidence) |
++|---|---|---|---|---|
++| Mintlify | Not explicit in Doc Writer materials citeturn4search11 | Not explicit citeturn4search11 | Partial implied (editor context), not specified citeturn4search11 | Not explicit citeturn4search11 |
++| JetBrains AI | Not described as KG/inference citeturn4search35 | Not described citeturn4search35 | IDE context implies symbol/type access, not a documented pipeline citeturn4search35 | Not described citeturn4search35 |
++| GitHub Copilot | Not described as KG/inference citeturn4search37 | Not described citeturn4search37 | Not described as deterministic-first citeturn4search37 | Not described citeturn4search37 |
++| TypeDoc (baseline) | Not KG-focused citeturn16search16 | N/A (outputs docs, not schema IR) citeturn16search16 | Yes (compiler-driven) citeturn16search16 | N/A (no claim verifier) citeturn16search16 |
++| CodexGraph | Yes (explicit KG + querying) citeturn5search0 | Not a doc schema system citeturn5search0 | Yes (graph built from code) citeturn5search0 | Not emphasized as closed-loop verifier citeturn5search0 |
++| RepoAgent | Partial (graph-like structure analysis, not positioned as KG+rules) citeturn5search1 | Not central claim citeturn5search1 | Yes (repo structure analysis) citeturn5search1 | Not central claim citeturn5search1 |
++| ETF | No (not a KG system) citeturn5search2 | No (evaluation framework) citeturn5search2 | Yes (static entity extraction) citeturn5search2 | Yes (hallucination detection loop) citeturn5search2 |
++| FORGE | No (not a KG system) citeturn5search3 | Not positioned as schema-first docs citeturn5search3 | Yes (AST-based) citeturn5search3 | Yes (detect/correct) citeturn5search3 |
++
++**Interpretation**: This table does *not* prove “no competitor can ever do all four pillars.” It just documents that, in publicly accessible descriptions as of **2026‑03‑03**, the four-pillar bundle is not commonly specified as an integrated, testable architecture for JSDoc generation.
++
++## Technical foundations with primary citations
++
++### OWL 2 RL and rule-based reasoning
++
++OWL 2 defines multiple profiles designed for specific reasoning tradeoffs; OWL 2 RL is the profile intended for scalable rule-based implementation. citeturn15search19 The practical interpretation for beep-effect is: represent code facts as RDF-like triples (or an isomorphic property-graph encoding) and apply a forward-chaining rule set to derive useful implied facts (inheritance propagation, dependency abstraction, alias/canonicalization, inverse edges, etc.).
++
++Complexity results help motivate tractability constraints. ter Horst’s Journal of Web Semantics paper proves that RDFS entailment is decidable, NP-complete in general, and **in P when the target graph contains no blank nodes**, a useful lens when choosing grounded identifiers for code elements. citeturn15search0
++
++### Incremental materialization maintenance
++
++In a documentation system, code changes are continuous; re-reasoning from scratch is expensive. Incremental datalog materialization is therefore a natural fit.
++
++- DRed (“Delete and Rederive”) originates in the materialized view maintenance literature and is classically associated with Gupta, Mumick, and Subrahmanian’s SIGMOD work. citeturn8search21turn8search6  
++- Motik et al. propose the Backward/Forward (B/F) algorithm for incremental datalog materialization, reporting large performance advantages vs DRed in some settings. citeturn8search1turn8search4
++
++For an engineer-facing white paper, the key point is architectural: **incremental inference is a first-class requirement** for IDE/CI integration, and existing algorithms offer known tradeoffs between over-deletion cost and re-derivation cost. citeturn8search1turn8search6
++
++### Efficient equality handling via rewriting
++
++Code graphs frequently contain aliasing: re-exports, barrel files, renamed imports, and symbol duplication across build outputs. OWL’s `sameAs` semantics can cause combinatorial blowups if naïvely materialized. Motik et al. analyze correctness and efficiency issues in `owl:sameAs` rewriting and propose algorithms to support equality efficiently in materialization-based OWL 2 RL systems. citeturn9search1turn9search14
++
++In beep-effect terms: implement **canonical identifiers** for equivalent symbols; store only one representative as the join key for reasoner rules; and keep provenance for “alias edges” for traceability.
++
++### Grothendieck fibrations as schema–instance factoring
++
++The original draft uses category-theoretic language to explain how tag metadata (schema) and tag payloads (instances) relate. That framing can be retained, but the white paper should (a) keep it concise in the main narrative and (b) move deeper proofs/derivations to an appendix, as requested.
++
++A minimal, engineer-friendly statement is:
++
++- A documentation tag system is naturally modeled as a **family of payload types indexed by a tag definition** (“for each tag name, what is the payload schema?”).
++- Dependent type theory motivates this as a dependent sum / “tag + payload” construction; fibrations are one categorical semantics of type families. citeturn10search0turn10search21
++
++This is valuable as a design justification for why “tag definitions” should be first-class and why schemas should be generated from tag metadata rather than handwritten repeatedly.
++
++## System architecture and implementation tradeoffs
++
++This section is written as “decision record” content: what you would include in a white paper to help contributors understand constraints and why design choices were made.
++
++### Graph store options
++
++beep-effect’s graph backend choice is not purely about raw speed; it must support: incremental updates, multi-tenant or multi-project isolation, query ergonomics, and (ideally) rule-based inference or easy integration for it.
++
++image_group{"layout":"carousel","aspect_ratio":"16:9","query":["property graph database architecture Neo4j Cypher","RDFox datalog materialization engine diagram","GraphBLAS sparse matrix graph database FalkorDB architecture"],"num_per_query":1}
++
++**FalkorDB**: FalkorDB describes itself as a graph database that uses **GraphBLAS** and sparse adjacency matrices under the hood. citeturn23search0turn23search16 It supports Cypher/OpenCypher-style querying (with documented Cypher coverage pages). citeturn23search3turn23search7  
++- **Strengths**: Fan-out heavy graph workloads can be fast; FalkorDB publishes benchmark claims showing sub-140ms p99 latency and large differences vs Neo4j on specific aggregate expansion workloads. These are vendor-reported and should be treated as such in the white paper. citeturn23search1turn23search4  
++- **Risks**: Reasoning is not described as built-in RDFS/OWL; inference must be implemented at the application layer (or via external materialization). (This is not a negative; it is simply an engineering scope item.)
++
++**Neo4j**: Neo4j provides ACID transactional behavior; its documentation explicitly describes Neo4j as ACID compliant in transaction execution semantics. citeturn23search2turn23search6  
++- **Strengths**: Mature tooling, transactions, operational ecosystem, and a broad Cypher user base.  
++- **Risks**: Performance for specific high-fanout analytical workloads may differ; do not repeat vendor-vs-vendor benchmark numbers as universal truth without specifying workload and reproduction.
++
++**RDFox**: RDFox is explicitly designed as a main-memory RDF store supporting **materialization-based parallel datalog reasoning** and SPARQL query answering. citeturn8search2turn8search11 Its published evaluation reports high-scale triple storage and high throughput under their experimental setup. citeturn8search8turn8search11  
++- **Strengths**: “Reasoner + store” integration is exactly aligned with OWL 2 RL / datalog-style reasoning.  
++- **Risks**: Integration complexity and licensing/deployment constraints may be higher than using a property-graph store; engineering cost can dominate for early prototypes.
++
++**Recommended posture for the white paper**: treat the database as a pluggable backend; specify the KG/inference interface and incremental update contract as the stable boundary, and document any store-specific optimization as optional.
++
++### Protocol and service architecture
++
++For tool integration in IDEs and agent environments, the Model Context Protocol (MCP) provides a structured way to expose tools/resources/prompts over a JSON-RPC style protocol. Anthropic’s MCP announcement describes the protocol as an open standard for connecting AI systems to tools and data sources, and the MCP specification codifies protocol requirements. citeturn11search3turn11search6
++
++For a TypeScript implementation, an Effect-based architecture can help enforce explicit dependencies and deterministic wiring. Effect documentation describes services/layers as a disciplined dependency-injection pattern and documents schemas via `Schema.Class`. citeturn19search0turn19search1turn19search11 This can be framed as an implementation detail: contributors do not need to love Effect to evaluate beep-effect’s novelty, but it can reduce incidental complexity in a multi-service pipeline.
++
++### Incremental reasoning and update design
++
++Reasoning must respond to file changes quickly enough for editor workflows. The white paper should propose:
++
++- **Named-graph scoping** by file/module: rebuild only the changed file’s triples/edges and affected neighborhoods.  
++- **Incremental materialization** using techniques inspired by DRed/B/F. citeturn8search6turn8search1  
++- **Equality rewriting layer** for alias canonicalization (re-exports, renames). citeturn9search1turn9search14  
++
++Risks and mitigation should be explicit: if incremental updates are too complex initially, start with rebuild-on-change for small repos and graduate to incremental maintenance once correctness is validated.
++
++## Pipeline, De‑Hallucinator, and provider constraints
++
++### End-to-end pipeline
++
++The pipeline below is the “center diagram” expected in a white paper. It makes the deterministic-first and verification loop concrete.
++
++```mermaid
++flowchart LR
++  A[Codebase] --> B[Layer 1: Syntax parse<br/>tree-sitter]
++  A --> C[Layer 2: Type-aware analysis<br/>TypeScript checker / ts-morph]
++  B --> D[Code fact extractor]
++  C --> D
++  D --> E[Knowledge Graph + Rules<br/>RDFS/OWL RL-style]
++  E --> F[Context builder<br/>2-hop ego network]
++  F --> G[Schema builder<br/>tag metadata -> JSON Schema]
++  G --> H[LLM enrichment<br/>semantic-only fields]
++  H --> I[De-Hallucinator<br/>claim extraction + verification]
++  I -->|pass| J[JSDoc emitter<br/>AST write-back]
++  I -->|fail| K[Retry policy / Human review queue]
++```
++
++Tree-sitter supports incremental parsing and efficient syntax tree updates, and ts-morph provides a practical wrapper around the TypeScript compiler API for navigation/manipulation and type-aware extraction. citeturn20search0turn19search2
++
++### Entity model sketch
++
++This is a lightweight entity/relationship picture suitable for the main narrative. (Deep ontology details can go to an appendix.)
++
++```mermaid
++erDiagram
++  MODULE ||--o{ CLASS : contains
++  MODULE ||--o{ FUNCTION : contains
++  CLASS  ||--o{ METHOD : contains
++  FUNCTION ||--o{ PARAMETER : has
++  METHOD ||--o{ PARAMETER : has
++  FUNCTION }o--o{ FUNCTION : calls
++  MODULE }o--o{ MODULE : imports
++
++  FUNCTION ||--o{ JSDOC_BLOCK : documented_by
++  METHOD   ||--o{ JSDOC_BLOCK : documented_by
++  JSDOC_BLOCK ||--o{ JSDOC_TAG : has
++  JSDOC_TAG }o--|| TAG_DEFINITION : instance_of
++```
++
++### Claim decomposition and verification
++
++The De‑Hallucinator should be described as derived from established “atomic claim” evaluation lines of work:
++
++- FActScore decomposes long-form text into atomic facts and checks them against a knowledge source. citeturn6search10  
++- SAFE adds search-augmented verification for open-domain factuality. citeturn6search7  
++- VeriScore emphasizes evaluating only verifiable content. citeturn7search8  
++- Claimify improves claim extraction by selection/disambiguation/decomposition with ambiguity handling. citeturn7search1  
++
++In beep-effect, the “knowledge source” is primarily the code-derived KG and static analysis artifacts (call graph, type checker facts). The white paper should define three verification tiers:
++
++- **AST-verifiable**: signature facts (names, types, return types) must match deterministic extraction (expected near-100% precision).  
++- **Graph-verifiable**: claims about direct relationships (“calls X”, “throws Y”) must match KG edges or typed analysis.  
++- **Heuristic/unverifiable**: intent-level claims (“optimized”, “safe”, “best-effort”) must be flagged as low-confidence or require human review.
++
++This design directly targets observed hallucination classes in code generation (naming/resource errors) and supply-chain risks (package hallucinations). citeturn6search4turn6search5turn6search17
++
++### Retry/circuit-breaker and human-in-loop policy
++
++Provider failures and schema brittleness are normal; the system needs policy:
++
++- A bounded retry sequence where each retry reduces degrees of freedom (e.g., fewer free-text fields, smaller context window, stronger instruction to abstain).  
++- A circuit breaker that fails fast during provider outages to avoid cascading CI failures.  
++- A human review queue that surfaces *only* low-confidence or unverifiable claims, prioritizing by risk (public API surface > internal methods).
++
++This policy should be stated as a governance mechanism, not as a promise of perfection.
++
++### Embeddings and retrieval
++
++If the system uses embedding-based retrieval as part of context building, Voyage AI’s `voyage-code-3` is a plausible choice with well-documented properties: the Voyage blog states a 32K context length, Matryoshka-style dimension flexibility (2048/1024/512/256), and multiple quantization formats. citeturn22search0turn22search4 This can be used to implement function/class/module-level retrieval for similarity, but the white paper should emphasize that **KG edges** are the authoritative structural context; embeddings are an auxiliary retrieval channel.
++
++### Structured-output constraints and the `toAgentOutputSchema` workaround
++
++Provider schema subsets materially affect how you design “structured output schemas.”
++
++**OpenAI Structured Outputs**: OpenAI’s documentation requires `additionalProperties: false` in objects, and states that when using Structured Outputs “all fields must be required,” with optionality emulated via union-with-null. citeturn14view0turn14view1 The docs also enumerate unsupported JSON Schema keywords (e.g., `allOf`, `if/then/else`, and—depending on settings—string/number constraints). citeturn14view1turn14view2
++
++**Anthropic Structured Outputs**: Anthropic’s docs define strict-schema limits, including a hard limit of **24 optional parameters** across all strict tool schemas and JSON output schemas. citeturn11search2
++
++These constraints justify a transformation like `toAgentOutputSchema`: convert rich union/discriminated schemas into a “product-of-optionals” schema with a discriminator and nullable fields, so the output remains representable in strict modes across providers. The white paper should present this as a compatibility layer with explicit tradeoffs: more verbose schemas, but higher provider portability and fewer schema compilation failures.
++
++## Evaluation plan and recommended white paper structure
++
++### Evaluation goals
++
++The evaluation section should not only claim novelty; it should demonstrate it via:
++
++- **Ablations**: remove one pillar at a time and quantify degradation.  
++- **Baselines**: compare against representative doc tools (e.g., “LLM-only docstring generator,” RepoAgent-style pipeline, deterministic-only TypeDoc reference extraction). citeturn5search1turn16search16  
++- **Reproducible corpora**: select open-source TS repos across domains; define stable evaluation slices (public API symbols, changed files, etc.).
++
++### Proposed metrics and experiments
++
++| Metric | What it measures | How to compute | Why it supports “four pillars” |
++|---|---|---|---|
++| Signature correctness | Parameter names/types/return types match compiler truth | Compare emitted JSDoc vs TypeScript checker output | Validates deterministic-first + schema constraint |
++| Claim factuality (verifiable) | Correctness of verifiable behavioral/relationship claims | Label a sample; compute precision/recall of verifier | Validates closed-loop verification |
++| Hallucination rate | Frequency of unsupported claims in docs | Count verifier-failed claims per 1k symbols | Connects to hallucination literature citeturn6search4turn6search5 |
++| Retry yield | % of failures corrected within N retries | Track pass/fail across retries | Tests robustness of circuit-breaker policy |
++| Incremental update latency | Time from code edit → updated docs | Measure end-to-end in editor/CI | Tests practicality of incremental reasoning |
++| Developer preference | Human utility / readability | Blind review of doc diffs | Validates “semantic enrichment” value |
++
++A strong “novelty demonstration” experiment is a **4-way ablation study**:
++
++- Full system  
++- Minus KG reasoning (replace with RAG-only context retrieval)  
++- Minus structured schema (free-form docstrings)  
++- Minus deterministic-first (allow model to fill structure)  
++- Minus verification (accept first-pass output)  
++
++If the hypothesis is correct, removing deterministic-first and verification should sharply increase signature/claim errors; removing KG reasoning should reduce correctness for cross-file contracts; removing structured schemas should increase formatting failures and reduce edit determinism. The papers discussed in earlier sections provide motivation for why these failures occur and what categories to measure. citeturn6search4turn6search10turn5search2
++
++### Recommended white paper structure
++
++To keep the main narrative readable for engineers while preserving rigor:
++
++- **Main narrative**: problem statement; pillar definitions; system overview; competitive checklist; implementation tradeoffs; evaluation plan.  
++- **Appendices**:  
++  - Category-theory and fibrations (formal definitions, proofs, deeper semantics). citeturn10search0turn10search21  
++  - Formal rule sets and OWL 2 RL mapping notes. citeturn15search19turn15search0  
++  - Reproducibility details (benchmark harness, datasets, scoring scripts).
++
++### Verified reference list
++
++This list includes the primary/official sources used for key claims; it is intentionally short and biased toward conference papers, standards, and vendor docs.
++
++- Stripe, “The Developer Coefficient” (2018). citeturn1search0  
++- Atlassian, “Atlassian’s take: AI’s impact on developer experience” / DX research highlights (2024). citeturn2search0  
++- npmjs downloads API, `typescript` weekly downloads (last week ending 2026‑03‑02). citeturn3view0  
++- OpenAI API docs: Structured Outputs (JSON Schema constraints, `additionalProperties: false`, “all fields must be required”, unsupported keywords). citeturn14view0turn14view1turn14view2  
++- Anthropic Claude API docs: Structured outputs limits (24 optional parameters). citeturn11search2  
++- W3C OWL 2 Profiles (OWL 2 RL context). citeturn15search19  
++- ter Horst, “Completeness, decidability and complexity of entailment for RDF Schema …” (Journal of Web Semantics, 2005). citeturn15search0  
++- Motik et al., “Incremental Update of Datalog Materialisation: the Backward/Forward Algorithm” (AAAI 2015). citeturn8search1turn8search4  
++- Gupta, Mumick, Subrahmanian, “Maintaining Views Incrementally” (SIGMOD 1993). citeturn8search21turn8search6  
++- Motik et al., “Handling owl:sameAs via Rewriting” (AAAI 2015 / arXiv 2014). citeturn9search1turn9search14  
++- Nenov et al., “RDFox: A Highly-Scalable RDF Store” (ISWC 2015). citeturn8search2turn8search11  
++- Tree-sitter (incremental parsing) documentation. citeturn20search0  
++- ts-morph documentation (TypeScript compiler API wrapper). citeturn19search2  
++- CodeHalu (AAAI 2025) and USENIX 2025 package hallucinations (hallucination/security motivation). citeturn6search4turn6search5  
++- FActScore (EMNLP 2023), SAFE (NeurIPS 2024), VeriScore (Findings EMNLP 2024), Claimify (arXiv 2025). citeturn6search10turn6search7turn7search8turn7search1  
++- Voyage AI `voyage-code-3` blog + docs (embeddings and quantization). citeturn22search0turn22search4  
++- Model Context Protocol announcement + specification. citeturn11search3turn11search6  
++- Neo4j documentation on ACID/transactions (tradeoff grounding). citeturn23search2turn23search6  
++- FalkorDB design/docs and vendor benchmarks (explicitly vendor-reported). citeturn23search16turn23search1turn23search4
+\ No newline at end of file
