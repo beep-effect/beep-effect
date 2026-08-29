@@ -1,0 +1,14 @@
+diff --git a/apps/practice-kg-mcp/src/bin.ts b/apps/practice-kg-mcp/src/bin.ts
+index 2a2bed8944..1daf73f770 100755
+--- a/apps/practice-kg-mcp/src/bin.ts
++++ b/apps/practice-kg-mcp/src/bin.ts
+@@ -26,6 +26,9 @@ const serverCommand = Command.make(
+   "practice-kg-mcp",
+   { bundleDir, corpusRoot },
+   Effect.fnUntraced(function* (flags) {
++    // const { PRACTICE_KG_BUNDLE_DIR, BUNDLE_DIR, PRACTICE_KG_CORPUS_ROOT } = yield* Config.all({
++    //
++    // })
+     const configuredBundleDir = yield* Config.option(Config.string("PRACTICE_KG_BUNDLE_DIR"));
+     const shortBundleDir = yield* Config.option(Config.string("BUNDLE_DIR"));
+     const configuredCorpusRoot = yield* Config.option(Config.string("PRACTICE_KG_CORPUS_ROOT"));
