@@ -210,12 +210,13 @@ entries="$(jq -Rsc --argjson acks "$ack_ids" --argjson wave "$wave" '
   decoded_rows
   | map(. as $row | select(($acks | index($row.id)) == null))
   | map(. + {
-      _liveness:
+      _liveness: (
         if ($wave | type) != "object" then "unknown"
         elif (.capsule.headSha? == null or .capsule.prNumber? == null) then "unknown"
         elif (.capsule.headSha == $wave.headSha and .capsule.prNumber == $wave.prNumber) then "live"
         else "superseded"
         end
+      )
     })
   | map(select(._liveness != "superseded"))
 ' "$failures" 2>/dev/null || printf '[]')"
