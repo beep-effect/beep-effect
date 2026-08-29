@@ -1,0 +1,969 @@
+diff --git a/.cspell/misspelled.txt b/.cspell/misspelled.txt
+index 799e63147d..344298e96a 100644
+--- a/.cspell/misspelled.txt
++++ b/.cspell/misspelled.txt
+@@ -1,4 +1,2 @@
+ dont
+ Pblshd
+-Reverseable
+-Uncommited
+diff --git a/_typos.toml b/_typos.toml
+index 67b049ad95..9e4d3ca355 100644
+--- a/_typos.toml
++++ b/_typos.toml
+@@ -9,7 +9,7 @@ Eff = "Eff"
+ Somes = "Somes"
+ annote = "annote"
+ retriev = "retriev"
+-Uncommited = "Uncommited"
++Uncommitted = "Uncommitted"
+ 
+ # Biome rule names
+ Inferrable = "Inferrable"
+diff --git a/packages/ai/sdk/src/claude/Storage/EventJournalKeyValueStore.ts b/packages/ai/sdk/src/claude/Storage/EventJournalKeyValueStore.ts
+index b4404a79f6..7f2731ebaf 100644
+--- a/packages/ai/sdk/src/claude/Storage/EventJournalKeyValueStore.ts
++++ b/packages/ai/sdk/src/claude/Storage/EventJournalKeyValueStore.ts
+@@ -110,7 +110,7 @@ export const make = (options?: { readonly key?: string }) =>
+       return created;
+     };
+ 
+-    const withRemoteUncommited = <A, E, R>(
++    const withRemoteUncommitted = <A, E, R>(
+       remoteId: EventJournal.RemoteId,
+       f: (entries: Array<EventJournal.Entry>) => Effect.Effect<A, E, R>
+     ) =>
+@@ -291,7 +291,7 @@ export const make = (options?: { readonly key?: string }) =>
+             }
+           })
+         ),
+-      withRemoteUncommited,
++      withRemoteUncommitted,
+       nextRemoteSequence: (remoteId) => withLock(Effect.sync(() => ensureRemote(remoteId).sequence)),
+       changes: PubSub.subscribe(pubsub),
+       destroy: withLock(
+@@ -325,4 +325,4 @@ export const withRemoteUncommitted = <A, E, R>(
+   journal: ServiceMap.Service.Shape<typeof EventJournal.EventJournal>,
+   remoteId: EventJournal.RemoteId,
+   f: (entries: ReadonlyArray<EventJournal.Entry>) => Effect.Effect<A, E, R>
+-) => journal.withRemoteUncommited(remoteId, f);
++) => journal.withRemoteUncommitted(remoteId, f);
+diff --git a/packages/common/utils/src/Struct.ts b/packages/common/utils/src/Struct.ts
+index c3cf841b26..539306d3af 100644
+--- a/packages/common/utils/src/Struct.ts
++++ b/packages/common/utils/src/Struct.ts
+@@ -425,7 +425,7 @@ export * from "effect/Struct";
+  * @since 0.1.0
+  * @category DomainModel
+  */
+-export type ReverseableStruct = Readonly<{
++export type ReversibleStruct = Readonly<{
+   readonly [key: string]: PropertyKey;
+   readonly [key: symbol]: PropertyKey;
+ }>;
+@@ -446,7 +446,7 @@ export type ReverseableStruct = Readonly<{
+  * @category DomainModel
+  * @since 0.1.0
+  */
+-export type ReverseStruct<T extends ReverseableStruct> = {
++export type ReverseStruct<T extends ReversibleStruct> = {
+   readonly [P in T[keyof T]]: {
+     readonly [K in keyof T]: T[K] extends P ? K : never;
+   }[keyof T];
+@@ -479,11 +479,11 @@ export type ReverseStruct<T extends ReverseableStruct> = {
+  * @category Utility
+  */
+ export const reverse: {
+-  <S extends ReverseableStruct>(): (self: S) => ReverseStruct<S>;
+-  <S extends ReverseableStruct>(self: S): ReverseStruct<S>;
++  <S extends ReversibleStruct>(): (self: S) => ReverseStruct<S>;
++  <S extends ReversibleStruct>(self: S): ReverseStruct<S>;
+ } = Fn.dual(
+   (args) => args.length === 1,
+-  <S extends ReverseableStruct>(self: S): ReverseStruct<S> => {
++  <S extends ReversibleStruct>(self: S): ReverseStruct<S> => {
+     const stringEntries = pipe(
+       entries(self),
+       A.map(([key, value]) => [value, key] as const)
+diff --git a/packages/repo-memory/model/src/retrieval/RetrievalPacket.ts b/packages/repo-memory/model/src/retrieval/RetrievalPacket.ts
+index fde495e45e..4ea7ec0752 100644
+--- a/packages/repo-memory/model/src/retrieval/RetrievalPacket.ts
++++ b/packages/repo-memory/model/src/retrieval/RetrievalPacket.ts
+@@ -22,12 +22,13 @@ import type {
+   RetrievalThrowsFacet,
+   RetrievalUnsupportedIssue,
+ } from "../internal/domain.js";
++import { thunkEmptyStr } from "@beep/utils";
+ 
+ const formatSnapshotSuffix = (packet: RetrievalPacket): string =>
+   pipe(
+     packet.sourceSnapshotId,
+     O.match({
+-      onNone: () => "",
++      onNone: thunkEmptyStr,
+       onSome: (sourceSnapshotId) => ` in snapshot ${sourceSnapshotId}`,
+     })
+   );
+@@ -151,35 +152,35 @@ const renderSubjectDetailPayload = (packet: RetrievalPacket, payload: RetrievalS
+         pipe(
+           declaration,
+           O.match({
+-            onNone: () => "",
++            onNone: thunkEmptyStr,
+             onSome: (facet) => `Signature: ${facet.signature}.`,
+           })
+         ),
+         pipe(
+           documentation,
+           O.match({
+-            onNone: () => "",
++            onNone: thunkEmptyStr,
+             onSome: (facet) =>
+               pipe(
+                 A.make(
+                   pipe(
+                     facet.summary,
+                     O.match({
+-                      onNone: () => "",
++                      onNone: thunkEmptyStr,
+                       onSome: (summary) => `Summary: ${summary}.`,
+                     })
+                   ),
+                   pipe(
+                     facet.description,
+                     O.match({
+-                      onNone: () => "",
++                      onNone: thunkEmptyStr,
+                       onSome: (description) => `Description: ${description}.`,
+                     })
+                   ),
+                   pipe(
+                     facet.remarks,
+                     O.match({
+-                      onNone: () => "",
++                      onNone: thunkEmptyStr,
+                       onSome: (remarks) => `Remarks: ${remarks}.`,
+                     })
+                   )
+diff --git a/packages/repo-memory/model/src/run/RunProjector.ts b/packages/repo-memory/model/src/run/RunProjector.ts
+index 37a3e62815..683e6da8a7 100644
+--- a/packages/repo-memory/model/src/run/RunProjector.ts
++++ b/packages/repo-memory/model/src/run/RunProjector.ts
+@@ -1,9 +1,17 @@
+-import { $RepoMemoryModelId } from "@beep/identity/packages";
+-import { makeStatusCauseError, NonNegativeInt, StatusCauseFields, TaggedErrorClass } from "@beep/schema";
+-import { type DateTime, Effect, Match, pipe } from "effect";
++import {$RepoMemoryModelId} from "@beep/identity/packages";
++import {
++  makeStatusCauseError,
++  NonNegativeInt,
++  StatusCauseFields,
++  TaggedErrorClass
++} from "@beep/schema";
++import {type DateTime, Effect, Match, pipe} from "effect";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+-import { RunEventSequence, type RunEventSequence as RunEventSequenceValue } from "../internal/domain.js";
++import {
++  RunEventSequence,
++  type RunEventSequence as RunEventSequenceValue
++} from "../internal/domain.js";
+ import {
+   AnswerQueryStage,
+   GroundingQueryStage,
+@@ -21,8 +29,15 @@ const $I = $RepoMemoryModelId.create("run/RunProjector");
+ const decodeNonNegativeInt = S.decodeUnknownSync(NonNegativeInt);
+ const decodeRunEventSequence = S.decodeUnknownSync(RunEventSequence);
+ const completedStagePercent = decodeNonNegativeInt(100);
+-const queryStageOrder = ["grounding", "retrieval", "packet", "answer"] as const;
+-type QueryStagePercentValue = GroundingQueryStage["percent"] extends O.Option<infer A> ? A : never;
++const queryStageOrder = [
++  "grounding",
++  "retrieval",
++  "packet",
++  "answer"
++] as const;
++type QueryStagePercentValue = GroundingQueryStage["percent"] extends O.Option<infer A>
++  ? A
++  : never;
+ 
+ const nextSequence = (event: RunStreamEvent) => decodeRunEventSequence(event.sequence);
+ 
+@@ -35,10 +50,14 @@ const nextSequence = (event: RunStreamEvent) => decodeRunEventSequence(event.seq
+ export class RunProjectorError extends TaggedErrorClass<RunProjectorError>($I`RunProjectorError`)(
+   "RunProjectorError",
+   StatusCauseFields,
+-  $I.annote("RunProjectorError", {
+-    description: "Typed projection error emitted while materializing repo-memory run events.",
+-  })
+-) {}
++  $I.annote(
++    "RunProjectorError",
++    {
++      description: "Typed projection error emitted while materializing repo-memory run events.",
++    }
++  )
++) {
++}
+ 
+ const toRunProjectorError = makeStatusCauseError(RunProjectorError);
+ 
+@@ -70,16 +89,26 @@ const makeQueryStage = (
+     ...patch,
+   };
+ 
+-  switch (phase) {
+-    case "grounding":
+-      return new GroundingQueryStage(base);
+-    case "retrieval":
+-      return new RetrievalQueryStage(base);
+-    case "packet":
+-      return new PacketQueryStage(base);
+-    case "answer":
+-      return new AnswerQueryStage(base);
+-  }
++  return Match.value(phase)
++    .pipe(
++      Match.when(
++        "grounding",
++        () => new GroundingQueryStage(base)
++      ),
++      Match.when(
++        "retrieval",
++        () => new RetrievalQueryStage(base)
++      ),
++      Match.when(
++        "packet",
++        () => new PacketQueryStage(base)
++      ),
++      Match.when(
++        "answer",
++        () => new AnswerQueryStage(base)
++      ),
++      Match.exhaustive
++    )
+ };
+ 
+ const makePendingQueryStageTrace = () =>
+@@ -107,14 +136,25 @@ const updateQueryStageTrace = (
+   ) => GroundingQueryStage | RetrievalQueryStage | PacketQueryStage | AnswerQueryStage
+ ) =>
+   new QueryStageTrace({
+-    grounding: phase === "grounding" ? (update(trace.grounding) as GroundingQueryStage) : trace.grounding,
+-    retrieval: phase === "retrieval" ? (update(trace.retrieval) as RetrievalQueryStage) : trace.retrieval,
+-    packet: phase === "packet" ? (update(trace.packet) as PacketQueryStage) : trace.packet,
+-    answer: phase === "answer" ? (update(trace.answer) as AnswerQueryStage) : trace.answer,
++    grounding: phase === "grounding"
++      ? (update(trace.grounding) as GroundingQueryStage)
++      : trace.grounding,
++    retrieval: phase === "retrieval"
++      ? (update(trace.retrieval) as RetrievalQueryStage)
++      : trace.retrieval,
++    packet: phase === "packet"
++      ? (update(trace.packet) as PacketQueryStage)
++      : trace.packet,
++    answer: phase === "answer"
++      ? (update(trace.answer) as AnswerQueryStage)
++      : trace.answer,
+   });
+ 
+ const ensureQueryStageTrace = (run: QueryRun): QueryStageTrace =>
+-  pipe(run.queryStages, O.getOrElse(makePendingQueryStageTrace));
++  pipe(
++    run.queryStages,
++    O.getOrElse(makePendingQueryStageTrace)
++  );
+ 
+ const completeQueryStage = (
+   trace: QueryStageTrace,
+@@ -125,23 +165,37 @@ const completeQueryStage = (
+     readonly latestMessage?: string;
+   }
+ ) =>
+-  updateQueryStageTrace(trace, phase, (stage) =>
+-    makeQueryStage(phase, {
+-      ...queryStageFields(stage),
+-      status: "completed",
+-      startedAt: pipe(
+-        stage.startedAt,
+-        O.orElse(() => O.some(at))
+-      ),
+-      completedAt: O.some(at),
+-      latestMessage: options?.latestMessage === undefined ? stage.latestMessage : O.some(options.latestMessage),
+-      percent: O.some(completedStagePercent),
+-      artifactAvailable:
+-        options?.artifactAvailable === undefined ? stage.artifactAvailable : O.some(options.artifactAvailable),
+-    })
++  updateQueryStageTrace(
++    trace,
++    phase,
++    (stage) =>
++      makeQueryStage(
++        phase,
++        {
++          ...queryStageFields(stage),
++          status: "completed",
++          startedAt: pipe(
++            stage.startedAt,
++            O.orElse(() => O.some(at))
++          ),
++          completedAt: O.some(at),
++          latestMessage: options?.latestMessage === undefined
++            ? stage.latestMessage
++            : O.some(options.latestMessage),
++          percent: O.some(completedStagePercent),
++          artifactAvailable:
++            options?.artifactAvailable === undefined
++              ? stage.artifactAvailable
++              : O.some(options.artifactAvailable),
++        }
++      )
+   );
+ 
+-const completeStagesBefore = (trace: QueryStageTrace, phase: QueryStagePhase, at: DateTime.Utc): QueryStageTrace => {
++const completeStagesBefore = (
++  trace: QueryStageTrace,
++  phase: QueryStagePhase,
++  at: DateTime.Utc
++): QueryStageTrace => {
+   const targetIndex = queryStageOrder.indexOf(phase);
+   let nextTrace = trace;
+ 
+@@ -150,7 +204,11 @@ const completeStagesBefore = (trace: QueryStageTrace, phase: QueryStagePhase, at
+       break;
+     }
+ 
+-    nextTrace = completeQueryStage(nextTrace, currentPhase, at);
++    nextTrace = completeQueryStage(
++      nextTrace,
++      currentPhase,
++      at
++    );
+   }
+ 
+   return nextTrace;
+@@ -158,7 +216,9 @@ const completeStagesBefore = (trace: QueryStageTrace, phase: QueryStagePhase, at
+ 
+ const projectQueryProgress = (
+   run: QueryRun,
+-  event: Extract<RunStreamEvent, { readonly kind: "progress" }>
++  event: Extract<RunStreamEvent, {
++    readonly kind: "progress"
++  }>
+ ): QueryRun => {
+   if (
+     event.phase !== "grounding" &&
+@@ -172,20 +232,30 @@ const projectQueryProgress = (
+ 
+   const nextTrace = pipe(
+     ensureQueryStageTrace(run),
+-    (trace) => completeStagesBefore(trace, phase, event.emittedAt),
++    (trace) => completeStagesBefore(
++      trace,
++      phase,
++      event.emittedAt
++    ),
+     (trace) =>
+-      updateQueryStageTrace(trace, phase, (stage) =>
+-        makeQueryStage(phase, {
+-          ...queryStageFields(stage),
+-          status: "running",
+-          startedAt: pipe(
+-            stage.startedAt,
+-            O.orElse(() => O.some(event.emittedAt))
+-          ),
+-          completedAt: O.none(),
+-          latestMessage: O.some(event.message),
+-          percent: event.percent,
+-        })
++      updateQueryStageTrace(
++        trace,
++        phase,
++        (stage) =>
++          makeQueryStage(
++            phase,
++            {
++              ...queryStageFields(stage),
++              status: "running",
++              startedAt: pipe(
++                stage.startedAt,
++                O.orElse(() => O.some(event.emittedAt))
++              ),
++              completedAt: O.none(),
++              latestMessage: O.some(event.message),
++              percent: event.percent,
++            }
++          )
+       )
+   );
+ 
+@@ -206,12 +276,21 @@ const projectQueryArtifactStage = (
+     queryStages: O.some(
+       pipe(
+         ensureQueryStageTrace(run),
+-        (trace) => completeStagesBefore(trace, phase, emittedAt),
++        (trace) => completeStagesBefore(
++          trace,
++          phase,
++          emittedAt
++        ),
+         (trace) =>
+-          completeQueryStage(trace, phase, emittedAt, {
+-            artifactAvailable: true,
+-            latestMessage,
+-          })
++          completeQueryStage(
++            trace,
++            phase,
++            emittedAt,
++            {
++              artifactAvailable: true,
++              latestMessage,
++            }
++          )
+       )
+     ),
+   });
+@@ -220,76 +299,101 @@ const requireCurrentRun = (
+   currentRun: O.Option<RepoRun>,
+   event: RunStreamEvent
+ ): Effect.Effect<RepoRun, RunProjectorError> =>
+-  O.match(currentRun, {
+-    onNone: () =>
+-      Effect.fail(toRunProjectorError(`Run "${event.runId}" must exist before projecting "${event.kind}".`, 404)),
+-    onSome: Effect.succeed,
+-  });
++  O.match(
++    currentRun,
++    {
++      onNone: () =>
++        Effect.fail(toRunProjectorError(
++          `Run "${event.runId}" must exist before projecting "${event.kind}".`,
++          404
++        )),
++      onSome: Effect.succeed,
++    }
++  );
+ 
+ const requireCurrentQueryRun = (
+   currentRun: O.Option<RepoRun>,
+-  event: Extract<RunStreamEvent, { readonly kind: "retrieval-packet" | "answer" }>
++  event: Extract<RunStreamEvent, {
++    readonly kind: "retrieval-packet" | "answer"
++  }>
+ ): Effect.Effect<QueryRun, RunProjectorError> =>
+-  requireCurrentRun(currentRun, event).pipe(
+-    Effect.flatMap((run) =>
+-      run.kind === "query"
+-        ? Effect.succeed(run)
+-        : Effect.fail(
+-            toRunProjectorError(`Run "${event.runId}" must be a query run before projecting "${event.kind}".`, 409)
++  requireCurrentRun(
++    currentRun,
++    event
++  )
++    .pipe(
++      Effect.flatMap((run) =>
++        run.kind === "query"
++          ? Effect.succeed(run)
++          : Effect.fail(
++            toRunProjectorError(
++              `Run "${event.runId}" must be a query run before projecting "${event.kind}".`,
++              409
++            )
+           )
+-    )
+-  );
+-
+-const acceptedRunFromEvent = (event: Extract<RunStreamEvent, { readonly kind: "accepted" }>) =>
+-  Match.value(event.runKind).pipe(
+-    Match.when("index", () =>
+-      Effect.succeed(
+-        new IndexRun({
+-          kind: "index",
+-          id: event.runId,
+-          repoId: event.repoId,
+-          status: "accepted",
+-          acceptedAt: event.emittedAt,
+-          startedAt: O.none(),
+-          completedAt: O.none(),
+-          lastEventSequence: nextSequence(event),
+-          indexedFileCount: O.none(),
+-          errorMessage: O.none(),
+-        })
+       )
+-    ),
+-    Match.when("query", () =>
+-      pipe(
+-        event.question,
+-        O.match({
+-          onNone: () =>
+-            Effect.fail(
+-              toRunProjectorError(`Accepted query run "${event.runId}" must include its original question.`, 500)
+-            ),
+-          onSome: (question) =>
+-            Effect.succeed(
+-              new QueryRun({
+-                kind: "query",
+-                id: event.runId,
+-                repoId: event.repoId,
+-                question,
+-                status: "accepted",
+-                acceptedAt: event.emittedAt,
+-                startedAt: O.none(),
+-                completedAt: O.none(),
+-                lastEventSequence: nextSequence(event),
+-                answer: O.none(),
+-                citations: [],
+-                retrievalPacket: O.none(),
+-                queryStages: O.some(makePendingQueryStageTrace()),
+-                errorMessage: O.none(),
+-              })
+-            ),
+-        })
+-      )
+-    ),
+-    Match.exhaustive
+-  );
++    );
++
++const acceptedRunFromEvent = (event: Extract<RunStreamEvent, {
++  readonly kind: "accepted"
++}>) =>
++  Match.value(event.runKind)
++    .pipe(
++      Match.when(
++        "index",
++        () =>
++          Effect.succeed(
++            new IndexRun({
++              kind: "index",
++              id: event.runId,
++              repoId: event.repoId,
++              status: "accepted",
++              acceptedAt: event.emittedAt,
++              startedAt: O.none(),
++              completedAt: O.none(),
++              lastEventSequence: nextSequence(event),
++              indexedFileCount: O.none(),
++              errorMessage: O.none(),
++            })
++          )
++      ),
++      Match.when(
++        "query",
++        () =>
++          pipe(
++            event.question,
++            O.match({
++              onNone: () =>
++                Effect.fail(
++                  toRunProjectorError(
++                    `Accepted query run "${event.runId}" must include its original question.`,
++                    500
++                  )
++                ),
++              onSome: (question) =>
++                Effect.succeed(
++                  new QueryRun({
++                    kind: "query",
++                    id: event.runId,
++                    repoId: event.repoId,
++                    question,
++                    status: "accepted",
++                    acceptedAt: event.emittedAt,
++                    startedAt: O.none(),
++                    completedAt: O.none(),
++                    lastEventSequence: nextSequence(event),
++                    answer: O.none(),
++                    citations: [],
++                    retrievalPacket: O.none(),
++                    queryStages: O.some(makePendingQueryStageTrace()),
++                    errorMessage: O.none(),
++                  })
++                ),
++            })
++          )
++      ),
++      Match.exhaustive
++    );
+ 
+ const updateRunStatus = (
+   run: RepoRun,
+@@ -301,28 +405,30 @@ const updateRunStatus = (
+     readonly errorMessage: O.Option<string>;
+   }
+ ): RepoRun =>
+-  Match.value(run).pipe(
+-    Match.discriminatorsExhaustive("kind")({
+-      index: (indexRun) =>
+-        new IndexRun({
+-          ...indexRun,
+-          status: patch.status,
+-          startedAt: patch.startedAt,
+-          completedAt: patch.completedAt,
+-          lastEventSequence: patch.lastEventSequence,
+-          errorMessage: patch.errorMessage,
+-        }),
+-      query: (queryRun) =>
+-        new QueryRun({
+-          ...queryRun,
+-          status: patch.status,
+-          startedAt: patch.startedAt,
+-          completedAt: patch.completedAt,
+-          lastEventSequence: patch.lastEventSequence,
+-          errorMessage: patch.errorMessage,
+-        }),
+-    })
+-  );
++  Match.value(run)
++    .pipe(
++      Match.discriminatorsExhaustive("kind")(
++        {
++          index: (indexRun) =>
++            new IndexRun({
++              ...indexRun,
++              status: patch.status,
++              startedAt: patch.startedAt,
++              completedAt: patch.completedAt,
++              lastEventSequence: patch.lastEventSequence,
++              errorMessage: patch.errorMessage,
++            }),
++          query: (queryRun) =>
++            new QueryRun({
++              ...queryRun,
++              status: patch.status,
++              startedAt: patch.startedAt,
++              completedAt: patch.completedAt,
++              lastEventSequence: patch.lastEventSequence,
++              errorMessage: patch.errorMessage,
++            }),
++        })
++    );
+ 
+ /**
+  * Project one durable run event into the current run read model.
+@@ -330,133 +436,174 @@ const updateRunStatus = (
+  * @since 0.0.0
+  * @category Projections
+  */
+-export const projectRunEvent = Effect.fn("RunProjector.projectRunEvent")(function* (
+-  currentRun: O.Option<RepoRun>,
+-  event: RunStreamEvent
+-): Effect.fn.Return<RepoRun, RunProjectorError> {
+-  if (event.kind === "accepted") {
+-    return yield* acceptedRunFromEvent(event);
+-  }
+-
+-  if (event.kind === "started" || event.kind === "resumed") {
+-    const run = yield* requireCurrentRun(currentRun, event);
+-
+-    return updateRunStatus(run, {
+-      status: "running",
+-      startedAt: pipe(
+-        run.startedAt,
+-        O.orElse(() => O.some(event.emittedAt))
+-      ),
+-      completedAt: O.none(),
+-      lastEventSequence: nextSequence(event),
+-      errorMessage: O.none(),
+-    });
+-  }
+-
+-  if (event.kind === "interrupted") {
+-    const run = yield* requireCurrentRun(currentRun, event);
++export const projectRunEvent = Effect.fn("RunProjector.projectRunEvent")(
++  function* (
++    currentRun: O.Option<RepoRun>,
++    event: RunStreamEvent
++  ): Effect.fn.Return<RepoRun, RunProjectorError> {
++    if (event.kind === "accepted") {
++      return yield* acceptedRunFromEvent(event);
++    }
+ 
+-    return updateRunStatus(run, {
+-      status: "interrupted",
+-      startedAt: run.startedAt,
+-      completedAt: O.some(event.emittedAt),
+-      lastEventSequence: nextSequence(event),
+-      errorMessage: O.none(),
+-    });
+-  }
++    if (event.kind === "started" || event.kind === "resumed") {
++      const run = yield* requireCurrentRun(
++        currentRun,
++        event
++      );
+ 
+-  if (event.kind === "failed") {
+-    const run = yield* requireCurrentRun(currentRun, event);
++      return updateRunStatus(
++        run,
++        {
++          status: "running",
++          startedAt: pipe(
++            run.startedAt,
++            O.orElse(() => O.some(event.emittedAt))
++          ),
++          completedAt: O.none(),
++          lastEventSequence: nextSequence(event),
++          errorMessage: O.none(),
++        }
++      );
++    }
+ 
+-    return updateRunStatus(run, {
+-      status: "failed",
+-      startedAt: run.startedAt,
+-      completedAt: O.some(event.emittedAt),
+-      lastEventSequence: nextSequence(event),
+-      errorMessage: O.some(event.message),
+-    });
+-  }
++    if (event.kind === "interrupted") {
++      const run = yield* requireCurrentRun(
++        currentRun,
++        event
++      );
++
++      return updateRunStatus(
++        run,
++        {
++          status: "interrupted",
++          startedAt: run.startedAt,
++          completedAt: O.some(event.emittedAt),
++          lastEventSequence: nextSequence(event),
++          errorMessage: O.none(),
++        }
++      );
++    }
+ 
+-  if (event.kind === "completed") {
+-    const run = yield* requireCurrentRun(currentRun, event);
++    if (event.kind === "failed") {
++      const run = yield* requireCurrentRun(
++        currentRun,
++        event
++      );
++
++      return updateRunStatus(
++        run,
++        {
++          status: "failed",
++          startedAt: run.startedAt,
++          completedAt: O.some(event.emittedAt),
++          lastEventSequence: nextSequence(event),
++          errorMessage: O.some(event.message),
++        }
++      );
++    }
+ 
+-    return yield* Match.value(run).pipe(
+-      Match.discriminatorsExhaustive("kind")({
+-        index: (indexRun) =>
+-          Effect.succeed(
+-            new IndexRun({
+-              ...indexRun,
+-              status: "completed",
+-              completedAt: O.some(event.emittedAt),
+-              lastEventSequence: nextSequence(event),
+-              indexedFileCount: pipe(
+-                event.indexedFileCount,
+-                O.map(decodeNonNegativeInt),
+-                O.orElse(() => indexRun.indexedFileCount)
+-              ),
+-              errorMessage: O.none(),
+-            })
+-          ),
+-        query: (queryRun) =>
+-          Effect.succeed(
+-            new QueryRun({
+-              ...queryRun,
+-              status: "completed",
+-              completedAt: O.some(event.emittedAt),
+-              lastEventSequence: nextSequence(event),
+-              errorMessage: O.none(),
++    if (event.kind === "completed") {
++      const run = yield* requireCurrentRun(
++        currentRun,
++        event
++      );
++
++      return yield* Match.value(run)
++        .pipe(
++          Match.discriminatorsExhaustive("kind")(
++            {
++              index: (indexRun) =>
++                Effect.succeed(
++                  new IndexRun({
++                    ...indexRun,
++                    status: "completed",
++                    completedAt: O.some(event.emittedAt),
++                    lastEventSequence: nextSequence(event),
++                    indexedFileCount: pipe(
++                      event.indexedFileCount,
++                      O.map(decodeNonNegativeInt),
++                      O.orElse(() => indexRun.indexedFileCount)
++                    ),
++                    errorMessage: O.none(),
++                  })
++                ),
++              query: (queryRun) =>
++                Effect.succeed(
++                  new QueryRun({
++                    ...queryRun,
++                    status: "completed",
++                    completedAt: O.some(event.emittedAt),
++                    lastEventSequence: nextSequence(event),
++                    errorMessage: O.none(),
++                  })
++                ),
+             })
++        );
++    }
++
++    if (event.kind === "progress") {
++      const run = yield* requireCurrentRun(
++        currentRun,
++        event
++      );
++      const updatedRun = updateRunStatus(
++        run,
++        {
++          status: "running",
++          startedAt: pipe(
++            run.startedAt,
++            O.orElse(() => O.some(event.emittedAt))
+           ),
+-      })
+-    );
+-  }
++          completedAt: O.none(),
++          lastEventSequence: nextSequence(event),
++          errorMessage: O.none(),
++        }
++      );
++
++      return updatedRun.kind === "query"
++        ? projectQueryProgress(
++          updatedRun,
++          event
++        )
++        : updatedRun;
++    }
+ 
+-  if (event.kind === "progress") {
+-    const run = yield* requireCurrentRun(currentRun, event);
+-    const updatedRun = updateRunStatus(run, {
+-      status: "running",
+-      startedAt: pipe(
+-        run.startedAt,
+-        O.orElse(() => O.some(event.emittedAt))
+-      ),
+-      completedAt: O.none(),
+-      lastEventSequence: nextSequence(event),
+-      errorMessage: O.none(),
+-    });
++    if (event.kind === "retrieval-packet") {
++      const run = yield* requireCurrentQueryRun(
++        currentRun,
++        event
++      );
+ 
+-    return updatedRun.kind === "query" ? projectQueryProgress(updatedRun, event) : updatedRun;
+-  }
++      return projectQueryArtifactStage(
++        new QueryRun({
++          ...run,
++          status: "running",
++          retrievalPacket: O.some(event.packet),
++          lastEventSequence: nextSequence(event),
++          errorMessage: O.none(),
++        }),
++        "packet",
++        event.emittedAt,
++        "Retrieval packet materialized."
++      );
++    }
+ 
+-  if (event.kind === "retrieval-packet") {
+-    const run = yield* requireCurrentQueryRun(currentRun, event);
++    const run = yield* requireCurrentQueryRun(
++      currentRun,
++      event
++    );
+ 
+     return projectQueryArtifactStage(
+       new QueryRun({
+         ...run,
+         status: "running",
+-        retrievalPacket: O.some(event.packet),
++        answer: O.some(event.answer),
++        citations: event.citations,
+         lastEventSequence: nextSequence(event),
+         errorMessage: O.none(),
+       }),
+-      "packet",
++      "answer",
+       event.emittedAt,
+-      "Retrieval packet materialized."
++      "Grounded answer drafted."
+     );
+-  }
+-
+-  const run = yield* requireCurrentQueryRun(currentRun, event);
+-
+-  return projectQueryArtifactStage(
+-    new QueryRun({
+-      ...run,
+-      status: "running",
+-      answer: O.some(event.answer),
+-      citations: event.citations,
+-      lastEventSequence: nextSequence(event),
+-      errorMessage: O.none(),
+-    }),
+-    "answer",
+-    event.emittedAt,
+-    "Grounded answer drafted."
+-  );
+-});
++  });
+diff --git a/packages/runtime/protocol/src/index.ts b/packages/runtime/protocol/src/index.ts
+index b68453cc1c..5549ebeee8 100644
+--- a/packages/runtime/protocol/src/index.ts
++++ b/packages/runtime/protocol/src/index.ts
+@@ -69,7 +69,7 @@ export class SidecarBootstrap extends S.Class<SidecarBootstrap>($I`SidecarBootst
+  */
+ export class SidecarBootstrapStdoutEvent extends S.Class<SidecarBootstrapStdoutEvent>($I`SidecarBootstrapStdoutEvent`)(
+   {
+-    type: S.Literal("bootstrap"),
++    type: S.tag("bootstrap"),
+     sessionId: S.String,
+     host: S.String,
+     port: NonNegativeInt,
+diff --git a/packages/runtime/server/src/index.ts b/packages/runtime/server/src/index.ts
+index 404e7f8e4f..2c6628e959 100644
+--- a/packages/runtime/server/src/index.ts
++++ b/packages/runtime/server/src/index.ts
+@@ -509,9 +509,7 @@ const emitBootstrapStdoutLine = Effect.fn("SidecarRuntime.emitBootstrapStdoutLin
+     Effect.mapError((cause) => toRuntimeError("Failed to encode sidecar bootstrap stdout line.", 500, cause))
+   );
+ 
+-  yield* Effect.sync(() => {
+-    process.stdout.write(`${encoded}\n`);
+-  });
++  yield* Effect.sync(() => void process.stdout.write(`${encoded}\n`));
+ });
+ 
+ // FINDING-017: Effect RPC protocol returns HTTP 200 for all RPC responses, including errors.
+@@ -900,9 +898,7 @@ export const runSidecarRuntime = Effect.fn("SidecarRuntime.run")(function* (conf
+ 
+       yield* Effect.acquireRelease(
+         Effect.sync(() => {
+-          const handleSignal = () => {
+-            void runRequestShutdown(requestShutdown());
+-          };
++          const handleSignal = () => void runRequestShutdown(requestShutdown());
+ 
+           process.on("SIGINT", handleSignal);
+           process.on("SIGTERM", handleSignal);
