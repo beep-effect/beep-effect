@@ -6,8 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import { Effect, flow, pipe } from "effect";
+import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertPinnedArchive, extractArchiveTextEntries, renderUnknownJsonModule } from "../internal/FreeLawProject.ts";
@@ -16,6 +17,7 @@ import {
   COURT_REPORTER_PROJECTION_VERSION,
   COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
   classifyVocabularyAliases,
+  preserveIssuedVocabularyRecords,
 } from "../internal/FreeLawProjectVocabulary.ts";
 import { fetchSource, formatJson, normalizeJson, outputFile, sourceMetadata } from "../internal/Source.ts";
 import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
@@ -185,6 +187,50 @@ class CourtRecord extends S.Class<CourtRecord>($I`CourtRecord`)(
   })
 ) {}
 
+class VocabularyContextualAlias extends S.Class<VocabularyContextualAlias>($I`VocabularyContextualAlias`)(
+  {
+    alias: S.NonEmptyString,
+    context: S.NonEmptyString,
+  },
+  $I.annote("VocabularyContextualAlias", {
+    description: "Context-bearing alias retained in a generated court or reporter vocabulary.",
+  })
+) {}
+
+class CourtVocabularyOutputRecord extends S.Class<CourtVocabularyOutputRecord>($I`CourtVocabularyOutputRecord`)(
+  {
+    id: S.NonEmptyString,
+    sourceId: S.NonEmptyString,
+    semanticKey: S.NonEmptyString,
+    lineageKey: S.NonEmptyString,
+    name: S.NonEmptyString,
+    nameAbbreviation: S.NullOr(S.String),
+    citationString: S.String,
+    sourceJurisdiction: S.NullOr(S.String),
+    system: S.String,
+    type: S.NullOr(S.String),
+    hierarchyLevel: S.NullOr(S.String),
+    location: S.String,
+    parentId: S.NullOr(S.String),
+    effectiveRanges: S.Array(CourtDateRange),
+    aliases: S.Array(S.NonEmptyString),
+    contextualAliases: S.Array(VocabularyContextualAlias),
+    status: S.Literals(["active", "tombstone"]),
+    successorId: S.NullOr(S.NonEmptyString),
+  },
+  $I.annote("CourtVocabularyOutputRecord", {
+    description: "Generated court vocabulary row used to preserve previously issued identities across refreshes.",
+  })
+) {}
+
+const PreviousCourtVocabularyArtifact = S.Struct({
+  records: S.Array(CourtVocabularyOutputRecord),
+}).pipe(
+  $I.annoteSchema("PreviousCourtVocabularyArtifact", {
+    description: "Minimal checked-in court vocabulary shape required for lifecycle reconciliation.",
+  })
+);
+
 const Variables = S.Record(S.String, S.String).pipe(
   $I.annoteSchema("Variables", {
     description: "Regex variables used to assemble courts-db court records.",
@@ -210,6 +256,34 @@ const decodeVariables = S.decodeUnknownEffect(S.fromJsonString(Variables));
 const decodeOrdinals = S.decodeUnknownEffect(S.fromJsonString(Ordinals));
 const decodeRawCourts = S.decodeUnknownEffect(S.fromJsonString(RawCourts));
 const decodeCourts = S.decodeUnknownEffect(Courts);
+const decodePreviousCourtVocabularyArtifact = S.decodeUnknownEffect(S.fromJsonString(PreviousCourtVocabularyArtifact));
+
+const readPreviousCourtVocabulary = Effect.fn("SyncDataToTs.CourtsDb.readPreviousVocabulary")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot().pipe(
+    SyncDataToTsError.mapError("Failed to locate the repo root for court vocabulary reconciliation", targetId)
+  );
+  const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
+  const exists = yield* fs
+    .exists(absolutePath)
+    .pipe(
+      SyncDataToTsError.mapError("Failed to inspect the checked-in court vocabulary", targetId, vocabularyDataPath)
+    );
+
+  if (!exists) {
+    return A.empty<CourtVocabularyOutputRecord>();
+  }
+
+  const content = yield* fs
+    .readFileString(absolutePath)
+    .pipe(SyncDataToTsError.mapError("Failed to read the checked-in court vocabulary", targetId, vocabularyDataPath));
+  const artifact = yield* decodePreviousCourtVocabularyArtifact(content).pipe(
+    SyncDataToTsError.mapError("Failed to decode the checked-in court vocabulary", targetId, vocabularyDataPath)
+  );
+
+  return artifact.records;
+});
 
 const replaceLiteralAll = (text: string, search: string, replacement: string): string =>
   pipe(text, Str.split(search), A.join(replacement));
@@ -393,13 +467,13 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
     R.fromEntries
   );
-  const courtVocabulary = A.map(courts, (court) => {
+  const projectedCourtVocabulary = A.map(courts, (court) => {
     const aliases = pipe(
       R.get(aliasesByCourtId, court.id),
       O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
     );
 
-    return {
+    return CourtVocabularyOutputRecord.make({
       id: court.id,
       sourceId: court.id,
       semanticKey: `court:${court.id}`,
@@ -418,8 +492,20 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
       contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
       status: "active",
       successorId: null,
-    };
+    });
   });
+  const previousCourtVocabulary = yield* readPreviousCourtVocabulary();
+  const courtVocabulary = preserveIssuedVocabularyRecords(
+    previousCourtVocabulary,
+    projectedCourtVocabulary,
+    (previous, current) => (previous.status === "tombstone" ? previous : current),
+    (previous, successorId) =>
+      CourtVocabularyOutputRecord.make({
+        ...previous,
+        status: "tombstone",
+        successorId,
+      })
+  );
 
   const vocabularyArtifact = {
     schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,

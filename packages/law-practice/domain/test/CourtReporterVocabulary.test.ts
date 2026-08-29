@@ -1,8 +1,11 @@
 import {
   ArtifactDriftChangeKind,
+  ContextualAlias,
   CourtId,
   CourtReporterArtifact,
   CourtReporterArtifactComparison,
+  CourtReporterArtifactContract,
+  CourtReporterArtifactVersion,
   CourtReporterCompatibilityPolicy,
   CourtSystem,
   CourtType,
@@ -24,11 +27,11 @@ import {
   ReporterVocabularyRecord,
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import { NonNegativeInt } from "@beep/schema";
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { pipe } from "effect";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import type { CourtReporterArtifactVersion } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 
 const currentCourt = CourtVocabulary.records[0]!;
 const secondCourt = CourtVocabulary.records[1]!;
@@ -81,6 +84,7 @@ const court = (
     readonly semanticKey: string;
     readonly lineageKey: string;
     readonly aliases: ReadonlyArray<string>;
+    readonly contextualAliases: ReadonlyArray<ContextualAlias>;
     readonly parentId: CourtVocabularyRecord["parentId"];
     readonly sourceJurisdiction: CourtVocabularyRecord["sourceJurisdiction"];
     readonly status: "active" | "tombstone";
@@ -96,6 +100,7 @@ const reporter = (
     readonly semanticKey: string;
     readonly lineageKey: string;
     readonly aliases: ReadonlyArray<string>;
+    readonly contextualAliases: ReadonlyArray<ContextualAlias>;
     readonly jurisdictions: ReporterVocabularyRecord["jurisdictions"];
     readonly status: "active" | "tombstone";
     readonly successorId: O.Option<ReporterId>;
@@ -146,6 +151,47 @@ describe("CourtReporterVocabulary", () => {
     expect(isCurrentCourtReporterArtifactVersion("crv1:stale-parser-build")).toBe(false);
   });
 
+  it("rejects a combined contract whose independently generated artifact versions differ", () => {
+    const mismatchedReporters = ReporterVocabularyArtifact.make({
+      ...ReporterVocabulary,
+      artifactVersion: CourtReporterArtifactVersion.make("crv1:fixture-mismatched-reporters"),
+    });
+
+    expect(() =>
+      CourtReporterArtifactContract.make({
+        ...CourtReporterArtifact,
+        reporters: mismatchedReporters,
+      })
+    ).toThrow();
+  });
+
+  it("accepts future nested artifact headers before classifying contract drift", () => {
+    const future = CourtReporterArtifactComparison.make({
+      ...CourtReporterArtifact,
+      schemaVersion: "court-reporter-vocabulary/v2",
+      projectionVersion: 2,
+      courts: {
+        ...CourtVocabulary,
+        schemaVersion: "court-reporter-vocabulary/v2",
+        projectionVersion: 2,
+      },
+      reporters: {
+        ...ReporterVocabulary,
+        schemaVersion: "court-reporter-vocabulary/v2",
+        projectionVersion: 2,
+      },
+    });
+    const report = classifyCourtReporterArtifactCompatibility(
+      CourtReporterArtifactComparison.make(CourtReporterArtifact),
+      future
+    );
+
+    expect(report.compatibility).toBe("incompatible");
+    expect(A.map(report.changes, ({ kind }) => kind)).toEqual(
+      expect.arrayContaining(["schemaChange", "projectionChange"])
+    );
+  });
+
   it("classifies every ratified lifecycle and incompatibility change", () => {
     const addedCourt = court(currentCourt, {
       id: CourtId.make("fixture-added-court"),
@@ -177,6 +223,7 @@ describe("CourtReporterVocabulary", () => {
     });
     const reassignedCourt = court(currentCourt, { id: CourtId.make("fixture-reassigned-court") });
     const reusedCourt = court(currentCourt, { semanticKey: "fixture-semantic-reuse" });
+    const removedSuccessorCourt = court(tombstonedCourt, { successorId: O.none() });
 
     const reports = [
       classify({ courts: [currentCourt] }, { courts: [currentCourt, addedCourt] }),
@@ -194,6 +241,7 @@ describe("CourtReporterVocabulary", () => {
       classify({ courts: [currentCourt] }, { courts: [] }),
       classify({ schemaVersion: "court-reporter-vocabulary/v0" }, { schemaVersion: "court-reporter-vocabulary/v1" }),
       classify({ projectionVersion: NonNegativeInt.make(0) }, { projectionVersion: NonNegativeInt.make(1) }),
+      classify({ courts: [tombstonedCourt, secondCourt] }, { courts: [removedSuccessorCourt, secondCourt] }),
     ];
     const kinds = A.sort(
       A.dedupe(A.flatMap(reports, ({ changes }) => A.map(changes, ({ kind }) => kind))),
@@ -311,5 +359,44 @@ describe("CourtReporterVocabulary", () => {
 
     expect(report.compatibility).toBe("compatible");
     expect(report.changes).toStrictEqual([]);
+  });
+
+  it("classifies plain-alias changes even when the same text remains contextual", () => {
+    const contextualAlias = ContextualAlias.make({ alias: "Fixture Rep.", context: "Fixture context" });
+    const contextualOnly = reporter(currentReporter, {
+      aliases: [],
+      contextualAliases: [contextualAlias],
+    });
+    const contextualAndPlain = reporter(currentReporter, {
+      aliases: [contextualAlias.alias],
+      contextualAliases: [contextualAlias],
+    });
+    const addition = classify({ reporters: [contextualOnly] }, { reporters: [contextualAndPlain] });
+    const removal = classify({ reporters: [contextualAndPlain] }, { reporters: [contextualOnly] });
+
+    expect(A.map(addition.changes, ({ kind }) => kind)).toContain("aliasAddition");
+    expect(A.map(removal.changes, ({ kind }) => kind)).toContain("aliasRemoval");
+    expect(addition.compatibility).toBe("compatible");
+    expect(removal.compatibility).toBe("incompatible");
+  });
+
+  it("publishes distinct reporter context for reused aliases with matching names", () => {
+    const arkansasReporters = A.filter(findReportersByAlias("Ark."), ({ name }) => name === "Arkansas Reports");
+    const contexts = pipe(
+      arkansasReporters,
+      A.flatMap(({ contextualAliases }) =>
+        pipe(
+          contextualAliases,
+          A.filter(({ alias }) => alias === "Ark."),
+          A.map(({ context }) => context)
+        )
+      )
+    );
+
+    expect(arkansasReporters.length).toBeGreaterThan(1);
+    expect(A.length(A.dedupe(contexts))).toBe(arkansasReporters.length);
+    expect(
+      A.every(contexts, (context) => Str.includes("cite-type=")(context) && Str.includes("editions=")(context))
+    ).toBe(true);
   });
 });

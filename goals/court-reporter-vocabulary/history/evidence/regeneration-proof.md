@@ -22,13 +22,13 @@ semantic SHA-256
 ## Commands
 
 ```sh
-bun run beep sync-data-to-ts --target courts-db \
+BUN_RUNTIME_TRANSPILER_CACHE_PATH=0 bun run beep sync-data-to-ts --target courts-db \
   --report-dir goals/court-reporter-vocabulary/history/evidence/courts-sync
-bun run beep sync-data-to-ts --target reporters-db \
+BUN_RUNTIME_TRANSPILER_CACHE_PATH=0 bun run beep sync-data-to-ts --target reporters-db \
   --report-dir goals/court-reporter-vocabulary/history/evidence/reporters-sync
-bun run beep sync-data-to-ts --target courts-db --check \
+BUN_RUNTIME_TRANSPILER_CACHE_PATH=0 bun run beep sync-data-to-ts --target courts-db --check \
   --report-dir goals/court-reporter-vocabulary/history/evidence/courts-no-diff
-bun run beep sync-data-to-ts --target reporters-db --check \
+BUN_RUNTIME_TRANSPILER_CACHE_PATH=0 bun run beep sync-data-to-ts --target reporters-db --check \
   --report-dir goals/court-reporter-vocabulary/history/evidence/reporters-no-diff
 ```
 
@@ -45,8 +45,8 @@ The second courts and reporters reports each record `changed: false`, an empty
 | `courts-vocabulary.data.json` | `b9d4aa7eaa0b9078bef2e4f924206c995427d0638830fcc8cfc244531a77a513` |
 | `reporters.ts` | `cb42646c2713aa9efe4e4ea8d7e447f24ba46373aa37f512d99a5a1eeb9728c2` |
 | `reporters-db.data.json` | `9ccb58b51dad3a469a3ba8eaf12867447d5794f99133d15ec367ed0ebc1f4656` |
-| `reporters-vocabulary.ts` | `adddf0e9829b14f4373acb78a7f4d9691b27b3cb49e53ddaea45eca562506040` |
-| `reporters-vocabulary.data.json` | `dba9165974553bb829997b5fd1ee6918c7f015aae85de00220e2913b555f8dcc` |
+| `reporters-vocabulary.ts` | `5bfb9584e5cd13bae64ea45788b530f42414cdf47cd3f398f60db840b9b96260` |
+| `reporters-vocabulary.data.json` | `6de6ca34e7bbd36acf8e162dceb4439391075880c69774bf75ff12968d51c33a` |
 
 ## Boundary proof
 

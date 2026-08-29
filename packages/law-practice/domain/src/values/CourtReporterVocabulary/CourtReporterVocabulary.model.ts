@@ -7,6 +7,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/CourtReporterVocabulary/CourtReporterVocabulary.model");
@@ -355,6 +356,7 @@ const ArtifactDriftChangeKindBase = LiteralKit([
   "aliasRemoval",
   "tombstone",
   "successor",
+  "successorRemoval",
   "merger",
   "abbreviationReuse",
   "dateSplit",
@@ -670,6 +672,22 @@ export class ArtifactCompatibilityPolicy extends S.Class<ArtifactCompatibilityPo
   })
 ) {}
 
+const CourtReporterArtifactVersionCoherenceCheck = S.makeFilter(
+  (artifact: {
+    readonly artifactVersion: CourtReporterArtifactVersion;
+    readonly courts: CourtVocabularyArtifact;
+    readonly reporters: ReporterVocabularyArtifact;
+  }) =>
+    Eq.equals(artifact.artifactVersion, artifact.courts.artifactVersion) &&
+    Eq.equals(artifact.artifactVersion, artifact.reporters.artifactVersion),
+  {
+    identifier: $I`CourtReporterArtifactVersionCoherenceCheck`,
+    title: "Court Reporter Artifact Version Coherence",
+    description: "The combined contract and both independently generated vocabularies must name one artifact version.",
+    message: "Court and reporter vocabularies must match the combined artifact version",
+  }
+);
+
 /**
  * One combined versioned court/reporter compatibility contract.
  *
@@ -687,17 +705,49 @@ export class ArtifactCompatibilityPolicy extends S.Class<ArtifactCompatibilityPo
 export class CourtReporterArtifactContract extends S.Class<CourtReporterArtifactContract>(
   $I`CourtReporterArtifactContract`
 )(
-  {
+  S.Struct({
     schemaVersion,
     projectionVersion,
     artifactVersion: CourtReporterArtifactVersion,
     policy: ArtifactCompatibilityPolicy,
     courts: CourtVocabularyArtifact,
     reporters: ReporterVocabularyArtifact,
-  },
+  }).check(CourtReporterArtifactVersionCoherenceCheck),
   $I.annote("CourtReporterArtifactContract", {
     description:
       "Combined exact-version court/reporter artifact plus its machine-readable lifecycle compatibility policy.",
+  })
+) {}
+
+class CourtVocabularyArtifactComparison extends S.Class<CourtVocabularyArtifactComparison>(
+  $I`CourtVocabularyArtifactComparison`
+)(
+  {
+    schemaVersion: S.NonEmptyString,
+    projectionVersion: S.Finite,
+    artifactVersion: CourtReporterArtifactVersion,
+    source: VocabularySourceProvenance,
+    stableIdCount: NonNegativeInt,
+    records: S.Array(CourtVocabularyRecord),
+  },
+  $I.annote("CourtVocabularyArtifactComparison", {
+    description: "Court vocabulary accepted for cross-version review before compatibility classification.",
+  })
+) {}
+
+class ReporterVocabularyArtifactComparison extends S.Class<ReporterVocabularyArtifactComparison>(
+  $I`ReporterVocabularyArtifactComparison`
+)(
+  {
+    schemaVersion: S.NonEmptyString,
+    projectionVersion: S.Finite,
+    artifactVersion: CourtReporterArtifactVersion,
+    source: VocabularySourceProvenance,
+    stableIdCount: NonNegativeInt,
+    records: S.Array(ReporterVocabularyRecord),
+  },
+  $I.annote("ReporterVocabularyArtifactComparison", {
+    description: "Reporter vocabulary accepted for cross-version review before compatibility classification.",
   })
 ) {}
 
@@ -733,8 +783,8 @@ export class CourtReporterArtifactComparison extends S.Class<CourtReporterArtifa
     projectionVersion: S.Finite,
     artifactVersion: CourtReporterArtifactVersion,
     policy: ArtifactCompatibilityPolicy,
-    courts: CourtVocabularyArtifact,
-    reporters: ReporterVocabularyArtifact,
+    courts: CourtVocabularyArtifactComparison,
+    reporters: ReporterVocabularyArtifactComparison,
   },
   $I.annote("CourtReporterArtifactComparison", {
     description: "Cross-version comparison input with open schema and projection header fields.",

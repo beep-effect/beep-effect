@@ -17,6 +17,7 @@ import {
   normalizeJson,
   outputFile,
   parseCsvSource,
+  preserveIssuedVocabularyRecords,
   renderUnknownJsonModule,
   SyncDataFetchedSource,
   SyncDataTargetMetadata,
@@ -509,6 +510,49 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
     expect(classified).toStrictEqual([
       ["first", ["Unique First"], [["Reused Rep.", "First Reporter"]]],
       ["second", ["Unique Second"], [["Reused Rep.", "Second Reporter"]]],
+    ]);
+  });
+
+  it("preserves removed issued identities and never resurrects historical tombstones", () => {
+    type FixtureVocabularyRecord = {
+      readonly id: string;
+      readonly lineageKey: string;
+      readonly status: "active" | "tombstone";
+      readonly successorId: string | null;
+    };
+    const previous: ReadonlyArray<FixtureVocabularyRecord> = [
+      {
+        id: "historical",
+        lineageKey: "historical-lineage",
+        status: "tombstone",
+        successorId: "historical-successor",
+      },
+      { id: "removed", lineageKey: "replacement-lineage", status: "active", successorId: null },
+    ];
+    const current: ReadonlyArray<FixtureVocabularyRecord> = [
+      { id: "historical", lineageKey: "historical-lineage", status: "active", successorId: null },
+      { id: "replacement", lineageKey: "replacement-lineage", status: "active", successorId: null },
+    ];
+    const reconciled = preserveIssuedVocabularyRecords(
+      previous,
+      current,
+      (issued, regenerated) => (issued.status === "tombstone" ? issued : regenerated),
+      (issued, successorId): FixtureVocabularyRecord => ({
+        id: issued.id,
+        lineageKey: issued.lineageKey,
+        status: "tombstone",
+        successorId,
+      })
+    );
+
+    expect(reconciled).toStrictEqual([
+      previous[0],
+      current[1],
+      {
+        ...previous[1],
+        status: "tombstone",
+        successorId: "replacement",
+      },
     ]);
   });
 

@@ -6,8 +6,9 @@
  * @since 0.0.0
  */
 
-import { A, Str } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { pipe } from "effect";
+import { dual } from "effect/Function";
 import * as R from "effect/Record";
 
 /**
@@ -129,3 +130,124 @@ export const classifyVocabularyAliases = (
     ] as const;
   });
 };
+
+type IssuedVocabularyRecord = {
+  readonly id: string;
+  readonly lineageKey: string;
+  readonly successorId: string | null;
+};
+
+/**
+ * Reconciles a regenerated vocabulary with every previously issued identity.
+ *
+ * **Details**
+ *
+ * Current-source rows retain source order. Previously issued rows absent from
+ * the new source are appended through `onRemoved`, with a successor inferred
+ * only when exactly one current row shares the prior lineage. Callers decide
+ * how retained tombstones and target-specific successor fields are encoded.
+ *
+ * **Example** (Retain a removed issued identity)
+ *
+ * ```ts
+ * import { preserveIssuedVocabularyRecords } from "@beep/repo-cli/commands/SyncDataToTs/internal/FreeLawProjectVocabulary"
+ *
+ * type VocabularyRecord = {
+ *   readonly id: string
+ *   readonly lineageKey: string
+ *   readonly status: "active" | "tombstone"
+ *   readonly successorId: string | null
+ * }
+ *
+ * const previous: ReadonlyArray<VocabularyRecord> = [
+ *   { id: "old", lineageKey: "family", status: "active", successorId: null }
+ * ]
+ * const current: ReadonlyArray<VocabularyRecord> = [
+ *   { id: "new", lineageKey: "family", status: "active", successorId: null }
+ * ]
+ * const records = preserveIssuedVocabularyRecords(
+ *   previous,
+ *   current,
+ *   (_, next) => next,
+ *   (record, successorId): VocabularyRecord => ({
+ *     id: record.id,
+ *     lineageKey: record.lineageKey,
+ *     status: "tombstone",
+ *     successorId,
+ *   })
+ * )
+ *
+ * console.log(records[1]?.status) // "tombstone"
+ * ```
+ *
+ * @param previous - Records from the last published vocabulary sidecar.
+ * @param current - Records projected from the newly pinned source.
+ * @param onRetained - Reconciles an identity present in both artifacts.
+ * @param onRemoved - Tombstones an absent identity with its retained or uniquely inferred lineage successor.
+ * @returns Current rows followed by preserved issued rows that disappeared from the source.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const preserveIssuedVocabularyRecords: {
+  <Record extends IssuedVocabularyRecord>(
+    previous: ReadonlyArray<Record>,
+    current: ReadonlyArray<Record>,
+    onRetained: (previous: Record, current: Record) => Record,
+    onRemoved: (previous: Record, successorId: string | null) => Record
+  ): ReadonlyArray<Record>;
+  <Record extends IssuedVocabularyRecord>(
+    current: ReadonlyArray<Record>,
+    onRetained: (previous: Record, current: Record) => Record,
+    onRemoved: (previous: Record, successorId: string | null) => Record
+  ): (previous: ReadonlyArray<Record>) => ReadonlyArray<Record>;
+} = dual(
+  4,
+  <Record extends IssuedVocabularyRecord>(
+    previous: ReadonlyArray<Record>,
+    current: ReadonlyArray<Record>,
+    onRetained: (previous: Record, current: Record) => Record,
+    onRemoved: (previous: Record, successorId: string | null) => Record
+  ): ReadonlyArray<Record> => {
+    const previousById = pipe(
+      previous,
+      A.map((record) => [record.id, record] as const),
+      R.fromEntries
+    );
+    const currentById = pipe(
+      current,
+      A.map((record) => [record.id, record] as const),
+      R.fromEntries
+    );
+    const currentByLineage = A.groupBy(current, (record) => record.lineageKey);
+    const retained = A.map(current, (record) =>
+      pipe(
+        R.get(previousById, record.id),
+        O.match({
+          onNone: () => record,
+          onSome: (issued) => onRetained(issued, record),
+        })
+      )
+    );
+    const removed = pipe(
+      previous,
+      A.filter((record) => O.isNone(R.get(currentById, record.id))),
+      A.map((record) => {
+        const successor = pipe(
+          R.get(currentByLineage, record.lineageKey),
+          O.filter((candidates) => A.length(candidates) === 1),
+          O.flatMap((candidates) => A.get(candidates, 0))
+        );
+
+        const successorId = pipe(
+          O.fromNullishOr(record.successorId),
+          O.orElse(() => O.map(successor, ({ id }) => id)),
+          O.getOrNull
+        );
+
+        return onRemoved(record, successorId);
+      })
+    );
+
+    return pipe(retained, A.appendAll(removed));
+  }
+);

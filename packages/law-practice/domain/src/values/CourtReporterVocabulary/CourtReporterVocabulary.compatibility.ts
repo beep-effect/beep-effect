@@ -6,7 +6,8 @@
  */
 
 import { A, O } from "@beep/utils";
-import { Equal, Order, pipe } from "effect";
+import { Order, pipe } from "effect";
+import * as Eq from "effect/Equal";
 import { dual, flow } from "effect/Function";
 import * as R from "effect/Record";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./CourtReporterVocabulary.model.ts";
 import type {
   ArtifactDriftChangeKind,
+  ContextualAlias,
   CourtReporterArtifactComparison,
   CourtVocabularyRecord,
   ReporterVocabularyRecord,
@@ -33,6 +35,7 @@ const compatibleChanges: ReadonlyArray<ArtifactDriftChangeKind> = [
 
 const incompatibleChanges: ReadonlyArray<ArtifactDriftChangeKind> = [
   "aliasRemoval",
+  "successorRemoval",
   "idReassignment",
   "semanticReuse",
   "removalWithoutTombstone",
@@ -69,8 +72,10 @@ type SubjectKind = "court" | "reporter";
 
 interface NormalizedRecord {
   readonly aliases: ReadonlyArray<string>;
+  readonly contextualAliases: ReadonlyArray<ContextualAlias>;
   readonly id: string;
   readonly lineageKey: string;
+  readonly plainAliases: ReadonlyArray<string>;
   readonly ranges: ReadonlyArray<string>;
   readonly semanticContent: string;
   readonly semanticKey: string;
@@ -78,22 +83,15 @@ interface NormalizedRecord {
   readonly successorId: O.Option<string>;
 }
 
-const normalizeAliases = (
-  aliases: ReadonlyArray<string>,
-  contextualAliases: ReadonlyArray<{ readonly alias: string }>
-) => pipe(aliases, A.appendAll(A.map(contextualAliases, (entry) => entry.alias)), A.dedupe);
-
 const normalizeStringSet: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
   A.dedupe,
   A.sort(Order.String)
 );
 
-const normalizeContextualAliases: (
-  aliases: ReadonlyArray<{ readonly alias: string; readonly context: string }>
-) => ReadonlyArray<string> = flow(
-  A.map(({ alias, context }: { readonly alias: string; readonly context: string }) => JSON.stringify([alias, context])),
-  normalizeStringSet
-);
+const normalizeAliases = (
+  aliases: ReadonlyArray<string>,
+  contextualAliases: ReadonlyArray<{ readonly alias: string }>
+) => pipe(aliases, A.appendAll(A.map(contextualAliases, (entry) => entry.alias)), normalizeStringSet);
 
 const normalizeOption = <A>(value: O.Option<A>): A | null => O.getOrNull(value);
 
@@ -102,6 +100,8 @@ const normalizeCourt = (record: CourtVocabularyRecord): NormalizedRecord => ({
   semanticKey: record.semanticKey,
   lineageKey: record.lineageKey,
   aliases: normalizeAliases(record.aliases, record.contextualAliases),
+  contextualAliases: record.contextualAliases,
+  plainAliases: normalizeStringSet(record.aliases),
   ranges: pipe(
     record.effectiveRanges,
     A.map(({ start, end }) => JSON.stringify([normalizeOption(start), normalizeOption(end)])),
@@ -118,7 +118,6 @@ const normalizeCourt = (record: CourtVocabularyRecord): NormalizedRecord => ({
     normalizeOption(record.hierarchyLevel),
     record.location,
     normalizeOption(record.parentId),
-    normalizeContextualAliases(record.contextualAliases),
   ]),
   status: record.status,
   successorId: record.successorId,
@@ -129,6 +128,8 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
   semanticKey: record.semanticKey,
   lineageKey: record.lineageKey,
   aliases: normalizeAliases(record.aliases, record.contextualAliases),
+  contextualAliases: record.contextualAliases,
+  plainAliases: normalizeStringSet(record.aliases),
   ranges: pipe(
     record.editions,
     A.map(({ abbreviation, start, end }) =>
@@ -141,7 +142,6 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
     record.name,
     record.citeType,
     normalizeStringSet(record.jurisdictions),
-    normalizeContextualAliases(record.contextualAliases),
   ]),
   status: record.status,
   successorId: record.successorId,
@@ -150,14 +150,41 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
 const sameStringSet = (left: ReadonlyArray<string>, right: ReadonlyArray<string>) =>
   A.length(left) === A.length(right) && A.every(left, (value) => A.contains(right, value));
 
+const contextualAliasTexts: (aliases: ReadonlyArray<ContextualAlias>) => ReadonlyArray<string> = flow(
+  A.map((entry: ContextualAlias) => entry.alias),
+  normalizeStringSet
+);
+
+const contextualAliasContexts = (aliases: ReadonlyArray<ContextualAlias>, alias: string) =>
+  pipe(
+    aliases,
+    A.filter((entry) => Eq.equals(entry.alias, alias)),
+    A.map((entry) => entry.context),
+    normalizeStringSet
+  );
+
+const hasContextualAliasContextDrift = (previous: NormalizedRecord, next: NormalizedRecord) =>
+  pipe(
+    contextualAliasTexts(previous.contextualAliases),
+    A.filter((alias) => A.contains(contextualAliasTexts(next.contextualAliases), alias)),
+    A.some(
+      (alias) =>
+        !sameStringSet(
+          contextualAliasContexts(previous.contextualAliases, alias),
+          contextualAliasContexts(next.contextualAliases, alias)
+        )
+    )
+  );
+
 const isAdditiveRangeSplit = (previous: NormalizedRecord, next: NormalizedRecord) =>
   A.length(next.ranges) > A.length(previous.ranges) &&
   A.every(previous.ranges, (range) => A.contains(next.ranges, range));
 
 const hasSemanticDrift = (previous: NormalizedRecord, next: NormalizedRecord, additiveRangeSplit: boolean) =>
-  !Equal.equals(previous.semanticKey, next.semanticKey) ||
-  !Equal.equals(previous.lineageKey, next.lineageKey) ||
-  !Equal.equals(previous.semanticContent, next.semanticContent) ||
+  !Eq.equals(previous.semanticKey, next.semanticKey) ||
+  !Eq.equals(previous.lineageKey, next.lineageKey) ||
+  !Eq.equals(previous.semanticContent, next.semanticContent) ||
+  hasContextualAliasContextDrift(previous, next) ||
   (!sameStringSet(previous.ranges, next.ranges) && !additiveRangeSplit);
 
 const changeCompatibility = (kind: ArtifactDriftChangeKind) =>
@@ -204,8 +231,26 @@ const compareAliases = (
   previous: NormalizedRecord,
   next: NormalizedRecord
 ): ReadonlyArray<ArtifactDriftChange> => {
-  const additions = A.filter(next.aliases, (alias) => !A.contains(previous.aliases, alias));
-  const removals = A.filter(previous.aliases, (alias) => !A.contains(next.aliases, alias));
+  const previousContextualAliases = contextualAliasTexts(previous.contextualAliases);
+  const nextContextualAliases = contextualAliasTexts(next.contextualAliases);
+  const additions = normalizeStringSet([
+    ...A.filter(next.aliases, (alias) => !A.contains(previous.aliases, alias)),
+    ...A.filter(
+      next.plainAliases,
+      (alias) => !A.contains(previous.plainAliases, alias) && A.contains(previous.aliases, alias)
+    ),
+  ]);
+  const removals = normalizeStringSet([
+    ...A.filter(previous.aliases, (alias) => !A.contains(next.aliases, alias)),
+    ...A.filter(
+      previous.plainAliases,
+      (alias) =>
+        !A.contains(next.plainAliases, alias) &&
+        A.contains(next.aliases, alias) &&
+        A.contains(previousContextualAliases, alias) &&
+        A.contains(nextContextualAliases, alias)
+    ),
+  ]);
 
   return [
     ...A.map(additions, (alias) =>
@@ -269,6 +314,17 @@ const compareFamily = (
     if (previousRecord.status === "active" && nextRecord.status === "tombstone") {
       changes.push(
         change("tombstone", subjectKind, [previousRecord.id], "An issued identity was retained as a tombstone.")
+      );
+    }
+
+    if (O.isSome(previousRecord.successorId) && !Eq.equals(previousRecord.successorId, nextRecord.successorId)) {
+      changes.push(
+        change(
+          "successorRemoval",
+          subjectKind,
+          [previousRecord.id, previousRecord.successorId.value],
+          "A published successor assignment was removed or replaced."
+        )
       );
     }
 
@@ -349,7 +405,7 @@ const compareFamily = (
           O.match({
             onNone: () => true,
             onSome: (previousRecord) =>
-              previousRecord.status !== "tombstone" || !Equal.equals(previousRecord.successorId, O.some(successorId)),
+              previousRecord.status !== "tombstone" || !Eq.equals(previousRecord.successorId, O.some(successorId)),
           })
         )
       );
@@ -427,11 +483,11 @@ export const classifyCourtReporterArtifactCompatibility: {
 } = dual(2, (previous: CourtReporterArtifactComparison, next: CourtReporterArtifactComparison): ArtifactDriftReport => {
   const contractChanges: Array<ArtifactDriftChange> = [];
 
-  if (!Equal.equals(previous.schemaVersion, next.schemaVersion)) {
+  if (!Eq.equals(previous.schemaVersion, next.schemaVersion)) {
     contractChanges.push(change("schemaChange", "artifact", [], "The public artifact schema version changed."));
   }
 
-  if (!Equal.equals(previous.projectionVersion, next.projectionVersion)) {
+  if (!Eq.equals(previous.projectionVersion, next.projectionVersion)) {
     contractChanges.push(change("projectionChange", "artifact", [], "The public projection version changed."));
   }
 

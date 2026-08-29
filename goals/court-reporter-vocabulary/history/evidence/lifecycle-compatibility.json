@@ -14,6 +14,7 @@
   ],
   "incompatibleChanges": [
     "aliasRemoval",
+    "successorRemoval",
     "idReassignment",
     "semanticReuse",
     "removalWithoutTombstone",
@@ -24,6 +25,7 @@
     { "change": "addition", "expected": "compatible" },
     { "change": "aliasAddition", "expected": "compatible" },
     { "change": "aliasRemoval", "expected": "incompatible" },
+    { "change": "successorRemoval", "expected": "incompatible" },
     { "change": "tombstone", "expected": "compatible" },
     { "change": "successor", "expected": "compatible" },
     { "change": "merger", "expected": "compatible" },
@@ -36,6 +38,7 @@
     { "change": "projectionChange", "expected": "incompatible" }
   ],
   "semanticDriftFixtures": [
+    "plainAliasCategoryOverlap",
     "courtHierarchyLevel",
     "courtJurisdiction",
     "courtParent",
@@ -45,6 +48,6 @@
   ],
   "proof": {
     "command": "bun run --cwd packages/law-practice/domain beep:test -- CourtReporterVocabulary.test.ts",
-    "result": "8 tests passed"
+    "result": "12 tests passed"
   }
 }

@@ -271,15 +271,15 @@
       "contextualAliases": [
         {
           "alias": "Marsh.",
-          "context": "Kentucky Reports, Marshall, A.K."
+          "context": "Kentucky Reports, Marshall, A.K.; cite-type=state; editions=A.K. Marsh.:1817-01-01T00:00:00..1821-12-31T00:00:00"
         },
         {
           "alias": "Marsh. Rep.",
-          "context": "Kentucky Reports, Marshall, A.K."
+          "context": "Kentucky Reports, Marshall, A.K.; cite-type=state; editions=A.K. Marsh.:1817-01-01T00:00:00..1821-12-31T00:00:00"
         },
         {
           "alias": "Marsh.(Ky.)",
-          "context": "Kentucky Reports, Marshall, A.K."
+          "context": "Kentucky Reports, Marshall, A.K.; cite-type=state; editions=A.K. Marsh.:1817-01-01T00:00:00..1821-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -1164,7 +1164,7 @@
       "contextualAliases": [
         {
           "alias": "Allen",
-          "context": "Massachusetts Reports, Allen"
+          "context": "Massachusetts Reports, Allen; cite-type=state; editions=Allen:1861-01-01T00:00:00..1867-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -2202,15 +2202,15 @@
       "contextualAliases": [
         {
           "alias": "Ark.",
-          "context": "Arkansas Reports"
+          "context": "Arkansas Reports; cite-type=neutral; editions=Ark.:2009-01-01T00:00:00..open"
         },
         {
           "alias": "ARK.",
-          "context": "Arkansas Reports"
+          "context": "Arkansas Reports; cite-type=neutral; editions=Ark.:2009-01-01T00:00:00..open"
         },
         {
           "alias": "Ark",
-          "context": "Arkansas Reports"
+          "context": "Arkansas Reports; cite-type=neutral; editions=Ark.:2009-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -2240,15 +2240,15 @@
       "contextualAliases": [
         {
           "alias": "Ark.",
-          "context": "Arkansas Reports"
+          "context": "Arkansas Reports; cite-type=state; editions=Ark.:1837-01-01T00:00:00..2008-12-31T00:00:00"
         },
         {
           "alias": "ARK.",
-          "context": "Arkansas Reports"
+          "context": "Arkansas Reports; cite-type=state; editions=Ark.:1837-01-01T00:00:00..2008-12-31T00:00:00"
         },
         {
           "alias": "Ark",
-          "context": "Arkansas Reports"
+          "context": "Arkansas Reports; cite-type=state; editions=Ark.:1837-01-01T00:00:00..2008-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -2329,15 +2329,15 @@
       "contextualAliases": [
         {
           "alias": "Ark. App.",
-          "context": "Arkansas Appellate Reports"
+          "context": "Arkansas Appellate Reports; cite-type=state; editions=Ark. App.:1981-01-01T00:00:00..2008-12-31T00:00:00"
         },
         {
           "alias": "Ak. App.",
-          "context": "Arkansas Appellate Reports"
+          "context": "Arkansas Appellate Reports; cite-type=state; editions=Ark. App.:1981-01-01T00:00:00..2008-12-31T00:00:00"
         },
         {
           "alias": "Ark.App.",
-          "context": "Arkansas Appellate Reports"
+          "context": "Arkansas Appellate Reports; cite-type=state; editions=Ark. App.:1981-01-01T00:00:00..2008-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -2364,15 +2364,15 @@
       "contextualAliases": [
         {
           "alias": "Ark. App.",
-          "context": "Arkansas Appellate Reports"
+          "context": "Arkansas Appellate Reports; cite-type=neutral; editions=Ark. App.:2009-01-01T00:00:00..open"
         },
         {
           "alias": "Ak. App.",
-          "context": "Arkansas Appellate Reports"
+          "context": "Arkansas Appellate Reports; cite-type=neutral; editions=Ark. App.:2009-01-01T00:00:00..open"
         },
         {
           "alias": "Ark.App.",
-          "context": "Arkansas Appellate Reports"
+          "context": "Arkansas Appellate Reports; cite-type=neutral; editions=Ark. App.:2009-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -2533,11 +2533,11 @@
       "contextualAliases": [
         {
           "alias": "Mon.",
-          "context": "Kentucky Reports, Monroe, Ben"
+          "context": "Kentucky Reports, Monroe, Ben; cite-type=state; editions=B. Mon.:1840-01-01T00:00:00..1857-12-31T00:00:00"
         },
         {
           "alias": "Mon. Rep.",
-          "context": "Kentucky Reports, Monroe, Ben"
+          "context": "Kentucky Reports, Monroe, Ben; cite-type=state; editions=B. Mon.:1840-01-01T00:00:00..1857-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -2808,7 +2808,7 @@
       "contextualAliases": [
         {
           "alias": "B.R.",
-          "context": "Bankruptcy Reporter"
+          "context": "Bankruptcy Reporter; cite-type=specialty; editions=B.R.:1979-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -2911,7 +2911,7 @@
       "contextualAliases": [
         {
           "alias": "BNA OSHC",
-          "context": "Occupational Safety & Health Cases"
+          "context": "Occupational Safety & Health Cases; cite-type=specialty; editions=BNA OSHC:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -3018,11 +3018,11 @@
       "contextualAliases": [
         {
           "alias": "Bailey",
-          "context": "South Carolina Reports, Bailey"
+          "context": "South Carolina Reports, Bailey; cite-type=state; editions=Bail.:1828-01-01T00:00:00..1832-12-31T00:00:00"
         },
         {
           "alias": "Bailey Rep.",
-          "context": "South Carolina Reports, Bailey"
+          "context": "South Carolina Reports, Bailey; cite-type=state; editions=Bail.:1828-01-01T00:00:00..1832-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -3056,11 +3056,11 @@
       "contextualAliases": [
         {
           "alias": "Bailey",
-          "context": "South Carolina Reports, Bailey's Equity"
+          "context": "South Carolina Reports, Bailey's Equity; cite-type=state; editions=Bail. Eq.:1830-01-01T00:00:00..1831-12-31T00:00:00"
         },
         {
           "alias": "Bailey Rep.",
-          "context": "South Carolina Reports, Bailey's Equity"
+          "context": "South Carolina Reports, Bailey's Equity; cite-type=state; editions=Bail. Eq.:1830-01-01T00:00:00..1831-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -3124,7 +3124,7 @@
       "contextualAliases": [
         {
           "alias": "B.R.",
-          "context": "Baltimore City Reports"
+          "context": "Baltimore City Reports; cite-type=state; editions=Balt. C. Rep.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -6730,7 +6730,7 @@
       "contextualAliases": [
         {
           "alias": "Col.",
-          "context": "Tennessee Reports, Coldwell"
+          "context": "Tennessee Reports, Coldwell; cite-type=state; editions=Cold.:1860-01-01T00:00:00..1870-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -6878,7 +6878,7 @@
       "contextualAliases": [
         {
           "alias": "Col.",
-          "context": "Colorado Reports"
+          "context": "Colorado Reports; cite-type=state; editions=Colo.:1864-01-01T00:00:00..1980-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -7473,31 +7473,31 @@
       "contextualAliases": [
         {
           "alias": "Conn. Super. Ct.",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         },
         {
           "alias": "CSCR",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         },
         {
           "alias": "Conn. Sup.",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         },
         {
           "alias": "Conn.Sup.",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         },
         {
           "alias": "Conn.Super.Ct.",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         },
         {
           "alias": "Ct. Sup.",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         },
         {
           "alias": "Ct.Sup.",
-          "context": "Connecticut Superior Court Reports"
+          "context": "Connecticut Superior Court Reports; cite-type=state; editions=Conn. Super. Ct.:1986-01-01T00:00:00..1994-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -7524,31 +7524,31 @@
       "contextualAliases": [
         {
           "alias": "Conn. Super. Ct.",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "CSCR",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Conn. Sup.",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Conn.Sup.",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Conn.Super.Ct.",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Ct. Sup.",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Ct.Sup.",
-          "context": "Connecticut Superior Court format-neutral citation"
+          "context": "Connecticut Superior Court format-neutral citation; cite-type=state; editions=Conn. Super. Ct.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -7997,11 +7997,11 @@
       "contextualAliases": [
         {
           "alias": "Cranch",
-          "context": "Cranch's Supreme Court Reports"
+          "context": "Cranch's Supreme Court Reports; cite-type=scotus_early; editions=Cranch:1801-01-01T00:00:00..1815-12-31T00:00:00"
         },
         {
           "alias": "Cranch Rep.",
-          "context": "Cranch's Supreme Court Reports"
+          "context": "Cranch's Supreme Court Reports; cite-type=scotus_early; editions=Cranch:1801-01-01T00:00:00..1815-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -8035,11 +8035,11 @@
       "contextualAliases": [
         {
           "alias": "Cranch",
-          "context": "District of Columbia Reports, Cranch"
+          "context": "District of Columbia Reports, Cranch; cite-type=state; editions=Cranch:1801-01-01T00:00:00..1841-12-31T00:00:00"
         },
         {
           "alias": "Cranch Rep.",
-          "context": "District of Columbia Reports, Cranch"
+          "context": "District of Columbia Reports, Cranch; cite-type=state; editions=Cranch:1801-01-01T00:00:00..1841-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -8126,7 +8126,7 @@
       "contextualAliases": [
         {
           "alias": "Ct. Cl.",
-          "context": "Court of Claims Reports (United States)"
+          "context": "Court of Claims Reports (United States); cite-type=specialty; editions=Ct. Cl.:1863-01-01T00:00:00..1982-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -8153,7 +8153,7 @@
       "contextualAliases": [
         {
           "alias": "Ct. Cl.",
-          "context": "Report of the Court of Claims (West Virginia)"
+          "context": "Report of the Court of Claims (West Virginia); cite-type=specialty; editions=Ct. Cl.:1941-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -8185,7 +8185,7 @@
       "contextualAliases": [
         {
           "alias": "Cust. Ct.",
-          "context": "Court of Customs Appeals Reports"
+          "context": "Court of Customs Appeals Reports; cite-type=specialty; editions=Ct. Cust.:1910-01-01T00:00:00..1929-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -8341,7 +8341,7 @@
       "contextualAliases": [
         {
           "alias": "Cust. Ct.",
-          "context": "Customs Court Reports"
+          "context": "Customs Court Reports; cite-type=federal; editions=Cust. Ct.:1938-01-01T00:00:00..1980-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -8863,27 +8863,27 @@
       "contextualAliases": [
         {
           "alias": "Dall.",
-          "context": "Dallas' Supreme Court Reports"
+          "context": "Dallas' Supreme Court Reports; cite-type=scotus_early; editions=Dall.:1790-01-01T00:00:00..1880-12-31T00:00:00"
         },
         {
           "alias": "Dal.",
-          "context": "Dallas' Supreme Court Reports"
+          "context": "Dallas' Supreme Court Reports; cite-type=scotus_early; editions=Dall.:1790-01-01T00:00:00..1880-12-31T00:00:00"
         },
         {
           "alias": "Dal. Rep.",
-          "context": "Dallas' Supreme Court Reports"
+          "context": "Dallas' Supreme Court Reports; cite-type=scotus_early; editions=Dall.:1790-01-01T00:00:00..1880-12-31T00:00:00"
         },
         {
           "alias": "Dall. Rep.",
-          "context": "Dallas' Supreme Court Reports"
+          "context": "Dallas' Supreme Court Reports; cite-type=scotus_early; editions=Dall.:1790-01-01T00:00:00..1880-12-31T00:00:00"
         },
         {
           "alias": "Dallas",
-          "context": "Dallas' Supreme Court Reports"
+          "context": "Dallas' Supreme Court Reports; cite-type=scotus_early; editions=Dall.:1790-01-01T00:00:00..1880-12-31T00:00:00"
         },
         {
           "alias": "Dallas Rep.",
-          "context": "Dallas' Supreme Court Reports"
+          "context": "Dallas' Supreme Court Reports; cite-type=scotus_early; editions=Dall.:1790-01-01T00:00:00..1880-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -8912,27 +8912,27 @@
       "contextualAliases": [
         {
           "alias": "Dall.",
-          "context": "Pennsylvania State Reports, Dallas"
+          "context": "Pennsylvania State Reports, Dallas; cite-type=state; editions=Dall.:1754-01-01T00:00:00..1806-12-31T00:00:00"
         },
         {
           "alias": "Dal.",
-          "context": "Pennsylvania State Reports, Dallas"
+          "context": "Pennsylvania State Reports, Dallas; cite-type=state; editions=Dall.:1754-01-01T00:00:00..1806-12-31T00:00:00"
         },
         {
           "alias": "Dal. Rep.",
-          "context": "Pennsylvania State Reports, Dallas"
+          "context": "Pennsylvania State Reports, Dallas; cite-type=state; editions=Dall.:1754-01-01T00:00:00..1806-12-31T00:00:00"
         },
         {
           "alias": "Dall. Rep.",
-          "context": "Pennsylvania State Reports, Dallas"
+          "context": "Pennsylvania State Reports, Dallas; cite-type=state; editions=Dall.:1754-01-01T00:00:00..1806-12-31T00:00:00"
         },
         {
           "alias": "Dallas",
-          "context": "Pennsylvania State Reports, Dallas"
+          "context": "Pennsylvania State Reports, Dallas; cite-type=state; editions=Dall.:1754-01-01T00:00:00..1806-12-31T00:00:00"
         },
         {
           "alias": "Dallas Rep.",
-          "context": "Pennsylvania State Reports, Dallas"
+          "context": "Pennsylvania State Reports, Dallas; cite-type=state; editions=Dall.:1754-01-01T00:00:00..1806-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -9168,7 +9168,7 @@
       "contextualAliases": [
         {
           "alias": "Dec. Comm'r Pat.",
-          "context": "Decisions of the Commissioner of Patents"
+          "context": "Decisions of the Commissioner of Patents; cite-type=specialty; editions=Dec. Com. Pat.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -9197,7 +9197,7 @@
       "contextualAliases": [
         {
           "alias": "Dec. Comm'r Pat.",
-          "context": "Decisions of the Commissioner of Patents"
+          "context": "Decisions of the Commissioner of Patents; cite-type=federal; editions=Dec. Comm'r Pat.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -9603,11 +9603,11 @@
       "contextualAliases": [
         {
           "alias": "Dev.",
-          "context": "North Carolina Reports, Devereux's Law"
+          "context": "North Carolina Reports, Devereux's Law; cite-type=state; editions=Dev.:1826-01-01T00:00:00..1834-12-31T00:00:00"
         },
         {
           "alias": "Dev. Rep.",
-          "context": "North Carolina Reports, Devereux's Law"
+          "context": "North Carolina Reports, Devereux's Law; cite-type=state; editions=Dev.:1826-01-01T00:00:00..1834-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -9639,11 +9639,11 @@
       "contextualAliases": [
         {
           "alias": "D.& B.",
-          "context": "North Carolina Reports, Devereux & Battle's Law"
+          "context": "North Carolina Reports, Devereux & Battle's Law; cite-type=state; editions=Dev. & Bat.:1834-01-01T00:00:00..1839-12-31T00:00:00"
         },
         {
           "alias": "Dev.& B.",
-          "context": "North Carolina Reports, Devereux & Battle's Law"
+          "context": "North Carolina Reports, Devereux & Battle's Law; cite-type=state; editions=Dev. & Bat.:1834-01-01T00:00:00..1839-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -9674,11 +9674,11 @@
       "contextualAliases": [
         {
           "alias": "D.& B.",
-          "context": "North Carolina Reports, Devereux & Battle's Equity"
+          "context": "North Carolina Reports, Devereux & Battle's Equity; cite-type=state; editions=Dev. & Bat. Eq.:1834-01-01T00:00:00..1839-12-31T00:00:00"
         },
         {
           "alias": "Dev.& B.",
-          "context": "North Carolina Reports, Devereux & Battle's Equity"
+          "context": "North Carolina Reports, Devereux & Battle's Equity; cite-type=state; editions=Dev. & Bat. Eq.:1834-01-01T00:00:00..1839-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -9709,11 +9709,11 @@
       "contextualAliases": [
         {
           "alias": "Dev.",
-          "context": "North Carolina Reports, Devereux's Equity"
+          "context": "North Carolina Reports, Devereux's Equity; cite-type=state; editions=Dev. Eq.:1826-01-01T00:00:00..1834-12-31T00:00:00"
         },
         {
           "alias": "Dev. Rep.",
-          "context": "North Carolina Reports, Devereux's Equity"
+          "context": "North Carolina Reports, Devereux's Equity; cite-type=state; editions=Dev. Eq.:1826-01-01T00:00:00..1834-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -9912,7 +9912,7 @@
       "contextualAliases": [
         {
           "alias": "Dudl.",
-          "context": "South Carolina Reports, Dudley"
+          "context": "South Carolina Reports, Dudley; cite-type=state; editions=Dud.:1837-01-01T00:00:00..1838-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -9944,7 +9944,7 @@
       "contextualAliases": [
         {
           "alias": "Dudl.",
-          "context": "South Carolina Reports, Dudley's Equity"
+          "context": "South Carolina Reports, Dudley's Equity; cite-type=state; editions=Dud. Eq.:1837-01-01T00:00:00..1838-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -12572,7 +12572,7 @@
       "contextualAliases": [
         {
           "alias": "Fla. L. Weekly",
-          "context": "Florida Law Weekly"
+          "context": "Florida Law Weekly; cite-type=state; editions=Fla. L. Weekly:1978-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -12643,7 +12643,7 @@
       "contextualAliases": [
         {
           "alias": "Fla. L. Weekly",
-          "context": "Florida (FL) Law Weekly Federal, District Court"
+          "context": "Florida (FL) Law Weekly Federal, District Court; cite-type=specialty; editions=Fla. L. Weekly Fed. D:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -12672,7 +12672,7 @@
       "contextualAliases": [
         {
           "alias": "Fla. L. Weekly",
-          "context": "Florida (FL) Law Weekly Federal, Supreme Court"
+          "context": "Florida (FL) Law Weekly Federal, Supreme Court; cite-type=federal; editions=Fla. L. Weekly Fed. S:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -13248,15 +13248,15 @@
       "contextualAliases": [
         {
           "alias": "Gild.",
-          "context": "Gildersleeve Reports"
+          "context": "Gildersleeve Reports; cite-type=state; editions=Gild.:1883-01-01T00:00:00..1889-12-31T00:00:00"
         },
         {
           "alias": "Gildersleeve",
-          "context": "Gildersleeve Reports"
+          "context": "Gildersleeve Reports; cite-type=state; editions=Gild.:1883-01-01T00:00:00..1889-12-31T00:00:00"
         },
         {
           "alias": "Gildr.",
-          "context": "Gildersleeve Reports"
+          "context": "Gildersleeve Reports; cite-type=state; editions=Gild.:1883-01-01T00:00:00..1889-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -13312,7 +13312,7 @@
       "contextualAliases": [
         {
           "alias": "Gilm.",
-          "context": "Illinois Reports, Gilman"
+          "context": "Illinois Reports, Gilman; cite-type=state; editions=Gilm.:1844-01-01T00:00:00..1849-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -13344,7 +13344,7 @@
       "contextualAliases": [
         {
           "alias": "Gilm.",
-          "context": "Virginia Reports, Gilmer"
+          "context": "Virginia Reports, Gilmer; cite-type=state; editions=Gilmer:1820-01-01T00:00:00..1821-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -13821,7 +13821,7 @@
       "contextualAliases": [
         {
           "alias": "H.",
-          "context": "Handy's Ohio Reports (12 Ohio Dec.)"
+          "context": "Handy's Ohio Reports (12 Ohio Dec.); cite-type=state; editions=Handy:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -13876,7 +13876,7 @@
       "contextualAliases": [
         {
           "alias": "Hard.",
-          "context": "Kentucky Reports, Hardin"
+          "context": "Kentucky Reports, Hardin; cite-type=state; editions=Hard.:1805-01-01T00:00:00..1808-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -13907,7 +13907,7 @@
       "contextualAliases": [
         {
           "alias": "Hard.",
-          "context": "Hardesty Team Reports (Del.)"
+          "context": "Hardesty Team Reports (Del.); cite-type=state; editions=Hard.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -13938,11 +13938,11 @@
       "contextualAliases": [
         {
           "alias": "Harp.",
-          "context": "South Carolina Reports, Harper"
+          "context": "South Carolina Reports, Harper; cite-type=state; editions=Harp.:1823-01-01T00:00:00..1831-12-31T00:00:00"
         },
         {
           "alias": "Harper",
-          "context": "South Carolina Reports, Harper"
+          "context": "South Carolina Reports, Harper; cite-type=state; editions=Harp.:1823-01-01T00:00:00..1831-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -13973,11 +13973,11 @@
       "contextualAliases": [
         {
           "alias": "Harp.",
-          "context": "South Carolina Reports, Harper's Equity"
+          "context": "South Carolina Reports, Harper's Equity; cite-type=state; editions=Harp. Eq.:1824-01-01T00:00:00..1824-12-31T00:00:00"
         },
         {
           "alias": "Harper",
-          "context": "South Carolina Reports, Harper's Equity"
+          "context": "South Carolina Reports, Harper's Equity; cite-type=state; editions=Harp. Eq.:1824-01-01T00:00:00..1824-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14015,11 +14015,11 @@
       "contextualAliases": [
         {
           "alias": "Harr.",
-          "context": "Harrington's Michigan Chancery Reports (1836-42)"
+          "context": "Harrington's Michigan Chancery Reports (1836-42); cite-type=state; editions=Harr. Ch.:1836-01-01T00:00:00..1842-12-31T00:00:00"
         },
         {
           "alias": "Harrington",
-          "context": "Harrington's Michigan Chancery Reports (1836-42)"
+          "context": "Harrington's Michigan Chancery Reports (1836-42); cite-type=state; editions=Harr. Ch.:1836-01-01T00:00:00..1842-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14046,7 +14046,7 @@
       "contextualAliases": [
         {
           "alias": "Harrington",
-          "context": "Delaware Reports, Harrington"
+          "context": "Delaware Reports, Harrington; cite-type=state; editions=Harrington:1832-01-01T00:00:00..1855-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14152,11 +14152,11 @@
       "contextualAliases": [
         {
           "alias": "H.",
-          "context": "Hawaii Reports"
+          "context": "Hawaii Reports; cite-type=state; editions=Haw.:1847-01-01T00:00:00..open"
         },
         {
           "alias": "H. Rep.",
-          "context": "Hawaii Reports"
+          "context": "Hawaii Reports; cite-type=state; editions=Haw.:1847-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -14289,7 +14289,7 @@
       "contextualAliases": [
         {
           "alias": "Hay. & Haz.",
-          "context": "District of Columbia Reports, Hayward & Hazelton"
+          "context": "District of Columbia Reports, Hayward & Hazelton; cite-type=state; editions=Hay. & Haz.:1841-01-01T00:00:00..1862-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14324,11 +14324,11 @@
       "contextualAliases": [
         {
           "alias": "Hayw.",
-          "context": "North Carolina Reports, Haywood"
+          "context": "North Carolina Reports, Haywood; cite-type=state; editions=Hayw.:1789-01-01T00:00:00..1806-12-31T00:00:00"
         },
         {
           "alias": "Hayw. Rep.",
-          "context": "North Carolina Reports, Haywood"
+          "context": "North Carolina Reports, Haywood; cite-type=state; editions=Hayw.:1789-01-01T00:00:00..1806-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14359,11 +14359,11 @@
       "contextualAliases": [
         {
           "alias": "Hayw.",
-          "context": "Tennessee Reports, Haywood"
+          "context": "Tennessee Reports, Haywood; cite-type=state; editions=Hayw.:1816-01-01T00:00:00..1818-12-31T00:00:00"
         },
         {
           "alias": "Hayw. Rep.",
-          "context": "Tennessee Reports, Haywood"
+          "context": "Tennessee Reports, Haywood; cite-type=state; editions=Hayw.:1816-01-01T00:00:00..1818-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14398,7 +14398,7 @@
       "contextualAliases": [
         {
           "alias": "Hay. & Haz.",
-          "context": "Hayward & Hazelton Circuit Court Reports (D.C.)"
+          "context": "Hayward & Hazelton Circuit Court Reports (D.C.); cite-type=federal; editions=Hayw. & H.D.C.:1893-01-01T00:00:00..1941-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14584,19 +14584,19 @@
       "contextualAliases": [
         {
           "alias": "Hill",
-          "context": "Hill's New York Reports"
+          "context": "Hill's New York Reports; cite-type=state; editions=Hill:1841-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "H.",
-          "context": "Hill's New York Reports"
+          "context": "Hill's New York Reports; cite-type=state; editions=Hill:1841-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "H. Rep.",
-          "context": "Hill's New York Reports"
+          "context": "Hill's New York Reports; cite-type=state; editions=Hill:1841-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Hill Rep.",
-          "context": "Hill's New York Reports"
+          "context": "Hill's New York Reports; cite-type=state; editions=Hill:1841-01-01T00:00:00..1844-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14626,15 +14626,15 @@
       "contextualAliases": [
         {
           "alias": "Hill",
-          "context": "South Carolina Reports, Hill"
+          "context": "South Carolina Reports, Hill; cite-type=state; editions=Hill:1833-01-01T00:00:00..1837-12-31T00:00:00"
         },
         {
           "alias": "Hill Rep.",
-          "context": "South Carolina Reports, Hill"
+          "context": "South Carolina Reports, Hill; cite-type=state; editions=Hill:1833-01-01T00:00:00..1837-12-31T00:00:00"
         },
         {
           "alias": "Hill S.C.",
-          "context": "South Carolina Reports, Hill"
+          "context": "South Carolina Reports, Hill; cite-type=state; editions=Hill:1833-01-01T00:00:00..1837-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14697,15 +14697,15 @@
       "contextualAliases": [
         {
           "alias": "Hill",
-          "context": "South Carolina Reports, Hill's Chancery"
+          "context": "South Carolina Reports, Hill's Chancery; cite-type=state; editions=Hill Eq.:1833-01-01T00:00:00..1837-12-31T00:00:00"
         },
         {
           "alias": "Hill Rep.",
-          "context": "South Carolina Reports, Hill's Chancery"
+          "context": "South Carolina Reports, Hill's Chancery; cite-type=state; editions=Hill Eq.:1833-01-01T00:00:00..1837-12-31T00:00:00"
         },
         {
           "alias": "Hill S.C.",
-          "context": "South Carolina Reports, Hill's Chancery"
+          "context": "South Carolina Reports, Hill's Chancery; cite-type=state; editions=Hill Eq.:1833-01-01T00:00:00..1837-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14782,7 +14782,7 @@
       "contextualAliases": [
         {
           "alias": "Hoff.",
-          "context": "Hoffman's Decisions"
+          "context": "Hoffman's Decisions; cite-type=scotus_early; editions=Hoff.:1853-01-01T00:00:00..1858-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -14817,7 +14817,7 @@
       "contextualAliases": [
         {
           "alias": "Hoff.",
-          "context": "Hoffman's Chancery Reports"
+          "context": "Hoffman's Chancery Reports; cite-type=state; editions=Hoff. Ch.:1838-01-01T00:00:00..1840-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -15042,11 +15042,11 @@
       "contextualAliases": [
         {
           "alias": "How.",
-          "context": "Howard's Supreme Court Reports"
+          "context": "Howard's Supreme Court Reports; cite-type=scotus_early; editions=How.:1843-01-01T00:00:00..1860-12-31T00:00:00"
         },
         {
           "alias": "How. Rep.",
-          "context": "Howard's Supreme Court Reports"
+          "context": "Howard's Supreme Court Reports; cite-type=scotus_early; editions=How.:1843-01-01T00:00:00..1860-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -15231,11 +15231,11 @@
       "contextualAliases": [
         {
           "alias": "How.",
-          "context": "Mississippi Reports, Howard"
+          "context": "Mississippi Reports, Howard; cite-type=state; editions=Howard:1834-01-01T00:00:00..1843-12-31T00:00:00"
         },
         {
           "alias": "How. Rep.",
-          "context": "Mississippi Reports, Howard"
+          "context": "Mississippi Reports, Howard; cite-type=state; editions=Howard:1834-01-01T00:00:00..1843-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -15369,7 +15369,7 @@
       "contextualAliases": [
         {
           "alias": "Hun",
-          "context": "Hun's Supreme Court Reports"
+          "context": "Hun's Supreme Court Reports; cite-type=state; editions=Hun:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -15396,7 +15396,7 @@
       "contextualAliases": [
         {
           "alias": "Hun",
-          "context": "Hun's New York Appellate Division Reports"
+          "context": "Hun's New York Appellate Division Reports; cite-type=state; editions=Hun:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -16341,7 +16341,7 @@
       "contextualAliases": [
         {
           "alias": "Ind. L. Rep.",
-          "context": "Indiana Law Reporter (1881)"
+          "context": "Indiana Law Reporter (1881); cite-type=state; editions=Ind. L. Rep.:1881-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -16366,7 +16366,7 @@
       "contextualAliases": [
         {
           "alias": "Ind. L. Rep.",
-          "context": "Indian Law Reporter"
+          "context": "Indian Law Reporter; cite-type=specialty; editions=Ind. L. Rep.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -16812,11 +16812,11 @@
       "contextualAliases": [
         {
           "alias": "Ired.",
-          "context": "North Carolina Reports, Iredell's Law"
+          "context": "North Carolina Reports, Iredell's Law; cite-type=state; editions=Ired.:1840-01-01T00:00:00..1852-12-31T00:00:00"
         },
         {
           "alias": "Ired. Rep.",
-          "context": "North Carolina Reports, Iredell's Law"
+          "context": "North Carolina Reports, Iredell's Law; cite-type=state; editions=Ired.:1840-01-01T00:00:00..1852-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -16848,11 +16848,11 @@
       "contextualAliases": [
         {
           "alias": "Ired.",
-          "context": "North Carolina Reports, Iredell's Equity"
+          "context": "North Carolina Reports, Iredell's Equity; cite-type=state; editions=Ired. Eq.:1840-01-01T00:00:00..1852-12-31T00:00:00"
         },
         {
           "alias": "Ired. Rep.",
-          "context": "North Carolina Reports, Iredell's Equity"
+          "context": "North Carolina Reports, Iredell's Equity; cite-type=state; editions=Ired. Eq.:1840-01-01T00:00:00..1852-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -16885,15 +16885,15 @@
       "contextualAliases": [
         {
           "alias": "Marsh.",
-          "context": "Kentucky Reports, Marshall, J.J."
+          "context": "Kentucky Reports, Marshall, J.J.; cite-type=state; editions=J.J. Marsh.:1829-01-01T00:00:00..1832-12-31T00:00:00"
         },
         {
           "alias": "Marsh. Rep.",
-          "context": "Kentucky Reports, Marshall, J.J."
+          "context": "Kentucky Reports, Marshall, J.J.; cite-type=state; editions=J.J. Marsh.:1829-01-01T00:00:00..1832-12-31T00:00:00"
         },
         {
           "alias": "Marsh.(Ky.)",
-          "context": "Kentucky Reports, Marshall, J.J."
+          "context": "Kentucky Reports, Marshall, J.J.; cite-type=state; editions=J.J. Marsh.:1829-01-01T00:00:00..1832-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -16977,19 +16977,19 @@
       "contextualAliases": [
         {
           "alias": "Johns.",
-          "context": "Johnson's Reports"
+          "context": "Johnson's Reports; cite-type=state; editions=Johns.:1806-01-01T00:00:00..1823-12-31T00:00:00"
         },
         {
           "alias": "Johns.Rep.",
-          "context": "Johnson's Reports"
+          "context": "Johnson's Reports; cite-type=state; editions=Johns.:1806-01-01T00:00:00..1823-12-31T00:00:00"
         },
         {
           "alias": "Johnson",
-          "context": "Johnson's Reports"
+          "context": "Johnson's Reports; cite-type=state; editions=Johns.:1806-01-01T00:00:00..1823-12-31T00:00:00"
         },
         {
           "alias": "Johnson Rep.",
-          "context": "Johnson's Reports"
+          "context": "Johnson's Reports; cite-type=state; editions=Johns.:1806-01-01T00:00:00..1823-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -17051,19 +17051,19 @@
       "contextualAliases": [
         {
           "alias": "Johns.",
-          "context": "Johnsons' Chancery Reports"
+          "context": "Johnsons' Chancery Reports; cite-type=state; editions=Johns. Ch.:1814-01-01T00:00:00..1823-12-31T00:00:00"
         },
         {
           "alias": "Johns.Rep.",
-          "context": "Johnsons' Chancery Reports"
+          "context": "Johnsons' Chancery Reports; cite-type=state; editions=Johns. Ch.:1814-01-01T00:00:00..1823-12-31T00:00:00"
         },
         {
           "alias": "Johnson",
-          "context": "Johnsons' Chancery Reports"
+          "context": "Johnsons' Chancery Reports; cite-type=state; editions=Johns. Ch.:1814-01-01T00:00:00..1823-12-31T00:00:00"
         },
         {
           "alias": "Johnson Rep.",
-          "context": "Johnsons' Chancery Reports"
+          "context": "Johnsons' Chancery Reports; cite-type=state; editions=Johns. Ch.:1814-01-01T00:00:00..1823-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -17094,7 +17094,7 @@
       "contextualAliases": [
         {
           "alias": "Jones",
-          "context": "North Carolina Reports, Jones' Law"
+          "context": "North Carolina Reports, Jones' Law; cite-type=state; editions=Jones:1853-01-01T00:00:00..1862-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -17150,7 +17150,7 @@
       "contextualAliases": [
         {
           "alias": "Jones",
-          "context": "North Carolina Reports, Jones' Equity"
+          "context": "North Carolina Reports, Jones' Equity; cite-type=state; editions=Jones Eq.:1853-01-01T00:00:00..1863-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -18552,7 +18552,7 @@
       "contextualAliases": [
         {
           "alias": "Lans.",
-          "context": "Lansing's Reports"
+          "context": "Lansing's Reports; cite-type=state; editions=Lans.:1869-01-01T00:00:00..1873-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -18585,7 +18585,7 @@
       "contextualAliases": [
         {
           "alias": "Lans.",
-          "context": "Lansing's Chancery Reports"
+          "context": "Lansing's Chancery Reports; cite-type=state; editions=Lans. Ch.:1824-01-01T00:00:00..1826-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -19422,7 +19422,7 @@
       "contextualAliases": [
         {
           "alias": "Me.",
-          "context": "Maine Reports"
+          "context": "Maine Reports; cite-type=neutral; editions=ME:1996-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -19579,7 +19579,7 @@
       "contextualAliases": [
         {
           "alias": "MacArth.",
-          "context": "Reports of cases arising upon applications for letters-patent for inventions determined in the Circuit and Supreme Court of the District of Columbia (MacArthur's Patent Cases)"
+          "context": "Reports of cases arising upon applications for letters-patent for inventions determined in the Circuit and Supreme Court of the District of Columbia (MacArthur's Patent Cases); cite-type=specialty; editions=MacA. Pat. Cas.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -19610,7 +19610,7 @@
       "contextualAliases": [
         {
           "alias": "MacArth.",
-          "context": "District of Columbia Reports, MacArthur"
+          "context": "District of Columbia Reports, MacArthur; cite-type=state; editions=MacArth.:1873-01-01T00:00:00..1879-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -19733,11 +19733,11 @@
       "contextualAliases": [
         {
           "alias": "Mart.",
-          "context": "Louisiana Reports, Martin"
+          "context": "Louisiana Reports, Martin; cite-type=state; editions=Mart.:1809-01-01T00:00:00..1830-12-31T00:00:00,Mart. (N.S.):1750-01-01T00:00:00..open"
         },
         {
           "alias": "Mart. Rep.",
-          "context": "Louisiana Reports, Martin"
+          "context": "Louisiana Reports, Martin; cite-type=state; editions=Mart.:1809-01-01T00:00:00..1830-12-31T00:00:00,Mart. (N.S.):1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -19772,11 +19772,11 @@
       "contextualAliases": [
         {
           "alias": "Mart.",
-          "context": "North Carolina Reports, Martin"
+          "context": "North Carolina Reports, Martin; cite-type=state; editions=Mart.:1778-01-01T00:00:00..1797-12-31T00:00:00"
         },
         {
           "alias": "Mart. Rep.",
-          "context": "North Carolina Reports, Martin"
+          "context": "North Carolina Reports, Martin; cite-type=state; editions=Mart.:1778-01-01T00:00:00..1797-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -19891,7 +19891,7 @@
       "contextualAliases": [
         {
           "alias": "Mas.",
-          "context": "Mason's United States (US) Circuit Court Reports"
+          "context": "Mason's United States (US) Circuit Court Reports; cite-type=federal; editions=Mason C.C.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -19928,7 +19928,7 @@
       "contextualAliases": [
         {
           "alias": "Mas.",
-          "context": "Massachusetts Reports"
+          "context": "Massachusetts Reports; cite-type=state; editions=Mass.:1867-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -20780,7 +20780,7 @@
       "contextualAliases": [
         {
           "alias": "Me.",
-          "context": "Maine Reports"
+          "context": "Maine Reports; cite-type=state; editions=Me.:1820-01-01T00:00:00..1965-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -20977,19 +20977,19 @@
       "contextualAliases": [
         {
           "alias": "Met.",
-          "context": "Kentucky Reports, Metcalf"
+          "context": "Kentucky Reports, Metcalf; cite-type=state; editions=Met.:1858-01-01T00:00:00..1863-12-31T00:00:00"
         },
         {
           "alias": "Met. Rep.",
-          "context": "Kentucky Reports, Metcalf"
+          "context": "Kentucky Reports, Metcalf; cite-type=state; editions=Met.:1858-01-01T00:00:00..1863-12-31T00:00:00"
         },
         {
           "alias": "Metc.",
-          "context": "Kentucky Reports, Metcalf"
+          "context": "Kentucky Reports, Metcalf; cite-type=state; editions=Met.:1858-01-01T00:00:00..1863-12-31T00:00:00"
         },
         {
           "alias": "Metc. Rep.",
-          "context": "Kentucky Reports, Metcalf"
+          "context": "Kentucky Reports, Metcalf; cite-type=state; editions=Met.:1858-01-01T00:00:00..1863-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -21019,19 +21019,19 @@
       "contextualAliases": [
         {
           "alias": "Met.",
-          "context": "Massachusetts Reports, Metcalf"
+          "context": "Massachusetts Reports, Metcalf; cite-type=state; editions=Met.:1840-01-01T00:00:00..1847-12-31T00:00:00"
         },
         {
           "alias": "Met. Rep.",
-          "context": "Massachusetts Reports, Metcalf"
+          "context": "Massachusetts Reports, Metcalf; cite-type=state; editions=Met.:1840-01-01T00:00:00..1847-12-31T00:00:00"
         },
         {
           "alias": "Metc.",
-          "context": "Massachusetts Reports, Metcalf"
+          "context": "Massachusetts Reports, Metcalf; cite-type=state; editions=Met.:1840-01-01T00:00:00..1847-12-31T00:00:00"
         },
         {
           "alias": "Metc. Rep.",
-          "context": "Massachusetts Reports, Metcalf"
+          "context": "Massachusetts Reports, Metcalf; cite-type=state; editions=Met.:1840-01-01T00:00:00..1847-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -21403,11 +21403,11 @@
       "contextualAliases": [
         {
           "alias": "Min.",
-          "context": "Minnesota Reports"
+          "context": "Minnesota Reports; cite-type=state; editions=Minn.:1851-01-01T00:00:00..1977-12-31T00:00:00"
         },
         {
           "alias": "Min. Rep.",
-          "context": "Minnesota Reports"
+          "context": "Minnesota Reports; cite-type=state; editions=Minn.:1851-01-01T00:00:00..1977-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -21557,11 +21557,11 @@
       "contextualAliases": [
         {
           "alias": "Min.",
-          "context": "Minor's Alabama Reports"
+          "context": "Minor's Alabama Reports; cite-type=state; editions=Minor:1820-01-01T00:00:00..1826-01-01T00:00:00"
         },
         {
           "alias": "Min. Rep.",
-          "context": "Minor's Alabama Reports"
+          "context": "Minor's Alabama Reports; cite-type=state; editions=Minor:1820-01-01T00:00:00..1826-01-01T00:00:00"
         }
       ],
       "status": "active",
@@ -21863,11 +21863,11 @@
       "contextualAliases": [
         {
           "alias": "Mon.",
-          "context": "Pennsylvania State Reports, Monaghan"
+          "context": "Pennsylvania State Reports, Monaghan; cite-type=state; editions=Monag.:1888-01-01T00:00:00..1890-12-31T00:00:00"
         },
         {
           "alias": "Mon. Rep.",
-          "context": "Pennsylvania State Reports, Monaghan"
+          "context": "Pennsylvania State Reports, Monaghan; cite-type=state; editions=Monag.:1888-01-01T00:00:00..1890-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -21899,7 +21899,7 @@
       "contextualAliases": [
         {
           "alias": "Mon.",
-          "context": "Montana Reports"
+          "context": "Montana Reports; cite-type=state; editions=Mont.:1868-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -22674,7 +22674,7 @@
       "contextualAliases": [
         {
           "alias": "N.H.",
-          "context": "New Hampshire Reports"
+          "context": "New Hampshire Reports; cite-type=state; editions=N.H.:1816-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -22701,7 +22701,7 @@
       "contextualAliases": [
         {
           "alias": "N.H.",
-          "context": "New Hampshire State Neutral Citation"
+          "context": "New Hampshire State Neutral Citation; cite-type=neutral; editions=N.H.:2024-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -23309,15 +23309,15 @@
       "contextualAliases": [
         {
           "alias": "Gild.",
-          "context": "New Mexico Reports (Gildersleeve)"
+          "context": "New Mexico Reports (Gildersleeve); cite-type=state; editions=N.M. (G.):1852-01-01T00:00:00..1889-12-31T00:00:00"
         },
         {
           "alias": "Gildersleeve",
-          "context": "New Mexico Reports (Gildersleeve)"
+          "context": "New Mexico Reports (Gildersleeve); cite-type=state; editions=N.M. (G.):1852-01-01T00:00:00..1889-12-31T00:00:00"
         },
         {
           "alias": "Gildr.",
-          "context": "New Mexico Reports (Gildersleeve)"
+          "context": "New Mexico Reports (Gildersleeve); cite-type=state; editions=N.M. (G.):1852-01-01T00:00:00..1889-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -23347,11 +23347,11 @@
       "contextualAliases": [
         {
           "alias": "Johnson",
-          "context": "New Mexico Reports (Johnson)"
+          "context": "New Mexico Reports (Johnson); cite-type=state; editions=N.M. (J.):1750-01-01T00:00:00..open"
         },
         {
           "alias": "Johnson Rep.",
-          "context": "New Mexico Reports (Johnson)"
+          "context": "New Mexico Reports (Johnson); cite-type=state; editions=N.M. (J.):1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -24065,11 +24065,11 @@
       "contextualAliases": [
         {
           "alias": "St. Rep.",
-          "context": "New York State Reporter"
+          "context": "New York State Reporter; cite-type=state; editions=N.Y. St. Rep.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "St.Rep.",
-          "context": "New York State Reporter"
+          "context": "New York State Reporter; cite-type=state; editions=N.Y. St. Rep.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -24103,7 +24103,7 @@
       "contextualAliases": [
         {
           "alias": "N.Y. Super. Ct.",
-          "context": "Supreme Court Reports"
+          "context": "Supreme Court Reports; cite-type=state; editions=N.Y. Sup. Ct.:1873-01-01T00:00:00..1896-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -24130,7 +24130,7 @@
       "contextualAliases": [
         {
           "alias": "N.Y. Super. Ct.",
-          "context": "Reports of Cases Argued and Determined in the Superior Court of the City of New York"
+          "context": "Reports of Cases Argued and Determined in the Superior Court of the City of New York; cite-type=state; editions=N.Y. Super. Ct.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -25629,7 +25629,7 @@
       "contextualAliases": [
         {
           "alias": "BNA OSHC",
-          "context": "Occupational Safety and Health Cases"
+          "context": "Occupational Safety and Health Cases; cite-type=specialty; editions=OSHC (BNA):1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -25678,7 +25678,7 @@
       "contextualAliases": [
         {
           "alias": "Ohio",
-          "context": "Ohio Reports"
+          "context": "Ohio Reports; cite-type=state; editions=Ohio:1821-01-01T00:00:00..1851-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -25708,7 +25708,7 @@
       "contextualAliases": [
         {
           "alias": "Ohio",
-          "context": "Ohio Neutral Citation"
+          "context": "Ohio Neutral Citation; cite-type=neutral; editions=Ohio:2002-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -25940,7 +25940,7 @@
       "contextualAliases": [
         {
           "alias": "Ohio Cir.Ct.",
-          "context": "Ohio Circuit Court Reports"
+          "context": "Ohio Circuit Court Reports; cite-type=state; editions=Ohio C.C.:1885-01-01T00:00:00..1901-12-31T00:00:00,Ohio C.C. (n.s.):1901-01-01T00:00:00..1922-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -25972,7 +25972,7 @@
       "contextualAliases": [
         {
           "alias": "Ohio Cir.Ct.",
-          "context": "Ohio Circuit Court Decisions"
+          "context": "Ohio Circuit Court Decisions; cite-type=state; editions=Ohio C.C. Dec.:1901-01-01T00:00:00..1923-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -26583,11 +26583,11 @@
       "contextualAliases": [
         {
           "alias": "Okla.",
-          "context": "Oklahoma Reports"
+          "context": "Oklahoma Reports; cite-type=state; editions=Okla.:1890-01-01T00:00:00..1953-12-31T00:00:00"
         },
         {
           "alias": "Okla. Rep.",
-          "context": "Oklahoma Reports"
+          "context": "Oklahoma Reports; cite-type=state; editions=Okla.:1890-01-01T00:00:00..1953-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -26648,11 +26648,11 @@
       "contextualAliases": [
         {
           "alias": "Okla.",
-          "context": "Oklahoma Criminal Reports"
+          "context": "Oklahoma Criminal Reports; cite-type=state; editions=Okla. Crim.:1908-01-01T00:00:00..1953-12-31T00:00:00"
         },
         {
           "alias": "Okla. Rep.",
-          "context": "Oklahoma Criminal Reports"
+          "context": "Oklahoma Criminal Reports; cite-type=state; editions=Okla. Crim.:1908-01-01T00:00:00..1953-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -27199,7 +27199,7 @@
       "contextualAliases": [
         {
           "alias": "P.R.",
-          "context": "Pacific Reporter"
+          "context": "Pacific Reporter; cite-type=state_regional; editions=P.:1883-01-01T00:00:00..1931-12-31T00:00:00,P.2d:1931-01-01T00:00:00..2000-12-31T00:00:00,P.3d:2000-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -27428,7 +27428,7 @@
       "contextualAliases": [
         {
           "alias": "P.R.",
-          "context": "Puerto Rico Reports"
+          "context": "Puerto Rico Reports; cite-type=state; editions=P.R.R.:1899-01-01T00:00:00..1978-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -27594,7 +27594,7 @@
       "contextualAliases": [
         {
           "alias": "Penn.",
-          "context": "Pennsylvania State Reports"
+          "context": "Pennsylvania State Reports; cite-type=state; editions=Pa.:1845-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -28020,11 +28020,11 @@
       "contextualAliases": [
         {
           "alias": "Pa. Super.",
-          "context": "Pennsylvania Superior Court Reports"
+          "context": "Pennsylvania Superior Court Reports; cite-type=state; editions=Pa. Super.:1895-01-01T00:00:00..1998-12-31T00:00:00"
         },
         {
           "alias": "PA Super",
-          "context": "Pennsylvania Superior Court Reports"
+          "context": "Pennsylvania Superior Court Reports; cite-type=state; editions=Pa. Super.:1895-01-01T00:00:00..1998-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -28051,11 +28051,11 @@
       "contextualAliases": [
         {
           "alias": "Pa. Super.",
-          "context": "Pennsylvania Superior Court Neutral Citation"
+          "context": "Pennsylvania Superior Court Neutral Citation; cite-type=neutral; editions=Pa. Super.:1999-01-01T00:00:00..open"
         },
         {
           "alias": "PA Super",
-          "context": "Pennsylvania Superior Court Neutral Citation"
+          "context": "Pennsylvania Superior Court Neutral Citation; cite-type=neutral; editions=Pa. Super.:1999-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -28429,7 +28429,7 @@
       "contextualAliases": [
         {
           "alias": "P.R.",
-          "context": "Pennsylvania State Reports, Penrose and Watts"
+          "context": "Pennsylvania State Reports, Penrose and Watts; cite-type=state; editions=Pen. & W.:1829-01-01T00:00:00..1832-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -28493,7 +28493,7 @@
       "contextualAliases": [
         {
           "alias": "Penn.",
-          "context": "Pennewill's Delaware Reports"
+          "context": "Pennewill's Delaware Reports; cite-type=state; editions=Penne.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -28551,7 +28551,7 @@
       "contextualAliases": [
         {
           "alias": "Penn.",
-          "context": "Pennsylvania State Reports, Pennypacker"
+          "context": "Pennsylvania State Reports, Pennypacker; cite-type=state; editions=Pennyp.:1881-01-01T00:00:00..1884-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -28800,23 +28800,23 @@
       "contextualAliases": [
         {
           "alias": "Phil.",
-          "context": "North Carolina Reports, Philips' Equity"
+          "context": "North Carolina Reports, Philips' Equity; cite-type=state; editions=Phil. Eq.:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phil. Rep.",
-          "context": "North Carolina Reports, Philips' Equity"
+          "context": "North Carolina Reports, Philips' Equity; cite-type=state; editions=Phil. Eq.:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phill.",
-          "context": "North Carolina Reports, Philips' Equity"
+          "context": "North Carolina Reports, Philips' Equity; cite-type=state; editions=Phil. Eq.:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phill. Rep.",
-          "context": "North Carolina Reports, Philips' Equity"
+          "context": "North Carolina Reports, Philips' Equity; cite-type=state; editions=Phil. Eq.:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phillips",
-          "context": "North Carolina Reports, Philips' Equity"
+          "context": "North Carolina Reports, Philips' Equity; cite-type=state; editions=Phil. Eq.:1866-01-01T00:00:00..1868-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -28848,23 +28848,23 @@
       "contextualAliases": [
         {
           "alias": "Phil.",
-          "context": "North Carolina Reports, Philips' Law"
+          "context": "North Carolina Reports, Philips' Law; cite-type=state; editions=Phil. Law:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phil. Rep.",
-          "context": "North Carolina Reports, Philips' Law"
+          "context": "North Carolina Reports, Philips' Law; cite-type=state; editions=Phil. Law:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phill.",
-          "context": "North Carolina Reports, Philips' Law"
+          "context": "North Carolina Reports, Philips' Law; cite-type=state; editions=Phil. Law:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phill. Rep.",
-          "context": "North Carolina Reports, Philips' Law"
+          "context": "North Carolina Reports, Philips' Law; cite-type=state; editions=Phil. Law:1866-01-01T00:00:00..1868-12-31T00:00:00"
         },
         {
           "alias": "Phillips",
-          "context": "North Carolina Reports, Philips' Law"
+          "context": "North Carolina Reports, Philips' Law; cite-type=state; editions=Phil. Law:1866-01-01T00:00:00..1868-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -29922,11 +29922,11 @@
       "contextualAliases": [
         {
           "alias": "Ril.",
-          "context": "South Carolina Reports, Riley"
+          "context": "South Carolina Reports, Riley; cite-type=state; editions=Ril.:1836-01-01T00:00:00..1837-12-31T00:00:00"
         },
         {
           "alias": "Riley",
-          "context": "South Carolina Reports, Riley"
+          "context": "South Carolina Reports, Riley; cite-type=state; editions=Ril.:1836-01-01T00:00:00..1837-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -29959,11 +29959,11 @@
       "contextualAliases": [
         {
           "alias": "Ril.",
-          "context": "South Carolina Reports, Riley's Chancery"
+          "context": "South Carolina Reports, Riley's Chancery; cite-type=state; editions=Ril. Eq.:1836-01-01T00:00:00..1837-12-31T00:00:00"
         },
         {
           "alias": "Riley",
-          "context": "South Carolina Reports, Riley's Chancery"
+          "context": "South Carolina Reports, Riley's Chancery; cite-type=state; editions=Ril. Eq.:1836-01-01T00:00:00..1837-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -29995,15 +29995,15 @@
       "contextualAliases": [
         {
           "alias": "Rob.",
-          "context": "Louisiana Reports, Robinson"
+          "context": "Louisiana Reports, Robinson; cite-type=state; editions=Rob.:1841-01-01T00:00:00..1846-12-31T00:00:00"
         },
         {
           "alias": "Rob. Rep.",
-          "context": "Louisiana Reports, Robinson"
+          "context": "Louisiana Reports, Robinson; cite-type=state; editions=Rob.:1841-01-01T00:00:00..1846-12-31T00:00:00"
         },
         {
           "alias": "Robinson",
-          "context": "Louisiana Reports, Robinson"
+          "context": "Louisiana Reports, Robinson; cite-type=state; editions=Rob.:1841-01-01T00:00:00..1846-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -30034,15 +30034,15 @@
       "contextualAliases": [
         {
           "alias": "Rob.",
-          "context": "Virginia Reports, Robinson"
+          "context": "Virginia Reports, Robinson; cite-type=state; editions=Rob.:1842-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Rob. Rep.",
-          "context": "Virginia Reports, Robinson"
+          "context": "Virginia Reports, Robinson; cite-type=state; editions=Rob.:1842-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Robinson",
-          "context": "Virginia Reports, Robinson"
+          "context": "Virginia Reports, Robinson; cite-type=state; editions=Rob.:1842-01-01T00:00:00..1844-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -30071,7 +30071,7 @@
       "contextualAliases": [
         {
           "alias": "Rob.",
-          "context": "Robertson's Reports (24-30 New York Superior)"
+          "context": "Robertson's Reports (24-30 New York Superior); cite-type=state; editions=Rob.:1863-01-01T00:00:00..1868-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -30103,11 +30103,11 @@
       "contextualAliases": [
         {
           "alias": "Rob.",
-          "context": "Synopses of the Decisions of the Supreme Court of Texas Arising from Restraints by Conscript and Other Military Authorities (Robards)"
+          "context": "Synopses of the Decisions of the Supreme Court of Texas Arising from Restraints by Conscript and Other Military Authorities (Robards); cite-type=state; editions=Robards:1862-01-01T00:00:00..1865-12-31T00:00:00"
         },
         {
           "alias": "Rob. Rep.",
-          "context": "Synopses of the Decisions of the Supreme Court of Texas Arising from Restraints by Conscript and Other Military Authorities (Robards)"
+          "context": "Synopses of the Decisions of the Supreme Court of Texas Arising from Restraints by Conscript and Other Military Authorities (Robards); cite-type=state; editions=Robards:1862-01-01T00:00:00..1865-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -30321,7 +30321,7 @@
       "contextualAliases": [
         {
           "alias": "S.C.",
-          "context": "West's Supreme Court Reporter"
+          "context": "West's Supreme Court Reporter; cite-type=federal; editions=S. Ct.:1882-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -30357,7 +30357,7 @@
       "contextualAliases": [
         {
           "alias": "S.C.",
-          "context": "South Carolina Reports"
+          "context": "South Carolina Reports; cite-type=state; editions=S.C.:1868-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -31463,7 +31463,7 @@
       "contextualAliases": [
         {
           "alias": "Sneed",
-          "context": "Kentucky Reports, Sneed"
+          "context": "Kentucky Reports, Sneed; cite-type=state; editions=Sneed:1801-01-01T00:00:00..1805-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -31492,7 +31492,7 @@
       "contextualAliases": [
         {
           "alias": "Sneed",
-          "context": "Tennessee Reports, Sneed"
+          "context": "Tennessee Reports, Sneed; cite-type=state; editions=Sneed:1853-01-01T00:00:00..1858-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -31656,15 +31656,15 @@
       "contextualAliases": [
         {
           "alias": "Speers",
-          "context": "South Carolina Reports, Speers"
+          "context": "South Carolina Reports, Speers; cite-type=state; editions=Speers:1842-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Sp.",
-          "context": "South Carolina Reports, Speers"
+          "context": "South Carolina Reports, Speers; cite-type=state; editions=Speers:1842-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Spears",
-          "context": "South Carolina Reports, Speers"
+          "context": "South Carolina Reports, Speers; cite-type=state; editions=Speers:1842-01-01T00:00:00..1844-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -31699,15 +31699,15 @@
       "contextualAliases": [
         {
           "alias": "Sp.",
-          "context": "South Carolina Reports, Speers' Equity"
+          "context": "South Carolina Reports, Speers' Equity; cite-type=state; editions=Speers Eq.:1842-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Spears",
-          "context": "South Carolina Reports, Speers' Equity"
+          "context": "South Carolina Reports, Speers' Equity; cite-type=state; editions=Speers Eq.:1842-01-01T00:00:00..1844-12-31T00:00:00"
         },
         {
           "alias": "Speers",
-          "context": "South Carolina Reports, Speers' Equity"
+          "context": "South Carolina Reports, Speers' Equity; cite-type=state; editions=Speers Eq.:1842-01-01T00:00:00..1844-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -31853,11 +31853,11 @@
       "contextualAliases": [
         {
           "alias": "St. Rep.",
-          "context": "State Reporter"
+          "context": "State Reporter; cite-type=state; editions=State Rptr.:1945-01-01T00:00:00..open"
         },
         {
           "alias": "St.Rep.",
-          "context": "State Reporter"
+          "context": "State Reporter; cite-type=state; editions=State Rptr.:1945-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -32228,11 +32228,11 @@
       "contextualAliases": [
         {
           "alias": "Mon.",
-          "context": "Kentucky Reports, Monroe, T.B."
+          "context": "Kentucky Reports, Monroe, T.B.; cite-type=state; editions=T.B. Mon.:1824-01-01T00:00:00..1828-12-31T00:00:00"
         },
         {
           "alias": "Mon. Rep.",
-          "context": "Kentucky Reports, Monroe, T.B."
+          "context": "Kentucky Reports, Monroe, T.B.; cite-type=state; editions=T.B. Mon.:1824-01-01T00:00:00..1828-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -32394,7 +32394,7 @@
       "contextualAliases": [
         {
           "alias": "T.C.M. (RIA)",
-          "context": "Tax Court Memorandum Decisions"
+          "context": "Tax Court Memorandum Decisions; cite-type=specialty; editions=T.C.M.:1942-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -32423,7 +32423,7 @@
       "contextualAliases": [
         {
           "alias": "T.C.M. (RIA)",
-          "context": "RIA Federal Tax Handbook"
+          "context": "RIA Federal Tax Handbook; cite-type=specialty; editions=T.C.M. (RIA):1924-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -32741,7 +32741,7 @@
       "contextualAliases": [
         {
           "alias": "Taylor",
-          "context": "North Carolina Reports, Taylor"
+          "context": "North Carolina Reports, Taylor; cite-type=state; editions=Tay.:1798-01-01T00:00:00..1802-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -32773,7 +32773,7 @@
       "contextualAliases": [
         {
           "alias": "Taylor",
-          "context": "Taylor's North Carolina Term Reports"
+          "context": "Taylor's North Carolina Term Reports; cite-type=state; editions=Taylor:1816-01-01T00:00:00..1818-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -33617,11 +33617,11 @@
       "contextualAliases": [
         {
           "alias": "Tread.",
-          "context": "Treadway's South Carolina Law Reports (1812-16)"
+          "context": "Treadway's South Carolina Law Reports (1812-16); cite-type=state; editions=Tread.:1812-01-01T00:00:00..1816-12-31T00:00:00"
         },
         {
           "alias": "Tread",
-          "context": "Treadway's South Carolina Law Reports (1812-16)"
+          "context": "Treadway's South Carolina Law Reports (1812-16); cite-type=state; editions=Tread.:1812-01-01T00:00:00..1816-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -33651,11 +33651,11 @@
       "contextualAliases": [
         {
           "alias": "Tread.",
-          "context": "Treadway's South Carolina Constitutional Reports"
+          "context": "Treadway's South Carolina Constitutional Reports; cite-type=state; editions=Tread.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Tread",
-          "context": "Treadway's South Carolina Constitutional Reports"
+          "context": "Treadway's South Carolina Constitutional Reports; cite-type=state; editions=Tread.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -34970,7 +34970,7 @@
       "contextualAliases": [
         {
           "alias": "Wy.",
-          "context": "Wythe's Chancery Reports (1789-99) (Va.)"
+          "context": "Wythe's Chancery Reports (1789-99) (Va.); cite-type=state; editions=Va. Ch. Dec.:1789-01-01T00:00:00..1799-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -35635,7 +35635,7 @@
       "contextualAliases": [
         {
           "alias": "Harr.",
-          "context": "W.W. Harrington's Reports"
+          "context": "W.W. Harrington's Reports; cite-type=state; editions=W.W. Harr.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -35883,11 +35883,11 @@
       "contextualAliases": [
         {
           "alias": "Walk.",
-          "context": "Pennsylvania State Reports, Walker"
+          "context": "Pennsylvania State Reports, Walker; cite-type=state; editions=Walk.:1855-01-01T00:00:00..1885-12-31T00:00:00"
         },
         {
           "alias": "Walker",
-          "context": "Pennsylvania State Reports, Walker"
+          "context": "Pennsylvania State Reports, Walker; cite-type=state; editions=Walk.:1855-01-01T00:00:00..1885-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -35943,11 +35943,11 @@
       "contextualAliases": [
         {
           "alias": "Walker",
-          "context": "Mississippi Reports, Walker"
+          "context": "Mississippi Reports, Walker; cite-type=state; editions=Walker:1818-01-01T00:00:00..1832-12-31T00:00:00"
         },
         {
           "alias": "Walk.",
-          "context": "Mississippi Reports, Walker"
+          "context": "Mississippi Reports, Walker; cite-type=state; editions=Walker:1818-01-01T00:00:00..1832-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -35974,7 +35974,7 @@
       "contextualAliases": [
         {
           "alias": "Walker",
-          "context": "Reports of cases decided by the supreme court of pennsylvania which have been omitted from the regular reports"
+          "context": "Reports of cases decided by the supreme court of pennsylvania which have been omitted from the regular reports; cite-type=state; editions=Walker:1849-01-01T00:00:00..1887-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36005,7 +36005,7 @@
       "contextualAliases": [
         {
           "alias": "Wall.",
-          "context": "Wallace's Supreme Court Reports"
+          "context": "Wallace's Supreme Court Reports; cite-type=scotus_early; editions=Wall.:1863-01-01T00:00:00..1874-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36037,7 +36037,7 @@
       "contextualAliases": [
         {
           "alias": "Wall.",
-          "context": "Wallace's Circuit Court Reports"
+          "context": "Wallace's Circuit Court Reports; cite-type=federal; editions=Wall.:1863-01-01T00:00:00..1874-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36155,11 +36155,11 @@
       "contextualAliases": [
         {
           "alias": "Wash.",
-          "context": "Virginia Reports, Washington"
+          "context": "Virginia Reports, Washington; cite-type=state; editions=Wash.:1790-01-01T00:00:00..1796-12-31T00:00:00"
         },
         {
           "alias": "Wash. Rep.",
-          "context": "Virginia Reports, Washington"
+          "context": "Virginia Reports, Washington; cite-type=state; editions=Wash.:1790-01-01T00:00:00..1796-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36211,23 +36211,23 @@
       "contextualAliases": [
         {
           "alias": "Wash.",
-          "context": "Washington Reports"
+          "context": "Washington Reports; cite-type=state; editions=Wash.:1889-01-01T00:00:00..open,Wash. 2d:1889-01-01T00:00:00..2023-02-19T00:00:00,Wash. 3d:2023-02-19T00:00:00..open"
         },
         {
           "alias": "W.",
-          "context": "Washington Reports"
+          "context": "Washington Reports; cite-type=state; editions=Wash.:1889-01-01T00:00:00..open,Wash. 2d:1889-01-01T00:00:00..2023-02-19T00:00:00,Wash. 3d:2023-02-19T00:00:00..open"
         },
         {
           "alias": "W.2d",
-          "context": "Washington Reports"
+          "context": "Washington Reports; cite-type=state; editions=Wash.:1889-01-01T00:00:00..open,Wash. 2d:1889-01-01T00:00:00..2023-02-19T00:00:00,Wash. 3d:2023-02-19T00:00:00..open"
         },
         {
           "alias": "Wa.",
-          "context": "Washington Reports"
+          "context": "Washington Reports; cite-type=state; editions=Wash.:1889-01-01T00:00:00..open,Wash. 2d:1889-01-01T00:00:00..2023-02-19T00:00:00,Wash. 3d:2023-02-19T00:00:00..open"
         },
         {
           "alias": "Wash. Rep.",
-          "context": "Washington Reports"
+          "context": "Washington Reports; cite-type=state; editions=Wash.:1889-01-01T00:00:00..open,Wash. 2d:1889-01-01T00:00:00..2023-02-19T00:00:00,Wash. 3d:2023-02-19T00:00:00..open"
         }
       ],
       "status": "active",
@@ -36411,15 +36411,15 @@
       "contextualAliases": [
         {
           "alias": "Allen",
-          "context": "Washington Territory Reports"
+          "context": "Washington Territory Reports; cite-type=state; editions=Wash. Terr.:1854-01-01T00:00:00..1888-12-31T00:00:00"
         },
         {
           "alias": "Wash.",
-          "context": "Washington Territory Reports"
+          "context": "Washington Territory Reports; cite-type=state; editions=Wash. Terr.:1854-01-01T00:00:00..1888-12-31T00:00:00"
         },
         {
           "alias": "Wash. Rep.",
-          "context": "Washington Territory Reports"
+          "context": "Washington Territory Reports; cite-type=state; editions=Wash. Terr.:1854-01-01T00:00:00..1888-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36474,7 +36474,7 @@
       "contextualAliases": [
         {
           "alias": "Wa.",
-          "context": "Pennsylvania State Reports, Watts"
+          "context": "Pennsylvania State Reports, Watts; cite-type=state; editions=Watts:1832-01-01T00:00:00..1840-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36613,7 +36613,7 @@
       "contextualAliases": [
         {
           "alias": "W.",
-          "context": "Wendell's Reports"
+          "context": "Wendell's Reports; cite-type=state; editions=Wend.:1828-01-01T00:00:00..1841-12-31T00:00:00"
         }
       ],
       "status": "active",
@@ -36956,7 +36956,7 @@
       "contextualAliases": [
         {
           "alias": "Wilson",
-          "context": "Wilson's Reports (1-3 Oregon)"
+          "context": "Wilson's Reports (1-3 Oregon); cite-type=state; editions=Wilson:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -36985,7 +36985,7 @@
       "contextualAliases": [
         {
           "alias": "Wilson",
-          "context": "Wilson's Reports (48-59 Minn.)"
+          "context": "Wilson's Reports (48-59 Minn.); cite-type=state; editions=Wilson:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -37015,7 +37015,7 @@
       "contextualAliases": [
         {
           "alias": "Wilson",
-          "context": "Wilson's Reports, Indiana Superior Court"
+          "context": "Wilson's Reports, Indiana Superior Court; cite-type=state; editions=Wilson:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -37106,11 +37106,11 @@
       "contextualAliases": [
         {
           "alias": "W.",
-          "context": "Wisconsin Reports"
+          "context": "Wisconsin Reports; cite-type=state; editions=Wis.:1853-01-01T00:00:00..open,Wis. 2d:1853-01-01T00:00:00..open"
         },
         {
           "alias": "W.2d",
-          "context": "Wisconsin Reports"
+          "context": "Wisconsin Reports; cite-type=state; editions=Wis.:1853-01-01T00:00:00..open,Wis. 2d:1853-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -37310,11 +37310,11 @@
       "contextualAliases": [
         {
           "alias": "Woolw.",
-          "context": "Woolworth's United States Circuit Court Reports"
+          "context": "Woolworth's United States Circuit Court Reports; cite-type=federal; editions=Woolw.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Woolw. Rep.",
-          "context": "Woolworth's United States Circuit Court Reports"
+          "context": "Woolworth's United States Circuit Court Reports; cite-type=federal; editions=Woolw.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -37339,11 +37339,11 @@
       "contextualAliases": [
         {
           "alias": "Woolw.",
-          "context": "Woolworth's Reports (1 Nebraska)"
+          "context": "Woolworth's Reports (1 Nebraska); cite-type=state; editions=Woolw.:1750-01-01T00:00:00..open"
         },
         {
           "alias": "Woolw. Rep.",
-          "context": "Woolworth's Reports (1 Nebraska)"
+          "context": "Woolworth's Reports (1 Nebraska); cite-type=state; editions=Woolw.:1750-01-01T00:00:00..open"
         }
       ],
       "status": "active",
@@ -37396,11 +37396,11 @@
       "contextualAliases": [
         {
           "alias": "W.",
-          "context": "Wyoming Reports"
+          "context": "Wyoming Reports; cite-type=state; editions=Wyo.:1870-01-01T00:00:00..1959-12-31T00:00:00"
         },
         {
           "alias": "Wy.",
-          "context": "Wyoming Reports"
+          "context": "Wyoming Reports; cite-type=state; editions=Wyo.:1870-01-01T00:00:00..1959-12-31T00:00:00"
         }
       ],
       "status": "active",

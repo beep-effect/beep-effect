@@ -75,3 +75,26 @@
 - Prevention: compatibility fixtures should mutate every public semantic field
   family and range boundary, not only produce one example of every emitted
   change label.
+
+## 2026-08-27 - Generator rerun consumed stale transpiler output
+
+- Work: regenerate the reporter vocabulary after changing the target's nested
+  edition projection and contextual-alias renderer.
+- Evidence: a second `bun run beep sync-data-to-ts --target reporters-db`
+  retained the prior nested key order; rerunning with
+  `BUN_RUNTIME_TRANSPILER_CACHE_PATH=0` immediately emitted the current source
+  shape and reduced the artifact diff to the intended contextual aliases.
+- Prevention: self-hosted source generators should disable Bun's runtime
+  transpiler cache, or include the generator source fingerprint in the cache
+  identity, so a successful rerun cannot publish stale generator behavior.
+
+## 2026-08-28 - Focused archive tests hung outside the review-fix paths
+
+- Work: verify the PR review fixes after merging current `origin/main`.
+- Evidence: the court/reporter domain suite passed all 12 cases, and the new
+  sync lifecycle case passed, but the pre-existing tar extraction cases timed
+  out at both 5 and 15 seconds without reaching an assertion. Neither the tests
+  nor their archive helper are changed by this review-fix diff.
+- Prevention: archive fixture tests should bound and report the child-process
+  stage that stalled, so proof attribution can distinguish extraction defects
+  from machine-level process or I/O contention.

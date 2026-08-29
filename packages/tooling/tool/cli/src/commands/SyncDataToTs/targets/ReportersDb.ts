@@ -6,8 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import { Crypto, Effect, Encoding, pipe } from "effect";
+import { Crypto, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertPinnedArchive, extractArchiveTextEntries, renderUnknownJsonModule } from "../internal/FreeLawProject.ts";
@@ -16,6 +17,7 @@ import {
   COURT_REPORTER_PROJECTION_VERSION,
   COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
   classifyVocabularyAliases,
+  preserveIssuedVocabularyRecords,
 } from "../internal/FreeLawProjectVocabulary.ts";
 import { fetchSource, formatJson, normalizeJson, outputFile, sourceMetadata } from "../internal/Source.ts";
 import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
@@ -117,6 +119,57 @@ class ReporterRecord extends S.Class<ReporterRecord>($I`ReporterRecord`)(
   })
 ) {}
 
+class ReporterVocabularyEdition extends S.Class<ReporterVocabularyEdition>($I`ReporterVocabularyEdition`)(
+  {
+    abbreviation: S.NonEmptyString,
+    start: S.NullOr(S.String),
+    end: S.NullOr(S.String),
+  },
+  $I.annote("ReporterVocabularyEdition", {
+    description: "Source-faithful reporter edition retained in the published vocabulary.",
+  })
+) {}
+
+class VocabularyContextualAlias extends S.Class<VocabularyContextualAlias>($I`VocabularyContextualAlias`)(
+  {
+    alias: S.NonEmptyString,
+    context: S.NonEmptyString,
+  },
+  $I.annote("VocabularyContextualAlias", {
+    description: "Context-bearing alias retained in a generated court or reporter vocabulary.",
+  })
+) {}
+
+class ReporterVocabularyOutputRecord extends S.Class<ReporterVocabularyOutputRecord>(
+  $I`ReporterVocabularyOutputRecord`
+)(
+  {
+    id: S.NonEmptyString,
+    semanticKey: S.NonEmptyString,
+    lineageKey: S.NonEmptyString,
+    primaryAbbreviation: S.NonEmptyString,
+    name: S.NonEmptyString,
+    citeType: S.NonEmptyString,
+    editions: S.Array(ReporterVocabularyEdition),
+    jurisdictions: S.Array(S.String),
+    aliases: S.Array(S.NonEmptyString),
+    contextualAliases: S.Array(VocabularyContextualAlias),
+    status: S.Literals(["active", "tombstone"]),
+    successorId: S.NullOr(S.NonEmptyString),
+  },
+  $I.annote("ReporterVocabularyOutputRecord", {
+    description: "Generated reporter vocabulary row used to preserve previously issued identities across refreshes.",
+  })
+) {}
+
+const PreviousReporterVocabularyArtifact = S.Struct({
+  records: S.Array(ReporterVocabularyOutputRecord),
+}).pipe(
+  $I.annoteSchema("PreviousReporterVocabularyArtifact", {
+    description: "Minimal checked-in reporter vocabulary shape required for lifecycle reconciliation.",
+  })
+);
+
 class JournalRecord extends S.Class<JournalRecord>($I`JournalRecord`)(
   {
     cite_type: S.String,
@@ -188,6 +241,38 @@ const decodeLaws = S.decodeUnknownEffect(S.fromJsonString(Laws));
 const decodeReporterRegexes = S.decodeUnknownEffect(S.fromJsonString(ReporterRegexes));
 const decodeReporters = S.decodeUnknownEffect(S.fromJsonString(Reporters));
 const decodeStateAbbreviations = S.decodeUnknownEffect(S.fromJsonString(StateAbbreviations));
+const decodePreviousReporterVocabularyArtifact = S.decodeUnknownEffect(
+  S.fromJsonString(PreviousReporterVocabularyArtifact)
+);
+
+const readPreviousReporterVocabulary = Effect.fn("SyncDataToTs.ReportersDb.readPreviousVocabulary")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot().pipe(
+    SyncDataToTsError.mapError("Failed to locate the repo root for reporter vocabulary reconciliation", targetId)
+  );
+  const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
+  const exists = yield* fs
+    .exists(absolutePath)
+    .pipe(
+      SyncDataToTsError.mapError("Failed to inspect the checked-in reporter vocabulary", targetId, vocabularyDataPath)
+    );
+
+  if (!exists) {
+    return A.empty<ReporterVocabularyOutputRecord>();
+  }
+
+  const content = yield* fs
+    .readFileString(absolutePath)
+    .pipe(
+      SyncDataToTsError.mapError("Failed to read the checked-in reporter vocabulary", targetId, vocabularyDataPath)
+    );
+  const artifact = yield* decodePreviousReporterVocabularyArtifact(content).pipe(
+    SyncDataToTsError.mapError("Failed to decode the checked-in reporter vocabulary", targetId, vocabularyDataPath)
+  );
+
+  return artifact.records;
+});
 
 const decodeArchiveEntry = <A, E>(
   targetId: string,
@@ -211,6 +296,26 @@ const makeReporterId = Effect.fn("SyncDataToTs.ReportersDb.makeReporterId")(func
 
   return `reporter:${pipe(Encoding.encodeHex(digest), Str.slice(0, 24))}`;
 });
+
+const formatReporterRangeBoundary = (boundary: string | null): string =>
+  pipe(
+    O.fromNullishOr(boundary),
+    O.getOrElse(() => "open")
+  );
+
+const reporterAliasContext = (record: ReporterRecord): string => {
+  const editions = pipe(
+    R.toEntries(record.editions),
+    A.sortWith(([abbreviation]) => abbreviation, Order.String),
+    A.map(
+      ([abbreviation, edition]) =>
+        `${abbreviation}:${formatReporterRangeBoundary(edition.start)}..${formatReporterRangeBoundary(edition.end)}`
+    ),
+    A.join(",")
+  );
+
+  return `${record.name}; cite-type=${record.cite_type}; editions=${editions}`;
+};
 
 /**
  * Decode all six authoritative reporters-db source datasets.
@@ -298,39 +403,54 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
 
   const aliasesByReporterId = pipe(
     reportersWithIds,
-    A.map(({ candidateAliases, id, record }) => [id, record.name, candidateAliases] as const),
+    A.map(({ candidateAliases, id, record }) => [id, reporterAliasContext(record), candidateAliases] as const),
     classifyVocabularyAliases,
     A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
     R.fromEntries
   );
-  const reporterVocabulary = A.map(reportersWithIds, ({ id, lineageKey, primaryAbbreviation, record, semanticKey }) => {
-    const aliases = pipe(
-      R.get(aliasesByReporterId, id),
-      O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
-    );
+  const projectedReporterVocabulary = A.map(
+    reportersWithIds,
+    ({ id, lineageKey, primaryAbbreviation, record, semanticKey }) => {
+      const aliases = pipe(
+        R.get(aliasesByReporterId, id),
+        O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
+      );
 
-    return {
-      id,
-      semanticKey,
-      lineageKey,
-      primaryAbbreviation,
-      name: record.name,
-      citeType: record.cite_type,
-      editions: pipe(
-        R.toEntries(record.editions),
-        A.map(([abbreviation, edition]) => ({
-          abbreviation,
-          start: edition.start,
-          end: edition.end,
-        }))
-      ),
-      jurisdictions: record.mlz_jurisdiction,
-      aliases: aliases.aliases,
-      contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
-      status: "active",
-      successorId: null,
-    };
-  });
+      return ReporterVocabularyOutputRecord.make({
+        id,
+        semanticKey,
+        lineageKey,
+        primaryAbbreviation,
+        name: record.name,
+        citeType: record.cite_type,
+        editions: pipe(
+          R.toEntries(record.editions),
+          A.map(([abbreviation, edition]) => ({
+            abbreviation,
+            start: edition.start,
+            end: edition.end,
+          }))
+        ),
+        jurisdictions: record.mlz_jurisdiction,
+        aliases: aliases.aliases,
+        contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
+        status: "active",
+        successorId: null,
+      });
+    }
+  );
+  const previousReporterVocabulary = yield* readPreviousReporterVocabulary();
+  const reporterVocabulary = preserveIssuedVocabularyRecords(
+    previousReporterVocabulary,
+    projectedReporterVocabulary,
+    (previous, current) => (previous.status === "tombstone" ? previous : current),
+    (previous, successorId) =>
+      ReporterVocabularyOutputRecord.make({
+        ...previous,
+        status: "tombstone",
+        successorId,
+      })
+  );
   const counts = {
     caseNameAbbreviationKeys: A.length(R.keys(caseNameAbbreviations)),
     caseNameExpansions: recordArrayCount(caseNameAbbreviations),
@@ -341,7 +461,7 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
     regexFamilies: A.length(R.keys(regexes)),
     reporterKeys: A.length(R.keys(reporters)),
     reporterRecords: recordArrayCount(reporters),
-    stableReporterIds: A.length(stableReporterIds),
+    stableReporterIds: A.length(reporterVocabulary),
     stateAbbreviations: A.length(R.keys(stateAbbreviations)),
   };
   const vocabularyArtifact = {
@@ -358,7 +478,7 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
       semanticSha256: null,
       refreshCommand,
     },
-    stableIdCount: A.length(stableReporterIds),
+    stableIdCount: A.length(reporterVocabulary),
     records: reporterVocabulary,
   };
   const metadata = sourceMetadata(source, { version: REPORTERS_DB_RELEASE });

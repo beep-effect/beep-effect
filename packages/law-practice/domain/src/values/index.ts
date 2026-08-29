@@ -211,19 +211,6 @@ export * from "./ContextOptions/index.ts";
  */
 export * from "./CourtInference/index.ts";
 /**
- * Stable court/reporter vocabulary and compatibility exports.
- *
- * **Example** (Import the current vocabulary artifact)
- *
- * ```ts
- * import { CourtReporterArtifact } from "@beep/law-practice-domain/values"
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CourtReporterVocabulary/index.ts";
-/**
  * Docket-citation value-object exports.
  *
  * **Example** (Import the docket-citation value objects)
