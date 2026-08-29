@@ -1,0 +1,28 @@
+diff --git a/bun.lock b/bun.lock
+index c3115204dc..cdd30a5364 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -308,9 +308,11 @@
+       "version": "0.0.0",
+       "dependencies": {
+         "@beep/identity": "workspace:^",
++        "@beep/nlp": "workspace:^",
+         "@beep/repo-memory-model": "workspace:^",
+         "@beep/repo-memory-store": "workspace:^",
+         "@beep/schema": "workspace:^",
++        "@beep/utils": "workspace:^",
+         "effect": "catalog:",
+       },
+       "devDependencies": {
+diff --git a/bunfig.toml b/bunfig.toml
+index ee388e32a6..c1e75ccaec 100644
+--- a/bunfig.toml
++++ b/bunfig.toml
+@@ -3,7 +3,6 @@
+ linker = "hoisted"
+ strict-peer-dependencies = true
+ saveTextLockfile = true
+-minimumReleaseAge = 259200
+ 
+ 
+ [install.scopes."@buf"]
