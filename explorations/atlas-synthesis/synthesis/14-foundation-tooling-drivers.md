@@ -1,5 +1,8 @@
 # 14 — Foundation, Tooling & Drivers: The Reusable Substrate
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 _Date: 2026-06-17_
 _Scope: the "what can we build with" inventory. The current, on-disk **reusable substrate** — foundation, drivers, tooling, and the cross-slice shared kernel — that future product work (the solo IP-law firm flywheel) would compose. This is the **lego-brick layer**, not the product layer._
 
