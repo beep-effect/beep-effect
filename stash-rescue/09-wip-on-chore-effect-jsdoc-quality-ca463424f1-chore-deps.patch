@@ -1,0 +1,3137 @@
+diff --git a/.changeset/chubby-eggs-know.md b/.changeset/chubby-eggs-know.md
+new file mode 100644
+index 0000000000..250701903d
+--- /dev/null
++++ b/.changeset/chubby-eggs-know.md
+@@ -0,0 +1,5 @@
++---
++{}
++---
++
++No release: refresh root development dependencies, fast-forward the vendored Effect subtree, and preserve Markdown embed construction under the updated Schema behavior.
+diff --git a/bun.lock b/bun.lock
+index ca53386813..7384819158 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -2752,7 +2752,7 @@
+     "@effect/sql-pglite": "4.0.0-beta.102",
+     "@effect/sql-sqlite-bun": "4.0.0-beta.102",
+     "@effect/sql-sqlite-node": "4.0.0-beta.102",
+-    "@effect/tsgo": "0.19.0",
++    "@effect/tsgo": "0.26.7",
+     "@effect/tsgo-darwin-arm64": "0.26.7",
+     "@effect/tsgo-darwin-x64": "0.26.7",
+     "@effect/tsgo-linux-arm": "0.26.7",
+@@ -4034,21 +4034,21 @@
+ 
+     "@effect/sql-sqlite-node": ["@effect/sql-sqlite-node@4.0.0-beta.102", "", { "peerDependencies": { "effect": "^4.0.0-beta.102" } }, "sha512-MtHf58b33hP8t5wJ9SrQCoLwIWQntxtFdcAN3aSLTSczBgKk+d/BPGfyv6iIgDkWWyMKHOYrJ29C7vprgjqeyA=="],
+ 
+-    "@effect/tsgo": ["@effect/tsgo@0.19.0", "", { "optionalDependencies": { "@effect/tsgo-darwin-arm64": "0.19.0", "@effect/tsgo-darwin-x64": "0.19.0", "@effect/tsgo-linux-arm": "0.19.0", "@effect/tsgo-linux-arm64": "0.19.0", "@effect/tsgo-linux-x64": "0.19.0", "@effect/tsgo-win32-arm64": "0.19.0", "@effect/tsgo-win32-x64": "0.19.0" }, "bin": { "effect-tsgo": "dist/effect-tsgo.js" } }, "sha512-NDyG/RufHigI0bdvyggbr53J6c1GWcnNkm7rUwQbBDuRI1KRThFh2WtugMLL+i6wrRiMXJtgLHzh9lIMqy9gGA=="],
++    "@effect/tsgo": ["@effect/tsgo@0.26.7", "", { "optionalDependencies": { "@effect/tsgo-darwin-arm64": "0.26.7", "@effect/tsgo-darwin-x64": "0.26.7", "@effect/tsgo-linux-arm": "0.26.7", "@effect/tsgo-linux-arm64": "0.26.7", "@effect/tsgo-linux-x64": "0.26.7", "@effect/tsgo-win32-arm64": "0.26.7", "@effect/tsgo-win32-x64": "0.26.7" }, "bin": { "effect-tsgo": "dist/effect-tsgo.cjs" } }, "sha512-GeSy97McdcKcWlQtbf1m39UIHVUlzE+ODV/zM9jWgNjTc4ofR6me6IxX01Z11PfkCU917IFYSv0AbyjPz/A78w=="],
+ 
+-    "@effect/tsgo-darwin-arm64": ["@effect/tsgo-darwin-arm64@0.24.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-eO83D7ZmpAsocA5WJQ8SSAPnAOZ+dEduFIozg9c2SmH36PCHG1Eb++I0UiQml+2LAr4o/QE2wKdWj7LExebjZA=="],
++    "@effect/tsgo-darwin-arm64": ["@effect/tsgo-darwin-arm64@0.26.7", "", { "os": "darwin", "cpu": "arm64" }, "sha512-VsyLA2kmvIKIWjGPv8aoEk9fJlwgrn31Ee51iHhwuDBwMEtaeBH4Lo8cTcjeOSNSf5AmalJfgTbl3sFiL4Wx0Q=="],
+ 
+-    "@effect/tsgo-darwin-x64": ["@effect/tsgo-darwin-x64@0.24.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-ksX9BdCM8289RRuN0lWhtzuvstH1frxwdxhoW08rrGW3ryER3udEFqEtgtveP0cYvK9gTlV5lXbQPNGktQ2sTw=="],
++    "@effect/tsgo-darwin-x64": ["@effect/tsgo-darwin-x64@0.26.7", "", { "os": "darwin", "cpu": "x64" }, "sha512-BjVmO5QrORJYSG3CglARqhVlmGKatPhHX/uWxcAMd94Nt6RjuusrYWKWijzPr+NAL0h1cShGJmU1kTs3W2Ax1g=="],
+ 
+-    "@effect/tsgo-linux-arm": ["@effect/tsgo-linux-arm@0.24.3", "", { "os": "linux", "cpu": "arm" }, "sha512-0TzebGLMNZkHOGSK0w1B4zuvHGlA+Od4LdElWeHHP6iMPEiEWPq17If787+oc+Y67yITPJ9DZcibu69eI9mZhg=="],
++    "@effect/tsgo-linux-arm": ["@effect/tsgo-linux-arm@0.26.7", "", { "os": "linux", "cpu": "arm" }, "sha512-xnYdSXMyW69U1UM7/poOze+qyPWcj0qFz5A1A0vyN4rGYcnoO3zNwx03XXY56eq3PX5xYKkTKYo72uOTjz3mnA=="],
+ 
+-    "@effect/tsgo-linux-arm64": ["@effect/tsgo-linux-arm64@0.24.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-CMiThuURi14rT5Ikag5pVnUC3tx4IcmPpRR4WBQkHxAbOf5a1Lo1NUF82zY0azhLW2WszBamTSZP5Tcv4uks2A=="],
++    "@effect/tsgo-linux-arm64": ["@effect/tsgo-linux-arm64@0.26.7", "", { "os": "linux", "cpu": "arm64" }, "sha512-o5WW/z3FW77kwdBQtlYrBxHgHIuTp9KNdx5HWzFWXobcOnxlNOPl/rtqX0FTP+Z4ZAx3PCylNsfMj1QBuCmAJQ=="],
+ 
+-    "@effect/tsgo-linux-x64": ["@effect/tsgo-linux-x64@0.24.3", "", { "os": "linux", "cpu": "x64" }, "sha512-R4jl1JWoYEldUU1rtCG1fXWW2ywj/rgY1xaCzK8HSb8fQhQ71WRLLAyAe8ewROuseWQ9Ip+IbbfAeXQOpmpdDA=="],
++    "@effect/tsgo-linux-x64": ["@effect/tsgo-linux-x64@0.26.7", "", { "os": "linux", "cpu": "x64" }, "sha512-khBxxHO007/f2tneX95sUenIrvj2PjgpRmHhQK+dqfIMjqw5GzAx+6/0/9zpO4skUXTWFvLUvwP/BIOih9In3w=="],
+ 
+-    "@effect/tsgo-win32-arm64": ["@effect/tsgo-win32-arm64@0.24.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-DOJ4oa8pk8qxEQwKHpJOqtjOfB9iOMuc6Cnb2ZbTG32PBfhqeRYv6YFGhFtgAojXyxfuRP2gCJVpFfjzHJh7nQ=="],
++    "@effect/tsgo-win32-arm64": ["@effect/tsgo-win32-arm64@0.26.7", "", { "os": "win32", "cpu": "arm64" }, "sha512-oQ6/hgKc3CHvwJFenRbnqNZxdgpfsViC1/c3b5mdw5BscBTH4d02QjDXVYD3facDl0+DLWYBbQUbGoSDwvEF5A=="],
+ 
+-    "@effect/tsgo-win32-x64": ["@effect/tsgo-win32-x64@0.24.3", "", { "os": "win32", "cpu": "x64" }, "sha512-6GpENpPn3mXldmJoM+Z7qi+8fe39xJYB2bLD5jqCFWl14vFp1AeJvYwHYQak8HRm1FiPz72Ninslv8DjHYtZgA=="],
++    "@effect/tsgo-win32-x64": ["@effect/tsgo-win32-x64@0.26.7", "", { "os": "win32", "cpu": "x64" }, "sha512-dIcrO9eI/h4rVZxn89HEvu7uW86F76Lb1/iTJOBx5CbOfV9ItO0h5cd1K+ice5Jlp3UEbJZX5nO/UD46t9oLDg=="],
+ 
+     "@effect/vitest": ["@effect/vitest@4.0.0-beta.102", "", { "peerDependencies": { "effect": "^4.0.0-beta.102", "vitest": "^3.0.0 || ^4.0.0" } }, "sha512-4dipFAYG6imOzrY3zy3BgzCJkbb9xESyzUef0WSx8bsK0/SpITqbJpdwKeOyDWLZ+rimjua8IbTFMAde865pIQ=="],
+ 
+diff --git a/eslint.config.mjs b/eslint.config.mjs
+index 33b6ceb2e1..857d057397 100644
+--- a/eslint.config.mjs
++++ b/eslint.config.mjs
+@@ -19,4 +19,4 @@ const selectedESLintConfig = (() => {
+   throw new Error(`Unsupported BEEP_ESLINT_PROFILE: ${eslintProfile}`);
+ })();
+ 
+-export default [globalIgnores(["**/src-tauri/target/**"]), ...selectedESLintConfig];
++export default [globalIgnores([".claude/worktrees/**", "**/src-tauri/target/**"]), ...selectedESLintConfig];
+diff --git a/goals/INDEX.md b/goals/INDEX.md
+index 4b1cffa086..84976ca52e 100644
+--- a/goals/INDEX.md
++++ b/goals/INDEX.md
+@@ -4,9 +4,9 @@ Generated by `bun run beep goals index --write` from `goals/*/ops/manifest.json`
+ Do not edit by hand: `bun run beep goals index --check` fails when this file
+ drifts from the manifests, and merge conflicts are resolved by regenerating.
+ 
+-113 packets: 29 active · 1 paused · 79 completed-retained · 0 superseded · 4 reference.
++114 packets: 30 active · 1 paused · 79 completed-retained · 0 superseded · 4 reference.
+ 
+-## Active (29)
++## Active (30)
+ 
+ | Packet | Title | Phases | Updated | Mission |
+ | --- | --- | --- | --- | --- |
+diff --git a/package.json b/package.json
+index 9e0eca391f..4f504a960c 100644
+--- a/package.json
++++ b/package.json
+@@ -45,7 +45,7 @@
+     "@effect/sql-pglite": "4.0.0-beta.102",
+     "@effect/sql-sqlite-bun": "4.0.0-beta.102",
+     "@effect/sql-sqlite-node": "4.0.0-beta.102",
+-    "@effect/tsgo": "0.19.0",
++    "@effect/tsgo": "0.26.7",
+     "@effect/tsgo-darwin-arm64": "0.26.7",
+     "@effect/tsgo-darwin-x64": "0.26.7",
+     "@effect/tsgo-linux-arm": "0.26.7",
+diff --git a/packages/drivers/box/test/Box.service.test.ts b/packages/drivers/box/test/Box.service.test.ts
+index e76cf742ac..1c02d25315 100644
+--- a/packages/drivers/box/test/Box.service.test.ts
++++ b/packages/drivers/box/test/Box.service.test.ts
+@@ -608,18 +608,17 @@ describe("@beep/box", () => {
+     it.effect(
+       "preserves direct caller cancellation tokens for generated methods",
+       Effect.fnUntraced(function* () {
+-        const callerController = new AbortController();
+         const box = yield* B.Box;
+-        const fiber = yield* box.users
+-          .getUserMe(B.UsersGetUserMePayload.make({ cancellationToken: callerController.signal }))
+-          .pipe(Effect.forkChild);
++        const fiber = yield* Effect.gen(function* () {
++          const cancellationToken = yield* Effect.abortSignal;
++          return yield* box.users.getUserMe(B.UsersGetUserMePayload.make({ cancellationToken }));
++        }).pipe(Effect.forkChild);
+ 
+         yield* Effect.promise(() => generatedDirectCancellationProbe.entered.promise);
+         expect(generatedDirectCancellationProbe.received).toBeInstanceOf(AbortSignal);
+-        callerController.abort();
++        yield* Fiber.interrupt(fiber);
+         yield* Effect.promise(() => generatedDirectCancellationProbe.aborted.promise);
+         generatedDirectCancellationProbe.pending.resolve(userFull);
+-        yield* Fiber.join(fiber);
+       })
+     );
+   });
+@@ -661,23 +660,22 @@ describe("@beep/box", () => {
+     it.effect(
+       "preserves optionalsInput caller cancellation tokens for generated methods",
+       Effect.fnUntraced(function* () {
+-        const callerController = new AbortController();
+         const box = yield* B.Box;
+-        const fiber = yield* box.downloads
+-          .getDownloadFileUrl(
++        const fiber = yield* Effect.gen(function* () {
++          const cancellationToken = yield* Effect.abortSignal;
++          return yield* box.downloads.getDownloadFileUrl(
+             B.DownloadsGetDownloadFileUrlPayload.make({
+               fileId: "file-id",
+-              optionalsInput: { cancellationToken: callerController.signal },
++              optionalsInput: { cancellationToken },
+             })
+-          )
+-          .pipe(Effect.forkChild);
++          );
++        }).pipe(Effect.forkChild);
+ 
+         yield* Effect.promise(() => generatedOptionalsCancellationProbe.entered.promise);
+         expect(generatedOptionalsCancellationProbe.received).toBeInstanceOf(AbortSignal);
+-        callerController.abort();
++        yield* Fiber.interrupt(fiber);
+         yield* Effect.promise(() => generatedOptionalsCancellationProbe.aborted.promise);
+         generatedOptionalsCancellationProbe.pending.resolve(undefined);
+-        expect(yield* Fiber.join(fiber)).toBe("https://box.example/file-id");
+       })
+     );
+   });
+diff --git a/packages/drivers/duckdb/src/DuckDb.service.ts b/packages/drivers/duckdb/src/DuckDb.service.ts
+index 4b4c0b293f..511271774e 100644
+--- a/packages/drivers/duckdb/src/DuckDb.service.ts
++++ b/packages/drivers/duckdb/src/DuckDb.service.ts
+@@ -1,7 +1,8 @@
+ /**
+  * Product-neutral DuckDB execution service and native Node API layer builders.
+  *
+- * @remarks
++ * **Details**
++ *
+  * The service boundary exposes SQL execution, read queries, transactions, and
+  * table-to-Parquet export without leaking `@duckdb/node-api` connection types
+  * into domain packages. The native implementation uses a shared connection and
+@@ -27,7 +28,8 @@ const $I = $DuckdbId.create("DuckDb.service");
+ /**
+  * Positional or named parameters accepted by DuckDB statements.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { DuckDbQueryParameters } from "@beep/duckdb"
+  *
+@@ -45,13 +47,15 @@ export type DuckDbQueryParameters = Array<DuckDBValue> | Record<string, DuckDBVa
+ /**
+  * Adapter contract accepted by {@link DuckDb.makeLayer}.
+  *
+- * @remarks
++ * **Details**
++ *
+  * Use this interface when a test, host application, or alternate runtime wants
+  * to provide DuckDB behavior without depending on the native Node API
+  * implementation exported by this package. Implementations should normalize
+  * recoverable failures into {@link DuckDbError}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { DuckDbClient, DuckDbRows } from "@beep/duckdb"
+  * import { Effect } from "effect"
+@@ -79,7 +83,8 @@ export interface DuckDbClient {
+   /**
+    * Export a table through DuckDB's Parquet writer.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * Native implementations reject calls made from a transaction-scoped client
+    * because DuckDB writes the Parquet file outside the database transaction and
+    * cannot roll that filesystem side effect back.
+@@ -121,7 +126,8 @@ export interface DuckDbClient {
+   /**
+    * Execute work inside a DuckDB transaction.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * Native implementations begin a transaction for the outer call, commit on
+    * success, and roll back on failure. Calls made on an already transactional
+    * client reuse the active transaction client instead of opening a nested
+@@ -141,12 +147,14 @@ export interface DuckDbClient {
+ /**
+  * Runtime shape exposed by the {@link DuckDb} service tag.
+  *
+- * @remarks
++ * **Details**
++ *
+  * Application code depends on this service shape rather than on native
+  * `@duckdb/node-api` connection objects. The shape mirrors {@link DuckDbClient}
+  * so production layers, host adapters, and tests can share the same boundary.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { DuckDbRows, DuckDbShape } from "@beep/duckdb"
+  * import { Effect } from "effect"
+@@ -411,7 +419,7 @@ const makeConnectionClient = (
+ 
+ const makeNodeClient = (options: DuckDbConnectionOptions): DuckDbClient => {
+   const getConnection = acquireSharedConnection(options);
+-  const connectionLock = Effect.runSync(Semaphore.make(1));
++  const connectionLock = Semaphore.makeUnsafe(1);
+   const useNodeConnection = Effect.fn("DuckDb.useNodeConnection")(function* <A, R>(
+     operation: DuckDbOperation,
+     use: NativeUse<A, R>
+@@ -450,13 +458,15 @@ const makeNodeLayer = (options: DuckDbConnectionOptions): Layer.Layer<DuckDb> =>
+ /**
+  * Effect service for product-neutral DuckDB execution.
+  *
+- * @remarks
++ * **Details**
++ *
+  * Yield this service from Effect programs that need DuckDB execution. Use
+  * {@link DuckDb.makeNodeLayer} for managed native connection lifetime, or
+  * {@link DuckDb.makeLayer} when tests or host code provide a compatible
+  * adapter.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { DuckDb, type DuckDbClient, type DuckDbRows } from "@beep/duckdb"
+  * import { Effect } from "effect"
+@@ -484,12 +494,14 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
+   /**
+    * Build a Layer from a narrow product-neutral DuckDB adapter.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * This constructor does not acquire a native DuckDB connection. It only
+    * installs the supplied adapter under the {@link DuckDb} service key, which
+    * is useful for tests and host-owned database runtimes.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { DuckDb, type DuckDbClient, type DuckDbRows } from "@beep/duckdb"
+    * import { Effect } from "effect"
+@@ -518,13 +530,15 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
+   /**
+    * Build a native DuckDB Node API client.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * The returned client lazily opens one shared native connection on first use
+    * and serializes operations through that connection. Prefer
+    * {@link DuckDb.makeNodeLayer} when the connection should be closed with an
+    * Effect scope finalizer.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
+    * import { Effect } from "effect"
+@@ -550,12 +564,14 @@ export class DuckDb extends Context.Service<DuckDb, DuckDbShape>()($I`DuckDb`) {
+   /**
+    * Build the native DuckDB Node API service layer.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * The layer registers a scope finalizer that closes both the shared
+    * connection and DuckDB instance. Use this constructor for application code
+    * that wants native resources tied to an Effect scope.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
+    * import { Effect } from "effect"
+diff --git a/packages/foundation/modeling/html/src/internal/Html.language-tag.ts b/packages/foundation/modeling/html/src/internal/Html.language-tag.ts
+index aeb7f1d749..9157c8b21a 100644
+--- a/packages/foundation/modeling/html/src/internal/Html.language-tag.ts
++++ b/packages/foundation/modeling/html/src/internal/Html.language-tag.ts
+@@ -92,6 +92,7 @@ const scanExtensionPayload = (subtags: ReadonlyArray<string>, start: number): O.
+   return index === start ? O.none() : O.some(index);
+ };
+ 
++// fallow-ignore-next-line code-duplication -- The loops enforce distinct RFC rules despite sharing traversal setup.
+ const scanExtensions = (subtags: ReadonlyArray<string>, start: number): O.Option<number> => {
+   const seen = MutableHashSet.empty<string>();
+   let index = start;
+diff --git a/packages/foundation/modeling/identity/src/Id.ts b/packages/foundation/modeling/identity/src/Id.ts
+index ab8119bc91..32ce2a5e61 100644
+--- a/packages/foundation/modeling/identity/src/Id.ts
++++ b/packages/foundation/modeling/identity/src/Id.ts
+@@ -6,7 +6,8 @@
+  * Effect codebase. Identities follow a `@beep/{package}/{path}` convention
+  * and are validated at construction time.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { make } from "@beep/identity"
+  *
+@@ -114,7 +115,8 @@ const $I = {
+  * Passing interpolated expressions is forbidden because identity strings
+  * must be statically deterministic.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { make, IdentityInterpolationError } from "@beep/identity"
+  *
+@@ -150,7 +152,8 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
+  *
+  * Template tags must be called with exactly one static string segment.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { IdentitySegmentCountError } from "@beep/identity"
+  *
+@@ -185,7 +188,8 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
+ /**
+  * Current version of the `@beep/identity` package.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { VERSION } from "@beep/identity"
+  *
+@@ -203,7 +207,8 @@ export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
+  * Resolves to `never` when the segment starts or ends with `/`, preventing
+  * invalid identity paths at compile time.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { SegmentValue } from "@beep/identity"
+  *
+@@ -337,7 +342,8 @@ type StripLeadingAt<Value extends string> = Value extends `@${infer Rest}` ? Res
+  *
+  * Converts `"my-service"` to `"My Service"` and `"user_account"` to `"User Account"`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { TitleFromIdentifier } from "@beep/identity"
+  *
+@@ -357,7 +363,8 @@ export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
+  * Converts `"@beep/a/b"` to `"https://ns.beep.sh/a/b"` when the authority is
+  * `"https://ns.beep.sh/"`. Widened string inputs intentionally widen to `string`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { IriFromIdentity } from "@beep/identity"
+  *
+@@ -383,7 +390,8 @@ export type IriFromIdentity<Authority extends string, Identity extends string> =
+  * Converts `"@beep/a/b"` to `"beep:a/b"` when the prefix is `"beep"`. Widened
+  * string inputs intentionally widen to `string`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { CurieFromIdentity } from "@beep/identity"
+  *
+@@ -410,7 +418,8 @@ export type CurieFromIdentity<Prefix extends string, Identity extends string> =
+  * paths, including slash, dot, underscore, hyphen, space, and lower-to-upper
+  * word boundaries.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { SlugFromIdentifier } from "@beep/identity"
+  *
+@@ -451,7 +460,8 @@ type HasInvalidModuleChar<S extends string> = S extends `${string}${InvalidModul
+  * with an alphabetic character and contain only alphanumerics, hyphens, or underscores.
+  * Resolves to `never` when violated.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { ModuleSegmentValue } from "@beep/identity"
+  *
+@@ -470,7 +480,8 @@ export type ModuleSegmentValue<S extends TString.NonEmpty> =
+  *
+  * `"my-service"` becomes `"MyServiceId"`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { ModuleAccessor } from "@beep/identity"
+  *
+@@ -487,7 +498,8 @@ export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<Modu
+  *
+  * `"my-service"` becomes `"$MyServiceId"`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { TaggedAccessor } from "@beep/identity"
+  *
+@@ -502,7 +514,8 @@ export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`
+ /**
+  * Branded string type for identity values, preventing accidental use of raw strings.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { make } from "@beep/identity"
+  * import type { IdentityString } from "@beep/identity"
+@@ -522,7 +535,8 @@ export type IdentityString<Value extends string> = Value & {
+ /**
+  * Branded symbol type for identity values, created via `Symbol.for` for interning.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { make } from "@beep/identity"
+  * import type { IdentitySymbol } from "@beep/identity"
+@@ -545,7 +559,8 @@ export type IdentitySymbol<Value extends string> = symbol & {
+  * Mirrors `S.Annotations.Bottom` so callers can supply `description`, `documentation`,
+  * and other Effect Schema annotation keys alongside identity metadata.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { SchemaAnnotationExtras } from "@beep/identity"
+  *
+@@ -566,7 +581,8 @@ export type SchemaAnnotationExtras<
+  * Mirrors `S.Annotations.Declaration` so declaration-only hooks are checked
+  * against both the declared value and its schema type parameters.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { DeclarationAnnotationExtras } from "@beep/identity"
+  * import * as S from "effect/Schema"
+@@ -586,7 +602,8 @@ export type DeclarationAnnotationExtras<
+ /**
+  * Annotation fields accepted by `annoteKey`, mirroring `S.Annotations.Key`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { KeyAnnotationExtras } from "@beep/identity"
+  *
+@@ -605,7 +622,8 @@ export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
+  * `skos:Concept` and `"conceptScheme"` adds `skos:ConceptScheme` beside
+  * `rdfs:Class`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { SkosClassification } from "@beep/identity"
+  *
+@@ -625,7 +643,8 @@ export type SkosClassification = "concept" | "conceptScheme";
+  * optionally reverse-marked with a leading `^` (SPARQL inverse-path syntax).
+  * Remaining fields mirror `annotateKey` extras.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { OntologyKeyOptions } from "@beep/identity"
+  *
+@@ -653,7 +672,8 @@ export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
+  * Extends the `annote` extras with an optional SKOS classification marker;
+  * the marker is written to the `skosClassification` annotation channel.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { OntologyClassExtras } from "@beep/identity"
+  *
+@@ -683,7 +703,8 @@ declare module "effect/Schema" {
+ /**
+  * Deprecated compatibility alias for Effect's request payload encoding metadata.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { HttpApiEncoding } from "@beep/identity"
+  *
+@@ -701,7 +722,8 @@ export type HttpApiEncoding = PayloadEncoding;
+  *
+  * Supports optional `httpApiStatus` and `~httpApiEncoding` for Effect HTTP API annotations.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { HttpAnnotationExtras } from "@beep/identity"
+  *
+@@ -724,7 +746,8 @@ export type HttpAnnotationExtras<
+  *
+  * Combines key-level and HTTP-level annotation fields into a single constraint.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { IdentityAnyAnnotationExtras } from "@beep/identity"
+  *
+@@ -745,7 +768,8 @@ export type IdentityAnyAnnotationExtras<
+  * Contains a full-path `identifier` string, an interned `schemaId` symbol, and a
+  * human-readable `title` derived from the local identifier segment.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { IdentityAnnotation } from "@beep/identity"
+  *
+@@ -799,7 +823,8 @@ type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title" | "iri
+  * Result of calling `annote` -- the identity annotation merged with any caller-supplied extras,
+  * with identity metadata keys taking precedence.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { IdentityAnnotationResult } from "@beep/identity"
+  *
+@@ -834,7 +859,8 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
+  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
+  * produced by calling `compose` with one or more module segment names.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { TaggedModuleRecord } from "@beep/identity"
+  *
+@@ -867,7 +893,8 @@ export type TaggedModuleRecord<
+  * - Produce annotation records for Effect schemas (`annote`, `annoteClass`, `annoteSchema`, `annoteHttp`, `annoteKey`)
+  * - Batch-create named child composers (`compose`)
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { make } from "@beep/identity"
+  *
+@@ -916,7 +943,8 @@ export interface IdentityComposer<
+    * caller-supplied extras. Use this with `S.Class`, `S.TaggedErrorClass`, or
+    * similar constructors that accept an annotation record.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -942,12 +970,14 @@ export interface IdentityComposer<
+   /**
+    * Produce a declaration-typed identity annotation record for a class constructor.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * Supply the declared schema and schema type-parameter tuple so
+    * declaration-only hooks such as `toArbitrary` and `toEquivalence` receive
+    * their real contextual types.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    * import * as S from "effect/Schema"
+@@ -993,7 +1023,8 @@ export interface IdentityComposer<
+    * When called with zero arguments, returns a curried builder that constrains
+    * the identifier to valid paths within `Parent`.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    * import * as S from "effect/Schema";
+@@ -1054,7 +1085,8 @@ export interface IdentityComposer<
+    * entrypoint for the ontology fold; membership in a fold comes from the
+    * fold's `schemas` list, not from this marker.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1086,7 +1118,8 @@ export interface IdentityComposer<
+    * Returns a record whose keys are `$`-prefixed PascalCase accessors (e.g. `$AuthId`)
+    * mapped to child composers rooted at `{Value}/{segment}`.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1110,7 +1143,8 @@ export interface IdentityComposer<
+    * Unlike `make` (which returns a plain string), `create` returns a full
+    * composer that supports further nesting, annotation, and composition.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1130,7 +1164,8 @@ export interface IdentityComposer<
+   /**
+    * CURIE projection for this composer's current path, or `undefined` when unbound.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1155,12 +1190,14 @@ export interface IdentityComposer<
+   /**
+    * IRI projection for this composer's current path, or `undefined` when unbound.
+    *
+-   * @remarks
++   * **Details**
++   *
+    * One-argument `make(...)` calls intentionally produce unbound composers, so
+    * callers must handle `undefined` there. Root-bound package composers derive
+    * exact literals from the configured authority.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1184,7 +1221,8 @@ export interface IdentityComposer<
+    * fold defaults the local name from the struct key. Borrowed vocabulary
+    * never rides the owned `identifier` channel.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    * import * as S from "effect/Schema"
+@@ -1210,7 +1248,8 @@ export interface IdentityComposer<
+   /**
+    * Create a child identity string by appending one segment.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1229,7 +1268,8 @@ export interface IdentityComposer<
+   /**
+    * Rebind IRI and CURIE projections without changing the identity path or symbol.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1250,7 +1290,8 @@ export interface IdentityComposer<
+   /**
+    * Kebab-case slug projection for this composer's current path.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1293,7 +1334,8 @@ export interface IdentityComposer<
+    * composer is unbound or bound without a vocabulary extension (consumers
+    * default to the core registry).
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { CoreVocab, make } from "@beep/identity"
+    *
+@@ -1311,7 +1353,8 @@ export interface IdentityComposer<
+    *
+    * Must be called with a single static string literal and no interpolations.
+    *
+-   * @example
++   * **Example** (Demonstrate usage)
++   *
+    * ```ts
+    * import { make } from "@beep/identity"
+    *
+@@ -1412,7 +1455,8 @@ const normalizeBaseValue = (value: string): string => {
+ /**
+  * Schema for package identity constructor input after `@beep` prefix normalization.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as O from "effect/Option"
+  * import * as S from "effect/Schema"
+@@ -1442,7 +1486,8 @@ export const BaseIdentityInput = S.String.pipe(
+ /**
+  * Runtime type for {@link BaseIdentityInput}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { BaseIdentityInput } from "@beep/identity"
+  *
+@@ -1914,7 +1959,8 @@ type MakeReturn<
+  * a record containing a single `$`-prefixed PascalCase accessor mapped to
+  * the root {@link IdentityComposer} for that package.
+  *
+- * @example
++ * **Example** (Build from a bare package name)
++ *
+  * ```ts
+  * import { make } from "@beep/identity"
+  *
+@@ -1924,7 +1970,8 @@ type MakeReturn<
+  * console.log(id)// "@beep/my-pkg/Service"
+  * ```
+  *
+- * @example
++ * **Example** (Build from a scoped package name)
++ *
+  * ```ts
+  * import { make } from "@beep/identity"
+  *
+diff --git a/packages/foundation/modeling/identity/src/PnLocal.ts b/packages/foundation/modeling/identity/src/PnLocal.ts
+index e5ec71b9b5..ed09b7cfd9 100644
+--- a/packages/foundation/modeling/identity/src/PnLocal.ts
++++ b/packages/foundation/modeling/identity/src/PnLocal.ts
+@@ -124,7 +124,8 @@ const iriReferenceValue = (iri: string): string => iri.replace(IriReferenceUnsaf
+ /**
+  * Schema for local names that can be emitted as unescaped Turtle PN_LOCAL values.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as S from "effect/Schema"
+  * import { SafePnLocal } from "@beep/identity"
+@@ -152,7 +153,8 @@ export const SafePnLocal = S.String.check(
+ /**
+  * Runtime type for {@link SafePnLocal}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { SafePnLocal } from "@beep/identity"
+  *
+@@ -170,7 +172,8 @@ const isSafePnLocal = S.is(SafePnLocal);
+ /**
+  * Schema for namespace prefixes that can be emitted as unescaped Turtle PN_PREFIX values.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as S from "effect/Schema"
+  * import { SafePnPrefix } from "@beep/identity"
+@@ -198,7 +201,8 @@ export const SafePnPrefix = S.String.check(
+ /**
+  * Runtime type for {@link SafePnPrefix}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { SafePnPrefix } from "@beep/identity"
+  *
+@@ -216,7 +220,8 @@ const isSafePnPrefix = S.is(SafePnPrefix);
+ /**
+  * Check whether a local name can be emitted as an unescaped Turtle PN_LOCAL.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { isSafeLocal } from "@beep/identity"
+  *
+@@ -232,7 +237,8 @@ export const isSafeLocal = (local: string): boolean => isSafePnLocal(local);
+ /**
+  * Check whether a namespace prefix can be emitted as an unescaped Turtle PN_PREFIX.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { isSafePrefix } from "@beep/identity"
+  *
+@@ -324,7 +330,8 @@ const acceptsEscapedLocalInternal = (local: string): boolean =>
+ /**
+  * Schema for escaped local names accepted by Turtle PN_LOCAL parsing.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as S from "effect/Schema"
+  * import { EscapedPnLocal } from "@beep/identity"
+@@ -352,7 +359,8 @@ export const EscapedPnLocal = S.String.check(
+ /**
+  * Runtime type for {@link EscapedPnLocal}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { EscapedPnLocal } from "@beep/identity"
+  *
+@@ -370,7 +378,8 @@ const isEscapedPnLocal = S.is(EscapedPnLocal);
+ /**
+  * Check whether an escaped local name is accepted by Turtle PN_LOCAL parsing.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { acceptsEscapedLocal } from "@beep/identity"
+  *
+@@ -385,7 +394,8 @@ export const acceptsEscapedLocal = (local: string): boolean => isEscapedPnLocal(
+ /**
+  * Remove Turtle PN_LOCAL backslash escapes from an escaped local name.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { unescapeLocal } from "@beep/identity"
+  *
+@@ -400,12 +410,14 @@ export const unescapeLocal = (local: string): string => Str.replace(/\\([_~.\-!$
+ /**
+  * Escape characters that Turtle permits through PN_LOCAL backslash escapes.
+  *
+- * @remarks
++ * **Details**
++ *
+  * Escaped-local emission currently feeds codec parity tests only. Writer-side
+  * identity output uses {@link prefixedNameOrIri} and falls back to full IRIs
+  * for unsafe locals.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { escapeLocal } from "@beep/identity"
+  *
+@@ -420,7 +432,8 @@ export const escapeLocal = (local: string): string => Str.replace(/[_~.\-!$&'()*
+ /**
+  * Emit a prefixed name only when the prefix and local part are safe, otherwise emit a full IRI reference.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { prefixedNameOrIri } from "@beep/identity"
+  *
+diff --git a/packages/foundation/modeling/lexical/src/Lexical.codec.ts b/packages/foundation/modeling/lexical/src/Lexical.codec.ts
+index d56d7b6398..f3a38c30b4 100644
+--- a/packages/foundation/modeling/lexical/src/Lexical.codec.ts
++++ b/packages/foundation/modeling/lexical/src/Lexical.codec.ts
+@@ -55,7 +55,8 @@ const $I = $LexicalSchemaId.create("Lexical.codec");
+  * URI scheme that round-trips {@link ArtifactRefNode} through the Md AST as a
+  * paragraph wrapping a single link.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema/Lexical.codec"
+  *
+@@ -71,7 +72,8 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
+  * Artifact URI form used when the Md projection carries an
+  * {@link ArtifactRefNode} as a link.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -94,7 +96,8 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
+ /**
+  * Type for {@link ArtifactUri}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
+  *
+@@ -336,7 +339,8 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
+ /**
+  * Lift one Md block into its serialized Lexical node.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Effect } from "effect"
+  * import { P, Text } from "@beep/md/Md.model"
+@@ -426,11 +430,13 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
+ /**
+  * Lift a full Md document into a serialized Lexical editor state.
+  *
+- * @remarks
++ * **Details**
++ *
+  * An empty Md document canonicalizes to one blank paragraph because Lexical
+  * cannot apply an editor state whose root has no children.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Effect } from "effect"
+  * import { Document, P, Text } from "@beep/md/Md.model"
+@@ -590,7 +596,8 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
+ /**
+  * Project one serialized Lexical node onto Md blocks.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -631,7 +638,8 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
+  * Project a serialized Lexical editor state onto the canonical Md document
+  * AST, applying the documented lossiness profile.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Effect } from "effect"
+  * import { Document, P, Text } from "@beep/md/Md.model"
+diff --git a/packages/foundation/modeling/md/src/Md.html.ts b/packages/foundation/modeling/md/src/Md.html.ts
+index 05bebb091a..c5dd8a8d84 100644
+--- a/packages/foundation/modeling/md/src/Md.html.ts
++++ b/packages/foundation/modeling/md/src/Md.html.ts
+@@ -219,7 +219,8 @@ const safeDocumentToHtmlFragment = (document: Document): HtmlModel.Fragment =>
+  * enter through {@link SafeDocument}; the defensive raw-node branches render
+  * their source as text if a structurally forged value reaches this module.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md, safeHtmlValue } from "@beep/md"
+  * import { Result } from "effect"
+diff --git a/packages/foundation/modeling/md/src/Md.model.ts b/packages/foundation/modeling/md/src/Md.model.ts
+index 6d416f33cd..2454c0e8f7 100644
+--- a/packages/foundation/modeling/md/src/Md.model.ts
++++ b/packages/foundation/modeling/md/src/Md.model.ts
+@@ -20,7 +20,8 @@ const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
+ /**
+  * Single safe Markdown fenced-code info-string token.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -50,7 +51,8 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
+ /**
+  * Type for {@link CodeFenceLanguage}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -72,7 +74,8 @@ export type CodeFenceLanguage = typeof CodeFenceLanguage.Type;
+  * (e.g. lone surrogates) at the schema boundary, so downstream consumers that
+  * percent-encode the id cannot be crashed by a `URIError`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -102,7 +105,8 @@ export const YouTubeVideoId = S.String.check(
+ /**
+  * Safe Markdown footnote identifier.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { FootnoteIdentifier } from "@beep/md/Md.model"
+  *
+@@ -131,7 +135,8 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
+ /**
+  * Type for {@link FootnoteIdentifier}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
+  * import { FootnoteIdentifier } from "@beep/md/Md.model"
+@@ -148,7 +153,8 @@ export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
+ /**
+  * Markdown table column alignment.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -170,7 +176,8 @@ export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pi
+ /**
+  * Type for {@link TableAlignment}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { TableAlignment } from "@beep/md/Md.model"
+  *
+@@ -186,7 +193,8 @@ export type TableAlignment = typeof TableAlignment.Type;
+ /**
+  * Common typed admonition kinds.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -208,7 +216,8 @@ export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning",
+ /**
+  * Type for {@link AdmonitionKind}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { AdmonitionKind } from "@beep/md/Md.model"
+  *
+@@ -224,7 +233,8 @@ export type AdmonitionKind = typeof AdmonitionKind.Type;
+ /**
+  * Generic block embed kind.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -263,7 +273,8 @@ export const EmbedKind = LiteralKit(["link", "image", "video", "audio", "unknown
+ /**
+  * Type for {@link EmbedKind}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { EmbedKind } from "@beep/md/Md.model"
+  *
+@@ -280,7 +291,8 @@ export type EmbedKind = typeof EmbedKind.Type;
+  * Recursive inline child list used by inline containers and text-bearing block
+  * nodes.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -302,7 +314,8 @@ export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.
+ /**
+  * Type for {@link InlineChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { InlineChildren } from "@beep/md/Md.model"
+@@ -319,7 +332,8 @@ export type InlineChildren = typeof InlineChildren.Type;
+ /**
+  * Companion namespace for {@link InlineChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { InlineChildren } from "@beep/md/Md.model"
+@@ -346,7 +360,8 @@ export declare namespace InlineChildren {
+ /**
+  * Plain escaped inline text.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  *
+@@ -372,7 +387,8 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
+ /**
+  * Companion namespace for {@link Text}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  *
+@@ -401,7 +417,8 @@ export declare namespace Text {
+ /**
+  * Trusted raw Markdown inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { RawMarkdown } from "@beep/md/Md.model"
+  *
+@@ -427,7 +444,8 @@ export class RawMarkdown extends S.TaggedClass<RawMarkdown>($I`RawMarkdown`)(
+ /**
+  * Companion namespace for {@link RawMarkdown}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { RawMarkdown } from "@beep/md/Md.model"
+  *
+@@ -458,7 +476,8 @@ export declare namespace RawMarkdown {
+  *
+  * The built-in HTML adapter escapes this value by default.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { RawHtml } from "@beep/md/Md.model"
+  *
+@@ -485,7 +504,8 @@ export class RawHtml extends S.TaggedClass<RawHtml>($I`RawHtml`)(
+ /**
+  * Companion namespace for {@link RawHtml}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { RawHtml } from "@beep/md/Md.model"
+  *
+@@ -514,7 +534,8 @@ export declare namespace RawHtml {
+ /**
+  * Strong inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Strong, Text } from "@beep/md/Md.model"
+  *
+@@ -540,7 +561,8 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
+ /**
+  * Companion namespace for {@link Strong}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Strong, Text } from "@beep/md/Md.model"
+  *
+@@ -572,7 +594,8 @@ export declare namespace Strong {
+ /**
+  * Emphasized inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Em, Text } from "@beep/md/Md.model"
+  *
+@@ -598,7 +621,8 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
+ /**
+  * Companion namespace for {@link Em}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Em, Text } from "@beep/md/Md.model"
+  *
+@@ -630,7 +654,8 @@ export declare namespace Em {
+ /**
+  * Deleted inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Del, Text } from "@beep/md/Md.model"
+  *
+@@ -656,7 +681,8 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
+ /**
+  * Companion namespace for {@link Del}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Del, Text } from "@beep/md/Md.model"
+  *
+@@ -688,7 +714,8 @@ export declare namespace Del {
+ /**
+  * Inline code span.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Code } from "@beep/md/Md.model"
+  *
+@@ -714,7 +741,8 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
+ /**
+  * Companion namespace for {@link Code}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Code } from "@beep/md/Md.model"
+  *
+@@ -743,7 +771,8 @@ export declare namespace Code {
+ /**
+  * Inline hyperlink.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { A, Text } from "@beep/md/Md.model"
+  *
+@@ -775,7 +804,8 @@ export class A extends S.TaggedClass<A>($I`A`)(
+ /**
+  * Companion namespace for {@link A}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { A, Text } from "@beep/md/Md.model"
+  *
+@@ -811,7 +841,8 @@ export declare namespace A {
+ /**
+  * Inline image.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Img } from "@beep/md/Md.model"
+  *
+@@ -843,7 +874,8 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
+ /**
+  * Companion namespace for {@link Img}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Img } from "@beep/md/Md.model"
+  *
+@@ -879,7 +911,8 @@ export declare namespace Img {
+ /**
+  * Inline line break.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Br } from "@beep/md/Md.model"
+  *
+@@ -901,7 +934,8 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
+ /**
+  * Companion namespace for {@link Br}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Br } from "@beep/md/Md.model"
+  *
+@@ -929,7 +963,8 @@ export declare namespace Br {
+ /**
+  * Inline TeX math content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { InlineMath } from "@beep/md/Md.model"
+  *
+@@ -955,7 +990,8 @@ export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
+ /**
+  * Companion namespace for {@link InlineMath}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { InlineMath } from "@beep/md/Md.model"
+  *
+@@ -984,7 +1020,8 @@ export declare namespace InlineMath {
+ /**
+  * Inline footnote reference.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { FootnoteReference } from "@beep/md/Md.model"
+  *
+@@ -1010,7 +1047,8 @@ export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`Footn
+ /**
+  * Companion namespace for {@link FootnoteReference}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { FootnoteReference } from "@beep/md/Md.model"
+  *
+@@ -1042,7 +1080,8 @@ export declare namespace FootnoteReference {
+ /**
+  * Discriminated union of inline Markdown AST nodes.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1080,7 +1119,8 @@ export const Inline = S.Union([
+ /**
+  * Runtime type for {@link Inline}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { Inline } from "@beep/md/Md.model"
+@@ -1097,7 +1137,8 @@ export type Inline = typeof Inline.Type;
+ /**
+  * Companion namespace for {@link Inline}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { Inline } from "@beep/md/Md.model"
+@@ -1148,7 +1189,8 @@ export declare namespace Inline {
+ /**
+  * Recursive block child list used by document and block quote containers.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1172,7 +1214,8 @@ export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Enc
+ /**
+  * Type for {@link BlockChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { P, Text } from "@beep/md/Md.model"
+  * import type { BlockChildren } from "@beep/md/Md.model"
+@@ -1189,7 +1232,8 @@ export type BlockChildren = typeof BlockChildren.Type;
+ /**
+  * Companion namespace for {@link BlockChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { P, Text } from "@beep/md/Md.model"
+  * import type { BlockChildren } from "@beep/md/Md.model"
+@@ -1218,7 +1262,8 @@ export declare namespace BlockChildren {
+  * block children preserve nested document structure such as paragraphs, code
+  * blocks, and nested lists.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1242,7 +1287,8 @@ export const ListItemChild = S.suspend(
+ /**
+  * Runtime type for {@link ListItemChild}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { ListItemChild } from "@beep/md/Md.model"
+@@ -1259,7 +1305,8 @@ export type ListItemChild = typeof ListItemChild.Type;
+ /**
+  * Companion namespace for {@link ListItemChild}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { ListItemChild } from "@beep/md/Md.model"
+@@ -1286,7 +1333,8 @@ export declare namespace ListItemChild {
+ /**
+  * List item children used by ordered, unordered, and task list items.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1308,7 +1356,8 @@ export const ListItemChildren = S.Array(ListItemChild).pipe(
+ /**
+  * Type for {@link ListItemChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { ListItemChildren } from "@beep/md/Md.model"
+@@ -1325,7 +1374,8 @@ export type ListItemChildren = typeof ListItemChildren.Type;
+ /**
+  * Companion namespace for {@link ListItemChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Text } from "@beep/md/Md.model"
+  * import type { ListItemChildren } from "@beep/md/Md.model"
+@@ -1352,7 +1402,8 @@ export declare namespace ListItemChildren {
+ /**
+  * Paragraph block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { P, Text } from "@beep/md/Md.model"
+  *
+@@ -1378,7 +1429,8 @@ export class P extends S.TaggedClass<P>($I`P`)(
+ /**
+  * Companion namespace for {@link P}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { P, Text } from "@beep/md/Md.model"
+  *
+@@ -1410,7 +1462,8 @@ export declare namespace P {
+ /**
+  * Heading level from one (largest) to six (smallest).
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1432,7 +1485,8 @@ export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
+ /**
+  * Type for {@link HeadingLevel}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1450,7 +1504,8 @@ export type HeadingLevel = typeof HeadingLevel.Type;
+ /**
+  * Heading block carrying its level alongside inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Heading, Text } from "@beep/md/Md.model"
+  *
+@@ -1482,7 +1537,8 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)(
+ /**
+  * Companion namespace for {@link Heading}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Heading, Text } from "@beep/md/Md.model"
+  *
+@@ -1516,7 +1572,8 @@ export declare namespace Heading {
+ /**
+  * List item node used by ordered, unordered, and task lists.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Text } from "@beep/md/Md.model"
+  *
+@@ -1544,7 +1601,8 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
+ /**
+  * Companion namespace for {@link Li}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Text } from "@beep/md/Md.model"
+  *
+@@ -1576,7 +1634,8 @@ export declare namespace Li {
+ /**
+  * List children used by ordered and unordered list blocks.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1600,7 +1659,8 @@ export const ListChildren = S.Array(Li).pipe(
+ /**
+  * Type for {@link ListChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Text } from "@beep/md/Md.model"
+  * import type { ListChildren } from "@beep/md/Md.model"
+@@ -1617,7 +1677,8 @@ export type ListChildren = typeof ListChildren.Type;
+ /**
+  * Companion namespace for {@link ListChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Text } from "@beep/md/Md.model"
+  * import type { ListChildren } from "@beep/md/Md.model"
+@@ -1644,7 +1705,8 @@ export declare namespace ListChildren {
+ /**
+  * Unordered list block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Text, Ul } from "@beep/md/Md.model"
+  *
+@@ -1670,7 +1732,8 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
+ /**
+  * Companion namespace for {@link Ul}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Text, Ul } from "@beep/md/Md.model"
+  *
+@@ -1702,7 +1765,8 @@ export declare namespace Ul {
+ /**
+  * Ordered list block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Ol, Text } from "@beep/md/Md.model"
+  *
+@@ -1731,7 +1795,8 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
+ /**
+  * Companion namespace for {@link Ol}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Li, Ol, Text } from "@beep/md/Md.model"
+  *
+@@ -1765,7 +1830,8 @@ export declare namespace Ol {
+ /**
+  * GFM task list item.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, Text } from "@beep/md/Md.model"
+  *
+@@ -1796,7 +1862,8 @@ export class TaskItem extends S.TaggedClass<TaskItem>($I`TaskItem`)(
+ /**
+  * Companion namespace for {@link TaskItem}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, Text } from "@beep/md/Md.model"
+  *
+@@ -1833,7 +1900,8 @@ export declare namespace TaskItem {
+  * Unlike the deprecated shorthand union accepted by `Md.taskList`, every value
+  * carries the `taskItem` discriminator and fully normalized child nodes.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, TaskListItemSpec, Text } from "@beep/md/Md.model"
+  *
+@@ -1854,7 +1922,8 @@ export const TaskListItemSpec = TaskItem.pipe(
+ /**
+  * Type for {@link TaskListItemSpec}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, Text } from "@beep/md/Md.model"
+  * import type { TaskListItemSpec } from "@beep/md/Md.model"
+@@ -1871,7 +1940,8 @@ export type TaskListItemSpec = typeof TaskListItemSpec.Type;
+ /**
+  * Task item children used by GFM task list blocks.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -1895,7 +1965,8 @@ export const TaskItemChildren = S.Array(TaskItem).pipe(
+ /**
+  * Type for {@link TaskItemChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, Text } from "@beep/md/Md.model"
+  * import type { TaskItemChildren } from "@beep/md/Md.model"
+@@ -1912,7 +1983,8 @@ export type TaskItemChildren = typeof TaskItemChildren.Type;
+ /**
+  * Companion namespace for {@link TaskItemChildren}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, Text } from "@beep/md/Md.model"
+  * import type { TaskItemChildren } from "@beep/md/Md.model"
+@@ -1939,7 +2011,8 @@ export declare namespace TaskItemChildren {
+ /**
+  * GFM task list block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, TaskList, Text } from "@beep/md/Md.model"
+  *
+@@ -1965,7 +2038,8 @@ export class TaskList extends S.TaggedClass<TaskList>($I`TaskList`)(
+ /**
+  * Companion namespace for {@link TaskList}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TaskItem, TaskList, Text } from "@beep/md/Md.model"
+  *
+@@ -1999,7 +2073,8 @@ export declare namespace TaskList {
+ /**
+  * Block quote container.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { BlockQuote, P, Text } from "@beep/md/Md.model"
+  *
+@@ -2025,7 +2100,8 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
+ /**
+  * Companion namespace for {@link BlockQuote}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { BlockQuote, P, Text } from "@beep/md/Md.model"
+  *
+@@ -2057,7 +2133,8 @@ export declare namespace BlockQuote {
+ /**
+  * Fenced code block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as O from "effect/Option"
+  * import { Pre } from "@beep/md/Md.model"
+@@ -2100,7 +2177,8 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
+ /**
+  * Companion namespace for {@link Pre}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as O from "effect/Option"
+  * import { Pre } from "@beep/md/Md.model"
+@@ -2139,7 +2217,8 @@ export declare namespace Pre {
+ /**
+  * Table cell containing inline Markdown content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TableCell, Text } from "@beep/md/Md.model"
+  *
+@@ -2167,7 +2246,8 @@ export class TableCell extends S.TaggedClass<TableCell>($I`TableCell`)(
+ /**
+  * Companion namespace for {@link TableCell}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TableCell, Text } from "@beep/md/Md.model"
+  *
+@@ -2199,7 +2279,8 @@ export declare namespace TableCell {
+ /**
+  * Table row containing cells in column order.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TableCell, TableRow, Text } from "@beep/md/Md.model"
+  *
+@@ -2227,7 +2308,8 @@ export class TableRow extends S.TaggedClass<TableRow>($I`TableRow`)(
+ /**
+  * Companion namespace for {@link TableRow}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { TableCell, TableRow, Text } from "@beep/md/Md.model"
+  *
+@@ -2259,7 +2341,8 @@ export declare namespace TableRow {
+ /**
+  * Markdown table block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Table, TableCell, TableRow, Text } from "@beep/md/Md.model"
+  *
+@@ -2294,7 +2377,8 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
+ /**
+  * Companion namespace for {@link Table}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Table, TableCell, TableRow, Text } from "@beep/md/Md.model"
+  *
+@@ -2333,7 +2417,8 @@ export declare namespace Table {
+ /**
+  * YouTube video embed block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { YouTube } from "@beep/md/Md.model"
+  *
+@@ -2359,7 +2444,8 @@ export class YouTube extends S.TaggedClass<YouTube>($I`YouTube`)(
+ /**
+  * Companion namespace for {@link YouTube}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { YouTube } from "@beep/md/Md.model"
+  *
+@@ -2388,7 +2474,8 @@ export declare namespace YouTube {
+ /**
+  * Display TeX math block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { MathBlock } from "@beep/md/Md.model"
+  *
+@@ -2414,7 +2501,8 @@ export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
+ /**
+  * Companion namespace for {@link MathBlock}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { MathBlock } from "@beep/md/Md.model"
+  *
+@@ -2443,7 +2531,8 @@ export declare namespace MathBlock {
+ /**
+  * Footnote definition block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { FootnoteDefinition, P, Text } from "@beep/md/Md.model"
+  *
+@@ -2475,7 +2564,8 @@ export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`Foo
+ /**
+  * Companion namespace for {@link FootnoteDefinition}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { FootnoteDefinition } from "@beep/md/Md.model"
+  *
+@@ -2513,7 +2603,8 @@ export declare namespace FootnoteDefinition {
+ /**
+  * Typed admonition block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import * as O from "effect/Option"
+  * import { Admonition, P, Text } from "@beep/md/Md.model"
+@@ -2550,7 +2641,8 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
+ /**
+  * Companion namespace for {@link Admonition}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { Admonition } from "@beep/md/Md.model"
+  *
+@@ -2586,7 +2678,8 @@ export declare namespace Admonition {
+ /**
+  * Safe generalized block embed.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Embed } from "@beep/md/Md.model"
+  *
+@@ -2615,7 +2708,8 @@ export const Embed = EmbedKind.mapMembers(
+ /**
+  * Companion runtime type for {@link Embed}
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Embed } from "@beep/md/Md.model"
+  *
+@@ -2631,7 +2725,8 @@ export type Embed = typeof Embed.Type;
+ /**
+  * Companion namespace for {@link Embed}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { Embed } from "@beep/md/Md.model"
+  *
+@@ -2727,7 +2822,8 @@ export declare namespace Embed {
+ /**
+  * Horizontal rule block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Hr } from "@beep/md/Md.model"
+  *
+@@ -2749,7 +2845,8 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
+ /**
+  * Companion namespace for {@link Hr}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Hr } from "@beep/md/Md.model"
+  *
+@@ -2777,7 +2874,8 @@ export declare namespace Hr {
+ /**
+  * Discriminated union of block Markdown AST nodes.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import * as S from "effect/Schema"
+@@ -2816,7 +2914,8 @@ export const Block = S.Union([
+ /**
+  * Runtime type for {@link Block}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { P, Text } from "@beep/md/Md.model"
+  * import type { Block } from "@beep/md/Md.model"
+@@ -2833,7 +2932,8 @@ export type Block = typeof Block.Type;
+ /**
+  * Companion namespace for {@link Block}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { P, Text } from "@beep/md/Md.model"
+  * import type { Block } from "@beep/md/Md.model"
+@@ -2888,7 +2988,8 @@ export declare namespace Block {
+ /**
+  * Root Markdown document AST.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Document, P, Text } from "@beep/md/Md.model"
+  *
+@@ -2917,7 +3018,8 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
+ /**
+  * Companion namespace for {@link Document}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Document, P, Text } from "@beep/md/Md.model"
+  *
+diff --git a/packages/foundation/modeling/md/src/Md.ts b/packages/foundation/modeling/md/src/Md.ts
+index edf61d07b0..fa199ad69c 100644
+--- a/packages/foundation/modeling/md/src/Md.ts
++++ b/packages/foundation/modeling/md/src/Md.ts
+@@ -88,7 +88,8 @@ import type {
+ /**
+  * Inline constructor input accepted by text-oriented builders.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { InlineInput } from "@beep/md/Md"
+  *
+@@ -104,7 +105,8 @@ export type InlineInput = string | Inline;
+ /**
+  * Inline child content accepted by inline and text block builders.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { InlineContent } from "@beep/md/Md"
+@@ -121,7 +123,8 @@ export type InlineContent = InlineInput | ReadonlyArray<InlineInput>;
+ /**
+  * Overloaded builder shape for inline-content constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { InlineContentBuilder } from "@beep/md/Md"
+  * import type { Strong } from "@beep/md/Md.model"
+@@ -141,7 +144,8 @@ export type InlineContentBuilder<Node> = {
+ /**
+  * Block constructor input accepted by block containers.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { BlockInput } from "@beep/md/Md"
+  *
+@@ -157,7 +161,8 @@ export type BlockInput = string | Block;
+ /**
+  * Block child content accepted by block container call forms.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { BlockContent } from "@beep/md/Md"
+@@ -177,7 +182,8 @@ export type BlockContent = BlockInput | ReadonlyArray<BlockInput>;
+  * Arrays in templates are inline content arrays; use the call form for block
+  * arrays.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { BlockTemplateValue } from "@beep/md/Md"
+@@ -194,7 +200,8 @@ export type BlockTemplateValue = InlineContent | Block;
+ /**
+  * Overloaded builder shape for block-content constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { BlockContentBuilder } from "@beep/md/Md"
+  * import type { BlockQuote } from "@beep/md/Md.model"
+@@ -214,7 +221,8 @@ export type BlockContentBuilder<Node> = {
+ /**
+  * Child input accepted inside list item constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { ListItemChildInput } from "@beep/md/Md"
+@@ -231,7 +239,8 @@ export type ListItemChildInput = InlineInput | Block;
+ /**
+  * List item child content accepted by ordered, unordered, and task list builders.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { ListItemContent } from "@beep/md/Md"
+@@ -248,7 +257,8 @@ export type ListItemContent = ListItemChildInput | ReadonlyArray<ListItemChildIn
+ /**
+  * Overloaded builder shape for list item content constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { ListItemContentBuilder } from "@beep/md/Md"
+  * import type { Li } from "@beep/md/Md.model"
+@@ -268,7 +278,8 @@ export type ListItemContentBuilder<Node> = {
+ /**
+  * Input accepted by ordered and unordered list constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { ListItemInput } from "@beep/md/Md"
+@@ -300,7 +311,8 @@ type TaskListCompatibilityInput =
+  * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
+  * {@link taskListFromItems}. This union remains for shorthand compatibility.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { TaskListItemInput } from "@beep/md/Md"
+  *
+@@ -316,7 +328,8 @@ export type TaskListItemInput = TaskListCompatibilityInput;
+ /**
+  * Input accepted by table cell constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { TableCellInput } from "@beep/md/Md"
+  *
+@@ -332,7 +345,8 @@ export type TableCellInput = InlineContent | TableCell;
+ /**
+  * Input accepted by table row constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import type { TableRowInput } from "@beep/md/Md"
+@@ -539,7 +553,8 @@ const asTableRow = (input: TableRowInput): TableRow =>
+ /**
+  * Creates plain escaped inline text.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -555,7 +570,8 @@ export const text = (value: string): Text => Text.make({ value });
+ /**
+  * Creates trusted raw Markdown inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -573,7 +589,8 @@ export const rawMarkdown = (value: string): RawMarkdown => RawMarkdown.make({ va
+  *
+  * The built-in {@link HtmlFragmentAdapter} escapes this value by default.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -589,7 +606,8 @@ export const rawHtml = (value: string): RawHtml => RawHtml.make({ value });
+ /**
+  * Creates strong inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -605,7 +623,8 @@ export const strong = makeInlineContentBuilder((children): Strong => Strong.make
+ /**
+  * Creates emphasized inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -621,7 +640,8 @@ export const em = makeInlineContentBuilder((children): Em => Em.make({ children
+ /**
+  * Creates deleted inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -637,7 +657,8 @@ export const del = makeInlineContentBuilder((children): Del => Del.make({ childr
+ /**
+  * Creates an inline code span.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -653,7 +674,8 @@ export const code = (value: string): Code => Code.make({ value });
+ /**
+  * Creates an inline hyperlink.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -670,7 +692,8 @@ export const a = (href: string, children: InlineContent, options: { readonly tit
+ /**
+  * Creates an inline image.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -687,7 +710,8 @@ export const img = (src: string, alt = "", options: { readonly title?: string }
+ /**
+  * Creates an inline line break.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -702,7 +726,8 @@ export const br: Br = Br.make({});
+ /**
+  * Creates inline TeX math content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -718,7 +743,8 @@ export const inlineMath = (value: string): InlineMath => InlineMath.make({ value
+ /**
+  * Creates an inline footnote reference.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -735,7 +761,8 @@ export const footnoteRef = (identifier: string): FootnoteReference =>
+ /**
+  * Creates a level-one heading block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -751,7 +778,8 @@ export const h1 = makeInlineContentBuilder((children): Heading => Heading.make({
+ /**
+  * Creates a level-two heading block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -767,7 +795,8 @@ export const h2 = makeInlineContentBuilder((children): Heading => Heading.make({
+ /**
+  * Creates a level-three heading block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -783,7 +812,8 @@ export const h3 = makeInlineContentBuilder((children): Heading => Heading.make({
+ /**
+  * Creates a level-four heading block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -799,7 +829,8 @@ export const h4 = makeInlineContentBuilder((children): Heading => Heading.make({
+ /**
+  * Creates a level-five heading block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -815,7 +846,8 @@ export const h5 = makeInlineContentBuilder((children): Heading => Heading.make({
+ /**
+  * Creates a level-six heading block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -831,7 +863,8 @@ export const h6 = makeInlineContentBuilder((children): Heading => Heading.make({
+ /**
+  * Creates a paragraph block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -847,7 +880,8 @@ export const p = makeInlineContentBuilder((children): PNode => PNode.make({ chil
+ /**
+  * Creates a list item node.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -863,7 +897,8 @@ export const li = makeListItemContentBuilder((children): Li => Li.make({ childre
+ /**
+  * Creates an unordered list block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -879,7 +914,8 @@ export const ul = (children: ReadonlyArray<ListItemInput>): Ul => Ul.make({ chil
+ /**
+  * Creates an ordered list block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -899,7 +935,8 @@ export const ol = (children: ReadonlyArray<ListItemInput>, options: { readonly s
+ /**
+  * Creates a GFM task list item.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -922,7 +959,8 @@ const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInpu
+ /**
+  * Creates a GFM task list block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -940,7 +978,8 @@ export const taskList = taskListCompatibility;
+ /**
+  * Creates a GFM task list from canonical tagged task items.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -959,7 +998,8 @@ export const taskListFromItems = (children: ReadonlyArray<TaskListItemSpec>): Ta
+ /**
+  * Creates a block quote container.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -975,7 +1015,8 @@ export const blockquote = makeBlockContentBuilder((children): BlockQuote => Bloc
+ /**
+  * Creates a fenced code block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -992,7 +1033,8 @@ export const pre = (value: string, options: { readonly language?: string } = {})
+ /**
+  * Creates a table cell with inline content.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1008,7 +1050,8 @@ export const tableCell = (children: InlineContent): TableCell => TableCell.make(
+ /**
+  * Creates a table row from table cells.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1025,7 +1068,8 @@ export const tableRow = (children: ReadonlyArray<TableCellInput>): TableRow =>
+ /**
+  * Creates a Markdown table block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1049,7 +1093,8 @@ export const table = (
+ /**
+  * Creates a display TeX math block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1065,7 +1110,8 @@ export const mathBlock = (value: string): MathBlock => MathBlock.make({ value })
+ /**
+  * Creates a footnote definition block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1082,7 +1128,8 @@ export const footnoteDef = (identifier: string, children: BlockContent): Footnot
+ /**
+  * Creates a typed admonition block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1102,7 +1149,8 @@ export const admonition = (
+ /**
+  * Creates a safe generalized block embed.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1127,7 +1175,8 @@ export const embed = (
+ /**
+  * Creates the encoded YouTube embed payload decoded by public constructors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Result } from "effect"
+  * import { Md } from "@beep/md"
+@@ -1144,7 +1193,8 @@ const youtubeInput = (videoId: string): YouTube.Encoded => ({ _tag: "youtube", v
+ /**
+  * Creates a YouTube embed block and captures schema validation failures.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import { Result } from "effect"
+@@ -1162,7 +1212,8 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError>
+ /**
+  * Effectful YouTube embed constructor.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Effect } from "effect"
+  * import { Md } from "@beep/md"
+@@ -1183,7 +1234,8 @@ export const youtubeEffect = Effect.fn("Md.youtubeEffect")(function* (videoId: s
+  *
+  * Prefer {@link youtube} or {@link youtubeEffect} at input boundaries.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1199,7 +1251,8 @@ export const youtubeUnsafe = (videoId: string): YouTube => YouTube.make({ videoI
+ /**
+  * Creates a horizontal rule block.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1214,7 +1267,8 @@ export const hr: Hr = Hr.make({});
+ /**
+  * Creates a Markdown document from block children.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  *
+@@ -1238,7 +1292,8 @@ export const make = (children: ReadonlyArray<Block>, options: { readonly frontma
+  * keeping function-call overloads for dynamic strings and structured inline
+  * children.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { Md } from "@beep/md"
+  * import { Result } from "effect"
+diff --git a/packages/foundation/modeling/utils/dtslint/Str.tst.ts b/packages/foundation/modeling/utils/dtslint/Str.tst.ts
+deleted file mode 100644
+index e69de29bb2..0000000000
+diff --git a/packages/foundation/ui-system/editor/src/chat/typeahead.tsx b/packages/foundation/ui-system/editor/src/chat/typeahead.tsx
+index a8c1bd3aee..4719175732 100644
+--- a/packages/foundation/ui-system/editor/src/chat/typeahead.tsx
++++ b/packages/foundation/ui-system/editor/src/chat/typeahead.tsx
+@@ -102,8 +102,6 @@ const filterSlashItems = (items: ReadonlyArray<SlashItem>, query: string): Reado
+ const slashQueryAtom = Atom.family((_editor: LexicalEditor) => Atom.make<string>(""));
+ 
+ const decodeMentionOptions = S.decodeUnknownEffect(MentionOptions);
+-const isImmediateMentionOptions = (result: ReturnType<MentionSource>): result is ReadonlyArray<MentionOption> =>
+-  A.isArray(result);
+ 
+ const mentionSourceFailure = (cause: unknown): MentionLookupError =>
+   MentionLookupError.make({
+@@ -123,16 +121,10 @@ const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
+     }>()(
+       Effect.fnUntraced(
+         function* ({ query, source }) {
+-          const sourceResult = yield* Effect.try({
+-            try: () => source(query),
++          const raw = yield* Effect.tryPromise({
++            try: () => globalThis.Promise.resolve(source(query)),
+             catch: mentionSourceFailure,
+           });
+-          const raw = yield* isImmediateMentionOptions(sourceResult)
+-            ? Effect.succeed(sourceResult)
+-            : Effect.tryPromise({
+-                try: () => sourceResult,
+-                catch: mentionSourceFailure,
+-              });
+           return yield* decodeMentionOptions(raw).pipe(
+             Effect.mapError((cause) =>
+               MentionLookupError.make({
+@@ -206,7 +198,8 @@ const MENU_VIEWPORT_GAP_PX = 4;
+  * Whether the typeahead listbox should flip above the caret line: there is not
+  * enough viewport space below it for the full menu, and more space above.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { shouldOpenUpward } from "@beep/editor/chat/typeahead"
+  *
+@@ -233,7 +226,8 @@ export const shouldOpenUpward = ({
+  * Fixed viewport coordinates for the typeahead listbox: below the caret when it
+  * fits, above it otherwise, clamped horizontally to the viewport.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { typeaheadMenuPosition } from "@beep/editor/chat/typeahead"
+  *
+@@ -418,7 +412,8 @@ interface SlashPluginProps {
+  * `/query` text is removed and the item mutates the current selection. Tracks
+  * its open state in the shared {@link menusOpenAtom}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```tsx
+  * import { SlashPlugin } from "@beep/editor/chat/typeahead"
+  * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
+@@ -497,7 +492,8 @@ interface MentionPluginProps {
+  * persisted node, so the emitted state stays within the v1 schema vocabulary.
+  * Tracks its open state in the shared {@link menusOpenAtom}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```tsx
+  * import { MentionPlugin } from "@beep/editor/chat/typeahead"
+  * import { MentionOption } from "@beep/editor/chat/config"
+@@ -603,7 +599,8 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
+ /**
+  * DOM id of the Lexical-owned typeahead listbox, scoped to one editor.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { typeaheadMenuId } from "@beep/editor/chat/typeahead"
+  * import { createEditor } from "lexical"
+@@ -728,7 +725,8 @@ const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
+  * preserving its `aria-activedescendant` behavior. Reads the open state from
+  * the shared {@link anyMenuOpenAtom}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```tsx
+  * import { ComboboxAriaPlugin } from "@beep/editor/chat/typeahead"
+  *
+diff --git a/packages/ontology/domain/src/aggregates/Session/Session.values.ts b/packages/ontology/domain/src/aggregates/Session/Session.values.ts
+index caf2d39b34..1519a6c3ae 100644
+--- a/packages/ontology/domain/src/aggregates/Session/Session.values.ts
++++ b/packages/ontology/domain/src/aggregates/Session/Session.values.ts
+@@ -16,7 +16,8 @@ const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
+ /**
+  * Stable ontology workbench session id.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
+  * import * as S from "effect/Schema"
+@@ -40,7 +41,8 @@ export const SessionId = S.NonEmptyString.pipe(
+ /**
+  * Type for {@link SessionId}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
+  * import * as S from "effect/Schema"
+@@ -58,7 +60,8 @@ export type SessionId = typeof SessionId.Type;
+ /**
+  * Derived named graph partitions owned by an ontology session.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
+  *
+@@ -79,7 +82,8 @@ export const GraphPartition = LiteralKit(["asserted", "ontologies", "inferred",
+ /**
+  * Type for {@link GraphPartition}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { graphPartitionIri, GraphPartition } from "@beep/ontology-domain/aggregates/Session"
+  *
+@@ -96,7 +100,8 @@ export type GraphPartition = typeof GraphPartition.Type;
+ /**
+  * Canonical graph IRI for each ontology session partition.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
+  *
+@@ -120,7 +125,8 @@ export const graphPartitionIri = (partition: GraphPartition): string =>
+ /**
+  * Shared SPEC 13 exclusion rule for derived graph partitions.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { isExcludedFromReasoning } from "@beep/ontology-domain/aggregates/Session"
+  *
+diff --git a/packages/ontology/server/src/aggregates/Session/Session.file-store.ts b/packages/ontology/server/src/aggregates/Session/Session.file-store.ts
+index 356694d3c5..cda3617f7c 100644
+--- a/packages/ontology/server/src/aggregates/Session/Session.file-store.ts
++++ b/packages/ontology/server/src/aggregates/Session/Session.file-store.ts
+@@ -198,11 +198,14 @@ const resolveWritePath = (
+ /**
+  * Build the FileSystem-backed ontology file-store port implementation.
+  *
+- * @remarks The supplied ontology server configuration must name an existing
++ * **Gotchas**
++ *
++ * The supplied ontology server configuration must name an existing
+  * directory. Requests accept only traversal-safe root-relative paths ending in
+  * lower-case `.ttl`.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyConfig, OntologyServerConfig } from "@beep/ontology-config/server"
+  * import { makeFileSystemOntologyFileStore } from "@beep/ontology-server/aggregates/Session"
+diff --git a/packages/ontology/server/src/tools/OntologyToolHandlers.ts b/packages/ontology/server/src/tools/OntologyToolHandlers.ts
+index 8631675bfb..abb168462f 100644
+--- a/packages/ontology/server/src/tools/OntologyToolHandlers.ts
++++ b/packages/ontology/server/src/tools/OntologyToolHandlers.ts
+@@ -38,7 +38,8 @@ import type * as Tool from "effect/unstable/ai/Tool";
+ import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+ 
+ /** Thin service-delegating handler layer for the ontology toolkit.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyToolkitHandlersLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyToolkitHandlersLive)
+@@ -107,7 +108,8 @@ const gatedMutation = Effect.fn("Ontology.Tools.gatedMutation")(function* <A, E,
+ });
+ 
+ /** Read-only MCP handlers that remain available while mutation registration is disabled.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyMcpReadOnlyHandlersLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyMcpReadOnlyHandlersLive)
+@@ -130,7 +132,8 @@ export const OntologyMcpReadOnlyHandlersLive = OntologyReadOnlyToolkit.toLayer(
+ );
+ 
+ /** Authenticated, TierGate-wrapped mutation handlers for the MCP transport.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyMcpMutationHandlersLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyMcpMutationHandlersLive)
+@@ -182,14 +185,20 @@ const publicationFailure = (error: HttpClientError.HttpClientError) =>
+       });
+ 
+ /** Publish a provenance sidecar to a caller-named destination through the ambient client.
+- * @remarks Exported as a standalone effect, not buried in the handler closure,
++ * **Details**
++ *
++ * Exported as a standalone effect, not buried in the handler closure,
+  * so the error translation below can be proven directly: which failures become
+  * an indistinguishable refusal and which stay a distinguishable execution error
+  * is a security property, not an implementation detail.
+- * @remarks Requires `HttpClient.HttpClient` from its caller and never builds
++ *
++ * **Gotchas**
++ *
++ * Requires `HttpClient.HttpClient` from its caller and never builds
+  * one: a self-provided client would resolve its own `Fetch` and escape the
+  * governed egress boundary entirely.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { publishProvenance } from "@beep/ontology-server/tools"
+  * console.log(typeof publishProvenance)
+@@ -222,10 +231,13 @@ export const publishProvenance = Effect.fn("Ontology.Tools.publishProvenance")(f
+ });
+ 
+ /** Governed provenance publication handlers, registered only when egress is allowlisted.
+- * @remarks Takes `HttpClient.HttpClient` as a layer requirement and never
++ * **Gotchas**
++ *
++ * Takes `HttpClient.HttpClient` as a layer requirement and never
+  * builds its own: a self-provided client would resolve its own `Fetch` and
+  * escape the governed egress boundary entirely.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyMcpPublishHandlersLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyMcpPublishHandlersLive)
+@@ -255,7 +267,8 @@ const OntologyToolServiceServerLive = OntologyToolServiceLive.pipe(
+ );
+ 
+ /** Fully wired real-engine ontology toolkit handler layer without transport.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyToolsLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyToolsLive)
+@@ -266,7 +279,8 @@ const OntologyToolServiceServerLive = OntologyToolServiceLive.pipe(
+ export const OntologyToolsLive = OntologyToolkitHandlersLive.pipe(Layer.provideMerge(OntologyToolServiceServerLive));
+ 
+ /** Fully wired read-only MCP ontology handlers over the real engine stack.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyMcpReadOnlyToolsLive)
+@@ -279,7 +293,8 @@ export const OntologyMcpReadOnlyToolsLive = OntologyMcpReadOnlyHandlersLive.pipe
+ );
+ 
+ /** Fully wired TierGate-protected mutation handlers over the real engine stack.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyMcpMutationToolsLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyMcpMutationToolsLive)
+@@ -292,9 +307,12 @@ export const OntologyMcpMutationToolsLive = OntologyMcpMutationHandlersLive.pipe
+ );
+ 
+ /** Fully wired governed provenance publication handlers over the real engine stack.
+- * @remarks `HttpClient.HttpClient` stays an open requirement so the composition
++ * **Details**
++ *
++ * `HttpClient.HttpClient` stays an open requirement so the composition
+  * root supplies the client whose graph carries the governed egress `Fetch`.
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologyMcpPublishToolsLive } from "@beep/ontology-server/tools"
+  * console.log(OntologyMcpPublishToolsLive)
+diff --git a/packages/ontology/ui/src/aggregates/Session/Session.document.tsx b/packages/ontology/ui/src/aggregates/Session/Session.document.tsx
+index e5985bc660..acaa66b57c 100644
+--- a/packages/ontology/ui/src/aggregates/Session/Session.document.tsx
++++ b/packages/ontology/ui/src/aggregates/Session/Session.document.tsx
+@@ -47,7 +47,8 @@ const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePa
+  * actions, derived from the in-flight flags of the open/save/preview atoms
+  * and whether a session is open.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { documentToolbarState } from "@beep/ontology-ui/aggregates/Session"
+  *
+@@ -84,7 +85,8 @@ const isOntologyFoldLevel = S.is(OntologyFoldLevel);
+ /**
+  * Document actions, view controls, dirty state, and document errors.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```tsx
+  * import { OntologyDocumentRegion } from "@beep/ontology-ui"
+  *
+diff --git a/packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx b/packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx
+index a93f9663d1..3c7897429a 100644
+--- a/packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx
++++ b/packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx
+@@ -25,7 +25,8 @@ import type { JSX } from "react";
+ /**
+  * Search controls and resource tree for the ontology workbench.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```tsx
+  * import { OntologyExplorerRegion } from "@beep/ontology-ui"
+  *
+diff --git a/packages/ontology/ui/src/aggregates/Session/Session.tree.ts b/packages/ontology/ui/src/aggregates/Session/Session.tree.ts
+index a0c82a72c4..5280d2e323 100644
+--- a/packages/ontology/ui/src/aggregates/Session/Session.tree.ts
++++ b/packages/ontology/ui/src/aggregates/Session/Session.tree.ts
+@@ -26,11 +26,13 @@ type OntologyTreeItem = {
+ /**
+  * Build a tree-safe hierarchy view from the ontology snapshot.
+  *
+- * @remarks
++ * **Details**
++ *
+  * Inferred subclass closure can make the hierarchy a DAG. MUI tree items need
+  * unique ids, so each resource is emitted once and path cycles are skipped.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { ontologyTreeItemsFor } from "@beep/ontology-ui/aggregates/Session"
+  * import { OntologyMetrics, OntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
+diff --git a/packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts b/packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts
+index 7a3dff6060..284603b4a8 100644
+--- a/packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts
++++ b/packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts
+@@ -29,7 +29,8 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.sparql");
+ /**
+  * SPARQL query profiles exposed by the ontology workbench panel.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlPanelProfile } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -50,7 +51,8 @@ export const OntologySparqlPanelProfile = LiteralKit(["select", "construct", "as
+ /**
+  * Type for {@link OntologySparqlPanelProfile}.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlPanelProfile } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -67,7 +69,8 @@ export type OntologySparqlPanelProfile = typeof OntologySparqlPanelProfile.Type;
+ /**
+  * SPARQL query safeguard envelope.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlSafeguards } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -98,7 +101,8 @@ export class OntologySparqlSafeguards extends S.Class<OntologySparqlSafeguards>(
+ /**
+  * SPARQL panel example query.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlExample } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -130,7 +134,8 @@ export class OntologySparqlExample extends S.Class<OntologySparqlExample>($I`Ont
+ /**
+  * SPARQL execution input for an ontology session.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+  * import { RunOntologySparqlInput } from "@beep/ontology-use-cases/aggregates/Session"
+@@ -177,7 +182,8 @@ export class RunOntologySparqlInput extends S.Class<RunOntologySparqlInput>($I`R
+ /**
+  * SPARQL execution result with applied safeguards.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session"
+  * import { NonNegativeInt } from "@beep/schema"
+@@ -221,7 +227,8 @@ export class RunOntologySparqlResult extends S.Class<RunOntologySparqlResult>($I
+ /**
+  * SPARQL safeguard validation failure.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlError } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -254,7 +261,8 @@ export class OntologySparqlError extends TaggedErrorClass<OntologySparqlError>($
+ /**
+  * SPARQL runner service shape.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import type { OntologySparqlRunnerShape } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -294,7 +302,8 @@ const QUERY_EXAMPLES: ReadonlyArray<OntologySparqlExample> = [
+ /**
+  * Built-in SPARQL query examples for the panel library.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { ontologySparqlExamples } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+@@ -321,7 +330,8 @@ const prefixLines = (prefixes: PrefixMap, query: string): ReadonlyArray<string>
+ /**
+  * Builds a prefix prelude from the session prefix map.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { ontologySparqlPrefixPrelude } from "@beep/ontology-use-cases/aggregates/Session"
+  * import { PrefixMap } from "@beep/rdf/Rdf"
+@@ -342,7 +352,8 @@ export const ontologySparqlPrefixPrelude = (prefixes: PrefixMap): string =>
+ /**
+  * Default prefix-aware SPARQL query for a session.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+  * import { defaultOntologySparqlQuery } from "@beep/ontology-use-cases/aggregates/Session"
+@@ -619,7 +630,8 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
+ /**
+  * SPARQL runner service tag.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlRunner } from "@beep/ontology-use-cases/aggregates/Session"
+  * import { Effect } from "effect"
+@@ -642,7 +654,8 @@ export class OntologySparqlRunner extends Context.Service<OntologySparqlRunner,
+ /**
+  * Live SPARQL runner service built on the semantic-web SPARQL contract.
+  *
+- * @example
++ * **Example** (Demonstrate usage)
++ *
+  * ```ts
+  * import { OntologySparqlRunnerLive } from "@beep/ontology-use-cases/aggregates/Session"
+  *
+diff --git a/packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts b/packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts
+index 84a3d696f3..41bb33d378 100644
+--- a/packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts
++++ b/packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts
+@@ -98,7 +98,7 @@ describe("Shared Next.js config preset", () => {
+     expect(omitted).toEqual(explicitEmpty);
+   });
+ 
+-  it("adds secure headers without invoking app headers during construction", () =>
++  it.effect("adds secure headers without invoking app headers during construction", () =>
+     Effect.gen(function* () {
+       let headersCalled = false;
+       const config = defineBeepNextConfig({
+@@ -133,7 +133,8 @@ describe("Shared Next.js config preset", () => {
+         source: "/custom",
+         headers: [{ key: "X-App", value: "1" }],
+       });
+-    }));
++    })
++  );
+ 
+   it("can disable every shared feature wrapper explicitly", () => {
+     const config = defineBeepNextConfig({
+diff --git a/standards/jsdoc-totals.regression-baseline.jsonc b/standards/jsdoc-totals.regression-baseline.jsonc
+index 8467f6d7a9..73e8f3f77d 100644
+--- a/standards/jsdoc-totals.regression-baseline.jsonc
++++ b/standards/jsdoc-totals.regression-baseline.jsonc
+@@ -4,13 +4,13 @@
+ // Comparison: fail-on-growth for every metric in tracked_totals.
+ {
+   "schema_version": 1,
+-  "source_inventory": "standards/jsdoc-documentation.inventory.jsonc",
++  "source_inventory": ".beep/ci/jsdoc-documentation.inventory.jsonc",
+   "regeneration_command": "bun run beep quality jsdoc-inventory",
+   "snapshot_command": "bun run beep quality jsdoc-ratchet --write-baseline",
+   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
+-  "generated_at": "2026-08-04T12:18:10.360Z",
++  "generated_at": "2026-08-04T16:34:47.756Z",
+   "tracked_totals": {
+-    "packagesNeedingRemediation": 111,
++    "packagesNeedingRemediation": 109,
+     "missingExportExamples": 0,
+     "missingExportCategories": 0,
+     "missingExportSince": 0,
+@@ -29,6 +29,7 @@
+     "malformed-example": 85,
+     "duplicate-example": 0,
+     "loose-ts-fence": 0,
+-    "forbidden-remarks": 467
++    "forbidden-remarks": 456
+   }
+ }
++
