@@ -1,0 +1,98 @@
+diff --git a/bun.lock b/bun.lock
+index 013f3cfaf9..f5f02d9bdc 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -2417,13 +2417,13 @@
+   },
+   "overrides": {
+     "@effect/platform-node-shared": "catalog:",
+-    "@effect/tsgo-darwin-arm64": "0.24.3",
+-    "@effect/tsgo-darwin-x64": "0.24.3",
+-    "@effect/tsgo-linux-arm": "0.24.3",
+-    "@effect/tsgo-linux-arm64": "0.24.3",
+-    "@effect/tsgo-linux-x64": "0.24.3",
+-    "@effect/tsgo-win32-arm64": "0.24.3",
+-    "@effect/tsgo-win32-x64": "0.24.3",
++    "@effect/tsgo-darwin-arm64": "catalog:",
++    "@effect/tsgo-darwin-x64": "catalog:",
++    "@effect/tsgo-linux-arm": "catalog:",
++    "@effect/tsgo-linux-arm64": "catalog:",
++    "@effect/tsgo-linux-x64": "catalog:",
++    "@effect/tsgo-win32-arm64": "catalog:",
++    "@effect/tsgo-win32-x64": "catalog:",
+     "@hono/node-server": "2.0.11",
+     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",
+     "@opentelemetry/propagator-jaeger": "2.10.0",
+@@ -2480,6 +2480,13 @@
+     "@effect/sql-sqlite-bun": "4.0.0-beta.101",
+     "@effect/sql-sqlite-node": "4.0.0-beta.101",
+     "@effect/tsgo": "0.19.0",
++    "@effect/tsgo-darwin-arm64": "0.24.3",
++    "@effect/tsgo-darwin-x64": "0.24.3",
++    "@effect/tsgo-linux-arm": "0.24.3",
++    "@effect/tsgo-linux-arm64": "0.24.3",
++    "@effect/tsgo-linux-x64": "0.24.3",
++    "@effect/tsgo-win32-arm64": "0.24.3",
++    "@effect/tsgo-win32-x64": "0.24.3",
+     "@effect/vitest": "4.0.0-beta.101",
+     "@electric-sql/pglite": "0.5.4",
+     "@electric-sql/pglite-socket": "0.2.7",
+diff --git a/packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts b/packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts
+index 68e3717f1a..8f78d07c8d 100644
+--- a/packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts
++++ b/packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts
+@@ -209,10 +209,19 @@ const localDefsRefTarget = (schema: JsonObject): O.Option<JsonObject> =>
+     return isJsonObject(defs) && isJsonObject(defs[key]) ? O.some(defs[key]) : O.none();
+   });
+ 
++// A root-level `$ref` with sibling keywords is an implicit intersection under
++// JSON Schema 2020-12, so strict MCP clients (e.g. OpenAI-compatible hosts)
++// normalize it to a top-level `allOf` and reject the tool schema outright.
++// Inline the referenced definition into the root instead; `$defs` stays for
++// any nested references.
+ const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
+-  schema.type === "object" || !O.exists(localDefsRefTarget(schema), (target) => target.type === "object")
+-    ? schema
+-    : { type: "object", ...schema };
++  O.match(localDefsRefTarget(schema), {
++    onNone: () => schema,
++    onSome: (target) => {
++      const { $ref: _$ref, ...rest } = schema;
++      return { ...rest, ...target };
++    },
++  });
+ 
+ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
+   toolkit: Toolkit.Toolkit<Tools>
+diff --git a/packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts b/packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts
+index 644154a6f0..d5bad988f6 100644
+--- a/packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts
++++ b/packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts
+@@ -152,15 +152,24 @@ describe("sanitizedToolkit", () => {
+ 
+   layer(refFullLayer)("with a named schema parameter toolkit registered via sanitizedToolkit", (it) => {
+     it.effect(
+-      "adds a top-level object type to ref-backed input schemas for strict MCP clients",
++      "inlines root-level $ref into a plain object schema for strict MCP clients",
+       Effect.fnUntraced(function* () {
+         const server = yield* McpServer.McpServer;
+         const registered = server.tools.find(({ tool }) => tool.name === "ref_tool");
+ 
+         assert.isDefined(registered);
+-        const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
++        const inputSchema = registered?.tool.inputSchema as {
++          readonly $ref?: unknown;
++          readonly type?: unknown;
++          readonly properties?: Record<string, unknown>;
++          readonly required?: ReadonlyArray<string>;
++        };
+         assert.strictEqual(inputSchema.type, "object");
+-        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParameters");
++        // No `$ref` may remain at the root: `$ref` + sibling keywords is an
++        // implicit `allOf`, which strict hosts reject at the top level.
++        assert.isUndefined(inputSchema.$ref);
++        assert.isDefined(inputSchema.properties?.secret);
++        assert.deepStrictEqual(inputSchema.required, ["secret"]);
+       })
+     );
+   });
