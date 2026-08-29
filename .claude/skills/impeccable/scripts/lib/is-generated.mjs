@@ -13,12 +13,17 @@
  *      within the first ~300 characters — catches non-git projects.
  */
 
-import { execFileSync } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const HEADER_SCAN_BYTES = 300;
-const HEADER_MARKERS = [/@generated\b/i, /\bGENERATED\s+FILE\b/, /\bAUTO-?GENERATED\b/i, /\bDO\s+NOT\s+EDIT\b/i];
+const HEADER_MARKERS = [
+  /@generated\b/i,
+  /\bGENERATED\s+FILE\b/,
+  /\bAUTO-?GENERATED\b/i,
+  /\bDO\s+NOT\s+EDIT\b/i,
+];
 
 /**
  * @param {string} filePath - absolute or cwd-relative path
@@ -39,9 +44,9 @@ function isGitIgnored(absPath, cwd) {
     // argv form, never a shell: this runs on every file the live-mode source
     // walk reaches, so a hostile filename embedding $(...) or backticks must
     // not be interpretable (issue #476). JSON.stringify is not shell quoting.
-    execFileSync("git", ["check-ignore", "--quiet", absPath], {
+    execFileSync('git', ['check-ignore', '--quiet', absPath], {
       cwd,
-      stdio: "ignore",
+      stdio: 'ignore',
     });
     return true; // exit 0 = ignored
   } catch (err) {
@@ -54,18 +59,14 @@ function isGitIgnored(absPath, cwd) {
 function hasGeneratedHeader(absPath) {
   let fd;
   try {
-    fd = fs.openSync(absPath, "r");
+    fd = fs.openSync(absPath, 'r');
     const buf = Buffer.alloc(HEADER_SCAN_BYTES);
     const bytesRead = fs.readSync(fd, buf, 0, HEADER_SCAN_BYTES, 0);
-    const head = buf.slice(0, bytesRead).toString("utf-8");
+    const head = buf.slice(0, bytesRead).toString('utf-8');
     return HEADER_MARKERS.some((re) => re.test(head));
   } catch {
     return false;
   } finally {
-    if (fd !== undefined) {
-      try {
-        fs.closeSync(fd);
-      } catch {}
-    }
+    if (fd !== undefined) { try { fs.closeSync(fd); } catch {} }
   }
 }

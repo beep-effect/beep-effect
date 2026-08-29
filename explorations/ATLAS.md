@@ -250,6 +250,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`todox-wealth-management-site`](./todox-wealth-management-site/README.md) —
+  graduated 2026-08-27 into
+  [`todox-marketing-site`](../goals/todox-marketing-site/README.md): build the
+  Terminal of Record marketing homepage in `apps/todox` (human-locked
+  direction, claim-gated copy, deterministic synthetic session, Impeccable
+  workflow). PR publication deferred pending Benjamin's go.
 - [`lejeune-bolt-agentic-demo`](./lejeune-bolt-agentic-demo/README.md) — graduated
   2026-08-26 into
   [`lejeune-demo-corpus-and-ontology`](../goals/lejeune-demo-corpus-and-ontology/README.md)
