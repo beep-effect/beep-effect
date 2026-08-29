@@ -375,8 +375,9 @@ stores (archived first), per-checkout `.codegraph/` indexes, and binaries.
 memory layer.** No successor Layer-2 memory system is designated; any future
 one starts as a fresh exploration with its own decision here first.
 
-**Mechanics:** `scripts/setup-agent-memory.sh` is retired; its still-required
-Effect reference-checkout half survives as `scripts/setup-effect-ref.sh`.
+**Mechanics:** the setup-agent-memory bootstrap script is retired; its
+still-required Effect reference-checkout half survives as
+`scripts/setup-effect-ref.sh`.
 The `.codegraph/` gitignore entry is retained defensively while stale
 machine-local indexes exist. This supersedes the 2026-08-06 role assignment
 above and the operational detail in `07-shared-memory-adoption.md`, which is
