@@ -3,7 +3,6 @@ import { Crypto, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canonicalJson } from "@/corpus/Canonical";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
@@ -75,7 +74,7 @@ const makeDocumentSource = Effect.gen(function* () {
 
   const makeAcquiredId = Effect.fn("DocumentSource.makeAcquiredId")(function* (document: DocumentId) {
     const body = EventBody.cases.Ingested.make({ document });
-    const encodedBody = yield* S.encodeEffect(EventBody)(body).pipe(Effect.orDie);
+    const encodedBody = yield* EventBody.encodeEffect(body).pipe(Effect.orDie);
     const preimage = new TextEncoder().encode(canonicalJson({ body: encodedBody, prev: null }));
     return ProvenanceEventId.make(yield* hashBytes(preimage));
   });

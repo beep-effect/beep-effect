@@ -29,7 +29,7 @@ const EvaluationMode = LiteralKit(["live", "replay"]);
  */
 export class EvalRunTelemetry extends S.Class<EvalRunTelemetry>($I`EvalRunTelemetry`)(
   {
-    schemaVersion: S.Literal("eval-telemetry/v1"),
+    schemaVersion: S.tag("eval-telemetry/v1"),
     reportDigest: Sha256Hex,
     runId: RunId,
     mode: EvaluationMode,

@@ -1,6 +1,7 @@
 import * as NLPService from "@beep/nlp-processing/NLPService";
 import { SourceTextExtractor } from "@beep/provenance";
 import { NonNegativeInt } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkBackendLive, WinkEngineLive } from "@beep/wink";
 import { Clock, Console, Crypto, DateTime, Effect, FileSystem, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -51,10 +52,13 @@ import type { EventBody as EventBodyValue, ProvenanceEvent as ProvenanceEventVal
 import type { ParseOutcome } from "@/schema/Text";
 import type { GoldSource } from "@/services/GoldSource";
 
-const GoldRefJson = S.fromJsonString(GoldRef);
+const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withEffectCodecStatics);
 const EvalReportJson = S.fromJsonString(EvalReport, { space: 2 });
 const EvalTelemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
-const fallbackExtractor = SourceTextExtractor.make({ name: "semantica-parser-degraded", version: SEMANTICA_VERSION });
+const fallbackExtractor = SourceTextExtractor.make({
+  name: "semantica-parser-degraded",
+  version: SEMANTICA_VERSION,
+});
 
 const executionFailed = (message: string): C0ExecutionFailed => C0ExecutionFailed.make({ message });
 
@@ -67,7 +71,12 @@ const makeEvent = Effect.fn("CanaryC0.makeEvent")(function* (
   body: EventBodyValue,
   prev: O.Option<ProvenanceEventValue["id"]>
 ) {
-  const id = yield* Effect.fromResult(makeProvenanceEventId({ body, prev })).pipe(Effect.orDie);
+  const id = yield* Effect.fromResult(
+    makeProvenanceEventId({
+      body,
+      prev,
+    })
+  ).pipe(Effect.orDie);
   return ProvenanceEvent.make({ body, id, prev });
 });
 
@@ -87,7 +96,11 @@ const batchEvents = Effect.fn("CanaryC0.batchEvents")(function* (
     return [previous] as const;
   }
   const extracted = yield* makeEvent(
-    EventBody.cases.Extracted.make({ batch: outcome.batch.id, kind: "Extracted", model: outcome.batch.model }),
+    EventBody.cases.Extracted.make({
+      batch: outcome.batch.id,
+      kind: "Extracted",
+      model: outcome.batch.model,
+    }),
     O.some(previous.id)
   );
   return [
@@ -106,7 +119,7 @@ const selectedPaper = (paper: O.Option<string>) =>
   O.match(paper, {
     onNone: () => Effect.succeed(O.none<CorpusPaperId>()),
     onSome: (value) =>
-      S.decodeEffect(CorpusPaperId)(value).pipe(
+      CorpusPaperId.decodeEffect(value).pipe(
         Effect.map(O.some),
         Effect.mapError(() => executionFailed("The requested --paper value is not a valid W1 corpus id."))
       ),
@@ -196,7 +209,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       );
       const goldPath = path.join(config.goldDirectory, "gold.json");
       const gold = yield* fs.readFileString(goldPath).pipe(
-        Effect.flatMap(S.decodeEffect(GoldRefJson)),
+        Effect.flatMap(GoldRefJson.decodeEffect),
         Effect.mapError(() =>
           GoldUnavailable.make({
             message: `Required gold reference is unavailable: ${goldPath}`,
@@ -235,12 +248,19 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
         selection: EvalSelection.make({ f1: selectedF1, w1 }),
         stage: "c0" as const,
       };
-      const run = EvalRun.make({ ...runBody, id: yield* Effect.fromResult(makeRunId(runBody)).pipe(Effect.orDie) });
+      const run = EvalRun.make({
+        ...runBody,
+        id: yield* Effect.fromResult(makeRunId(runBody)).pipe(Effect.orDie),
+      });
       const mode = RuntimeMode.$match(config.offline || options.offline ? "replay" : "live", {
         live: () => "live" as const,
         replay: () => "replay" as const,
       });
-      const selectedConfig = LabConfig.of({ ...config, mode, offline: mode === "replay" });
+      const selectedConfig = LabConfig.of({
+        ...config,
+        mode,
+        offline: mode === "replay",
+      });
       const ledgerDirectory = path.join(config.ledgerRoot, run.id, mode);
       yield* fs
         .remove(ledgerDirectory, { force: true, recursive: true })
@@ -275,81 +295,94 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
         hosted,
         pattern,
         evaluator,
-        LedgerLive({ ledgerRoot: config.ledgerRoot, mode, runId: run.id }).pipe(Layer.provide(support))
+        LedgerLive({
+          ledgerRoot: config.ledgerRoot,
+          mode,
+          runId: run.id,
+        }).pipe(Layer.provide(support))
       );
 
       const execution = yield* Effect.scoped(
         Layer.build(executionLayer).pipe(
           Effect.mapError(() => executionFailed("The selected C0 execution layers could not be acquired.")),
-          Effect.flatMap((context) =>
-            Effect.gen(function* () {
-              const layersReadyMillis = yield* Clock.currentTimeMillis;
-              const hostedExtractor = yield* HostedExtractor;
-              const patternExtractor = yield* PatternExtractor;
-              const ledger = yield* Ledger;
-              const evaluatorService = yield* Evaluator;
-              const results = yield* Effect.forEach(
-                documents,
-                Effect.fnUntraced(function* (document) {
-                  const documentStarted = yield* Clock.currentTimeMillis;
-                  const bytes = yield* documentSource.read(document);
-                  const outcome = yield* parser.parse(document, bytes);
-                  const ingested = yield* ProvenanceEvent.makeEffect({
-                    body: EventBody.cases.Ingested.make({ document: document.id, kind: "Ingested" }),
-                    id: document.acquired,
-                    prev: O.none(),
-                  }).pipe(
-                    Effect.mapError(() => executionFailed("The document acquisition event id is not canonical."))
-                  );
-                  const parsed = yield* makeEvent(parsedEventBody(document, outcome), O.some(ingested.id));
-                  if (outcome.outcome === "Degraded") {
-                    yield* ledger.appendDocument(document, outcome, O.none(), [], [ingested, parsed]);
+          Effect.flatMap(
+            Effect.fnUntraced(
+              function* (_context) {
+                const layersReadyMillis = yield* Clock.currentTimeMillis;
+                const hostedExtractor = yield* HostedExtractor;
+                const patternExtractor = yield* PatternExtractor;
+                const ledger = yield* Ledger;
+                const evaluatorService = yield* Evaluator;
+                const results = yield* Effect.forEach(
+                  documents,
+                  Effect.fnUntraced(function* (document) {
+                    const documentStarted = yield* Clock.currentTimeMillis;
+                    const bytes = yield* documentSource.read(document);
+                    const outcome = yield* parser.parse(document, bytes);
+                    const ingested = yield* ProvenanceEvent.makeEffect({
+                      body: EventBody.cases.Ingested.make({
+                        document: document.id,
+                        kind: "Ingested",
+                      }),
+                      id: document.acquired,
+                      prev: O.none(),
+                    }).pipe(
+                      Effect.mapError(() => executionFailed("The document acquisition event id is not canonical."))
+                    );
+                    const parsed = yield* makeEvent(parsedEventBody(document, outcome), O.some(ingested.id));
+                    if (outcome.outcome === "Degraded") {
+                      yield* ledger.appendDocument(document, outcome, O.none(), [], [ingested, parsed]);
+                      return {
+                        outcomes: [] as ReadonlyArray<ExtractOutcomeValue>,
+                        timing: (yield* Clock.currentTimeMillis) - documentStarted,
+                      };
+                    }
+                    const canonical = yield* canonicalizer.identify(document, outcome);
+                    const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
+                    const chunked = yield* makeEvent(
+                      EventBody.cases.Chunked.make({
+                        chunks: A.map(chunks, (chunk) => chunk.id),
+                        document: document.id,
+                        kind: "Chunked",
+                      }),
+                      O.some(parsed.id)
+                    );
+                    yield* ledger.appendDocument(document, outcome, O.some(canonical), chunks, [
+                      ingested,
+                      parsed,
+                      chunked,
+                    ]);
+                    const extractionOutcomes = yield* Effect.all(
+                      [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
+                      { concurrency: 2 }
+                    ).pipe(Effect.provideService(Crypto.Crypto, crypto));
+                    yield* Effect.forEach(
+                      extractionOutcomes,
+                      Effect.fnUntraced(function* (extraction) {
+                        yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
+                      }),
+                      { concurrency: 1, discard: true }
+                    );
                     return {
-                      outcomes: [] as ReadonlyArray<ExtractOutcomeValue>,
+                      outcomes: extractionOutcomes,
                       timing: (yield* Clock.currentTimeMillis) - documentStarted,
                     };
-                  }
-                  const canonical = yield* canonicalizer.identify(document, outcome);
-                  const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
-                  const chunked = yield* makeEvent(
-                    EventBody.cases.Chunked.make({
-                      chunks: A.map(chunks, (chunk) => chunk.id),
-                      document: document.id,
-                      kind: "Chunked",
-                    }),
-                    O.some(parsed.id)
-                  );
-                  yield* ledger.appendDocument(document, outcome, O.some(canonical), chunks, [
-                    ingested,
-                    parsed,
-                    chunked,
-                  ]);
-                  const extractionOutcomes = yield* Effect.all(
-                    [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
-                    { concurrency: 2 }
-                  ).pipe(Effect.provideService(Crypto.Crypto, crypto));
-                  yield* Effect.forEach(
-                    extractionOutcomes,
-                    Effect.fnUntraced(function* (extraction) {
-                      yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
-                    }),
-                    { concurrency: 1, discard: true }
-                  );
-                  return { outcomes: extractionOutcomes, timing: (yield* Clock.currentTimeMillis) - documentStarted };
-                }),
-                { concurrency: 1 }
-              );
-              const outcomes = A.flatMap(results, (result) => result.outcomes);
-              const snapshot = yield* ledger.read(run.id);
-              const report = yield* evaluatorService
-                .score(run, snapshot, outcomes)
-                .pipe(Effect.provideService(Crypto.Crypto, crypto));
-              return {
-                coldStartMs: N.max(0, layersReadyMillis - startedMillis),
-                report,
-                timings: A.map(results, (result) => result.timing),
-              };
-            }).pipe(Effect.provide(context))
+                  }),
+                  { concurrency: 1 }
+                );
+                const outcomes = A.flatMap(results, (result) => result.outcomes);
+                const snapshot = yield* ledger.read(run.id);
+                const report = yield* evaluatorService
+                  .score(run, snapshot, outcomes)
+                  .pipe(Effect.provideService(Crypto.Crypto, crypto));
+                return {
+                  coldStartMs: N.max(0, layersReadyMillis - startedMillis),
+                  report,
+                  timings: A.map(results, (result) => result.timing),
+                };
+              },
+              (effect, context) => effect.pipe(Effect.provide(context))
+            )
           )
         )
       );

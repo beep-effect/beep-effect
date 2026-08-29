@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { SourceTextExtractor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { identity, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -108,13 +109,13 @@ export const EventBody = EventKind.mapMembers(
     () => AssertedEventBody,
     () => InvalidatedEventBody,
   ])
-)
-  .annotate(
-    $I.annote("EventBody", {
-      description: "Exhaustive timestamp-free C0 provenance event bodies.",
-    })
-  )
-  .pipe(S.toTaggedUnion("kind"));
+).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("EventBody", {
+    description: "Exhaustive timestamp-free C0 provenance event bodies.",
+  }),
+  SchemaUtils.withEffectCodecStatics
+);
 
 /**
  * Decoded provenance event body.
@@ -168,7 +169,10 @@ export const makeProvenanceEventId = (
 
 const ProvenanceEventIdCheck = S.makeFilter(
   (event: typeof ProvenanceEventFields.Type) =>
-    contentDigestSync(ProvenanceEventPreimage)({ prev: event.prev, body: event.body }).pipe(
+    contentDigestSync(ProvenanceEventPreimage)({
+      prev: event.prev,
+      body: event.body,
+    }).pipe(
       Result.match({
         onFailure: () => false,
         onSuccess: (digest) => Str.Equivalence(digest, event.id),

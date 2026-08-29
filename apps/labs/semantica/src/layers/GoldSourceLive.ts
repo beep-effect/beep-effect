@@ -14,7 +14,6 @@ import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
-const GoldFileJson = S.fromJsonString(GoldFileEncoded);
 const GoldRefJson = S.fromJsonString(GoldRef);
 const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
 const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
@@ -54,7 +53,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("stale-reference", "The gold-v1 reference covers a missing label file.");
     }
     const file = yield* fs.readFileString(filePath).pipe(
-      Effect.flatMap(S.decodeEffect(GoldFileJson)),
+      Effect.flatMap(GoldFileEncoded.decodeEffectFromJsonString),
       Effect.mapError(() => unavailable("read-failed", "A covered gold-v1 file could not be read or decoded."))
     );
     if (!Str.Equivalence(file.paperId, paperId) || !Str.Equivalence(file.subset, subset)) {

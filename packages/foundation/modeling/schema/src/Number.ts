@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("NumberChecks");
 
@@ -202,6 +203,7 @@ export const NonNegativeInt = S.Int.pipe(S.brand("Int"))
     })
   )
   .pipe(
+    SchemaUtils.withCodecStatics,
     $I.annoteSchema("NonNegativeInt", {
       description: "A non-negative integer",
     })

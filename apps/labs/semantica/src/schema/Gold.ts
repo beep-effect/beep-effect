@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Equal, HashSet, identity, Number as N, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -545,6 +546,7 @@ const GoldFileProposerCheck = S.makeFilter(
  * @since 0.0.0
  */
 export const GoldFile = GoldFileDefinition.check(GoldFileProposerCheck).pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("GoldFile", {
     description: "Gold-v1 structure, entity, or relation labels for one paper and pinned proposer.",
   })
@@ -603,6 +605,7 @@ const GoldFileEncodedProposerCheck = S.makeFilter(
  * @since 0.0.0
  */
 export const GoldFileEncoded = GoldFileEncodedDefinition.check(GoldFileEncodedProposerCheck).pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("GoldFileEncoded", {
     description: "Persisted gold-v1 file shape containing offsets and digests but no W1 corpus text.",
   })
