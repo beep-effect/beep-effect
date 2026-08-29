@@ -794,7 +794,7 @@ const updateYeetInboxActiveIndex = Effect.fn("Yeet.updateInboxActiveIndex")(func
   const inboxDir = path.dirname(paths.activePath);
   const inputPath = path.join(inboxDir, `.active-row-${randomUUID()}.tmp`);
   const outputPath = path.join(inboxDir, `.active-index-${randomUUID()}.tmp`);
-  const versionPath = path.join(inboxDir, "active-p0-safe-v1");
+  const versionPath = path.join(inboxDir, "active-p0-safe-v2");
   yield* fs.writeFileString(inputPath, `${line}\n`, { flag: "wx", mode: 0o600 });
   const script = `
 set -eu
@@ -814,12 +814,11 @@ if [ -d "$acks" ]; then
   for ack_path in "$acks"/*; do
     [ -e "$ack_path" ] || continue
     [ -f "$ack_path" ] && [ ! -L "$ack_path" ] || continue
-    waive_expiry="$(jq -r 'select(.resolution.kind == "waive") | .resolution.expiresAt // empty' "$ack_path" 2>/dev/null || true)"
-    if [ -n "$waive_expiry" ]; then
-      expiry_epoch="$(date -d "$waive_expiry" +%s 2>/dev/null || true)"
-      now_epoch="$(date +%s)"
-      if [ -z "$expiry_epoch" ] || [ "$expiry_epoch" -le "$now_epoch" ]; then continue; fi
-    fi
+    ack_kind="$(jq -r '.resolution.kind // empty' "$ack_path" 2>/dev/null || true)"
+    # A waiver hides a row only until its expiry. Keep waived evidence in the
+    # bounded active projection so hook-time expiry can re-arm it without
+    # relying on a duplicate hosted observation.
+    [ "$ack_kind" = "waive" ] && continue
     ack_id="\${ack_path##*/}"
     ack_ids="$(printf '%s' "$ack_ids" | jq -c --arg id "$ack_id" '. + [$id]')"
   done
@@ -841,7 +840,7 @@ fi
 ' >"$output"
 chmod 600 "$output"
 mv -f -- "$output" "$active"
-printf 'yeet-inbox-active-p0-safe/v1\n' >"$version"
+printf 'yeet-inbox-active-p0-safe/v2\n' >"$version"
 chmod 600 "$version"
 rm -f -- "$incoming"
 `;
@@ -1067,7 +1066,7 @@ export const appendYeetInboxRowOnce = Effect.fn("Yeet.appendYeetInboxRowOnce")(f
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const paths = yield* yeetInboxPaths(repoRoot);
-  const activeVersionPath = path.join(paths.dir, "active-p0-safe-v1");
+  const activeVersionPath = path.join(paths.dir, "active-p0-safe-v2");
   const activeIndexCurrent = yield* fs.exists(activeVersionPath).pipe(Effect.orElseSucceed(() => false));
   const sourcePath = activeIndexCurrent ? paths.activePath : paths.failuresPath;
   const text = yield* fs.readFileString(sourcePath).pipe(Effect.orElseSucceed(() => ""));

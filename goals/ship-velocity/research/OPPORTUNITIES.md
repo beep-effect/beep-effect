@@ -729,3 +729,21 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   `admission: waiting`, with the push still absent while unrelated proofs held four tokens.
 - What would have prevented it: keep the clean-HEAD preflight, push, and PR creation outside the
   proof coordinator. Acquire scheduler admission immediately before the heavyweight proof phase.
+
+## 2026-08-28 — Thread steering terminated an admitted proof
+
+- What was happening: a Yeet proof had completed the cheap gates, build, and lint and was still
+  running in the foreground when a new thread instruction arrived.
+- Evidence: the foreground command was terminated during `lint-policy`; the scheduler lease was
+  released, but the completed output could not be resumed or accepted as a terminal proof.
+- What would have prevented it: run admitted proofs behind a resumable process handle whose
+  receipt survives thread steering, so a later turn can reattach without repeating passed work.
+
+## 2026-08-28 — Yeet verify cannot isolate a staged repair
+
+- What was happening: the review repair was staged beside an unrelated unstaged operator edit,
+  and the pre-publication check attempted to use Yeet's staged-only isolation.
+- Evidence: `bun run beep yeet verify --staged-only` exited before proof with
+  `Unrecognized flag: --staged-only`; only the publish command exposes that isolation mode.
+- What would have prevented it: support the same staged-only worktree protection on `yeet verify`,
+  or have it delegate to the publish isolation boundary without committing or pushing.

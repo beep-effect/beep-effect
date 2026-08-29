@@ -79,6 +79,7 @@ import {
   validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
+  writePublishedPrLease,
   YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
@@ -106,7 +107,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -119,6 +120,9 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
 );
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const decodeLeaseSummary = S.decodeUnknownSync(
+  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Number }))
+);
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
@@ -175,6 +179,38 @@ const withTempDirectory = <Result, Error, Requirements>(
         yield* fs.remove(tmpDir, { recursive: true });
       })
   ).pipe(provideScopedLayer(PlatformLayer));
+
+const withEnvVarEffect = <Out, Error, Requirements>(
+  name: string,
+  value: string | undefined,
+  use: Effect.Effect<Out, Error, Requirements>
+): Effect.Effect<Out, Error, Requirements> =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = Bun.env[name];
+      if (value === undefined) delete Bun.env[name];
+      else Bun.env[name] = value;
+      return previous;
+    }),
+    () => use,
+    (previous) =>
+      Effect.sync(() => {
+        if (previous === undefined) delete Bun.env[name];
+        else Bun.env[name] = previous;
+      })
+  );
+
+const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {
+  const previous = Bun.env[name];
+  if (value === undefined) delete Bun.env[name];
+  else Bun.env[name] = value;
+  try {
+    return use();
+  } finally {
+    if (previous === undefined) delete Bun.env[name];
+    else Bun.env[name] = previous;
+  }
+};
 
 type TempTrackedFileRepo = {
   readonly filePath: string;
@@ -407,6 +443,73 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
     A.findFirst((step) => step.label === label),
     O.getOrThrow
   );
+
+describe("yeet published PR lease", () => {
+  it("replaces terminal and abandoned ownership while preserving an open prior PR", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bin = path.join(tmpDir, "bin");
+          const leasePath = path.join(tmpDir, ".beep", "inbox", "pr-lease.json");
+          yield* fs.makeDirectory(bin);
+          const ghPath = path.join(bin, "gh");
+          yield* fs.writeFileString(
+            ghPath,
+            `#!/bin/sh
+case "\${3:-}" in
+  --json) printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}' ;;
+  700) printf '%s\\n' '{"number":700,"headRefName":"already-merged","state":"MERGED"}' ;;
+  701) printf '%s\\n' '{"number":701,"headRefName":"still-open","state":"OPEN"}' ;;
+  *) exit 2 ;;
+esac
+`
+          );
+          yield* fs.chmod(ghPath, 0o755);
+
+          const writeExistingLease = Effect.fn("test.writeExistingPrLease")(function* (
+            generationId: string,
+            prNumber: number
+          ) {
+            const encoded = yield* encodeJson({
+              schemaVersion: "yeet-pr-lease/v1",
+              generationId,
+              sessionId: `retired-agent:${generationId}`,
+              pid: 999_999,
+              procStart: "dead",
+              checkoutRoot: tmpDir,
+              branch: `old-pr-${prNumber}`,
+              headSha: "deadbeef",
+              prNumber,
+              acquiredAt: "2026-08-27T00:00:00Z",
+              refreshedAt: "2026-08-27T00:00:00Z",
+              status: "active",
+            });
+            yield* fs.makeDirectory(path.dirname(leasePath), { recursive: true });
+            yield* fs.writeFileString(leasePath, `${encoded}\n`);
+          });
+          const publish = withEnvVarEffect("PATH", `${bin}:${Bun.env.PATH ?? ""}`, writePublishedPrLease(tempContext));
+
+          yield* writeExistingLease("terminal-pr", 700);
+          yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
+          yield* writeExistingLease("open-pr", 701);
+          expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: "open-pr",
+            prNumber: 701,
+          });
+
+          yield* writeExistingLease("abandoned-current-pr", 874);
+          yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath)).generationId).not.toBe("abandoned-current-pr");
+        })
+      )
+    ));
+});
 
 describe("yeet planner", () => {
   it("keeps yeet command error optional context at the command boundary", () => {
@@ -751,6 +854,27 @@ describe("yeet planner", () => {
     expect(earlyPush.args).toEqual(["push", "-u", "origin", "HEAD"]);
     expect(earlyPush.args).not.toContain("--no-verify");
     expect(earlyPush.env).toBeUndefined();
+  });
+
+  it("targets the original PR branch when a recovery worktree supplies a push refspec", () => {
+    const plan = withEnvVar("BEEP_YEET_PUSH_REFSPEC", "HEAD:refs/heads/feature/original-pr", () =>
+      buildYeetRunPlanForTesting({
+        context,
+        message: O.some("fix(repo-cli): recover published branch"),
+        monitor: true,
+        startPrEarly: true,
+      })
+    );
+    expect(findStep(plan.steps, "early-publish:git:push").args).toEqual([
+      "push",
+      "-u",
+      "origin",
+      "HEAD:refs/heads/feature/original-pr",
+    ]);
+    const invalid = withEnvVar("BEEP_YEET_PUSH_REFSPEC", "refs/heads/not-a-head-refspec", () =>
+      buildYeetRunPlanForTesting({ context, message: O.some("fix(repo-cli): reject invalid recovery refspec") })
+    );
+    expect(findStep(invalid.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
   });
 
   it("builds push-only reuse publish as only push plus optional monitor", () => {

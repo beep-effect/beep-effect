@@ -323,9 +323,15 @@ describe("ackYeetInboxRow", () => {
           })
         );
 
+        // Updating the bounded active index for unrelated evidence must not
+        // discard a waived row that will become actionable again.
+        yield* appendYeetInboxRow(root, row(capsule({ lane: "Check / Lint" }), "P1"));
+
         const state = yield* readYeetAckState(root, subject.id);
         expect(state.acked).toBe(false);
         expect(state.receipt?.resolution.kind).toBe("waive");
+        const view = yield* loadYeetInboxView(root);
+        expect(A.some(view.entries, (candidate) => candidate.row.id === subject.id && !candidate.ack.acked)).toBe(true);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );

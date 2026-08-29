@@ -41,6 +41,7 @@ describe("setup-agent-memory", () => {
           );
           yield* writeExecutable(path.join(binDir, "uvx"), "#!/bin/sh\nprintf 'beep-shared\\n'\n");
           yield* writeExecutable(path.join(binDir, "codegraph"), "#!/bin/sh\nexit 0\n");
+          yield* writeExecutable(path.join(binDir, "systemctl"), "#!/bin/sh\nexit 1\n");
           yield* writeExecutable(
             path.join(binDir, "git"),
             '#!/bin/sh\nif [ "$1" = "clone" ]; then\n  for argument do target=$argument; done\n  mkdir -p "$target/.git"\nfi\n'
@@ -58,7 +59,6 @@ describe("setup-agent-memory", () => {
             cwd: workingDirectory,
             env: {
               BEEP_EFFECT_CHECKOUT: "missing-segment/../effect-reference",
-              BEEP_SETUP_SKIP_USER_SERVICES: "1",
               BEEP_SHARED_STORE: storeDir,
               PATH: `${binDir}:${Bun.env.PATH ?? ""}`,
             },
@@ -72,9 +72,48 @@ describe("setup-agent-memory", () => {
             { concurrency: "unbounded" }
           );
 
-          expect(stderr).toBe("");
+          expect(stderr).toContain("no usable systemd user manager");
           expect(exitCode, stderr).toBe(0);
           expect(yield* fs.readLink(path.join(repoRoot, ".repos", "effect"))).toBe(expectedEffectRef);
+        })
+      )
+    ));
+
+  it("installs the watcher with the supplied checkout as an explicit scan root", () =>
+    Effect.runPromise(
+      provideNodeServices(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "setup-yeet-watcher-test-" });
+          const setupScriptPath = fileURLToPath(
+            new URL("../../../../../scripts/setup-yeet-pr-lease-watcher.sh", import.meta.url)
+          );
+          const binDir = path.join(tempDir, "bin");
+          const configDir = path.join(tempDir, "config");
+          const repoRoot = path.join(tempDir, "arbitrary-checkout");
+          yield* Effect.forEach([binDir, configDir, repoRoot], (directory) => fs.makeDirectory(directory), {
+            discard: true,
+          });
+          yield* writeExecutable(path.join(binDir, "systemctl"), "#!/bin/sh\nexit 0\n");
+
+          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
+            cwd: tempDir,
+            env: { PATH: `${binDir}:${Bun.env.PATH ?? ""}`, XDG_CONFIG_HOME: configDir },
+            extendEnv: true,
+            stdin: "ignore",
+            stderr: "pipe",
+            stdout: "pipe",
+          });
+          const [exitCode, stderr] = yield* Effect.all(
+            [handle.exitCode, Stream.mkString(Stream.decodeText(handle.stderr)), Stream.runDrain(handle.stdout)],
+            { concurrency: "unbounded" }
+          );
+          expect(exitCode, stderr).toBe(0);
+          const unit = yield* fs.readFileString(
+            path.join(configDir, "systemd", "user", "beep-yeet-pr-lease-watch.service")
+          );
+          expect(unit).toContain(`BEEP_YEET_WATCH_ROOTS=${repoRoot}`);
         })
       )
     ));

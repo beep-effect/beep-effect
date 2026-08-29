@@ -20,7 +20,12 @@ SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # projection conflicts as ordinary text.
 bash "${SCRIPT_ROOT}/setup-regenerate-merge-driver.sh" "${REPO_ROOT}"
 if [[ "${BEEP_SETUP_SKIP_USER_SERVICES:-0}" != "1" ]]; then
-  bash "${SCRIPT_ROOT}/setup-yeet-pr-lease-watcher.sh" "${REPO_ROOT}"
+  if command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1; then
+    bash "${SCRIPT_ROOT}/setup-yeet-pr-lease-watcher.sh" "${REPO_ROOT}" ||
+      printf 'setup-agent-memory: WARN: optional Yeet PR watcher setup failed; continuing bootstrap\n' >&2
+  else
+    printf 'setup-agent-memory: WARN: no usable systemd user manager; skipping optional Yeet PR watcher\n' >&2
+  fi
 fi
 
 STORE_DIR="${BEEP_SHARED_STORE:-${HOME}/YeeBois/memory/beep-shared}"

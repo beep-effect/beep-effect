@@ -9,6 +9,7 @@ Restart=on-failure
 RestartSec=5
 Environment=BEEP_YEET_LEASE_STALE_SECONDS=240
 Environment=BEEP_YEET_WATCH_INTERVAL_SECONDS=30
+Environment="BEEP_YEET_WATCH_ROOTS=@WATCH_ROOTS@"
 
 [Install]
 WantedBy=default.target

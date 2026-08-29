@@ -16,6 +16,22 @@ fixer_root="${BEEP_YEET_FIXER_ROOT:-${projects_root}/.beep-fixers}"
 log() { printf '[yeet-pr-watch] %s\n' "$*"; }
 warn() { printf '[yeet-pr-watch] WARN: %s\n' "$*" >&2; }
 
+parse_timestamp_epoch() {
+  local timestamp="$1" normalized parsed
+  normalized="$timestamp"
+  case "$normalized" in
+    *.*Z) normalized="${normalized%%.*}Z" ;;
+  esac
+  parsed="$(date -u -d "$normalized" +%s 2>/dev/null || true)"
+  if [[ -n "$parsed" ]]; then
+    printf '%s' "$parsed"
+    return 0
+  fi
+  parsed="$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$normalized" +%s 2>/dev/null || true)"
+  [[ -n "$parsed" ]] || return 1
+  printf '%s' "$parsed"
+}
+
 proc_start() {
   local pid="$1" rest
   [[ -r "/proc/${pid}/stat" ]] || return 1
@@ -44,7 +60,7 @@ unacked_p0_rows() {
       local waive_expiry expiry_epoch now_epoch
       waive_expiry="$(jq -r 'select(.resolution.kind == "waive") | .resolution.expiresAt // empty' "$ack_path" 2>/dev/null || true)"
       if [[ -n "$waive_expiry" ]]; then
-        expiry_epoch="$(date -d "$waive_expiry" +%s 2>/dev/null || true)"
+        expiry_epoch="$(parse_timestamp_epoch "$waive_expiry" || true)"
         now_epoch="$(date +%s)"
         [[ -n "$expiry_epoch" && "$expiry_epoch" -gt "$now_epoch" ]] || continue
       fi
@@ -97,7 +113,7 @@ spawn_resumed_owner() {
 }
 
 spawn_fresh_fixer() {
-  local root="$1" prompt_path="$2" log_path="$3" pr_number="$4" head_sha="$5" generation="$6"
+  local root="$1" prompt_path="$2" log_path="$3" pr_number="$4" head_sha="$5" generation="$6" head_branch="$7"
   local agent suffix worktree branch
   if command -v codex >/dev/null 2>&1; then
     agent='codex'
@@ -113,9 +129,16 @@ spawn_fresh_fixer() {
   mkdir -p "$fixer_root"
   git -C "$root" worktree add --quiet -b "$branch" "$worktree" "$head_sha" || return 1
   case "$agent" in
-    codex) nohup setsid codex exec -C "$worktree" - <"$prompt_path" >"$log_path" 2>&1 & ;;
+    codex)
+      nohup env BEEP_YEET_PUSH_REFSPEC="HEAD:refs/heads/${head_branch}" \
+        setsid codex exec -C "$worktree" - <"$prompt_path" >"$log_path" 2>&1 &
+      ;;
     claude)
-      (cd "$worktree" && nohup setsid claude --print --permission-mode acceptEdits <"$prompt_path" >"$log_path" 2>&1) &
+      (
+        cd "$worktree" &&
+          nohup env BEEP_YEET_PUSH_REFSPEC="HEAD:refs/heads/${head_branch}" \
+            setsid claude --print --permission-mode acceptEdits <"$prompt_path" >"$log_path" 2>&1
+      ) &
       ;;
   esac
   printf '%s\t%s\t%s' "$!" "$worktree" "$branch"
@@ -126,16 +149,20 @@ terminate_spawned_fixer() {
   if [[ "$pid" =~ ^[1-9][0-9]*$ ]]; then
     local observed_start
     if [[ -z "$expected_start" ]]; then
-      warn "refusing to signal process group ${pid} without an exact leader generation"
-      return 1
+      if kill -0 "$pid" 2>/dev/null; then
+        warn "refusing to signal live process ${pid} without an exact leader generation"
+        return 1
+      fi
+      observed_start=''
+    else
+      observed_start="$(proc_start "$pid" || true)"
     fi
-    observed_start="$(proc_start "$pid" || true)"
-    if [[ "$observed_start" != "$expected_start" ]]; then
+    if [[ -n "$expected_start" && "$observed_start" != "$expected_start" ]]; then
       if kill -0 -- "-$pid" 2>/dev/null; then
         warn "refusing to signal process group ${pid}: leader generation no longer matches ${expected_start}"
         return 1
       fi
-    else
+    elif [[ -n "$expected_start" ]]; then
       kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
       for _ in {1..20}; do
         kill -0 -- "-$pid" 2>/dev/null || break
@@ -163,7 +190,7 @@ terminate_spawned_fixer() {
 }
 
 take_over_checkout() {
-  local root="$1" inbox lease failures acks lock_fd generation status session_id owner_pid owner_start
+  local root="$1" inbox lease failures acks lock_fd generation status session_id owner_pid owner_start head_branch
   local observed_start observed_state refreshed_at refreshed_epoch now_epoch age head_sha pr_number rows
   local prompt_path log_path spawned spawn_pid spawn_worktree='' spawn_branch='' takeover_mode next_generation next_start tmp
   local claim_generation claim_start claim_tmp original_lease
@@ -171,7 +198,7 @@ take_over_checkout() {
   inbox="${root}/.beep/inbox"
   lease="${inbox}/pr-lease.json"
   failures="${inbox}/failures.ndjson"
-  if [[ -f "${inbox}/active.ndjson" && -f "${inbox}/active-p0-safe-v1" ]]; then
+  if [[ -f "${inbox}/active.ndjson" && -f "${inbox}/active-p0-safe-v2" ]]; then
     failures="${inbox}/active.ndjson"
   fi
   acks="${inbox}/acks"
@@ -195,9 +222,10 @@ take_over_checkout() {
   refreshed_at="$(jq -r '.refreshedAt // empty' "$lease")"
   head_sha="$(jq -r '.headSha // empty' "$lease")"
   pr_number="$(jq -r '.prNumber // empty' "$lease")"
-  [[ "$owner_pid" =~ ^[1-9][0-9]*$ && "$pr_number" =~ ^[1-9][0-9]*$ && -n "$head_sha" ]] || return 0
+  head_branch="$(jq -r '.branch // empty' "$lease")"
+  [[ "$owner_pid" =~ ^[1-9][0-9]*$ && "$pr_number" =~ ^[1-9][0-9]*$ && -n "$head_sha" && -n "$head_branch" ]] || return 0
 
-  refreshed_epoch="$(date -d "$refreshed_at" +%s 2>/dev/null || true)"
+  refreshed_epoch="$(parse_timestamp_epoch "$refreshed_at" || true)"
   [[ "$refreshed_epoch" =~ ^[0-9]+$ ]] || return 0
   now_epoch="$(date +%s)"
   age="$((now_epoch - refreshed_epoch))"
@@ -281,7 +309,7 @@ take_over_checkout() {
   takeover_mode='resume-owner'
   spawn_pid="${spawned%%$'\t'*}"
   if [[ ! "$spawn_pid" =~ ^[1-9][0-9]*$ ]] || ! kill -0 "$spawn_pid" 2>/dev/null; then
-    spawned="$(spawn_fresh_fixer "$root" "$prompt_path" "$log_path" "$pr_number" "$head_sha" "$generation" || true)"
+    spawned="$(spawn_fresh_fixer "$root" "$prompt_path" "$log_path" "$pr_number" "$head_sha" "$generation" "$head_branch" || true)"
     takeover_mode='fresh-worktree'
     spawn_pid="${spawned%%$'\t'*}"
     if [[ "$spawned" == *$'\t'* ]]; then
@@ -303,8 +331,12 @@ take_over_checkout() {
     sleep 0.05
   done
   if [[ -z "$next_start" ]]; then
-    warn "spawned fixer ${spawn_pid} has no exact process generation; leaving generation ${claim_generation} claiming"
-    rm -f "$original_lease"
+    warn "spawned fixer ${spawn_pid} exited before exact process registration; restoring generation ${generation}"
+    if terminate_spawned_fixer "$root" "$spawn_pid" "" "$spawn_worktree" "$spawn_branch"; then
+      mv -f "$original_lease" "$lease"
+    else
+      rm -f "$original_lease"
+    fi
     return 0
   fi
   registered_tmp="$(mktemp "${inbox}/.pr-lease-registered.XXXXXX")"

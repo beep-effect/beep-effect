@@ -12,6 +12,7 @@ import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   byRepoPlanStepAscending,
   enforceConservativeResume,
@@ -529,11 +530,24 @@ const commitStep = (
  */
 export const GIT_PUSH_STEP_ID = "publish:01-git-push" as const;
 
+const publishPushRefspec = (): string => {
+  // Machine-local dead-owner recovery uses this narrow override to update the
+  // original PR branch from a detached fixer worktree.
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
+  const configured = Bun.env.BEEP_YEET_PUSH_REFSPEC;
+  return configured !== undefined && Str.startsWith("HEAD:refs/heads/")(configured) ? configured : "HEAD";
+};
+
 // Keep local pre-push hooks (secret scanning, SAST, policy gates) active on the
 // early push: --no-verify would publish unverified content to the remote before
 // any hook could block secrets or policy violations.
 const earlyPushStep = (context: RepoRunContext): RepoPlanStep =>
-  gitStep(context, GIT_PUSH_STEP_ID, "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
+  gitStep(context, GIT_PUSH_STEP_ID, "early-publish:git:push", "early-publish", [
+    "push",
+    "-u",
+    "origin",
+    publishPushRefspec(),
+  ]);
 
 const pushStep = (context: RepoRunContext): RepoPlanStep =>
   gitStep(
@@ -541,7 +555,7 @@ const pushStep = (context: RepoRunContext): RepoPlanStep =>
     GIT_PUSH_STEP_ID,
     "publish:git:push",
     "publish",
-    ["push", "-u", "origin", "HEAD"],
+    ["push", "-u", "origin", publishPushRefspec()],
     O.some({ BEEP_YEET_REUSE_PRE_PUSH_PROOF: "1" })
   );
 

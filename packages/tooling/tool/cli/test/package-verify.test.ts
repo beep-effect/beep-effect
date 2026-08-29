@@ -211,4 +211,38 @@ describe("package verify", () => {
         })
       )
     ));
+
+  it("clears quick lint and check poison after a successful full audit", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const step = (name: "lint" | "check" | "audit", ok: boolean) =>
+            PackageVerifyStepResult.make({
+              step: name,
+              script: `beep:${name}`,
+              skipped: false,
+              ok,
+              durationMillis: 20,
+              exitCode: O.some(ok ? 0 : 1),
+              output: ok ? "" : `${name} failed`,
+            });
+          const report = (quick: boolean, results: ReadonlyArray<PackageVerifyStepResult>) =>
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick,
+              repoRoot: tmpDir,
+              results,
+            });
+
+          yield* recordPackageVerifyInboxForTesting(report(true, [step("lint", false), step("check", false)]));
+          yield* recordPackageVerifyInboxForTesting(report(false, [step("audit", true)]));
+
+          const repaired = yield* loadYeetInboxView(tmpDir);
+          expect(repaired.entries).toHaveLength(2);
+          expect(repaired.entries.every((entry) => entry.ack.acked)).toBe(true);
+        })
+      )
+    ));
 });

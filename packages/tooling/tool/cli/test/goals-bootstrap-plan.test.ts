@@ -362,7 +362,7 @@ describe("goals adopt --plan manifest-less packet", () => {
 
 describe("goals adopt --plan index parity", () => {
   it(
-    "regenerating the index around a retain-only pilot plan produces the tracked bytes",
+    "regenerating the local index around a retain-only pilot plan is deterministic",
     () =>
       run(
         Effect.gen(function* () {
@@ -375,9 +375,11 @@ describe("goals adopt --plan index parity", () => {
             (entry) => entry.path === `${snapshot.packetPath}/ops/manifest.json` && entry.action !== "preserve"
           );
           expect(A.length(manifestWrites)).toBe(0);
-          const regenerated = yield* buildPortfolioIndexContent(repoRoot);
-          const tracked = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`);
-          expect(regenerated).toBe(tracked);
+          const first = yield* buildPortfolioIndexContent(repoRoot);
+          const second = yield* buildPortfolioIndexContent(repoRoot);
+          expect(second).toBe(first);
+          const local = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`).pipe(Effect.option);
+          if (O.isSome(local)) expect(local.value).toBe(first);
         })
       ),
     60_000

@@ -12,20 +12,13 @@ const provideNodeServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   );
 
 describe("regenerate merge driver", () => {
-  it("regenerates only allowlisted projections and bootstrap installs the fail-loud driver", () =>
+  it("leaves allowlisted projections conflicted until the merged tree is available", () =>
     Effect.runPromise(
       provideNodeServices(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const root = yield* fs.makeTempDirectory({ prefix: "beep-regenerate-driver-" });
-          const bin = path.join(root, "bin");
-          yield* fs.makeDirectory(bin);
-          yield* fs.writeFileString(
-            path.join(bin, "bun"),
-            '#!/usr/bin/env bash\nif [[ "$*" == *"config-sync"* ]]; then printf "generated\\n" >tsconfig.json; fi\n'
-          );
-          yield* fs.chmod(path.join(bin, "bun"), 0o755);
           const git = (args: ReadonlyArray<string>) =>
             Bun.spawnSync({ cmd: ["git", ...args], cwd: root, stderr: "pipe", stdout: "pipe" });
           expect(git(["init"]).exitCode).toBe(0);
@@ -39,12 +32,12 @@ describe("regenerate merge driver", () => {
           const generated = Bun.spawnSync({
             cmd: [driverPath, ancestor, current, other, "tsconfig.json"],
             cwd: root,
-            env: { ...Bun.env, PATH: `${bin}:${Bun.env.PATH ?? ""}` },
             stderr: "pipe",
             stdout: "pipe",
           });
-          expect(generated.exitCode, generated.stderr.toString()).toBe(0);
-          expect(yield* fs.readFileString(current)).toBe("generated\n");
+          expect(generated.exitCode).not.toBe(0);
+          expect(generated.stderr.toString()).toContain("left tsconfig.json conflicted");
+          expect(yield* fs.readFileString(current)).toBe("current\n");
 
           const refused = Bun.spawnSync({
             cmd: [driverPath, ancestor, current, other, "bun.lock"],

@@ -67,6 +67,24 @@ describe("CI runner security", () => {
       const outputPath = path.join(tempRoot, "profile-output.txt");
       assert.strictEqual(profile("pull_request", outputPath), "goals_only=true");
       assert.strictEqual(Str.trim(yield* fs.readFileString(outputPath)), "goals_only=true");
+      yield* fs.remove(outputPath);
+
+      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
+      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "history", "reflections"), { recursive: true });
+      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
+      yield* fs.writeFileString(
+        path.join(tempRoot, "goals", "example", "history", "reflections", "closeout.md"),
+        "# Closeout\n"
+      );
+      git(["add", "."]);
+      git(["commit", "-m", "goal metadata"]);
+      assert.strictEqual(profile("pull_request"), "goals_only=true");
+
+      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
+      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
+      git(["add", "."]);
+      git(["commit", "-m", "goal executable"]);
+      assert.strictEqual(profile("pull_request"), "goals_only=false");
 
       yield* fs.makeDirectory(path.join(tempRoot, "src"));
       yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
@@ -101,6 +119,7 @@ describe("CI runner security", () => {
       const repoRoot = yield* findRepoRoot();
       const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
       const workflow = parseDocument(workflowText);
+      const heavyWorkflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
       const storybookText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
       const storybook = parseDocument(storybookText);
 
@@ -137,6 +156,8 @@ describe("CI runner security", () => {
       assert.include(workflowText, "'local:rw,remote:r'");
       assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
       assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]');
+      assert.include(heavyWorkflowText, 'if [[ "${{ matrix.id }}" == "docgen"');
+      assert.include(heavyWorkflowText, "^apps/|^packages/|^infra/");
       assert.include(workflowText, "- name: Skip lane");
       assert.strictEqual(
         storybook.getIn(["jobs", "build-and-test", "env", "TURBO_API"]),

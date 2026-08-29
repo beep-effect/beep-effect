@@ -135,6 +135,7 @@ const environmentProfileHash = (lane: GithubCheckLaneSpec): string =>
       TURBO_FORCE: Bun.env.TURBO_FORCE,
       // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
       BEEP_DOCGEN_CONCURRENCY: Bun.env.BEEP_DOCGEN_CONCURRENCY,
+      BEEP_FC_NUM_RUNS: Bun.env.BEEP_FC_NUM_RUNS,
       BEEP_FC_SEED: Bun.env.BEEP_FC_SEED,
       NODE_OPTIONS: Bun.env.NODE_OPTIONS,
       laneEnv: stableRecordText(lane.step.env ?? {}),

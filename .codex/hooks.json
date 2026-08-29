@@ -6,13 +6,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/packet-projections.sh",
+            "command": "bash \"${CODEX_PROJECT_DIR:-.}/.claude/hooks/packet-projections.sh\"",
             "timeout": 30,
             "statusMessage": "Refreshing packet projections"
           },
           {
             "type": "command",
-            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "command": "bash \"${CODEX_PROJECT_DIR:-.}/.claude/hooks/yeet-inbox.sh\" codex",
             "timeout": 2,
             "additionalContextLimit": 1200,
             "statusMessage": "Reading Yeet inbox"
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "command": "bash \"${CODEX_PROJECT_DIR:-.}/.claude/hooks/yeet-inbox.sh\" codex",
             "timeout": 2,
             "additionalContextLimit": 1200,
             "statusMessage": "Checking Yeet inbox"
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f \".agents/skills/impeccable/scripts/hook.mjs\" ] || node \".agents/skills/impeccable/scripts/hook.mjs\"",
+            "command": "[ ! -f \"${CODEX_PROJECT_DIR:-.}/.agents/skills/impeccable/scripts/hook.mjs\" ] || node \"${CODEX_PROJECT_DIR:-.}/.agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 5,
             "statusMessage": "Checking UI changes",
             "commandWindows": "if exist \".agents/skills/impeccable/scripts/hook.mjs\" (node \".agents/skills/impeccable/scripts/hook.mjs\" & exit /b)"
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "command": "bash \"${CODEX_PROJECT_DIR:-.}/.claude/hooks/yeet-inbox.sh\" codex",
             "timeout": 2,
             "additionalContextLimit": 1200,
             "statusMessage": "Reading Yeet inbox"
@@ -65,13 +65,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/yeet-inbox.sh codex",
+            "command": "bash \"${CODEX_PROJECT_DIR:-.}/.claude/hooks/yeet-inbox.sh\" codex",
             "timeout": 2,
             "statusMessage": "Checking Yeet inbox"
           },
           {
             "type": "command",
-            "command": "[ ! -f \".agents/skills/impeccable/scripts/hook.mjs\" ] || node \".agents/skills/impeccable/scripts/hook.mjs\"",
+            "command": "[ ! -f \"${CODEX_PROJECT_DIR:-.}/.agents/skills/impeccable/scripts/hook.mjs\" ] || node \"${CODEX_PROJECT_DIR:-.}/.agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 30,
             "statusMessage": "Design deep pass",
             "commandWindows": "if exist \".agents/skills/impeccable/scripts/hook.mjs\" (node \".agents/skills/impeccable/scripts/hook.mjs\" & exit /b)"

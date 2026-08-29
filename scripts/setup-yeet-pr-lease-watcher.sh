@@ -9,7 +9,10 @@ unit_path="${unit_dir}/beep-yeet-pr-lease-watch.service"
 mkdir -p "$unit_dir"
 
 temporary="$(mktemp "${unit_dir}/.beep-yeet-watch.XXXXXX")"
-sed "s|@WATCH_SCRIPT@|${repo_root}/scripts/yeet-pr-lease-watch.sh|g" \
+escaped_repo_root="${repo_root//\\/\\\\}"
+escaped_repo_root="${escaped_repo_root//|/\\|}"
+sed -e "s|@WATCH_SCRIPT@|${escaped_repo_root}/scripts/yeet-pr-lease-watch.sh|g" \
+  -e "s|@WATCH_ROOTS@|${escaped_repo_root}|g" \
   "${script_root}/systemd/beep-yeet-pr-lease-watch.service" >"$temporary"
 mv -f "$temporary" "$unit_path"
 

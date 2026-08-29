@@ -28,12 +28,13 @@ interface HookResult {
 const runHook = Effect.fn("YeetInboxHookAdapterTest.runHook")(function* (
   root: string,
   harness: "claude" | "codex" | "grok",
-  payload: object
+  payload: object,
+  env: Readonly<Record<string, string>> = {}
 ) {
   const payloadJson = yield* encodeUnknown(payload);
   const handle = yield* ChildProcess.make(hookPath, [harness], {
     cwd: root,
-    env: { BEEP_YEET_HOOK_ROOT: root },
+    env: { ...env, BEEP_YEET_HOOK_ROOT: root },
     extendEnv: true,
     stdin: {
       stream: Stream.encodeText(Stream.make(payloadJson)),
@@ -305,6 +306,14 @@ describe("Yeet inbox harness adapter", () => {
             "hookSpecificOutput.permissionDecisionReason",
             expect.stringContaining("mutex is busy")
           );
+          const stop = decodeObject(
+            (yield* runHook(root, "codex", {
+              cwd: root,
+              hook_event_name: "Stop",
+              session_id: "owner",
+            })).stdout
+          );
+          expect(stop).toMatchObject({ decision: "block" });
           yield* holder.kill({ forceKillAfter: "100 millis" }).pipe(Effect.ignore);
         })
       ).pipe(provideTestLayer),
@@ -382,6 +391,56 @@ describe("Yeet inbox harness adapter", () => {
             })).stdout
           );
           expect(expiredStop).toMatchObject({ decision: "block" });
+        })
+      ).pipe(provideTestLayer),
+    15_000
+  );
+
+  itEffect(
+    "honors an active waiver with BSD date semantics",
+    () =>
+      withInbox(({ ack, root }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bin = path.join(root, "bin");
+          yield* fs.makeDirectory(bin);
+          const datePath = path.join(bin, "date");
+          yield* fs.writeFileString(
+            datePath,
+            `#!/usr/bin/env bash
+case "$*" in
+  *" -d "*) exit 1 ;;
+  *" -j "*) printf '200' ;;
+  *"+%s"*) printf '100' ;;
+  *) exec /usr/bin/date "$@" ;;
+esac
+`
+          );
+          yield* fs.chmod(datePath, 0o755);
+          const waiver = yield* encodeUnknown({
+            schemaVersion: "yeet-ack/v1",
+            id: "coverage-live",
+            ackedAt: "2026-08-27T00:00:00Z",
+            resolution: {
+              kind: "waive",
+              actor: "operator",
+              expiresAt: "2026-08-27T01:00:00Z",
+              reason: "temporary outage",
+              shard: "Coverage",
+            },
+          });
+          yield* ack("coverage-live", waiver);
+
+          const stop = decodeObject(
+            (yield* runHook(
+              root,
+              "codex",
+              { cwd: root, hook_event_name: "Stop", session_id: "bsd-date" },
+              { PATH: `${bin}:${Bun.env.PATH ?? ""}` }
+            )).stdout
+          );
+          expect(stop).toStrictEqual({});
         })
       ).pipe(provideTestLayer),
     15_000

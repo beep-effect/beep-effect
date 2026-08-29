@@ -773,21 +773,23 @@ describe("quality task adapter", () => {
   });
 
   it("carries a quarantine package filter into the nested check lane's Turbo invocation", () => {
-    const steps = ciLaneStepsForTesting(
-      "/repo",
-      "check",
-      CiLaneRunOptions.make({
-        affected: true,
-        base: "origin/main",
-        head: "HEAD",
-        summarize: true,
-        mode: "affected",
-        to: "HEAD",
-        last: false,
-        changesetStatus: false,
-        validateEnvelopes: false,
-        filter: "@beep/schema",
-      })
+    const steps = withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+      ciLaneStepsForTesting(
+        "/repo",
+        "check",
+        CiLaneRunOptions.make({
+          affected: true,
+          base: "origin/main",
+          head: "HEAD",
+          summarize: true,
+          mode: "affected",
+          to: "HEAD",
+          last: false,
+          changesetStatus: false,
+          validateEnvelopes: false,
+          filter: "@beep/schema",
+        })
+      )
     );
 
     expect(steps[0]?.args).toEqual([
@@ -957,6 +959,28 @@ describe("quality task adapter", () => {
       yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# changed\n");
       const invalidated = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
       expect(A.map(invalidated.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "invalidates a lane proof when the property-test run floor increases",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-fc-runs-" });
+      const markerPath = path.join(tempRoot, ".beep", "property-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "quality:test-unit", "heavy", "echo run >> .beep/property-marker.txt");
+      const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
+      const run = collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast");
+      const atRuns = (runs: string) =>
+        withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", withEnvVarEffect("BEEP_FC_NUM_RUNS", runs, run));
+
+      expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(A.map((yield* atRuns("400")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
     }, provideScopedLayer(PlatformLayer))
   );

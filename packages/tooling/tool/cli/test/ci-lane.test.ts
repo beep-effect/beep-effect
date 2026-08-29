@@ -24,6 +24,18 @@ const REPO_ROOT = "/repo";
 const MERGE_BASE_SHA = "mergebase1234";
 const encoder = new TextEncoder();
 
+const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {
+  const previous = Bun.env[name];
+  if (value === undefined) delete Bun.env[name];
+  else Bun.env[name] = value;
+  try {
+    return use();
+  } finally {
+    if (previous === undefined) delete Bun.env[name];
+    else Bun.env[name] = previous;
+  }
+};
+
 const commandHandle = (output = "", exitCode = 0) =>
   ChildProcessSpawner.makeHandle({
     all: Stream.make(encoder.encode(output)),
@@ -218,23 +230,18 @@ describe("CI lane descriptors", () => {
 
 describe("ciLaneStepsForTesting", () => {
   it("serializes the PR-shape check lane on fleet workers", () => {
-    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
+    const step = withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+      firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions))
+    );
     expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=3", "--affected", "--summarize"]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 
   it("lowers Check to c2 under a contended admission profile", () => {
-    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-    const previous = Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY;
-    Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY = "2";
-    try {
+    withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", "2", () => {
       const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
       expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=2", "--affected", "--summarize"]);
-    } finally {
-      // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv.
-      if (previous === undefined) delete Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY;
-      else Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY = previous;
-    }
+    });
   });
 
   it("builds the PR-shape package lint graph with TURBO_SCM_BASE", () => {

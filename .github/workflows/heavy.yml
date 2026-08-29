@@ -94,6 +94,13 @@ jobs:
             should_run=false
           fi
 
+          if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
+            if [[ -z "$changed_files" ]] || ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
+              should_run=false
+            fi
+          fi
+
           if [[ "${{ matrix.id }}" == "doctest" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             doctest_mode=affected
             base_ref="origin/${GITHUB_BASE_REF:-main}"

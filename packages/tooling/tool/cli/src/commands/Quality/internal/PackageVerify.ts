@@ -551,20 +551,34 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
 export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recordInbox")(function* (
   report: PackageVerifyReport
 ) {
+  const recordStep = (result: PackageVerifyStepResult, shardStep: PackageVerifyStepName = result.step) =>
+    recordYeetLocalShardOutcome(
+      report.repoRoot,
+      YeetLocalShardOutcome.make({
+        command: `bun run ${result.script}`,
+        exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
+        headSha: report.headSha,
+        shard: `package:${report.packageName}:${shardStep}`,
+      })
+    );
   yield* Effect.forEach(
     A.filter(report.results, (result) => !result.skipped),
-    (result) =>
-      recordYeetLocalShardOutcome(
-        report.repoRoot,
-        YeetLocalShardOutcome.make({
-          command: `bun run ${result.script}`,
-          exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
-          headSha: report.headSha,
-          shard: `package:${report.packageName}:${result.step}`,
-        })
-      ),
+    (result) => recordStep(result),
     { concurrency: 1, discard: true }
   );
+  const fullAudit = pipe(
+    report.results,
+    A.findFirst((result) => result.step === "audit" && !result.skipped && result.ok)
+  );
+  if (!report.quick && O.isSome(fullAudit)) {
+    // The default audit includes both package lint and package check. Clear
+    // poison emitted by an earlier quick run only after that encompassing
+    // audit succeeds.
+    yield* Effect.forEach(["lint", "check"] as const, (step) => recordStep(fullAudit.value, step), {
+      concurrency: 1,
+      discard: true,
+    });
+  }
 });
 
 const fmtSecs = (ms: number): string => `${(ms / 1000).toFixed(1)}s`;

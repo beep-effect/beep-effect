@@ -18,7 +18,7 @@ import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { parseProcStatStartTime } from "../../Worktree/Fleet.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { currentCommitSha } from "./GitExec.ts";
-import { runGhPullRequestView } from "./PullRequest.ts";
+import { runGhPullRequestView, runGhPullRequestViewForNumber } from "./PullRequest.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -282,6 +282,12 @@ const agentSessionId = (pid: number, procStart: string): string => {
   return `yeet:${pid}:${procStart}`;
 };
 
+const leaseOwnerProcessIsAlive = Effect.fn("PrLease.ownerProcessIsAlive")(function* (lease: YeetPrLease) {
+  const fs = yield* FileSystem.FileSystem;
+  const stat = yield* fs.readFileString(`/proc/${lease.pid}/stat`).pipe(Effect.option);
+  return O.exists(stat, (contents) => O.contains(parseProcStatStartTime(contents), lease.procStart));
+});
+
 /**
  * Write the ownership lease after Yeet has ensured an open PR for the published branch.
  *
@@ -315,27 +321,50 @@ export const writePublishedPrLease = Effect.fn("PrLease.writePublished")(functio
   });
   const expectedGeneration = yield* O.match(observed, {
     onNone: () => Effect.succeed(O.none<string>()),
-    onSome: (current) =>
-      leaseStatus(current) !== "active"
-        ? YeetCommandError.make({
-            message: `Refusing to publish over ${leaseStatus(current)} PR ownership generation ${current.generationId}.`,
-          })
-        : current.pid !== lease.pid || !Str.Equivalence(current.procStart, lease.procStart)
-          ? YeetCommandError.make({
-              message: `Refusing to publish over active PR ownership generation ${current.generationId} owned by another exact process.`,
-            })
-          : current.prNumber !== lease.prNumber
-            ? YeetCommandError.make({
-                message: `Refusing to publish PR #${lease.prNumber} over active ownership generation ${current.generationId} for PR #${current.prNumber}.`,
-              })
-            : Effect.succeed(O.some(current.generationId)),
+    onSome: Effect.fn("PrLease.resolveExistingGeneration")(function* (current) {
+      const currentStatus = leaseStatus(current);
+      if (currentStatus === "retired") return O.some(current.generationId);
+      if (currentStatus !== "active") {
+        return yield* YeetCommandError.make({
+          message: `Refusing to publish over ${currentStatus} PR ownership generation ${current.generationId}.`,
+        });
+      }
+      if (current.prNumber !== lease.prNumber) {
+        const prior = yield* runGhPullRequestViewForNumber(context, current.prNumber);
+        if (!A.contains(["MERGED", "CLOSED"], prior.state)) {
+          return yield* YeetCommandError.make({
+            message: `Refusing to publish PR #${lease.prNumber} while ownership generation ${current.generationId} still belongs to open PR #${current.prNumber}.`,
+          });
+        }
+        yield* Console.log(
+          `[yeet] replacing terminal ${Str.toLowerCase(prior.state)} PR #${current.prNumber} ownership generation ${current.generationId}`
+        );
+        return O.some(current.generationId);
+      }
+      const sameOwner = current.pid === lease.pid && Str.Equivalence(current.procStart, lease.procStart);
+      if (sameOwner) return O.some(current.generationId);
+      if (!(yield* leaseOwnerProcessIsAlive(current))) {
+        yield* Console.log(
+          `[yeet] replacing abandoned PR #${current.prNumber} ownership generation ${current.generationId}`
+        );
+        return O.some(current.generationId);
+      }
+      return yield* YeetCommandError.make({
+        message: `Refusing to publish over active PR ownership generation ${current.generationId} owned by another exact process.`,
+      });
+    }),
   });
+  const allowedStatuses = pipe(
+    observed,
+    O.filter((current) => leaseStatus(current) === "retired"),
+    O.match({ onNone: () => ["active"] as const, onSome: () => ["retired"] as const })
+  );
   yield* persistLeaseTransition(
     inbox,
     leasePath,
     lease,
     expectedGeneration,
-    ["active"],
+    allowedStatuses,
     "pr-lease",
     context.repoRoot,
     lease.headSha

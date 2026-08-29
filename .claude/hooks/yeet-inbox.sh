@@ -30,7 +30,7 @@ done
 inbox="$root/.beep/inbox"
 failures="$inbox/failures.ndjson"
 active_failures="$inbox/active.ndjson"
-active_failures_version="$inbox/active-p0-safe-v1"
+active_failures_version="$inbox/active-p0-safe-v2"
 if [ -f "$active_failures" ] && [ -f "$active_failures_version" ]; then
   failures="$active_failures"
 fi
@@ -71,6 +71,79 @@ if [ "$event" = "PreToolUse" ]; then
   esac
 fi
 
+parse_timestamp_epoch() {
+  timestamp="$1"
+  normalized_timestamp="$timestamp"
+  case "$normalized_timestamp" in
+    *.*Z) normalized_timestamp="${normalized_timestamp%%.*}Z" ;;
+  esac
+  parsed_epoch="$(date -u -d "$normalized_timestamp" +%s 2>/dev/null || true)"
+  if [ -n "$parsed_epoch" ]; then
+    printf '%s' "$parsed_epoch"
+    return 0
+  fi
+  parsed_epoch="$(date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$normalized_timestamp" +%s 2>/dev/null || true)"
+  [ -n "$parsed_epoch" ] || return 1
+  printf '%s' "$parsed_epoch"
+}
+
+active_ack_ids() {
+  loaded_ack_ids='[]'
+  if [ -d "$acks" ]; then
+    for loaded_ack_path in "$acks"/*; do
+      [ -e "$loaded_ack_path" ] || continue
+      [ -f "$loaded_ack_path" ] && [ ! -L "$loaded_ack_path" ] || continue
+      loaded_waive_expiry="$(jq -r 'select(.resolution.kind == "waive") | .resolution.expiresAt // empty' "$loaded_ack_path" 2>/dev/null || true)"
+      if [ -n "$loaded_waive_expiry" ]; then
+        loaded_expiry_epoch="$(parse_timestamp_epoch "$loaded_waive_expiry" || true)"
+        loaded_now_epoch="$(date +%s)"
+        if [ -z "$loaded_expiry_epoch" ] || [ "$loaded_expiry_epoch" -le "$loaded_now_epoch" ]; then
+          continue
+        fi
+      fi
+      loaded_ack_id="${loaded_ack_path##*/}"
+      loaded_ack_ids="$(printf '%s' "$loaded_ack_ids" | jq -c --arg id "$loaded_ack_id" '. + [$id]')"
+    done
+  fi
+  printf '%s' "$loaded_ack_ids"
+}
+
+unacked_stop_p0_rows() {
+  [ "$failures_present" = true ] || { printf '[]'; return 0; }
+  stop_ack_ids="$(active_ack_ids)"
+  stop_wave='null'
+  if [ -f "$dispatch" ] && [ ! -L "$dispatch" ] && [ -r "$dispatch" ]; then
+    stop_wave="$(jq -c 'select(.schemaVersion == "yeet-dispatch/v1")' "$dispatch" 2>/dev/null || printf 'null')"
+    [ -n "$stop_wave" ] || stop_wave='null'
+  fi
+  jq -Rsc --argjson acks "$stop_ack_ids" --argjson wave "$stop_wave" '
+    split("\n")
+    | map(try fromjson catch empty)
+    | map(select(.schemaVersion == "yeet-inbox/v1" and .severity == "P0"))
+    | unique_by(.id)
+    | map(. as $row | select(($acks | index($row.id)) == null))
+    | map(select(
+        ($wave | type) != "object"
+        or .capsule.headSha? == null
+        or .capsule.prNumber? == null
+        or (.capsule.headSha == $wave.headSha and .capsule.prNumber == $wave.prNumber)
+      ))
+  ' "$failures" 2>/dev/null || printf '[]'
+}
+
+block_stop_while_mutex_unavailable() {
+  if [ "$event" != "Stop" ] && [ "$event" != "SubagentStop" ]; then
+    return 0
+  fi
+  stop_rows="$(unacked_stop_p0_rows)"
+  [ "$(printf '%s' "$stop_rows" | jq 'length')" -gt 0 ] || { printf '{}\n'; return 0; }
+  stop_context="$(printf '%s' "$stop_rows" | jq -r '
+    "Fix this now. The checkout has unacknowledged Yeet inbox work:\n" +
+    (map("- " + .severity + " " + (.capsule.lane // .capsule.shard // .kind // "incident") + " [" + .id + "]") | join("\n"))
+  ')"
+  jq -cn --arg context "$stop_context" '{decision:"block",reason:$context}'
+}
+
 deny_mutating_nonowner_while_mutex_unavailable() {
   [ "$pretool_mutating" = true ] || return 0
   unavailable_lease="$inbox/pr-lease.json"
@@ -104,32 +177,18 @@ deny_mutating_nonowner_while_mutex_unavailable() {
 # hook boundary.
 exec 9>"$inbox/hook-mutex.lock" 2>/dev/null || {
   deny_mutating_nonowner_while_mutex_unavailable
+  block_stop_while_mutex_unavailable
   exit 0
 }
 if command -v flock >/dev/null 2>&1; then
   if ! flock -w 1 9 2>/dev/null; then
     deny_mutating_nonowner_while_mutex_unavailable
+    block_stop_while_mutex_unavailable
     exit 0
   fi
 fi
 
-ack_ids='[]'
-if [ -d "$acks" ]; then
-  for ack_path in "$acks"/*; do
-    [ -e "$ack_path" ] || continue
-    [ -f "$ack_path" ] && [ ! -L "$ack_path" ] || continue
-    waive_expiry="$(jq -r 'select(.resolution.kind == "waive") | .resolution.expiresAt // empty' "$ack_path" 2>/dev/null || true)"
-    if [ -n "$waive_expiry" ]; then
-      expiry_epoch="$(date -d "$waive_expiry" +%s 2>/dev/null || true)"
-      now_epoch="$(date +%s)"
-      if [ -z "$expiry_epoch" ] || [ "$expiry_epoch" -le "$now_epoch" ]; then
-        continue
-      fi
-    fi
-    ack_id="${ack_path##*/}"
-    ack_ids="$(printf '%s' "$ack_ids" | jq -c --arg id "$ack_id" '. + [$id]')"
-  done
-fi
+ack_ids="$(active_ack_ids)"
 
 wave='null'
 if [ -f "$dispatch" ] && [ ! -L "$dispatch" ] && [ -r "$dispatch" ]; then
@@ -279,7 +338,7 @@ load_pr_lease() {
   lease_refreshed_at="$(jq -r '.refreshedAt // empty' "$pr_lease")"
   observed_start="$(proc_start "$lease_pid" || true)"
   observed_state="$(proc_state "$lease_pid" || true)"
-  refreshed_epoch="$(date -d "$lease_refreshed_at" +%s 2>/dev/null || true)"
+  refreshed_epoch="$(parse_timestamp_epoch "$lease_refreshed_at" || true)"
   stale_seconds="${BEEP_YEET_LEASE_STALE_SECONDS:-240}"
   if [ -n "$refreshed_epoch" ] && [ "$(( $(date +%s) - refreshed_epoch ))" -ge "$stale_seconds" ]; then
     lease_owner_stale=true
