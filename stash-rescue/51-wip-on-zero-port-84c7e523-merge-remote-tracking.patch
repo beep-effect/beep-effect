@@ -1,0 +1,1354 @@
+diff --git a/.claude/.hook-state.json b/.claude/.hook-state.json
+index 1dfd0c2634..c9cef8f7b0 100644
+--- a/.claude/.hook-state.json
++++ b/.claude/.hook-state.json
+@@ -1,3 +1,577 @@
+ {
+-  "lastCallMs": 1770165769462
++  "lastCallMs": 1770170828311,
++  "patternCache": {
++    "loadedAt": 1770170839961,
++    "directoryMtime": 1769711271602,
++    "patterns": [
++      {
++        "name": "kill-signal-9",
++        "description": "Forcefully killing processes with SIGKILL",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "kill\\s+(-9|--signal\\s+9|-s\\s+9|SIGKILL|-KILL)",
++        "action": "ask",
++        "level": "medium",
++        "body": "# Kill -9 (SIGKILL)\n\nForcefully terminates a process without cleanup.\n\n**Why dangerous:**\n- Process cannot catch or ignore SIGKILL\n- No opportunity for graceful shutdown\n- May leave resources in inconsistent state\n- Can corrupt files being written\n\n**Consider:**\n- Try `kill` (SIGTERM) first for graceful shutdown\n- Only use kill -9 if process is truly stuck\n- Check what the process is doing before killing",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/kill-9.md"
++      },
++      {
++        "name": "git-discard-changes",
++        "description": "Discard uncommitted working directory changes",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+(checkout\\s+--\\s*\\.|restore\\s+\\.)",
++        "action": "ask",
++        "level": "high",
++        "body": "# Git Discard Changes\n\nThis command discards all uncommitted changes in the working directory.\n\n**Why dangerous:**\n- Permanently discards all uncommitted changes in working directory\n- Cannot be recovered with git commands\n- Affects all modified files at once\n\n**Consider:**\n- Stash changes first: `git stash`\n- Commit changes before discarding\n- Use `git diff` to review changes before discarding\n- Discard specific files instead of all: `git checkout -- file.txt`",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/git-discard-changes.md"
++      },
++      {
++        "name": "drop-database",
++        "description": "SQL commands that drop databases or tables",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "^(?!(echo|grep|cat|less|more|head|tail|sed|awk|print)\\s).*(DROP\\s+(DATABASE|TABLE|SCHEMA)|TRUNCATE\\s+TABLE)",
++        "action": "ask",
++        "level": "critical",
++        "body": "# Drop Database/Table\n\nThis command will permanently delete database objects.\n\n**Why dangerous:**\n- Irreversibly deletes all data in table/database\n- No undo without backups\n- Can affect production if wrong connection\n\n**Consider:**\n- Verify you're connected to the right database\n- Create a backup first\n- Use transactions if possible",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/drop-database.md"
++      },
++      {
++        "name": "chmod-world-writable",
++        "description": "Making files world-writable or overly permissive",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "chmod\\s+(-R\\s+)?777",
++        "action": "ask",
++        "level": "high",
++        "body": "# World-Writable Permissions\n\nSetting chmod 777 makes files writable by everyone.\n\n**Why dangerous:**\n- Any user on the system can modify/delete\n- Major security vulnerability\n- Can lead to privilege escalation attacks\n- Recursive `-R` affects all subdirectories\n\n**Consider:**\n- Use more restrictive permissions: 755 for dirs, 644 for files\n- Only grant permissions that are actually needed\n- Use groups for shared access",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/chmod-777.md"
++      },
++      {
++        "name": "sudo-rm",
++        "description": "Deleting files as root",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "sudo\\s+rm\\s+(-[rRf]+\\s+)*",
++        "action": "ask",
++        "level": "critical",
++        "body": "# Sudo Remove\n\nRunning rm as root bypasses all permission protections.\n\n**Why dangerous:**\n- Root can delete any file including system files\n- No confirmation prompts with `-f`\n- Can make system unbootable\n- Cannot be undone\n\n**Consider:**\n- Double-check the exact path\n- Avoid `-f` flag to get confirmation prompts\n- Use `sudo ls` first to verify what will be deleted",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/sudo-rm.md"
++      },
++      {
++        "name": "git-clean",
++        "description": "Force clean untracked files",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+clean\\s+.*(-f|--force)",
++        "action": "ask",
++        "level": "high",
++        "body": "# Git Clean\n\nThis command permanently deletes untracked files and directories.\n\n**Why dangerous:**\n- Permanently deletes all untracked files and directories\n- Cannot be recovered without backup\n- May delete work-in-progress files not yet added to git\n\n**Consider:**\n- Use dry run first: `git clean -n` to preview deletions\n- Use interactive mode: `git clean -i`\n- Commit or stash important work before cleaning",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/git-clean.md"
++      },
++      {
++        "name": "git-branch-force-delete",
++        "description": "Force delete unmerged branch",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+branch\\s+.*-D",
++        "action": "ask",
++        "level": "medium",
++        "body": "# Git Branch Force Delete\n\nThis command force-deletes a branch even if it contains unmerged commits.\n\n**Why dangerous:**\n- Force-deletes branch even if not merged\n- Commits unique to that branch may be lost\n- Cannot be easily undone if branch had unmerged work\n\n**Consider:**\n- Use `git branch -d` (lowercase) for safe delete that checks merge status\n- Verify branch is merged first: `git branch --merged`\n- Create a backup tag before deleting: `git tag backup/branch-name branch-name`",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/git-branch-force-delete.md"
++      },
++      {
++        "name": "dd-overwrite",
++        "description": "Direct disk write with dd",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "dd\\s+.*of=/dev/",
++        "action": "ask",
++        "level": "critical",
++        "body": "# DD Device Overwrite\n\nThis command writes directly to a block device.\n\n**Why dangerous:**\n- Can overwrite entire disk partitions or devices\n- Data loss is immediate and irreversible\n- No confirmation prompt by default\n- A typo in the device path can destroy the wrong disk\n\n**Consider:**\n- Double-check the device path with `lsblk` or `diskutil list`\n- Verify the source file is correct\n- Consider using `dd` with `status=progress` to monitor\n- Reading from a device (if=) is safe; writing to a device (of=) is dangerous",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/dd-overwrite.md"
++      },
++      {
++        "name": "rm-rf-root",
++        "description": "Recursive force delete from root or home directory",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "rm\\s+(-[rf]+\\s+)*(/$|/\\s|~/?$|~\\s|\\$HOME/?$|\\$HOME\\s|/home/?$|/home\\s)",
++        "action": "ask",
++        "level": "critical",
++        "body": "# Recursive Delete from Root/Home\n\nThis command attempts to recursively delete from a critical system location.\n\n**Why dangerous:**\n- `rm -rf /` destroys the entire filesystem\n- `rm -rf ~` or `rm -rf $HOME` destroys your home directory\n- Cannot be undone without backups\n- May require OS reinstallation\n\n**Consider:**\n- Be more specific about what to delete\n- Use trash/recycle bin instead\n- Verify the path before running",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/rm-rf.md"
++      },
++      {
++        "name": "git-force-push",
++        "description": "Force push to remote repository",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+push\\s+.*(-f|--force|--force-with-lease)",
++        "action": "ask",
++        "level": "high",
++        "body": "# Git Force Push\n\nThis command will overwrite remote history.\n\n**Why dangerous:**\n- Rewrites commit history on remote\n- Can destroy teammates' work if they've pulled\n- May lose commits that only exist on remote\n- Particularly dangerous on main/master branches\n\n**Consider:**\n- Use `--force-with-lease` instead of `--force` (safer)\n- Coordinate with team before force pushing shared branches\n- Never force push to main/master without team agreement",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/force-push.md"
++      },
++      {
++        "name": "expose-secrets",
++        "description": "Commands that may expose secrets or credentials",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "(cat|echo|printf|head|tail|less|more)\\s+.*\\.(env|pem|key|secret|credential)",
++        "action": "ask",
++        "level": "high",
++        "body": "# Exposing Secrets\n\nThis command may expose sensitive credentials.\n\n**Why dangerous:**\n- Secrets may appear in terminal history\n- May be logged or captured\n- Could be visible to screen sharing\n\n**Consider:**\n- Use environment variables instead of cat'ing files\n- Check who might see your terminal\n- Clear terminal history after viewing secrets",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/env-secrets.md"
++      },
++      {
++        "name": "git-stash-destroy",
++        "description": "Permanently delete stashed changes",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+stash\\s+(drop|clear)",
++        "action": "ask",
++        "level": "medium",
++        "body": "# Git Stash Destroy\n\nThis command permanently deletes stashed changes.\n\n**Why dangerous:**\n- Permanently destroys stashed work\n- Cannot be recovered after garbage collection\n- May lose unsaved work that was stashed for later\n\n**Consider:**\n- Review stash contents first: `git stash show -p`\n- Create a branch from the stash: `git stash branch <name>`\n- Use `git stash pop` to apply and remove safely",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/git-stash-destroy.md"
++      },
++      {
++        "name": "write-env-file",
++        "description": "Writing to .env files that may contain secrets",
++        "event": "PreToolUse",
++        "tool": "Write",
++        "glob": "**/.env?(.local|.production|.development|.staging|.test)",
++        "pattern": ".",
++        "action": "ask",
++        "level": "medium",
++        "body": "# Writing to .env Files\n\nThis operation will modify environment configuration files that typically contain secrets.\n\n**Why dangerous:**\n- May overwrite API keys or database credentials\n- Could expose secrets if written to wrong location\n- Might break application configuration\n\n**Consider:**\n- Review the content being written\n- Ensure no secrets are being exposed\n- Use .env.example for templates instead\n- Consider using a secrets manager for sensitive values",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/write-env-file.md"
++      },
++      {
++        "name": "git-destroy-history",
++        "description": "Destroy reflog or force garbage collection",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+(reflog\\s+expire|gc\\s+--prune)",
++        "action": "ask",
++        "level": "critical",
++        "body": "# Git Destroy History\n\nThis command destroys the reflog safety net or forces garbage collection.\n\n**Why dangerous:**\n- `git reflog expire` removes reflog entries that serve as a safety net for recovering lost commits\n- `git gc --prune` forces garbage collection of unreachable objects\n- Makes recovery of lost commits impossible\n- Combined with reset/rebase mistakes, can lead to permanent data loss\n\n**Consider:**\n- Let Git handle garbage collection automatically\n- Keep reflog entries for at least 90 days (default)\n- Only use these commands if you truly need to reclaim disk space\n- Ensure all important commits are reachable before expiring",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/git-destroy-history.md"
++      },
++      {
++        "name": "git-hard-reset",
++        "description": "Hard reset that discards uncommitted changes",
++        "event": "PreToolUse",
++        "tool": "Bash",
++        "pattern": "git\\s+reset\\s+--hard",
++        "action": "ask",
++        "level": "high",
++        "body": "# Git Hard Reset\n\nThis command discards all uncommitted changes.\n\n**Why dangerous:**\n- Permanently deletes uncommitted work\n- Cannot be undone with git commands\n- May lose hours of work\n\n**Consider:**\n- Stash changes first: `git stash`\n- Use `git reset --soft` to unstage but keep changes\n- Commit or stash before resetting",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/dangerous-commands/hard-reset.md"
++      },
++      {
++        "name": "pattern-identifier",
++        "description": "Brief one-line description",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "regex-pattern-to-match",
++        "action": "context",
++        "level": "warning",
++        "tag": "suggestion-tag",
++        "body": "# Pattern Name\n\nBrief explanation of the pattern and why it matters.\n\n```haskell\n-- Type signatures\noperation :: Input → Output Effect\n\n-- Transformations\nbad  :: A → B    -- what to avoid\ngood :: A → B    -- what to prefer\n```\n\n```haskell\n-- Pattern examples\nbad :: Example\nbad = antipattern implementation\n\ngood :: Example\ngood = recommended implementation\n```\n\nExplanation of why the good pattern is better.\n\n**When to use:**\n- Condition 1\n- Condition 2\n\n**Exceptions:**\n- When X is true\n- Legacy code compatibility",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/TEMPLATE.md"
++      },
++      {
++        "name": "use-clock-service",
++        "description": "Use Effect DateTime instead of JS Date",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(new Date\\(|Date\\.\\w+\\()",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-effect-clock",
++        "body": "# Use Effect DateTime Instead of JS Date\n\n```haskell\n-- Transformation\nnewDate   :: IO Date              -- impure, non-deterministic\ndateNow   :: IO Milliseconds      -- side effect, untestable\n\n-- Instead\nnow       :: Effect DateTime R    -- R includes Clock\ncurrentMs :: Effect Millis Clock  -- explicit dependency\n```\n\n```haskell\n-- Pattern\nbad :: IO Timestamp\nbad = Date.now                    -- where R = ∅, untestable\n\ngood :: Effect Timestamp Clock\ngood = Clock.currentTimeMillis    -- where R ⊃ Clock, testable\n\n-- In tests\ntest :: Effect () TestClock\ntest = do\n  TestClock.adjust (minutes 5)    -- deterministic time\n  result ← good\n  assert (result == expected)\n```\n\nDirect `Date` usage is non-deterministic. Use `DateTime.now` or `Clock.currentTimeMillis` for testable time operations via `TestClock`.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/use-clock-service.md"
++      },
++      {
++        "name": "avoid-untagged-errors",
++        "description": "Avoid instanceof Error and new Error - use Data.TaggedError for typed errors",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(instanceof\\s+Error|new\\s+Error\\s*\\()",
++        "action": "context",
++        "level": "warning",
++        "tag": "avoid-untagged-errors",
++        "body": "# Avoid `instanceof Error` and `new Error`\n\n```haskell\n-- Transformation\ninstanceofError :: Error → Bool           -- opaque, no discrimination\nnewError        :: String → Error         -- untagged, untrackable\n\n-- Instead\ndata MyError = MyError { message :: String }\n  deriving TaggedError \"MyError\"\n\ntaggedFail :: MyError → Effect a MyError\ncatchTag   :: \"MyError\" → (MyError → Effect a) → Effect a E → Effect a (E - MyError)\n```\n\n```haskell\n-- Pattern\nbad :: Error → Effect ()\nbad e\n  | e `instanceof` Error = log (message e)    -- which error type?\n  | otherwise            = pure ()\n\ngood :: Effect () MyError\ngood = pipe\n  myEffect\n  $ catchTag \"MyError\" \\e → log (message e)\n\n-- Exhaustive handling\nhandle :: Effect a (E₁ | E₂ | E₃) → Effect a ∅\nhandle = catchTags\n  { E₁: handler₁\n  , E₂: handler₂\n  , E₃: handler₃\n  }\n```\n\n`Data.TaggedError` enables exhaustive pattern matching via `_tag`. Use `catchTag` for type-safe error discrimination.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-untagged-errors.md"
++      },
++      {
++        "name": "effect-run-in-body",
++        "description": "Effect.runSync/runPromise should only be at entry points",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "Effect\\.run(Sync|Promise)",
++        "action": "context",
++        "level": "warning",
++        "tag": "effect-run-in-body",
++        "body": "# Effect.runSync/runPromise Only at Entry Points\n\n```haskell\n-- Transformation\nrunSync    :: Effect a E R → a        -- escapes Effect, loses composition\nrunPromise :: Effect a E R → Promise a -- same problem\n\n-- Instead: compose until boundary\ncompose :: Effect a E R → Effect b E R → Effect (a, b) E R\nyield*  :: Effect a E R → a           -- inside Effect.gen only\n```\n\n```haskell\n-- Pattern\nbad :: Effect () R\nbad = do\n  result ← pure $ Effect.runSync someEffect   -- breaks composition!\n  doSomething result\n  -- can't retry, race, timeout the inner effect\n\ngood :: Effect () R\ngood = do\n  result ← someEffect                         -- still composable\n  doSomething result\n  -- can wrap entire program with retry, race, timeout\n\n-- Entry points only\nmain :: IO ()\nmain = Effect.runMain program              -- ✓ application boundary\n\nhandler :: Request → IO Response\nhandler req = Effect.runPromise (handle req)  -- ✓ API boundary\n\ntest :: Spec\ntest = Effect.runPromise (testProgram)        -- ✓ test boundary\n```\n\nRunning effects mid-logic breaks composition. Keep effects as values until entry points (main, handlers, tests).",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/effect-run-in-body.md"
++      },
++      {
++        "name": "stream-large-files",
++        "description": "Consider streaming large files instead of reading into memory",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "fs\\.(readFile|readFileString)\\s*\\(",
++        "action": "context",
++        "level": "info",
++        "tag": "consider-streaming",
++        "body": "# Consider Streaming Large Files\n\n```haskell\n-- Transformation\nreadFile       :: FilePath → Effect String FileSystem   -- entire file in memory\nstream         :: FilePath → Stream Chunk FileSystem    -- incremental chunks\n\n-- For large files\nfs.stream path { chunkSize: 64 * 1024 }\n  |> decodeText \"utf-8\"\n  |> splitLines\n  |> map processLine\n  |> runDrain\n```\n\n```haskell\n-- Pattern\nbad :: FilePath → Effect String FileSystem\nbad path = readFileString path          -- OOM on gigabyte files\n\ngood :: FilePath → Effect () FileSystem\ngood path = pipe\n  (fs.stream path { chunkSize: 65536 })\n  $ Stream.decodeText \"utf-8\"\n  $ Stream.splitLines\n  $ Stream.map processLine\n  $ Stream.runDrain                     -- constant memory usage\n\n-- When to stream\nshouldStream :: FileSize → Bool\nshouldStream size\n  | size > megabytes 100 = True         -- definitely stream\n  | lineByLine needed    = True         -- stream for efficiency\n  | otherwise            = False        -- readFile is fine\n```\n\n`readFile` loads entire file into memory. Use `fs.stream` for large files or line-by-line processing to avoid OOM errors.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/stream-large-files.md"
++      },
++      {
++        "name": "tsc-suggest-scripts",
++        "description": "Suggest project typecheck scripts instead of raw tsc commands",
++        "event": "PostToolUse",
++        "tool": "Bash",
++        "pattern": "(?<!(mise\\s+(run\\s+)?|npm\\s+run\\s+|bun\\s+run\\s+))tsc(\\s+--?(build|noEmit|watch|project|p)\\b|\\s*$)",
++        "action": "context",
++        "level": "info",
++        "tag": "tsc-context",
++        "body": "# Use Project Typecheck Scripts\n\nYou ran `tsc` directly. This project may have established scripts for type checking that ensure consistent flags and configurations.\n\n**Check for project scripts:**\n\n1. `package.json` - Look for `scripts` like `typecheck`, `tsc`, or `type-check`\n2. `.mise.toml` - Look for tasks like `typecheck` or `tc`\n3. `Makefile`, `justfile`, or other task runner configs\n\n**Why use project scripts?**\n\n- Ensures consistent compiler flags across the team\n- May include additional preprocessing or postprocessing\n- Often provides enhanced error reporting or filtering\n- Respects project-specific tsconfig paths and settings",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/tsc-suggest-scripts.md"
++      },
++      {
++        "name": "use-path-service",
++        "description": "Use Path service instead of direct Node.js path imports",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(import\\s+.*\\s+from\\s+['\"]node:path['\"]|import\\s+.*\\s+from\\s+['\"]path['\"])",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-effect-path",
++        "body": "# Use Path Service Instead of `path`\n\n```haskell\n-- Transformation\nimport \"node:path\"  :: Node → Path a    -- platform-coupled\nimport \"path\"       :: Node → Path a    -- same problem\n\n-- Instead\nPath               :: Effect Path Path  -- platform-agnostic\n```\n\n```haskell\n-- Pattern\nbad :: String → String → String\nbad dir file = path.join dir file      -- R = Node\n\ngood :: String → String → Effect String Path\ngood dir file = do\n  p ← Path.Path\n  p.join dir file                      -- R ⊃ Path, portable\n\n-- Path operations\njoin      :: [String] → Effect String Path\ndirname   :: String → Effect String Path\nbasename  :: String → Effect String Path\nextname   :: String → Effect String Path\nresolve   :: String → Effect String Path\n```\n\nDirect `path` imports couple code to Node.js. Use `@effect/platform` Path for cross-platform path operations.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/use-path-service.md"
++      },
++      {
++        "name": "avoid-any",
++        "description": "Avoid using 'as any' or 'as unknown as' type assertions",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "as\\s+(any|unknown\\s+as)",
++        "action": "context",
++        "level": "warning",
++        "tag": "do-not-use-any",
++        "body": "# Avoid `as any` Type Assertions\n\n```haskell\n-- Transformation\nasAny      :: a → Any       -- erases type, defeats compiler\nasUnknown  :: a → Unknown   -- same problem with extra steps\n\n-- Instead\ndecode     :: Schema a → Unknown → Either ParseError a\nguard      :: (a → Bool) → a → Maybe a\ngenerics   :: ∀ a. Constraint a ⇒ a → F a\n```\n\n```haskell\n-- Pattern\nbad  :: Unknown → T\nbad x = x `as` T                    -- trust me bro\n\ngood :: Unknown → Either ParseError T\ngood x = Schema.decode schemaT x    -- prove it\n```\n\nUsing `as any` bypasses type checking entirely. The `as unknown as T` pattern is equivalent—casting through `unknown` still erases type information.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-any.md"
++      },
++      {
++        "name": "avoid-react-hooks",
++        "description": "React hooks (useState, useEffect, useReducer, etc.) should be avoided - use View Models with Effect Atom instead",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "\\b(useState|useEffect|useReducer|useCallback|useMemo|useRef|useLayoutEffect|useImperativeHandle|useDebugValue|useDeferredValue|useTransition|useId|useSyncExternalStore|useInsertionEffect)\\s*[<(]",
++        "action": "context",
++        "level": "high",
++        "tag": "avoid-react-hooks",
++        "body": "# Avoid React Hooks - Use View Models\n\n```haskell\n-- Transformation\nuseState     :: a → (a, a → ())          -- scattered state, untestable\nuseEffect    :: (() → ()) → [a] → ()     -- cleanup error-prone\n\n-- Instead: View Model pattern\ndata VM = VM\n  { state$  :: Atom State               -- reactive state\n  , action  :: () → Effect ()           -- effectful actions\n  }\n\n-- Component is pure renderer\ncomponent :: VM → JSX\ncomponent vm = useAtomValue (state$ vm)  -- only reads atoms\n```\n\n```haskell\n-- Replacements\nuseState      → vmAtom :: Atom a\nuseEffect     → vmAction :: Effect ()\nuseCallback   → derivedAtom :: Atom (a → b)\nuseMemo       → derivedAtom :: Atom a\nuseRef (DOM)  → pass from parent ∨ VM trigger\nuseSearchParams → Atom.searchParam\nuseEffect (cleanup) → Atom.make with get.addFinalizer\n\n-- Architecture\ndata Component = Component\n  { view :: VM → JSX           -- pure renderer\n  , vm   :: Layer VM           -- testable, injectable\n  }\n\n-- Invoke skill for implementation\ninvoke \"react-vm\"\n```\n\nReact hooks scatter state across components. Use View Models: state in atoms, effects in actions, components as pure renderers.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-react-hooks.md"
++      },
++      {
++        "name": "context-tag-extends",
++        "description": "Avoid class *Tag extends Context.Tag and mismatched GenericTag naming",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(class\\s+\\w+Tag\\s+extends\\s+Context\\.Tag|Context\\.GenericTag<\\w+Service>)",
++        "action": "context",
++        "level": "warning",
++        "tag": "do-not-extend-context-tag",
++        "body": "# Avoid `class *Tag extends Context.Tag`\n\n```haskell\n-- Anti-pattern\nclass MyServiceTag extends Context.Tag    -- *Tag suffix = coupling smell\ndata MyServiceInterface = ...             -- separate interface = complexity\n\n-- Instead\ninterface MyService = ...                 -- clean contract\nMyService = Context.GenericTag<MyService> -- same name, declaration merging\n```\n\n```haskell\n-- Pattern\nbad :: Context.Tag\nbad = class ParallelClientTag extends Context.Tag\n  -- Tag suffix indicates unnecessary coupling\n  -- interface probably named ParallelClientService\n  -- two names for one concept\n\ngood :: Context.GenericTag\ngood = do\n  interface ParallelClient { ... }        -- interface name\n  ParallelClient = GenericTag<ParallelClient>(\"@parallel/ParallelClient\")\n  -- same name via declaration merging\n\n-- Testing\nmock :: Layer ParallelClient ∅\nmock = Layer.succeed ParallelClient mockImpl   -- easy to mock\n\ntest :: Effect () ∅\ntest = program\n  & provide mock                          -- swap implementation\n```\n\nUse `Context.GenericTag` with matching interface/tag names. Avoid `*Tag`/`*Service` suffixes—one name for one concept.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/context-tag-extends.md"
++      },
++      {
++        "name": "avoid-expect-in-if",
++        "description": "Avoid nesting expect() calls inside if blocks in tests",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{test,spec}.{ts,tsx}",
++        "pattern": "if\\s*\\([^)]*\\)\\s*\\{[^}]*expect\\(",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-assert-to-narrow",
++        "body": "# Avoid `expect()` Inside `if` Blocks\n\n```haskell\n-- Anti-pattern\ntestBad :: Effect ()\ntestBad = do\n  result ← runTest\n  if isJust (value result)           -- condition false → silently passes!\n    then expect (name $ fromJust $ value result) `toBe` \"test\"\n    else pure ()                     -- hidden skip\n\n-- Pattern\nnarrow :: Maybe a → Effect a\nnarrow = assert \"Expected value to be defined\"\n\ntestGood :: Effect ()\ntestGood = do\n  result ← runTest\n  value  ← narrow (value result)     -- fails fast if Nothing\n  expect (name value) `toBe` \"test\"  -- type narrowed, safe\n```\n\n```haskell\n-- Transformation\nif value then expect(value.x) else skip    -- ✗ silent skip\nassert value; expect(value.x)               -- ✓ fail fast\n\n-- Alternative\nexpect(value) `toBeDefined`\nassert value                                -- narrow for TS\nexpect(value.name) `toBe` \"test\"\n```\n\n`if (x) { expect(x.y) }` silently passes when condition is false. Use `assert` to narrow types and fail fast.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-expect-in-if.md"
++      },
++      {
++        "name": "avoid-sync-fs",
++        "description": "Avoid synchronous filesystem operations",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(readFileSync|writeFileSync|mkdirSync|readdirSync|statSync|existsSync|copyFileSync|unlinkSync|rmdirSync|renameSync|appendFileSync)\\s*\\(",
++        "action": "context",
++        "level": "high",
++        "tag": "no-sync-fs",
++        "body": "# Avoid Synchronous Filesystem Operations\n\n```haskell\n-- Transformation\nreadFileSync  :: FilePath → IO String     -- blocks event loop\nwriteFileSync :: FilePath → String → IO () -- same problem\n\n-- Instead\nreadFileString  :: FilePath → Effect String FileSystem\nwriteFileString :: FilePath → String → Effect () FileSystem\n```\n\n```haskell\n-- Pattern\nbad :: FilePath → IO String\nbad path = fs.readFileSync path \"utf-8\"   -- blocking, defeats async\n\ngood :: FilePath → Effect String FileSystem\ngood path = do\n  fs ← FileSystem.FileSystem\n  fs.readFileString path                  -- non-blocking, composable\n\n-- Sync → Async mapping\nreadFileSync   → readFileString\nwriteFileSync  → writeFileString\nmkdirSync      → makeDirectory\nexistsSync     → exists\nunlinkSync     → remove\nreaddirSync    → readDirectory\n```\n\nSync operations block the event loop. Use Effect's FileSystem service for async, composable file operations.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-sync-fs.md"
++      },
++      {
++        "name": "effect-promise-vs-trypromise",
++        "description": "Use Effect.tryPromise instead of Effect.promise for error handling",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "yield\\*\\s+Effect\\.promise",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-effect-trypromise",
++        "body": "# Use Effect.tryPromise Instead of Effect.promise\n\n```haskell\n-- Transformation\npromise    :: IO (Promise a) → Effect a ∅        -- rejection = defect (uncatchable)\ntryPromise :: IO (Promise a) → Effect a E        -- rejection = typed error (catchable)\n```\n\n```haskell\n-- Pattern\nbad :: Effect User ∅\nbad = Effect.promise \\_ → fetchUser id\n  -- rejection becomes Defect: can't catch, crashes fiber\n\ngood :: Effect User FetchError\ngood = Effect.tryPromise\n  { try:   \\_ → fetchUser id\n  , catch: \\e → FetchError (show e)\n  }\n  -- rejection becomes typed error: catchable, testable\n\n-- Error handling\nhandle :: Effect User FetchError → Effect User ∅\nhandle = catchTag \"FetchError\" \\e → defaultUser\n\n-- Defects bypass all handlers\ndefect :: Effect a ∅ → Effect a E\ndefect = id    -- can't recover from defects\n```\n\n`Effect.promise` converts rejections to uncatchable defects. Use `Effect.tryPromise` for typed, recoverable errors in the E channel.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/effect-promise-vs-trypromise.md"
++      },
++      {
++        "name": "avoid-non-null-assertion",
++        "description": "Avoid using ! non-null assertion operator",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "[\\w\\)\\]]\\!\\s*[;\\.\\[\\(]",
++        "action": "context",
++        "level": "warning",
++        "tag": "do-not-assert-non-null",
++        "body": "# Avoid Non-Null Assertion Operator `!`\n\n```haskell\n-- Transformation\nbang :: a | Null → a        -- \"trust me\" → runtime crash on null\nsafe :: a | Null → Maybe a  -- explicit handling required\n\n-- Instead\noptional  :: a?.b           -- optional chaining\ncoalesce  :: a ?? default   -- nullish coalescing\noption    :: Option a       -- Effect's optional type\nguard     :: a → Maybe a    -- type guard proves existence\n```\n\n```haskell\n-- Pattern\nbad :: Map → Value\nbad map = map.get(\"key\")!         -- crash if key missing\n\ngood :: Map → Maybe Value\ngood map = Option.fromNullable (map.get \"key\")\n\n-- Or with chaining\nsafe :: User → Maybe Email\nsafe user = user?.contact?.email ?? Nothing\n\n-- With Schema for external data\nvalidated :: Unknown → Either ParseError User\nvalidated = Schema.decode userSchema\n```\n\nThe `!` operator is \"trust me, this isn't null\"—if wrong, runtime crash. Use `?.`, `??`, `Option`, or type guards for safe null handling.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-non-null-assertion.md"
++      },
++      {
++        "name": "imperative-loops",
++        "description": "Use functional transformations instead of imperative loops",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "for\\s*\\(",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-functional",
++        "body": "# Use Functional Transformations\n\n```haskell\n-- Array operations\nmap     :: [a] → (a → b) → [b]\nfilter  :: [a] → (a → Bool) → [a]\nreduce  :: [a] → b → (b → a → b) → b\nfilterMap :: [a] → (a → Option b) → [b]   -- single pass\n\n-- Record operations\nRecord.map        :: {k: a} → (a → b) → {k: b}\nRecord.filter     :: {k: a} → (a → Bool) → {k: a}\nRecord.filterMap  :: {k: a} → (a → Option b) → {k: b}\n```\n\n```haskell\n-- Bad: Imperative with mutations\nbad :: [Number] → [Number]\nbad numbers = do\n  result ← []\n  for n in numbers do\n    if n % 2 == 0 then\n      result.push(n * n)\n  return result\n\n-- Good: Functional composition\ngood :: [Number] → [Number]\ngood numbers =\n  filterMap numbers λn →\n    if n % 2 == 0\n    then Option.some(n * n)\n    else Option.none()\n```\n\nImperative loops with mutations are error-prone. Use `Array.filterMap`, `Array.map`, `Array.reduce` for single-pass transformations.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/imperative-loops.md"
++      },
++      {
++        "name": "avoid-try-catch",
++        "description": "Avoid try-catch blocks in Effect code - use Effect.try or typed errors",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "try\\s*\\{",
++        "action": "context",
++        "level": "warning",
++        "tag": "avoid-try-catch",
++        "body": "# Avoid `try { } catch` in Effect Code\n\n```haskell\n-- Transformation\ntryCatch :: IO a → IO (Either Error a)    -- loses error types\neffectTry :: (() → a) → Effect a E        -- preserves error channel\n\n-- Error handling\ncatchTag  :: Tag → (E → Effect a) → Effect a E → Effect a (E - Tag)\ncatchTags :: {Tag₁: h₁, Tag₂: h₂} → Effect a E → Effect a (E - Tags)\n```\n\n```haskell\n-- Pattern\nbad :: () → { success :: Bool, data :: Maybe a, error :: Maybe String }\nbad () = try\n  result ← riskyOperation\n  pure { success: True, data: Just result, error: Nothing }\n catch e →\n  pure { success: False, data: Nothing, error: Just (show e) }\n\ngood :: Effect a DataError\ngood = Effect.try\n  { try:   riskyOperation\n  , catch: DataError <<< show\n  }\n\n-- Or with TaggedError\ndata DataError = DataError { message :: String }\n  deriving TaggedError \"DataError\"\n```\n\n`try-catch` breaks the error channel—errors become opaque. Use `Effect.try` with `Data.TaggedError` for typed, composable error handling.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-try-catch.md"
++      },
++      {
++        "name": "avoid-fs-promises",
++        "description": "Wrap fs/promises with Effect instead of using directly",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(import\\s+.*\\s+from\\s+['\"]node:fs/promises['\"]|import\\s+.*\\s+from\\s+['\"]fs/promises['\"])",
++        "action": "context",
++        "level": "warning",
++        "tag": "wrap-fs-promises",
++        "body": "# Use FileSystem Service Instead of `fs/promises`\n\n```haskell\n-- Transformation\nimport \"fs/promises\"     :: Node → Promise a    -- platform-coupled, Promise-based\nimport \"node:fs/promises\" :: Node → Promise a   -- same problem\n\n-- Instead\nFileSystem              :: Effect a FileSystem  -- Effect-native, platform-agnostic\n```\n\n```haskell\n-- Pattern\nbad :: FilePath → Promise String\nbad path = fsPromises.readFile path \"utf-8\"   -- Promise, not Effect\n\ngood :: FilePath → Effect String FileSystem\ngood path = do\n  fs ← FileSystem.FileSystem\n  fs.readFileString path                      -- Effect-native\n\n-- If wrapping is necessary\nwrap :: Promise a → Effect a Error\nwrap promise = Effect.tryPromise \\_ → promise\n```\n\n`fs/promises` returns Promises, not Effects. Use `@effect/platform` FileSystem for Effect-native file operations with typed errors.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-fs-promises.md"
++      },
++      {
++        "name": "avoid-object-type",
++        "description": "Avoid using Object or {} as types",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(?::\\s*|=\\s*)(Object|{})\\s*(?=[,;\\)\\]\\|&=<>\\s\\[])",
++        "action": "context",
++        "level": "warning",
++        "tag": "do-not-use-object-type",
++        "body": "# Avoid `Object` and `{}` as Types\n\n```haskell\n-- Transformation\nobject :: Object                  -- accepts nearly anything\nempty  :: {}                      -- same problem, no structure\n\n-- Instead\ndata User = User { id :: Int, name :: String }  -- explicit shape\nrecord :: Record String a                       -- dictionary with known value type\nunknown :: Unknown                              -- truly unknown, requires validation\n```\n\n```haskell\n-- Pattern\nbad :: Object → Effect ()\nbad obj = doSomething obj         -- what fields? what types?\n\ngood :: User → Effect ()\ngood user = doSomething user      -- clear structure, IDE support\n\n-- For unknown shapes\ndecode :: Unknown → Either ParseError User\ndecode = Schema.decode userSchema\n```\n\n`Object` and `{}` provide no type safety—they accept any non-null value. Use explicit types, `Record<K,V>`, `unknown`, or Schema for validation.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-object-type.md"
++      },
++      {
++        "name": "avoid-direct-json",
++        "description": "Consider using Schema.parseJson instead of direct JSON methods",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "JSON\\.(parse|stringify)\\(",
++        "action": "context",
++        "level": "info",
++        "tag": "prefer-schema-json",
++        "body": "# Consider Schema.parseJson Instead of JSON Methods\n\n```haskell\n-- Transformation\njsonParse     :: String → Any           -- returns Any, can throw\njsonStringify :: a → String             -- no validation\n\n-- Instead\nparseJson     :: Schema a → String → Either ParseError a\nencodeJson    :: Schema a → a → String\n```\n\n```haskell\n-- Pattern\nbad :: String → IO User\nbad json = JSON.parse json        -- returns Any, throws on invalid\n\ngood :: String → Either ParseError User\ngood json = Schema.decodeSync (Schema.parseJson userSchema) json\n\n-- Bidirectional\ndata UserSchema = Schema.Struct\n  { id   :: Schema.Number\n  , name :: Schema.String\n  }\n\ndecode :: String → Either ParseError User\ndecode = Schema.decodeSync (Schema.parseJson UserSchema)\n\nencode :: User → String\nencode = Schema.encodeSync (Schema.parseJson UserSchema)\n```\n\n`JSON.parse` returns `any` and throws on invalid input. `Schema.parseJson` provides typed, validated parsing. Acceptable for simple logging/debugging.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-direct-json.md"
++      },
++      {
++        "name": "avoid-direct-tag-checks",
++        "description": "Avoid direct _tag property checks; use exported refinements/predicates",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "\\._tag\\s*===\\s*[\"']",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-type-predicates",
++        "body": "# Avoid Direct `_tag` Property Checks\n\n```haskell\n-- Transformation\ndirectCheck :: Event → Bool\ndirectCheck e = e._tag == \"FactRecorded\"   -- fragile, poor narrowing\n\n-- Instead\n$is   :: Tag → Event → Bool                -- from TaggedEnum\n$match :: { Tag₁: h₁, Tag₂: h₂ } → Event → a  -- exhaustive matching\n```\n\n```haskell\n-- Pattern\nbad :: Event → Effect ()\nbad e\n  | e._tag == \"FactRecorded\" = handleFact e    -- manual check, fragile\n  | otherwise                = pure ()\n\ngood :: Event → Effect ()\ngood = $match\n  { FactRecorded:  handleFact\n  , QuestionAsked: handleQuestion\n  }                                            -- exhaustive, type-safe\n\n-- Or with predicates\ndata Event = FactRecorded | QuestionAsked\n  deriving TaggedEnum\n\nisFactRecorded :: Event → Bool\nisFactRecorded = $is \"FactRecorded\"\n\n-- Refactoring-safe: rename tag in one place\n```\n\nDirect `_tag` checks don't narrow types correctly. Use `$is` for predicates or `$match` for exhaustive pattern matching via `Data.taggedEnum`.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-direct-tag-checks.md"
++      },
++      {
++        "name": "avoid-ts-ignore",
++        "description": "Avoid using @ts-ignore or @ts-expect-error to silence type errors",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "@ts-(ignore|expect-error)",
++        "action": "context",
++        "level": "warning",
++        "tag": "do-not-silence-types",
++        "body": "# Avoid `@ts-ignore` and `@ts-expect-error`\n\n```haskell\n-- Anti-pattern\ntsIgnore :: TypeError → ()    -- hide error, pray at runtime\ntsExpect :: TypeError → ()    -- same with false confidence\n\n-- Instead\nfix        :: TypeError → Code → Code        -- address root cause\nguard      :: Unknown → Maybe Known          -- runtime validation\nschema     :: Schema a → Unknown → Either ParseError a\n```\n\n```haskell\n-- Pattern\nbad :: Effect a\nbad = do\n  -- @ts-ignore\n  x ← brokenCode          -- compiler is wrong, right?\n\ngood :: Effect a\ngood = do\n  x ← Schema.decode schema raw   -- prove correctness\n```\n\nSuppressing errors masks bugs that surface at runtime. Fix the underlying type issue instead.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-ts-ignore.md"
++      },
++      {
++        "name": "yield-in-for-loop",
++        "description": "Use Effect.forEach or STM.forEach instead of yield* in for loops",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "for\\s*\\([^)]*\\)\\s*\\{[^}]*yield\\s*\\*",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-foreach",
++        "body": "# Use `Effect.forEach` Instead of For Loops\n\n```haskell\n-- Transformation\nfor item in items { yield* process item }   -- imperative, not composable\nforEach items process                        -- declarative, parallelizable\n\n-- Operations\nforEach  :: [a] → (a → Effect b) → Effect [b]\nfilter   :: [a] → (a → Effect Bool) → Effect [a]\ntraverse :: (a → Effect b) → [a] → Effect [b]\n```\n\n```haskell\n-- Pattern\nbad :: [Item] → Effect ()\nbad items = for item ← items do\n  yield* processItem item          -- imperative loop\n\ngood :: [Item] → Effect ()\ngood items = forEach items processItem\n\nparallel :: [Item] → Effect ()\nparallel items = forEach items processItem { concurrency: \"unbounded\" }\n\n-- With filtering\nfiltered :: [Id] → Effect ()\nfiltered ids = do\n  active ← filter ids (not <<< alreadyProcessed)\n  forEach active process\n\n-- Effectful predicate\neffectfulFilter :: [User] → Effect ()\neffectfulFilter users = do\n  active ← Effect.filter users (checkUserStatus <<< _.id)\n  forEach active sendNotification\n```\n\nFor loops with `yield*` are imperative. `Effect.forEach` enables parallel execution, uniform error handling, and composition.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/yield-in-for-loop.md"
++      },
++      {
++        "name": "vm-in-wrong-file",
++        "description": "View Model definitions must be in .vm.ts files - detected VM pattern outside of proper location",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/!(*.vm).{ts,tsx}",
++        "pattern": "(interface\\s+\\w+VM\\s*\\{|Context\\.GenericTag<\\w*VM>|Layer\\.(effect|scoped)\\(\\s*\\w+VM)",
++        "action": "context",
++        "level": "critical",
++        "tag": "vm-location",
++        "body": "# VM Code in Wrong File\n\n```haskell\n-- File structure convention\ndata ComponentFiles = ComponentFiles\n  { component :: \"Component.tsx\"      -- pure renderer\n  , viewModel :: \"Component.vm.ts\"    -- VM definition\n  , index     :: \"index.ts\"           -- re-exports\n  }\n\n-- VM file structure\ndata VMFile a = VMFile\n  { interface :: Interface a          -- type contract\n  , tag       :: GenericTag a         -- DI tag\n  , layer     :: Layer a              -- implementation\n  }\n```\n\n```haskell\n-- Anti-pattern: VM in component file\nbad :: \"Component.tsx\"\nbad = do\n  interface ComponentVM { ... }       -- ✗ wrong file\n  ComponentVM = GenericTag<...>       -- ✗ wrong file\n  layer = Layer.effect(...)           -- ✗ wrong file\n\n-- Correct: VM in dedicated file\ngood :: \"Component.vm.ts\"\ngood = do\n  interface ComponentVM { ... }       -- ✓ correct file\n  ComponentVM = GenericTag<...>       -- ✓ correct file\n  layer = Layer.effect(...)           -- ✓ correct file\n  export default { tag, layer }       -- ✓ clean export\n\n-- Import in component\nimport ComponentVM from \"./Component.vm\"\n```\n\nVMs must be in `.vm.ts` files. Mixing rendering and state management breaks organization. Invoke `react-vm` skill for guidance.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/vm-in-wrong-file.md"
++      },
++      {
++        "name": "use-random-service",
++        "description": "Use Random service instead of Math.random()",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "Math\\.random\\(\\)",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-effect-random",
++        "body": "# Use Random Service Instead of `Math.random()`\n\n```haskell\n-- Transformation\nmathRandom :: IO Float              -- impure, non-deterministic\nrandom     :: Effect Float Random   -- explicit dependency, testable\n\n-- Random operations\nnext       :: Effect Float Random\nnextInt    :: Effect Int Random\nnextRange  :: (Int, Int) → Effect Int Random\nshuffle    :: [a] → Effect [a] Random\n```\n\n```haskell\n-- Pattern\nbad :: IO Int\nbad = floor (Math.random * 100)     -- R = ∅, untestable\n\ngood :: Effect Int Random\ngood = Random.nextIntBetween 0 100  -- R ⊃ Random, deterministic in tests\n\n-- In tests\ntest :: Effect () TestRandom\ntest = do\n  TestRandom.feedInts [42, 7, 13]   -- deterministic sequence\n  result ← good\n  assert (result == 42)\n```\n\n`Math.random()` is non-deterministic. Use `Random` service for reproducible randomness via `TestRandom.feed*` in tests.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/use-random-service.md"
++      },
++      {
++        "name": "casting-awareness",
++        "description": "Type assertions may indicate incorrect types",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "as\\s+(?!const\\b)\\w+",
++        "action": "context",
++        "level": "info",
++        "tag": "type-awareness",
++        "body": "# Type Assertion Awareness\n\n```haskell\n-- Type assertion\ncast :: a → b                     -- \"trust me, I know better\"\n\n-- Before casting, check\nredundant  :: a → a               -- already correct type (use LSP!)\nnarrowable :: ∀ a. Generic a ⇒ F a  -- use generics instead\nguardable  :: a → Maybe b         -- runtime check for safety\ndecodable  :: Schema b → a → Either ParseError b  -- validate external data\n```\n\n```haskell\n-- Pattern\nsuspicious :: Unknown → User\nsuspicious x = x `as` User        -- why is x Unknown?\n\ninvestigate :: Effect ()\ninvestigate = do\n  actualType ← lsp.typeAt file line col    -- what is it really?\n  case actualType of\n    User → pure ()                -- cast was redundant\n    _    → fix (sourceType actualType)     -- improve upstream types\n\n-- Consider\nwithGenerics :: ∀ a. Decodable a ⇒ String → Effect a ParseError\nwithGenerics = Schema.decode schema       -- types flow correctly\n```\n\nCasts tell the compiler \"trust me.\" Sometimes correct, often a signal that upstream types could be improved. Check with LSP first.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/casting-awareness.md"
++      },
++      {
++        "name": "effect-catchall-default",
++        "description": "Avoid Effect.catchAll returning defaults - often hides bugs",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "Effect\\.catchAll\\(.*?=>\\s*(Effect\\.)?(succeed|sync)\\(",
++        "action": "context",
++        "level": "warning",
++        "tag": "avoid-catchall-default",
++        "body": "# Avoid Effect.catchAll with Default Values\n\n```haskell\n-- Transformation\ncatchAll :: (E → Effect a) → Effect a E → Effect a ∅\ncatchAll _ default = \\_ → succeed default    -- swallows all errors silently\n\n-- Instead\ncatchTag  :: Tag → (E → Effect a) → Effect a E → Effect a (E - Tag)\ncatchTags :: {Tag₁: h₁, ...} → Effect a E → Effect a (E - Tags)\n```\n\n```haskell\n-- Pattern\nbad :: Effect User ∅\nbad = pipe\n  fetchUser\n  $ catchAll \\_ → succeed defaultUser    -- which error? why? 🤷\n\ngood :: Effect User (NetworkError | Timeout)\ngood = pipe\n  fetchUser\n  $ catchTag \"NotFound\" \\_ → do\n      log \"User not found, creating...\"\n      createDefaultUser               -- explicit, logged, traceable\n\n-- For expected absence\nbetter :: Effect (Option User) NetworkError\nbetter = pipe\n  fetchUser\n  $ Option.some                       -- Option, not error swallowing\n  $ catchTag \"NotFound\" \\_ → Option.none\n```\n\n`catchAll` with defaults hides bugs and loses context. Use `catchTag` for specific errors with logging, or `Option` for expected absence.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/effect-catchall-default.md"
++      },
++      {
++        "name": "use-filesystem-service",
++        "description": "Use FileSystem service instead of direct Node.js fs imports",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(import\\s+.*\\s+from\\s+['\"]node:fs['\"]|import\\s+.*\\s+from\\s+['\"]fs['\"]|require\\(['\"]node:fs['\"]\\)|require\\(['\"]fs['\"]\\))",
++        "action": "context",
++        "level": "high",
++        "tag": "use-effect-filesystem",
++        "body": "# Use FileSystem Service Instead of `fs`\n\n```haskell\n-- Transformation\nimport \"node:fs\"    :: Node → IO a        -- platform-coupled, untestable\nimport \"fs\"         :: Node → IO a        -- same problem\n\n-- Instead\nFileSystem          :: Effect a FileSystem  -- platform-agnostic\n```\n\n```haskell\n-- Pattern\nbad :: FilePath → IO String\nbad path = fs.readFileSync path \"utf-8\"   -- R = Node, untestable\n\ngood :: FilePath → Effect String FileSystem\ngood path = do\n  fs ← FileSystem.FileSystem\n  fs.readFileString path                  -- R ⊃ FileSystem, portable\n\n-- Platform provision at entry point\nmain :: Effect () (FileSystem | Console | ...)\nmain = program\n  & provide BunContext.layer    -- or NodeContext.layer\n  & runMain\n```\n\nDirect `fs` imports couple code to Node.js. Use `@effect/platform` FileSystem for portability across Node, Bun, and browser.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/use-filesystem-service.md"
++      },
++      {
++        "name": "avoid-node-imports",
++        "description": "Use @effect/platform abstractions instead of node: imports",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(from\\s+['\"]node:|require\\s*\\(\\s*['\"]node:)",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-effect-platform",
++        "body": "# Use @effect/platform Instead of `node:` Imports\n\n```haskell\n-- Transformation\nimport \"node:*\"     :: Node -> IO a        -- platform-coupled, untestable\n\n-- Instead\n@effect/platform   :: Effect a R          -- platform-agnostic, testable\n```\n\n```haskell\n-- Pattern\nbad :: Node -> IO\nbad = do\n  fs <- \"node:fs\"                         -- R = Node\n  child <- \"node:child_process\"           -- R = Node\n  path <- \"node:path\"                     -- R = Node\n\ngood :: Effect a (FileSystem | CommandExecutor | Path)\ngood = do\n  fs <- FileSystem.FileSystem             -- R = FileSystem\n  executor <- CommandExecutor             -- R = CommandExecutor\n  path <- Path.Path                       -- R = Path\n```\n\nDirect `node:` imports couple code to Node.js runtime. Use `@effect/platform` for cross-platform abstractions that work on Node, Bun, and browser.\n\n**Platform module mappings:**\n\n| `node:` import       | Effect Platform                     |\n|----------------------|-------------------------------------|\n| `node:fs`            | `FileSystem.FileSystem`             |\n| `node:path`          | `Path.Path`                         |\n| `node:child_process` | `Command` + `CommandExecutor`       |\n| `node:http`          | `HttpClient.HttpClient`             |\n| `node:stream`        | `Stream` from effect                |\n| `node:readline`      | `Terminal.Terminal`                 |\n\n**Exceptions:**\n- Build scripts and tooling config (vite.config.ts, etc.)\n- Platform-specific layers that implement services",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/avoid-node-imports.md"
++      },
++      {
++        "name": "prefer-option-over-null",
++        "description": "Consider using Option instead of union with null",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "\\|\\s*null(?!\\s*\\|)|null\\s*\\|",
++        "action": "context",
++        "level": "info",
++        "tag": "effect-patterns",
++        "body": "# Consider `Option` Instead of `| null`\n\n```haskell\n-- Transformation\nnullable :: T | Null              -- scattered null checks\noption   :: Option T              -- composable, chainable\n\n-- Option operations\nmap      :: (a → b) → Option a → Option b\nflatMap  :: (a → Option b) → Option a → Option b\nfilter   :: (a → Bool) → Option a → Option a\ngetOrElse :: a → Option a → a\n```\n\n```haskell\n-- Pattern\nbad :: Id → User | Null\nbad id = users.get id             -- caller must check null\n\ngood :: Id → Option User\ngood id = Option.fromNullable (users.get id)\n\n-- Composition\nfindEmail :: Id → Option Email\nfindEmail = good >=> (_.email >>> Option.fromNullable)\n```\n\n`Option<T>` provides chainable operations. Use `| null` only at external boundaries (JSON, DOM, third-party libs).",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/prefer-option-over-null.md"
++      },
++      {
++        "name": "use-temp-file-scoped",
++        "description": "Use makeTempFileScoped/makeTempDirectoryScoped instead of os.tmpdir() or non-scoped variants",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "(import\\s+.*\\s+from\\s+['\"]os['\"]|require\\(['\"]os['\"]\\)|os\\.tmpdir\\(\\)|\\.(makeTempFile|makeTempDirectory)\\s*\\()",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-scoped-temp",
++        "body": "# Use Scoped Temp Files for Automatic Cleanup\n\n```haskell\n-- Transformation\nos.tmpdir        :: IO FilePath              -- Node-coupled, manual cleanup\nmakeTempFile     :: Effect FilePath FS       -- manual cleanup required\nmakeTempFileScoped :: Effect FilePath (FS | Scope)  -- auto cleanup\n\n-- Scoped resources\nwithTempFile :: (FilePath → Effect a) → Effect a\nwithTempFile use = scoped $ do\n  path ← makeTempFileScoped { prefix: \"myapp-\" }\n  use path\n  -- auto cleanup on scope exit, even on error\n```\n\n```haskell\n-- Pattern\nbad :: Effect () FS\nbad = do\n  tmpFile ← makeTempFile\n  writeFileString tmpFile \"data\"\n  remove tmpFile                    -- might not run on error!\n\ngood :: Effect () (FS | Scope)\ngood = scoped $ do\n  tmpFile ← makeTempFileScoped { prefix: \"myapp-\" }\n  writeFileString tmpFile \"data\"\n  -- auto removed when scope ends\n\n-- Directories too\nwithTempDir :: Effect () (FS | Scope)\nwithTempDir = scoped $ do\n  dir ← makeTempDirectoryScoped { prefix: \"myapp-\" }\n  path ← join dir \"file.txt\"\n  writeFileString path \"data\"\n  -- entire dir removed when scope ends\n```\n\n`makeTempFileScoped` provides automatic cleanup via Effect's scope. Never use `os.tmpdir()` (Node-coupled) or unscoped variants (leak resources).",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/use-temp-file-scoped.md"
++      },
++      {
++        "name": "use-console-service",
++        "description": "Use Effect Console or Effect.log instead of console",
++        "event": "PostToolUse",
++        "tool": "(Edit|Write)",
++        "glob": "**/*.{ts,tsx}",
++        "pattern": "console\\.(log|error|warn|info|debug|trace)\\(",
++        "action": "context",
++        "level": "warning",
++        "tag": "use-effect-console",
++        "body": "# Use Effect Console Instead of console.*\n\n```haskell\n-- Transformation\nconsole.log   :: String → IO ()      -- side effect, not composable\nconsole.error :: String → IO ()      -- same problem\n\n-- Instead\nConsole.log   :: String → Effect () Console\nEffect.log    :: String → Effect () ∅        -- with structured logging\nEffect.logError :: String → Effect () ∅\n```\n\n```haskell\n-- Pattern\nbad :: Effect ()\nbad = do\n  Effect.sync \\_ → console.error \"Error:\" error   -- ceremony with no benefit\n\ngood :: Effect ()\ngood = Console.error (\"Error:\" <> show error)     -- proper Effect console\n\nbetter :: Effect ()\nbetter = Effect.logError error                    -- structured, with context\n\n-- Why Effect logging\nstructured :: Effect () ∅\nstructured = do\n  Effect.logInfo \"Processing\" `withLogSpan` \"request\"\n  -- adds: timestamp, span, log level, structured context\n\n-- Testable\ntest :: Effect () TestConsole\ntest = do\n  program\n  logs ← TestConsole.output\n  assert (logs `contains` \"expected message\")\n```\n\n`console.*` in Effect code breaks the paradigm. Use `Console` service or `Effect.log*` for structured, testable logging.",
++        "filePath": "/home/elpresidank/YeeBois/projects/beep-effect/.claude/patterns/code-smells/use-console-service.md"
++      }
++    ]
++  }
+ }
+\ No newline at end of file
+diff --git a/apps/todox/package.json b/apps/todox/package.json
+index 6c7e7536b0..6f757dd499 100644
+--- a/apps/todox/package.json
++++ b/apps/todox/package.json
+@@ -30,11 +30,12 @@
+     "@beep/utils": "workspace:^",
+     "@beep/schema": "workspace:^",
+     "@beep/constants": "workspace:^",
+-    "@beep/ui-core": "workspace:^",
+     "@beep/shared-domain": "workspace:^",
+     "@beep/calendar-domain": "workspace:^",
+     "@beep/comms-domain": "workspace:^",
+     "@beep/customization-domain": "workspace:^",
++    "@beep/ui": "workspace:^",
++    "@beep/ui-core": "workspace:^",
+     "@beep/documents-domain": "workspace:^",
+     "@beep/knowledge-domain": "workspace:^",
+     "@beep/shared-env": "workspace:^",
+@@ -46,7 +47,6 @@
+     "@beep/documents-tables": "workspace:^",
+     "@beep/knowledge-tables": "workspace:^",
+     "@beep/shared-client": "workspace:^",
+-    "@beep/ui": "workspace:^",
+     "@beep/knowledge-server": "workspace:^",
+     "@beep/iam-client": "workspace:^",
+     "@beep/runtime-server": "workspace:^",
+diff --git a/apps/todox/src/app/lexical/Settings.tsx b/apps/todox/src/app/lexical/Settings.tsx
+index 96e387b668..3d84f99647 100644
+--- a/apps/todox/src/app/lexical/Settings.tsx
++++ b/apps/todox/src/app/lexical/Settings.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Label } from "@beep/todox/components/ui/label";
+-import { Switch } from "@beep/todox/components/ui/switch";
++import { Label } from "@beep/ui/components/label";
++import { Switch } from "@beep/ui/components/switch";
+ import { CAN_USE_BEFORE_INPUT } from "@lexical/utils";
+ import type { JSX } from "react";
+ import { useEffect, useId, useMemo, useState } from "react";
+diff --git a/apps/todox/src/app/lexical/hooks/useModal.tsx b/apps/todox/src/app/lexical/hooks/useModal.tsx
+index 3846bba222..543cacd882 100644
+--- a/apps/todox/src/app/lexical/hooks/useModal.tsx
++++ b/apps/todox/src/app/lexical/hooks/useModal.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@beep/todox/components/ui/dialog";
++import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@beep/ui/components/dialog";
+ import type { JSX } from "react";
+ import { useCallback, useMemo, useState } from "react";
+ 
+diff --git a/apps/todox/src/app/lexical/nodes/DateTimeNode/DateTimeComponent.tsx b/apps/todox/src/app/lexical/nodes/DateTimeNode/DateTimeComponent.tsx
+index 3ccfbcc9d5..c4f1cd1724 100644
+--- a/apps/todox/src/app/lexical/nodes/DateTimeNode/DateTimeComponent.tsx
++++ b/apps/todox/src/app/lexical/nodes/DateTimeNode/DateTimeComponent.tsx
+@@ -1,11 +1,11 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Calendar } from "@beep/todox/components/ui/calendar";
+-import { Checkbox } from "@beep/todox/components/ui/checkbox";
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Label } from "@beep/todox/components/ui/label";
+-import { Popover, PopoverContent, PopoverTrigger } from "@beep/todox/components/ui/popover";
++import { Button } from "@beep/ui/components/button";
++import { Calendar } from "@beep/ui/components/calendar";
++import { Checkbox } from "@beep/ui/components/checkbox";
++import { Input } from "@beep/ui/components/input";
++import { Label } from "@beep/ui/components/label";
++import { Popover, PopoverContent, PopoverTrigger } from "@beep/ui/components/popover";
+ import { cn } from "@beep/todox/lib/utils";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
+diff --git a/apps/todox/src/app/lexical/nodes/PollComponent.tsx b/apps/todox/src/app/lexical/nodes/PollComponent.tsx
+index cfabea6672..c7cd3d142b 100644
+--- a/apps/todox/src/app/lexical/nodes/PollComponent.tsx
++++ b/apps/todox/src/app/lexical/nodes/PollComponent.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import { cn } from "@beep/todox/lib/utils";
+ import { useCollaborationContext } from "@lexical/react/LexicalCollaborationContext";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+diff --git a/apps/todox/src/app/lexical/plugins/ActionsPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/ActionsPlugin/index.tsx
+index 7b4b6ffe17..a7a0946b5f 100644
+--- a/apps/todox/src/app/lexical/plugins/ActionsPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/ActionsPlugin/index.tsx
+@@ -13,10 +13,10 @@ import {
+   AlertDialogHeader,
+   AlertDialogTitle,
+   AlertDialogTrigger,
+-} from "@beep/todox/components/ui/alert-dialog";
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Toggle } from "@beep/todox/components/ui/toggle";
+-import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/todox/components/ui/tooltip";
++} from "@beep/ui/components/alert-dialog";
++import { Button } from "@beep/ui/components/button";
++import { Toggle } from "@beep/ui/components/toggle";
++import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/tooltip";
+ import { cn } from "@beep/todox/lib/utils";
+ import { withToast } from "@beep/ui/common";
+ import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
+diff --git a/apps/todox/src/app/lexical/plugins/AutoEmbedPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/AutoEmbedPlugin/index.tsx
+index a9aeb77f19..c44bc4048f 100644
+--- a/apps/todox/src/app/lexical/plugins/AutoEmbedPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/AutoEmbedPlugin/index.tsx
+@@ -1,8 +1,8 @@
+ "use client";
+ 
+ import { $TodoxId } from "@beep/identity/packages";
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Input } from "@beep/todox/components/ui/input";
++import { Button } from "@beep/ui/components/button";
++import { Input } from "@beep/ui/components/input";
+ import { thunkNull } from "@beep/utils";
+ import {
+   AutoEmbedOption,
+diff --git a/apps/todox/src/app/lexical/plugins/CommentPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/CommentPlugin/index.tsx
+index a48494cd3c..da8ca5dc5e 100644
+--- a/apps/todox/src/app/lexical/plugins/CommentPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/CommentPlugin/index.tsx
+@@ -10,9 +10,9 @@ import {
+   AlertDialogHeader,
+   AlertDialogTitle,
+   AlertDialogTrigger,
+-} from "@beep/todox/components/ui/alert-dialog";
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@beep/todox/components/ui/drawer";
++} from "@beep/ui/components/alert-dialog";
++import { Button } from "@beep/ui/components/button";
++import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@beep/ui/components/drawer";
+ import {
+   $createMarkNode,
+   $getMarkIDs,
+diff --git a/apps/todox/src/app/lexical/plugins/ImagesPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/ImagesPlugin/index.tsx
+index a1b03f196e..299d0df084 100644
+--- a/apps/todox/src/app/lexical/plugins/ImagesPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/ImagesPlugin/index.tsx
+@@ -1,9 +1,9 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Label } from "@beep/todox/components/ui/label";
+-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@beep/todox/components/ui/tabs";
++import { Button } from "@beep/ui/components/button";
++import { Input } from "@beep/ui/components/input";
++import { Label } from "@beep/ui/components/label";
++import { Tabs, TabsContent, TabsList, TabsTrigger } from "@beep/ui/components/tabs";
+ import { $isAutoLinkNode, $isLinkNode, type LinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+ import { $findMatchingParent, $wrapNodeInElement, mergeRegister } from "@lexical/utils";
+diff --git a/apps/todox/src/app/lexical/plugins/LayoutPlugin/InsertLayoutDialog.tsx b/apps/todox/src/app/lexical/plugins/LayoutPlugin/InsertLayoutDialog.tsx
+index 7764762f90..9be080fb02 100644
+--- a/apps/todox/src/app/lexical/plugins/LayoutPlugin/InsertLayoutDialog.tsx
++++ b/apps/todox/src/app/lexical/plugins/LayoutPlugin/InsertLayoutDialog.tsx
+@@ -1,8 +1,8 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Label } from "@beep/todox/components/ui/label";
+-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@beep/todox/components/ui/select";
++import { Button } from "@beep/ui/components/button";
++import { Label } from "@beep/ui/components/label";
++import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@beep/ui/components/select";
+ import type { LexicalEditor } from "lexical";
+ import type { JSX } from "react";
+ import { useId, useState } from "react";
+diff --git a/apps/todox/src/app/lexical/plugins/PollPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/PollPlugin/index.tsx
+index 94972218eb..c8d189aa73 100644
+--- a/apps/todox/src/app/lexical/plugins/PollPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/PollPlugin/index.tsx
+@@ -1,8 +1,8 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Label } from "@beep/todox/components/ui/label";
++import { Button } from "@beep/ui/components/button";
++import { Input } from "@beep/ui/components/input";
++import { Label } from "@beep/ui/components/label";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+ import { $wrapNodeInElement } from "@lexical/utils";
+ import * as Str from "effect/String";
+diff --git a/apps/todox/src/app/lexical/plugins/TableActionMenuPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/TableActionMenuPlugin/index.tsx
+index 17fa652680..11abf5ff58 100644
+--- a/apps/todox/src/app/lexical/plugins/TableActionMenuPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/TableActionMenuPlugin/index.tsx
+@@ -1,12 +1,12 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ import { cn } from "@beep/todox/lib/utils";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+ import { useLexicalEditable } from "@lexical/react/useLexicalEditable";
+diff --git a/apps/todox/src/app/lexical/plugins/TableHoverActionsV2Plugin/index.tsx b/apps/todox/src/app/lexical/plugins/TableHoverActionsV2Plugin/index.tsx
+index 41c9eb8f00..25d2bb2d3e 100644
+--- a/apps/todox/src/app/lexical/plugins/TableHoverActionsV2Plugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/TableHoverActionsV2Plugin/index.tsx
+@@ -1,12 +1,12 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ import { cn } from "@beep/todox/lib/utils";
+ import { autoUpdate, offset, shift, useFloating, type VirtualElement } from "@floating-ui/react";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+diff --git a/apps/todox/src/app/lexical/plugins/TablePlugin.tsx b/apps/todox/src/app/lexical/plugins/TablePlugin.tsx
+index f2d2e615cc..869f5537ec 100644
+--- a/apps/todox/src/app/lexical/plugins/TablePlugin.tsx
++++ b/apps/todox/src/app/lexical/plugins/TablePlugin.tsx
+@@ -1,6 +1,6 @@
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Label } from "@beep/todox/components/ui/label";
++import { Button } from "@beep/ui/components/button";
++import { Input } from "@beep/ui/components/input";
++import { Label } from "@beep/ui/components/label";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+ import { INSERT_TABLE_COMMAND, TableCellNode, TableNode, TableRowNode } from "@lexical/table";
+ import type { EditorThemeClasses, Klass, LexicalEditor, LexicalNode } from "lexical";
+diff --git a/apps/todox/src/app/lexical/plugins/ToolbarPlugin/index.tsx b/apps/todox/src/app/lexical/plugins/ToolbarPlugin/index.tsx
+index f8a046b15c..9e43fa1bc3 100644
+--- a/apps/todox/src/app/lexical/plugins/ToolbarPlugin/index.tsx
++++ b/apps/todox/src/app/lexical/plugins/ToolbarPlugin/index.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+@@ -8,8 +8,8 @@ import {
+   DropdownMenuSeparator,
+   DropdownMenuShortcut,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
+-import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/todox/components/ui/tooltip";
++} from "@beep/ui/components/dropdown-menu";
++import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/tooltip";
+ import { cn } from "@beep/todox/lib/utils";
+ import {
+   $isCodeNode,
+diff --git a/apps/todox/src/app/lexical/ui/ColorPicker.tsx b/apps/todox/src/app/lexical/ui/ColorPicker.tsx
+index ea49d0bbce..1355a76879 100644
+--- a/apps/todox/src/app/lexical/ui/ColorPicker.tsx
++++ b/apps/todox/src/app/lexical/ui/ColorPicker.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Label } from "@beep/todox/components/ui/label";
++import { Input } from "@beep/ui/components/input";
++import { Label } from "@beep/ui/components/label";
+ import { cn } from "@beep/todox/lib/utils";
+ import { calculateZoomLevel } from "@lexical/utils";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/app/lexical/ui/DropdownColorPicker.tsx b/apps/todox/src/app/lexical/ui/DropdownColorPicker.tsx
+index 0fced53e22..82c60a8016 100644
+--- a/apps/todox/src/app/lexical/ui/DropdownColorPicker.tsx
++++ b/apps/todox/src/app/lexical/ui/DropdownColorPicker.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Popover, PopoverContent, PopoverTrigger } from "@beep/todox/components/ui/popover";
++import { Button } from "@beep/ui/components/button";
++import { Popover, PopoverContent, PopoverTrigger } from "@beep/ui/components/popover";
+ import { cn } from "@beep/todox/lib/utils";
+ import { CaretDownIcon } from "@phosphor-icons/react";
+ import type { ReactNode } from "react";
+diff --git a/apps/todox/src/app/lexical/ui/ExcalidrawModal.tsx b/apps/todox/src/app/lexical/ui/ExcalidrawModal.tsx
+index 7a05fd0e13..de20e8c438 100644
+--- a/apps/todox/src/app/lexical/ui/ExcalidrawModal.tsx
++++ b/apps/todox/src/app/lexical/ui/ExcalidrawModal.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@beep/todox/components/ui/dialog";
++import { Button } from "@beep/ui/components/button";
++import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@beep/ui/components/dialog";
+ import { Excalidraw } from "@excalidraw/excalidraw";
+ import type {
+   AppState,
+diff --git a/apps/todox/src/app/lexical/ui/KatexEquationAlterer.tsx b/apps/todox/src/app/lexical/ui/KatexEquationAlterer.tsx
+index 0ad627a7da..519f4b2bb6 100644
+--- a/apps/todox/src/app/lexical/ui/KatexEquationAlterer.tsx
++++ b/apps/todox/src/app/lexical/ui/KatexEquationAlterer.tsx
+@@ -1,10 +1,10 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Checkbox } from "@beep/todox/components/ui/checkbox";
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Label } from "@beep/todox/components/ui/label";
+-import { Textarea } from "@beep/todox/components/ui/textarea";
++import { Button } from "@beep/ui/components/button";
++import { Checkbox } from "@beep/ui/components/checkbox";
++import { Input } from "@beep/ui/components/input";
++import { Label } from "@beep/ui/components/label";
++import { Textarea } from "@beep/ui/components/textarea";
+ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+ import type { JSX } from "react";
+ import { useCallback, useId, useState } from "react";
+diff --git a/apps/todox/src/app/page.tsx b/apps/todox/src/app/page.tsx
+index abd07fe413..685d0839cf 100644
+--- a/apps/todox/src/app/page.tsx
++++ b/apps/todox/src/app/page.tsx
+@@ -6,8 +6,8 @@ import { TopNavbar } from "@beep/todox/components/navbar";
+ import { PlaceholderView } from "@beep/todox/components/placeholder-view";
+ import { SidePanel, SidePanelProvider, useSidePanel } from "@beep/todox/components/side-panel";
+ import { MainContentPanelSidebar } from "@beep/todox/components/sidebar";
+-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@beep/todox/components/ui/sidebar";
+-import { ToggleGroup, ToggleGroupItem } from "@beep/todox/components/ui/toggle-group";
++import { SidebarInset, SidebarProvider, SidebarTrigger } from "@beep/ui/components/sidebar";
++import { ToggleGroup, ToggleGroupItem } from "@beep/ui/components/toggle-group";
+ import { MailCompose } from "@beep/todox/features/mail/mail-compose";
+ import { MailDetails } from "@beep/todox/features/mail/mail-details";
+ import { MailList } from "@beep/todox/features/mail/mail-list";
+diff --git a/apps/todox/src/components/ai-chat/ai-chat-panel.tsx b/apps/todox/src/components/ai-chat/ai-chat-panel.tsx
+index 10a955f421..006991af70 100644
+--- a/apps/todox/src/components/ai-chat/ai-chat-panel.tsx
++++ b/apps/todox/src/components/ai-chat/ai-chat-panel.tsx
+@@ -2,8 +2,8 @@
+ 
+ import { MiniSidebarPanel } from "@beep/todox/components/mini-sidebar";
+ import { useSidePanel } from "@beep/todox/components/side-panel";
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/todox/components/ui/tooltip";
++import { Button } from "@beep/ui/components/button";
++import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/ui/components/tooltip";
+ import { cn } from "@beep/todox/lib/utils";
+ import {
+   ArrowLineLeftIcon,
+diff --git a/apps/todox/src/components/mini-sidebar/mini-sidebar.tsx b/apps/todox/src/components/mini-sidebar/mini-sidebar.tsx
+index 15b95f30b6..1886fe21e0 100644
+--- a/apps/todox/src/components/mini-sidebar/mini-sidebar.tsx
++++ b/apps/todox/src/components/mini-sidebar/mini-sidebar.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/todox/components/ui/tooltip";
++import { Button } from "@beep/ui/components/button";
++import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/ui/components/tooltip";
+ import { cn } from "@beep/todox/lib/utils";
+ import type { Icon } from "@phosphor-icons/react";
+ import {
+diff --git a/apps/todox/src/components/mode-toggle.tsx b/apps/todox/src/components/mode-toggle.tsx
+index 1f77359359..9a9b6ba004 100644
+--- a/apps/todox/src/components/mode-toggle.tsx
++++ b/apps/todox/src/components/mode-toggle.tsx
+@@ -1,12 +1,12 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ import { MoonIcon, SunIcon } from "@phosphor-icons/react";
+ import { useTheme } from "next-themes";
+ 
+diff --git a/apps/todox/src/components/navbar/command-search.tsx b/apps/todox/src/components/navbar/command-search.tsx
+index 0a3a515bea..f0e9f11c90 100644
+--- a/apps/todox/src/components/navbar/command-search.tsx
++++ b/apps/todox/src/components/navbar/command-search.tsx
+@@ -10,7 +10,7 @@ import {
+   CommandList,
+   CommandSeparator,
+   CommandShortcut,
+-} from "@beep/todox/components/ui/command";
++} from "@beep/ui/components/command";
+ import {
+   CalendarIcon,
+   FileIcon,
+diff --git a/apps/todox/src/components/navbar/navbar-user-dropdown.tsx b/apps/todox/src/components/navbar/navbar-user-dropdown.tsx
+index e5e7b1faf2..1f89ce457e 100644
+--- a/apps/todox/src/components/navbar/navbar-user-dropdown.tsx
++++ b/apps/todox/src/components/navbar/navbar-user-dropdown.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { Core } from "@beep/iam-client";
+-import { Avatar, AvatarFallback, AvatarImage } from "@beep/todox/components/ui/avatar";
++import { Avatar, AvatarFallback, AvatarImage } from "@beep/ui/components/avatar";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+@@ -10,8 +10,8 @@ import {
+   DropdownMenuLabel,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
+-import { ToggleGroup, ToggleGroupItem } from "@beep/todox/components/ui/toggle-group";
++} from "@beep/ui/components/dropdown-menu";
++import { ToggleGroup, ToggleGroupItem } from "@beep/ui/components/toggle-group";
+ import {
+   BellIcon,
+   CreditCardIcon,
+diff --git a/apps/todox/src/components/navbar/notification-dropdown.tsx b/apps/todox/src/components/navbar/notification-dropdown.tsx
+index 9c2dfd8d37..64812020ec 100644
+--- a/apps/todox/src/components/navbar/notification-dropdown.tsx
++++ b/apps/todox/src/components/navbar/notification-dropdown.tsx
+@@ -6,7 +6,7 @@ import {
+   DropdownMenuItem,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ import { thunk } from "@beep/utils";
+ import { BellIcon, CheckIcon, EnvelopeIcon, UserPlusIcon, WarningIcon } from "@phosphor-icons/react";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/navbar/top-navbar.tsx b/apps/todox/src/components/navbar/top-navbar.tsx
+index 907583bf02..cd08c6ec06 100644
+--- a/apps/todox/src/components/navbar/top-navbar.tsx
++++ b/apps/todox/src/components/navbar/top-navbar.tsx
+@@ -3,8 +3,8 @@
+ import { MiniSidebarTrigger } from "@beep/todox/components/mini-sidebar";
+ import { TeamSwitcherCompact } from "@beep/todox/components/sidebar";
+ import { type Org, OrgSwitcherCompact } from "@beep/todox/components/sidebar/org-switcher";
+-import { Avatar, AvatarFallback, AvatarImage } from "@beep/todox/components/ui/avatar";
+-import { Button } from "@beep/todox/components/ui/button";
++import { Avatar, AvatarFallback, AvatarImage } from "@beep/ui/components/avatar";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+@@ -14,7 +14,7 @@ import {
+   DropdownMenuSeparator,
+   DropdownMenuShortcut,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ import type { Icon } from "@phosphor-icons/react";
+ import {
+   BuildingsIcon,
+diff --git a/apps/todox/src/components/sidebar/main-content-panel-sidebar.tsx b/apps/todox/src/components/sidebar/main-content-panel-sidebar.tsx
+index b2311bfd1b..9fb4e3f03d 100644
+--- a/apps/todox/src/components/sidebar/main-content-panel-sidebar.tsx
++++ b/apps/todox/src/components/sidebar/main-content-panel-sidebar.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Sidebar, SidebarContent, SidebarFooter, SidebarRail } from "@beep/todox/components/ui/sidebar";
++import { Sidebar, SidebarContent, SidebarFooter, SidebarRail } from "@beep/ui/components/sidebar";
+ import { MailNav } from "@beep/todox/features/mail/mail-nav";
+ import { useMail } from "@beep/todox/features/mail/provider";
+ import type * as React from "react";
+diff --git a/apps/todox/src/components/sidebar/nav-main.tsx b/apps/todox/src/components/sidebar/nav-main.tsx
+index 498c600767..fc397294c7 100644
+--- a/apps/todox/src/components/sidebar/nav-main.tsx
++++ b/apps/todox/src/components/sidebar/nav-main.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@beep/todox/components/ui/collapsible";
++import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@beep/ui/components/collapsible";
+ import {
+   SidebarGroup,
+   SidebarGroupLabel,
+@@ -10,7 +10,7 @@ import {
+   SidebarMenuSub,
+   SidebarMenuSubButton,
+   SidebarMenuSubItem,
+-} from "@beep/todox/components/ui/sidebar";
++} from "@beep/ui/components/sidebar";
+ import type { Icon } from "@phosphor-icons/react";
+ import { CaretRightIcon } from "@phosphor-icons/react";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/sidebar/nav-projects.tsx b/apps/todox/src/components/sidebar/nav-projects.tsx
+index e11917806c..8180f12e38 100644
+--- a/apps/todox/src/components/sidebar/nav-projects.tsx
++++ b/apps/todox/src/components/sidebar/nav-projects.tsx
+@@ -6,7 +6,7 @@ import {
+   DropdownMenuItem,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ import {
+   SidebarGroup,
+   SidebarGroupLabel,
+@@ -15,7 +15,7 @@ import {
+   SidebarMenuButton,
+   SidebarMenuItem,
+   useSidebar,
+-} from "@beep/todox/components/ui/sidebar";
++} from "@beep/ui/components/sidebar";
+ import type { Icon } from "@phosphor-icons/react";
+ import { DotsThreeIcon, FolderIcon, ShareIcon, TrashIcon } from "@phosphor-icons/react";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/sidebar/nav-user.tsx b/apps/todox/src/components/sidebar/nav-user.tsx
+index 9b8719b504..ec353ee724 100644
+--- a/apps/todox/src/components/sidebar/nav-user.tsx
++++ b/apps/todox/src/components/sidebar/nav-user.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { Core } from "@beep/iam-client";
+ import { paths } from "@beep/shared-domain";
+-import { Avatar, AvatarFallback, AvatarImage } from "@beep/todox/components/ui/avatar";
++import { Avatar, AvatarFallback, AvatarImage } from "@beep/ui/components/avatar";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+@@ -11,9 +11,9 @@ import {
+   DropdownMenuLabel,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
+-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@beep/todox/components/ui/sidebar";
+-import { ToggleGroup, ToggleGroupItem } from "@beep/todox/components/ui/toggle-group";
++} from "@beep/ui/components/dropdown-menu";
++import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@beep/ui/components/sidebar";
++import { ToggleGroup, ToggleGroupItem } from "@beep/ui/components/toggle-group";
+ import {
+   BellIcon,
+   CaretUpDownIcon,
+diff --git a/apps/todox/src/components/sidebar/org-switcher.tsx b/apps/todox/src/components/sidebar/org-switcher.tsx
+index 48310b3c6d..4116c2d65b 100644
+--- a/apps/todox/src/components/sidebar/org-switcher.tsx
++++ b/apps/todox/src/components/sidebar/org-switcher.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+@@ -10,8 +10,8 @@ import {
+   DropdownMenuSeparator,
+   DropdownMenuShortcut,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
+-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@beep/todox/components/ui/sidebar";
++} from "@beep/ui/components/dropdown-menu";
++import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@beep/ui/components/sidebar";
+ import type { Icon } from "@phosphor-icons/react";
+ import { CaretUpDownIcon, CheckIcon, PlusIcon } from "@phosphor-icons/react";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/sidebar/team-switcher.tsx b/apps/todox/src/components/sidebar/team-switcher.tsx
+index 8d765c7968..78a923da1d 100644
+--- a/apps/todox/src/components/sidebar/team-switcher.tsx
++++ b/apps/todox/src/components/sidebar/team-switcher.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+@@ -10,8 +10,8 @@ import {
+   DropdownMenuSeparator,
+   DropdownMenuShortcut,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
+-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@beep/todox/components/ui/sidebar";
++} from "@beep/ui/components/dropdown-menu";
++import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@beep/ui/components/sidebar";
+ import type { Icon } from "@phosphor-icons/react";
+ import { CaretUpDownIcon, CheckIcon, PlusIcon } from "@phosphor-icons/react";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/ui/alert-dialog.tsx b/apps/todox/src/components/ui/alert-dialog.tsx
+index d370e14303..2ca603d91f 100644
+--- a/apps/todox/src/components/ui/alert-dialog.tsx
++++ b/apps/todox/src/components/ui/alert-dialog.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ 
+ import { cn } from "@beep/todox/lib/utils";
+ import type * as React from "react";
+diff --git a/apps/todox/src/components/ui/calendar.tsx b/apps/todox/src/components/ui/calendar.tsx
+index 8927dcbdb2..7656850f8b 100644
+--- a/apps/todox/src/components/ui/calendar.tsx
++++ b/apps/todox/src/components/ui/calendar.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button, buttonVariants } from "@beep/todox/components/ui/button";
++import { Button, buttonVariants } from "@beep/ui/components/button";
+ import { cn } from "@beep/todox/lib/utils";
+ import { CaretDownIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+ import * as React from "react";
+diff --git a/apps/todox/src/components/ui/carousel.tsx b/apps/todox/src/components/ui/carousel.tsx
+index 037ee7a99d..d83a21c3df 100644
+--- a/apps/todox/src/components/ui/carousel.tsx
++++ b/apps/todox/src/components/ui/carousel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import { cn } from "@beep/todox/lib/utils";
+ import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/ui/combobox.tsx b/apps/todox/src/components/ui/combobox.tsx
+index f4e739e28c..15352db42e 100644
+--- a/apps/todox/src/components/ui/combobox.tsx
++++ b/apps/todox/src/components/ui/combobox.tsx
+@@ -1,8 +1,8 @@
+ "use client";
+ 
+ import { Combobox as ComboboxPrimitive } from "@base-ui/react";
+-import { Button } from "@beep/todox/components/ui/button";
+-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@beep/todox/components/ui/input-group";
++import { Button } from "@beep/ui/components/button";
++import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@beep/ui/components/input-group";
+ import { cn } from "@beep/todox/lib/utils";
+ import { CaretDownIcon, CheckIcon, XIcon } from "@phosphor-icons/react";
+ import * as React from "react";
+diff --git a/apps/todox/src/components/ui/command.tsx b/apps/todox/src/components/ui/command.tsx
+index 8d6eeb1d09..82def0dc77 100644
+--- a/apps/todox/src/components/ui/command.tsx
++++ b/apps/todox/src/components/ui/command.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@beep/todox/components/ui/dialog";
+-import { InputGroup, InputGroupAddon } from "@beep/todox/components/ui/input-group";
++import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@beep/ui/components/dialog";
++import { InputGroup, InputGroupAddon } from "@beep/ui/components/input-group";
+ 
+ import { cn } from "@beep/todox/lib/utils";
+ import { CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
+diff --git a/apps/todox/src/components/ui/dialog.tsx b/apps/todox/src/components/ui/dialog.tsx
+index b8af0312dc..d82fd567eb 100644
+--- a/apps/todox/src/components/ui/dialog.tsx
++++ b/apps/todox/src/components/ui/dialog.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ 
+ import { cn } from "@beep/todox/lib/utils";
+ import { XIcon } from "@phosphor-icons/react";
+diff --git a/apps/todox/src/components/ui/field.tsx b/apps/todox/src/components/ui/field.tsx
+index 0175e21c1f..f28fbb78d0 100644
+--- a/apps/todox/src/components/ui/field.tsx
++++ b/apps/todox/src/components/ui/field.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+-import { Label } from "@beep/todox/components/ui/label";
+-import { Separator } from "@beep/todox/components/ui/separator";
++import { Label } from "@beep/ui/components/label";
++import { Separator } from "@beep/ui/components/separator";
+ import { cn } from "@beep/todox/lib/utils";
+ import { cva, type VariantProps } from "class-variance-authority";
+ import * as A from "effect/Array";
+diff --git a/apps/todox/src/components/ui/input-group.tsx b/apps/todox/src/components/ui/input-group.tsx
+index 06d92c2a07..370e2aed9f 100644
+--- a/apps/todox/src/components/ui/input-group.tsx
++++ b/apps/todox/src/components/ui/input-group.tsx
+@@ -1,8 +1,8 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
+-import { Input } from "@beep/todox/components/ui/input";
+-import { Textarea } from "@beep/todox/components/ui/textarea";
++import { Button } from "@beep/ui/components/button";
++import { Input } from "@beep/ui/components/input";
++import { Textarea } from "@beep/ui/components/textarea";
+ import { cn } from "@beep/todox/lib/utils";
+ import { cva, type VariantProps } from "class-variance-authority";
+ import * as Str from "effect/String";
+diff --git a/apps/todox/src/components/ui/menubar.tsx b/apps/todox/src/components/ui/menubar.tsx
+index 05ae88c922..54d271cceb 100644
+--- a/apps/todox/src/components/ui/menubar.tsx
++++ b/apps/todox/src/components/ui/menubar.tsx
+@@ -16,7 +16,7 @@ import {
+   DropdownMenuSubContent,
+   DropdownMenuSubTrigger,
+   DropdownMenuTrigger,
+-} from "@beep/todox/components/ui/dropdown-menu";
++} from "@beep/ui/components/dropdown-menu";
+ 
+ import { cn } from "@beep/todox/lib/utils";
+ import { CheckIcon } from "@phosphor-icons/react";
+diff --git a/apps/todox/src/components/ui/pagination.tsx b/apps/todox/src/components/ui/pagination.tsx
+index 86271fedb8..e875cbcbb0 100644
+--- a/apps/todox/src/components/ui/pagination.tsx
++++ b/apps/todox/src/components/ui/pagination.tsx
+@@ -1,4 +1,4 @@
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ 
+ import { cn } from "@beep/todox/lib/utils";
+ import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
+diff --git a/apps/todox/src/components/ui/scrub-bar.tsx b/apps/todox/src/components/ui/scrub-bar.tsx
+index 2ea7bf6e85..c3442629e8 100644
+--- a/apps/todox/src/components/ui/scrub-bar.tsx
++++ b/apps/todox/src/components/ui/scrub-bar.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Progress } from "@beep/todox/components/ui/progress";
++import { Progress } from "@beep/ui/components/progress";
+ import { cn } from "@beep/todox/lib/utils";
+ import * as F from "effect/Function";
+ import * as Str from "effect/String";
+diff --git a/apps/todox/src/components/ui/sheet.tsx b/apps/todox/src/components/ui/sheet.tsx
+index 6b73a94556..3a2f1674d2 100644
+--- a/apps/todox/src/components/ui/sheet.tsx
++++ b/apps/todox/src/components/ui/sheet.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ 
+ import { cn } from "@beep/todox/lib/utils";
+ import { XIcon } from "@phosphor-icons/react";
+diff --git a/apps/todox/src/components/ui/speech-input.tsx b/apps/todox/src/components/ui/speech-input.tsx
+index 828fc2c1e2..86eb5445fd 100644
+--- a/apps/todox/src/components/ui/speech-input.tsx
++++ b/apps/todox/src/components/ui/speech-input.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Button } from "@beep/todox/components/ui/button";
++import { Button } from "@beep/ui/components/button";
+ import { type AudioFormat, type CommitStrategy, useScribe } from "@beep/todox/hooks/use-scribe";
+ import { cn } from "@beep/todox/lib/utils";
+ import { MicrophoneIcon, SquareIcon, XIcon } from "@phosphor-icons/react";
+diff --git a/apps/todox/src/components/ui/toggle-group.tsx b/apps/todox/src/components/ui/toggle-group.tsx
+index e6fd466b65..152a774a65 100644
+--- a/apps/todox/src/components/ui/toggle-group.tsx
++++ b/apps/todox/src/components/ui/toggle-group.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
+ import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group";
+-import { toggleVariants } from "@beep/todox/components/ui/toggle";
++import { toggleVariants } from "@beep/ui/components/toggle";
+ import { cn } from "@beep/todox/lib/utils";
+ import type { VariantProps } from "class-variance-authority";
+ import * as React from "react";
