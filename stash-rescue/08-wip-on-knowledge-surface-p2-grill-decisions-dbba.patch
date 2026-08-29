@@ -1,0 +1,20 @@
+diff --git a/scratchpad/index.ts b/scratchpad/index.ts
+index 336ce12bb9..446fe6d848 100644
+--- a/scratchpad/index.ts
++++ b/scratchpad/index.ts
+@@ -1 +1,14 @@
+-export {}
++import * as S from "effect/Schema";
++import * as Str from "effect/String";
++const Sku = S.Trimmed.pipe(
++   S.makeFilterGroup(
++     [
++       (str: string) => Str.isNonEmpty(str),
++       (str: string) => Str
++     ]
++   )
++)
++
++export const Silencer = S.Struct({
++  sku:
++})
