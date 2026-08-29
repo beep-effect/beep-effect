@@ -1,0 +1,31 @@
+diff --git a/package.json b/package.json
+index f041de2cad..14601130c9 100644
+--- a/package.json
++++ b/package.json
+@@ -232,7 +232,7 @@
+     "@clack/prompts": "^1.5.1",
+     "fast-xml-parser": "^5.8.0",
+     "fast-xml-validator": "^1.1.1",
+-    "drizzle-orm": "1.0.0-rc.3",
++    "drizzle-orm": "1.0.0-rc.4-5d5b77c",
+     "@duckdb/node-api": "1.5.3-r.3",
+     "@microsoft/tsdoc": "^0.16.0",
+     "i18next": "^26.3.1",
+@@ -365,7 +365,7 @@
+     "eslint": "^10.4.1",
+     "@types/estree": "^1.0.9",
+     "type-fest": "^5.7.0",
+-    "drizzle-kit": "1.0.0-rc.3",
++    "drizzle-kit": "1.0.0-rc.4-ca0f029",
+     "@types/geojson": "^7946.0.16",
+     "geojson": "^0.5.0",
+     "eslint-plugin-jsdoc": "^63.0.2",
+@@ -378,7 +378,7 @@
+     "lefthook": "^2.1.9",
+     "lodash": "^4.18.1",
+     "madge": "^8.0.0",
+-    "fallow": "^2.89.0",
++    "fallow": "^2.91.0",
+     "knip": "^6.16.1",
+     "next": "16.3.0-canary.48",
+     "next-pwa": "^5.6.0",
