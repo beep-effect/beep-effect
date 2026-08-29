@@ -1,0 +1,18 @@
+diff --git a/tsconfig.json b/tsconfig.json
+index 0422a9f973..a686792219 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -1731,7 +1731,12 @@
+       "@beep/qa-capture": [
+         "./packages/tooling/library/qa-capture/src/index.ts"
+       ],
+-      "@beep/qa-capture/*": ["./packages/tooling/library/qa-capture/src/*"]
++      "@beep/qa-capture/*": [
++        "./packages/tooling/library/qa-capture/src/*"
++      ],
++      "@beep/repo-cli/commands/Qa": [
++        "./packages/tooling/tool/cli/src/commands/Qa/index.ts"
++      ]
+     }
+   }
+ }
