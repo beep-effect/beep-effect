@@ -1,0 +1,634 @@
+diff --git a/.changeset/publish-regenerates-goals-index.md b/.changeset/publish-regenerates-goals-index.md
+new file mode 100644
+index 0000000000..a0de388b0f
+--- /dev/null
++++ b/.changeset/publish-regenerates-goals-index.md
+@@ -0,0 +1,17 @@
++---
++"@beep/repo-cli": patch
++---
++
++`yeet publish` now treats `goals/INDEX.md` as the derived projection it is.
++
++Immediately before the commit — after the reviewed intent is staged and after the `--staged-only`
++stash has parked residue, the one point where the worktree provably equals the tree being
++committed — publish renders the index from `goals/*/ops/manifest.json`. If the committed copy is
++stale it is regenerated and staged into the same commit; if the publish intent hand-stages a copy
++that disagrees with the manifests, publish refuses with a publish-scope failure packet naming
++`bun run beep goals index --write` and leaves the staged file untouched. A staged copy that already
++equals the projection proceeds unchanged.
++
++This closes the merge class recorded in `goals/ship-velocity/research/c6-conflicts-queue.md`: the
++index is whole-file sorted output, so every observed git auto-merge of it produced a plausible but
++wrong packet count, and regeneration is the only correct resolution.
+diff --git a/goals/ship-velocity/PLAN.md b/goals/ship-velocity/PLAN.md
+index d4e8550adf..cb65f73646 100644
+--- a/goals/ship-velocity/PLAN.md
++++ b/goals/ship-velocity/PLAN.md
+@@ -19,7 +19,9 @@ phase flips ride the final PR of each phase.
+ ## P1 — Instant wins
+ 
+ - B1 same-argv lanes (`beep ci lane` from yeet).
+-- E1 publish refuses hand-staged INDEX + regenerates from manifests.
++- ~~E1 publish refuses hand-staged INDEX + regenerates from manifests.~~ Done 2026-08-16
++  (`PortfolioIndexGuard.ts`; renders the projection after the staged-only stash, stages it when it
++  differs, refuses a hand-staged copy that disagrees).
+ - C1 local remote-cache read path + checkout env template.
+ - A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
+   backoff).
+diff --git a/goals/ship-velocity/research/OPPORTUNITIES.md b/goals/ship-velocity/research/OPPORTUNITIES.md
+index 2a0d977929..fbc0078f93 100644
+--- a/goals/ship-velocity/research/OPPORTUNITIES.md
++++ b/goals/ship-velocity/research/OPPORTUNITIES.md
+@@ -74,3 +74,30 @@ session/machine ids.
+ - Third misattributed-composite-hint receipt: PR #728's publish verdict said "inspect the Nix
+   error" while the actual hosted red was Test Integration (TS2306 race). Same class as the two
+   OSV receipts above — capsule hints must derive from the failing sublane.
++
++## 2026-08-16 — E1 implementation
++
++- Placing the derived-INDEX regeneration required reconstructing an undocumented invariant by
++  hand: regeneration is only trustworthy after `stashUnstagedWorktree` runs, because
++  `git stash push --keep-index` is what makes the worktree equal the staged tree. Anywhere
++  earlier, `--staged-only` would render the index from unstaged manifest edits that are not in
++  the commit — a silently wrong INDEX, the exact class E1 exists to prevent. Nothing in
++  `Yeet/internal/` states that the post-stash / pre-commit window is the only point where the
++  worktree provably equals the commit-to-be. Prevention: name that window in the publish
++  pipeline (a comment landed with E1) and reuse it for every E3 derived-file auto-heal instead
++  of each gate re-deriving it.
++- The publish commit phase runs *outside* the stash-restore `Effect.ensuring` that wraps the
++  post-commit phases, so any refusal between the stash and the commit strands the operator's
++  unstaged residue in a stash they were never told about. Pre-existing for commit-hook failures;
++  E1's new refusal had to add its own `Effect.tapError` restore rather than inherit a safe
++  default. Prevention: make stash restoration a property of the whole staged-only publish scope,
++  not of one sub-phase, so future pre-commit gates cannot reintroduce the leak.
++- `packages/tooling/tool/cli/test/tsconfig.json` cannot compile at all: it extends the package
++  config and therefore inherits `rootDir: "src"`, so every file it includes fails TS6059
++  ("not under rootDir"). repo-cli test files consequently have zero typecheck coverage from any
++  gate — a wrong test-kit import surfaces only as a runtime `undefined` deep inside an unrelated
++  call (here, a `path.join` TypeError), not as a missing-export error. The blindspot baseline
++  entry for `@beep/repo-cli` attributes the gap to `include` narrowing, which is not the actual
++  blocker. Verified locally: an otherwise identical config with `rootDir: "."` typechecks the
++  same file at exit 0. Prevention: fix `rootDir` in the test project before B6 counts repo-cli's
++  test surface as covered; the baseline note should record the real cause.
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+index fd7ce91389..4160a649a8 100644
+--- a/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+@@ -68,6 +68,7 @@ import {
+   YeetRunMode,
+   YeetRunPlanModeOptions,
+ } from "./Planner.ts";
++import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
+ import {
+   acquireFullProofLock,
+   assertReusableVerifiedState,
+@@ -438,6 +439,22 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
+         yield* Ref.update(extras, (state) => ({ ...state, stash }));
+       }
+ 
++      // `goals/INDEX.md` is a derived whole-file projection, so it is rendered
++      // here rather than trusted from the index: the worktree now equals the
++      // staged tree (residue is parked), which makes this the only point where
++      // the projection provably describes the commit being made.
++      yield* enforcePortfolioIndexPublishIntent(plan.context, publishIntent).pipe(
++        Effect.tapError(() =>
++          pipe(
++            stash,
++            O.match({
++              onNone: () => Effect.void,
++              onSome: (state) => restoreStashedWorktree(plan.context, state),
++            })
++          )
++        )
++      );
++
+       const commitResults = yield* runPhase(plan.context, commitSteps, recorder);
+       if (A.some(commitResults, (result) => result.exitCode !== 0)) {
+         return yield* failWithIssueArtifacts(plan.context, commitSteps, commitResults, "yeet commit phase failed.");
+diff --git a/packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts b/packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts
+new file mode 100644
+index 0000000000..492f688ad3
+--- /dev/null
++++ b/packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts
+@@ -0,0 +1,238 @@
++/**
++ * Derived goals-index guard for Yeet publish.
++ *
++ * `goals/INDEX.md` is a whole-file deterministic projection of
++ * `goals/<slug>/ops/manifest.json`, so a textual merge of two branches can only
++ * ever produce a plausible-but-false index. Publish therefore renders the
++ * projection itself immediately before the commit and refuses any hand-staged
++ * copy that disagrees with it.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $RepoCliId } from "@beep/identity/packages";
++import { LiteralKit } from "@beep/schema";
++import { Console, Effect, FileSystem, Path } from "effect";
++import * as A from "effect/Array";
++import * as O from "effect/Option";
++import { GOALS_DIR } from "../../Goals/Inventory.ts";
++import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "../../Goals/PortfolioIndex.ts";
++import { YeetCommandError } from "../Yeet.errors.ts";
++import { runGitOutput } from "./GitExec.ts";
++import { failPublishScopeWithPacket } from "./PublishScope.ts";
++import type { ChildProcessSpawner } from "effect/unstable/process";
++import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
++import type { YeetStagedPublishIntent } from "../Yeet.schemas.ts";
++
++const $I = $RepoCliId.create("commands/Yeet/internal/PortfolioIndexGuard");
++
++/**
++ * Command an operator runs to regenerate the goals index by hand.
++ *
++ * **Example** (Read the regeneration command)
++ *
++ * ```ts
++ * import { PORTFOLIO_INDEX_WRITE_COMMAND } from "@beep/repo-cli/test/Yeet"
++ *
++ * console.log(PORTFOLIO_INDEX_WRITE_COMMAND) // "bun run beep goals index --write"
++ * ```
++ *
++ * @category constants
++ * @since 0.0.0
++ */
++export const PORTFOLIO_INDEX_WRITE_COMMAND = "bun run beep goals index --write";
++
++/**
++ * What publish decided to do about the derived goals index.
++ *
++ * **Details**
++ *
++ * `absent` means the checkout carries no `goals/` portfolio at all, so the guard
++ * does not apply. `current` means the committed projection already matches the
++ * manifests. `regenerated` means publish rendered a fresh projection and staged
++ * it into the commit. `drifted` means the publish intent hand-stages an index
++ * that disagrees with the manifests, which publish refuses rather than
++ * overwrite.
++ *
++ * **Example** (Check a disposition)
++ *
++ * ```ts
++ * import { PortfolioIndexPublishDisposition } from "@beep/repo-cli/test/Yeet"
++ *
++ * console.log(PortfolioIndexPublishDisposition.is.drifted("drifted")) // true
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const PortfolioIndexPublishDisposition = LiteralKit(["absent", "current", "regenerated", "drifted"]).pipe(
++  $I.annoteSchema("PortfolioIndexPublishDisposition", {
++    description: "Outcome of the derived goals-index guard for one yeet publish commit.",
++  })
++);
++
++/**
++ * Type-level union of derived goals-index publish dispositions.
++ *
++ * **Example** (Annotate a value as PortfolioIndexPublishDisposition)
++ *
++ * ```ts
++ * import type { PortfolioIndexPublishDisposition } from "@beep/repo-cli/test/Yeet"
++ *
++ * const disposition: PortfolioIndexPublishDisposition = "regenerated"
++ * console.log(disposition) // example value
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PortfolioIndexPublishDisposition = typeof PortfolioIndexPublishDisposition.Type;
++
++/**
++ * Decide what publish must do about `goals/INDEX.md` for one commit.
++ *
++ * **Details**
++ *
++ * The decision is pure so the whole behavior matrix is testable without a Git
++ * fixture: a committed copy that already equals the projection is accepted
++ * whether or not it was staged, a staged copy that disagrees is refused, and an
++ * unstaged disagreement is regenerated into the commit.
++ *
++ * **Example** (Refuse a hand-staged index that disagrees)
++ *
++ * ```ts
++ * import { portfolioIndexPublishDisposition } from "@beep/repo-cli/test/Yeet"
++ * import * as O from "effect/Option"
++ *
++ * const disposition = portfolioIndexPublishDisposition({
++ *   committed: O.some("# Goals Index\n\nhand edited\n"),
++ *   present: true,
++ *   regenerated: "# Goals Index\n\ngenerated\n",
++ *   staged: true
++ * })
++ *
++ * console.log(disposition) // "drifted"
++ * ```
++ *
++ * @param input - Whether a goals portfolio exists, whether the index sits in the
++ * publish intent, the committed index content, and the freshly rendered
++ * projection.
++ * @returns The disposition publish must act on.
++ * @category validation
++ * @since 0.0.0
++ */
++export const portfolioIndexPublishDisposition = (input: {
++  readonly committed: O.Option<string>;
++  readonly present: boolean;
++  readonly regenerated: string;
++  readonly staged: boolean;
++}): PortfolioIndexPublishDisposition =>
++  !input.present
++    ? "absent"
++    : O.contains(input.committed, input.regenerated)
++      ? "current"
++      : input.staged
++        ? "drifted"
++        : "regenerated";
++
++/**
++ * Regenerate the derived goals index into the commit publish is about to make.
++ *
++ * **Details**
++ *
++ * Call this only once the worktree already equals the Git index — after
++ * {@link stageReviewedPublishIntent} and after the `--staged-only` stash has
++ * parked residue. At that instant the files on disk are exactly the tree the
++ * commit will contain, so the rendered projection describes the committed
++ * manifests rather than uncommitted edits. Running it earlier would embed
++ * unstaged packet state into the published index.
++ *
++ * **Gotchas**
++ *
++ * This guard only covers commits publish itself creates. An `existing-commit`
++ * intent (`--push-only`, `--reuse-verified`, or a clean local commit already
++ * ahead of the publish target) is left alone, because repairing its index would
++ * mean rewriting a commit that may already be pushed.
++ *
++ * **Example** (Guard a reviewed publish intent)
++ *
++ * ```ts
++ * import { enforcePortfolioIndexPublishIntent, RepoRunContext, YeetStagedPublishIntent } from "@beep/repo-cli/test/Yeet"
++ * import { Effect } from "effect"
++ *
++ * const context = RepoRunContext.make({
++ *   base: "origin/main",
++ *   branch: "feature/closeout",
++ *   cwd: ".",
++ *   head: "HEAD",
++ *   originalArgv: [],
++ *   packetDir: ".beep/yeet",
++ *   repoRoot: ".",
++ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
++ * })
++ * const intent = YeetStagedPublishIntent.make({ paths: ["goals/ship-velocity/ops/manifest.json"] })
++ *
++ * console.log(Effect.isEffect(enforcePortfolioIndexPublishIntent(context, intent))) // true
++ * ```
++ *
++ * @param context - Repo context whose worktree and Git index are updated.
++ * @param intent - Reviewed staged paths publish is about to commit.
++ * @returns The disposition, after staging a regenerated index or refusing a
++ * hand-staged one.
++ * @effects Writes and stages {@link PORTFOLIO_INDEX_PATH} when the committed
++ * projection is stale.
++ * @category execution
++ * @since 0.0.0
++ */
++export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfolioIndexPublishIntent")(function* (
++  context: RepoRunContext,
++  intent: YeetStagedPublishIntent
++): Effect.fn.Return<
++  PortfolioIndexPublishDisposition,
++  YeetCommandError,
++  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
++> {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const present = yield* fs.exists(path.join(context.repoRoot, GOALS_DIR)).pipe(Effect.orElseSucceed(() => false));
++  if (!present) {
++    return "absent";
++  }
++
++  const indexPath = path.join(context.repoRoot, PORTFOLIO_INDEX_PATH);
++  const regenerated = yield* buildPortfolioIndexContent(context.repoRoot).pipe(
++    Effect.mapError(
++      YeetCommandError.new(`Failed to render ${PORTFOLIO_INDEX_PATH} from ${GOALS_DIR}/*/ops/manifest.json.`)
++    )
++  );
++  const committed = yield* fs.readFileString(indexPath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
++  const disposition = portfolioIndexPublishDisposition({
++    committed,
++    present,
++    regenerated,
++    staged: A.contains(intent.paths, PORTFOLIO_INDEX_PATH),
++  });
++
++  if (PortfolioIndexPublishDisposition.is.current(disposition)) {
++    return disposition;
++  }
++
++  if (PortfolioIndexPublishDisposition.is.drifted(disposition)) {
++    return yield* failPublishScopeWithPacket(context, {
++      message: `yeet publish refuses a hand-staged ${PORTFOLIO_INDEX_PATH}. It is a generated whole-file projection of ${GOALS_DIR}/*/ops/manifest.json, and the staged copy disagrees with the current manifests, so committing it would publish a false index.`,
++      paths: [PORTFOLIO_INDEX_PATH],
++      remediation: `Run \`${PORTFOLIO_INDEX_WRITE_COMMAND}\` and stage the regenerated file, or unstage ${PORTFOLIO_INDEX_PATH} and let yeet publish regenerate it into the commit.`,
++      subCategory: "derived-index-hand-staged",
++    });
++  }
++
++  yield* fs
++    .writeFileString(indexPath, regenerated)
++    .pipe(Effect.mapError(YeetCommandError.new(`Failed to write the regenerated ${PORTFOLIO_INDEX_PATH}.`)));
++  yield* runGitOutput(context.repoRoot, ["add", "--", PORTFOLIO_INDEX_PATH]);
++  yield* Console.log(
++    `[yeet] regenerated ${PORTFOLIO_INDEX_PATH} from ${GOALS_DIR}/*/ops/manifest.json and staged it into the commit`
++  );
++  return disposition;
++});
+diff --git a/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts b/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts
+index 259a55d8dc..03e2982d7d 100644
+--- a/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts
++++ b/packages/tooling/tool/cli/src/test/Yeet.test-kit.ts
+@@ -40,6 +40,7 @@ export * from "../commands/Yeet/internal/MonitorComments.ts";
+ export * from "../commands/Yeet/internal/MonitorLoop.ts";
+ export * from "../commands/Yeet/internal/Planner.ts";
+ export * from "../commands/Yeet/internal/Porcelain.ts";
++export * from "../commands/Yeet/internal/PortfolioIndexGuard.ts";
+ export * from "../commands/Yeet/internal/ProofState.ts";
+ export * from "../commands/Yeet/internal/Provenance.ts";
+ export * from "../commands/Yeet/internal/PublishScope.ts";
+diff --git a/packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts b/packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts
+new file mode 100644
+index 0000000000..af4e246ad7
+--- /dev/null
++++ b/packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts
+@@ -0,0 +1,264 @@
++import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "@beep/repo-cli/commands/Goals";
++import {
++  enforcePortfolioIndexPublishIntent,
++  PORTFOLIO_INDEX_WRITE_COMMAND,
++  portfolioIndexPublishDisposition,
++  RepoRunContext,
++  YeetStagedPublishIntent,
++} from "@beep/repo-cli/test/Yeet";
++import { provideScopedLayer } from "@beep/test-utils";
++import { NodeChildProcessSpawner } from "@effect/platform-node";
++import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
++import * as NodePath from "@effect/platform-node/NodePath";
++import { describe, expect, it } from "@effect/vitest";
++import { Effect, FileSystem, Layer, Path } from "effect";
++import * as A from "effect/Array";
++import * as O from "effect/Option";
++import * as Str from "effect/String";
++
++const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
++  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
++);
++
++const spawnGit = (cwd: string, args: ReadonlyArray<string>) =>
++  Effect.sync(() => {
++    const command: Array<string> = ["git", ...args];
++    const result = Bun.spawnSync(command, { cwd, stderr: "pipe", stdout: "pipe" });
++    if (result.exitCode !== 0) {
++      throw new Error(`${A.join(command, " ")} failed: ${result.stderr.toString()}`);
++    }
++    return result.stdout.toString();
++  });
++
++const runGit = (cwd: string, args: ReadonlyArray<string>) => spawnGit(cwd, args).pipe(Effect.asVoid);
++
++const runGitStatus = (cwd: string) => spawnGit(cwd, ["status", "--porcelain"]).pipe(Effect.map(Str.trim));
++
++const goalManifest = (slug: string): string =>
++  JSON.stringify(
++    {
++      schemaVersion: "initiative-manifest/v2",
++      initiative: { id: slug, title: `Packet ${slug}`, status: "active", updated: "2026-08-16" },
++      mission: `Mission for ${slug}.`,
++      completionGate: {
++        operator: "yeet",
++        requiresPullRequest: true,
++        requiresMergeable: true,
++        statement: "Merged through yeet.",
++        grandfathered: false,
++      },
++    },
++    undefined,
++    2
++  );
++
++const withTempDirectory = <Result, Error, Requirements>(
++  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>
++) =>
++  Effect.acquireUseRelease(
++    Effect.gen(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      return yield* fs.makeTempDirectory();
++    }),
++    use,
++    (tmpDir) =>
++      Effect.gen(function* () {
++        const fs = yield* FileSystem.FileSystem;
++        yield* fs.remove(tmpDir, { recursive: true });
++      })
++  ).pipe(provideScopedLayer(PlatformLayer));
++
++type TempPortfolioRepo = {
++  readonly indexPath: string;
++  readonly tempContext: RepoRunContext;
++  readonly tmpDir: string;
++};
++
++// Seeds a git repo carrying two goal packets and no committed index, so each
++// case can decide independently what `goals/INDEX.md` looks like.
++const initPortfolioRepo = Effect.fn("initPortfolioRepo")(function* (tmpDir: string, slugs: ReadonlyArray<string>) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++
++  yield* runGit(tmpDir, ["init"]);
++  yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
++  yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
++
++  for (const slug of slugs) {
++    const opsDir = path.join(tmpDir, "goals", slug, "ops");
++    yield* fs.makeDirectory(opsDir, { recursive: true });
++    yield* fs.writeFileString(path.join(opsDir, "manifest.json"), goalManifest(slug));
++  }
++  yield* fs.writeFileString(path.join(tmpDir, "README.md"), "# temp\n");
++  yield* runGit(tmpDir, ["add", "."]);
++  yield* runGit(tmpDir, ["commit", "-m", "init"]);
++
++  return {
++    indexPath: path.join(tmpDir, PORTFOLIO_INDEX_PATH),
++    tempContext: RepoRunContext.make({
++      base: "origin/main",
++      branch: "feature/e1",
++      cwd: tmpDir,
++      head: "HEAD",
++      originalArgv: [],
++      packetDir: ".beep/yeet",
++      repoRoot: tmpDir,
++      turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
++    }),
++    tmpDir,
++  } satisfies TempPortfolioRepo;
++});
++
++const withPortfolioRepo = <Result, Error, Requirements>(
++  use: (repo: TempPortfolioRepo) => Effect.Effect<Result, Error, Requirements>,
++  slugs: ReadonlyArray<string> = ["alpha-packet", "beta-packet"]
++) =>
++  withTempDirectory((tmpDir) =>
++    Effect.gen(function* () {
++      return yield* use(yield* initPortfolioRepo(tmpDir, slugs));
++    })
++  );
++
++describe("yeet publish derived goals index", () => {
++  it("treats a checkout without a goals portfolio as out of scope", () => {
++    expect(
++      portfolioIndexPublishDisposition({
++        committed: O.none(),
++        present: false,
++        regenerated: "# Goals Index\n",
++        staged: true,
++      })
++    ).toBe("absent");
++  });
++
++  it("accepts a committed index that already equals the projection", () => {
++    const regenerated = "# Goals Index\n\n1 packets\n";
++    expect(
++      portfolioIndexPublishDisposition({ committed: O.some(regenerated), present: true, regenerated, staged: false })
++    ).toBe("current");
++    expect(
++      portfolioIndexPublishDisposition({ committed: O.some(regenerated), present: true, regenerated, staged: true })
++    ).toBe("current");
++  });
++
++  it("regenerates an unstaged stale index and refuses a hand-staged one", () => {
++    const regenerated = "# Goals Index\n\n2 packets\n";
++    const committed = O.some("# Goals Index\n\nhand written\n");
++    expect(portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: false })).toBe(
++      "regenerated"
++    );
++    expect(portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: true })).toBe("drifted");
++    expect(portfolioIndexPublishDisposition({ committed: O.none(), present: true, regenerated, staged: false })).toBe(
++      "regenerated"
++    );
++  });
++
++  it("leaves a repo without goals/ untouched", () =>
++    Effect.runPromise(
++      withTempDirectory((tmpDir) =>
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          const path = yield* Path.Path;
++          yield* runGit(tmpDir, ["init"]);
++          const tempContext = RepoRunContext.make({
++            base: "origin/main",
++            branch: "feature/e1",
++            cwd: tmpDir,
++            head: "HEAD",
++            originalArgv: [],
++            packetDir: ".beep/yeet",
++            repoRoot: tmpDir,
++            turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
++          });
++
++          const disposition = yield* enforcePortfolioIndexPublishIntent(
++            tempContext,
++            YeetStagedPublishIntent.make({ paths: ["src/index.ts"] })
++          );
++
++          expect(disposition).toBe("absent");
++          expect(yield* fs.exists(path.join(tmpDir, PORTFOLIO_INDEX_PATH))).toBe(false);
++        })
++      )
++    ));
++
++  it("regenerates a missing index and stages it into the commit", () =>
++    Effect.runPromise(
++      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++
++          const disposition = yield* enforcePortfolioIndexPublishIntent(
++            tempContext,
++            YeetStagedPublishIntent.make({ paths: ["goals/alpha-packet/ops/manifest.json"] })
++          );
++
++          expect(disposition).toBe("regenerated");
++          expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
++          expect(yield* runGitStatus(tmpDir)).toBe(`A  ${PORTFOLIO_INDEX_PATH}`);
++        })
++      )
++    ));
++
++  it("overwrites a stale unstaged index instead of committing the drift", () =>
++    Effect.runPromise(
++      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* fs.writeFileString(indexPath, "# Goals Index\n\nstale copy from a merge\n");
++          yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
++          yield* runGit(tmpDir, ["commit", "-m", "stale index"]);
++
++          const disposition = yield* enforcePortfolioIndexPublishIntent(
++            tempContext,
++            YeetStagedPublishIntent.make({ paths: ["goals/alpha-packet/ops/manifest.json"] })
++          );
++
++          expect(disposition).toBe("regenerated");
++          expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
++          expect(yield* runGitStatus(tmpDir)).toBe(`M  ${PORTFOLIO_INDEX_PATH}`);
++        })
++      )
++    ));
++
++  it("proceeds when the staged index already equals the regenerated projection", () =>
++    Effect.runPromise(
++      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
++          yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
++
++          const disposition = yield* enforcePortfolioIndexPublishIntent(
++            tempContext,
++            YeetStagedPublishIntent.make({ paths: [PORTFOLIO_INDEX_PATH] })
++          );
++
++          expect(disposition).toBe("current");
++          expect(yield* runGitStatus(tmpDir)).toBe(`A  ${PORTFOLIO_INDEX_PATH}`);
++        })
++      )
++    ));
++
++  it("refuses a hand-staged index that disagrees with the manifests", () =>
++    Effect.runPromise(
++      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
++        Effect.gen(function* () {
++          const fs = yield* FileSystem.FileSystem;
++          const handEdited = "# Goals Index\n\nhand-merged by an agent\n";
++          yield* fs.writeFileString(indexPath, handEdited);
++          yield* runGit(tmpDir, ["add", PORTFOLIO_INDEX_PATH]);
++
++          const failure = yield* enforcePortfolioIndexPublishIntent(
++            tempContext,
++            YeetStagedPublishIntent.make({ paths: [PORTFOLIO_INDEX_PATH] })
++          ).pipe(Effect.flip);
++
++          expect(failure.message).toContain(PORTFOLIO_INDEX_PATH);
++          expect(failure.message).toContain(PORTFOLIO_INDEX_WRITE_COMMAND);
++          // The refusal must never silently replace the agent's staged copy.
++          expect(yield* fs.readFileString(indexPath)).toBe(handEdited);
++        })
++      )
++    ));
++});
