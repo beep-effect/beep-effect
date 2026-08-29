@@ -1,0 +1,695 @@
+diff --git a/goals/identity-iri-fibered/history/p1-p2-evidence.md b/goals/identity-iri-fibered/history/p1-p2-evidence.md
+index 807df51189..8a8e82f7f6 100644
+--- a/goals/identity-iri-fibered/history/p1-p2-evidence.md
++++ b/goals/identity-iri-fibered/history/p1-p2-evidence.md
+@@ -82,3 +82,21 @@ tree, then `yeet publish --reuse-verified` and `yeet monitor` to merge-ready
+ - Store examples are test/dev Layers only → `layerDataset` over an in-memory
+   `Dataset`; `SparqlQueryService` untouched.
+ - No P1 before blockers cleared → `p0-blocker-audit.md` (2026-08-25).
++
++## P3 — review and hosted-gate follow-ups (PR #821)
++
++- Greptile P1 (predicate collisions defeat the exact codec) → `IdentityRdfBinding`
++  now carries the pairwise-distinct-predicates invariant as a schema check on its
++  fields struct (`S.check(S.makeFilter(...))`, validated against rc.112
++  `Schema.ts` Class-accepts-Struct overload); Greptile P2 → `FiberedInput.member`
++  hook returns `FiberMember<Point, Fibers[Point]>`, cast removed. Report:
++  `history/p3-review-fixes-report.md`.
++- Hosted `Repo Sanity` → `@beep/epistemic-server` added to the changeset (test-only
++  change still counts as a changed product workspace).
++- Hosted `Heavy / Coverage Regression` → semantic-web's 100/100/100/100 floors
++  restored with behavior-level tests (`test/IdentityRdfBindingCoverage.test.ts`,
++  report `history/p3-coverage-report.md`) plus one crispening: `literalAt` now
++  uses `A.match` (empty / exactly-one / duplicate arms), removing an unreachable
++  `O.none` arm that no test could cover. Scoped ratchet:
++  `bun run coverage -- --filter=@beep/identity --filter=@beep/semantic-web` → ok.
++
+diff --git a/goals/identity-iri-fibered/history/p3-coverage-report.md b/goals/identity-iri-fibered/history/p3-coverage-report.md
+new file mode 100644
+index 0000000000..73b6ff4c50
+--- /dev/null
++++ b/goals/identity-iri-fibered/history/p3-coverage-report.md
+@@ -0,0 +1,88 @@
++# P3 coverage report
++
++## Result
++
++Added behavior-level coverage in
++`packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts`.
++All reachable statements, branches, and functions in the three identity modules
++are now covered. The package ratchet still exits 1 because
++`IdentityRdfBinding.ts:195` is unreachable under the current source and counts
++as one uncovered statement, line, and function.
++
++Final package totals are 99.06% lines, 99.07% statements, 100% branches, and
++98.03% functions. No baseline, source, coverage configuration, or ignore comment
++was changed.
++
++## How the uncovered units were located
++
++1. `codegraph explore` mapped `datasetToEntries`, `layerDataset`,
++   `projectShapes`, `predicateCollision`, and their callers and existing tests.
++2. `bun run coverage -- --filter=@beep/semantic-web` produced the authoritative
++   package totals.
++3. The shared Vitest configuration at `vitest.shared.ts` sets
++   `reportsDirectory: "coverage"` and enables the `lcov` reporter. The exact
++   per-file data was read from
++   `packages/foundation/capability/semantic-web/coverage/lcov.info`.
++4. The initial `lcov.info` showed uncovered callbacks at lines 195, 201, 208,
++   233, 267, and 296 in `src/identity/IdentityRdfBinding.ts`. After the added
++   tests, only line 195 remains at `FNDA:0` and `DA:0`.
++
++## Tests added
++
++| Unit | Test name |
++| --- | --- |
++| `decodeSubject`: blank-node subject | `rejects a blank-node identity subject` |
++| `literalAt`: missing and duplicate identifier cardinality | `rejects missing and duplicate identifier literals` |
++| `literalAt`: missing and duplicate CURIE cardinality | `rejects missing and duplicate CURIE literals` |
++| `ObjectTerm.match`: blank-node and named-node values | `rejects blank-node and named-node registry values` |
++| `literalAt`: wrong datatype and language-tagged literal | `rejects non-string and language-tagged literals` |
++| `decodeSubject`: unknown predicate | `rejects an unmapped RDF predicate` |
++| `literalAt`: duplicate mapped fiber | `rejects duplicate values for a mapped fiber` |
++| `A.match`: omitted optional mapped fiber | `decodes an omitted mapped fiber as absent` |
++| `layerDataset`: data-last overload | `builds a registry through the data-last layerDataset overload` |
++| `projectShapes`: data-last overload | `matches data-first projection through the data-last projectShapes overload` |
++
++The tests assert exact error `_tag`, `subject`, and `message` fields or exact
++decoded/projected values. The pre-existing test file already covers valid and
++colliding predicate bindings, round trips, missing fiber bindings, the
++data-first registry layer, and successful data-first projection.
++
++## Unreachable unit
++
++`IdentityRdfBinding.ts:195` is the `onNone` callback for
++`A.head(matching)`. `matching` is a fresh array returned by `A.filter`. The code
++immediately returns an `IdentityDatasetDecodeError` unless
++`A.length(matching) === 1`. For an array of length one, Effect's `A.head` calls
++`A.get(0)`, and index zero is in bounds, so it always returns `Option.some`.
++The `onNone` callback cannot run.
++
++Covering it from a test would require mocking `effect/Array` into an internally
++inconsistent state. That would not test production behavior and was not done.
++A source change is required to remove or restructure the redundant defensive
++branch, but this task expressly forbids changes under `src/**`.
++
++## Final ratchet output
++
++```text
++[coverage-ratchet] coverage regression(s) detected:
++  - @beep/semantic-web (packages/foundation/capability/semantic-web) functions: 98.03 < 100
++  - @beep/semantic-web (packages/foundation/capability/semantic-web) lines: 99.06 < 100
++  - @beep/semantic-web (packages/foundation/capability/semantic-web) statements: 99.07 < 100
++```
++
++The final per-file row for `IdentityRdfBinding.ts` is 98.64% statements, 100%
++branches, 97.29% functions, and 98.63% lines, with line 195 as the sole
++uncovered line. `IdentityRegistryDataset.ts` and `IdentityShaclProjection.ts`
++are 100% on all four metrics.
++
++## Proof commands
++
++| Command | Exit code | Result |
++| --- | ---: | --- |
++| `cd packages/foundation/capability/semantic-web && bun run test` | 1 | Fork workers timed out before tests started. |
++| `cd packages/foundation/capability/semantic-web && bun run test -- --pool=threads` | 0 | 4 files passed, 27 tests passed. |
++| `cd packages/foundation/capability/semantic-web && bun run check` | 0 | TSGo passed. |
++| `cd packages/foundation/capability/semantic-web && bun run lint` | 0 | Biome checked 17 files. |
++| `bun run coverage -- --filter=@beep/semantic-web` | 1 | Branches reached 100%; the three rows above remain because of line 195. |
++| `bun run beep lint schema-first` | 0 | No missing, stale, or advisory entries. |
++| `bun run docgen:local` | 0 | Scoped proof completed and aggregated 121 packages. |
+diff --git a/goals/identity-iri-fibered/history/p3-review-fixes-report.md b/goals/identity-iri-fibered/history/p3-review-fixes-report.md
+new file mode 100644
+index 0000000000..e30233671a
+--- /dev/null
++++ b/goals/identity-iri-fibered/history/p3-review-fixes-report.md
+@@ -0,0 +1,79 @@
++# P3 review fixes report
++
++Date: 2026-08-25  
++PR: #821 (`feat/identity-iri-fibered`)
++
++## Files touched
++
++- `packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts`
++- `packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts`
++- `packages/foundation/modeling/identity/src/Fibered.ts`
++- `packages/foundation/modeling/identity/test/Fibered.test.ts`
++- `goals/identity-iri-fibered/history/p3-review-fixes-report.md`
++
++## Fixes
++
++### F1: RDF predicate collisions
++
++`IdentityRdfBindingFields` is now an `S.Struct` with an object-wide
++`S.makeFilter` attached through `S.check`. The filter walks `identifierPath`,
++`curiePath`, and every `fiberPaths` entry, tracking each `NamedNode.value` in an
++Effect `HashMap`. A duplicate returns a schema issue that names both colliding
++fields and the RDF predicate. The checked struct is the fields argument to
++`S.Class`, so `IdentityRdfBinding.make`, schema decoding, and schema-derived
++arbitraries share the same invariant. `DefaultIdentityRdfBinding` remains valid.
++
++The Effect 4.0.0-rc.112 API was validated against the local reference source:
++
++- `.repos/effect/packages/effect/src/Schema.ts:14353-14356` declares the
++  `S.Class` overload that accepts an `S.Struct`.
++- `.repos/effect/packages/effect/src/Schema.ts:14358-14364` preserves a supplied
++  struct and passes it to class construction.
++- `.repos/effect/packages/effect/src/Schema.ts:14124-14131` runs `struct.make`
++  from the class constructor, which enforces the check during `.make(...)`.
++- `.repos/effect/packages/effect/src/Schema.ts:5133-5136` and `:6669-6673`
++  define `S.check` and `S.makeFilter`.
++- `.repos/effect/packages/effect/src/internal/arbitrary/schema.ts:1044-1058`
++  applies custom schema filters to generated values and shrinks.
++
++Tests cover constructor and decoder failures with the exact collision message.
++A property test samples `S.toArbitrary(IdentityRdfBinding)` and verifies that
++every generated predicate set is pairwise distinct. The existing RDF codec
++round-trip property remains green.
++
++### F2: Fiber member hook contract
++
++`FiberedInput.member` now returns `FiberMember<Point, Fibers[Point]>` instead of
++`S.Top`. The local `makeMember` helper carries the same return type, and the cast
++after `.annotate(...)` was removed. Public `Fibered.make(...)` call syntax and
++the returned `member`, `union`, and `fiberOf` APIs are unchanged.
++
++Tests include a compile-time `@ts-expect-error` for a hook returning `S.String`
++and a runtime case showing that a conforming hook's annotated schema is returned
++by `member(point)` and validates the expected tagged value.
++
++## Verification
++
++| Working directory | Command | Exit | Result |
++| --- | --- | ---: | --- |
++| `packages/foundation/modeling/identity` | `bun run test` | 0 | 12 files, 106 tests passed |
++| `packages/foundation/modeling/identity` | `bun run check` | 0 | `tsgo` passed |
++| `packages/foundation/modeling/identity` | `bun run lint` | 0 | 25 files checked |
++| `packages/foundation/capability/semantic-web` | `bun run test -- --pool=threads` | 0 | 3 files, 17 tests passed |
++| `packages/foundation/capability/semantic-web` | `bun run check` | 0 | `tsgo` passed |
++| `packages/foundation/capability/semantic-web` | `bun run lint` | 0 | 16 files checked |
++| `packages/epistemic/server` | `bun run test -- --pool=threads` | 0 | 6 files, 32 tests passed |
++| repository root | `bun run beep lint schema-first` | 0 | 89 live/tracked entries; no advisories |
++| repository root | `bun run docgen:local` | 0 | 125 Turbo tasks passed |
++
++## Environment notes
++
++The default forks pool timed out while starting workers in this sandbox. The
++`packages/epistemic/server` default run exited 1 with six worker-start timeouts;
++the first semantic-web default run did not return a terminal result in its
++capture window. Both packages passed with the permitted `--pool=threads`
++fallback shown above. No `vitest.config.ts` file was edited.
++
++Remote caching was unavailable during `docgen:local`, so Turbo recomputed the
++expanded dependency graph. The command still exited 0. No install, service or
++contract edit, Git index/ref mutation, or design-document change was performed.
+diff --git a/packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts b/packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts
+index 5cbb5844ac..7e8cb1286e 100644
+--- a/packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts
++++ b/packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts
+@@ -11,6 +11,7 @@ import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTer
+ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+ import { Effect, pipe, Tuple } from "effect";
+ import * as A from "effect/Array";
++import * as HashMap from "effect/HashMap";
+ import * as O from "effect/Option";
+ import * as R from "effect/Record";
+ import * as S from "effect/Schema";
+@@ -23,6 +24,53 @@ const curiePathIri = $SemanticWebId.create("identity/curie").iri;
+ const sameNamedNode = S.toEquivalence(NamedNode);
+ const sameSubject = S.toEquivalence(Subject);
+ 
++const IdentityRdfBindingFields = S.Struct({
++  identifierPath: NamedNode,
++  curiePath: NamedNode,
++  fiberPaths: S.Record(S.String, NamedNode),
++});
++
++const predicateEntries = (binding: typeof IdentityRdfBindingFields.Type): ReadonlyArray<readonly [string, NamedNode]> =>
++  pipe(
++    R.toEntries(binding.fiberPaths),
++    A.map(([fiber, path]) => Tuple.make(`fiberPaths.${fiber}`, path)),
++    A.prepend(Tuple.make("curiePath", binding.curiePath)),
++    A.prepend(Tuple.make("identifierPath", binding.identifierPath))
++  );
++
++const predicateCollision = (binding: typeof IdentityRdfBindingFields.Type): O.Option<string> => {
++  let seen = HashMap.empty<string, string>();
++
++  for (const [label, path] of predicateEntries(binding)) {
++    const previous = HashMap.get(seen, path.value);
++    if (O.isSome(previous)) {
++      return O.some(`${previous.value} and ${label} collide at RDF predicate '${path.value}'`);
++    }
++    seen = HashMap.set(seen, path.value, label);
++  }
++
++  return O.none();
++};
++
++const IdentityRdfPredicatePathsDistinct = S.makeFilter<typeof IdentityRdfBindingFields.Type>(
++  (binding) =>
++    pipe(
++      predicateCollision(binding),
++      O.match({
++        onNone: () => true,
++        onSome: (collision) => collision,
++      })
++    ),
++  {
++    identifier: $I`IdentityRdfPredicatePathsDistinct`,
++    title: "Distinct Identity RDF Predicate Paths",
++    description: "Requires identifier, CURIE, and fiber RDF predicate paths to be pairwise distinct.",
++    message: "Identity RDF predicate paths must be pairwise distinct.",
++  }
++);
++
++const CheckedIdentityRdfBindingFields = IdentityRdfBindingFields.pipe(S.check(IdentityRdfPredicatePathsDistinct));
++
+ /**
+  * Explicit predicate binding for identity registry fields and named fibers.
+  *
+@@ -44,11 +92,7 @@ const sameSubject = S.toEquivalence(Subject);
+  * @since 0.0.0
+  */
+ export class IdentityRdfBinding extends S.Class<IdentityRdfBinding>($I`IdentityRdfBinding`)(
+-  {
+-    identifierPath: NamedNode,
+-    curiePath: NamedNode,
+-    fiberPaths: S.Record(S.String, NamedNode),
+-  },
++  CheckedIdentityRdfBindingFields,
+   $I.annote("IdentityRdfBinding", {
+     description: "Explicit RDF predicates for identity registry fields and named string fibers.",
+   })
+@@ -141,15 +185,12 @@ const literalAt = Effect.fn("IdentityRdfBinding.literalAt")(function* (
+     A.filter((quad) => sameNamedNode(quad.predicate, path))
+   );
+ 
+-  if (A.length(matching) !== 1) {
+-    return yield* IdentityDatasetDecodeError.make({ subject, message: cardinalityMessage });
+-  }
+-
++  const cardinalityError = () => Effect.fail(IdentityDatasetDecodeError.make({ subject, message: cardinalityMessage }));
+   const quad = yield* pipe(
+-    A.head(matching),
+-    O.match({
+-      onNone: () => Effect.fail(IdentityDatasetDecodeError.make({ subject, message: cardinalityMessage })),
+-      onSome: Effect.succeed,
++    matching,
++    A.match({
++      onEmpty: cardinalityError,
++      onNonEmpty: (found) => (A.length(found) === 1 ? Effect.succeed(A.headNonEmpty(found)) : cardinalityError()),
+     })
+   );
+ 
+diff --git a/packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts b/packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts
+index 14250463f3..76db422c63 100644
+--- a/packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts
++++ b/packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts
+@@ -16,9 +16,15 @@ import {
+   ShaclValidationResult,
+   ShaclValidationService,
+ } from "@beep/semantic-web/services/shacl-validation";
+-import { assert, describe, it } from "@effect/vitest";
+-import { Effect, Layer, Ref } from "effect";
++import { assert, describe, expect, it } from "@effect/vitest";
++import { Effect, Layer, pipe, Ref, Result } from "effect";
++import * as A from "effect/Array";
++import * as HashSet from "effect/HashSet";
++import * as P from "effect/Predicate";
++import * as R from "effect/Record";
+ import * as S from "effect/Schema";
++import * as SchemaIssue from "effect/SchemaIssue";
++import { FastCheck as fc } from "effect/testing";
+ import type { ShaclNodeShape } from "@beep/semantic-web/services/shacl-validation";
+ 
+ const entryComposer = $SemanticWebId.create("identity/registry-test-entry");
+@@ -40,6 +46,33 @@ const EntrySeed = S.Struct({
+   label: S.String,
+   route: S.String,
+ });
++const collidingBindingInput = {
++  identifierPath: DefaultIdentityRdfBinding.identifierPath,
++  curiePath: DefaultIdentityRdfBinding.identifierPath,
++  fiberPaths: { label: labelPath },
++};
++
++const bindingPredicateValues = (value: IdentityRdfBinding): ReadonlyArray<string> =>
++  pipe(
++    R.values(value.fiberPaths),
++    A.map((path) => path.value),
++    A.prepend(value.curiePath.value),
++    A.prepend(value.identifierPath.value)
++  );
++
++const expectBindingMakeToFail = (run: () => unknown, messagePart: string): void => {
++  const formatIssue = SchemaIssue.makeFormatterDefault();
++  try {
++    run();
++  } catch (error) {
++    if (P.hasProperty(error, "cause") && SchemaIssue.isIssue(error.cause)) {
++      expect(formatIssue(error.cause)).toContain(messagePart);
++      return;
++    }
++    throw error;
++  }
++  expect.unreachable("expected binding construction to throw");
++};
+ 
+ const provideScopedLayer =
+   <ROut, E2, RIn>(provided: Layer.Layer<ROut, E2, RIn>) =>
+@@ -47,6 +80,33 @@ const provideScopedLayer =
+     Effect.scoped(Layer.build(provided).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+ 
+ describe("identity RDF binding", () => {
++  it("rejects predicate collisions during construction and decoding", () => {
++    expectBindingMakeToFail(
++      () => IdentityRdfBinding.make(collidingBindingInput),
++      "identifierPath and curiePath collide at RDF predicate"
++    );
++
++    const decoded = S.decodeUnknownResult(IdentityRdfBinding)(collidingBindingInput);
++    assert.isTrue(Result.isFailure(decoded));
++    if (Result.isFailure(decoded)) {
++      assert.include(
++        SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
++        "identifierPath and curiePath collide at RDF predicate"
++      );
++    }
++  });
++
++  it("derives only pairwise-distinct predicate bindings", () => {
++    fc.assert(
++      fc.property(S.toArbitrary(IdentityRdfBinding)(fc), (generated) => {
++        const predicates = bindingPredicateValues(generated);
++
++        assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
++      }),
++      { numRuns: 40 }
++    );
++  });
++
+   it.effect(
+     "round-trips exact identity entries through an RDF dataset",
+     Effect.fnUntraced(function* () {
+diff --git a/packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts b/packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts
+new file mode 100644
+index 0000000000..f1597346b5
+--- /dev/null
++++ b/packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts
+@@ -0,0 +1,213 @@
++import { IdentityEntry, IdentityRegistry } from "@beep/identity";
++import { $SemanticWebId } from "@beep/identity/packages";
++import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
++import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
++import {
++  datasetToEntries,
++  entriesToDataset,
++  IdentityRdfBinding,
++  IdentityShapePolicy,
++  layerDataset,
++  projectShapes,
++} from "@beep/semantic-web";
++import { assert, describe, it } from "@effect/vitest";
++import { Effect, Layer } from "effect";
++import type { Dataset, Quad } from "@beep/rdf/Rdf";
++
++const entryComposer = $SemanticWebId.create("identity/coverage-entry");
++const labelPath = makeNamedNode($SemanticWebId.create("identity/coverage-fibers/label").iri);
++const binding = IdentityRdfBinding.make({
++  identifierPath: makeNamedNode($SemanticWebId.create("identity/coverage-identifier").iri),
++  curiePath: makeNamedNode($SemanticWebId.create("identity/coverage-curie").iri),
++  fiberPaths: { label: labelPath },
++});
++const entry = IdentityEntry.fromComposer(entryComposer, { label: "Coverage entry" });
++const subject = makeNamedNode(entry.iri);
++const identifierQuad = makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value));
++const curieQuad = makeQuad(subject, binding.curiePath, makeLiteral(entry.curie, XSD_STRING.value));
++
++const datasetWith = (...quads: ReadonlyArray<Quad>): Dataset => makeDataset(quads);
++
++const expectDecodeError = Effect.fnUntraced(function* (
++  dataset: Dataset,
++  expectedSubject: string,
++  expectedMessage: string
++) {
++  const error = yield* datasetToEntries(binding)(dataset).pipe(Effect.flip);
++
++  assert.strictEqual(error._tag, "IdentityDatasetDecodeError");
++  assert.strictEqual(error.subject, expectedSubject);
++  assert.strictEqual(error.message, expectedMessage);
++});
++
++const provideScopedLayer =
++  <ROut, E2, RIn>(provided: Layer.Layer<ROut, E2, RIn>) =>
++  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
++    Effect.scoped(Layer.build(provided).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
++
++describe("identity RDF binding decode failures", () => {
++  it.effect(
++    "rejects a blank-node identity subject",
++    Effect.fnUntraced(function* () {
++      const blankSubject = makeBlankNode("anonymous-identity");
++      const dataset = datasetWith(
++        makeQuad(blankSubject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value))
++      );
++
++      yield* expectDecodeError(dataset, blankSubject.value, "Identity entry subjects must be named nodes.");
++    })
++  );
++
++  it.effect(
++    "rejects missing and duplicate identifier literals",
++    Effect.fnUntraced(function* () {
++      yield* expectDecodeError(
++        datasetWith(curieQuad),
++        subject.value,
++        "Expected exactly one identity identifier literal."
++      );
++      yield* expectDecodeError(
++        datasetWith(
++          identifierQuad,
++          makeQuad(subject, binding.identifierPath, makeLiteral("duplicate", XSD_STRING.value)),
++          curieQuad
++        ),
++        subject.value,
++        "Expected exactly one identity identifier literal."
++      );
++    })
++  );
++
++  it.effect(
++    "rejects missing and duplicate CURIE literals",
++    Effect.fnUntraced(function* () {
++      yield* expectDecodeError(
++        datasetWith(identifierQuad),
++        subject.value,
++        "Expected exactly one identity CURIE literal."
++      );
++      yield* expectDecodeError(
++        datasetWith(
++          identifierQuad,
++          curieQuad,
++          makeQuad(subject, binding.curiePath, makeLiteral("duplicate:curie", XSD_STRING.value))
++        ),
++        subject.value,
++        "Expected exactly one identity CURIE literal."
++      );
++    })
++  );
++
++  it.effect(
++    "rejects blank-node and named-node registry values",
++    Effect.fnUntraced(function* () {
++      const expectedMessage = "Identity registry values must be plain string literals.";
++
++      yield* expectDecodeError(
++        datasetWith(makeQuad(subject, binding.identifierPath, makeBlankNode("identity-value")), curieQuad),
++        subject.value,
++        expectedMessage
++      );
++      yield* expectDecodeError(
++        datasetWith(makeQuad(subject, binding.identifierPath, makeNamedNode("https://example.test/value")), curieQuad),
++        subject.value,
++        expectedMessage
++      );
++    })
++  );
++
++  it.effect(
++    "rejects non-string and language-tagged literals",
++    Effect.fnUntraced(function* () {
++      const expectedMessage = "Identity registry values must be plain string literals.";
++
++      yield* expectDecodeError(
++        datasetWith(makeQuad(subject, binding.identifierPath, makeLiteral("1", XSD_DOUBLE.value)), curieQuad),
++        subject.value,
++        expectedMessage
++      );
++      yield* expectDecodeError(
++        datasetWith(
++          makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value, { language: "en" })),
++          curieQuad
++        ),
++        subject.value,
++        expectedMessage
++      );
++    })
++  );
++
++  it.effect(
++    "rejects an unmapped RDF predicate",
++    Effect.fnUntraced(function* () {
++      const unknownPath = makeNamedNode("https://example.test/identity/unknown");
++      const dataset = datasetWith(
++        identifierQuad,
++        curieQuad,
++        makeQuad(subject, unknownPath, makeLiteral("unknown", XSD_STRING.value))
++      );
++
++      yield* expectDecodeError(dataset, subject.value, "Identity entry contains an unmapped RDF predicate.");
++    })
++  );
++
++  it.effect(
++    "rejects duplicate values for a mapped fiber",
++    Effect.fnUntraced(function* () {
++      const dataset = datasetWith(
++        identifierQuad,
++        curieQuad,
++        makeQuad(subject, labelPath, makeLiteral("first", XSD_STRING.value)),
++        makeQuad(subject, labelPath, makeLiteral("second", XSD_STRING.value))
++      );
++
++      yield* expectDecodeError(
++        dataset,
++        subject.value,
++        "Expected at most one plain string literal for a mapped identity fiber."
++      );
++    })
++  );
++
++  it.effect(
++    "decodes an omitted mapped fiber as absent",
++    Effect.fnUntraced(function* () {
++      const decoded = yield* datasetToEntries(binding)(datasetWith(identifierQuad, curieQuad));
++
++      assert.deepStrictEqual(decoded, [
++        IdentityEntry.make({
++          identity: entry.identity,
++          iri: entry.iri,
++          curie: entry.curie,
++          fibers: {},
++        }),
++      ]);
++    })
++  );
++});
++
++describe("identity RDF data-last adapters", () => {
++  it.effect(
++    "builds a registry through the data-last layerDataset overload",
++    Effect.fnUntraced(function* () {
++      const dataset = yield* entriesToDataset(binding)([entry]);
++      const resolved = yield* IdentityRegistry.use((registry) =>
++        registry.resolve({ _tag: "identity", value: entry.identity })
++      ).pipe(provideScopedLayer(layerDataset(dataset)(binding)));
++
++      assert.deepStrictEqual(resolved, entry);
++    })
++  );
++
++  it.effect(
++    "matches data-first projection through the data-last projectShapes overload",
++    Effect.fnUntraced(function* () {
++      const policy = IdentityShapePolicy.make({ requiredFibers: ["label"] });
++      const dataFirst = yield* projectShapes(binding, policy)([entry]);
++      const dataLast = yield* projectShapes(policy)(binding)([entry]);
++
++      assert.strictEqual(dataLast.length, 1);
++      assert.deepStrictEqual(dataLast, dataFirst);
++    })
++  );
++});
+diff --git a/packages/foundation/modeling/identity/src/Fibered.ts b/packages/foundation/modeling/identity/src/Fibered.ts
+index 3870fc30da..1508fa99c7 100644
+--- a/packages/foundation/modeling/identity/src/Fibered.ts
++++ b/packages/foundation/modeling/identity/src/Fibered.ts
+@@ -67,7 +67,9 @@ export interface FiberedInput<
+   readonly annotationKey?: string | undefined;
+   readonly base: S.Literals<Points>;
+   readonly fibers: Fibers;
+-  readonly member?: (<Point extends Points[number]>(point: Point, fiber: Fibers[Point]) => S.Top) | undefined;
++  readonly member?:
++    | (<Point extends Points[number]>(point: Point, fiber: Fibers[Point]) => FiberMember<Point, Fibers[Point]>)
++    | undefined;
+   readonly section: {
+     readonly schema: Section;
+     readonly values: SectionValues<Points, Section>;
+@@ -163,7 +165,10 @@ const make = <
+   input: FiberedInput<Points, Fibers, Section>
+ ): Fibered<Points, Fibers, Section> => {
+   const annotationKey = input.annotationKey ?? "fiberedSection";
+-  const makeMember = <Point extends Points[number]>(point: Point, fiber: Fibers[Point]): S.Top =>
++  const makeMember = <Point extends Points[number]>(
++    point: Point,
++    fiber: Fibers[Point]
++  ): FiberMember<Point, Fibers[Point]> =>
+     input.member === undefined ? defaultMember(point, fiber) : input.member(point, fiber);
+   const maps = A.reduce(
+     input.base.literals,
+@@ -173,10 +178,7 @@ const make = <
+     },
+     (current, point: Points[number]) => {
+       const section = Result.getOrThrow(S.decodeResult(input.section.schema)(input.section.values[point]));
+-      const member = makeMember(point, input.fibers[point]).annotate({ [annotationKey]: section }) as FiberMember<
+-        Points[number],
+-        Fibers[Points[number]]
+-      >;
++      const member = makeMember(point, input.fibers[point]).annotate({ [annotationKey]: section });
+ 
+       return {
+         members: HashMap.set(current.members, point, member),
+diff --git a/packages/foundation/modeling/identity/test/Fibered.test.ts b/packages/foundation/modeling/identity/test/Fibered.test.ts
+index 347ae44607..e1eb47b561 100644
+--- a/packages/foundation/modeling/identity/test/Fibered.test.ts
++++ b/packages/foundation/modeling/identity/test/Fibered.test.ts
+@@ -140,4 +140,37 @@ describe("Fibered", () => {
+ 
+     expectTypeOf(rejectPartialSection).toBeFunction();
+   });
++
++  it("rejects member hooks that return a non-member schema", () => {
++    const rejectInvalidMemberHook = () =>
++      Fibered.make({
++        base: S.Literals(["text"]),
++        fibers: { text: S.String },
++        // @ts-expect-error Member hooks must preserve the tagged member shape.
++        member: () => S.String,
++        section: {
++          schema: S.Struct({ label: S.String }),
++          values: { text: { label: "Text" } },
++        },
++      });
++
++    expectTypeOf(rejectInvalidMemberHook).toBeFunction();
++  });
++
++  it("returns the schema produced by a conforming member hook", () => {
++    const customFamily = Fibered.make({
++      base: S.Literals(["custom"]),
++      fibers: { custom: S.String },
++      member: (point, fiber) =>
++        S.Struct({ _tag: S.tag(point), value: fiber }).annotate({ description: "Custom member schema" }),
++      section: {
++        schema: S.Struct({ label: S.String }),
++        values: { custom: { label: "Custom" } },
++      },
++    });
++    const member = customFamily.member("custom");
++
++    expect(S.resolveAnnotations(member)?.description).toBe("Custom member schema");
++    expect(S.is(member)({ _tag: "custom", value: "payload" })).toBe(true);
++  });
+ });
