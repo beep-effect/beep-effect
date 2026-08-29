@@ -1,0 +1,94 @@
+diff --git a/apps/professional-desktop/docs/_config.yml b/apps/professional-desktop/docs/_config.yml
+deleted file mode 100644
+index b36cba5915..0000000000
+--- a/apps/professional-desktop/docs/_config.yml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-remote_theme: mikearnaldi/just-the-docs
+-
+-# Enable or disable the site search
+-search_enabled: true
+-
+-# Aux links for the upper right navigation
+-aux_links:
+-'@beep/professional-desktop on GitHub':
+-  - 'https://github.com/kriegcloud/beep-effect/tree/main/apps/professional-desktop'
+\ No newline at end of file
+diff --git a/apps/professional-desktop/docs/index.md b/apps/professional-desktop/docs/index.md
+deleted file mode 100644
+index d77a44118a..0000000000
+--- a/apps/professional-desktop/docs/index.md
++++ /dev/null
+@@ -1,4 +0,0 @@
+----
+-title: Home
+-nav_order: 1
+----
+diff --git a/apps/professional-desktop/docs/modules/index.md b/apps/professional-desktop/docs/modules/index.md
+deleted file mode 100644
+index d20a6b7c31..0000000000
+--- a/apps/professional-desktop/docs/modules/index.md
++++ /dev/null
+@@ -1,6 +0,0 @@
+----
+-title: Modules
+-has_children: true
+-permalink: /docs/modules
+-nav_order: 2
+----
+diff --git a/apps/professional-desktop/docs/modules/index.ts.md b/apps/professional-desktop/docs/modules/index.ts.md
+deleted file mode 100644
+index 8394c4a3f8..0000000000
+--- a/apps/professional-desktop/docs/modules/index.ts.md
++++ /dev/null
+@@ -1,49 +0,0 @@
+----
+-title: index.ts
+-nav_order: 1
+-parent: Modules
+----
+-
+-## index.ts overview
+-
+-Package version.
+-
+-**Example**
+-
+-```ts
+-import { VERSION } from "@beep/professional-desktop"
+-
+-console.log(VERSION)
+-```
+-
+-Since v0.0.0
+-
+----
+-## Exports Grouped by Category
+-- [configuration](#configuration)
+-  - [VERSION](#version)
+----
+-
+-# configuration
+-
+-## VERSION
+-
+-Package version.
+-
+-**Example**
+-
+-```ts
+-import { VERSION } from "@beep/professional-desktop"
+-
+-console.log(VERSION)
+-```
+-
+-**Signature**
+-
+-```ts
+-declare const VERSION: "0.0.0"
+-```
+-
+-[Source](https://github.com/kriegcloud/beep-effect/tree/main/apps/professional-desktop/blob/main/src/index.ts#L21)
+-
+-Since v0.0.0
+\ No newline at end of file
