@@ -77,7 +77,7 @@
     "phoenix-docs",
     "phoenix"
   ],
-  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
+  "disabledMcpjsonServers": ["chrome-devtools", "serena", "webstorm"],
   "hooks": {
     "PreToolUse": [
       {
