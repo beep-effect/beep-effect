@@ -1,0 +1,138 @@
+diff --git a/packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts b/packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts
+index f95a6643af..a39f39d2fb 100644
+--- a/packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts
++++ b/packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts
+@@ -61,13 +61,15 @@ type ReverseEnumMap<M extends MappedPairs> = {
+   readonly [Pair in PairUnion<M> as LiteralToKey<Pair[1]>]: Pair[0];
+ };
+ 
+-type DirectionalHelpers<From extends Literals, Enum extends Record<string, LiteralValue>> = {
+-  readonly Options: LiteralKitSchema<From>["Options"];
+-  readonly is: LiteralKitSchema<From>["is"];
+-  readonly Enum: Enum;
+-  readonly pickOptions: LiteralKitSchema<From>["pickOptions"];
+-  readonly omitOptions: LiteralKitSchema<From>["omitOptions"];
+-  readonly $match: LiteralKitSchema<From>["$match"];
++type LiteralHelpers<L extends Literals> = {
++  readonly Options: LiteralKitSchema<L>["Options"];
++  readonly is: LiteralKitSchema<L>["is"];
++  readonly Enum: LiteralKitSchema<L>["Enum"];
++  readonly pickOptions: LiteralKitSchema<L>["pickOptions"];
++  readonly omitOptions: LiteralKitSchema<L>["omitOptions"];
++  readonly $match: LiteralKitSchema<L>["$match"];
++  readonly thunk: LiteralKitSchema<L>["thunk"];
++  readonly toTaggedUnion: LiteralKitSchema<L>["toTaggedUnion"];
+ };
+ 
+ type TransformedLiteralsSchema<
+@@ -75,12 +77,6 @@ type TransformedLiteralsSchema<
+   To extends { readonly [I in keyof From]: LiteralValue },
+ > = S.Union<{ readonly [I in keyof From]: S.decodeTo<S.Literal<To[I]>, S.Literal<From[I]>> }>;
+ 
+-type DirectionalKit<
+-  From extends Literals,
+-  To extends { readonly [I in keyof From]: LiteralValue },
+-  Enum extends Record<string, LiteralValue>,
+-> = TransformedLiteralsSchema<From, To> & DirectionalHelpers<From, Enum>;
+-
+ /**
+  * Error thrown when `MappedLiteralKit` receives duplicate literals on the
+  * `from` or `to` side of the mapping.
+@@ -224,40 +220,15 @@ const attachHelperDescriptors = <T extends object>(
+   }) as T;
+ };
+ 
+-const makeDirectionalKit = <
+-  From extends Literals,
+-  To extends { readonly [I in keyof From]: LiteralValue },
+-  Enum extends Record<string, LiteralValue>,
+->(
+-  from: From,
+-  to: To,
+-  Enum: Enum
+-): DirectionalKit<From, To, Enum> => {
+-  const base = S.Literals(from).transform(to);
+-  const literalKit = LiteralKit(from);
+-  const readonlyProperty = <T>(value: T): PropertyDescriptor => ({
+-    value,
+-    enumerable: true,
+-    writable: false,
+-    configurable: false,
+-  });
+-
+-  return attachHelperDescriptors(base, () => ({
+-    Options: readonlyProperty(literalKit.Options),
+-    is: readonlyProperty(literalKit.is),
+-    Enum: readonlyProperty(Enum),
+-    pickOptions: readonlyProperty(literalKit.pickOptions),
+-    omitOptions: readonlyProperty(literalKit.omitOptions),
+-    $match: readonlyProperty(literalKit.$match),
+-  })) as DirectionalKit<From, To, Enum>;
+-};
+-
+ /**
+  * Runtime mapped literal kit that augments transformed literal schemas with directional helpers.
+  *
+  * - `decode` maps `From` literals to `To` literals.
+  * - `encode` maps `To` literals back to `From` literals.
+- * - Top-level helpers (`Enum`, `is`, `$match`, etc.) are aliases of `From`.
++ * - `From` and `To` are side-local literal helpers.
++ * - `Map` maps `From` helper keys to `To` literals.
++ * - `ReverseMap` maps `To` helper keys back to `From` literals.
++ * - Top-level helpers (`Enum`, `is`, `$match`, etc.) are aliases of `To`.
+  * - Both sides must be unique by literal value and by `LiteralToKey` helper key encoding.
+  *
+  * @example
+@@ -273,28 +244,29 @@ const makeDirectionalKit = <
+  * S.decodeSync(SqlState)("SUCCESSFUL_COMPLETION"); // "00000"
+  * S.encodeSync(SqlState)("00000"); // "SUCCESSFUL_COMPLETION"
+  *
+- * SqlState.From.Enum.SUCCESSFUL_COMPLETION; // "00000"
+- * SqlState.To.Enum["00000"]; // "SUCCESSFUL_COMPLETION"
+- * SqlState.Enum.WARNING; // "01000"
++ * SqlState.From.Enum.SUCCESSFUL_COMPLETION; // "SUCCESSFUL_COMPLETION"
++ * SqlState.To.Enum["00000"]; // "00000"
++ * SqlState.Map.WARNING; // "01000"
++ * SqlState.ReverseMap["00000"]; // "SUCCESSFUL_COMPLETION"
+  * ```
+  *
+  * @category models
+  * @since 0.0.0
+  */
+-type ForwardDirectionalKit<M extends MappedPairs> = DirectionalKit<FromLiterals<M>, ToLiterals<M>, ForwardEnumMap<M>>;
+-type ReverseDirectionalKit<M extends MappedPairs> = DirectionalKit<ToLiterals<M>, FromLiterals<M>, ReverseEnumMap<M>>;
+-
+ /**
+  * Runtime type for the value returned by the {@link MappedLiteralKit}
+- * constructor. Contains `From` and `To` directional helpers and the original
++ * constructor. Contains `From` and `To` literal helpers, mapping helpers, and the original
+  * `Pairs`.
+  *
+  * @category models
+  * @since 0.0.0
+  */
+-type MappedLiteralKitBase<M extends MappedPairs> = ForwardDirectionalKit<M> & {
+-  readonly From: ForwardDirectionalKit<M>;
+-  readonly To: ReverseDirectionalKit<M>;
++type MappedLiteralKitBase<M extends MappedPairs> = TransformedLiteralsSchema<FromLiterals<M>, ToLiterals<M>> &
++  LiteralHelpers<ToLiterals<M>> & {
++  readonly From: LiteralKitSchema<FromLiterals<M>>;
++  readonly To: LiteralKitSchema<ToLiterals<M>>;
++  readonly Map: ForwardEnumMap<M>;
++  readonly ReverseMap: ReverseEnumMap<M>;
+   readonly Pairs: M;
+ };
+ 
+@@ -339,8 +311,10 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
+  *
+  * S.decodeSync(HttpStatus)("OK")       // "200"
+  * S.encodeSync(HttpStatus)("200")      // "OK"
+- * HttpStatus.From.Enum.OK              // "200"
+- * HttpStatus.To.Enum["200"]            // "OK"
++ * HttpStatus.From.Enum.OK              // "OK"
++ * HttpStatus.To.Enum["200"]            // "200"
++ * HttpStatus.Map.OK                    // "200"
++ * HttpStatus.ReverseMap["200"]         // "OK"
+  * ```
+  *
+  * @category models
