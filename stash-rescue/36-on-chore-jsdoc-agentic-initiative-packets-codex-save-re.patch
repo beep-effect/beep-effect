@@ -1,0 +1,1198 @@
+diff --git a/packages/foundation/modeling/utils/src/Array.ts b/packages/foundation/modeling/utils/src/Array.ts
+index 606774ee1e..4f416f990f 100644
+--- a/packages/foundation/modeling/utils/src/Array.ts
++++ b/packages/foundation/modeling/utils/src/Array.ts
+@@ -110,8 +110,8 @@ function asNonEmptyReadonlyArray<T>(out: ReadonlyArray<T>): A.NonEmptyReadonlyAr
+  * // Data-last (pipeable)
+  * const tripled = pipe(items, A.mapNonEmpty((n) => n * 3))
+  *
+- * void doubled
+- * void tripled
++ * console.log(doubled)
++ * console.log(tripled)
+  * ```
+  *
+  * @category combinators
+@@ -146,8 +146,8 @@ export const mapNonEmpty: {
+  * // Data-last (pipeable)
+  * const doubled = pipe(items, A.flatMapNonEmpty((n): A.NonEmptyReadonlyArray<number> => [n, n]))
+  *
+- * void expanded
+- * void doubled
++ * console.log(expanded)
++ * console.log(doubled)
+  * ```
+  *
+  * @category combinators
+@@ -184,8 +184,8 @@ export const flatMapNonEmpty: {
+  * // Data-last (pipeable)
+  * const prefixed = pipe(items, A.mapNonEmptyReadonly((s) => `item-${s}`))
+  *
+- * void upper
+- * void prefixed
++ * console.log(upper)
++ * console.log(prefixed)
+  * ```
+  *
+  * @category combinators
+@@ -226,8 +226,8 @@ export const mapNonEmptyReadonly: {
+  *   A.flatMapNonEmptyReadonly((item): A.NonEmptyReadonlyArray<string> => [item, item])
+  * )
+  *
+- * void expanded
+- * void doubled
++ * console.log(expanded)
++ * console.log(doubled)
+  * ```
+  *
+  * @category combinators
+@@ -273,8 +273,8 @@ export * from "effect/Array";
+  * const multi = A.makeReadonly(["a", "b"])
+  * // ["a", "b"]
+  *
+- * void single
+- * void multi
++ * console.log(single)
++ * console.log(multi)
+  * ```
+  *
+  * @category constructors
+@@ -294,7 +294,7 @@ export const makeReadonly = <T>(a: T | Array<T>): ReadonlyArray<T> => A.ensure(a
+  * const fromSet = A.fromIterableNonEmpty(new Set([1, 2, 3]))
+  * // [1, 2, 3] typed as NonEmptyReadonlyArray<number>
+  *
+- * void fromSet
++ * console.log(fromSet)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Bool.ts b/packages/foundation/modeling/utils/src/Bool.ts
+index 5fa7bdd938..9fed8db7d9 100644
+--- a/packages/foundation/modeling/utils/src/Bool.ts
++++ b/packages/foundation/modeling/utils/src/Bool.ts
+@@ -8,7 +8,7 @@
+  * const toggled = Bool.not(true)
+  * // false
+  *
+- * void toggled
++ * console.log(toggled)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/DateTime.ts b/packages/foundation/modeling/utils/src/DateTime.ts
+index 717897b538..60e4d23ddb 100644
+--- a/packages/foundation/modeling/utils/src/DateTime.ts
++++ b/packages/foundation/modeling/utils/src/DateTime.ts
+@@ -17,7 +17,7 @@ import { Clock, Context, DateTime, Effect, Layer } from "effect";
+  * import { makeUnsafeUtc } from "@beep/utils/DateTime"
+  *
+  * const value = makeUnsafeUtc("2026-01-01T00:00:00.000Z")
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -41,7 +41,7 @@ export * from "effect/DateTime";
+  * ```ts
+  * import { DateTimes } from "@beep/utils/DateTime"
+  *
+- * void DateTimes.Default
++ * console.log(DateTimes.Default)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Event.ts b/packages/foundation/modeling/utils/src/Event.ts
+index f4a8151bb4..420496fefc 100644
+--- a/packages/foundation/modeling/utils/src/Event.ts
++++ b/packages/foundation/modeling/utils/src/Event.ts
+@@ -41,7 +41,7 @@ type EventShape<TTag extends TString.NonEmpty, TFields extends S.Struct.Fields>
+  *   _tag: "Progress",
+  *   payload: { percent: 50 },
+  * })
+- * void decoded
++ * console.log(decoded)
+  * ```
+  *
+  * @category models
+diff --git a/packages/foundation/modeling/utils/src/FileSystem.ts b/packages/foundation/modeling/utils/src/FileSystem.ts
+index d5a03f4aae..cac0e95bba 100644
+--- a/packages/foundation/modeling/utils/src/FileSystem.ts
++++ b/packages/foundation/modeling/utils/src/FileSystem.ts
+@@ -34,7 +34,7 @@ import { dual } from "effect/Function";
+  *
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  */
+ export const makeWaitForFile = Effect.gen(function* () {
+diff --git a/packages/foundation/modeling/utils/src/Function.ts b/packages/foundation/modeling/utils/src/Function.ts
+index 48c6c910f3..01519b0c06 100644
+--- a/packages/foundation/modeling/utils/src/Function.ts
++++ b/packages/foundation/modeling/utils/src/Function.ts
+@@ -11,8 +11,8 @@
+  * const render = (right: number) => (left: string) => `${left}:${right}`
+  * const rendered = reverseCurry(render)("beep")(5)
+  *
+- * void pair
+- * void rendered
++ * console.log(pair)
++ * console.log(rendered)
+  * ```
+  *
+  * @packageDocumentation
+@@ -28,7 +28,7 @@
+  *
+  * const doubled = pipe(2, (value) => value * 2)
+  *
+- * void doubled
++ * console.log(doubled)
+  * ```
+  *
+  * @category interop
+@@ -47,8 +47,8 @@ export * from "effect/Function";
+  * const first = pair[0]
+  * const second = pair[1]
+  *
+- * void first
+- * void second
++ * console.log(first)
++ * console.log(second)
+  * ```
+  *
+  * @template T - The tuple element list captured from the argument list.
+@@ -72,7 +72,7 @@ export function tuple<const T extends ReadonlyArray<unknown>>(...elements: T): R
+  * const joinTuple = tupledCurry(join)
+  * const result = joinTuple(["beep", "effect"])
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @template A - The first argument type.
+@@ -98,7 +98,7 @@ export function tupledCurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: [A, B])
+  * const appendTo = reverseCurry(append)
+  * const result = appendTo("beep")("-effect")
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @template A - The first argument type after reversal.
+@@ -123,7 +123,7 @@ export function reverseCurry<A, B, C>(fn: (b: B) => (a: A) => C) {
+  * const join = (left: string, right: string) => `${left}:${right}`
+  * const result = curry(join)("beep")("effect")
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @template A - The first argument type.
+@@ -148,7 +148,7 @@ export function curry<A, B, C>(fn: (a: A, b: B) => C) {
+  * const join = (left: string) => (right: string) => `${left}:${right}`
+  * const result = uncurry(join)("beep", "effect")
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @template A - The first argument type.
+@@ -179,8 +179,8 @@ export function uncurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: A, arg1: B)
+  * const first = readOnce()
+  * const second = readOnce()
+  *
+- * void first
+- * void second
++ * console.log(first)
++ * console.log(second)
+  * ```
+  *
+  * @template A - The value produced by the thunk.
+diff --git a/packages/foundation/modeling/utils/src/Glob.ts b/packages/foundation/modeling/utils/src/Glob.ts
+index ca72a9af58..535e1f6a96 100644
+--- a/packages/foundation/modeling/utils/src/Glob.ts
++++ b/packages/foundation/modeling/utils/src/Glob.ts
+@@ -25,7 +25,7 @@ const $I = $UtilsId.create("Glob");
+  * import { Pattern } from "@beep/utils/Glob"
+  *
+  * const schema = Pattern
+- * void schema
++ * console.log(schema)
+  * ```
+  *
+  * @category utilities
+@@ -41,7 +41,7 @@ export const Pattern = S.Union([S.String, S.Array(S.String)]);
+  * import type { Pattern } from "@beep/utils/Glob"
+  *
+  * const pattern: Pattern = ["src/*.ts", "test/*.ts"]
+- * void pattern
++ * console.log(pattern)
+  * ```
+  *
+  * @category models
+@@ -57,7 +57,7 @@ export type Pattern = typeof Pattern.Type;
+  * import { GlobOptions } from "@beep/utils/Glob"
+  *
+  * const opts = new GlobOptions({ absolute: true, dot: true })
+- * void opts
++ * console.log(opts)
+  * ```
+  *
+  * @category models
+@@ -84,7 +84,7 @@ export class GlobOptions extends S.Class<GlobOptions>($I`GlobOptions`)(
+  * import { GlobError } from "@beep/utils/Glob"
+  *
+  * const pattern = (value: GlobError.Encoded) => value.pattern
+- * void pattern
++ * console.log(pattern)
+  * ```
+  *
+  * @category models
+@@ -99,7 +99,7 @@ export declare namespace GlobError {
+    * import { GlobError } from "@beep/utils/Glob"
+    *
+    * const pattern = (value: GlobError.Encoded) => value.pattern
+-   * void pattern
++   * console.log(pattern)
+    * ```
+    *
+    * @category models
+@@ -118,7 +118,7 @@ export declare namespace GlobError {
+  * import { GlobError } from "@beep/utils/Glob"
+  *
+  * const error = GlobError.new("src/*.ts", undefined)
+- * void error
++ * console.log(error)
+  * ```
+  *
+  * @category models
+@@ -165,7 +165,7 @@ export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
+  *   return yield* service.glob("src/*.ts")
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @category services
+@@ -183,7 +183,7 @@ export interface Glob {
+  * import { Glob } from "@beep/utils/Glob"
+  *
+  * const tag = Glob
+- * void tag
++ * console.log(tag)
+  * ```
+  *
+  * @category services
+@@ -460,7 +460,7 @@ const makeGlob = (pattern: Pattern, options?: undefined | GlobOptions) => {
+  *   layer
+  * )
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/Html.ts b/packages/foundation/modeling/utils/src/Html.ts
+index a4efca237b..ab29c1082c 100644
+--- a/packages/foundation/modeling/utils/src/Html.ts
++++ b/packages/foundation/modeling/utils/src/Html.ts
+@@ -21,7 +21,7 @@ import * as Str from "effect/String";
+  * import { escapeHtml } from "@beep/utils/Html"
+  *
+  * const value = escapeHtml(`<div class="note">it's fine</div>`)
+- * void value
++ * console.log(value)
+  * ```
+  */
+ export const escapeHtml = flow(
+@@ -45,7 +45,7 @@ export const escapeHtml = flow(
+  * import { escapeHtmlMultiline } from "@beep/utils/Html"
+  *
+  * const value = escapeHtmlMultiline("hello\n<script>alert('x')</script>")
+- * void value
++ * console.log(value)
+  * ```
+  */
+ export const escapeHtmlMultiline = flow(escapeHtml, Str.replaceAll("\n", "<br />"));
+diff --git a/packages/foundation/modeling/utils/src/NodeUrl.ts b/packages/foundation/modeling/utils/src/NodeUrl.ts
+index 09f967a8ed..167edeafd5 100644
+--- a/packages/foundation/modeling/utils/src/NodeUrl.ts
++++ b/packages/foundation/modeling/utils/src/NodeUrl.ts
+@@ -26,7 +26,7 @@ import { Effect, PlatformError } from "effect";
+  *   return path
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @example
+@@ -40,7 +40,7 @@ import { Effect, PlatformError } from "effect";
+  *   Effect.succeed("/tmp/fallback.txt")
+  * )
+  *
+- * void recovered
++ * console.log(recovered)
+  * ```
+  *
+  * @param url - The `file:` URL to convert.
+@@ -75,7 +75,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
+  *   return url.href
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @example
+@@ -87,7 +87,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
+  *   Effect.succeed(new URL("file:///tmp/fallback.txt"))
+  * )
+  *
+- * void recovered
++ * console.log(recovered)
+  * ```
+  *
+  * @param path - The platform path string to convert.
+@@ -114,7 +114,7 @@ export const toFileUrl = (path: string): Effect.Effect<URL, PlatformError.BadArg
+  * import { fileURLToPath } from "@beep/utils/NodeUrl"
+  *
+  * const path = fileURLToPath(new URL("file:///tmp/beep.txt"))
+- * void path
++ * console.log(path)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/Number.ts b/packages/foundation/modeling/utils/src/Number.ts
+index 167e1d92c0..fd8d096f7a 100644
+--- a/packages/foundation/modeling/utils/src/Number.ts
++++ b/packages/foundation/modeling/utils/src/Number.ts
+@@ -43,7 +43,7 @@ import { Number as Num } from "effect";
+  *
+  *
+  *
+- * void processNumber(10);
++ * console.log(processNumber(10))
+  * ```
+  *
+  * @since 0.0.0
+@@ -78,9 +78,9 @@ export * from "effect/Number";
+  * const notNum = Num.isInteger("42")
+  * // false
+  *
+- * void whole
+- * void fractional
+- * void notNum
++ * console.log(whole)
++ * console.log(fractional)
++ * console.log(notNum)
+  * ```
+  *
+  * @category predicates
+diff --git a/packages/foundation/modeling/utils/src/Option.ts b/packages/foundation/modeling/utils/src/Option.ts
+index ea458f69ac..07926782a2 100644
+--- a/packages/foundation/modeling/utils/src/Option.ts
++++ b/packages/foundation/modeling/utils/src/Option.ts
+@@ -38,8 +38,8 @@ import { unsafeDotGet } from "./internal/StructPath.ts";
+  * const name = pipe(user, O.propFromNullishOr("name"))
+  * // Option.some("Alice")
+  *
+- * void age
+- * void name
++ * console.log(age)
++ * console.log(name)
+  * ```
+  *
+  * @category getters
+diff --git a/packages/foundation/modeling/utils/src/Predicate.ts b/packages/foundation/modeling/utils/src/Predicate.ts
+index a88ba65ca3..4703358cf3 100644
+--- a/packages/foundation/modeling/utils/src/Predicate.ts
++++ b/packages/foundation/modeling/utils/src/Predicate.ts
+@@ -36,8 +36,8 @@ export * from "effect/Predicate";
+  * const result2 = hasProperties({ foo: 1, bar: 2 }, ["foo", "bar"] as const)
+  * // true
+  *
+- * void result1
+- * void result2
++ * console.log(result1)
++ * console.log(result2)
+  * ```
+  */
+ export const hasProperties: {
+diff --git a/packages/foundation/modeling/utils/src/Random.ts b/packages/foundation/modeling/utils/src/Random.ts
+index ece3c28ef3..67d622a50c 100644
+--- a/packages/foundation/modeling/utils/src/Random.ts
++++ b/packages/foundation/modeling/utils/src/Random.ts
+@@ -17,7 +17,7 @@ const $I = $RepoUtilsId.create("Random");
+  * ```ts
+  * import { RandomValues } from "@beep/utils/Random"
+  *
+- * void RandomValues.Default
++ * console.log(RandomValues.Default)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Str.ts b/packages/foundation/modeling/utils/src/Str.ts
+index 893783920d..1dbc476136 100644
+--- a/packages/foundation/modeling/utils/src/Str.ts
++++ b/packages/foundation/modeling/utils/src/Str.ts
+@@ -25,8 +25,8 @@ import * as A from "./Array.ts";
+  * const piped = pipe("bar", Str.prefix("foo-"))
+  * // "foo-bar"
+  *
+- * void prefixed
+- * void piped
++ * console.log(prefixed)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -61,8 +61,8 @@ export const prefix: {
+  * const result = piped()
+  * // "foo-bar"
+  *
+- * void value
+- * void result
++ * console.log(value)
++ * console.log(result)
+  * ```
+  *
+  * @category combinators
+@@ -96,8 +96,8 @@ export const prefixThunk: {
+  * const piped = pipe("foo", Str.postfix("-bar"))
+  * // "foo-bar"
+  *
+- * void suffixed
+- * void piped
++ * console.log(suffixed)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -133,8 +133,8 @@ export const postfix: {
+  * const result = piped()
+  * // "foo-bar"
+  *
+- * void value
+- * void result
++ * console.log(value)
++ * console.log(result)
+  * ```
+  *
+  * @category combinators
+@@ -170,8 +170,8 @@ export const postfixThunk: {
+  * // Data-last (pipeable)
+  * const piped = pipe(routes, Str.mapPrefix("/api/"))
+  *
+- * void prefixed
+- * void piped
++ * console.log(prefixed)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -216,8 +216,8 @@ export const mapPrefix: {
+  * // Data-last (pipeable)
+  * const piped = pipe(files, Str.mapPostfix(".ts"))
+  *
+- * void withExt
+- * void piped
++ * console.log(withExt)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -251,7 +251,7 @@ export const mapPostfix: {
+  *
+  * const value = Str.camelCase("my_cool_name")
+  * // "myCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -268,7 +268,7 @@ export const camelCase = <TStr extends string>(str: TStr): TF.CamelCase<TStr> =>
+  *
+  * const value = Str.snakeCase("myCoolName")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -285,7 +285,7 @@ export const snakeCase = <const TStr extends string>(str: TStr): TF.SnakeCase<TS
+  *
+  * const value = Str.kebabCase("myCoolName")
+  * // "my-cool-name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -303,7 +303,7 @@ export const kebabCase = <const TStr extends string>(str: TStr): TF.KebabCase<TS
+  *
+  * const value = Str.screamingSnake("myCoolName")
+  * // "MY_COOL_NAME"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -321,7 +321,7 @@ export const screamingSnake = <const TStr extends string>(str: TStr): TF.Screami
+  *
+  * const value = Str.pascalCase("my_cool_name")
+  * // "MyCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -338,7 +338,7 @@ export const pascalCase = <const TStr extends string>(str: TStr): TF.PascalCase<
+  *
+  * const value = Str.pascalToSnake("MyCoolName")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -356,7 +356,7 @@ export const pascalToSnake = <const TStr extends string>(str: TF.PascalCase<TStr
+  *
+  * const value = Str.snakeToCamel("my_cool_name")
+  * // "myCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -374,7 +374,7 @@ export const snakeToCamel = <const TStr extends string>(str: TF.SnakeCase<TStr>)
+  *
+  * const value = Str.snakeToKebab("my_cool_name")
+  * // "my-cool-name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -392,7 +392,7 @@ export const snakeToKebab = <const TStr extends string>(str: TF.SnakeCase<TStr>)
+  *
+  * const value = Str.camelToSnake("myCoolName")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -410,7 +410,7 @@ export const camelToSnake = <const TStr extends string>(str: TF.CamelCase<TStr>)
+  *
+  * const value = Str.snakeToPascal("my_cool_name")
+  * // "MyCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -428,7 +428,7 @@ export const snakeToPascal = <const TStr extends string>(str: TF.SnakeCase<TStr>
+  *
+  * const value = Str.kebabToSnake("my-cool-name")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -451,8 +451,8 @@ export const kebabToSnake = <const TStr extends string>(str: TF.KebabCase<TStr>)
+  * const direct = Str.startsWith("hello-world", "hello")
+  * const piped = pipe("hello-world", Str.startsWith("hello"))
+  *
+- * void direct
+- * void piped
++ * console.log(direct)
++ * console.log(piped)
+  * ```
+  *
+  * @category predicates
+@@ -488,8 +488,8 @@ export const startsWith: {
+  * const direct = Str.endsWith("hello-world", "world")
+  * const piped = pipe("hello-world", Str.endsWith("world"))
+  *
+- * void direct
+- * void piped
++ * console.log(direct)
++ * console.log(piped)
+  * ```
+  *
+  * @category predicates
+@@ -530,8 +530,8 @@ export const endsWith: {
+  * const piped = pipe("hello world", Str.contains("xyz"))
+  * // false
+  *
+- * void result
+- * void piped
++ * console.log(result)
++ * console.log(piped)
+  * ```
+  *
+  * @category predicates
+@@ -571,8 +571,8 @@ export const contains: {
+  * const piped = pipe("na", Str.repeat(2))
+  * // "nana"
+  *
+- * void result
+- * void piped
++ * console.log(result)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -607,7 +607,7 @@ export * from "effect/String";
+  * const value = lazy()
+  * // "hello"
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -623,7 +623,7 @@ export const trimThunk = (s: string) => () => Str.trim(s);
+  * import { Str } from "@beep/utils"
+  *
+  * const value = Str.fromNumber(42)
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -642,7 +642,7 @@ export const fromNumber = <const T extends number>(num: T): `${T}` => `${num}` a
+  * import { Str } from "@beep/utils"
+  *
+  * const value = Str.toSlug("Hello, Beep Effect!")
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -673,8 +673,8 @@ export const toSlug = flow(
+  * const piped = pipe("  beep effect  ", Str.truncate(4))
+  * // "beep..."
+  *
+- * void direct
+- * void piped
++ * console.log(direct)
++ * console.log(piped)
+  * ```
+  *
+  * @param text - The text to trim and truncate.
+diff --git a/packages/foundation/modeling/utils/src/Stream.ts b/packages/foundation/modeling/utils/src/Stream.ts
+index 840e1e52d8..c50b2c0cdc 100644
+--- a/packages/foundation/modeling/utils/src/Stream.ts
++++ b/packages/foundation/modeling/utils/src/Stream.ts
+@@ -31,7 +31,7 @@ import * as S from "effect/Schema";
+  *   Stream.runCollect
+  * )
+  *
+- * void Effect.runPromise(program)
++ * console.log(Effect.runPromise(program))
+  * ```
+  *
+  * @param self - The stream of JSON lines to decode.
+diff --git a/packages/foundation/modeling/utils/src/Struct.ts b/packages/foundation/modeling/utils/src/Struct.ts
+index 330097c422..681416e5fb 100644
+--- a/packages/foundation/modeling/utils/src/Struct.ts
++++ b/packages/foundation/modeling/utils/src/Struct.ts
+@@ -32,7 +32,7 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
+  * import { EmptyStructError } from "@beep/utils/Struct"
+  *
+  * const error = EmptyStructError
+- * void error
++ * console.log(error)
+  * ```
+  *
+  * @category error-handling
+@@ -90,7 +90,7 @@ const pathFromOptions = (options: { readonly path: PathInput }): PathInput =>
+  * import type { PathLookup } from "@beep/utils/Struct"
+  *
+  * const isFound = (lookup: PathLookup) => lookup.found
+- * void isFound
++ * console.log(isFound)
+  * ```
+  *
+  * @category models
+@@ -121,8 +121,8 @@ export type PathLookup = InternalPathLookup;
+  * // Data-last (pipeable)
+  * const age = pipe(user, Struct.dotGet("profile.age"))
+  *
+- * void name
+- * void age
++ * console.log(name)
++ * console.log(age)
+  * ```
+  *
+  * @category getters
+@@ -163,8 +163,8 @@ export const dotGet: {
+  * const missing = Struct.dotGetOption(user, ["profile", "age"])
+  * // Option.none()
+  *
+- * void name
+- * void missing
++ * console.log(name)
++ * console.log(missing)
+  * ```
+  *
+  * @category getters
+@@ -213,7 +213,7 @@ export const dotGetOption: {
+  * const upper = Struct.mapPath(user, (s: string) => s.toUpperCase(), { path: "profile.name" })
+  * // "ALICE"
+  *
+- * void upper
++ * console.log(upper)
+  * ```
+  *
+  * @category combinators
+@@ -288,7 +288,7 @@ export const mapPath: {
+  * const value = lazy()
+  * // "ALICE"
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -366,8 +366,8 @@ export const mapPathLazy: {
+  * const port = getPort()
+  * // 3000
+  *
+- * void host
+- * void port
++ * console.log(host)
++ * console.log(port)
+  * ```
+  *
+  * @category getters
+@@ -400,7 +400,7 @@ export const getLazy: {
+  * const paths = Struct.pathsOf(config)
+  * // ["db", "db.host", "db.port", "debug"]
+  *
+- * void paths
++ * console.log(paths)
+  * ```
+  *
+  * @category getters
+@@ -434,7 +434,7 @@ export const pathsOf = <const S extends Record<string, unknown>>(
+  *
+  * type Entry = StringKeyEntry<{ readonly host: string; readonly port: number }>
+  * const useEntry = (entry: Entry) => entry[0]
+- * void useEntry
++ * console.log(useEntry)
+  * ```
+  *
+  * @category models
+@@ -455,7 +455,7 @@ export type StringKeyEntry<T> = { [K in keyof T & string]: [K, T[K]] }[keyof T &
+  *
+  * type Entries = StringKeyEntries<{ readonly host: string; readonly port: number }>
+  * const entries: Entries = [["host", "localhost"], ["port", 3000]]
+- * void entries
++ * console.log(entries)
+  * ```
+  *
+  * @category models
+@@ -479,7 +479,7 @@ export type StringKeyEntries<T> = Array<StringKeyEntry<T>>;
+  * const value = { a: "foo", b: 1, [c]: true }
+  *
+  * const entries: Array<["a", string] | ["b", number]> = Struct.entries(value)
+- * void entries
++ * console.log(entries)
+  * ```
+  *
+  * @category getters
+@@ -508,7 +508,7 @@ export const entries = <const R extends object>(obj: R): StringKeyEntries<R> =>
+  * const result = Struct.entriesNonEmpty(config)
+  * // [["host", "localhost"], ["port", 3000]]
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @category getters
+@@ -536,7 +536,7 @@ export const entriesNonEmpty = <const R extends object>(
+  * const result = Struct.keys(config)
+  * // ["host", "port"]
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @category getters
+@@ -559,7 +559,7 @@ export const keys = <const R extends object>(obj: R): Array<keyof R & string> =>
+  * const result = Struct.keysNonEmpty(config)
+  * // ["host", "port"] typed as NonEmptyReadonlyArray
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @category getters
+@@ -591,7 +591,7 @@ export const keysNonEmpty = <const R extends object>(
+  * const obj = Struct.fromEntries(entries)
+  * // { host: "localhost", port: 3000 }
+  *
+- * void obj
++ * console.log(obj)
+  * ```
+  *
+  * @category constructors
+@@ -630,7 +630,7 @@ export * from "effect/Struct";
+  * import type { ReverseableStruct } from "@beep/utils/Struct"
+  *
+  * const mapping: ReverseableStruct = { active: "A", inactive: "I" }
+- * void mapping
++ * console.log(mapping)
+  * ```
+  *
+  * @category models
+@@ -653,7 +653,7 @@ export type ReverseableStruct = Readonly<{
+  *
+  * type Direction = ReverseStruct<{ readonly up: "north"; readonly down: "south" }>
+  * const getNorth = (direction: Direction) => direction.north
+- * void getNorth
++ * console.log(getNorth)
+  * ```
+  *
+  * @category models
+@@ -686,7 +686,7 @@ export type ReverseStruct<T extends ReverseableStruct> = {
+  *
+  * const reversed = Struct.reverse(errorCode)
+  *
+- * void reversed
++ * console.log(reversed)
+  * ```
+  *
+  * @category combinators
+diff --git a/packages/foundation/modeling/utils/src/Text.ts b/packages/foundation/modeling/utils/src/Text.ts
+index eb02e65d4b..b3459f3087 100644
+--- a/packages/foundation/modeling/utils/src/Text.ts
++++ b/packages/foundation/modeling/utils/src/Text.ts
+@@ -24,7 +24,7 @@ const descriptionFromOptions = (options: { readonly description: string }): stri
+  * const tags = Text.splitCommaSeparatedTrimmed(" foo , bar , , baz ")
+  * // ["foo", "bar", "baz"]
+  *
+- * void tags
++ * console.log(tags)
+  * ```
+  *
+  * @category utilities
+@@ -48,8 +48,8 @@ export const splitCommaSeparatedTrimmed = flow(Str.split(","), A.map(Str.trim),
+  * const noAlias = Text.formatNameWithAliases("rm", [], { description: "Remove files" })
+  * // "rm: Remove files"
+  *
+- * void row
+- * void noAlias
++ * console.log(row)
++ * console.log(noAlias)
+  * ```
+  *
+  * @category utilities
+@@ -80,7 +80,7 @@ export const formatNameWithAliases: {
+  * const block = Text.joinLines(["hello", "world"])
+  * // "hello\nworld"
+  *
+- * void block
++ * console.log(block)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/internal/StructPath.ts b/packages/foundation/modeling/utils/src/internal/StructPath.ts
+index 9c7fe45432..53b71345a7 100644
+--- a/packages/foundation/modeling/utils/src/internal/StructPath.ts
++++ b/packages/foundation/modeling/utils/src/internal/StructPath.ts
+@@ -22,7 +22,7 @@ import * as A from "../Array.ts";
+  * import { PathInput } from "@beep/utils/internal/StructPath"
+  *
+  * const schema = PathInput
+- * void schema
++ * console.log(schema)
+  * ```
+  *
+  * @category models
+@@ -38,7 +38,7 @@ export const PathInput = S.Union([S.String, S.Array(S.String)]);
+  * import type { PathInput } from "@beep/utils/internal/StructPath"
+  *
+  * const path: PathInput = ["profile", "name"]
+- * void path
++ * console.log(path)
+  * ```
+  *
+  * @category models
+@@ -62,7 +62,7 @@ const PathLookupSchema = S.TaggedUnion({
+  * import type { PathLookup } from "@beep/utils/internal/StructPath"
+  *
+  * const describe = (lookup: PathLookup) => lookup.found
+- * void describe
++ * console.log(describe)
+  * ```
+  *
+  * @category models
+@@ -130,7 +130,7 @@ const lookupParts = (self: unknown, parts: A.NonEmptyReadonlyArray<string>): Pat
+  * import { lookupAtPath } from "@beep/utils/internal/StructPath"
+  *
+  * const lookup = lookupAtPath({ profile: { name: "Ada" } }, "profile.name")
+- * void lookup
++ * console.log(lookup)
+  * ```
+  *
+  * @category getters
+@@ -156,7 +156,7 @@ export const lookupAtPath: {
+  * import { unsafeDotGet } from "@beep/utils/internal/StructPath"
+  *
+  * const value = unsafeDotGet({ profile: { name: "Ada" } }, "profile.name")
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category getters
+diff --git a/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts b/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts
+index 7cba7a4bb8..4e5f3bb380 100644
+--- a/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts
++++ b/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts
+@@ -26,8 +26,8 @@ const BlockedObjectKeys = HashSet.make("__proto__", "prototype", "constructor");
+  * const blocked = isBlockedObjectKey("__proto__")
+  * // true
+  *
+- * void safe
+- * void blocked
++ * console.log(safe)
++ * console.log(blocked)
+  * ```
+  *
+  * @category predicates
+diff --git a/packages/foundation/modeling/utils/src/thunk.ts b/packages/foundation/modeling/utils/src/thunk.ts
+index 1a61ecf4eb..e65f3e1ae9 100644
+--- a/packages/foundation/modeling/utils/src/thunk.ts
++++ b/packages/foundation/modeling/utils/src/thunk.ts
+@@ -22,7 +22,7 @@ type LazyArg<A> = () => A;
+  * const value = getFortyTwo()
+  * // 42
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category constructors
+@@ -43,7 +43,7 @@ export const thunk =
+  * const value = thunkNull()
+  * // null
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -61,7 +61,7 @@ export const thunkNull = thunk(null);
+  * const value = thunkUndefined()
+  * // undefined
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -79,7 +79,7 @@ export const thunkUndefined = thunk(undefined);
+  * const value = thunkVoid()
+  * // undefined
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -97,7 +97,7 @@ export const thunkVoid = thunk(void 0);
+  * const value = thunkTrue()
+  * // true
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -115,7 +115,7 @@ export const thunkTrue = thunk(true as const);
+  * const value = thunkFalse()
+  * // false
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -133,7 +133,7 @@ export const thunkFalse = thunk(false as const);
+  * const value = thunkEmptyStr()
+  * // ""
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -151,7 +151,7 @@ export const thunkEmptyStr = thunk("");
+  * const value = thunk0()
+  * // 0
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -169,7 +169,7 @@ export const thunk0 = thunk(0);
+  * const value = thunk1()
+  * // 1
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -188,7 +188,7 @@ export const thunk1 = thunk(1);
+  * const arr = getArr()
+  * // []
+  *
+- * void arr
++ * console.log(arr)
+  * ```
+  *
+  * @category constructors
+@@ -207,7 +207,7 @@ export const thunkEmptyArray = <A = never>(): LazyArg<Array<A>> => A.empty<A>;
+  * const arr = getArr()
+  * // []
+  *
+- * void arr
++ * console.log(arr)
+  * ```
+  *
+  * @category constructors
+@@ -226,7 +226,7 @@ export const thunkEmptyReadonlyArray = <A = never>(): LazyArg<ReadonlyArray<A>>
+  * const getEffect = thunkEffect(Effect.succeed(42))
+  * const eff = getEffect()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category constructors
+@@ -243,7 +243,7 @@ export const thunkEffect = <T>(effect: T) => thunk(effect);
+  *
+  * const eff = thunkEffectVoid()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category utilities
+@@ -261,7 +261,7 @@ export const thunkEffectVoid = thunkEffect(Effect.void);
+  * const getEffect = thunkEffectSucceed("hello")
+  * const eff = getEffect()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category constructors
+@@ -278,7 +278,7 @@ export const thunkEffectSucceed = <A>(a: A) => thunkEffect(Effect.succeed(a));
+  *
+  * const eff = thunkEffectSucceedNull()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category utilities
+@@ -295,7 +295,7 @@ export const thunkEffectSucceedNull = thunkEffectSucceed(null);
+  *
+  * const eff = thunkEffectSucceedNone<string>()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category constructors
+@@ -312,7 +312,7 @@ export const thunkEffectSucceedNone = <A = never>() => Effect.succeed(O.none<A>(
+  *
+  * const rec = thunkEmptyRecord<string, number>()
+  *
+- * void rec
++ * console.log(rec)
+  * ```
+  *
+  * @category constructors
+@@ -331,7 +331,7 @@ export const thunkEmptyRecord = <K extends string | symbol = never, V = never>()
+  * const opt = getSome()
+  * // Option.some(42)
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+@@ -352,7 +352,7 @@ export const thunkSome =
+  * const opt = thunkSomeEmptyStr()
+  * // Option.some("")
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category utilities
+@@ -370,7 +370,7 @@ export const thunkSomeEmptyStr = thunkSome("");
+  * const value = thunkNegative1()
+  * // -1
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -388,7 +388,7 @@ export const thunkNegative1 = thunk(-1);
+  * const opt = thunkSomeFalse()
+  * // Option.some(false)
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category utilities
+@@ -406,7 +406,7 @@ export const thunkSomeFalse = thunkSome(false);
+  * const opt = thunkSomeTrue()
+  * // Option.some(true)
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category utilities
+@@ -424,7 +424,7 @@ export const thunkSomeTrue = thunkSome(true as const);
+  * const opt = thunkSomeEmptyArray<number>()
+  * // Option.some([])
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+@@ -442,7 +442,7 @@ export const thunkSomeEmptyArray = <A = never>() => O.some(A.empty<A>());
+  * const opt = thunkSomeEmptyRecord<string, number>()
+  * // Option.some({})
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+@@ -463,7 +463,7 @@ export const thunkSomeEmptyRecord = <K extends string | symbol = never, V = neve
+  * const opt = thunkSomeNone<string>()
+  * // Option.some(Option.none())
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
