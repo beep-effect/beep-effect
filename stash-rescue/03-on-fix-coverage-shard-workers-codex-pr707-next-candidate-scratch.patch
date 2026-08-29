@@ -1,0 +1,417 @@
+diff --git a/scratchpad/msg-to-codex-findings-session.md b/scratchpad/msg-to-codex-findings-session.md
+new file mode 100644
+index 0000000000..5a49280907
+--- /dev/null
++++ b/scratchpad/msg-to-codex-findings-session.md
+@@ -0,0 +1,64 @@
++# To the session on `codex/security-findings-2026-08-13` (beep-effect7)
++
++The publish hold is lifted — PRs #673 (turbo-cache infra activation) and #674
++(CI cache consumption) are merged, along with #672 (Effect 4.0.0-rc.108) and
++#676. You may publish, with the following required sequencing so nothing
++breaks.
++
++## Before anything else
++
++1. `git fetch origin && git merge origin/main` (merge, not rebase — repo
++   norm), then `bun install` — #672 moved the lockfile; skipping the install
++   produces phantom failures.
++2. Expect merge conflicts in files we both touched:
++   - `infra/src/CiTurboCache.ts` — main now removes the `POST /v8/artifacts`
++     route/integration entirely, adds stage throttling, reserved concurrency,
++     and a `loadCiTurboCacheConfig` loader. Keep both sides: your CSF-013
++     invoke-ARN correction applies to the two surviving integrations
++     (read + write); if any hunk of yours references the removed
++     `query-artifact` integration, drop that hunk.
++   - `infra/test/CiTurboCache.test.ts` — same file changed on main; re-apply
++     your Pulumi-mock assertions on top.
++   - `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts`
++     and `standards/coverage.regression-baseline.jsonc` — main merged a new
++     floor for `@beep/repo-docgen` today. If your work regenerates or
++     migrates the baseline, regenerate it ON THE POST-MERGE TREE; never
++     resolve that file by keeping your pre-merge version.
++3. Regenerate every ratchet/baseline artifact you touched on the merged tree
++   before verifying (same rule as above, generally).
++
++## CI environment changes you inherit
++
++- PR lanes now consume the remote turbo cache read-only (`TURBO_*` env is
++  set); fork-style degradation is env-gated and none of it needs anything
++  from you.
++- The Effect CLI and docgen bins now exit explicitly on success — the
++  "lane prints success then hangs/SIGABRTs" class is fixed. If you saw that
++  during earlier verifies, do not chase it; it is gone on merged main.
++
++## Deployment boundary (important)
++
++Your CSF-013 change corrects the API Gateway integrations to the invoke ARN.
++The live stack currently runs the function-ARN form and is probe-proven
++working, so: land the PR, but do NOT run `pulumi up` from your session. The
++operator/infra session deploys it afterward as a two-resource in-place update
++followed by the live probe matrix.
++
++## Publishing shape
++
++Publish as narrow standalone PRs, not one omnibus, in this order of value:
++CSF-002 (legacy runner-launcher retirement) first, then CSF-007 (public
++provenance) and CSF-010 (agent defaults + AI-sync enforcement). Hold
++CSF-009 and CSF-012 until their known gaps are closed (CSF-012: the
++aggregate-flat file-replacement case; also evict the unrelated
++`EffectTsgoEffectFnPolicy.test.ts` edit from the security scope), and keep
++the six runner-admission findings unpublished — they become acceptance
++evidence for the CI architecture work, not fixes claimable now. If your
++newer work (your QUALITY_REVIEW.md) already closes those gaps, say so in
++the PR bodies.
++
++Mechanics: every changed package needs a changeset; commit subjects are
++conventional and lowercase; body lines under 100 chars; publish through
++`bun run beep yeet verify` then publish, and describe each change in the PR
++body in precise, neutral engineering terms (what is validated/enforced,
++which finding id it closes).
+diff --git a/scratchpad/runner-endgame-decision-record.md b/scratchpad/runner-endgame-decision-record.md
+new file mode 100644
+index 0000000000..9b0fd90655
+--- /dev/null
++++ b/scratchpad/runner-endgame-decision-record.md
+@@ -0,0 +1,186 @@
++# Runner endgame — decision record (2026-08-08)
++
++Synthesis of the runner-endgame research workflow (5 agents: philips-lineage
++deep-read, alternatives survey, our-stack gap audit, cache/AMI design,
++decision synthesizer; full output archived in the session task
++`wg7t66mm1.output`) plus the post-research grill (operator signatures below).
++This file is the charter input for `goals/ci-fleet-endgame`; the speed-loop
++closeout PR graduates it into that packet.
++
++## Charter (operator-worded, co-primary)
++
++1. **On-demand worker-per-job**: a system that spins up one worker per job on
++   demand — "the single biggest win even if we struggle to get under
++   20 minute jobs."
++2. **No 20-minute jobs**: "Endgame should just mean we don't wait 20 minutes
++   for any job."
++
++Neither deliverable is subordinate to the other.
++
++## Decision: ADOPT-THEN-WRAP
++
++Adopt **github-aws-runners/terraform-aws-github-runner** (the live,
++community-maintained successor of the archived philips-labs repo — archived
++2025-01-16; the fork has ~3.1k stars and released within days of this
++research) as the controller core, pinned at v7.10.x with provenance-verified
++module + lambda release artifacts, in **ephemeral one-job-one-VM mode with
++JIT registration**. Flow: workflow_job webhook → API Gateway → SQS →
++scale-up Lambda → CreateFleet (diversified spot) → ephemeral runner →
++scale-down/orphan reconciliation.
++
++The deployed `CiRunners.ts` Pulumi stack **remains the foundation**: VPC and
++egress geometry, IAM guardrails, flow logs, the reaper as second-line TTL
++authority (via `beep-ci=runner` extra-tag propagation to instances AND
++volumes), AMI-pinning discipline, and the launch-template worker-shape
++doctrine re-expressed as module inputs. All ops flow through `beep runners`
++porcelain. The asymmetric turbo cache and lockfile-keyed baked AMI are built
++by us regardless of controller (no surveyed option ships them safely for a
++public repo).
++
++**Velocity correction (operator, from prior-job experience):** this module
++deploys with a single apply in under an hour — the phased ceremony below is
++for the *wrapping* (porcelain, cache, AMI, observability), not the module.
++Do not let ceremony inflate the deploy. The operator has run this exact
++module in production before.
++
++## Signed grill decisions (2026-08-08)
++
++1. **Invariant amendment — THE adoption decision (signed).** "Workers carry
++   no AWS credentials" is amended to: *workers carry a scoped,
++   permissions-boundaried, deny-by-default, self-referential runner role;
++   the single-use JIT registration token is deleted at registration.* The
++   module's SSM-pull JIT delivery requires this; the account's
++   launch-with-profile IAM Deny is lifted for the runner role only.
++   Refusal of this amendment was the void-adoption tripwire; it is now moot.
++2. **Deployment vehicle — Pulumi preferred (signed).** "Ideally we use
++   pulumi instead of add terraform as a dep if we can." Spike Pulumi's
++   `terraform-module` bridge first (module consumed as a Pulumi resource in
++   the existing `infra/` program, same S3 state backend + passphrase); a
++   minimal Terraform root is the fallback only if the bridge chokes on the
++   module's lambda-release artifacts or provider surface.
++3. **GitHub App: repo-scoped, KMS, 1Password (signed).** App installed on
++   beep-effect only. Private key + webhook secret in SSM SecureString under
++   KMS; source-of-truth copy in 1Password (`op://BEEP_CI`). A future repo
++   re-runs the install step rather than widening blast radius now.
++4. **Cost gates: $100/mo projection, $200/mo absolute ceiling (signed).**
++   The standing 20%-over-projection rule stops expansion; ceiling breach is
++   a hard stop + re-decision. (~1/7th of the Blacksmith run-rate.)
++5. **Spot posture: spot everywhere + on-demand failover on capacity errors
++   (signed).** Diversified types, price-capacity-optimized. Standing
++   tripwire: >2 interruption-caused re-runs/week → move Coverage and Test
++   Integration to on-demand.
++6. **RunsOn fallback licensing: free non-commercial tier (signed).** The
++   defensibility rests on the repo being a public personal learning
++   substrate — that is the load-bearing fact, not which email registers the
++   account (a personal email is fine and cleaner, but presentation only).
++   Nothing is registered unless a tripwire actually fires; the adopted
++   module is Apache-2.0 with no licensing question.
++7. **Fork-PR trust: resolved by prior hardening (verified live).**
++   Approval-required is set for ALL outside collaborators; default workflow
++   token is read-only; workflow-approval of PRs is off. The research's
++   "weaker than assumed" premise described the pre-campaign state.
++
++Defaults accepted without signature (revisit on evidence, not on schedule):
++container/IMDS boundary — block IMDS from containers via host iptables,
++final call when the shadow deployment shows whether testcontainers needs
++IMDS; RO cache token is public-equivalent by construction — accepted,
++because cache contents are artifacts of reviewed merged code only;
++maintenance budget 4h/month sustained a quarter → RunsOn tripwire;
++break-glass `beep runners launch|teardown` manual path kept (audited,
++flag-gated); reaper TTL stays 90 min until measured p99 job duration
++justifies tightening; single m7i.2xlarge-class runner config until per-lane
++peak-RSS data justifies multi-runner right-sizing splits.
++
++## Alternatives (ranked by the survey)
++
++1. **Adopt-then-wrap the fork** — chosen; best invariant-fit per
++   maintenance-hour; the module is also the gap-list oracle regardless of
++   pick.
++2. **RunsOn** — fallback. Caveats that cost it first place: Magic Cache must
++   stay OFF on a public repo (shared-bucket full-write violates
++   PR-never-writes-cache; isolation "coming"), runners carry an instance
++   role anyway, per-launch telemetry needs an egress exception, and since we
++   hand-roll cache asymmetry regardless, its differential shrinks.
++3. **Build-own Effect-native controller** — ranked down on operational
++   grounds only; stays live as the flip target if the operator ever promotes
++   the controller to a first-class learning/product artifact (explicit
++   tripwire).
++4. ARC (Kubernetes) — wrong weight class for a solo operator; EKS standing
++   cost defeats scale-to-zero.
++5. Per-workflow ephemeral actions (start/stop EC2 inside the workflow) —
++   trust-inverted: PR-editable YAML would control launches; rejected on the
++   o6 §2 structural finding.
++
++## Gap audit — what adoption buys (our stack today vs controller needs)
++
++Absent/deferred in our stack, supplied by the module: webhook intake;
++**out-of-repo trust verification before any VM launch** (load-bearing since
++#620 put `runs-on: beep-ec2-heavy` in PR-editable YAML); JIT registration;
++per-job dispatch with subnet/type diversification; spot-interruption
++consumer; orphan/health reconciliation beyond the blunt 90-min reaper;
++operational metrics (pickup latency, per-job cost, infra-success rate);
++capacity policy (scale-to-zero, max fleet, budget alarms).
++
++Keeps (re-asserted as module inputs or kept beside it): IAM launch
++guardrails; egress-only VPC + zero-ingress SG; the reaper as second-line
++authority; the launch-template worker-shape contract; workflow-side
++hardening (#600, #620); the red-team acceptance suite (all must FAIL from a
++guest: IMDS credential reachability, S3 cache write, east-west/LAN/tailnet
++reach).
++
++## Performance layer (deliverable 2 — ours to build regardless)
++
++Baseline (measured, burst receipts): heavy lane 18–20+ min = ~2.2 min setup
++floor + 15–18 min turbo compute at **0 cache hits**; test lanes carry
++~9.3 min of type-graph import inside vitest.
++
++- **Asymmetric turbo cache** on the provisioned
++  `beep-turbo-cache-832907639880` bucket: trusted (merged) code writes; PR
++  code gets read-only via short-lived pre-signed GETs from an Effect-native
++  mint Lambda (`effect/unstable/http`, sibling of CiRunners.ts). Projected:
++  leaf/mid-slice PR Check/Build/Docgen 18–20 → ~6–9 min; core-package PR
++  ~11–14 min; Test Integration ~19 → ~13–15; Coverage 20+ → ~15–17. Bonus:
++  the same pull porcelain serves free ubuntu-24.04 lanes — a cached Check
++  lane may re-fit free-runner memory, attacking fleet NECESSITY, not just
++  speed.
++- **Lockfile-keyed baked AMI** (`beep runners bake` through the existing
++  launch-template rails; Image Builder and Packer rejected): deletes the
++  setup floor and the cross-runner cache-poisoning classes; makes ephemeral
++  one-job-one-VM affordable.
++- **Honest cannot-fix**: the ~9 min type-graph import is compute inside
++  vitest/tsgo, re-paid by every lane that actually RUNS a heavy-import
++  suite (Coverage and Test Integration always; core-package PRs broadly).
++  Global-input PRs (tsconfig.base/turbo.json edits) hit 0% cache —
++  correct, not fixable. The lever on this class is per-slice sharding
++  (ledger #3 lineage), not caching.
++
++## Tripwires (standing, from the research — abbreviated)
++
++Container-IMDS boundary fails → decide iptables vs build-own flip; reaper
++tag-propagation to instances AND volumes fails → adoption BLOCKED until
++fixed; upstream >90 days silent / unpatched advisory / unfundable major →
++RunsOn or freeze-and-fork; maintenance >4h/mo for a quarter → RunsOn; first
++invoice >20% over $100 projection → stop + re-decide; ceiling $200 → hard
++stop; cache+sharding re-fit lanes onto free runners leaving ≤2 EC2 lanes →
++controller payload shrinks, revisit scope; Terraform/Pulumi dual-writer
++fight over shared resources → stop and consolidate ownership; >2
++interruption re-runs/week → longest lanes to on-demand; operator promotes
++controller to product → build-own flip.
++
++## Execution order (resequenced for the velocity correction)
++
++Deliverable 1 is hours, not weeks — it goes first; the performance layer
++follows on its own track.
++
++1. **Ratify + docs** (this record into the packet; CiRunners.ts doc-block
++   amended for the signed invariant; zero controller code).
++2. **Bridge spike + deploy** (GitHub App mint → Pulumi terraform-module
++   bridge spike → module deployed on a non-serving shadow label; fallback:
++   minimal Terraform root).
++3. **Cutover**: `beep-ec2-heavy` served by the module; manual burst scripts
++   demoted to break-glass; red-team suite re-run against a live ephemeral
++   worker.
++4. **Cache** (asymmetric turbo cache; biggest measured minutes).
++5. **Baked AMI** (`beep runners bake`, lockfile-keyed).
++6. **Ops hardening**: pickup-latency/cost/RSS dashboard feeding the
++   right-sizing and sharding decisions.
+diff --git a/scratchpad/speed-loop-closeout-friction.md b/scratchpad/speed-loop-closeout-friction.md
+new file mode 100644
+index 0000000000..20d5fc9b30
+--- /dev/null
++++ b/scratchpad/speed-loop-closeout-friction.md
+@@ -0,0 +1,54 @@
++# Friction receipts pending ledger entry (closeout PR carries these)
++
++Source: the 608-conflict-resolution subagent's reflection (2026-08-08, merge
++of origin/main into feat/jsdoc-carrier-migration-p3, commits `ad15631803` +
++`0b0703e355`). Held here because goals/ files were owned by in-flight PRs at
++capture time; fold into `goals/speed-loop/research/OPPORTUNITIES.md` in the
++closeout PR.
++
++1. **Generated-file auto-merge is wrong in both directions — third confirmed
++   instance.** `goals/INDEX.md` regenerated to 122 packets / 33 active; HEAD
++   said 31, main said 34 — taking EITHER side commits a wrong index.
++   Prevention: a git merge driver marking `goals/INDEX.md`,
++   `standards/jsdoc-*.inventory.*`, and `standards/*.regression-baseline.jsonc`
++   as `merge=regenerate` so conflicts fail loudly instead of auto-merging
++   plausibly-wrong content.
++
++2. **A docs-only codemod branch carried a latent compile break.** The P3
++   branch pinned `S.TaggedErrorClass`; main's effect beta.104 bump renamed
++   the export to `S.TaggedError` (verified: zero occurrences of the old name
++   in the installed package). No gate on the branch itself could catch it
++   before merge — the API simply no longer existed. Prevention: merge main
++   into long-running codemod branches early and often (and ledger #84's
++   merged-tree verify tier is exactly the local gate that would have caught
++   it).
++
++3. **The jsdoc ratchet compares counts only, so it cannot detect a stale
++   inventory.** A concurrent writer shipped an inventory with line anchors
++   from a pre-merge tree (`Id.ts` `make` at 2043 vs actual 2065); totals
++   matched, gate stayed green. Anchors/`generatedAt` are load-bearing for
++   docs tooling but unguarded. Prevention: ratchet check-mode should verify a
++   sample of anchors against the working tree, or hash the anchored spans.
++
++4. **`jsdoc-inventory` costs ~5 min per run (303s/319s observed) and
++   merge-resolution loops run it repeatedly** (three times across two merges
++   here). Prevention: a `--since`-style bounded mode like `docgen:local`,
++   scoped to origin/main...HEAD + dirty files.
++
++Also observed this session (mine, not the subagent's):
++
++5. **Prebuilt-binary download timeout converts to a red lane via a latent
++   env gap** (PR #626, Codegen Drift, 2026-08-08): keytar (transitive via
++   `@azure/msal-node-extensions`) hit "prebuild-install warn install Request
++   timed out", fell back to node-gyp source build, and died on missing
++   `libsecret-1-dev` on the free ubuntu-24.04 runner. Immediate: rerun-once
++   (dispatched); fingerprint added to the #89 scope (install-step infra
++   failure, jobs-API detectable). Durable: the ci-fleet-endgame baked-AMI
++   toolbelt must include `libsecret-1-dev` (and the free-lane setup composite
++   can add it if the class recurs) so the source fallback simply works.
++
++6. **The lane janitor's allowlist lives in a session-scoped scratchpad path**
++   (`/tmp/claude-1000/.../6ac248be.../scratchpad/lane-allowlist.txt`), which a
++   successor session had to rediscover by find(1). Prevention: ops state that
++   outlives a session belongs in a durable repo-adjacent location (the
++   `beep runners` porcelain should own lane-closure state).
+diff --git a/scratchpad/speed-loop-closeout-grill-51-63.md b/scratchpad/speed-loop-closeout-grill-51-63.md
+new file mode 100644
+index 0000000000..8b896f4da0
+--- /dev/null
++++ b/scratchpad/speed-loop-closeout-grill-51-63.md
+@@ -0,0 +1,89 @@
++# Drafted GRILL-DECISIONS entries 51–63 (closeout PR appends these)
++
++Wrap-up grill (2026-08-08, lane-closed window) + post-research grill
++(2026-08-08, runner-endgame research record). Answers verbatim from the
++operator via AskUserQuestion; transcript-verified.
++
++51. **Wrap-up scope: docs + ALL small widgets.** "Wrap-up before the CI lane
++    reopens" includes the four repo-cli implementation widgets — #84
++    (`yeet verify --merged`), #88 (gate-staleness), #89 (quarantine
++    fingerprints), #90 (collector columns) — not just docs/decisions/
++    teardown. They ship as one implementation PR before the closeout flip.
++    Mid-flight addendum to #89 (operator-observed live failure, PR #626):
++    a THIRD fingerprint — install-step infra failure (prebuilt-binary
++    download timeout → source-build fallback → missing system header),
++    jobs-API detectable, rerun-once semantics.
++52. **#84 ships FULL, now.** The merged-tree verify tier materializes
++    `origin/main`-merge preview in a detached worktree and runs the
++    repo-level battery there — the largest widget, shipped whole rather
++    than staged. Ratified against live evidence: the night's merge
++    treadmill (INDEX regenerated three times; two semantically-mixed trees
++    caught only by hosted lanes) and #608's latent `S.TaggedErrorClass`
++    compile break are exactly this gap biting.
++53. **#86/#87 (ledger sidecar + sigil grammar): SUPERSEDED by
++    basic-memory.** PR #604's adoption of basic-memory + codegraph as the
++    shared agent knowledge plane replaces the bespoke machine-readable
++    ledger sidecar; the #NN sigil overload is tolerated in the retained
++    ledger and disambiguated in prose where it matters.
++54. **Runner endgame graduates as ONE successor packet:
++    `goals/ci-fleet-endgame`.** #91 (controller adopt-vs-build), #92
++    (baked AMI), #93 (resource-weight campaign), #94 (asymmetric cache)
++    move together into the successor charter; speed-loop closes
++    completed-retained without absorbing weeks of fleet work. Charter is
++    CO-PRIMARY by operator correction: (1) an on-demand worker-per-job
++    system — "the single biggest win even if we struggle to get under
++    20 minute jobs" — AND (2) no job waits 20 minutes; neither subordinate.
++55. **Earlier grilled-but-unshipped widgets: PARK in the retained
++    ledger.** The ranked cheap bundle (#82 publish status line, #76, #73,
++    #83 verdict staleness) and the PR-G family (#75 repo-level battery,
++    #60 regenerate-map, #77 publish --reconcile, …) stay recorded with
++    their grill outcomes in the retained ledger; any future packet may
++    revive them by citation, and none block closeout.
++56. **Lane policy: REOPEN after speed-loop closes.** The CI lane does not
++    stay closed for the endgame; it reopens once the closeout PR merges,
++    and ci-fleet-endgame proceeds as the active packet on the normal
++    shared lane.
++57. **THE adoption decision (endgame): amend the invariant, ADOPT
++    github-aws-runners/terraform-aws-github-runner.** "Workers carry no
++    AWS credentials" is formally amended to: workers carry a scoped,
++    permissions-boundaried, deny-by-default, self-referential runner role;
++    the single-use JIT registration token is deleted at registration. The
++    module (v7.10.x, ephemeral one-job-one-VM, JIT via SSM-pull) requires
++    it; the account's launch-with-profile IAM Deny is lifted for the
++    runner role only. Full record, alternatives, and tripwires:
++    `research/runner-endgame-decision-record.md` in the successor packet.
++58. **Deployment vehicle: Pulumi, not a Terraform dep.** Operator verbatim:
++    "Ideally we use pulumi instead of add terraform as a dep if we can."
++    Spike Pulumi's terraform-module bridge inside the existing `infra/`
++    program (same S3 backend + passphrase); a minimal Terraform root is
++    fallback only if the bridge chokes on the module's lambda artifacts.
++59. **Velocity correction: the module deploy is hours, not weeks.** The
++    operator has run this exact module in production before ("took less
++    than 1 hour"). The endgame's phased ceremony covers the wrapping
++    (porcelain, cache, AMI, observability) — never the deploy itself.
++    Execution resequenced module-first; the performance layer follows on
++    its own track.
++60. **GitHub App: repo-scoped, KMS, 1Password.** Installed on beep-effect
++    only; private key + webhook secret in SSM SecureString under KMS;
++    source-of-truth copy in 1Password (`op://BEEP_CI`). Future repos
++    re-run the install step rather than widening blast radius now.
++61. **Cost gates: $100/mo projection, $200/mo absolute ceiling.** The
++    standing 20%-over-projection rule halts expansion; ceiling breach is a
++    hard stop + re-decision. Spend is usage-shaped (scale-to-zero): VM
++    minutes only while a job runs; standing costs are storage-class
++    pennies.
++62. **Spot posture: spot everywhere + on-demand failover on capacity
++    errors.** Diversified types, price-capacity-optimized. Standing
++    tripwire: >2 interruption-caused re-runs/week moves Coverage and Test
++    Integration to on-demand.
++63. **RunsOn fallback licensing: free non-commercial tier.** Defensibility
++    rests on the usage — a public personal learning repo — not the
++    registering email (a personal email is cleaner but is presentation,
++    not substance). Nothing registers unless an adoption tripwire fires;
++    the adopted module is Apache-2.0. Related closures recorded with the
++    decision record: fork-PR trust posture resolved by prior hardening
++    (all-outside-collaborator approval + read-only workflow tokens,
++    verified live); container-IMDS boundary, RO-cache-token exposure,
++    4h/month maintenance budget, break-glass retention, reaper TTL, and
++    single-runner-config-first all accepted as defaults, revisited on
++    evidence.
