@@ -1,0 +1,77 @@
+diff --git a/apps/professional-desktop/package.json b/apps/professional-desktop/package.json
+index dd1103046a..6ceb4cb1f0 100644
+--- a/apps/professional-desktop/package.json
++++ b/apps/professional-desktop/package.json
+@@ -16,6 +16,7 @@
+     "codegen": "bun run scripts/sync-migration-bundle.ts --write",
+     "codegen:check": "bun run scripts/sync-migration-bundle.ts --check",
+     "dev": "portless professional-desktop.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
++    "preview": "portless professional-desktop.beep sh -c 'vite preview --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
+     "dev:sidecar": "CHAT_AGENT=fixture bun run sidecar",
+     "sidecar": "test ! -L ../../.beep/professional-desktop/ontology-workspace && mkdir -p ../../.beep/professional-desktop/ontology-workspace && test ! -L ../../.beep/professional-desktop/ontology-workspace && chmod 700 ../../.beep/professional-desktop/ontology-workspace && ONTOLOGY_WORKSPACE_ROOT=../../.beep/professional-desktop/ontology-workspace bun run server/main.ts",
+     "build:sidecar": "bun run scripts/build-sidecar.ts",
+diff --git a/apps/professional-desktop/vite.config.ts b/apps/professional-desktop/vite.config.ts
+index f837151501..f743c06a26 100644
+--- a/apps/professional-desktop/vite.config.ts
++++ b/apps/professional-desktop/vite.config.ts
+@@ -59,6 +59,21 @@ const initialChunkGroups = [
+   { name: "pretext-vendor", test: /node_modules[\\/]@chenglou[\\/]pretext[\\/]/, priority: 25 },
+ ];
+ 
++// Same-origin `/rpc` and `/otlp` for both `vite` and `vite preview`. The
++// production tailnet host is `vite preview`; without this map, preview would
++// 404 `/rpc` instead of forwarding to the loopback sidecar.
++const sidecarProxy = {
++  "/rpc": {
++    target: "http://127.0.0.1:3939",
++    changeOrigin: true,
++  },
++  "/otlp": {
++    target: "http://localhost:4318",
++    changeOrigin: true,
++    rewrite: (path: string) => path.replace(/^\/otlp/, ""),
++  },
++};
++
+ export default defineConfig({
+   clearScreen: false,
+   plugins: [resolveUniformTypeScriptSourceSpecifiers(), stripMisplacedLexicalPureAnnotations(), react()],
+@@ -107,25 +122,7 @@ export default defineConfig({
+     // (`--port "${PORT:-1421}" --strictPort`): portless assigns PORT for the
+     // named route, and the 1421 fallback keeps the PORTLESS=0 diagnostic
+     // bypass on the port tauri and the ontology MCP allowlist already accept.
+-    proxy: {
+-      // Same-origin rpc: the vite dev server is the single origin, so the
+-      // webview's `/rpc` calls (see @beep/agents-client Chat.atoms.ts SERVER_URL)
+-      // ride this proxy to the loopback bun sidecar on :3939 (server/main.ts
+-      // CHAT_SIDECAR_PORT default). Dev runs the sidecar via `bun run dev:sidecar`.
+-      "/rpc": {
+-        target: "http://127.0.0.1:3939",
+-        changeOrigin: true,
+-      },
+-      // Same-origin OTLP for the webview's effect-native exporter (the client
+-      // observability global layer in @beep/agents-client). Vite proxies it to
+-      // the standard OTel collector so the browser needs no CORS setup; without
+-      // a collector listening the export just fails silently.
+-      "/otlp": {
+-        target: "http://localhost:4318",
+-        changeOrigin: true,
+-        rewrite: (path) => path.replace(/^\/otlp/, ""),
+-      },
+-    },
++    proxy: sidecarProxy,
+     // Cargo can materialize tens of thousands of generated files under target.
+     // They never affect the web bundle and exhausting inotify there prevents the
+     // canonical portless dev server from starting.
+@@ -133,5 +130,11 @@ export default defineConfig({
+       ignored: ["**/src-tauri/target/**"],
+     },
+   },
++  preview: {
++    // Loopback-only preview; Tailscale serve forwards with the node's
++    // `*.ts.net` Host header, which Vite rejects unless listed here.
++    allowedHosts: true,
++    proxy: sidecarProxy,
++  },
+   envPrefix: ["VITE_", "TAURI_"],
+ });
