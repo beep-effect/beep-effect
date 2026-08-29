@@ -25,10 +25,9 @@ existing packet's `CAPTURE.md`, or is struck through with a word of why.
   into Claude/Codex/Grok/t3code/Docker-MCP vendor configs, replacing
   hand-synchronized `.mcp.json` + `config.toml` + settings sprawl; fail-closed
   compilation (an adapter that can't express a constraint errors instead of
-  widening authority). Evidence: the 2026-08-29 agent-runtime overhaul —
-  removal had to touch five independent config surfaces per tool, three
-  undocumented (ChatGPT Compatibility loader for repo `.mcp.json`, Grok
-  cursor-compat import, Codex prompt-hooks); 47 tracked `.mcp.json` copies had
-  drifted into 3 content hashes. Protocol/product constraints live in the
-  machine-local agent-runtime-overhaul research lanes (mcp-protocol-matrix,
-  mcp-control-planes, 2026-08-29).
+  widening authority). Operator-captured 2026-08-29 during the basic-memory +
+  codegraph removal campaign (#881, #884): stripping two servers required
+  touching five independent config surfaces per harness — several undocumented
+  (a Claude-format `.mcp.json` compatibility loader in the ChatGPT-embedded
+  app-server, Grok's Cursor-config import, Codex prompt-hooks) — and the 47
+  tracked `.mcp.json` copies across clones had drifted into 3 content hashes.

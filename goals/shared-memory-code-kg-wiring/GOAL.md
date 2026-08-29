@@ -1,7 +1,9 @@
 # GOAL: Wire shared memory + code-KG into all four coding agents
 
-> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
-> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+> **Historical — MUST NOT be executed (superseded 2026-08-29).** This launcher
+> built the basic-memory + codegraph plane that was later removed entirely;
+> following it would reintroduce removed tooling. See
+> `standards/memory-architecture/04-decision-log.md`. Record only.
 
 Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
