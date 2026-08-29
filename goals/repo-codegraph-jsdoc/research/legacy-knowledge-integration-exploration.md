@@ -1,5 +1,8 @@
 # OVERVIEW Legacy Knowledge Integration Exploration
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 ## 1. Purpose and Reading Guide
 - **Intent**: exploratory synthesis of legacy `knowledge/_docs` ideas/patterns/systems and their possible integration value for the current repo-codegraph-jsdoc direction in [SPEC.md](../SPEC.md).
 - **Outcome type**: opportunities and recommended exploratory lanes, not implementation commitments.

@@ -1,5 +1,8 @@
 # CodeRAG: Supportive Code Retrieval on Bigraph for Real-World Code Generation
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Source: https://arxiv.org/html/2504.10046v1
 
 Jia Li Key Lab of High Confidence Software Technology (Peking University), MoE, School of Computer Science, Peking UniversityChina  , Xianjie Shi Key Lab of High Confidence Software Technology (Peking University), MoE, School of Computer Science, Peking UniversityChina  , Kechi Zhang Key Lab of High Confidence Software Technology (Peking University), MoE, School of Computer Science, Peking UniversityChina  , Lei Li The University of Hong KongChina  , Ge Li Key Lab of High Confidence Software Technology (Peking University), MoE, School of Computer Science, Peking UniversityChina  , Zhengwei Tao, Jia Li Key Lab of High Confidence Software Technology (Peking University), MoE, School of Computer Science, Peking UniversityChina [tttzw@stu.pku.edu.cn, lijia@stu.pku.edu.cn](mailto:tttzw@stu.pku.edu.cn,%20lijia@stu.pku.edu.cn) , Fang Liu School of Computer Science and Engineering, State Key Laboratory of Complex & Critical Software Environment, Beihang UniversityChina  , Chongyang Tao Beihang UniversityChina  and Zhi Jin Key Lab of High Confidence Software Technology (Peking University), MoE, School of Computer Science, Peking UniversityChina

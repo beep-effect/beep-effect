@@ -20,3 +20,14 @@ existing packet's `CAPTURE.md`, or is struck through with a word of why.
   datatype/object inference are the same decision table in opposite directions
   — consider one shared range-policy module so import and export lanes cannot
   diverge.
+- **agent-config-canonicalization** — one semantic manifest (tool → artifact,
+  execution scope, lifecycle/TTL, capabilities, principal, profiles) compiled
+  into Claude/Codex/Grok/t3code/Docker-MCP vendor configs, replacing
+  hand-synchronized `.mcp.json` + `config.toml` + settings sprawl; fail-closed
+  compilation (an adapter that can't express a constraint errors instead of
+  widening authority). Operator-captured 2026-08-29 during the basic-memory +
+  codegraph removal campaign (#881, #884): stripping two servers required
+  touching five independent config surfaces per harness — several undocumented
+  (a Claude-format `.mcp.json` compatibility loader in the ChatGPT-embedded
+  app-server, Grok's Cursor-config import, Codex prompt-hooks) — and the 47
+  tracked `.mcp.json` copies across clones had drifted into 3 content hashes.
