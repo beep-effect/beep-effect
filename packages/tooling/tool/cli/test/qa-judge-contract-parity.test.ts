@@ -31,7 +31,7 @@ import {
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { Unknown } from "@beep/schema/Unknown";
-import { GateRegistry, SkillContract } from "@beep/skill-contract";
+import { GateRegistry, SkillArtifactVerdict, SkillContract, verifySkillArtifact } from "@beep/skill-contract";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -41,6 +41,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -252,6 +253,37 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
 });
 
 describe("commands/Qa complete judge contract parity", () => {
+  it.effect("verifies the committed qa-inventory judge SKILL.md artifact", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const committed = yield* fs.readFileString(path.join(process.cwd(), "skills", "qa-inventory-judge", "SKILL.md"));
+      const verdict = yield* verifySkillArtifact({ committed, contract: QaJudgeContract });
+
+      expect(verdict.verdict).toBe("allowed");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("denies a mutated copy of the committed SKILL.md artifact", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const committed = yield* fs.readFileString(path.join(process.cwd(), "skills", "qa-inventory-judge", "SKILL.md"));
+      const verdict = yield* verifySkillArtifact({
+        committed: Str.replace("Mode: none", "Mode: tampered")(committed),
+        contract: QaJudgeContract,
+      });
+
+      expect(verdict.verdict).toBe("denied");
+      expect(
+        SkillArtifactVerdict.match(verdict, {
+          allowed: () => [],
+          denied: ({ reasons }) => reasons,
+        })
+      ).toEqual(["rerender-mismatch"]);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it("composes the five declarations from the single ordered gate-id registry", () => {
     expect(QaJudgeContract.id).toBe("https://beep-effect.dev/contracts/qa-inventory/v1");
     expect(A.map(QaJudgeContract.gates.declarations, (gate) => gate.id)).toEqual([

@@ -13,14 +13,17 @@
 import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
 import { CaptureLane, ClockCorrelator, Collector, ExtractionRuleSet, SessionStore, Witness } from "@beep/qa-capture";
+import { renderSkillMarkdown } from "@beep/skill-contract";
 import { A } from "@beep/utils";
-import { Effect, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path } from "effect";
+import * as O from "effect/Option";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { markLiveSession, stopLiveSession } from "./Control.ts";
 import { isBlockingProbe, renderDoctorReport, runQaDoctor } from "./Doctor.ts";
 import { runQaExtract } from "./Extract.ts";
+import { QaJudgeContract } from "./JudgeContract.ts";
 import { runQaJudgeIngest } from "./JudgeIngest.ts";
 import { runQaJudgeLint } from "./JudgeLint.ts";
 import { runQaJudgePack } from "./JudgePack.ts";
@@ -135,6 +138,10 @@ const surfaceFlag = Flag.string("surface").pipe(
 const fromFlag = Flag.file("from", { mustExist: true }).pipe(
   Flag.withDescription("File holding the judge transcript; the last fenced JSON block is ingested")
 );
+const writeSkillFlag = Flag.string("write").pipe(
+  Flag.withDescription("Write the rendered qa-inventory judge SKILL.md to this path instead of stdout"),
+  Flag.optional
+);
 const dataFlag = Flag.string("data").pipe(
   Flag.withDescription("Extra text appended to the marker label (witness markers carry a label only)"),
   Flag.optional
@@ -144,7 +151,9 @@ const labelArgument = Argument.string("label").pipe(
 );
 
 const printQaIndex = () =>
-  printLines(["qa commands: record, stop, mark, extract, report, doctor, judge-pack, judge-ingest, judge-lint"]);
+  printLines([
+    "qa commands: record, stop, mark, extract, report, doctor, judge-pack, judge-ingest, judge-lint, judge-skill",
+  ]);
 
 const runRecordCommand = Effect.fn("QaCommand.record")(function* (options: unknown) {
   const decoded = yield* decodeQaRecordOptions(options).pipe(QaCommandError.mapError("Invalid `qa record` options."));
@@ -208,6 +217,21 @@ const runJudgeLintCommand = Effect.fn("QaCommand.judgeLint")(function* (options:
     QaCommandError.mapError("Invalid `qa judge-lint` options.")
   );
   yield* runQaJudgeLint(process.cwd(), decoded);
+});
+
+const runJudgeSkillCommand = Effect.fn("QaCommand.judgeSkill")(function* (options: {
+  readonly write: O.Option<string>;
+}) {
+  const markdown = yield* Effect.fromResult(renderSkillMarkdown(QaJudgeContract));
+  yield* O.match(options.write, {
+    onNone: () => printLines([markdown]),
+    onSome: Effect.fn(function* (outputPath) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true });
+      yield* fs.writeFileString(outputPath, markdown);
+    }),
+  });
 });
 
 const qaRecordCommand = Command.make(
@@ -287,6 +311,11 @@ const qaJudgeLintCommand = Command.make("judge-lint", { round: requiredRoundFlag
   Command.provide(QaCommandLayers)
 );
 
+const qaJudgeSkillCommand = Command.make("judge-skill", { write: writeSkillFlag }, runJudgeSkillCommand).pipe(
+  Command.withDescription("Render the qa-inventory judge contract as deterministic SKILL.md"),
+  Command.provide(QaCommandLayers)
+);
+
 /**
  * Recorded-QA command group.
  *
@@ -316,7 +345,8 @@ export const qaCommand = Command.make("qa", {}, printQaIndex).pipe(
       qaDoctorCommand,
       qaJudgePackCommand,
       qaJudgeIngestCommand,
-      qaJudgeLintCommand
+      qaJudgeLintCommand,
+      qaJudgeSkillCommand
     )
   )
 );

@@ -12,6 +12,9 @@
       "path": "../identity/tsconfig.json"
     },
     {
+      "path": "../md/tsconfig.json"
+    },
+    {
       "path": "../schema/tsconfig.json"
     },
     {
