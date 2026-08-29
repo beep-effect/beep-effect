@@ -45,7 +45,7 @@ export {
  * @category cli-commands
  * @since 0.0.0
  */
-export { yeetCommand } from "./Yeet.command.ts";
+export { yeetCommand, yeetMonitorCommandRoute } from "./Yeet.command.ts";
 /**
  * Public yeet command error.
  *
