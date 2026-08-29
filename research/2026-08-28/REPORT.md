@@ -2,7 +2,7 @@
 
 Window 2026-08-26 22:22 → 2026-08-28 08:27 America/Chicago. Status: **partial** (X search still `client-not-enrolled`). 15 claims. Collision rate 0 against the 2026-08-26 digest plus the closed unmerged 2026-08-27 packet (#862). Refutation quota: 5 standing claims challenged (4 held, 1 held-and-moved). Not Sunday; no weekly consolidation.
 
-The 2026-08-27 packet (#862) was closed unmerged. Its 12 claims stay in the exclusion digest and are not re-emitted.
+The 2026-08-27 packet (#862) was closed unmerged. Its 12 claims are committed at `research/ledger/excluded-packets/2026-08-27.jsonl` so a later exclusion digest can rebuild without the closed PR. They are not re-emitted.
 
 ## Delta
 
@@ -37,7 +37,7 @@ Merged since the 2026-08-26 packet: #866 closes semantic-foundation (read next t
 
 Open and relevant: #867 patent-document-schema and #865 court-reporter-vocabulary (BLANC + iManage write-back). #872 LeJeune ontology / #873 corpus salvage. #869 Oppold T7. #874 ship-velocity. #871 langextract metadata.
 
-Closed #862 (2026-08-27 nightly) is the exclusion source for Lexis Protégé, ILTACON Day 3, Clio judiciary, USPTO RPI NPR, Tenet LAB/harness, claude-patent-creator, Evolu 8.7.0, and Effect #7489/#7486/#7477/#7492. Do not re-claim those.
+Closed #862 (2026-08-27 nightly) is the exclusion source for Lexis Protégé, ILTACON Day 3, Clio judiciary, USPTO RPI NPR, Tenet LAB/harness, claude-patent-creator, Evolu 8.7.0, and Effect #7489/#7486/#7477/#7492. Those 12 records live in `research/ledger/excluded-packets/2026-08-27.jsonl`. Do not re-claim those.
 
 ## Frictions
 
