@@ -135,5 +135,6 @@ explorations/graph-3d-navigation/research/seed/
 # Agent-harness prompt scratch files must never be committed (public repo).
 /codex-task-*.txt
 
-# codegraph local index (shared-memory-code-kg-wiring)
+# legacy codegraph local index (tool removed 2026-08-29; ignore kept so stale
+# machine-local indexes are never committed)
 .codegraph/
