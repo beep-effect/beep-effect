@@ -1,0 +1,14 @@
+diff --git a/packages/repo-memory/runtime/src/retrieval/GroundedRetrieval.ts b/packages/repo-memory/runtime/src/retrieval/GroundedRetrieval.ts
+index e74ba0e095..309d1cc680 100644
+--- a/packages/repo-memory/runtime/src/retrieval/GroundedRetrieval.ts
++++ b/packages/repo-memory/runtime/src/retrieval/GroundedRetrieval.ts
+@@ -184,7 +184,8 @@ const latestSnapshotForRepo = (store: GroundedRetrievalStoreShape) =>
+     const latestSnapshot = yield* mapStoreError(store.latestSourceSnapshot(repoId));
+ 
+     return yield* O.match(latestSnapshot, {
+-      onNone: () => GroundedRetrievalError.noCause(`Repo "${repoId}" does not have a completed source snapshot yet.`, 400),
++      onNone: () =>
++        GroundedRetrievalError.noCause(`Repo "${repoId}" does not have a completed source snapshot yet.`, 400),
+       onSome: (snapshot) => Effect.succeed(snapshot.id),
+     });
+   });
