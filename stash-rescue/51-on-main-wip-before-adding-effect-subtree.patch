@@ -1,0 +1,161 @@
+diff --git a/.claude/.hook-state.json b/.claude/.hook-state.json
+index b1cdc8989e..8da2a2fc85 100644
+--- a/.claude/.hook-state.json
++++ b/.claude/.hook-state.json
+@@ -1,7 +1,7 @@
+ {
+-  "lastCallMs": 1770169784898,
++  "lastCallMs": 1770171075028,
+   "patternCache": {
+-    "loadedAt": 1770169789748,
++    "loadedAt": 1770171092120,
+     "directoryMtime": 1770162603628,
+     "patterns": [
+       {
+diff --git a/specs/agent-context-optimization/MASTER_ORCHESTRATION.md b/specs/agent-context-optimization/MASTER_ORCHESTRATION.md
+index cf21bedfe2..f5c3fad7da 100644
+--- a/specs/agent-context-optimization/MASTER_ORCHESTRATION.md
++++ b/specs/agent-context-optimization/MASTER_ORCHESTRATION.md
+@@ -18,6 +18,15 @@ self := Architect ∧ Coordinator ∧ Delegator
+ --   • Code exploration (>3 files) → codebase-researcher
+ --   • Documentation writing → doc-writer
+ --   • Effect lookups → mcp-researcher
++
++-- You MAY execute directly:
++--   • Git operations → Execute with verification steps
++--   • Tooling config changes → Execute, verify with bun run check
++--   • Simple file operations (1-3 files) → Execute with error handling
++
++-- On direct execution ERRORS:
++--   • Git failures → Log error, attempt recovery, if persistent delegate to web-researcher for solutions
++--   • Config failures → Rollback change, verify with bun run check before retry
+ ```
+ 
+ ---
+@@ -76,8 +85,11 @@ bun run check
+ - [ ] Existing AGENTS.md patterns documented
+ - [ ] REFLECTION_LOG.md updated
+ 
+-### Handoff
+-Create `handoffs/HANDOFF_P1.md` and `handoffs/P1_ORCHESTRATOR_PROMPT.md`
++### Phase Exit Checklist
++- [ ] Update REFLECTION_LOG.md with Phase 0 learnings
++- [ ] **Populate `handoffs/HANDOFF_P1.md` Episodic Context with P0 results**
++- [ ] **Update token budget estimates in HANDOFF_P1.md**
++- [ ] Verify `handoffs/P1_ORCHESTRATOR_PROMPT.md` is ready to copy-paste
+ 
+ ---
+ 
+@@ -147,8 +159,18 @@ grep -r "Effect.gen" .repos/effect/packages/effect/src/ | head -5
+ - [ ] `bun run check` passes
+ - [ ] REFLECTION_LOG.md updated
+ 
+-### Handoff
+-Create `handoffs/HANDOFF_P2.md` and `handoffs/P2_ORCHESTRATOR_PROMPT.md`
++### Subtree Update Risk Mitigation
++
++Before running `git subtree pull` (for future updates):
++1. Create a backup branch: `git checkout -b backup-before-subtree-update`
++2. Test merge on backup first
++3. If conflicts, document resolution in `documentation/subtree-workflow.md`
++
++### Phase Exit Checklist
++- [ ] Update REFLECTION_LOG.md with Phase 1 learnings
++- [ ] **Populate `handoffs/HANDOFF_P2.md` Episodic Context with P1 results**
++- [ ] **Update token budget estimates in HANDOFF_P2.md**
++- [ ] Verify `handoffs/P2_ORCHESTRATOR_PROMPT.md` is ready to copy-paste
+ 
+ ---
+ 
+@@ -248,8 +270,11 @@ bun run check
+ - [ ] `bun run check` passes
+ - [ ] REFLECTION_LOG.md updated
+ 
+-### Handoff
+-Create `handoffs/HANDOFF_P3.md` and `handoffs/P3_ORCHESTRATOR_PROMPT.md`
++### Phase Exit Checklist
++- [ ] Update REFLECTION_LOG.md with Phase 2 learnings
++- [ ] **Populate `handoffs/HANDOFF_P3.md` Episodic Context with P2 results**
++- [ ] **Update token budget estimates in HANDOFF_P3.md**
++- [ ] Verify `handoffs/P3_ORCHESTRATOR_PROMPT.md` is ready to copy-paste
+ 
+ ---
+ 
+@@ -305,6 +330,12 @@ grep "Context Navigation" AGENTS.md
+ bun run check
+ ```
+ 
++### Scope Clarification
++
++- **Root AGENTS.md**: Add Context Navigation section (primary deliverable)
++- **Package AGENTS.md**: Add links to relevant context files (secondary, use agents-md-updater)
++- **Do NOT**: Duplicate context content across files
++
+ ### Exit Criteria
+ - [ ] AGENTS.md has Context Navigation section
+ - [ ] All context files linked
+@@ -313,8 +344,11 @@ bun run check
+ - [ ] `bun run check` passes
+ - [ ] REFLECTION_LOG.md updated
+ 
+-### Handoff
+-Create `handoffs/HANDOFF_P4.md` and `handoffs/P4_ORCHESTRATOR_PROMPT.md`
++### Phase Exit Checklist
++- [ ] Update REFLECTION_LOG.md with Phase 3 learnings
++- [ ] **Populate `handoffs/HANDOFF_P4.md` Episodic Context with P3 results**
++- [ ] **Update token budget estimates in HANDOFF_P4.md**
++- [ ] Verify `handoffs/P4_ORCHESTRATOR_PROMPT.md` is ready to copy-paste
+ 
+ ---
+ 
+@@ -332,6 +366,28 @@ Validate the complete system and refine based on testing.
+ | 4.3 | Generate missing context | doc-writer | Additional context files |
+ | 4.4 | Final AGENTS.md review | spec-reviewer | `outputs/final-review.md` |
+ | 4.5 | Document maintenance | doc-writer | `documentation/context-maintenance.md` |
++| 4.6 | Validate context budgets | Orchestrator (direct) | `outputs/context-budget-analysis.md` |
++
++### Task 4.6: Validate Context Budgets
++
++For each HANDOFF_P[N].md:
++1. Measure actual token count (word count × 4)
++2. Compare against budget (≤4,000 tokens)
++3. Document final measurements in `outputs/context-budget-analysis.md`
++
++```markdown
++## Context Budget Analysis
++
++| Handoff | Word Count | Est. Tokens | Budget | Status |
++|---------|------------|-------------|--------|--------|
++| HANDOFF_P1.md | [count] | [×4] | ≤4,000 | [OK/OVER] |
++| HANDOFF_P2.md | [count] | [×4] | ≤4,000 | [OK/OVER] |
++| HANDOFF_P3.md | [count] | [×4] | ≤4,000 | [OK/OVER] |
++| HANDOFF_P4.md | [count] | [×4] | ≤4,000 | [OK/OVER] |
++
++## Findings
++[Analysis of context engineering strategy effectiveness]
++```
+ 
+ ### Validation Protocol
+ 
+diff --git a/specs/agent-context-optimization/README.md b/specs/agent-context-optimization/README.md
+index f5f03a9e54..a5cf78feac 100644
+--- a/specs/agent-context-optimization/README.md
++++ b/specs/agent-context-optimization/README.md
+@@ -166,6 +166,17 @@ AGENTS.md                            # ENHANCED: Root index with context links
+ 
+ ---
+ 
++## Related Skills & Context
++
++| Resource | Purpose |
++|----------|---------|
++| `.claude/skills/` | 35+ existing Effect patterns to link from context files |
++| `.claude/rules/effect-patterns.md` | Current agent rules to enhance with subtree links |
++| `documentation/EFFECT_PATTERNS.md` | User-facing patterns to cross-reference |
++| `.claude/agents-manifest.yaml` | Agent capabilities for delegation |
++
++---
++
+ ## Reference Files
+ 
+ | File | Purpose |
