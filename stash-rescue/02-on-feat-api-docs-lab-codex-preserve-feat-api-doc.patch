@@ -1,0 +1,261 @@
+diff --git a/.changeset/api-docs-httpapi-contracts.md b/.changeset/api-docs-httpapi-contracts.md
+new file mode 100644
+index 0000000000..63694c6f84
+--- /dev/null
++++ b/.changeset/api-docs-httpapi-contracts.md
+@@ -0,0 +1,14 @@
++---
++"@beep/codegen-kit": patch
++"@beep/ecfr": patch
++"@beep/editor": patch
++"@beep/govinfo": patch
++"@beep/pacer": patch
++"@beep/qa-capture": patch
++"@beep/runpod": patch
++---
++
++OpenApi annotations on the handwritten HttpApi contracts (pacer, govinfo search, qa-capture
++collector), a contract-only `@beep/ecfr/contract` subpath export for docs consumers, a tsc-safe
++Match handler in the editor toolbar, and terse-effect law collateral pinned to explicit type
++arguments in codegen-kit and runpod.
+diff --git a/apps/labs/api-docs/package.json b/apps/labs/api-docs/package.json
+index 11a56debe7..b1b6f6c73c 100644
+--- a/apps/labs/api-docs/package.json
++++ b/apps/labs/api-docs/package.json
+@@ -35,6 +35,7 @@
+     "@beep/pacer": "workspace:^",
+     "@beep/qa-capture": "workspace:^",
+     "@beep/schema": "workspace:^",
++    "@beep/utils": "workspace:^",
+     "@effect/platform-bun": "catalog:",
+     "effect": "catalog:"
+   },
+diff --git a/apps/labs/api-docs/src/Catalog.models.ts b/apps/labs/api-docs/src/Catalog.models.ts
+index 41c92d74e6..a7fbd5a21e 100644
+--- a/apps/labs/api-docs/src/Catalog.models.ts
++++ b/apps/labs/api-docs/src/Catalog.models.ts
+@@ -5,8 +5,6 @@ import * as S from "effect/Schema";
+ import type { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
+ import type { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
+ 
+-export { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
+-
+ const $I = $ApiDocsId.create("Catalog.models");
+ 
+ /** Catalog grouping for APIs hosted by this repository and APIs it consumes. */
+@@ -16,11 +14,8 @@ export const ApiAudience = LiteralKit(["served", "consumed"]).annotate(
+   })
+ );
+ 
+-/** Runtime audience represented by {@link ApiAudience}. */
+-export type ApiAudience = typeof ApiAudience.Type;
+-
+ /** On-disk serialization format for a committed specification. */
+-export const SpecFormat = LiteralKit(["json", "yaml"]).annotate(
++const SpecFormat = LiteralKit(["json", "yaml"]).annotate(
+   $I.annote("SpecFormat", {
+     description: "Serialization format preserved when the lab serves a committed specification.",
+   })
+diff --git a/apps/labs/api-docs/src/Docs.routes.ts b/apps/labs/api-docs/src/Docs.routes.ts
+index 3049335b56..94b095b810 100644
+--- a/apps/labs/api-docs/src/Docs.routes.ts
++++ b/apps/labs/api-docs/src/Docs.routes.ts
+@@ -1,20 +1,12 @@
+-import { Effect, FileSystem, flow, Layer, Match } from "effect";
++import { escapeHtml } from "@beep/utils/Html";
++import { Effect, FileSystem, Layer, Match } from "effect";
+ import * as A from "effect/Array";
+-import * as Str from "effect/String";
+ import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
+ import { HttpApiScalar, OpenApi } from "effect/unstable/httpapi";
+ import { ApiAudience } from "./Catalog.models.ts";
+ import { Catalog, resolveCatalogSpecPath } from "./Catalog.ts";
+ import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Catalog.models.ts";
+ 
+-const escapeHtml = flow(
+-  Str.replaceAll("&", "&amp;"),
+-  Str.replaceAll("<", "&lt;"),
+-  Str.replaceAll(">", "&gt;"),
+-  Str.replaceAll('"', "&quot;"),
+-  Str.replaceAll("'", "&#39;")
+-);
+-
+ const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
+ const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
+ 
+diff --git a/apps/labs/api-docs/tsconfig.json b/apps/labs/api-docs/tsconfig.json
+index f2eaab4e71..72716da2f4 100644
+--- a/apps/labs/api-docs/tsconfig.json
++++ b/apps/labs/api-docs/tsconfig.json
+@@ -35,6 +35,9 @@
+     {
+       "path": "../../../packages/foundation/modeling/schema/tsconfig.json"
+     },
++    {
++      "path": "../../../packages/foundation/modeling/utils/tsconfig.json"
++    },
+     {
+       "path": "../../../packages/tooling/library/codegen-kit/tsconfig.json"
+     },
+diff --git a/apps/labs/semantica/src/layers/ProviderCacheLive.ts b/apps/labs/semantica/src/layers/ProviderCacheLive.ts
+index cdf4cc16f3..ef8ef28872 100644
+--- a/apps/labs/semantica/src/layers/ProviderCacheLive.ts
++++ b/apps/labs/semantica/src/layers/ProviderCacheLive.ts
+@@ -115,7 +115,7 @@ const makeProviderCache = Effect.gen(function* () {
+       onSome: (value) => processIsAlive(value).pipe(Effect.map(Bool.not)),
+     });
+     return Bool.match(stale, {
+-      onFalse: () => O.none<O.Option<string>>(),
++      onFalse: O.none<O.Option<string>>,
+       onTrue: () => O.some(owner),
+     });
+   });
+diff --git a/apps/labs/semantica/src/parse/Html.ts b/apps/labs/semantica/src/parse/Html.ts
+index 70fd94fc3f..4e2e1900c7 100644
+--- a/apps/labs/semantica/src/parse/Html.ts
++++ b/apps/labs/semantica/src/parse/Html.ts
+@@ -125,7 +125,7 @@ const findTagEnd = (html: string, start: number): Result.Result<number, "truncat
+         quote = Str.empty;
+         return O.none<number>();
+       }),
+-      Match.when({ inQuote: true }, () => O.none<number>()),
++      Match.when({ inQuote: true }, O.none<number>),
+       Match.when({ opensDoubleQuote: true }, () => {
+         quote = '"';
+         return O.none<number>();
+@@ -135,7 +135,7 @@ const findTagEnd = (html: string, start: number): Result.Result<number, "truncat
+         return O.none<number>();
+       }),
+       Match.when({ closesTag: true }, () => O.some(end)),
+-      Match.orElse(() => O.none<number>())
++      Match.orElse(O.none<number>)
+     );
+     if (O.isSome(match)) {
+       return Result.succeed(match.value);
+diff --git a/bun.lock b/bun.lock
+index c3c5762bfb..e0f5e44936 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -74,6 +74,7 @@
+         "@beep/pacer": "workspace:^",
+         "@beep/qa-capture": "workspace:^",
+         "@beep/schema": "workspace:^",
++        "@beep/utils": "workspace:^",
+         "@effect/platform-bun": "catalog:",
+         "effect": "catalog:",
+       },
+diff --git a/packages/drivers/runpod/scripts/operations.renderer.ts b/packages/drivers/runpod/scripts/operations.renderer.ts
+index c75d88cd0d..60c4f70c08 100644
+--- a/packages/drivers/runpod/scripts/operations.renderer.ts
++++ b/packages/drivers/runpod/scripts/operations.renderer.ts
+@@ -1167,7 +1167,7 @@ const objectSchemaExpression = (schema: JsonSchema, hint: string): string =>
+   );
+ 
+ const schemaTypeOption = Match.type<string | readonly string[]>().pipe(
+-  Match.when(P.isString, O.some),
++  Match.when(P.isString, (type): O.Option<string> => O.some(type)),
+   Match.orElse((types): O.Option<string> => A.head(types))
+ );
+ 
+diff --git a/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts b/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts
+index 969836a59a..5f4ab69ea2 100644
+--- a/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts
++++ b/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts
+@@ -176,18 +176,6 @@ const getZeroArgHelperReference = (callExpression: CallExpression): O.Option<str
+     return O.none();
+   }
+ 
+-  // `O.none` / `A.empty` are nullary GENERIC constructors: collapsing a bare
+-  // call (`() => O.none()` -> `O.none`) leaves the type parameter unbound
+-  // wherever contextual typing cannot reach it (Match.orElse, match handler
+-  // objects under docgen's tsc), silently widening Option<A> to
+-  // Option<unknown>. tsgo tolerates the widened form, so the damage only
+-  // surfaces later in the docgen lane. Only rewrite calls that pin the type
+-  // argument explicitly (`() => O.none<string>()` -> `O.none<string>`), which
+-  // stays type-identical as an instantiation expression.
+-  if (callExpression.getTypeArguments().length === 0) {
+-    return O.none();
+-  }
+-
+   const receiverText = expression.getExpression().getText();
+   const propertyText = expression.getName();
+ 
+@@ -234,6 +222,19 @@ const getArrowReplacement = (arrowFunction: ArrowFunction): O.Option<string> =>
+     return O.none();
+   }
+ 
++  // The helpers this rule collapses (`O.none`, `A.empty`, `O.some`, `A.make`)
++  // are GENERIC: a bare reference relies on higher-order inference to bind the
++  // type parameter, which fails in positions like `Match.orElse(O.none)` or
++  // `Match.when(P.isString, O.some)` — silently under docgen's tsc (widening
++  // to unknown), loudly under tsgo at the use site. The lambda form binds the
++  // generic at its call site, so it is the safe default. Only collapse calls
++  // that pin the type argument explicitly (`() => O.none<string>()` ->
++  // `O.none<string>`), which stays type-identical as an instantiation
++  // expression.
++  if (body.getTypeArguments().length === 0) {
++    return O.none();
++  }
++
+   if (arrowFunction.getParameters().length === 0) {
+     return getZeroArgHelperReference(body);
+   }
+diff --git a/packages/tooling/tool/cli/test/terse-effect.test.ts b/packages/tooling/tool/cli/test/terse-effect.test.ts
+index 3b90676753..56b40d428b 100644
+--- a/packages/tooling/tool/cli/test/terse-effect.test.ts
++++ b/packages/tooling/tool/cli/test/terse-effect.test.ts
+@@ -49,7 +49,7 @@ const writeHelperWrapperFixture = writeDemoSource([
+   "",
+   "export const value = {",
+   "  onNone: () => A.empty<string>(),",
+-  "  onSome: (reference) => A.make(reference),",
++  "  onSome: (reference) => A.make<string>(reference),",
+   "};",
+   "",
+ ]);
+@@ -160,7 +160,7 @@ describe("terse effect laws", () => {
+           expect(summary.strictFailure).toBe(true);
+           expect(summary.changedFiles).toEqual([DemoSourcePath]);
+           expect(source).toContain("onNone: () => A.empty<string>()");
+-          expect(source).toContain("onSome: (reference) => A.make(reference)");
++          expect(source).toContain("onSome: (reference) => A.make<string>(reference)");
+         })
+       ).pipe(provideScopedLayer(NodeTestLayer))
+     ));
+@@ -182,7 +182,7 @@ describe("terse effect laws", () => {
+           expect(summary.optionObjectCompactionCandidatesDetected).toBe(0);
+           expect(summary.strictFailure).toBe(false);
+           expect(source).toContain("onNone: A.empty<string>");
+-          expect(source).toContain("onSome: A.of");
++          expect(source).toContain("onSome: A.of<string>");
+         })
+       ).pipe(provideScopedLayer(NodeTestLayer))
+     ));
+@@ -201,6 +201,7 @@ describe("terse effect laws", () => {
+               "  onNone: () => A.empty<string>(),",
+               "  onEmpty: () => O.none(),",
+               "  onBare: () => A.empty(),",
++              "  onRef: (value) => O.some(value),",
+               "};",
+               "",
+             ],
+@@ -220,6 +221,7 @@ describe("terse effect laws", () => {
+           expect(rewritten).toContain("onNone: A.empty<string>");
+           expect(rewritten).toContain("onEmpty: () => O.none()");
+           expect(rewritten).toContain("onBare: () => A.empty()");
++          expect(rewritten).toContain("onRef: (value) => O.some(value)");
+         })
+       ).pipe(provideScopedLayer(NodeTestLayer))
+     ));
+diff --git a/vitest.aliases.generated.json b/vitest.aliases.generated.json
+index af0865ebc1..53905dac8a 100644
+--- a/vitest.aliases.generated.json
++++ b/vitest.aliases.generated.json
+@@ -1096,6 +1096,7 @@
+   "@beep/govinfo": ["./packages/drivers/govinfo/src/index.ts"],
+   "@beep/govinfo/*": ["./packages/drivers/govinfo/src/*"],
+   "@beep/ecfr": ["./packages/drivers/ecfr/src/index.ts"],
++  "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"],
+   "@beep/nlp-processing": [
+     "./packages/foundation/capability/nlp-processing/src/index.ts"
+   ],
