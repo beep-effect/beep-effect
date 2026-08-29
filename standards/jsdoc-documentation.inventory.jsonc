@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-29T11:16:08.701Z",
+  "generatedAt": "2026-08-29T11:37:16.347Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -84612,8 +84612,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 385,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-385-validaterepoconfig",
+          "line": 388,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-388-validaterepoconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -84635,8 +84635,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 426,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-426-validatereposafetypolicy",
+          "line": 431,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-431-validatereposafetypolicy",
           "currentTags": [
             "@effects",
             "@category",
@@ -84658,8 +84658,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 467,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-467-validatedogfoodconfig",
+          "line": 472,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-472-validatedogfoodconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -84681,8 +84681,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 495,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-495-validatedogfoodconfigs",
+          "line": 500,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-500-validatedogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -84704,8 +84704,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 521,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-521-defaultreporoot",
+          "line": 526,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-526-defaultreporoot",
           "currentTags": [
             "@effects",
             "@category",
@@ -84727,8 +84727,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 549,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-549-validatecurrentcheckoutdogfood",
+          "line": 554,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-554-validatecurrentcheckoutdogfood",
           "currentTags": [
             "@effects",
             "@category",
@@ -84750,8 +84750,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 578,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-578-validatecurrentcheckoutdogfoodconfigs",
+          "line": 583,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-583-validatecurrentcheckoutdogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
