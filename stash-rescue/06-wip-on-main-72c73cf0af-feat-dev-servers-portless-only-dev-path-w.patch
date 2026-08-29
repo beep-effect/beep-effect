@@ -1,0 +1,28 @@
+diff --git a/packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.repo.ts b/packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.repo.ts
+index 384596d23f..e05569d275 100644
+--- a/packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.repo.ts
++++ b/packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.repo.ts
+@@ -9,13 +9,13 @@
+ import { PostgresDrizzle } from "@beep/postgres";
+ import { PosInt } from "@beep/schema/Int";
+ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
++import { A, O } from "@beep/utils";
+ import { Workspace } from "@beep/workspace-domain/entities/Workspace";
+ import { DbSchema } from "@beep/workspace-tables";
+ import { fromWorkspaceRow, toWorkspaceInsert } from "@beep/workspace-tables/entities/Workspace";
+ import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
+ import { eq } from "drizzle-orm";
+ import { Effect, FileSystem, HashMap, Ref } from "effect";
+-import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import type { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
+ 
+@@ -177,7 +177,7 @@ export const makeDrizzleWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaul
+         .where(eq(workspaceTable.id, id))
+         .limit(1)
+         .pipe(repositoryUnavailable("select Workspace"));
+-      if (rows.length === 0) {
++      if (A.isReadonlyArrayEmpty(rows)) {
+         const seed = baseWorkspaceEntity(id, O.some(input.vaultRootPath));
+         yield* db
+           .insert(workspaceTable)
