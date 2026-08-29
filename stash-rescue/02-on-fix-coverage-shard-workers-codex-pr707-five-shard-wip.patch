@@ -1,0 +1,195 @@
+diff --git a/goals/ci-lane-economics/research/OPPORTUNITIES.md b/goals/ci-lane-economics/research/OPPORTUNITIES.md
+index 2620ad91d0..053ff8cc52 100644
+--- a/goals/ci-lane-economics/research/OPPORTUNITIES.md
++++ b/goals/ci-lane-economics/research/OPPORTUNITIES.md
+@@ -208,3 +208,35 @@ evidence, what would have prevented it). Redact for the public repo.
+ - **Would have prevented it:** a fleet-parity capacity model that includes the
+   cold prebuild and tests a small bounded worker-cap curve instead of treating
+   host-vCPU equality as the only safe candidate.
++
++## 2026-08-13 — uniform three-worker cap added contention without throughput
++
++- **Doing:** admitting the four-shard, three-worker Coverage Regression
++  candidate on PR #707.
++- **Evidence:** run `31759003628`, job `94641084512`, failed after 23m08s. The
++  cold prebuild took 3m30s; the three mixed shards passed in 16m05s, 16m32s,
++  and 17m16s, while the repo-cli shard failed after 18m16s when a bounded-work
++  assertion measured 1026.30ms against its 1000ms ceiling. There was no OOM or
++  runner shutdown. The repo-cli Vitest config disables file parallelism, so
++  raising `maxWorkers` could not shorten its 728.76 seconds of serial imports.
++- **Would have prevented it:** profile the long pole's Vitest configuration and
++  phase breakdown before raising a uniform worker cap; explicitly parallelize
++  the serial file-import boundary under a bounded coverage-only worker pool.
++
++## 2026-08-13 — root lint-fix did not accept file paths
++
++- **Doing:** formatting the focused Coverage Regression implementation files.
++- **Evidence:** `bun run lint:fix -- <two paths>` routed the paths to Turbo as
++  task names and exited with `Missing tasks in project`; no files were changed.
++- **Would have prevented it:** expose or document a canonical file-scoped
++  formatter entrypoint distinct from the root task-oriented lint-fix command.
++
++## 2026-08-13 — stale zero-cache flags became mutually exclusive
++
++- **Doing:** running the forced local full-path proof for the five-shard
++  coverage candidate.
++- **Evidence:** Turbo 2.10 rejected `--force --remote-only` before executing a
++  task because cache configuration cannot be combined with `force`; the prior
++  proof recipe had treated both as compatible zero-cache controls.
++- **Would have prevented it:** keep one canonical forced-execution recipe in
++  the packet or CLI and validate it against the pinned Turbo version.
+diff --git a/goals/ci-lane-economics/research/coverage-sharding-design.md b/goals/ci-lane-economics/research/coverage-sharding-design.md
+index ae965f4c4b..47b8844d38 100644
+--- a/goals/ci-lane-economics/research/coverage-sharding-design.md
++++ b/goals/ci-lane-economics/research/coverage-sharding-design.md
+@@ -80,14 +80,28 @@ took 23 seconds, the four shards completed 5, 32, 44, and 44 tasks in 8m32s,
+ retry job `94625871718` confirmed the correctness repair but rejected the
+ timing shape: all 124 summaries passed, yet a 3m38s prebuild plus shards at
+ 15m32s, 16m58s, 17m26s, and 18m23s produced a 23m23s job. The next candidate
+-raises the explicit cap to three workers per shard. Aggregate fan-out remains
+-bounded at 12 instead of the unbounded pool's potential 32 while supplying the
+-roughly 19% long-pole improvement required by the live result. Its forced
+-full-path proof passed with remote cache disabled: the prebuild completed all
+-128 tasks in 21.4 seconds, the four shards completed 5, 32, 44, and 44 tasks
+-in 6m32s, 5m43s, 5m51s, and 6m04s, and the ratchet compared all 124 summaries.
+-That is the candidate submitted for live fleet admission; local timing alone
+-does not satisfy the hosted wall-time gate.
++raised the explicit cap to three workers per shard. Its forced full-path proof
++passed locally, but live PR #707 job `94641084512` rejected both correctness
++and timing after 23m08s: the 3m30s prebuild led into three green mixed shards
++at 16m05s-17m16s, while the repo-cli shard failed at 18m16s when CPU
++contention pushed a bounded-work assertion to 1026.30ms against 1000ms.
++
++The live phase breakdown exposed the missed boundary: repo-cli's Vitest config
++sets `fileParallelism: false`, so raising `maxWorkers` could not shorten its
++728.76 seconds of serial imports. A coverage-only override passed the complete
++local repo-cli suite without exclusions: three workers completed 90 files and
++1,514 tests (five skipped) in 141.26 seconds, and the safer two-worker probe
++completed them in 200.86 seconds with identical coverage. The next candidate
++therefore uses five stable weighted shards with `--fileParallelism=true` and
++`--maxWorkers=2`. It bounds aggregate test-process fan-out at 10 rather than
++the rejected three-worker candidate's 12, while the fifth shard reduces each
++non-repo-cli weight from about 800 to about 608 seconds. A fresh forced local
++full-path proof on the rebased candidate passed with remote cache unavailable:
++the prebuild completed 129/129 tasks in 18.08 seconds, the five shards completed
++1, 19, 35, 35, and 36 tasks in 3m40s, 5m39s, 6m14s, 8m07s, and 7m04s, and the
++ratchet compared all 124 baseline packages. Every task was a cache miss, and
++there was no shutdown or OOM. Local timing still cannot satisfy the hosted
++wall-time gate.
+ 
+ The live PR admission must prove all summaries, all regression tests, no runner
+ shutdown/OOM, and complete job wall time below 20 minutes. Any source change
+diff --git a/goals/ci-lane-economics/research/placement-decision.md b/goals/ci-lane-economics/research/placement-decision.md
+index 6ab682c0d3..0e7f85039e 100644
+--- a/goals/ci-lane-economics/research/placement-decision.md
++++ b/goals/ci-lane-economics/research/placement-decision.md
+@@ -31,7 +31,7 @@ required context.
+ | Docgen | fleet | fleet | 13.4m | Retain; `uses_turbo: false`, so there is no cache-backed re-fit case. |
+ | Codegen Drift | hosted | hosted | 3.3m | Retain. |
+ | Repo Sanity | hosted | hosted | 4.1m | Retain. |
+-| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run four stable weighted in-job shards with an explicit three-worker Vitest cap for complete runs. |
++| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run five stable weighted in-job shards with coverage-only file parallelism and a two-worker Vitest cap for complete runs. |
+ | Knip | hosted | hosted | 3.1m | Retain. |
+ | Commitlint | hosted | hosted | 1.8m | Retain. |
+ | Secret Scanning | hosted | hosted | 1.0m | Retain. |
+@@ -83,9 +83,14 @@ pre-packet placement cannot raise the approved projection.
+   assertion. Capping every shard's Vitest pool at two workers repaired those
+   failures, but retry job `94625871718` then passed in 23m23s: its 3m38s
+   prebuild was followed by four green shards at 15m32s-18m23s. The next
+-  candidate raises the cap to three workers per shard, keeping aggregate
+-  fan-out bounded at 12 rather than the unbounded pool's potential 32.
+-- Reject or roll back the three-worker four-shard admission if the existing
++  candidate raised the cap to three workers per shard, but live job
++  `94641084512` failed after 23m08s. Three mixed shards passed in
++  16m05s-17m16s; the repo-cli shard failed at 18m16s when contention pushed a
++  bounded-work assertion over its ceiling. Its config disables file
++  parallelism, so the higher cap could not shorten 728.76 seconds of serial
++  imports. The next candidate uses five shards, explicitly enables file
++  parallelism on the full-coverage path, and restores the two-worker cap.
++- Reject or roll back the file-parallel five-shard admission if the existing
+   32-GB fleet runner shuts down, exhausts memory, or the complete required job
+   remains at or above 20 minutes. The design raises in-job package concurrency,
+   not fleet job count.
+@@ -93,8 +98,14 @@ pre-packet placement cannot raise the approved projection.
+   retry proved correctness while rejecting timing. The three-worker revision
+   then passed a fresh forced local proof with remote cache disabled: all 128
+   prebuild tasks in 21.4 seconds, four green shards at 5m43s-6m32s, and all
+-  124 summaries accepted by the ratchet. The live fleet run remains the
+-  admission authority.
++  124 summaries accepted by the ratchet. The three-worker candidate then failed
++  live. Coverage-only repo-cli probes established the new boundary: 90 files
++  and 1,514 tests passed at both three workers (141.26s) and two workers
++  (200.86s), with identical coverage and no exclusions. The rebased five-shard
++  candidate then passed a forced local full-path proof: a zero-cache 129-task
++  prebuild in 18.08s, five green zero-cache shards at 3m40s-8m07s, and all 124
++  baseline packages accepted by the ratchet. The live fleet remains the timing
++  and admission authority.
+ 
+ ## P2 live admission evidence
+ 
+@@ -107,3 +118,4 @@ pre-packet placement cannot raise the approved projection.
+ | `31748322804` / `94608048289` | `beep-ec2-heavy` | Failed after 24m10s | The prebuild took 3m32s and three shards passed in 15m30s-16m46s. The `@beep/repo-cli` shard took 19m13s and failed contention-sensitive timeouts because each co-resident Vitest process still sized itself from the whole host. | Reject the unbounded four-shard admission; exclude it from duration percentiles and admit the four-shard/two-worker candidate. |
+ | `31753283207` / `94623544457` | `beep-ec2-heavy` | Failed after 1m26s | The cold prebuild emitted impossible missing-export diagnostics after five successful tasks. A clean detached build of the exact merge ref then passed 128/128 tasks with zero cache hits in 1m03s. | Attribute as a hosted cold-build flake, exclude from duration percentiles, and require a targeted retry. |
+ | `31753283207` attempt 2 / `94625871718` | `beep-ec2-heavy` | Passed after 23m23s | The two-worker cap eliminated the contention-sensitive failures and compared all 124 packages. The 3m38s prebuild plus four green shards at 15m32s-18m23s still exceeded the charter. | Reject the uniform two-worker timing admission; exclude it from the accepted P3 population and admit the smallest bounded increase, three workers per shard. |
++| `31759003628` / `94641084512` | `beep-ec2-heavy` | Failed after 23m08s | The 3m30s prebuild led into three green shards at 16m05s-17m16s. The repo-cli shard failed after 18m16s when a bounded-work assertion measured 1026.30ms against 1000ms; no OOM or runner shutdown occurred. | Reject the uniform three-worker admission and exclude it from duration percentiles. Enable file parallelism only for full coverage, restore two workers, and use five weighted shards to reduce the mixed-shard long poles. |
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+index 3f0e5a5146..e8a48bc4b4 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+@@ -110,16 +110,17 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+ // tuning; the 16GB-survival value was 2.
+ const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
+ const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+-// Match the fleet's accepted Turbo concurrency. Five concurrent Vitest
+-// coverage processes made the isolated repo-cli long pole slower than the
+-// 20-minute job charter on live fleet hardware.
+-const COVERAGE_FULL_SHARD_COUNT = 4;
+-// Each shard owns one Turbo task at a time, but Vitest otherwise sizes its
+-// worker pool from the whole 8-vCPU host. Three workers per shard keeps the
+-// aggregate fan-out bounded at 12 instead of the unbounded pool's potential 32;
+-// the live two-worker admission preserved correctness but missed the wall-time
+-// charter because it left every shard CPU-bound for 15m32s-18m23s.
+-const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=3";
++// Five weighted shards reduce the non-repo-cli long poles while keeping the
++// work inside one fleet job. Two Vitest workers per shard bound aggregate
++// test-process fan-out at 10 instead of the unbounded pool's potential 40.
++const COVERAGE_FULL_SHARD_COUNT = 5;
++// repo-cli deliberately disables file parallelism for ordinary package runs,
++// but serial imports consumed 728.76 seconds in the rejected live coverage
++// candidate. Full coverage uses isolated Vitest workers, so enable file
++// parallelism only on this orchestrated path; a two-worker local probe passed
++// all 90 files in 200.86 seconds with identical coverage.
++const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
++const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
+ const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
+ const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
+ const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
+@@ -1332,6 +1333,7 @@ const coverageFullShardStep = (
+         ...passthroughArgs,
+         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
+         "--",
++        COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
+         COVERAGE_FULL_VITEST_MAX_WORKERS_ARG,
+       ]
+     ),
+diff --git a/packages/tooling/tool/cli/test/quality-tasks.test.ts b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+index 95d7db16ef..e68f38d5ee 100644
+--- a/packages/tooling/tool/cli/test/quality-tasks.test.ts
++++ b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+@@ -1570,6 +1570,7 @@ describe("quality task adapter", () => {
+         "coverage:shard-2",
+         "coverage:shard-3",
+         "coverage:shard-4",
++        "coverage:shard-5",
+       ]);
+       expect(steps[0]?.args).toEqual([
+         "turbo",
+@@ -1587,7 +1588,7 @@ describe("quality task adapter", () => {
+         expect(step.args).toContain("--force");
+         expect(step.args).toContain("--remote-only");
+         expect(step.args).toContain("--output-logs=errors-only");
+-        expect(A.takeRight(step.args, 2)).toEqual(["--", "--maxWorkers=3"]);
++        expect(A.takeRight(step.args, 3)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=2"]);
+         expect(step.args).not.toContain("--concurrency=4");
+         expect(step.args).not.toContain("9");
+       }
