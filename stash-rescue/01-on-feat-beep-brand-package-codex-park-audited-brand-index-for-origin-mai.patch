@@ -1,0 +1,3118 @@
+diff --git a/.changeset/beep-brand-package.md b/.changeset/beep-brand-package.md
+new file mode 100644
+index 0000000000..45d31025e3
+--- /dev/null
++++ b/.changeset/beep-brand-package.md
+@@ -0,0 +1,12 @@
++---
++"@beep/brand": minor
++"@beep/identity": patch
++"@beep/storybook": patch
++---
++
++Add `@beep/brand`, a `foundation/ui-system` package that owns the beep brand identity as
++schema-decoded data (forest-green and zinc color schemes, Inter and JetBrains Mono stacks,
++the lambda mark geometry) and renders the Tailwind v4 theme stylesheet, the SVG mark,
++favicon, and wordmarks from it. Ships a shadcn bridge stylesheet, self-hosted fonts, a
++`@beep/brand/react` subpath with `BeepMark` and `BeepWordmark`, and a parity test that
++fails when a generated file drifts. Storybook's manager now carries the wordmark and favicon.
+diff --git a/apps/labs/trustgraph-workbench/index.html b/apps/labs/trustgraph-workbench/index.html
+index e0517a5078..dd32078fd7 100644
+--- a/apps/labs/trustgraph-workbench/index.html
++++ b/apps/labs/trustgraph-workbench/index.html
+@@ -1,9 +1,11 @@
+ <!doctype html>
+-<html lang="en">
++<html lang="en" class="dark">
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <title>@beep/trustgraph-workbench</title>
++    <title>Beep Graph</title>
++    <meta name="description" content="Knowledge graph exploration and AI-powered retrieval" />
++    <!-- Favicons, theme-color, and the app icon set are rendered by <BrandHead /> from @beep/brand. -->
+   </head>
+   <body>
+     <div id="root"></div>
+diff --git a/apps/labs/trustgraph-workbench/package.json b/apps/labs/trustgraph-workbench/package.json
+index 52dbacce2d..5e63ff6980 100644
+--- a/apps/labs/trustgraph-workbench/package.json
++++ b/apps/labs/trustgraph-workbench/package.json
+@@ -28,6 +28,7 @@
+     "test": "bun run beep:test"
+   },
+   "dependencies": {
++    "@beep/brand": "workspace:^",
+     "@beep/ui": "workspace:^",
+     "react": "catalog:",
+     "react-dom": "catalog:"
+diff --git a/apps/labs/trustgraph-workbench/src/App.tsx b/apps/labs/trustgraph-workbench/src/App.tsx
+index 72065c2043..20ed321e30 100644
+--- a/apps/labs/trustgraph-workbench/src/App.tsx
++++ b/apps/labs/trustgraph-workbench/src/App.tsx
+@@ -1,7 +1,34 @@
+-export function App() {
+-  return (
+-    <main>
+-      <h1>@beep/trustgraph-workbench</h1>
++import { beep } from "@beep/brand";
++import appleTouchIconUrl from "@beep/brand/assets/apple-touch-icon.png";
++import faviconSvgUrl from "@beep/brand/assets/favicon.svg";
++import favicon16Url from "@beep/brand/assets/favicon-16.png";
++import favicon32Url from "@beep/brand/assets/favicon-32.png";
++import { BeepMark } from "@beep/brand/react";
++
++/**
++ * Document-head tags for the beep identity. React 19 hoists `<link>` and `<meta>`
++ * rendered anywhere in the tree into `<head>`, so the favicon set ships from
++ * `@beep/brand/assets` through Vite's asset pipeline instead of a copied `public/`.
++ */
++const BrandHead = () => (
++  <>
++    <link rel="icon" type="image/svg+xml" href={faviconSvgUrl} />
++    <link rel="icon" type="image/png" sizes="32x32" href={favicon32Url} />
++    <link rel="icon" type="image/png" sizes="16x16" href={favicon16Url} />
++    <link rel="apple-touch-icon" sizes="180x180" href={appleTouchIconUrl} />
++    <meta name="theme-color" content={beep.dark.brand["900"]} />
++  </>
++);
++
++export const App = () => (
++  <>
++    <BrandHead />
++    <main className="min-h-screen bg-surface-0 text-fg font-sans">
++      <header className="flex items-center gap-3 border-b border-border px-6 py-4">
++        <BeepMark className="size-8 text-brand-400" />
++        <h1 className="text-xl font-bold tracking-tight">Beep Graph</h1>
++        <span className="text-sm text-fg-subtle">Knowledge graph engine</span>
++      </header>
+     </main>
+-  );
+-}
++  </>
++);
+diff --git a/apps/labs/trustgraph-workbench/src/styles/globals.css b/apps/labs/trustgraph-workbench/src/styles/globals.css
+index ae5e0cec10..00ca9f351e 100644
+--- a/apps/labs/trustgraph-workbench/src/styles/globals.css
++++ b/apps/labs/trustgraph-workbench/src/styles/globals.css
+@@ -1 +1,7 @@
++/* Order matters: fonts define the @font-face rules, @beep/ui brings Tailwind and the
++   shadcn tokens, brand.css declares the beep theme, and bridge.css points the shadcn
++   tokens at the brand scale (its var() references need brand.css first). */
++@import "@beep/brand/styles/fonts.css";
+ @import "@beep/ui/styles/globals.css";
++@import "@beep/brand/styles/brand.css";
++@import "@beep/brand/styles/bridge.css";
+diff --git a/apps/labs/trustgraph-workbench/test/App.test.tsx b/apps/labs/trustgraph-workbench/test/App.test.tsx
+index 003b419a6b..babc79510b 100644
+--- a/apps/labs/trustgraph-workbench/test/App.test.tsx
++++ b/apps/labs/trustgraph-workbench/test/App.test.tsx
+@@ -1,11 +1,25 @@
++import { beep } from "@beep/brand";
+ import { render, screen } from "@testing-library/react";
+ import { describe, expect, it } from "vitest";
+ import { App } from "@/App";
+ 
+ describe("@beep/trustgraph-workbench", () => {
+-  it("renders the app shell", () => {
++  it("renders the branded shell", () => {
+     render(<App />);
+ 
+-    expect(screen.getByRole("heading", { name: "@beep/trustgraph-workbench" })).toBeDefined();
++    expect(screen.getByRole("heading", { name: "Beep Graph" })).toBeDefined();
++    expect(screen.getByRole("img", { name: beep.mark.name })).toBeDefined();
++  });
++
++  it("hoists the brand favicon set and theme color into the document head", () => {
++    render(<App />);
++
++    // Vite serves small assets as data URIs and larger ones by hashed path; both are valid icon hrefs.
++    expect(document.head.querySelector('link[rel="icon"][type="image/svg+xml"]')?.getAttribute("href")).toMatch(
++      /favicon\.svg$|^data:image\/svg\+xml/
++    );
++    expect(document.head.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe(
++      beep.dark.brand["900"]
++    );
+   });
+ });
+diff --git a/apps/labs/trustgraph-workbench/tsconfig.json b/apps/labs/trustgraph-workbench/tsconfig.json
+index 519a9ee7cc..734e43a5ec 100644
+--- a/apps/labs/trustgraph-workbench/tsconfig.json
++++ b/apps/labs/trustgraph-workbench/tsconfig.json
+@@ -27,6 +27,9 @@
+     "rootDir": "../../.."
+   },
+   "references": [
++    {
++      "path": "../../../packages/foundation/ui-system/brand/tsconfig.json"
++    },
+     {
+       "path": "../../../packages/foundation/ui-system/ui/tsconfig.json"
+     }
+diff --git a/apps/storybook/.storybook/main.ts b/apps/storybook/.storybook/main.ts
+index f43df63571..a3822225e5 100644
+--- a/apps/storybook/.storybook/main.ts
++++ b/apps/storybook/.storybook/main.ts
+@@ -1,3 +1,4 @@
++import * as A from "effect/Array";
+ import type { StorybookConfig } from "@storybook/react-vite";
+ import type { Plugin } from "vite";
+ 
+@@ -55,10 +56,16 @@ const config: StorybookConfig = {
+     "../../../packages/drivers/graph-3d/stories/**/*.stories.@(ts|tsx)",
+   ],
+   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-vitest"],
+-  staticDirs: [{ from: "../../../node_modules/emojibase-data", to: "/emojibase-data" }],
++  staticDirs: [
++    { from: "../../../node_modules/emojibase-data", to: "/emojibase-data" },
++    // beep brand assets (favicon, wordmark) for the manager chrome; see manager.ts. Served as
++    // static files on purpose: the manager bundle must not import @beep/brand (effect/Schema).
++    { from: "../../../packages/foundation/ui-system/brand/assets", to: "/brand" },
++  ],
++  managerHead: (head) => `${head}<link rel="icon" type="image/svg+xml" href="./brand/favicon.svg" />`,
+   viteFinal(config) {
+-    const dedupe = Array.from(new Set(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]));
+-    const fsAllow = Array.from(new Set([repoRoot, ...(config.server?.fs?.allow ?? [])]));
++    const dedupe = A.dedupe(["react", "react-dom", ...(config.resolve?.dedupe ?? [])]);
++    const fsAllow = A.dedupe([repoRoot, ...(config.server?.fs?.allow ?? [])]);
+ 
+     return {
+       ...config,
+diff --git a/apps/storybook/.storybook/manager.ts b/apps/storybook/.storybook/manager.ts
+index 1e59d8cae3..483733e51d 100644
+--- a/apps/storybook/.storybook/manager.ts
++++ b/apps/storybook/.storybook/manager.ts
+@@ -1,6 +1,15 @@
+ import { addons } from "storybook/manager-api";
+-import { themes } from "storybook/theming";
++import { create } from "storybook/theming";
+ 
++// Brand chrome only: the wordmark and favicon are served from @beep/brand/assets via
++// `staticDirs` in main.ts. Colors stay Storybook's dark defaults; the manager bundle
++// does not import the brand package so it stays free of effect/Schema.
+ addons.setConfig({
+-  theme: themes.dark,
++  theme: create({
++    base: "dark",
++    brandTitle: "beep",
++    brandUrl: "https://github.com/beep-effect/beep-effect",
++    brandImage: "./brand/wordmark.svg",
++    brandTarget: "_self",
++  }),
+ });
+diff --git a/bun.lock b/bun.lock
+index 2fad9b14d9..e68f7f040e 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -93,6 +93,7 @@
+       "name": "@beep/trustgraph-workbench",
+       "version": "0.0.0",
+       "dependencies": {
++        "@beep/brand": "workspace:^",
+         "@beep/ui": "workspace:^",
+         "react": "catalog:",
+         "react-dom": "catalog:",
+@@ -1977,6 +1978,37 @@
+         "@types/node": "catalog:",
+       },
+     },
++    "packages/foundation/ui-system/brand": {
++      "name": "@beep/brand",
++      "version": "0.0.0",
++      "dependencies": {
++        "@beep/identity": "workspace:^",
++        "@beep/schema": "workspace:^",
++        "@beep/utils": "workspace:^",
++        "@fontsource-variable/inter": "catalog:",
++        "@fontsource-variable/jetbrains-mono": "catalog:",
++        "effect": "catalog:",
++      },
++      "devDependencies": {
++        "@effect/platform-bun": "catalog:",
++        "@effect/vitest": "catalog:",
++        "@testing-library/react": "catalog:",
++        "@types/node": "catalog:",
++        "@types/react": "catalog:",
++        "@types/react-dom": "catalog:",
++        "bun-types": "catalog:",
++        "jsdom": "catalog:",
++        "react": "catalog:",
++        "react-dom": "catalog:",
++        "vitest": "catalog:",
++      },
++      "peerDependencies": {
++        "react": "^19",
++      },
++      "optionalPeers": [
++        "react",
++      ],
++    },
+     "packages/foundation/ui-system/dock": {
+       "name": "@beep/dock",
+       "version": "0.0.0",
+@@ -2875,6 +2907,8 @@
+     "@elevenlabs/client": "^1.21.0",
+     "@emotion/react": "^11.14.0",
+     "@emotion/styled": "^11.14.1",
++    "@fontsource-variable/inter": "^5.3.0",
++    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+     "@lexical/code": "^0.49.0",
+     "@lexical/headless": "^0.49.0",
+     "@lexical/html": "^0.49.0",
+@@ -3203,6 +3237,8 @@
+ 
+     "@beep/box": ["@beep/box@workspace:packages/drivers/box"],
+ 
++    "@beep/brand": ["@beep/brand@workspace:packages/foundation/ui-system/brand"],
++
+     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
+ 
+     "@beep/codegen-kit": ["@beep/codegen-kit@workspace:packages/tooling/library/codegen-kit"],
+@@ -4273,6 +4309,10 @@
+ 
+     "@floating-ui/utils": ["@floating-ui/utils@0.2.12", "", {}, "sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww=="],
+ 
++    "@fontsource-variable/inter": ["@fontsource-variable/inter@5.3.0", "", {}, "sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA=="],
++
++    "@fontsource-variable/jetbrains-mono": ["@fontsource-variable/jetbrains-mono@5.3.0", "", {}, "sha512-F32xpS2NsGYoQi2ADSkKTgpJj7ozajsGgDJ8woTnqjmIB+dxDIqImjl4pXZVEExu8UFZ2ndhmX18EBS/hdz3Lw=="],
++
+     "@gar/promise-retry": ["@gar/promise-retry@1.0.3", "", {}, "sha512-GmzA9ckNokPypTg10pgpeHNQe7ph+iIKKmhKu3Ob9ANkswreCx7R3cKmY781K8QK3AqVL3xVh9A42JvIAbkkSA=="],
+ 
+     "@google-cloud/paginator": ["@google-cloud/paginator@6.1.0", "", { "dependencies": { "extend": "^3.0.2" } }, "sha512-9bxQ/QNhcq5c6ra75khWjA5Q9UHWp0vQnhwesmqPpLLF5PxmxCIsadIA5ssLxKted4/iZ2RlRPkW/E8p68W8cg=="],
+diff --git a/package.json b/package.json
+index b513d51d06..1e97f2ad5a 100644
+--- a/package.json
++++ b/package.json
+@@ -49,6 +49,8 @@
+     "@elevenlabs/client": "^1.21.0",
+     "@emotion/react": "^11.14.0",
+     "@emotion/styled": "^11.14.1",
++    "@fontsource-variable/inter": "^5.3.0",
++    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+     "@lexical/code": "^0.49.0",
+     "@lexical/headless": "^0.49.0",
+     "@lexical/html": "^0.49.0",
+diff --git a/packages/foundation/AGENTS.md b/packages/foundation/AGENTS.md
+index ffefa045b9..7eaabc5891 100644
+--- a/packages/foundation/AGENTS.md
++++ b/packages/foundation/AGENTS.md
+@@ -11,7 +11,8 @@ apps, but they must not depend on product-specific slice language.
+ - `primitive`: leaf type and data substrate.
+ - `modeling`: identity, schema, messages, and domain-modeling helpers.
+ - `capability`: reusable technical capability packages with runtime behavior.
+-- `ui-system`: product-agnostic UI primitives, hooks, themes, and styles.
++- `ui-system`: product-agnostic UI primitives, hooks, themes, styles, and repo
++  brand identity (`@beep/brand`).
+ 
+ ## Rules
+ 
+diff --git a/packages/foundation/modeling/identity/src/packages.ts b/packages/foundation/modeling/identity/src/packages.ts
+index 06193ddb2c..a9c5139011 100644
+--- a/packages/foundation/modeling/identity/src/packages.ts
++++ b/packages/foundation/modeling/identity/src/packages.ts
+@@ -189,7 +189,8 @@ const generatedComposers = $I.compose(
+   "epistemic-ui",
+   "effect-drizzle",
+   "skill-contract",
+-  "codegen-kit"
++  "codegen-kit",
++  "brand"
+ );
+ 
+ // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+@@ -2496,3 +2497,20 @@ export const $SkillContractId: Identity.IdentityComposer<"@beep/skill-contract">
+  * @since 0.0.0
+  */
+ export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = composers.$CodegenKitId;
++
++/**
++ * Identity composer for `@beep/brand`.
++ *
++ * **Example** (Make package ID)
++ *
++ * ```ts
++ * import { $BrandId } from "@beep/identity"
++ *
++ * const id = $BrandId.make("Brand")
++ * void id
++ * ```
++ *
++ * @category configuration
++ * @since 0.0.0
++ */
++export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = composers.$BrandId;
+diff --git a/packages/foundation/ui-system/brand/AGENTS.md b/packages/foundation/ui-system/brand/AGENTS.md
+new file mode 100644
+index 0000000000..4e21d9cb4c
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/AGENTS.md
+@@ -0,0 +1,17 @@
++# @beep/brand
++
++beep brand identity: marks, palette, typography tokens, and static assets.
++
++## Surface
++
++- `src/index.ts` is the framework-free root; `src/react.tsx` is the only React surface
++  and must not be re-exported from the root.
++- `styles/brand.css` and `assets/*.svg` are generated. Edit `src/Brand.tokens.ts`, run
++  `bun run render`, never hand-edit the generated files; `test/assets.test.ts` enforces it.
++- The PNG icon set is rasterised from `assets/favicon.svg`; regenerate it when the mark changes.
++
++## Laws
++
++- Root `AGENTS.md` and `standards/ARCHITECTURE.md` govern this package.
++- Keep this package free of product-domain language and of `@beep/ui` imports; the
++  dependency direction is `@beep/ui -> @beep/brand`, never the reverse.
+diff --git a/packages/foundation/ui-system/brand/CLAUDE.md b/packages/foundation/ui-system/brand/CLAUDE.md
+new file mode 120000
+index 0000000000..47dc3e3d86
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/CLAUDE.md
+@@ -0,0 +1 @@
++AGENTS.md
+\ No newline at end of file
+diff --git a/packages/foundation/ui-system/brand/LICENSE b/packages/foundation/ui-system/brand/LICENSE
+new file mode 100644
+index 0000000000..32e9053973
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/LICENSE
+@@ -0,0 +1,21 @@
++MIT License
++
++Copyright (c) 2026 beep-effect
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
+diff --git a/packages/foundation/ui-system/brand/README.md b/packages/foundation/ui-system/brand/README.md
+new file mode 100644
+index 0000000000..373adbc255
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/README.md
+@@ -0,0 +1,82 @@
++# @beep/brand
++
++The beep brand identity as data: forest-green scales on zinc surfaces, Inter and
++JetBrains Mono, and the lambda-with-pixel-glasses mark. Everything an app ships
++(the theme stylesheet, the SVG mark, favicon, and wordmarks) is rendered from one
++schema-decoded identity, and a test fails when a checked-in file drifts from its render.
++
++## Entrypoints
++
++| Entrypoint | Purpose | Purity |
++| --- | --- | --- |
++| `@beep/brand` | Identity schemas, the `beep` tokens, and the CSS/SVG encoders | Framework- and DOM-free |
++| `@beep/brand/react` | `BeepMark` and `BeepWordmark` components | React 19 |
++| `@beep/brand/styles/brand.css` | Generated Tailwind v4 `@theme` plus `.dark` scheme | Stylesheet |
++| `@beep/brand/styles/bridge.css` | Opt-in mapping of `@beep/ui` shadcn tokens onto the brand scale | Stylesheet |
++| `@beep/brand/styles/fonts.css` | Self-hosted Inter Variable and JetBrains Mono Variable | Stylesheet |
++| `@beep/brand/assets/*` | `mark.svg`, `favicon.svg`, `wordmark.svg`, `wordmark-light.svg`, and the PNG icon set | Static files |
++
++## Usage
++
++Stylesheet order matters: fonts first, then `@beep/ui`, then the brand theme, then the
++bridge so its `var()` references resolve.
++
++```css
++@import "@beep/brand/styles/fonts.css";
++@import "@beep/ui/styles/globals.css";
++@import "@beep/brand/styles/brand.css";
++@import "@beep/brand/styles/bridge.css";
++```
++
++```tsx
++import { beep } from "@beep/brand"
++import { BeepMark } from "@beep/brand/react"
++
++export const Header = () => (
++  <header style={{ background: beep.dark.surface["0"] }}>
++    <BeepMark className="size-8 text-brand-400" />
++  </header>
++)
++```
++
++The theme declares the light scheme in `@theme`, so Tailwind mints `bg-brand-500`,
++`text-fg-muted`, `border-border-hover`, and `font-brand-mono`, and redeclares the dark
++scheme under `.dark`, the same custom variant `@beep/ui` uses. Glow layers are
++`--beep-glow-{primary,secondary,tertiary}-{start,mid}` as `color-mix()` references into
++the brand scale.
++
++## Changing the brand
++
++1. Edit `src/Brand.tokens.ts` (or the schemas in `src/Brand.schema.ts`).
++2. Run `bun run render` to regenerate `styles/brand.css` and the SVG assets.
++3. Rasterise `assets/favicon.svg` into the PNG icon set when the mark changes.
++4. `bun run test` proves the checked-in files match their render.
++
++## Consumers
++
++- `apps/labs/trustgraph-workbench`: favicon set, theme, bridge, and `BeepMark` in the shell.
++- `apps/storybook`: manager `brandImage` and favicon from `assets/`.
++
++## Placement
++
++A `foundation/ui-system` package: repo identity is a design-system role, not product
++domain language, so it lives beside `@beep/ui` rather than inside it. `@beep/ui` stays
++brand-neutral because `apps/oip-web` consumes it under a different identity; the bridge is
++how an app opts in. See `standards/architecture/07-non-slice-families.md`.
++
++## Development
++
++```bash
++bun run build
++bun run check
++bun run test
++bun run lint:fix
++bun run render
++```
++
++Unit tests stay outside `test/integration`. Tests import package source through
++`@beep/brand` and `@beep/brand/react`; relative imports are for local helpers only.
++
++## License
++
++MIT
+diff --git a/packages/foundation/ui-system/brand/assets/apple-touch-icon.png b/packages/foundation/ui-system/brand/assets/apple-touch-icon.png
+new file mode 100644
+index 0000000000..6b60072f45
+Binary files /dev/null and b/packages/foundation/ui-system/brand/assets/apple-touch-icon.png differ
+diff --git a/packages/foundation/ui-system/brand/assets/favicon-16.png b/packages/foundation/ui-system/brand/assets/favicon-16.png
+new file mode 100644
+index 0000000000..57755d43a1
+Binary files /dev/null and b/packages/foundation/ui-system/brand/assets/favicon-16.png differ
+diff --git a/packages/foundation/ui-system/brand/assets/favicon-32.png b/packages/foundation/ui-system/brand/assets/favicon-32.png
+new file mode 100644
+index 0000000000..680c0a0bb0
+Binary files /dev/null and b/packages/foundation/ui-system/brand/assets/favicon-32.png differ
+diff --git a/packages/foundation/ui-system/brand/assets/favicon.svg b/packages/foundation/ui-system/brand/assets/favicon.svg
+new file mode 100644
+index 0000000000..8707f98b62
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/assets/favicon.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="beep"><rect width="32" height="32" rx="6" fill="#122812"/><g transform="scale(1.3333)"><path d="M6 20l6.5 -9" stroke="#5c9a5c" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 20c-6 0 -6 -16 -12 -16" stroke="#5c9a5c" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(5.4, 9.5) scale(0.52) rotate(8 12.5 2.5)"><path fill="#fafafa" d="m0,0v2h1v1h1v1h1v1h7v-1h1v-1h1v-2h2v2h1v1h1v1h6v-1h1v-1h1v-1h1v-2z"/><path fill="#122812" d="m2,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/><path fill="#122812" d="m15,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/></g></g></svg>
+diff --git a/packages/foundation/ui-system/brand/assets/icon-192.png b/packages/foundation/ui-system/brand/assets/icon-192.png
+new file mode 100644
+index 0000000000..c806041edb
+Binary files /dev/null and b/packages/foundation/ui-system/brand/assets/icon-192.png differ
+diff --git a/packages/foundation/ui-system/brand/assets/icon-512.png b/packages/foundation/ui-system/brand/assets/icon-512.png
+new file mode 100644
+index 0000000000..ec49c6d6c9
+Binary files /dev/null and b/packages/foundation/ui-system/brand/assets/icon-512.png differ
+diff --git a/packages/foundation/ui-system/brand/assets/mark.svg b/packages/foundation/ui-system/brand/assets/mark.svg
+new file mode 100644
+index 0000000000..b968dc5e17
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/assets/mark.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" role="img" aria-label="beep"><g transform="scale(1)"><path d="M6 20l6.5 -9" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 20c-6 0 -6 -16 -12 -16" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(5.4, 9.5) scale(0.52) rotate(8 12.5 2.5)"><path fill="#fafafa" d="m0,0v2h1v1h1v1h1v1h7v-1h1v-1h1v-2h2v2h1v1h1v1h6v-1h1v-1h1v-1h1v-2z"/><path fill="#09090b" d="m2,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/><path fill="#09090b" d="m15,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/></g></g></svg>
+diff --git a/packages/foundation/ui-system/brand/assets/wordmark-light.svg b/packages/foundation/ui-system/brand/assets/wordmark-light.svg
+new file mode 100644
+index 0000000000..73dd55cc50
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/assets/wordmark-light.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 24" fill="none" role="img" aria-label="beep"><g transform="scale(1)"><path d="M6 20l6.5 -9" stroke="#214e21" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 20c-6 0 -6 -16 -12 -16" stroke="#214e21" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(5.4, 9.5) scale(0.52) rotate(8 12.5 2.5)"><path fill="#fafafa" d="m0,0v2h1v1h1v1h1v1h7v-1h1v-1h1v-2h2v2h1v1h1v1h6v-1h1v-1h1v-1h1v-2z"/><path fill="#09090b" d="m2,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/><path fill="#09090b" d="m15,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/></g></g><text x="30" y="17.5" font-family="Inter Variable, Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700" letter-spacing="-0.02em" fill="#18181b">beep</text></svg>
+diff --git a/packages/foundation/ui-system/brand/assets/wordmark.svg b/packages/foundation/ui-system/brand/assets/wordmark.svg
+new file mode 100644
+index 0000000000..4be29fa3a3
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/assets/wordmark.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 24" fill="none" role="img" aria-label="beep"><g transform="scale(1)"><path d="M6 20l6.5 -9" stroke="#5c9a5c" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 20c-6 0 -6 -16 -12 -16" stroke="#5c9a5c" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(5.4, 9.5) scale(0.52) rotate(8 12.5 2.5)"><path fill="#fafafa" d="m0,0v2h1v1h1v1h1v1h7v-1h1v-1h1v-2h2v2h1v1h1v1h6v-1h1v-1h1v-1h1v-2z"/><path fill="#09090b" d="m2,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/><path fill="#09090b" d="m15,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"/></g></g><text x="30" y="17.5" font-family="Inter Variable, Inter, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700" letter-spacing="-0.02em" fill="#fafafa">beep</text></svg>
+diff --git a/packages/foundation/ui-system/brand/docgen.json b/packages/foundation/ui-system/brand/docgen.json
+new file mode 100644
+index 0000000000..0f6cbe6963
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/docgen.json
+@@ -0,0 +1,32 @@
++{
++  "$schema": "../../../../packages/tooling/tool/docgen/schema.json",
++  "exclude": ["src/internal/**/*.ts"],
++  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/ui-system/brand/src/",
++  "examplesCompilerOptions": {
++    "noEmit": true,
++    "strict": true,
++    "skipLibCheck": true,
++    "moduleResolution": "bundler",
++    "module": "es2022",
++    "target": "es2022",
++    "lib": ["ESNext", "DOM", "DOM.Iterable"],
++    "rewriteRelativeImportExtensions": true,
++    "allowImportingTsExtensions": true,
++    "moduleDetection": "force",
++    "verbatimModuleSyntax": true,
++    "allowJs": false,
++    "erasableSyntaxOnly": true,
++    "declaration": true,
++    "declarationMap": true,
++    "sourceMap": true,
++    "exactOptionalPropertyTypes": true,
++    "noUnusedLocals": true,
++    "noUnusedParameters": true,
++    "noImplicitOverride": true,
++    "noFallthroughCasesInSwitch": true,
++    "stripInternal": false,
++    "noErrorTruncation": true,
++    "types": [],
++    "jsx": "react-jsx"
++  }
++}
+diff --git a/packages/foundation/ui-system/brand/package.json b/packages/foundation/ui-system/brand/package.json
+new file mode 100644
+index 0000000000..838748c074
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/package.json
+@@ -0,0 +1,105 @@
++{
++  "name": "@beep/brand",
++  "version": "0.0.0",
++  "description": "beep brand identity: marks, palette, typography tokens, and static assets",
++  "license": "MIT",
++  "private": true,
++  "type": "module",
++  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/ui-system/brand",
++  "repository": {
++    "type": "git",
++    "url": "git@github.com:beep-effect/beep-effect.git",
++    "directory": "packages/foundation/ui-system/brand"
++  },
++  "beep": {
++    "family": "foundation",
++    "kind": "ui-system"
++  },
++  "scripts": {
++    "audit": "bun run --if-present beep:audit",
++    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
++    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
++    "beep:build": "tsc -p tsconfig.json && bun run babel",
++    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
++    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
++    "beep:lint": "biome check .",
++    "beep:lint:fix": "biome check . --write",
++    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
++    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
++    "build": "bun run beep:build",
++    "check": "bun run beep:check",
++    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
++    "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
++    "lint": "bun run beep:lint",
++    "lint:fix": "bun run beep:lint:fix",
++    "render": "bun run scripts/render.ts",
++    "test": "bun run beep:test",
++    "test:integration": "bun run beep:test:integration"
++  },
++  "exports": {
++    ".": "./src/index.ts",
++    "./react": "./src/react.tsx",
++    "./styles/*": "./styles/*",
++    "./assets/*": {
++      "types": "./src/Brand.asset.d.ts",
++      "default": "./assets/*"
++    },
++    "./package.json": "./package.json"
++  },
++  "files": [
++    "assets/**",
++    "styles/**",
++    "src/**/*.ts",
++    "src/**/*.tsx",
++    "dist/**/*.js",
++    "dist/**/*.js.map",
++    "dist/**/*.d.ts",
++    "dist/**/*.d.ts.map"
++  ],
++  "sideEffects": [
++    "**/*.css"
++  ],
++  "publishConfig": {
++    "access": "public",
++    "provenance": true,
++    "exports": {
++      ".": "./dist/index.js",
++      "./react": "./dist/react.js",
++      "./styles/*": "./styles/*",
++      "./assets/*": {
++        "types": "./src/Brand.asset.d.ts",
++        "default": "./assets/*"
++      },
++      "./package.json": "./package.json"
++    }
++  },
++  "dependencies": {
++    "@beep/identity": "workspace:^",
++    "@beep/schema": "workspace:^",
++    "@beep/utils": "workspace:^",
++    "@fontsource-variable/inter": "catalog:",
++    "@fontsource-variable/jetbrains-mono": "catalog:",
++    "effect": "catalog:"
++  },
++  "devDependencies": {
++    "@effect/platform-bun": "catalog:",
++    "@effect/vitest": "catalog:",
++    "@testing-library/react": "catalog:",
++    "@types/node": "catalog:",
++    "@types/react": "catalog:",
++    "@types/react-dom": "catalog:",
++    "bun-types": "catalog:",
++    "jsdom": "catalog:",
++    "react": "catalog:",
++    "react-dom": "catalog:",
++    "vitest": "catalog:"
++  },
++  "peerDependencies": {
++    "react": "^19"
++  },
++  "peerDependenciesMeta": {
++    "react": {
++      "optional": true
++    }
++  }
++}
+diff --git a/packages/foundation/ui-system/brand/scripts/render.ts b/packages/foundation/ui-system/brand/scripts/render.ts
+new file mode 100644
+index 0000000000..de4203cc61
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/scripts/render.ts
+@@ -0,0 +1,33 @@
++/**
++ * Writes every generated brand file (theme stylesheet and SVG assets) from the identity in `src/Brand.tokens.ts`.
++ *
++ * Run with `bun run render` from the package root. The parity test in `test/assets.test.ts`
++ * fails until the checked-in files match this output.
++ */
++import { beep, renderBrandAssets } from "@beep/brand";
++import { A } from "@beep/utils";
++import { BunRuntime } from "@effect/platform-bun";
++import * as BunServices from "@effect/platform-bun/BunServices";
++import { Console, Effect, FileSystem, Layer, Path } from "effect";
++
++const packageRoot = new URL("../", import.meta.url).pathname;
++
++const writeAsset = Effect.fn("writeAsset")(function* (asset: { readonly path: string; readonly content: string }) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const target = path.join(packageRoot, asset.path);
++  yield* fs.writeFileString(target, asset.content);
++  yield* Console.log(`wrote ${asset.path}`);
++});
++
++const assets = renderBrandAssets(beep);
++
++const writeAll = Effect.forEach(assets, writeAsset, { discard: true }).pipe(
++  Effect.andThen(Console.log(`rendered ${A.length(assets)} files`))
++);
++
++const program = Effect.scoped(
++  Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => writeAll.pipe(Effect.provide(context))))
++);
++
++BunRuntime.runMain(program);
+diff --git a/packages/foundation/ui-system/brand/src/Brand.asset.d.ts b/packages/foundation/ui-system/brand/src/Brand.asset.d.ts
+new file mode 100644
+index 0000000000..9f9353b503
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/Brand.asset.d.ts
+@@ -0,0 +1,9 @@
++/**
++ * Type contract for static brand asset subpath imports.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++declare const assetUrl: string;
++
++export default assetUrl;
+diff --git a/packages/foundation/ui-system/brand/src/Brand.assets.ts b/packages/foundation/ui-system/brand/src/Brand.assets.ts
+new file mode 100644
+index 0000000000..b6da847eb2
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/Brand.assets.ts
+@@ -0,0 +1,116 @@
++/**
++ * The generated files this package ships, rendered from the brand identity so the checked-in stylesheet and SVG assets can be proven current.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { $BrandId } from "@beep/identity";
++import * as O from "effect/Option";
++import * as S from "effect/Schema";
++import { renderThemeCss } from "./Brand.css.ts";
++import { MarkGround, MarkPaint, MarkSvgRequest, WordmarkSvgRequest } from "./Brand.schema.ts";
++import { renderMarkSvg, renderWordmarkSvg } from "./Brand.svg.ts";
++import type { BrandIdentity } from "./Brand.schema.ts";
++
++const $I = $BrandId.create("Brand.assets");
++
++/**
++ * One generated file: its package-relative path and full text content.
++ *
++ * **Example** (Construct a rendered asset)
++ *
++ * ```ts
++ * import { RenderedAsset } from "@beep/brand"
++ *
++ * console.log(RenderedAsset.make({ path: "styles/brand.css", content: "" }).path)
++ * ```
++ *
++ * @category rendering
++ * @since 0.0.0
++ */
++export class RenderedAsset extends S.Class<RenderedAsset>($I`RenderedAsset`)(
++  {
++    path: S.NonEmptyString.annotateKey({ description: "Path relative to the package root." }),
++    content: S.String.annotateKey({ description: "Full file text." }),
++  },
++  $I.annote("RenderedAsset", { description: "A generated file: package-relative path and text content." })
++) {}
++
++const onDark = (identity: BrandIdentity): MarkPaint =>
++  MarkPaint.make({ stroke: "currentColor", frame: identity.dark.foreground.base, lens: identity.dark.surface["0"] });
++
++const accentOnDark = (identity: BrandIdentity): MarkPaint =>
++  MarkPaint.make({
++    stroke: identity.dark.brand["400"],
++    frame: identity.dark.foreground.base,
++    lens: identity.dark.surface["0"],
++  });
++
++const accentOnLight = (identity: BrandIdentity): MarkPaint =>
++  MarkPaint.make({
++    stroke: identity.light.brand["400"],
++    frame: identity.dark.foreground.base,
++    lens: identity.dark.surface["0"],
++  });
++
++const favicon = (identity: BrandIdentity): MarkPaint =>
++  MarkPaint.make({
++    stroke: identity.dark.brand["400"],
++    frame: identity.dark.foreground.base,
++    lens: identity.dark.brand["900"],
++  });
++
++/**
++ * Render every generated file for an identity.
++ *
++ * **Details**
++ *
++ * The list is the contract between `scripts/render.ts`, which writes these files, and
++ * the parity test, which fails when a checked-in file no longer matches its render.
++ * The PNG icon set is not generated here; it is rasterised from `assets/favicon.svg`.
++ *
++ * **Example** (List generated paths)
++ *
++ * ```ts
++ * import { beep, renderBrandAssets } from "@beep/brand"
++ *
++ * console.log(renderBrandAssets(beep).map((asset) => asset.path))
++ * ```
++ *
++ * @param identity - Brand identity to render.
++ * @returns The stylesheet and SVG assets in a stable order.
++ * @category rendering
++ * @since 0.0.0
++ */
++export const renderBrandAssets = (identity: BrandIdentity): ReadonlyArray<RenderedAsset> => [
++  RenderedAsset.make({ path: "styles/brand.css", content: renderThemeCss(identity) }),
++  RenderedAsset.make({
++    path: "assets/mark.svg",
++    content: renderMarkSvg(
++      MarkSvgRequest.make({ mark: identity.mark, size: identity.mark.viewBox, paint: onDark(identity) })
++    ),
++  }),
++  RenderedAsset.make({
++    path: "assets/favicon.svg",
++    content: renderMarkSvg(
++      MarkSvgRequest.make({
++        mark: identity.mark,
++        size: 32,
++        paint: favicon(identity),
++        ground: O.some(MarkGround.make({ fill: identity.dark.brand["900"], radius: 6 })),
++      })
++    ),
++  }),
++  RenderedAsset.make({
++    path: "assets/wordmark.svg",
++    content: renderWordmarkSvg(
++      WordmarkSvgRequest.make({ identity, paint: accentOnDark(identity), textFill: identity.dark.foreground.base })
++    ),
++  }),
++  RenderedAsset.make({
++    path: "assets/wordmark-light.svg",
++    content: renderWordmarkSvg(
++      WordmarkSvgRequest.make({ identity, paint: accentOnLight(identity), textFill: identity.light.foreground.base })
++    ),
++  }),
++];
+diff --git a/packages/foundation/ui-system/brand/src/Brand.css.ts b/packages/foundation/ui-system/brand/src/Brand.css.ts
+new file mode 100644
+index 0000000000..faabe97eeb
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/Brand.css.ts
+@@ -0,0 +1,117 @@
++/**
++ * Encodes a {@link BrandIdentity} as a Tailwind v4 theme stylesheet.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { A, Str } from "@beep/utils";
++import { pipe } from "effect";
++import { ScaleStep, SurfaceStep } from "./Brand.schema.ts";
++import type { BrandIdentity, ColorScheme, FontStack, Glow, GlowLayer, GlowStop, Typography } from "./Brand.schema.ts";
++
++/**
++ * Banner line at the top of every generated stylesheet.
++ *
++ * **Example** (Detect a generated stylesheet)
++ *
++ * ```ts
++ * import { GENERATED_CSS_BANNER } from "@beep/brand"
++ *
++ * console.log(GENERATED_CSS_BANNER.startsWith("/*"))
++ * ```
++ *
++ * @category rendering
++ * @since 0.0.0
++ */
++export const GENERATED_CSS_BANNER =
++  "/* Generated by @beep/brand from Brand.tokens.ts. Do not edit by hand; run `bun run render` in packages/foundation/ui-system/brand. */";
++
++const declaration = (name: string, value: string): string => `  --${name}: ${value};`;
++
++const block = (selector: string, lines: ReadonlyArray<string>): string =>
++  pipe([`${selector} {`, ...lines, "}"], A.join("\n"));
++
++const quoteFamily = (family: string): string => (Str.includes(" ")(family) ? `"${family}"` : family);
++
++const fontStack = (stack: FontStack): string =>
++  pipe([stack.family, ...stack.fallbacks], A.map(quoteFamily), A.join(", "));
++
++const scaleLines = (scheme: ColorScheme): ReadonlyArray<string> =>
++  A.map(ScaleStep.Options, (step) => declaration(`color-brand-${step}`, scheme.brand[step]));
++
++const surfaceLines = (scheme: ColorScheme): ReadonlyArray<string> =>
++  A.map(SurfaceStep.Options, (step) => declaration(`color-surface-${step}`, scheme.surface[step]));
++
++const roleLines = (scheme: ColorScheme): ReadonlyArray<string> => [
++  declaration("color-fg", scheme.foreground.base),
++  declaration("color-fg-muted", scheme.foreground.muted),
++  declaration("color-fg-subtle", scheme.foreground.subtle),
++  declaration("color-border", scheme.border.base),
++  declaration("color-border-hover", scheme.border.hover),
++  declaration("color-success", scheme.semantic.success),
++  declaration("color-warning", scheme.semantic.warning),
++  declaration("color-error", scheme.semantic.error),
++];
++
++const glowValue = (stop: GlowStop): string =>
++  `color-mix(in srgb, var(--color-brand-${stop.step}) ${Math.round(stop.alpha * 100)}%, transparent)`;
++
++const glowLayerLines = (name: string, layer: GlowLayer): ReadonlyArray<string> => [
++  declaration(`beep-glow-${name}-start`, glowValue(layer.start)),
++  declaration(`beep-glow-${name}-mid`, glowValue(layer.mid)),
++];
++
++const glowLines = (glow: Glow): ReadonlyArray<string> =>
++  A.flatten([
++    glowLayerLines("primary", glow.primary),
++    glowLayerLines("secondary", glow.secondary),
++    glowLayerLines("tertiary", glow.tertiary),
++  ]);
++
++const fontLines = (typography: Typography): ReadonlyArray<string> => [
++  declaration("font-brand-sans", fontStack(typography.sans)),
++  declaration("font-brand-mono", fontStack(typography.mono)),
++  declaration("font-sans", "var(--font-brand-sans)"),
++  declaration("font-mono", "var(--font-brand-mono)"),
++];
++
++const schemeLines = (scheme: ColorScheme): ReadonlyArray<string> =>
++  A.flatten([scaleLines(scheme), surfaceLines(scheme), roleLines(scheme)]);
++
++/**
++ * Render the brand theme stylesheet.
++ *
++ * **Details**
++ *
++ * The light scheme is declared inside `@theme` so Tailwind v4 mints `bg-brand-500`,
++ * `text-fg-muted`, `border-border-hover`, and `font-brand-mono` utilities. The dark
++ * scheme redeclares the same custom properties under `.dark`, matching the `.dark`
++ * custom variant that `@beep/ui/styles/globals.css` uses, so utilities follow the
++ * appearance without inline theme values. Glow layers are `color-mix()` references
++ * to the brand scale rather than baked RGBA, so they track scheme overrides.
++ *
++ * **Example** (Render the beep theme)
++ *
++ * ```ts
++ * import { beep, renderThemeCss } from "@beep/brand"
++ *
++ * const css = renderThemeCss(beep)
++ * console.log(css.includes("--color-brand-500"))
++ * ```
++ *
++ * @param identity - Brand identity to encode.
++ * @returns The stylesheet text, ending with a newline.
++ * @category rendering
++ * @since 0.0.0
++ */
++export const renderThemeCss = (identity: BrandIdentity): string =>
++  pipe(
++    [
++      GENERATED_CSS_BANNER,
++      block("@theme", A.flatten([schemeLines(identity.light), fontLines(identity.typography)])),
++      block(":root", glowLines(identity.light.glow)),
++      block(".dark", A.flatten([schemeLines(identity.dark), glowLines(identity.dark.glow)])),
++    ],
++    A.join("\n\n"),
++    Str.concat("\n")
++  );
+diff --git a/packages/foundation/ui-system/brand/src/Brand.schema.ts b/packages/foundation/ui-system/brand/src/Brand.schema.ts
+new file mode 100644
+index 0000000000..33b13cfe37
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/Brand.schema.ts
+@@ -0,0 +1,729 @@
++/**
++ * Schema-first model of the beep brand identity: color schemes, typography stacks, the mark geometry, and the render requests that encode them into CSS and SVG.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { $BrandId } from "@beep/identity";
++import { LiteralKit, SchemaUtils } from "@beep/schema";
++import { HexColor } from "@beep/schema/Color";
++import * as S from "effect/Schema";
++
++const $I = $BrandId.create("Brand.schema");
++
++const svgPathDataPattern = /^[Mm]/;
++
++/**
++ * Tint step of a ten-stop brand color scale, lightest first.
++ *
++ * **Example** (Enumerate scale steps)
++ *
++ * ```ts
++ * import { ScaleStep } from "@beep/brand"
++ *
++ * console.log(ScaleStep.Options.length)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const ScaleStep = LiteralKit(["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"]).annotate(
++  $I.annote("ScaleStep", { description: "Tint step of a ten-stop brand color scale, lightest first." })
++);
++
++/**
++ * Decoded {@link ScaleStep} literal.
++ *
++ * **Example** (Annotate a scale step)
++ *
++ * ```ts
++ * import type { ScaleStep } from "@beep/brand"
++ *
++ * const accent: ScaleStep = "400"
++ * console.log(accent)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type ScaleStep = typeof ScaleStep.Type;
++
++/**
++ * Elevation step of a surface scale, base first.
++ *
++ * **Example** (Enumerate surface steps)
++ *
++ * ```ts
++ * import { SurfaceStep } from "@beep/brand"
++ *
++ * console.log(SurfaceStep.Options)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const SurfaceStep = LiteralKit(["0", "50", "100", "200", "300", "400"]).annotate(
++  $I.annote("SurfaceStep", { description: "Elevation step of a six-stop surface scale, base first." })
++);
++
++/**
++ * Decoded {@link SurfaceStep} literal.
++ *
++ * **Example** (Annotate a surface step)
++ *
++ * ```ts
++ * import type { SurfaceStep } from "@beep/brand"
++ *
++ * const base: SurfaceStep = "0"
++ * console.log(base)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type SurfaceStep = typeof SurfaceStep.Type;
++
++/**
++ * Ten-stop hex color scale keyed by {@link ScaleStep}.
++ *
++ * **Example** (Read the accent step)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.brand["400"])
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class ColorScale extends S.Class<ColorScale>($I`ColorScale`)(
++  {
++    "50": HexColor.annotateKey({ description: "Lightest tint." }),
++    "100": HexColor.annotateKey({ description: "Tint step 100." }),
++    "200": HexColor.annotateKey({ description: "Tint step 200." }),
++    "300": HexColor.annotateKey({ description: "Tint step 300; light-scheme accent text." }),
++    "400": HexColor.annotateKey({ description: "Tint step 400; the accent step in both schemes." }),
++    "500": HexColor.annotateKey({ description: "Tint step 500; the anchor hue." }),
++    "600": HexColor.annotateKey({ description: "Tint step 600." }),
++    "700": HexColor.annotateKey({ description: "Tint step 700." }),
++    "800": HexColor.annotateKey({ description: "Tint step 800." }),
++    "900": HexColor.annotateKey({ description: "Darkest shade; favicon and theme-color ground." }),
++  },
++  $I.annote("ColorScale", { description: "Ten-stop hex color scale keyed by ScaleStep." })
++) {}
++
++/**
++ * Six-stop surface (background) scale keyed by {@link SurfaceStep}.
++ *
++ * **Example** (Read the page background)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.surface["0"])
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class SurfaceScale extends S.Class<SurfaceScale>($I`SurfaceScale`)(
++  {
++    "0": HexColor.annotateKey({ description: "Page background." }),
++    "50": HexColor.annotateKey({ description: "Raised surface one step above the page." }),
++    "100": HexColor.annotateKey({ description: "Card and panel surface." }),
++    "200": HexColor.annotateKey({ description: "Muted control surface." }),
++    "300": HexColor.annotateKey({ description: "Hover and separator surface." }),
++    "400": HexColor.annotateKey({ description: "Strongest surface; scrollbar thumb hover." }),
++  },
++  $I.annote("SurfaceScale", { description: "Six-stop surface scale keyed by SurfaceStep." })
++) {}
++
++/**
++ * Foreground text colors at three emphasis levels.
++ *
++ * **Example** (Read muted text color)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.foreground.muted)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class Foreground extends S.Class<Foreground>($I`Foreground`)(
++  {
++    base: HexColor.annotateKey({ description: "Primary text color." }),
++    muted: HexColor.annotateKey({ description: "Secondary text color." }),
++    subtle: HexColor.annotateKey({ description: "Tertiary text color for hints and metadata." }),
++  },
++  $I.annote("Foreground", { description: "Foreground text colors at three emphasis levels." })
++) {}
++
++/**
++ * Border colors at rest and on hover.
++ *
++ * **Example** (Read the resting border)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.border.base)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class Border extends S.Class<Border>($I`Border`)(
++  {
++    base: HexColor.annotateKey({ description: "Resting border color." }),
++    hover: HexColor.annotateKey({ description: "Border color on hover." }),
++  },
++  $I.annote("Border", { description: "Border colors at rest and on hover." })
++) {}
++
++/**
++ * Semantic status colors.
++ *
++ * **Example** (Read the error color)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.semantic.error)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class Semantic extends S.Class<Semantic>($I`Semantic`)(
++  {
++    success: HexColor.annotateKey({ description: "Success status color." }),
++    warning: HexColor.annotateKey({ description: "Warning status color." }),
++    error: HexColor.annotateKey({ description: "Error status color." }),
++  },
++  $I.annote("Semantic", { description: "Semantic status colors." })
++) {}
++
++/**
++ * Opacity in the closed unit interval.
++ *
++ * **Example** (Construct an alpha)
++ *
++ * ```ts
++ * import { Alpha } from "@beep/brand"
++ *
++ * console.log(Alpha.make(0.35))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const Alpha = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(
++  S.brand("Alpha"),
++  $I.annoteSchema("Alpha", { description: "Opacity in the closed unit interval." })
++);
++
++/**
++ * Decoded {@link Alpha} value.
++ *
++ * **Example** (Annotate an alpha)
++ *
++ * ```ts
++ * import { Alpha } from "@beep/brand"
++ *
++ * const half: Alpha = Alpha.make(0.5)
++ * console.log(half)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type Alpha = typeof Alpha.Type;
++
++/**
++ * One color stop of an ambient glow: a brand scale step at an opacity.
++ *
++ * **Example** (Construct a glow stop)
++ *
++ * ```ts
++ * import { Alpha, GlowStop } from "@beep/brand"
++ *
++ * console.log(GlowStop.make({ step: "500", alpha: Alpha.make(0.35) }))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class GlowStop extends S.Class<GlowStop>($I`GlowStop`)(
++  {
++    step: ScaleStep.annotateKey({ description: "Brand scale step the glow samples." }),
++    alpha: Alpha.annotateKey({ description: "Opacity of the sampled step." }),
++  },
++  $I.annote("GlowStop", { description: "A brand scale step at an opacity." })
++) {}
++
++/**
++ * Radial glow layer with a bright start stop and a dimmer mid stop.
++ *
++ * **Example** (Read the primary glow start)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.glow.primary.start.step)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class GlowLayer extends S.Class<GlowLayer>($I`GlowLayer`)(
++  {
++    start: GlowStop.annotateKey({ description: "Center stop of the radial glow." }),
++    mid: GlowStop.annotateKey({ description: "Mid-radius stop before the glow fades to transparent." }),
++  },
++  $I.annote("GlowLayer", { description: "Radial glow layer with start and mid stops." })
++) {}
++
++/**
++ * The three ambient glow layers used behind graph and orb visuals.
++ *
++ * **Example** (Read the tertiary glow)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.glow.tertiary.mid.alpha)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class Glow extends S.Class<Glow>($I`Glow`)(
++  {
++    primary: GlowLayer.annotateKey({ description: "Dominant glow layer." }),
++    secondary: GlowLayer.annotateKey({ description: "Second glow layer, drifting against the primary." }),
++    tertiary: GlowLayer.annotateKey({ description: "Deep background glow layer." }),
++  },
++  $I.annote("Glow", { description: "The three ambient glow layers." })
++) {}
++
++/**
++ * A complete color scheme for one appearance (light or dark).
++ *
++ * **Example** (Read the light scheme border)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.light.border.hover)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class ColorScheme extends S.Class<ColorScheme>($I`ColorScheme`)(
++  {
++    brand: ColorScale.annotateKey({ description: "Brand hue scale for this scheme." }),
++    surface: SurfaceScale.annotateKey({ description: "Background surfaces for this scheme." }),
++    foreground: Foreground.annotateKey({ description: "Text colors for this scheme." }),
++    border: Border.annotateKey({ description: "Border colors for this scheme." }),
++    semantic: Semantic.annotateKey({ description: "Status colors for this scheme." }),
++    glow: Glow.annotateKey({ description: "Ambient glow layers for this scheme." }),
++  },
++  $I.annote("ColorScheme", { description: "A complete color scheme for one appearance." })
++) {}
++
++/**
++ * Appearance name of a color scheme.
++ *
++ * **Example** (Guard a scheme name)
++ *
++ * ```ts
++ * import { SchemeName } from "@beep/brand"
++ *
++ * console.log(SchemeName.is.dark("dark"))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const SchemeName = LiteralKit(["light", "dark"]).annotate(
++  $I.annote("SchemeName", { description: "Appearance name of a color scheme." })
++);
++
++/**
++ * Decoded {@link SchemeName} literal.
++ *
++ * **Example** (Annotate a scheme name)
++ *
++ * ```ts
++ * import type { SchemeName } from "@beep/brand"
++ *
++ * const scheme: SchemeName = "dark"
++ * console.log(scheme)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type SchemeName = typeof SchemeName.Type;
++
++/**
++ * A font family with its ordered fallbacks.
++ *
++ * **Example** (Read the sans family)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.typography.sans.family)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class FontStack extends S.Class<FontStack>($I`FontStack`)(
++  {
++    family: S.NonEmptyString.annotateKey({ description: "Preferred font family name." }),
++    fallbacks: S.Array(S.NonEmptyString).annotateKey({
++      description: "Ordered fallback families and generic keywords.",
++    }),
++  },
++  $I.annote("FontStack", { description: "A font family with its ordered fallbacks." })
++) {}
++
++/**
++ * Brand typography: the sans and mono stacks.
++ *
++ * **Example** (Read the mono family)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.typography.mono.family)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class Typography extends S.Class<Typography>($I`Typography`)(
++  {
++    sans: FontStack.annotateKey({ description: "Body and UI text stack." }),
++    mono: FontStack.annotateKey({ description: "Code and data stack." }),
++  },
++  $I.annote("Typography", { description: "Brand typography: sans and mono stacks." })
++) {}
++
++/**
++ * SVG path data beginning with a move-to command.
++ *
++ * **Example** (Construct path data)
++ *
++ * ```ts
++ * import { SvgPathData } from "@beep/brand"
++ *
++ * console.log(SvgPathData.make("M6 20l6.5 -9"))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const SvgPathData = S.String.check(
++  S.isPattern(svgPathDataPattern, {
++    identifier: $I`SvgPathDataPatternCheck`,
++    title: "SVG Path Data",
++    description: "SVG path data beginning with a move-to command.",
++    message: "SVG path data must begin with M or m",
++  })
++).pipe(
++  S.brand("SvgPathData"),
++  $I.annoteSchema("SvgPathData", { description: "SVG path data beginning with a move-to command." })
++);
++
++/**
++ * Decoded {@link SvgPathData} value.
++ *
++ * **Example** (Annotate path data)
++ *
++ * ```ts
++ * import { SvgPathData } from "@beep/brand"
++ *
++ * const stroke: SvgPathData = SvgPathData.make("M0 0h1")
++ * console.log(stroke)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type SvgPathData = typeof SvgPathData.Type;
++
++/**
++ * A point in mark user units.
++ *
++ * **Example** (Construct a point)
++ *
++ * ```ts
++ * import { MarkPoint } from "@beep/brand"
++ *
++ * console.log(MarkPoint.make({ x: 5.4, y: 9.5 }))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class MarkPoint extends S.Class<MarkPoint>($I`MarkPoint`)(
++  {
++    x: S.Finite.annotateKey({ description: "Horizontal coordinate in mark user units." }),
++    y: S.Finite.annotateKey({ description: "Vertical coordinate in mark user units." }),
++  },
++  $I.annote("MarkPoint", { description: "A point in mark user units." })
++) {}
++
++/**
++ * A rotation in degrees about an origin.
++ *
++ * **Example** (Construct a rotation)
++ *
++ * ```ts
++ * import { MarkPoint, MarkRotation } from "@beep/brand"
++ *
++ * console.log(MarkRotation.make({ degrees: 8, origin: MarkPoint.make({ x: 12.5, y: 2.5 }) }))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class MarkRotation extends S.Class<MarkRotation>($I`MarkRotation`)(
++  {
++    degrees: S.Finite.annotateKey({ description: "Clockwise rotation in degrees." }),
++    origin: MarkPoint.annotateKey({ description: "Rotation origin in the rotated group's own units." }),
++  },
++  $I.annote("MarkRotation", { description: "A rotation in degrees about an origin." })
++) {}
++
++/**
++ * The tilted pixel glasses worn by the lambda: placement transform plus frame and lens paths.
++ *
++ * **Example** (Count the lenses)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.mark.glasses.lenses.length)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class PixelGlasses extends S.Class<PixelGlasses>($I`PixelGlasses`)(
++  {
++    translate: MarkPoint.annotateKey({ description: "Placement offset in mark user units." }),
++    scale: S.Finite.annotateKey({ description: "Uniform scale from glasses pixels to mark user units." }),
++    rotation: MarkRotation.annotateKey({ description: "Tilt applied after scaling." }),
++    frame: SvgPathData.annotateKey({ description: "Filled frame outline path in glasses pixels." }),
++    lenses: S.Array(SvgPathData).annotateKey({ description: "Filled lens paths in glasses pixels." }),
++  },
++  $I.annote("PixelGlasses", { description: "Tilted pixel glasses: placement transform plus frame and lens paths." })
++) {}
++
++/**
++ * Geometry of the beep mark: stroked lambda paths plus the pixel glasses, on a square view box.
++ *
++ * **Example** (Read the view box size)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.mark.viewBox)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class BrandMark extends S.Class<BrandMark>($I`BrandMark`)(
++  {
++    name: S.NonEmptyString.annotateKey({ description: "Accessible name of the mark." }),
++    viewBox: S.Finite.check(S.isGreaterThan(0)).annotateKey({
++      description: "Side length of the square view box in user units.",
++    }),
++    strokes: S.Array(SvgPathData).annotateKey({ description: "Stroked lambda paths." }),
++    strokeWidth: S.Finite.check(S.isGreaterThan(0)).annotateKey({
++      description: "Stroke width of the lambda paths in user units.",
++    }),
++    glasses: PixelGlasses.annotateKey({ description: "The pixel glasses overlay." }),
++  },
++  $I.annote("BrandMark", { description: "Geometry of the beep mark on a square view box." })
++) {}
++
++/**
++ * The whole brand identity: both color schemes, typography, and the mark.
++ *
++ * **Example** (Read the brand name)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.name)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class BrandIdentity extends S.Class<BrandIdentity>($I`BrandIdentity`)(
++  {
++    name: S.NonEmptyString.annotateKey({ description: "Brand name as rendered in wordmarks." }),
++    light: ColorScheme.annotateKey({ description: "Light appearance scheme." }),
++    dark: ColorScheme.annotateKey({ description: "Dark appearance scheme." }),
++    typography: Typography.annotateKey({ description: "Font stacks." }),
++    mark: BrandMark.annotateKey({ description: "Mark geometry." }),
++  },
++  $I.annote("BrandIdentity", { description: "The whole brand identity: color schemes, typography, and the mark." })
++) {}
++
++/**
++ * SVG paint for a stroke: a hex color or the inherited `currentColor`.
++ *
++ * **Example** (Inherit the text color)
++ *
++ * ```ts
++ * import { SvgPaint } from "@beep/brand"
++ *
++ * console.log(SvgPaint.is("currentColor"))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const SvgPaint = S.Union([HexColor, S.Literal("currentColor")]).pipe(
++  $I.annoteSchema("SvgPaint", { description: "A hex color or the inherited currentColor keyword." }),
++  SchemaUtils.withStatics((self) => ({ is: S.is(self) }))
++);
++
++/**
++ * Decoded {@link SvgPaint} value.
++ *
++ * **Example** (Annotate a paint)
++ *
++ * ```ts
++ * import type { SvgPaint } from "@beep/brand"
++ *
++ * const paint: SvgPaint = "currentColor"
++ * console.log(paint)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type SvgPaint = typeof SvgPaint.Type;
++
++/**
++ * Colors applied to the mark's lambda stroke, glasses frame, and lenses.
++ *
++ * **Example** (Paint the mark for dark surfaces)
++ *
++ * ```ts
++ * import { beep, MarkPaint } from "@beep/brand"
++ *
++ * const paint = MarkPaint.make({ stroke: "currentColor", frame: beep.dark.foreground.base, lens: beep.dark.surface["0"] })
++ * console.log(paint.frame)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class MarkPaint extends S.Class<MarkPaint>($I`MarkPaint`)(
++  {
++    stroke: SvgPaint.annotateKey({ description: "Lambda stroke paint." }),
++    frame: HexColor.annotateKey({ description: "Glasses frame fill." }),
++    lens: HexColor.annotateKey({ description: "Glasses lens fill." }),
++  },
++  $I.annote("MarkPaint", { description: "Colors for the mark's stroke, frame, and lenses." })
++) {}
++
++/**
++ * Optional rounded ground rectangle behind the mark (favicons and app icons).
++ *
++ * **Example** (Ground the mark on brand-900)
++ *
++ * ```ts
++ * import { beep, MarkGround } from "@beep/brand"
++ *
++ * console.log(MarkGround.make({ fill: beep.dark.brand["900"], radius: 6 }))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class MarkGround extends S.Class<MarkGround>($I`MarkGround`)(
++  {
++    fill: HexColor.annotateKey({ description: "Ground rectangle fill." }),
++    radius: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
++      description: "Corner radius in output user units.",
++    }),
++  },
++  $I.annote("MarkGround", { description: "Rounded ground rectangle behind the mark." })
++) {}
++
++/**
++ * Request to render the mark as a standalone SVG document.
++ *
++ * **Example** (Render request for the 24-unit mark)
++ *
++ * ```ts
++ * import { beep, MarkPaint, MarkSvgRequest } from "@beep/brand"
++ *
++ * const request = MarkSvgRequest.make({
++ *   mark: beep.mark,
++ *   size: 24,
++ *   paint: MarkPaint.make({ stroke: "currentColor", frame: beep.dark.foreground.base, lens: beep.dark.surface["0"] }),
++ * })
++ * console.log(request.size)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class MarkSvgRequest extends S.Class<MarkSvgRequest>($I`MarkSvgRequest`)(
++  {
++    mark: BrandMark.annotateKey({ description: "Mark geometry to render." }),
++    size: S.Finite.check(S.isGreaterThan(0)).annotateKey({
++      description: "Output view box side length; the mark scales to fill it.",
++    }),
++    paint: MarkPaint.annotateKey({ description: "Colors for the mark." }),
++    ground: S.OptionFromOptionalKey(MarkGround)
++      .pipe(SchemaUtils.withNoneDefault)
++      .annotateKey({ description: "Optional ground rectangle behind the mark." }),
++  },
++  $I.annote("MarkSvgRequest", { description: "Request to render the mark as a standalone SVG document." })
++) {}
++
++/**
++ * Request to render the mark beside the brand name as a wordmark SVG.
++ *
++ * **Example** (Wordmark request for dark surfaces)
++ *
++ * ```ts
++ * import { beep, MarkPaint, WordmarkSvgRequest } from "@beep/brand"
++ *
++ * const request = WordmarkSvgRequest.make({
++ *   identity: beep,
++ *   paint: MarkPaint.make({ stroke: beep.dark.brand["400"], frame: beep.dark.foreground.base, lens: beep.dark.surface["0"] }),
++ *   textFill: beep.dark.foreground.base,
++ * })
++ * console.log(request.identity.name)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class WordmarkSvgRequest extends S.Class<WordmarkSvgRequest>($I`WordmarkSvgRequest`)(
++  {
++    identity: BrandIdentity.annotateKey({ description: "Identity supplying the mark, name, and sans stack." }),
++    paint: MarkPaint.annotateKey({ description: "Colors for the mark." }),
++    textFill: HexColor.annotateKey({ description: "Fill for the brand name text." }),
++  },
++  $I.annote("WordmarkSvgRequest", { description: "Request to render the mark beside the brand name." })
++) {}
+diff --git a/packages/foundation/ui-system/brand/src/Brand.svg.ts b/packages/foundation/ui-system/brand/src/Brand.svg.ts
+new file mode 100644
+index 0000000000..18d9a7368f
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/Brand.svg.ts
+@@ -0,0 +1,162 @@
++/**
++ * Encodes the brand mark as SVG documents and React-ready transform strings.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { A, Str } from "@beep/utils";
++import { pipe } from "effect";
++import * as O from "effect/Option";
++import type {
++  BrandMark,
++  MarkGround,
++  MarkPaint,
++  MarkSvgRequest,
++  PixelGlasses,
++  WordmarkSvgRequest,
++} from "./Brand.schema.ts";
++
++const WORDMARK_HEIGHT = 24;
++const WORDMARK_TEXT_X = 30;
++const WORDMARK_GLYPH_WIDTH = 11;
++
++const round = (value: number): number => Number(value.toFixed(4));
++
++/**
++ * SVG transform placing the pixel glasses on the mark grid.
++ *
++ * **Example** (Read the glasses transform)
++ *
++ * ```ts
++ * import { beep, glassesTransform } from "@beep/brand"
++ *
++ * console.log(glassesTransform(beep.mark.glasses))
++ * ```
++ *
++ * @param glasses - Glasses placement and geometry.
++ * @returns A `translate(...) scale(...) rotate(...)` transform list.
++ * @category rendering
++ * @since 0.0.0
++ */
++export const glassesTransform = (glasses: PixelGlasses): string =>
++  `translate(${glasses.translate.x}, ${glasses.translate.y}) scale(${glasses.scale}) rotate(${glasses.rotation.degrees} ${glasses.rotation.origin.x} ${glasses.rotation.origin.y})`;
++
++const strokePath =
++  (mark: BrandMark, paint: MarkPaint) =>
++  (d: string): string =>
++    `<path d="${d}" stroke="${paint.stroke}" stroke-width="${mark.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
++
++const fillPath =
++  (fill: string) =>
++  (d: string): string =>
++    `<path fill="${fill}" d="${d}"/>`;
++
++const glassesGroup = (mark: BrandMark, paint: MarkPaint): string =>
++  pipe(
++    [
++      `<g transform="${glassesTransform(mark.glasses)}">`,
++      fillPath(paint.frame)(mark.glasses.frame),
++      ...A.map(mark.glasses.lenses, fillPath(paint.lens)),
++      "</g>",
++    ],
++    A.join("")
++  );
++
++const markBody = (mark: BrandMark, paint: MarkPaint): string =>
++  pipe([...A.map(mark.strokes, strokePath(mark, paint)), glassesGroup(mark, paint)], A.join(""));
++
++const scaledMark = (mark: BrandMark, paint: MarkPaint, size: number): string =>
++  `<g transform="scale(${round(size / mark.viewBox)})">${markBody(mark, paint)}</g>`;
++
++const groundRect =
++  (size: number) =>
++  (ground: MarkGround): string =>
++    `<rect width="${size}" height="${size}" rx="${ground.radius}" fill="${ground.fill}"/>`;
++
++const svgOpen = (width: number, height: number, label: string): string =>
++  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" fill="none" role="img" aria-label="${label}">`;
++
++/**
++ * Render the mark as a standalone SVG document.
++ *
++ * **Details**
++ *
++ * The mark is scaled from its own view box to `request.size`, so the same geometry
++ * produces the 24-unit inline mark and the 32-unit favicon. When `ground` is present
++ * a rounded rectangle is drawn first.
++ *
++ * **Example** (Render the favicon)
++ *
++ * ```ts
++ * import { beep, MarkGround, MarkPaint, MarkSvgRequest, renderMarkSvg } from "@beep/brand"
++ * import * as O from "effect/Option"
++ *
++ * const svg = renderMarkSvg(
++ *   MarkSvgRequest.make({
++ *     mark: beep.mark,
++ *     size: 32,
++ *     paint: MarkPaint.make({ stroke: beep.dark.brand["400"], frame: beep.dark.foreground.base, lens: beep.dark.brand["900"] }),
++ *     ground: O.some(MarkGround.make({ fill: beep.dark.brand["900"], radius: 6 })),
++ *   })
++ * )
++ * console.log(svg.startsWith("<svg"))
++ * ```
++ *
++ * @param request - Mark, output size, paint, and optional ground.
++ * @returns The SVG document text, ending with a newline.
++ * @category rendering
++ * @since 0.0.0
++ */
++export const renderMarkSvg = (request: MarkSvgRequest): string =>
++  pipe(
++    [
++      svgOpen(request.size, request.size, request.mark.name),
++      O.getOrElse(O.map(request.ground, groundRect(request.size)), () => ""),
++      scaledMark(request.mark, request.paint, request.size),
++      "</svg>",
++    ],
++    A.join(""),
++    Str.concat("\n")
++  );
++
++const wordmarkText = (request: WordmarkSvgRequest): string =>
++  `<text x="${WORDMARK_TEXT_X}" y="17.5" font-family="${Str.replaceAll('"', "'")(`${request.identity.typography.sans.family}, ${A.join(", ")(request.identity.typography.sans.fallbacks)}`)}" font-size="18" font-weight="700" letter-spacing="-0.02em" fill="${request.textFill}">${request.identity.name}</text>`;
++
++/**
++ * Render the mark beside the brand name as a horizontal wordmark SVG.
++ *
++ * **Example** (Render the wordmark for dark surfaces)
++ *
++ * ```ts
++ * import { beep, MarkPaint, renderWordmarkSvg, WordmarkSvgRequest } from "@beep/brand"
++ *
++ * const svg = renderWordmarkSvg(
++ *   WordmarkSvgRequest.make({
++ *     identity: beep,
++ *     paint: MarkPaint.make({ stroke: beep.dark.brand["400"], frame: beep.dark.foreground.base, lens: beep.dark.surface["0"] }),
++ *     textFill: beep.dark.foreground.base,
++ *   })
++ * )
++ * console.log(svg.includes(">beep<"))
++ * ```
++ *
++ * @param request - Identity, mark paint, and text fill.
++ * @returns The SVG document text, ending with a newline.
++ * @category rendering
++ * @since 0.0.0
++ */
++export const renderWordmarkSvg = (request: WordmarkSvgRequest): string =>
++  pipe(
++    [
++      svgOpen(
++        WORDMARK_TEXT_X + WORDMARK_GLYPH_WIDTH * Str.length(request.identity.name),
++        WORDMARK_HEIGHT,
++        request.identity.name
++      ),
++      scaledMark(request.identity.mark, request.paint, WORDMARK_HEIGHT),
++      wordmarkText(request),
++      "</svg>",
++    ],
++    A.join(""),
++    Str.concat("\n")
++  );
+diff --git a/packages/foundation/ui-system/brand/src/Brand.tokens.ts b/packages/foundation/ui-system/brand/src/Brand.tokens.ts
+new file mode 100644
+index 0000000000..a85e316723
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/Brand.tokens.ts
+@@ -0,0 +1,134 @@
++/**
++ * The beep brand identity constants, decoded through the schemas in `Brand.schema.ts`.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { HexColor } from "@beep/schema/Color";
++import {
++  Alpha,
++  Border,
++  BrandIdentity,
++  BrandMark,
++  ColorScale,
++  ColorScheme,
++  FontStack,
++  Foreground,
++  Glow,
++  GlowLayer,
++  GlowStop,
++  MarkPoint,
++  MarkRotation,
++  PixelGlasses,
++  Semantic,
++  SurfaceScale,
++  SvgPathData,
++  Typography,
++} from "./Brand.schema.ts";
++import type { ScaleStep } from "./Brand.schema.ts";
++
++const hex = (value: string): HexColor => HexColor.make(value);
++
++const stop = (step: ScaleStep, alpha: number): GlowStop => GlowStop.make({ step, alpha: Alpha.make(alpha) });
++
++const forestGreen = ColorScale.make({
++  "50": hex("#eef5ee"),
++  "100": hex("#d4e8d4"),
++  "200": hex("#aed1ae"),
++  "300": hex("#82b582"),
++  "400": hex("#5c9a5c"),
++  "500": hex("#3d7d3d"),
++  "600": hex("#2d632d"),
++  "700": hex("#214e21"),
++  "800": hex("#1a3a1a"),
++  "900": hex("#122812"),
++});
++
++// The light scheme darkens the two accent steps so green text and outlines keep
++// contrast on white; every other step is shared with the dark scheme.
++const forestGreenOnLight = ColorScale.make({ ...forestGreen, "300": hex("#2d632d"), "400": hex("#214e21") });
++
++const dark = ColorScheme.make({
++  brand: forestGreen,
++  surface: SurfaceScale.make({
++    "0": hex("#09090b"),
++    "50": hex("#111113"),
++    "100": hex("#18181b"),
++    "200": hex("#27272a"),
++    "300": hex("#3f3f46"),
++    "400": hex("#52525b"),
++  }),
++  foreground: Foreground.make({ base: hex("#fafafa"), muted: hex("#a1a1aa"), subtle: hex("#71717a") }),
++  border: Border.make({ base: hex("#27272a"), hover: hex("#3f3f46") }),
++  semantic: Semantic.make({ success: hex("#22c55e"), warning: hex("#eab308"), error: hex("#ef4444") }),
++  glow: Glow.make({
++    primary: GlowLayer.make({ start: stop("500", 0.35), mid: stop("600", 0.15) }),
++    secondary: GlowLayer.make({ start: stop("400", 0.28), mid: stop("500", 0.12) }),
++    tertiary: GlowLayer.make({ start: stop("700", 0.3), mid: stop("800", 0.12) }),
++  }),
++});
++
++const light = ColorScheme.make({
++  brand: forestGreenOnLight,
++  surface: SurfaceScale.make({
++    "0": hex("#ffffff"),
++    "50": hex("#fafafa"),
++    "100": hex("#f4f4f5"),
++    "200": hex("#e4e4e7"),
++    "300": hex("#d4d4d8"),
++    "400": hex("#a1a1aa"),
++  }),
++  foreground: Foreground.make({ base: hex("#18181b"), muted: hex("#52525b"), subtle: hex("#71717a") }),
++  border: Border.make({ base: hex("#d4d4d8"), hover: hex("#a1a1aa") }),
++  semantic: Semantic.make({ success: hex("#16a34a"), warning: hex("#854d0e"), error: hex("#b91c1c") }),
++  glow: Glow.make({
++    primary: GlowLayer.make({ start: stop("500", 0.28), mid: stop("400", 0.16) }),
++    secondary: GlowLayer.make({ start: stop("600", 0.22), mid: stop("500", 0.12) }),
++    tertiary: GlowLayer.make({ start: stop("700", 0.18), mid: stop("400", 0.1) }),
++  }),
++});
++
++const typography = Typography.make({
++  sans: FontStack.make({
++    family: "Inter Variable",
++    fallbacks: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
++  }),
++  mono: FontStack.make({
++    family: "JetBrains Mono Variable",
++    fallbacks: ["JetBrains Mono", "ui-monospace", "monospace"],
++  }),
++});
++
++// A lambda wearing tilted pixel glasses, drawn on a 24-unit grid.
++const mark = BrandMark.make({
++  name: "beep",
++  viewBox: 24,
++  strokes: [SvgPathData.make("M6 20l6.5 -9"), SvgPathData.make("M19 20c-6 0 -6 -16 -12 -16")],
++  strokeWidth: 2.25,
++  glasses: PixelGlasses.make({
++    translate: MarkPoint.make({ x: 5.4, y: 9.5 }),
++    scale: 0.52,
++    rotation: MarkRotation.make({ degrees: 8, origin: MarkPoint.make({ x: 12.5, y: 2.5 }) }),
++    frame: SvgPathData.make("m0,0v2h1v1h1v1h1v1h7v-1h1v-1h1v-2h2v2h1v1h1v1h6v-1h1v-1h1v-1h1v-2z"),
++    lenses: [
++      SvgPathData.make("m2,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"),
++      SvgPathData.make("m15,1v1h4v2h1v-1h-2v-2h-1v3h1v-1h-2v-2z"),
++    ],
++  }),
++});
++
++/**
++ * The beep brand identity: forest-green scales on zinc surfaces, Inter and JetBrains Mono, and the lambda mark.
++ *
++ * **Example** (Read the theme-color ground)
++ *
++ * ```ts
++ * import { beep } from "@beep/brand"
++ *
++ * console.log(beep.dark.brand["900"])
++ * ```
++ *
++ * @category tokens
++ * @since 0.0.0
++ */
++export const beep: BrandIdentity = BrandIdentity.make({ name: "beep", light, dark, typography, mark });
+diff --git a/packages/foundation/ui-system/brand/src/index.ts b/packages/foundation/ui-system/brand/src/index.ts
+new file mode 100644
+index 0000000000..b8fad29814
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/index.ts
+@@ -0,0 +1,190 @@
++/**
++ * beep brand identity: schema-first color schemes, typography, and mark geometry, plus the
++ * encoders that render them to CSS and SVG; stylesheets and static assets ship beside the
++ * source on `@beep/brand/styles/*` and `@beep/brand/assets/*`, and React components live on
++ * the `@beep/brand/react` subpath so this root stays framework-free.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++export {
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  RenderedAsset,
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  renderBrandAssets,
++} from "./Brand.assets.ts";
++export {
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  GENERATED_CSS_BANNER,
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  renderThemeCss,
++} from "./Brand.css.ts";
++export {
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  Alpha,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  Border,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  BrandIdentity,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  BrandMark,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  ColorScale,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  ColorScheme,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  FontStack,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  Foreground,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  Glow,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  GlowLayer,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  GlowStop,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  MarkGround,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  MarkPaint,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  MarkPoint,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  MarkRotation,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  MarkSvgRequest,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  PixelGlasses,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  ScaleStep,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  SchemeName,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  Semantic,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  SurfaceScale,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  SurfaceStep,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  SvgPaint,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  SvgPathData,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  Typography,
++  /**
++   * @category models
++   * @since 0.0.0
++   */
++  WordmarkSvgRequest,
++} from "./Brand.schema.ts";
++export {
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  glassesTransform,
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  renderMarkSvg,
++  /**
++   * @category rendering
++   * @since 0.0.0
++   */
++  renderWordmarkSvg,
++} from "./Brand.svg.ts";
++export {
++  /**
++   * @category tokens
++   * @since 0.0.0
++   */
++  beep,
++} from "./Brand.tokens.ts";
+diff --git a/packages/foundation/ui-system/brand/src/react.tsx b/packages/foundation/ui-system/brand/src/react.tsx
+new file mode 100644
+index 0000000000..1ba0826e71
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/src/react.tsx
+@@ -0,0 +1,95 @@
++/**
++ * React components for the beep mark and wordmark, driven by the same geometry the SVG assets
++ * are rendered from; imported from `@beep/brand/react` so the package root stays framework-free.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++import { A } from "@beep/utils";
++import { glassesTransform } from "./Brand.svg.ts";
++import { beep } from "./Brand.tokens.ts";
++import type { HTMLAttributes, SVGProps } from "react";
++
++const mark = beep.mark;
++const glasses = mark.glasses;
++
++/**
++ * The beep mark as an inline SVG. The lambda stroke follows `currentColor`; the glasses use the dark-scheme foreground and page surface so they read on any ground.
++ *
++ * **Example** (Render the mark at 32px in the accent color)
++ *
++ * ```ts
++ * import { BeepMark } from "@beep/brand/react"
++ * import { createElement } from "react"
++ *
++ * const element = createElement(BeepMark, { className: "size-8 text-brand-400" })
++ * console.log(element.type === BeepMark)
++ * ```
++ *
++ * @param props - Standard SVG element props; `viewBox`, `fill`, and `role` are set by the component.
++ * @returns The mark as an `<svg>` element.
++ * @category components
++ * @since 0.0.0
++ */
++export const BeepMark = (props: SVGProps<SVGSVGElement>) => (
++  <svg
++    xmlns="http://www.w3.org/2000/svg"
++    role="img"
++    aria-label={mark.name}
++    {...props}
++    viewBox={`0 0 ${mark.viewBox} ${mark.viewBox}`}
++    fill="none"
++  >
++    {A.map(mark.strokes, (d) => (
++      <path
++        key={d}
++        d={d}
++        stroke="currentColor"
++        strokeWidth={mark.strokeWidth}
++        strokeLinecap="round"
++        strokeLinejoin="round"
++      />
++    ))}
++    <g transform={glassesTransform(glasses)}>
++      <path fill={beep.dark.foreground.base} d={glasses.frame} />
++      {A.map(glasses.lenses, (d) => (
++        <path key={d} fill={beep.dark.surface["0"]} d={d} />
++      ))}
++    </g>
++  </svg>
++);
++
++/**
++ * The beep mark beside the brand name in the sans stack. The wrapper is an inline flex `<span>`; size it with a font size and the mark follows at `1.25em`.
++ *
++ * **Example** (Render the wordmark)
++ *
++ * ```ts
++ * import { BeepWordmark } from "@beep/brand/react"
++ * import { createElement } from "react"
++ *
++ * const element = createElement(BeepWordmark, { className: "text-xl" })
++ * console.log(element.type === BeepWordmark)
++ * ```
++ *
++ * @param props - Standard span props for the wrapper.
++ * @returns The wordmark as a `<span>` containing the mark and the brand name.
++ * @category components
++ * @since 0.0.0
++ */
++export const BeepWordmark = (props: HTMLAttributes<HTMLSpanElement>) => (
++  <span
++    {...props}
++    style={{
++      display: "inline-flex",
++      alignItems: "center",
++      gap: "0.4em",
++      fontWeight: 700,
++      letterSpacing: "-0.02em",
++      ...props.style,
++    }}
++  >
++    <BeepMark aria-hidden="true" style={{ width: "1.25em", height: "1.25em" }} className="text-brand-400" />
++    <span>{beep.name}</span>
++  </span>
++);
+diff --git a/packages/foundation/ui-system/brand/styles/brand.css b/packages/foundation/ui-system/brand/styles/brand.css
+new file mode 100644
+index 0000000000..9e1edcac8b
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/styles/brand.css
+@@ -0,0 +1,74 @@
++/* Generated by @beep/brand from Brand.tokens.ts. Do not edit by hand; run `bun run render` in packages/foundation/ui-system/brand. */
++
++@theme {
++  --color-brand-50: #eef5ee;
++  --color-brand-100: #d4e8d4;
++  --color-brand-200: #aed1ae;
++  --color-brand-300: #2d632d;
++  --color-brand-400: #214e21;
++  --color-brand-500: #3d7d3d;
++  --color-brand-600: #2d632d;
++  --color-brand-700: #214e21;
++  --color-brand-800: #1a3a1a;
++  --color-brand-900: #122812;
++  --color-surface-0: #ffffff;
++  --color-surface-50: #fafafa;
++  --color-surface-100: #f4f4f5;
++  --color-surface-200: #e4e4e7;
++  --color-surface-300: #d4d4d8;
++  --color-surface-400: #a1a1aa;
++  --color-fg: #18181b;
++  --color-fg-muted: #52525b;
++  --color-fg-subtle: #71717a;
++  --color-border: #d4d4d8;
++  --color-border-hover: #a1a1aa;
++  --color-success: #16a34a;
++  --color-warning: #854d0e;
++  --color-error: #b91c1c;
++  --font-brand-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
++  --font-brand-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
++  --font-sans: var(--font-brand-sans);
++  --font-mono: var(--font-brand-mono);
++}
++
++:root {
++  --beep-glow-primary-start: color-mix(in srgb, var(--color-brand-500) 28%, transparent);
++  --beep-glow-primary-mid: color-mix(in srgb, var(--color-brand-400) 16%, transparent);
++  --beep-glow-secondary-start: color-mix(in srgb, var(--color-brand-600) 22%, transparent);
++  --beep-glow-secondary-mid: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
++  --beep-glow-tertiary-start: color-mix(in srgb, var(--color-brand-700) 18%, transparent);
++  --beep-glow-tertiary-mid: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
++}
++
++.dark {
++  --color-brand-50: #eef5ee;
++  --color-brand-100: #d4e8d4;
++  --color-brand-200: #aed1ae;
++  --color-brand-300: #82b582;
++  --color-brand-400: #5c9a5c;
++  --color-brand-500: #3d7d3d;
++  --color-brand-600: #2d632d;
++  --color-brand-700: #214e21;
++  --color-brand-800: #1a3a1a;
++  --color-brand-900: #122812;
++  --color-surface-0: #09090b;
++  --color-surface-50: #111113;
++  --color-surface-100: #18181b;
++  --color-surface-200: #27272a;
++  --color-surface-300: #3f3f46;
++  --color-surface-400: #52525b;
++  --color-fg: #fafafa;
++  --color-fg-muted: #a1a1aa;
++  --color-fg-subtle: #71717a;
++  --color-border: #27272a;
++  --color-border-hover: #3f3f46;
++  --color-success: #22c55e;
++  --color-warning: #eab308;
++  --color-error: #ef4444;
++  --beep-glow-primary-start: color-mix(in srgb, var(--color-brand-500) 35%, transparent);
++  --beep-glow-primary-mid: color-mix(in srgb, var(--color-brand-600) 15%, transparent);
++  --beep-glow-secondary-start: color-mix(in srgb, var(--color-brand-400) 28%, transparent);
++  --beep-glow-secondary-mid: color-mix(in srgb, var(--color-brand-500) 12%, transparent);
++  --beep-glow-tertiary-start: color-mix(in srgb, var(--color-brand-700) 30%, transparent);
++  --beep-glow-tertiary-mid: color-mix(in srgb, var(--color-brand-800) 12%, transparent);
++}
+diff --git a/packages/foundation/ui-system/brand/styles/bridge.css b/packages/foundation/ui-system/brand/styles/bridge.css
+new file mode 100644
+index 0000000000..a6cb389dbc
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/styles/bridge.css
+@@ -0,0 +1,51 @@
++/*
++ * Opt-in bridge from @beep/ui's shadcn tokens onto the beep brand scale.
++ *
++ * Import order in an app stylesheet:
++ *   @import "@beep/brand/styles/fonts.css";
++ *   @import "@beep/ui/styles/globals.css";
++ *   @import "@beep/brand/styles/brand.css";
++ *   @import "@beep/brand/styles/bridge.css";
++ *
++ * Every value here is a var() reference into brand.css, so the bridge follows the
++ * light/dark scheme without restating a single color. `--font-geist-*` is the font
++ * variable @beep/ui expects an app to define; the brand stacks satisfy it.
++ */
++:root {
++  --font-geist-sans: var(--font-brand-sans);
++  --font-geist-mono: var(--font-brand-mono);
++
++  --background: var(--color-surface-0);
++  --foreground: var(--color-fg);
++  --card: var(--color-surface-50);
++  --card-foreground: var(--color-fg);
++  --popover: var(--color-surface-100);
++  --popover-foreground: var(--color-fg);
++  --primary: var(--color-brand-400);
++  --primary-foreground: var(--color-brand-50);
++  --secondary: var(--color-surface-100);
++  --secondary-foreground: var(--color-fg);
++  --muted: var(--color-surface-100);
++  --muted-foreground: var(--color-fg-muted);
++  --accent: var(--color-surface-200);
++  --accent-foreground: var(--color-fg);
++  --destructive: var(--color-error);
++  --success: var(--color-success);
++  --warning: var(--color-warning);
++  --border: var(--color-border);
++  --input: var(--color-border);
++  --ring: var(--color-brand-500);
++  --sidebar: var(--color-surface-50);
++  --sidebar-foreground: var(--color-fg);
++  --sidebar-primary: var(--color-brand-400);
++  --sidebar-primary-foreground: var(--color-brand-50);
++  --sidebar-accent: var(--color-surface-200);
++  --sidebar-accent-foreground: var(--color-fg);
++  --sidebar-border: var(--color-border);
++  --sidebar-ring: var(--color-brand-500);
++}
++
++.dark {
++  --primary-foreground: var(--color-brand-900);
++  --sidebar-primary-foreground: var(--color-brand-900);
++}
+diff --git a/packages/foundation/ui-system/brand/styles/fonts.css b/packages/foundation/ui-system/brand/styles/fonts.css
+new file mode 100644
+index 0000000000..9d4758afe1
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/styles/fonts.css
+@@ -0,0 +1,7 @@
++/*
++ * Self-hosted brand fonts. Each import pulls the variable-weight @font-face rules and
++ * woff2 files from the fontsource package, so every app renders the same glyphs.
++ * Family names: "Inter Variable" and "JetBrains Mono Variable" (see brand.css).
++ */
++@import "@fontsource-variable/inter";
++@import "@fontsource-variable/jetbrains-mono";
+diff --git a/packages/foundation/ui-system/brand/test/.gitkeep b/packages/foundation/ui-system/brand/test/.gitkeep
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/packages/foundation/ui-system/brand/test/Brand.test.ts b/packages/foundation/ui-system/brand/test/Brand.test.ts
+new file mode 100644
+index 0000000000..d94b6777ba
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/test/Brand.test.ts
+@@ -0,0 +1,76 @@
++import {
++  BrandIdentity,
++  beep,
++  GENERATED_CSS_BANNER,
++  renderThemeCss,
++  ScaleStep,
++  SurfaceStep,
++  SvgPaint,
++} from "@beep/brand";
++import { A } from "@beep/utils";
++import { describe, expect, it } from "@effect/vitest";
++import { Effect } from "effect";
++import * as S from "effect/Schema";
++
++describe("beep identity", () => {
++  it.effect("round-trips through its schema", () =>
++    Effect.gen(function* () {
++      const encoded = yield* S.encodeEffect(BrandIdentity)(beep);
++      const decoded = yield* S.decodeEffect(BrandIdentity)(encoded);
++
++      expect(decoded).toStrictEqual(beep);
++    })
++  );
++
++  it("shares every brand step between schemes except the two light accents", () => {
++    const differing = A.filter(ScaleStep.Options, (step) => beep.light.brand[step] !== beep.dark.brand[step]);
++
++    expect(differing).toStrictEqual(["300", "400"]);
++  });
++
++  it("names five mark paths: two strokes, one frame, two lenses", () => {
++    expect(beep.mark.strokes.length).toBe(2);
++    expect(beep.mark.glasses.lenses.length).toBe(2);
++    expect(SvgPaint.is("currentColor")).toBe(true);
++    expect(SvgPaint.is("green")).toBe(false);
++  });
++});
++
++describe("renderThemeCss", () => {
++  const css = renderThemeCss(beep);
++
++  it("starts with the generated banner and ends with a newline", () => {
++    expect(css.startsWith(GENERATED_CSS_BANNER)).toBe(true);
++    expect(css.endsWith("}\n")).toBe(true);
++  });
++
++  it("declares every scale step and surface step in both schemes", () => {
++    for (const step of ScaleStep.Options) {
++      expect(css).toContain(`--color-brand-${step}: ${beep.light.brand[step]};`);
++      expect(css).toContain(`--color-brand-${step}: ${beep.dark.brand[step]};`);
++    }
++    for (const step of SurfaceStep.Options) {
++      expect(css).toContain(`--color-surface-${step}: ${beep.dark.surface[step]};`);
++    }
++  });
++
++  it("puts the light scheme in @theme and the dark scheme under .dark", () => {
++    const themeBlock = css.slice(css.indexOf("@theme {"), css.indexOf(":root {"));
++    const darkBlock = css.slice(css.indexOf(".dark {"));
++
++    expect(themeBlock).toContain(`--color-surface-0: ${beep.light.surface["0"]};`);
++    expect(darkBlock).toContain(`--color-surface-0: ${beep.dark.surface["0"]};`);
++  });
++
++  it("references the brand scale from glow layers instead of baking rgba", () => {
++    expect(css).toContain("--beep-glow-primary-start: color-mix(in srgb, var(--color-brand-500) 28%, transparent);");
++    expect(css).toContain("--beep-glow-primary-start: color-mix(in srgb, var(--color-brand-500) 35%, transparent);");
++    expect(css).not.toContain("rgba(");
++  });
++
++  it("quotes multi-word families and leaves generic keywords bare", () => {
++    expect(css).toContain('--font-brand-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;');
++    expect(css).toContain('--font-brand-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;');
++    expect(css).toContain("--font-sans: var(--font-brand-sans);");
++  });
++});
+diff --git a/packages/foundation/ui-system/brand/test/assets.test.ts b/packages/foundation/ui-system/brand/test/assets.test.ts
+new file mode 100644
+index 0000000000..c2a027c12f
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/test/assets.test.ts
+@@ -0,0 +1,53 @@
++import { beep, renderBrandAssets, renderThemeCss } from "@beep/brand";
++import { A } from "@beep/utils";
++import * as BunServices from "@effect/platform-bun/BunServices";
++import { describe, expect, it } from "@effect/vitest";
++import { Effect, FileSystem, HashSet, Layer, Path } from "effect";
++import * as O from "effect/Option";
++
++const packageRoot = new URL("../", import.meta.url).pathname;
++
++const withBunServices = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
++  Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
++
++const readPackageFile = Effect.fn("readPackageFile")(function* (relative: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  return yield* fs.readFileString(path.join(packageRoot, relative));
++});
++
++describe("generated assets", () => {
++  it.effect("match their render exactly (run `bun run render` after changing tokens)", () =>
++    Effect.gen(function* () {
++      for (const asset of renderBrandAssets(beep)) {
++        const onDisk = yield* readPackageFile(asset.path);
++        expect(onDisk, asset.path).toBe(asset.content);
++      }
++    }).pipe(withBunServices)
++  );
++
++  it.effect("bridge.css only references custom properties that brand.css declares", () =>
++    Effect.gen(function* () {
++      const bridge = yield* readPackageFile("styles/bridge.css");
++      const declared = HashSet.fromIterable(
++        A.map(A.fromIterable(renderThemeCss(beep).matchAll(/^\s+(--[\w-]+):/gm)), (match) => match[1])
++      );
++      const referenced = A.map(A.fromIterable(bridge.matchAll(/var\((--[\w-]+)\)/g)), (match) => match[1]);
++
++      expect(A.length(referenced)).toBeGreaterThan(0);
++      for (const name of referenced) {
++        expect(HashSet.has(declared, name), name).toBe(true);
++      }
++    }).pipe(withBunServices)
++  );
++
++  it("renders the favicon on a brand-900 ground with the mark scaled to 32 units", () => {
++    const favicon = A.findFirst(renderBrandAssets(beep), (asset) => asset.path === "assets/favicon.svg");
++    const content = O.map(favicon, (asset) => asset.content);
++
++    expect(O.getOrElse(content, () => "")).toContain(
++      `<rect width="32" height="32" rx="6" fill="${beep.dark.brand["900"]}"/>`
++    );
++    expect(O.getOrElse(content, () => "")).toContain('<g transform="scale(1.3333)">');
++  });
++});
+diff --git a/packages/foundation/ui-system/brand/test/react.test.tsx b/packages/foundation/ui-system/brand/test/react.test.tsx
+new file mode 100644
+index 0000000000..00eafde6d1
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/test/react.test.tsx
+@@ -0,0 +1,28 @@
++// @vitest-environment jsdom
++import { beep } from "@beep/brand";
++import { BeepMark, BeepWordmark } from "@beep/brand/react";
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it } from "vitest";
++
++describe("BeepMark", () => {
++  it("renders the five mark paths inside a labelled svg", () => {
++    const { container } = render(<BeepMark className="size-8" />);
++    const svg = screen.getByRole("img", { name: beep.mark.name });
++
++    expect(svg.getAttribute("viewBox")).toBe("0 0 24 24");
++    expect(svg.getAttribute("class")).toBe("size-8");
++    expect(container.querySelectorAll("path")).toHaveLength(5);
++    expect(container.querySelector("g")?.getAttribute("transform")).toBe(
++      "translate(5.4, 9.5) scale(0.52) rotate(8 12.5 2.5)"
++    );
++  });
++});
++
++describe("BeepWordmark", () => {
++  it("renders the brand name beside a hidden mark", () => {
++    const { container } = render(<BeepWordmark />);
++
++    expect(screen.getByText(beep.name)).toBeDefined();
++    expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
++  });
++});
+diff --git a/packages/foundation/ui-system/brand/tsconfig.check.json b/packages/foundation/ui-system/brand/tsconfig.check.json
+new file mode 100644
+index 0000000000..e21e439edf
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/tsconfig.check.json
+@@ -0,0 +1,15 @@
++{
++  "$schema": "https://json.schemastore.org/tsconfig",
++  "extends": "./tsconfig.json",
++  "references": [],
++  "compilerOptions": {
++    "composite": false,
++    "declaration": false,
++    "declarationMap": false,
++    "incremental": false,
++    "noEmit": true,
++    "module": "ESNext",
++    "moduleResolution": "Bundler",
++    "rootDir": "../../../../."
++  }
++}
+diff --git a/packages/foundation/ui-system/brand/tsconfig.json b/packages/foundation/ui-system/brand/tsconfig.json
+new file mode 100644
+index 0000000000..381227a470
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/tsconfig.json
+@@ -0,0 +1,22 @@
++{
++  "$schema": "https://json.schemastore.org/tsconfig",
++  "extends": "../../../../tsconfig.base.json",
++  "include": ["src"],
++  "compilerOptions": {
++    "types": ["node"],
++    "jsx": "react-jsx",
++    "outDir": "dist",
++    "rootDir": "src"
++  },
++  "references": [
++    {
++      "path": "../../modeling/identity/tsconfig.json"
++    },
++    {
++      "path": "../../modeling/schema/tsconfig.json"
++    },
++    {
++      "path": "../../modeling/utils/tsconfig.json"
++    }
++  ]
++}
+diff --git a/packages/foundation/ui-system/brand/tsconfig.test.json b/packages/foundation/ui-system/brand/tsconfig.test.json
+new file mode 100644
+index 0000000000..5430a88344
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/tsconfig.test.json
+@@ -0,0 +1,17 @@
++{
++  "$schema": "https://json.schemastore.org/tsconfig",
++  "extends": "../../../../tsconfig.base.json",
++  "include": ["src", "test", "scripts"],
++  "compilerOptions": {
++    "composite": false,
++    "declaration": false,
++    "declarationMap": false,
++    "incremental": false,
++    "jsx": "react-jsx",
++    "noEmit": true,
++    "outDir": "dist-test",
++    "rootDir": ".",
++    "sourceMap": false,
++    "types": ["node", "bun-types"]
++  }
++}
+diff --git a/packages/foundation/ui-system/brand/vitest.config.ts b/packages/foundation/ui-system/brand/vitest.config.ts
+new file mode 100644
+index 0000000000..8f2ff8ae28
+--- /dev/null
++++ b/packages/foundation/ui-system/brand/vitest.config.ts
+@@ -0,0 +1,11 @@
++import { defineConfig, mergeConfig } from "vitest/config";
++import shared from "../../../../vitest.shared.ts";
++
++export default mergeConfig(
++  shared,
++  defineConfig({
++    test: {
++      // Package-specific overrides
++    },
++  })
++);
+diff --git a/standards/ARCHITECTURE.md b/standards/ARCHITECTURE.md
+index 9e0d6fa287..4b8817e912 100644
+--- a/standards/ARCHITECTURE.md
++++ b/standards/ARCHITECTURE.md
+@@ -55,7 +55,7 @@ Start with the smallest boundary that owns the meaning:
+ | Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
+ | Law-abiding experimental app proving an uncertain idea | `apps/labs/*`, per [15-lab-apps.md](architecture/15-lab-apps.md). |
+ | Typed application/runtime configuration contracts | The slice or shared `config` package. |
+-| Product-agnostic UI primitives, themes, tokens, hooks, or composition helpers | `foundation/ui-system`. |
++| Product-agnostic UI primitives, themes, tokens, hooks, composition helpers, or repo brand identity | `foundation/ui-system`. |
+ | Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
+ | App runtime wiring | The app entrypoint or an app-local `src/runtime/Layer.ts` helper. |
+ 
+@@ -471,8 +471,8 @@ Route specific homes before reaching for `foundation/capability`:
+ 2. External engines, SDKs, services, frameworks, and browser platform wrappers
+    go to `drivers`.
+ 3. Repo operations, generators, policy packs, and automation go to `tooling`.
+-4. Product-agnostic UI primitives, themes, tokens, hooks, and composition
+-   helpers go to `foundation/ui-system`.
++4. Product-agnostic UI primitives, themes, tokens, hooks, composition
++   helpers, and repo brand identity go to `foundation/ui-system`.
+ 5. Only remaining repo-owned, domain-agnostic technical services may go to
+    `foundation/capability`.
+ 
+@@ -688,7 +688,7 @@ canonical:
+ | `foundation/primitive`     | flat modules plus `index.ts`; optional environment entrypoints such as `*.browser.ts` |
+ | `foundation/modeling`      | concept modules with `*.schema.ts`, `*.brand.ts`, `*.codec.ts`, `index.ts`; package-specific role files when canonized |
+ | `foundation/capability`    | `*.service.ts`, `*.layer.ts`, `*.schema.ts`, `*.errors.ts`, optional `*.client.ts` |
+-| `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `index.ts`                        |
++| `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `assets/`, `index.ts`             |
+ | `drivers`                  | `*.service.ts`, `*.layer.ts`, `*.errors.ts`, `*.config.ts`, optional `*.browser.ts`, `*.test-layer.ts` |
+ | `tooling/library`          | library modules plus `index.ts`                                                   |
+ | `tooling/tool`             | `src/bin.ts`, `commands/`, `*.command.ts`, `*.service.ts`, `*.schemas.ts`, `index.ts` |
+diff --git a/standards/architecture/07-non-slice-families.md b/standards/architecture/07-non-slice-families.md
+index e5ba5b2fc5..c31b85e693 100644
+--- a/standards/architecture/07-non-slice-families.md
++++ b/standards/architecture/07-non-slice-families.md
+@@ -40,8 +40,8 @@ Route in this order:
+ 2. External engines, SDKs, services, frameworks, and browser platform wrappers
+    go to `drivers`.
+ 3. Repo operations, generators, policy packs, and automation go to `tooling`.
+-4. Product-agnostic UI primitives, themes, tokens, hooks, and composition
+-   helpers go to `foundation/ui-system`.
++4. Product-agnostic UI primitives, themes, tokens, hooks, composition
++   helpers, and repo brand identity go to `foundation/ui-system`.
+ 5. Only remaining repo-owned, domain-agnostic technical services may go to
+    `foundation/capability`.
+ 
+@@ -199,6 +199,20 @@ This keeps the mental model clean:
+ - shared kernel owns cross-slice product language
+ - `foundation/ui-system` owns product-agnostic UI primitives
+ 
++### Brand Identity Is A Design-System Role
++
++Repo brand identity (marks, palettes, type stacks, favicons, wordmarks) is not
++product-domain language: no slice owns it, and putting it in `shared/*` would
++make every slice depend on a logo. It is a design-system role, so it routes to
++`foundation/ui-system` as its own package, `@beep/brand`, rather than into
++`@beep/ui`. Keeping the two apart lets an app that carries a different identity
++(`apps/oip-web`) consume `@beep/ui` without inheriting beep colors, and lets a
++demo take the mark and palette without the component library's dependency
++weight. The dependency direction is `@beep/ui -> @beep/brand`, never the
++reverse. Brand tokens are schema-decoded data; the stylesheet and SVG assets
++are generated from them and proven current by a parity test. The `assets/`
++anchor holds those generated files and their rasterised icon set.
++
+ `ui-system` is a side branch of foundation. It may depend on
+ `foundation/primitive` and `foundation/modeling`, but it does not depend on
+ `foundation/capability` by default. It may also import a driver's
+diff --git a/standards/architecture/GLOSSARY.md b/standards/architecture/GLOSSARY.md
+index 729d6fc433..47a3b9b4a2 100644
+--- a/standards/architecture/GLOSSARY.md
++++ b/standards/architecture/GLOSSARY.md
+@@ -54,6 +54,17 @@ one application. It is not a monorepo package family and must not own product
+ policy, handlers, repositories, schedules, workflows, or cross-slice
+ orchestration.
+ 
++## Brand Package
++
++A `foundation/ui-system` package that owns repo brand identity as schema-decoded
++data: color scales per appearance, typography stacks, and mark geometry, with the
++theme stylesheet and SVG assets generated from that data. Brand identity is a
++design-system role, not product-domain language, so it is neither a slice concern
++nor shared-kernel vocabulary. `@beep/brand` is the canonical instance; `@beep/ui`
++may depend on it, never the reverse, so a brand-neutral component library stays
++consumable by apps carrying another identity. Doctrine:
++[07-non-slice-families.md](./07-non-slice-families.md).
++
+ ## Client Package
+ 
+ The slice package that owns browser/client adapters, remote command/query
+diff --git a/standards/coverage.regression-baseline.jsonc b/standards/coverage.regression-baseline.jsonc
+index 8c78b743f4..974aaa8345 100644
+--- a/standards/coverage.regression-baseline.jsonc
++++ b/standards/coverage.regression-baseline.jsonc
+@@ -2555,6 +2555,105 @@
+         }
+       }
+     },
++    "@beep/brand": {
++      "path": "packages/foundation/ui-system/brand",
++      "lines": 100,
++      "statements": 100,
++      "branches": 100,
++      "functions": 100,
++      "uncovered": {
++        "lines": 0,
++        "statements": 0,
++        "branches": 0,
++        "functions": 0
++      },
++      "files": {
++        "packages/foundation/ui-system/brand/src/Brand.assets.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/foundation/ui-system/brand/src/Brand.css.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/foundation/ui-system/brand/src/Brand.schema.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/foundation/ui-system/brand/src/Brand.svg.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/foundation/ui-system/brand/src/Brand.tokens.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/foundation/ui-system/brand/src/index.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
++        "packages/foundation/ui-system/brand/src/react.tsx": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        }
++      }
++    },
+     "@beep/chalk": {
+       "path": "packages/foundation/capability/chalk",
+       "lines": 94.03,
+@@ -9616,10 +9715,10 @@
+     },
+     "@beep/identity": {
+       "path": "packages/foundation/modeling/identity",
+-      "lines": 96.17,
+-      "statements": 96,
+-      "branches": 89.26,
+-      "functions": 90.2,
++      "lines": 96.57,
++      "statements": 96.4,
++      "branches": 89.93,
++      "functions": 91.41,
+       "uncovered": {
+         "lines": 18,
+         "statements": 20,
+@@ -9639,6 +9738,18 @@
+             "functions": 14
+           }
+         },
++        "packages/foundation/modeling/identity/src/Fibered.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
+         "packages/foundation/modeling/identity/src/Id.ts": {
+           "lines": 100,
+           "statements": 100,
+@@ -9651,6 +9762,18 @@
+             "functions": 0
+           }
+         },
++        "packages/foundation/modeling/identity/src/IdentityRegistry.ts": {
++          "lines": 100,
++          "statements": 100,
++          "branches": 100,
++          "functions": 100,
++          "uncovered": {
++            "lines": 0,
++            "statements": 0,
++            "branches": 0,
++            "functions": 0
++          }
++        },
+         "packages/foundation/modeling/identity/src/PnLocal.ts": {
+           "lines": 95.14,
+           "statements": 96,
+diff --git a/standards/fallow.boundaries.generated.jsonc b/standards/fallow.boundaries.generated.jsonc
+index b6df1c20f1..c5fed61cd8 100644
+--- a/standards/fallow.boundaries.generated.jsonc
++++ b/standards/fallow.boundaries.generated.jsonc
+@@ -119,6 +119,12 @@
+           "packages/drivers/box/src/**"
+         ]
+       },
++      {
++        "name": "@beep/brand",
++        "patterns": [
++          "packages/foundation/ui-system/brand/src/**"
++        ]
++      },
+       {
+         "name": "@beep/chalk",
+         "patterns": [
+@@ -1194,6 +1200,21 @@
+           "@beep/test-utils"
+         ]
+       },
++      {
++        "from": "@beep/brand",
++        "allow": [
++          "@beep/brand",
++          "@beep/identity",
++          "@beep/schema",
++          "@beep/utils"
++        ],
++        "allowTypeOnly": [
++          "@beep/brand",
++          "@beep/identity",
++          "@beep/schema",
++          "@beep/utils"
++        ]
++      },
+       {
+         "from": "@beep/chalk",
+         "allow": [
+@@ -3284,10 +3305,12 @@
+       {
+         "from": "@beep/trustgraph-workbench",
+         "allow": [
++          "@beep/brand",
+           "@beep/trustgraph-workbench",
+           "@beep/ui"
+         ],
+         "allowTypeOnly": [
++          "@beep/brand",
+           "@beep/trustgraph-workbench",
+           "@beep/ui"
+         ]
+diff --git a/standards/jsdoc-totals.regression-baseline.jsonc b/standards/jsdoc-totals.regression-baseline.jsonc
+index 3750fb4da8..10b4c603c9 100644
+--- a/standards/jsdoc-totals.regression-baseline.jsonc
++++ b/standards/jsdoc-totals.regression-baseline.jsonc
+@@ -8,7 +8,7 @@
+   "regeneration_command": "bun run beep quality jsdoc-inventory",
+   "snapshot_command": "bun run beep quality jsdoc-ratchet --write-baseline",
+   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
+-  "generated_at": "2026-08-23T19:33:42.804Z",
++  "generated_at": "2026-08-26T05:55:44.279Z",
+   "tracked_totals": {
+     "packagesNeedingRemediation": 59,
+     "missingExportExamples": 4,
+@@ -17,7 +17,7 @@
+     "unsafeExampleFindings": 0,
+     "schemaAnnotationFindings": 0,
+     "undescribed-see": 12,
+-    "multiple-description-paragraphs": 514,
++    "multiple-description-paragraphs": 513,
+     "leading-blank": 0,
+     "trailing-blank": 1,
+     "invalid-heading": 1,
+diff --git a/tsconfig.json b/tsconfig.json
+index 4ba894236d..a4aa37026c 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -1934,7 +1934,15 @@
+       "@beep/codegen-kit": [
+         "./packages/tooling/library/codegen-kit/src/index.ts"
+       ],
+-      "@beep/codegen-kit/*": ["./packages/tooling/library/codegen-kit/src/*"]
++      "@beep/codegen-kit/*": [
++        "./packages/tooling/library/codegen-kit/src/*"
++      ],
++      "@beep/brand": [
++        "./packages/foundation/ui-system/brand/src/index.ts"
++      ],
++      "@beep/brand/react": [
++        "./packages/foundation/ui-system/brand/src/react.tsx"
++      ]
+     }
+   }
+ }
+diff --git a/tsconfig.packages.json b/tsconfig.packages.json
+index cf9c775a8f..05da6cba3e 100644
+--- a/tsconfig.packages.json
++++ b/tsconfig.packages.json
+@@ -300,6 +300,9 @@
+     {
+       "path": "packages/foundation/primitive/types"
+     },
++    {
++      "path": "packages/foundation/ui-system/brand"
++    },
+     {
+       "path": "packages/foundation/ui-system/dock"
+     },
+diff --git a/vitest.aliases.generated.json b/vitest.aliases.generated.json
+index a2fec4dafd..3df5a426db 100644
+--- a/vitest.aliases.generated.json
++++ b/vitest.aliases.generated.json
+@@ -1762,5 +1762,7 @@
+     "./packages/foundation/modeling/skill-contract/src/*"
+   ],
+   "@beep/codegen-kit": ["./packages/tooling/library/codegen-kit/src/index.ts"],
+-  "@beep/codegen-kit/*": ["./packages/tooling/library/codegen-kit/src/*"]
++  "@beep/codegen-kit/*": ["./packages/tooling/library/codegen-kit/src/*"],
++  "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
++  "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"]
+ }
