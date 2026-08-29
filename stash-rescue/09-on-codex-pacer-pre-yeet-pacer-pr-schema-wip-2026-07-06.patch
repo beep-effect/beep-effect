@@ -1,0 +1,498 @@
+diff --git a/packages/foundation/modeling/schema/src/PlatformArch.schema.ts b/packages/foundation/modeling/schema/src/PlatformArch.schema.ts
+new file mode 100644
+index 0000000000..1b68d83a04
+--- /dev/null
++++ b/packages/foundation/modeling/schema/src/PlatformArch.schema.ts
+@@ -0,0 +1,47 @@
++/**
++ * Runtime platform architecture literal domain.
++ *
++ * @packageDocumentation
++ * @category validation
++ * @since 0.0.0
++ */
++import { $SchemaId } from "@beep/identity";
++import { LiteralKit } from "./LiteralKit/index.ts";
++
++const $I = $SchemaId.create("PlatformArch");
++
++/**
++ * CPU architecture identifier for runtime platform checks.
++ *
++ * @example
++ * ```ts
++ * import { PlatformArch } from "@beep/schema"
++ *
++ * console.log(PlatformArch.Options.includes("arm64")) // true
++ * console.log(PlatformArch.is.x64("arm64")) // false
++ * ```
++ *
++ * @category validation
++ * @since 0.0.0
++ */
++export const PlatformArch = LiteralKit(["arm64", "x64", "other"]).annotate(
++  $I.annote("PlatformArch", {
++    description: "CPU architecture identifier for runtime platform checks.",
++  })
++);
++
++/**
++ * Type for {@link PlatformArch}. {@inheritDoc PlatformArch}
++ *
++ * @example
++ * ```ts
++ * import { PlatformArch } from "@beep/schema"
++ *
++ * const arch: PlatformArch = PlatformArch.Enum.arm64
++ * console.log(arch) // "arm64"
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PlatformArch = typeof PlatformArch.Type;
+diff --git a/packages/foundation/modeling/schema/src/PlatformOS.schema.ts b/packages/foundation/modeling/schema/src/PlatformOS.schema.ts
+new file mode 100644
+index 0000000000..944fbbb1a3
+--- /dev/null
++++ b/packages/foundation/modeling/schema/src/PlatformOS.schema.ts
+@@ -0,0 +1,47 @@
++/**
++ * Runtime platform operating-system literal domain.
++ *
++ * @packageDocumentation
++ * @category validation
++ * @since 0.0.0
++ */
++import { $SchemaId } from "@beep/identity";
++import { LiteralKit } from "./LiteralKit/index.ts";
++
++const $I = $SchemaId.create("PlatformOS");
++
++/**
++ * Operating-system identifier for runtime platform checks.
++ *
++ * @example
++ * ```ts
++ * import { PlatformOS } from "@beep/schema"
++ *
++ * console.log(PlatformOS.Options.includes("linux")) // true
++ * console.log(PlatformOS.is.windows("darwin")) // false
++ * ```
++ *
++ * @category validation
++ * @since 0.0.0
++ */
++export const PlatformOS = LiteralKit(["darwin", "linux", "windows", "unknown"]).annotate(
++  $I.annote("PlatformOS", {
++    description: "Operating-system identifier for runtime platform checks.",
++  })
++);
++
++/**
++ * Type for {@link PlatformOS}. {@inheritDoc PlatformOS}
++ *
++ * @example
++ * ```ts
++ * import { PlatformOS } from "@beep/schema"
++ *
++ * const os: PlatformOS = PlatformOS.Enum.darwin
++ * console.log(os) // "darwin"
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PlatformOS = typeof PlatformOS.Type;
+diff --git a/packages/foundation/modeling/schema/src/SchemaUtils/schemaJson.ts b/packages/foundation/modeling/schema/src/SchemaUtils/schemaJson.ts
+new file mode 100644
+index 0000000000..f75952cdd1
+--- /dev/null
++++ b/packages/foundation/modeling/schema/src/SchemaUtils/schemaJson.ts
+@@ -0,0 +1,293 @@
++import { $SchemaId } from "@beep/identity";
++import { A, Bool, dual, O, P, pipe, Str } from "@beep/utils";
++import { Effect, Exit, Match, Result, SchemaGetter, SchemaTransformation } from "effect";
++import * as S from "effect/Schema";
++import type { Cause, SchemaIssue } from "effect";
++
++const $I = $SchemaId.create("SchemaUtils.schemaJson");
++
++const MAX_SCHEMA_DIAGNOSTIC_ISSUES = 8;
++const MAX_SCHEMA_DIAGNOSTIC_PATH_SEGMENTS = 16;
++const MAX_SCHEMA_DIAGNOSTIC_PATH_SEGMENT_LENGTH = 64;
++const MAX_SCHEMA_DIAGNOSTIC_LENGTH = 2_048;
++
++class SchemaDiagnosticIssue extends S.Class<SchemaDiagnosticIssue>($I`SchemaDiagnosticIssue`)(
++  {
++    message: S.String,
++    path: S.Array(S.PropertyKey),
++  },
++  $I.annote("SchemaDiagnosticIssue", {
++    description: "Schema diagnostic issue class",
++  })
++) {}
++
++// Schema's default formatter includes actual values. These diagnostics cross
++// process and UI boundaries, so retain only issue kinds and bounded paths.
++
++const truncateDiagnostic: {
++  (value: string, maxLength: number): string;
++  (maxLength: number): (value: string) => string;
++} = dual(2, (value: string, maxLength: number): string =>
++  value.length <= maxLength ? value : `${Str.slice(0, maxLength - 3)(value)}...`
++);
++
++const formatDiagnosticPathSegment = (key: PropertyKey) => {
++  if (P.isNumber(key)) {
++    return `[${key}]`;
++  }
++  const value = truncateDiagnostic(P.isSymbol(key) ? String(key) : key, MAX_SCHEMA_DIAGNOSTIC_PATH_SEGMENT_LENGTH);
++  return `[${JSON.stringify(value)}]`;
++};
++
++const formatDiagnosticIssue = (issue: SchemaDiagnosticIssue): string => {
++  if (A.isReadonlyArrayEmpty(issue.path)) {
++    return issue.message;
++  }
++
++  const path = pipe(
++    issue.path,
++    A.slice(0, MAX_SCHEMA_DIAGNOSTIC_PATH_SEGMENTS),
++    A.map(formatDiagnosticPathSegment),
++    A.join("")
++  );
++  const suffix = A.length(issue.path) > MAX_SCHEMA_DIAGNOSTIC_PATH_SEGMENTS ? "[...]" : "";
++
++  return `${issue.message}\n  at ${path}${suffix}`;
++};
++
++const schemaDiagnosticMessage = Match.type<SchemaIssue.Issue>().pipe(
++  Match.withReturnType<string>(),
++  Match.tag("InvalidValue", "Filter", "AnyOf", "Encoding", "Pointer", "Composite", () => "Invalid value"),
++  Match.tagsExhaustive({
++    InvalidType: () => "Invalid type",
++    MissingKey: () => "Missing key",
++    UnexpectedKey: () => "Unexpected key",
++    Forbidden: () => "Forbidden operation",
++    OneOf: () => "Expected exactly one schema member to match",
++  })
++);
++
++const collectCurrentSchemaDiagnosticIssue = (
++  issue: SchemaIssue.Issue,
++  path: ReadonlyArray<PropertyKey>,
++  diagnostics: Array<SchemaDiagnosticIssue>
++): number => {
++  if (A.length(diagnostics) < MAX_SCHEMA_DIAGNOSTIC_ISSUES) {
++    diagnostics.push({
++      message: schemaDiagnosticMessage(issue),
++      path,
++    });
++  }
++  return 1;
++};
++
++const collectSchemaDiagnosticIssueList = (
++  issues: ReadonlyArray<SchemaIssue.Issue>,
++  path: ReadonlyArray<PropertyKey>,
++  diagnostics: Array<SchemaDiagnosticIssue>
++): number => A.reduce(issues, 0, (count, issue) => count + collectSchemaDiagnosticIssues(issue, path, diagnostics));
++
++const collectSchemaDiagnosticIssues: {
++  (issue: SchemaIssue.Issue, path: ReadonlyArray<PropertyKey>, diagnostics: Array<SchemaDiagnosticIssue>): number;
++  (path: ReadonlyArray<PropertyKey>, diagnostics: Array<SchemaDiagnosticIssue>): (issue: SchemaIssue.Issue) => number;
++} = dual(
++  3,
++  (issue: SchemaIssue.Issue, path: ReadonlyArray<PropertyKey>, diagnostics: Array<SchemaDiagnosticIssue>): number =>
++    Match.value(issue).pipe(
++      Match.withReturnType<number>(),
++      Match.tags({
++        Encoding: (issue) => collectSchemaDiagnosticIssues(issue.issue, path, diagnostics),
++        Pointer: (issue) => collectSchemaDiagnosticIssues(issue.issue, [...path, ...issue.path], diagnostics),
++        Composite: (issue) => collectSchemaDiagnosticIssueList(issue.issues, path, diagnostics),
++        AnyOf: (issue) =>
++          A.match(issue.issues, {
++            onEmpty: () => collectCurrentSchemaDiagnosticIssue(issue, path, diagnostics),
++            onNonEmpty: (issues) => collectSchemaDiagnosticIssueList(issues, path, diagnostics),
++          }),
++        Filter: (issue) =>
++          Bool.match(P.isTagged(issue.issue, "InvalidValue"), {
++            onFalse: () => collectSchemaDiagnosticIssues(issue.issue, path, diagnostics),
++            onTrue: () => collectCurrentSchemaDiagnosticIssue(issue, path, diagnostics),
++          }),
++      }),
++      Match.orElse((issue) => collectCurrentSchemaDiagnosticIssue(issue, path, diagnostics))
++    )
++);
++
++export const decodeJsonResult = <const TSchema extends S.Codec<unknown, unknown>>(
++  schema: TSchema
++): ((input: string) => Result.Result<never, Cause.Cause<S.SchemaError>> | Result.Result<TSchema["Type"], never>) => {
++  const decode = S.decodeExit(S.fromJsonString(schema));
++  return (input: string): Result.Result<never, Cause.Cause<S.SchemaError>> | Result.Result<TSchema["Type"], never> => {
++    const result = decode(input);
++    if (Exit.isFailure(result)) {
++      return Result.fail(result.cause);
++    }
++    return Result.succeed(result.value);
++  };
++};
++
++export const decodeUnknownJsonResult = <TSchema extends S.Codec<unknown, unknown, never, never>>(
++  schema: TSchema
++): ((input: unknown) => Result.Result<unknown, never> | Result.Result<never, Cause.Cause<S.SchemaError>>) => {
++  const decode = S.decodeUnknownExit(S.fromJsonString(schema));
++  return (input: unknown): Result.Result<unknown, never> | Result.Result<never, Cause.Cause<S.SchemaError>> => {
++    const result = decode(input);
++    if (Exit.isFailure(result)) {
++      return Result.fail(result.cause);
++    }
++    return Result.succeed(result.value);
++  };
++};
++
++export const formatSchemaError = (cause: Cause.Cause<S.SchemaError>) => {
++  const issues = A.empty<SchemaDiagnosticIssue>();
++  let issueCount = 0;
++  let failureCount = 0;
++  let defectCount = 0;
++  let interruptionCount = 0;
++
++  for (const reason of cause.reasons) {
++    Match.value(reason).pipe(
++      Match.tags({
++        Fail: (reason) => {
++          failureCount += 1;
++          if (S.isSchemaError(reason.error)) {
++            issueCount += collectSchemaDiagnosticIssues(reason.error.issue, [], issues);
++          }
++        },
++        Die: () => {
++          defectCount += 1;
++        },
++        Interrupt: () => {
++          interruptionCount += 1;
++        },
++      })
++    );
++  }
++
++  if (A.isReadonlyArrayEmpty(issues)) {
++    return `Schema validation failed (failureCount=${failureCount}, defectCount=${defectCount}, interruptionCount=${interruptionCount}).`;
++  }
++
++  const omittedIssueCount = issueCount - issues.length;
++  const formatted = pipe(issues, A.map(formatDiagnosticIssue), A.join("\n"));
++  if (omittedIssueCount === 0) {
++    return truncateDiagnostic(formatted, MAX_SCHEMA_DIAGNOSTIC_LENGTH);
++  }
++  const suffix = `\n... and ${omittedIssueCount} more issue(s)`;
++  return truncateDiagnostic(formatted, MAX_SCHEMA_DIAGNOSTIC_LENGTH - suffix.length) + suffix;
++};
++
++/**
++ * A `Getter` that parses a lenient JSON string (tolerating trailing commas
++ * and JS-style comments) into an unknown value.
++ *
++ * Mirrors `SchemaGetter.parseJson()` but strips JSONC syntax before parsing.
++ */
++const decodeJsonString = S.decodeEffect(S.UnknownFromJsonString);
++
++const parseLenientJsonGetter = SchemaGetter.onSome((input: string) => {
++  // Strip single-line comments - alternation preserves quoted strings.
++  let stripped = input.replace(/("(?:[^"\\]|\\.)*")|\/\/[^\n]*/g, (match, stringLiteral: string | undefined) =>
++    P.isNotUndefined(stringLiteral) ? match : ""
++  );
++
++  // Strip multi-line comments.
++  stripped = stripped.replace(/("(?:[^"\\]|\\.)*")|\/\*[\s\S]*?\*\//g, (match, stringLiteral: string | undefined) =>
++    P.isNotUndefined(stringLiteral) ? match : ""
++  );
++
++  // Strip trailing commas before `}` or `]`.
++  stripped = stripped.replace(/,(\s*[}\]])/g, "$1");
++
++  return decodeJsonString(stripped).pipe(
++    Effect.map(O.some),
++    Effect.mapError((error) => error.issue)
++  );
++});
++
++/**
++ * Schema transformation: lenient JSONC string ↔ unknown.
++ *
++ * Same API as `SchemaTransformation.fromJsonString`, but the decode side
++ * strips trailing commas and JS-style comments before parsing.
++ * Encoding produces strict JSON via `JSON.stringify`.
++ */
++export const fromLenientJsonString = new SchemaTransformation.Transformation(
++  parseLenientJsonGetter,
++  SchemaGetter.stringifyJson()
++);
++
++export const prettyJsonString = SchemaGetter.parseJson<string>().compose(SchemaGetter.stringifyJson({ space: 2 }));
++
++/**
++ * Build a schema that decodes a lenient JSON string into `A`.
++ *
++ * Drop-in replacement for `S.fromJsonString(schema)` that tolerates
++ * trailing commas and comments in the input.
++ */
++export const fromLenientJson = <const TSchema extends S.Top>(schema: TSchema) =>
++  S.String.pipe(S.decodeTo(schema, fromLenientJsonString));
++
++export function extractJsonObject(raw: string): string {
++  const trimmed = Str.trim(raw);
++  if (Str.isEmpty(trimmed)) {
++    return trimmed;
++  }
++
++  const start = trimmed.indexOf("{");
++  if (start < 0) {
++    return trimmed;
++  }
++
++  let depth = 0;
++  let inString = false;
++  let escaping = false;
++  for (let index = start; index < trimmed.length; index += 1) {
++    const char = trimmed[index];
++    if (inString) {
++      if (escaping) {
++        escaping = false;
++      } else if (char === "\\") {
++        escaping = true;
++      } else if (char === '"') {
++        inString = false;
++      }
++      continue;
++    }
++
++    if (char === '"') {
++      inString = true;
++      continue;
++    }
++
++    if (char === "{") {
++      depth += 1;
++      continue;
++    }
++
++    if (char === "}") {
++      depth -= 1;
++      if (depth === 0) {
++        return trimmed.slice(start, index + 1);
++      }
++    }
++  }
++
++  return trimmed.slice(start);
++}
++
++/**
++ * Build a JSON string schema that encodes with stable 2-space formatting.
++ *
++ * Decode behavior matches `S.fromJsonString(schema)`. Encode behavior
++ * keeps the transformation schema-based while preserving human-readable JSON.
++ */
++export const fromJsonStringPretty = <const TSchema extends S.Top>(schema: TSchema) =>
++  S.fromJsonString(schema).pipe(
++    S.encode({
++      decode: prettyJsonString,
++      encode: prettyJsonString,
++    })
++  );
+diff --git a/packages/foundation/modeling/schema/src/index.ts b/packages/foundation/modeling/schema/src/index.ts
+index bcf89558f1..86fbbce7df 100644
+--- a/packages/foundation/modeling/schema/src/index.ts
++++ b/packages/foundation/modeling/schema/src/index.ts
+@@ -271,6 +271,16 @@ export * from "./Options.ts";
+  * @category validation
+  */
+ export * from "./PascalStr.ts";
++/**
++ * @since 0.0.0
++ * @category validation
++ */
++export * from "./PlatformArch.schema.ts";
++/**
++ * @since 0.0.0
++ * @category validation
++ */
++export * from "./PlatformOS.schema.ts";
+ /**
+  * @since 0.0.0
+  * @category validation
+diff --git a/packages/foundation/modeling/schema/test/Platform.test.ts b/packages/foundation/modeling/schema/test/Platform.test.ts
+new file mode 100644
+index 0000000000..64f26a95cc
+--- /dev/null
++++ b/packages/foundation/modeling/schema/test/Platform.test.ts
+@@ -0,0 +1,66 @@
++import { PlatformArch, PlatformOS } from "@beep/schema";
++import { describe, expect, it } from "@effect/vitest";
++import * as S from "effect/Schema";
++
++describe("PlatformOS", () => {
++  const decode = S.decodeUnknownSync(PlatformOS);
++
++  it("exports operating-system literals from the package root", () => {
++    expect(PlatformOS.Options).toEqual(["darwin", "linux", "windows", "unknown"]);
++    expect(PlatformOS.Enum.linux).toBe("linux");
++  });
++
++  it("decodes supported operating-system identifiers", () => {
++    expect(decode("darwin")).toBe("darwin");
++    expect(decode("windows")).toBe("windows");
++  });
++
++  it("rejects unsupported operating-system identifiers", () => {
++    expect(() => decode("freebsd")).toThrow();
++  });
++
++  it("exposes derived guards and match helpers", () => {
++    expect(PlatformOS.is.unknown("unknown")).toBe(true);
++    expect(PlatformOS.is.linux("darwin")).toBe(false);
++
++    expect(
++      PlatformOS.$match("windows", {
++        darwin: () => "mac",
++        linux: () => "linux",
++        windows: () => "windows",
++        unknown: () => "unknown",
++      })
++    ).toBe("windows");
++  });
++});
++
++describe("PlatformArch", () => {
++  const decode = S.decodeUnknownSync(PlatformArch);
++
++  it("exports architecture literals from the package root", () => {
++    expect(PlatformArch.Options).toEqual(["arm64", "x64", "other"]);
++    expect(PlatformArch.Enum.arm64).toBe("arm64");
++  });
++
++  it("decodes supported architecture identifiers", () => {
++    expect(decode("arm64")).toBe("arm64");
++    expect(decode("x64")).toBe("x64");
++  });
++
++  it("rejects unsupported architecture identifiers", () => {
++    expect(() => decode("ia32")).toThrow();
++  });
++
++  it("exposes derived guards and match helpers", () => {
++    expect(PlatformArch.is.other("other")).toBe(true);
++    expect(PlatformArch.is.x64("arm64")).toBe(false);
++
++    expect(
++      PlatformArch.$match("arm64", {
++        arm64: () => "arm",
++        x64: () => "x64",
++        other: () => "other",
++      })
++    ).toBe("arm");
++  });
++});
