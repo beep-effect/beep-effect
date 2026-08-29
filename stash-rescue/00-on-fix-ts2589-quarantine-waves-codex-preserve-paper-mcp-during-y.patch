@@ -1,0 +1,15 @@
+diff --git a/.mcp.json b/.mcp.json
+index 366156e77a..ff224231a7 100644
+--- a/.mcp.json
++++ b/.mcp.json
+@@ -56,6 +56,10 @@
+       "headers": {
+         "IJ_MCP_SERVER_PROJECT_PATH": "${PWD}"
+       }
++    },
++    "paper": {
++      "type": "http",
++      "url": "http://127.0.0.1:29979/mcp"
+     }
+   }
+ }
