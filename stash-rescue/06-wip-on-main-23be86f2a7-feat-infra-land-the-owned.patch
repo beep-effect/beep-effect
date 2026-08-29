@@ -1,0 +1,25 @@
+diff --git a/apps/professional-desktop/scripts/build-sidecar.ts b/apps/professional-desktop/scripts/build-sidecar.ts
+index 4767c21438..48c419e139 100644
+--- a/apps/professional-desktop/scripts/build-sidecar.ts
++++ b/apps/professional-desktop/scripts/build-sidecar.ts
+@@ -10,18 +10,10 @@
+  * @since 0.0.0
+  */
+ import { $ } from "bun";
+-import * as P from "effect/Predicate";
+-import * as S from "effect/Schema";
+-
+-class MissingTargetTripleError extends S.TaggedErrorClass<MissingTargetTripleError>()("MissingTargetTripleError", {
+-  message: S.String,
+-}) {}
+ 
+ const triple = (await $`rustc -vV`.text()).match(/host: (\S+)/)?.[1];
+-if (P.isUndefined(triple)) {
+-  throw new MissingTargetTripleError({
+-    message: "could not determine the target triple from `rustc -vV`",
+-  });
++if (triple === undefined) {
++  throw new Error("could not determine the target triple from `rustc -vV`");
+ }
+ 
+ const outfile = `src-tauri/binaries/sidecar-${triple}`;
