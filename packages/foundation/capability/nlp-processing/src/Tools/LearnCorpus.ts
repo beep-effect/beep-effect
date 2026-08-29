@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, FourHintAnnotations } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -78,10 +79,18 @@ class LearnCorpusSuccess extends S.Class<LearnCorpusSuccess>($I`LearnCorpusSucce
  * @category tools
  * @since 0.0.0
  */
-export const LearnCorpus = Tool.make("LearnCorpus", {
-  description: "Learn one or more documents into an existing corpus session for incremental indexing.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: LearnCorpusParameters,
-  success: S.toEncoded(LearnCorpusSuccess),
-});
+// Non-destructive: `learnDocuments` only appends or skips-on-dedupe; it never
+// overwrites an existing document at the same id
+// (packages/drivers/wink/src/WinkCorpus.service.ts:673-686). Not idempotent:
+// a repeated call without ids (or with `dedupeById: false`) adds duplicate
+// content each time.
+export const LearnCorpus = annotateFourHints(
+  Tool.make("LearnCorpus", {
+    description: "Learn one or more documents into an existing corpus session for incremental indexing.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: LearnCorpusParameters,
+    success: S.toEncoded(LearnCorpusSuccess),
+  }),
+  FourHintAnnotations.make({ destructive: false, idempotent: false, openWorld: false, readOnly: false })
+);

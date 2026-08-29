@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiSentence, AiToolError } from "./_schemas.ts";
@@ -56,10 +57,13 @@ class SentencesSuccess extends S.Class<SentencesSuccess>($I`SentencesSuccess`)(
  * @category tools
  * @since 0.0.0
  */
-export const Sentences = Tool.make("Sentences", {
+export const Sentences = annotateFourHints(
+  Tool.make("Sentences", {
   description: "Split text into sentences with token counts and character positions.",
   failure: AiToolError,
   failureMode: "return",
   parameters: SentencesParameters,
   success: S.toEncoded(SentencesSuccess),
-});
+  }),
+  readOnlyToolHints
+);

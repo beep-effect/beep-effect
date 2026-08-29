@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -73,10 +74,13 @@ class RankByRelevanceSuccess extends S.Class<RankByRelevanceSuccess>($I`RankByRe
  * @category tools
  * @since 0.0.0
  */
-export const RankByRelevance = Tool.make("RankByRelevance", {
+export const RankByRelevance = annotateFourHints(
+  Tool.make("RankByRelevance", {
   description: "Rank an array of texts by relevance to a query using vectorized similarity.",
   failure: AiToolError,
   failureMode: "return",
   parameters: RankByRelevanceParameters,
   success: S.toEncoded(RankByRelevanceSuccess),
-});
+  }),
+  readOnlyToolHints
+);

@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -58,10 +59,13 @@ class CorpusStatsParameters extends S.Class<CorpusStatsParameters>($I`CorpusStat
  * @category tools
  * @since 0.0.0
  */
-export const CorpusStats = Tool.make("CorpusStats", {
+export const CorpusStats = annotateFourHints(
+  Tool.make("CorpusStats", {
   description: "Inspect corpus internals such as vocabulary, IDF values, and optional document-term matrix.",
   failure: AiToolError,
   failureMode: "return",
   parameters: CorpusStatsParameters,
   success: S.toEncoded(AiCorpusStats),
-});
+  }),
+  readOnlyToolHints
+);

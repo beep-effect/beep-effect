@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, FourHintAnnotations } from "@beep/mcp-kit";
 import { BM25Norm, PositiveNumber } from "@beep/nlp/Core/Vectorization";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
@@ -72,10 +73,17 @@ class CreateCorpusParameters extends S.Class<CreateCorpusParameters>($I`CreateCo
  * @category tools
  * @since 0.0.0
  */
-export const CreateCorpus = Tool.make("CreateCorpus", {
-  description: "Create a stateful BM25-style corpus session that can be learned incrementally across tool calls.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: CreateCorpusParameters,
-  success: S.toEncoded(AiCorpusSummary),
-});
+// Non-destructive: `createCorpus` fails with a typed error when `corpusId`
+// already exists rather than overwriting it (packages/drivers/wink/src/WinkCorpus.service.ts:535-547).
+// Not idempotent: a repeated call without an explicit `corpusId` creates a
+// distinct new session each time.
+export const CreateCorpus = annotateFourHints(
+  Tool.make("CreateCorpus", {
+    description: "Create a stateful BM25-style corpus session that can be learned incrementally across tool calls.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: CreateCorpusParameters,
+    success: S.toEncoded(AiCorpusSummary),
+  }),
+  FourHintAnnotations.make({ destructive: false, idempotent: false, openWorld: false, readOnly: false })
+);

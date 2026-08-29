@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToken, AiToolError } from "./_schemas.ts";
@@ -57,10 +58,13 @@ class TokenizeSuccess extends S.Class<TokenizeSuccess>($I`TokenizeSuccess`)(
  * @category tools
  * @since 0.0.0
  */
-export const Tokenize = Tool.make("Tokenize", {
+export const Tokenize = annotateFourHints(
+  Tool.make("Tokenize", {
   description: "Tokenize text into linguistic tokens with part-of-speech tags, lemmas, and character positions.",
   failure: AiToolError,
   failureMode: "return",
   parameters: TokenizeParameters,
   success: S.toEncoded(TokenizeSuccess),
-});
+  }),
+  readOnlyToolHints
+);

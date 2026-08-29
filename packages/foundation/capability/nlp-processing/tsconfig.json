@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../mcp-kit/tsconfig.json"
+    },
+    {
       "path": "../observability/tsconfig.json"
     },
     {

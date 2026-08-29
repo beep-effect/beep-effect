@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiNGram, AiToolError } from "./_schemas.ts";
@@ -57,10 +58,13 @@ class BagOfWordsSuccess extends S.Class<BagOfWordsSuccess>($I`BagOfWordsSuccess`
  * @category tools
  * @since 0.0.0
  */
-export const BagOfWords = Tool.make("BagOfWords", {
+export const BagOfWords = annotateFourHints(
+  Tool.make("BagOfWords", {
   description: "Compute a bag-of-words term-frequency table from text.",
   failure: AiToolError,
   failureMode: "return",
   parameters: BagOfWordsParameters,
   success: S.toEncoded(BagOfWordsSuccess),
-});
+  }),
+  readOnlyToolHints
+);

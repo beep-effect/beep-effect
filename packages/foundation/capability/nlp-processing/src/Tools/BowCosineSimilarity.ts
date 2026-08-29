@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -66,11 +67,14 @@ class BowCosineSimilaritySuccess extends S.Class<BowCosineSimilaritySuccess>($I`
  * @category tools
  * @since 0.0.0
  */
-export const BowCosineSimilarity = Tool.make("BowCosineSimilarity", {
+export const BowCosineSimilarity = annotateFourHints(
+  Tool.make("BowCosineSimilarity", {
   description:
     "Compute cosine similarity using bag-of-words term frequencies. Returns a score from 0 (unrelated) to 1 (identical token distribution).",
   failure: AiToolError,
   failureMode: "return",
   parameters: BowCosineSimilarityParameters,
   success: S.toEncoded(BowCosineSimilaritySuccess),
-});
+  }),
+  readOnlyToolHints
+);

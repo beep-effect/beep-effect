@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -66,11 +67,14 @@ class TextSimilaritySuccess extends S.Class<TextSimilaritySuccess>($I`TextSimila
  * @category tools
  * @since 0.0.0
  */
-export const TextSimilarity = Tool.make("TextSimilarity", {
+export const TextSimilarity = annotateFourHints(
+  Tool.make("TextSimilarity", {
   description:
     "Compute similarity between two texts using BM25 vectorization and cosine similarity. Returns a score from 0 (unrelated) to 1 (identical).",
   failure: AiToolError,
   failureMode: "return",
   parameters: TextSimilarityParameters,
   success: S.toEncoded(TextSimilaritySuccess),
-});
+  }),
+  readOnlyToolHints
+);

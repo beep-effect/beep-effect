@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -56,10 +57,13 @@ class StemSuccess extends S.Class<StemSuccess>($I`StemSuccess`)(
  * @category tools
  * @since 0.0.0
  */
-export const Stem = Tool.make("Stem", {
+export const Stem = annotateFourHints(
+  Tool.make("Stem", {
   description: "Reduce word tokens to their stems.",
   failure: AiToolError,
   failureMode: "return",
   parameters: StemParameters,
   success: S.toEncoded(StemSuccess),
-});
+  }),
+  readOnlyToolHints
+);

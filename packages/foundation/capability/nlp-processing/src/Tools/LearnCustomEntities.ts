@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, FourHintAnnotations } from "@beep/mcp-kit";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
@@ -96,10 +97,18 @@ class LearnCustomEntitiesSuccess extends S.Class<LearnCustomEntitiesSuccess>($I`
  * @category tools
  * @since 0.0.0
  */
-export const LearnCustomEntities = Tool.make("LearnCustomEntities", {
-  description: "Learn custom entity patterns using bracket-string elements such as [PROPN], [CARDINAL], or [$].",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: LearnCustomEntitiesParameters,
-  success: S.toEncoded(LearnCustomEntitiesSuccess),
-});
+// Destructive: `mode: "replace"` overwrites previously learned entities for a
+// `groupName`, so the tool as a whole can perform a destructive update even
+// though `mode: "append"` (the default) is additive. Not idempotent: repeated
+// `append` calls duplicate patterns, and `replace` is only idempotent when the
+// caller happens to submit the same entity set every time.
+export const LearnCustomEntities = annotateFourHints(
+  Tool.make("LearnCustomEntities", {
+    description: "Learn custom entity patterns using bracket-string elements such as [PROPN], [CARDINAL], or [$].",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: LearnCustomEntitiesParameters,
+    success: S.toEncoded(LearnCustomEntitiesSuccess),
+  }),
+  FourHintAnnotations.make({ destructive: true, idempotent: false, openWorld: false, readOnly: false })
+);

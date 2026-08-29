@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -56,10 +57,13 @@ class WordCountSuccess extends S.Class<WordCountSuccess>($I`WordCountSuccess`)(
  * @category tools
  * @since 0.0.0
  */
-export const WordCount = Tool.make("WordCount", {
+export const WordCount = annotateFourHints(
+  Tool.make("WordCount", {
   description: "Count word-like tokens and characters in text.",
   failure: AiToolError,
   failureMode: "return",
   parameters: WordCountParameters,
   success: S.toEncoded(WordCountSuccess),
-});
+  }),
+  readOnlyToolHints
+);

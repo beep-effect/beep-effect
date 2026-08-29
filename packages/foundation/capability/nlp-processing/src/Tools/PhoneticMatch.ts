@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -71,10 +72,13 @@ class PhoneticMatchParameters extends S.Class<PhoneticMatchParameters>($I`Phonet
  * @category tools
  * @since 0.0.0
  */
-export const PhoneticMatch = Tool.make("PhoneticMatch", {
+export const PhoneticMatch = annotateFourHints(
+  Tool.make("PhoneticMatch", {
   description: "Compute phonetic overlap between two texts using Soundex or phonetization.",
   failure: AiToolError,
   failureMode: "return",
   parameters: PhoneticMatchParameters,
   success: S.toEncoded(AiPhoneticMatch),
-});
+  }),
+  readOnlyToolHints
+);

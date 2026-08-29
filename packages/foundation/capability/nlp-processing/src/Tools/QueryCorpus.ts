@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -84,10 +85,13 @@ class QueryCorpusSuccess extends S.Class<QueryCorpusSuccess>($I`QueryCorpusSucce
  * @category tools
  * @since 0.0.0
  */
-export const QueryCorpus = Tool.make("QueryCorpus", {
+export const QueryCorpus = annotateFourHints(
+  Tool.make("QueryCorpus", {
   description: "Query a learned corpus session and return vector-ranked results without relearning.",
   failure: AiToolError,
   failureMode: "return",
   parameters: QueryCorpusParameters,
   success: S.toEncoded(QueryCorpusSuccess),
-});
+  }),
+  readOnlyToolHints
+);

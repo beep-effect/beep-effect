@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiAnalysis, AiToolError } from "./_schemas.ts";
@@ -47,10 +48,13 @@ class AnalyzeParameters extends S.Class<AnalyzeParameters>($I`AnalyzeParameters`
  * @category tools
  * @since 0.0.0
  */
-export const Analyze = Tool.make("Analyze", {
+export const Analyze = annotateFourHints(
+  Tool.make("Analyze", {
   description: "Run a composite linguistic analysis (counts, sentences, annotated tokens) over text.",
   failure: AiToolError,
   failureMode: "return",
   parameters: AnalyzeParameters,
   success: S.toEncoded(AiAnalysis),
-});
+  }),
+  readOnlyToolHints
+);

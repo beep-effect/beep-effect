@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiDocumentStats, AiToolError } from "./_schemas.ts";
@@ -47,11 +48,14 @@ class DocumentStatsParameters extends S.Class<DocumentStatsParameters>($I`Docume
  * @category tools
  * @since 0.0.0
  */
-export const DocumentStats = Tool.make("DocumentStats", {
+export const DocumentStats = annotateFourHints(
+  Tool.make("DocumentStats", {
   description:
     "Compute fast document statistics including word count, sentence count, average sentence length, and character count.",
   failure: AiToolError,
   failureMode: "return",
   parameters: DocumentStatsParameters,
   success: S.toEncoded(AiDocumentStats),
-});
+  }),
+  readOnlyToolHints
+);

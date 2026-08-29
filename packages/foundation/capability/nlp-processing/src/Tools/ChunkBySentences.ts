@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -64,10 +65,13 @@ class ChunkBySentencesSuccess extends S.Class<ChunkBySentencesSuccess>($I`ChunkB
  * @category tools
  * @since 0.0.0
  */
-export const ChunkBySentences = Tool.make("ChunkBySentences", {
+export const ChunkBySentences = annotateFourHints(
+  Tool.make("ChunkBySentences", {
   description: "Split text into sentence-aligned chunks, targeting a maximum character size per chunk.",
   failure: AiToolError,
   failureMode: "return",
   parameters: ChunkBySentencesParameters,
   success: S.toEncoded(ChunkBySentencesSuccess),
-});
+  }),
+  readOnlyToolHints
+);

@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -57,10 +58,13 @@ class RemoveStopWordsSuccess extends S.Class<RemoveStopWordsSuccess>($I`RemoveSt
  * @category tools
  * @since 0.0.0
  */
-export const RemoveStopWords = Tool.make("RemoveStopWords", {
+export const RemoveStopWords = annotateFourHints(
+  Tool.make("RemoveStopWords", {
   description: "Remove stop words from text, returning the remaining word tokens.",
   failure: AiToolError,
   failureMode: "return",
   parameters: RemoveStopWordsParameters,
   success: S.toEncoded(RemoveStopWordsSuccess),
-});
+  }),
+  readOnlyToolHints
+);

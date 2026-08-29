@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -56,10 +57,13 @@ class ParagraphizeSuccess extends S.Class<ParagraphizeSuccess>($I`ParagraphizeSu
  * @category tools
  * @since 0.0.0
  */
-export const Paragraphize = Tool.make("Paragraphize", {
+export const Paragraphize = annotateFourHints(
+  Tool.make("Paragraphize", {
   description: "Split text into paragraphs on blank-line boundaries.",
   failure: AiToolError,
   failureMode: "return",
   parameters: ParagraphizeParameters,
   success: S.toEncoded(ParagraphizeSuccess),
-});
+  }),
+  readOnlyToolHints
+);

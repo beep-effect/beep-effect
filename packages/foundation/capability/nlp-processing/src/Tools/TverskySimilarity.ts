@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
@@ -81,11 +82,14 @@ class TverskySimilaritySuccess extends S.Class<TverskySimilaritySuccess>($I`Tver
  * @category tools
  * @since 0.0.0
  */
-export const TverskySimilarity = Tool.make("TverskySimilarity", {
+export const TverskySimilarity = annotateFourHints(
+  Tool.make("TverskySimilarity", {
   description:
     "Compute asymmetric set similarity between two texts using the Tversky index. Useful for containment-style comparisons.",
   failure: AiToolError,
   failureMode: "return",
   parameters: TverskySimilarityParameters,
   success: S.toEncoded(TverskySimilaritySuccess),
-});
+  }),
+  readOnlyToolHints
+);

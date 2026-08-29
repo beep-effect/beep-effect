@@ -75,6 +75,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/nlp": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",

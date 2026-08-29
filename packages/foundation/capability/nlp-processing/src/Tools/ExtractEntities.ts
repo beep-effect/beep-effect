@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiEntity, AiToolError } from "./_schemas.ts";
@@ -74,10 +75,13 @@ class ExtractEntitiesSuccess extends S.Class<ExtractEntitiesSuccess>($I`ExtractE
  * @category tools
  * @since 0.0.0
  */
-export const ExtractEntities = Tool.make("ExtractEntities", {
+export const ExtractEntities = annotateFourHints(
+  Tool.make("ExtractEntities", {
   description: "Extract named entities from text, including optional learned custom entities.",
   failure: AiToolError,
   failureMode: "return",
   parameters: ExtractEntitiesParameters,
   success: S.toEncoded(ExtractEntitiesSuccess),
-});
+  }),
+  readOnlyToolHints
+);

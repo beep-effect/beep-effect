@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, FourHintAnnotations } from "@beep/mcp-kit";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -55,10 +56,17 @@ class DeleteCorpusSuccess extends S.Class<DeleteCorpusSuccess>($I`DeleteCorpusSu
  * @category tools
  * @since 0.0.0
  */
-export const DeleteCorpus = Tool.make("DeleteCorpus", {
-  description: "Delete a corpus session and release its in-memory index state.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: DeleteCorpusParameters,
-  success: S.toEncoded(DeleteCorpusSuccess),
-});
+// Destructive: irreversibly discards the corpus session's learned state
+// (packages/drivers/wink/src/WinkCorpus.service.ts:558-561,319-325). Idempotent:
+// deleting an already-deleted or nonexistent corpus id is a no-op that
+// converges to the same end state (`deleted: false`), never an error.
+export const DeleteCorpus = annotateFourHints(
+  Tool.make("DeleteCorpus", {
+    description: "Delete a corpus session and release its in-memory index state.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: DeleteCorpusParameters,
+    success: S.toEncoded(DeleteCorpusSuccess),
+  }),
+  FourHintAnnotations.make({ destructive: true, idempotent: true, openWorld: false, readOnly: false })
+);

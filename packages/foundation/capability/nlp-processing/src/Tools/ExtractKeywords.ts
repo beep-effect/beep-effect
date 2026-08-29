@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -62,10 +63,13 @@ class ExtractKeywordsSuccess extends S.Class<ExtractKeywordsSuccess>($I`ExtractK
  * @category tools
  * @since 0.0.0
  */
-export const ExtractKeywords = Tool.make("ExtractKeywords", {
+export const ExtractKeywords = annotateFourHints(
+  Tool.make("ExtractKeywords", {
   description: "Extract keywords from text ranked by TF-IDF-style importance.",
   failure: AiToolError,
   failureMode: "return",
   parameters: ExtractKeywordsParameters,
   success: S.toEncoded(ExtractKeywordsSuccess),
-});
+  }),
+  readOnlyToolHints
+);

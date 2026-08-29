@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -84,10 +85,13 @@ class NGramsSuccess extends S.Class<NGramsSuccess>($I`NGramsSuccess`)(
  * @category tools
  * @since 0.0.0
  */
-export const NGrams = Tool.make("NGrams", {
+export const NGrams = annotateFourHints(
+  Tool.make("NGrams", {
   description: "Extract character n-grams from text using bag, edge, or set mode with deterministic ranking.",
   failure: AiToolError,
   failureMode: "return",
   parameters: NGramsParameters,
   success: S.toEncoded(NGramsSuccess),
-});
+  }),
+  readOnlyToolHints
+);

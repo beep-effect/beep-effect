@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -92,10 +93,13 @@ class TransformTextSuccess extends S.Class<TransformTextSuccess>($I`TransformTex
  * @category tools
  * @since 0.0.0
  */
-export const TransformText = Tool.make("TransformText", {
+export const TransformText = annotateFourHints(
+  Tool.make("TransformText", {
   description: "Apply text transformation operations in sequence for cleaning and normalization.",
   failure: AiToolError,
   failureMode: "return",
   parameters: TransformTextParameters,
   success: S.toEncoded(TransformTextSuccess),
-});
+  }),
+  readOnlyToolHints
+);
