@@ -51,6 +51,7 @@
     "@emotion/styled": "^11.14.1",
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@google-cloud/pubsub": "^6.0.1",
     "@lexical/code": "^0.49.0",
     "@lexical/headless": "^0.49.0",
     "@lexical/html": "^0.49.0",
@@ -135,6 +136,7 @@
     "@vitest/coverage-istanbul": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
     "@zip.js/zip.js": "^2.8.60",
+    "@xenova/transformers": "^2.17.2",
     "ajv": "^8.20.0",
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
@@ -300,6 +302,7 @@
     "nanoid": "^3.3.18",
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
+    "protobufjs": "^7.6.6",
     "sharp": "catalog:",
     "tar": "catalog:"
   },

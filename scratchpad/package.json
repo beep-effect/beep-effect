@@ -66,6 +66,8 @@
     "@effect/ai-openai": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node-shared": "catalog:",
+    "@google-cloud/pubsub": "catalog:",
+    "@xenova/transformers": "catalog:",
     "@zip.js/zip.js": "catalog:",
     "ajv": "catalog:",
     "drizzle-orm": "catalog:",
