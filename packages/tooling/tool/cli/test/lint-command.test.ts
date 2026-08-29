@@ -1563,6 +1563,27 @@ describe("schema-first lint command", { concurrent: false }, () => {
 });
 
 describe("package test import lint command", { concurrent: false }, () => {
+  it("rejects conflicting and out-of-package scan scopes", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const conflicting = yield* Effect.exit(
+            runLintCommand([
+              "package-test-imports",
+              "--include",
+              "packages/example/test/Example.test.ts",
+              "--include-root",
+              "packages/example",
+            ])
+          );
+          const outside = yield* Effect.exit(runLintCommand(["package-test-imports", "--include-root", "standards"]));
+
+          expectReportedExit(conflicting);
+          expectReportedExit(outside);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
   it(
     "scopes the scan to one package root",
     () =>

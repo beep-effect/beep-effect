@@ -38,6 +38,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Console, DateTime, Duration, Effect, FileSystem, flow, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -628,6 +629,66 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
     : Effect.void;
 
 /**
+ * Selects the published-PR lease retirement effect for a watch ending.
+ *
+ * **Details**
+ *
+ * The injectable retirement operation keeps terminal-reason routing focused
+ * and testable without weakening the production lease transition.
+ *
+ * **Example** (Inspect the testing seam)
+ *
+ * ```ts
+ * import { retireWatchLeaseForEndForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof retireWatchLeaseForEndForTesting === "function") // true
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const retireWatchLeaseForEndForTesting: {
+  <Error, Requirements>(
+    snapshot: YeetWatchSnapshot,
+    reason: YeetWatchEndReason,
+    retire: (
+      context: RepoRunContext,
+      prNumber: number,
+      headSha: string,
+      reason: YeetWatchEndReason
+    ) => Effect.Effect<void, Error, Requirements>
+  ): (context: RepoRunContext) => Effect.Effect<void, Error, Requirements>;
+  <Error, Requirements>(
+    context: RepoRunContext,
+    snapshot: YeetWatchSnapshot,
+    reason: YeetWatchEndReason,
+    retire: (
+      context: RepoRunContext,
+      prNumber: number,
+      headSha: string,
+      reason: YeetWatchEndReason
+    ) => Effect.Effect<void, Error, Requirements>
+  ): Effect.Effect<void, Error, Requirements>;
+} = dual(
+  4,
+  <Error, Requirements>(
+    context: RepoRunContext,
+    snapshot: YeetWatchSnapshot,
+    reason: YeetWatchEndReason,
+    retire: (
+      context: RepoRunContext,
+      prNumber: number,
+      headSha: string,
+      reason: YeetWatchEndReason
+    ) => Effect.Effect<void, Error, Requirements>
+  ) =>
+    YeetWatchEndReason.is["pr-merged"](reason) || YeetWatchEndReason.is["pr-closed"](reason)
+      ? retire(context, snapshot.prNumber, snapshot.headSha, reason)
+      : Effect.void
+);
+
+/**
  * Poll the pull request and stream one NDJSON row per state transition.
  *
  * **Details**
@@ -749,9 +810,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   while (true) {
     const end = watchStreamEnd(untilEvent, current, emptyPolls, settleTicks);
     if (O.isSome(end)) {
-      if (YeetWatchEndReason.is["pr-merged"](end.value) || YeetWatchEndReason.is["pr-closed"](end.value)) {
-        yield* retirePublishedPrLease(context, current.prNumber, current.headSha, end.value);
-      }
+      yield* retireWatchLeaseForEndForTesting(context, current, end.value, retirePublishedPrLease);
       return yield* emitWatchEnded(current, end.value);
     }
     yield* reportWatchRegistrationWait(current, emptyPolls);

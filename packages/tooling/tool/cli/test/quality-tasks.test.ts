@@ -390,7 +390,8 @@ const laneProofTestLane = (
   repoRoot: string,
   id: string,
   wave: GithubCheckLaneWave,
-  source: string
+  source: string,
+  useLocalEnv = false
 ): GithubCheckLaneSpec =>
   GithubCheckLaneSpec.make({
     id,
@@ -402,6 +403,7 @@ const laneProofTestLane = (
       command: "bash",
       args: ["-c", source],
       cwd: repoRoot,
+      useLocalEnv,
     }),
   });
 
@@ -974,7 +976,13 @@ describe("quality task adapter", () => {
       const markerPath = path.join(tempRoot, ".beep", "property-marker.txt");
       yield* initializeLaneProofRepository(tempRoot);
 
-      const lane = laneProofTestLane(tempRoot, "quality:test-unit", "heavy", "echo run >> .beep/property-marker.txt");
+      const lane = laneProofTestLane(
+        tempRoot,
+        "quality:test-unit",
+        "heavy",
+        "echo run >> .beep/property-marker.txt",
+        true
+      );
       const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
       const run = collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast");
       const atRuns = (runs: string) =>
@@ -983,6 +991,38 @@ describe("quality task adapter", () => {
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
       expect(A.map((yield* atRuns("400")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "runs the lane when the configured proof base cannot be resolved",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-missing-base-" });
+      const markerPath = path.join(tempRoot, ".beep", "missing-base-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:missing-base",
+        "preflight",
+        "mkdir -p .beep; echo run >> .beep/missing-base-marker.txt"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-missing-base",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast"
+      );
+      const withMissingBase = withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "active",
+        withEnvVarEffect("BEEP_YEET_PROOF_BASE", "refs/heads/does-not-exist", run)
+      );
+
+      expect(A.map((yield* withMissingBase).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* withMissingBase).report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
     }, provideScopedLayer(PlatformLayer))
   );
@@ -3219,12 +3259,33 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["config", "user.email", "coverage-base@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Base Test"]);
             yield* writeBaseline(
-              CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "base" })
+              CoverageRegressionBaseline.make({
+                ...coverageRegressionBaseline,
+                generated_at: "base",
+                packages: {
+                  "@beep/a": CoveragePackageBaseline.make({
+                    ...coveragePackageBaseline("packages/a", 80),
+                    files: { "packages/a/src/Existing.ts": coverageFileBaseline(80, 1) },
+                  }),
+                },
+              })
             );
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
             yield* writeBaseline(
-              CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "branch-relaxation" })
+              CoverageRegressionBaseline.make({
+                ...coverageRegressionBaseline,
+                generated_at: "branch-relaxation",
+                packages: {
+                  "@beep/a": CoveragePackageBaseline.make({
+                    ...coveragePackageBaseline("packages/a", 40),
+                    files: {
+                      "packages/a/src/Existing.ts": coverageFileBaseline(40, 10),
+                      "packages/a/src/New.ts": coverageFileBaseline(65, 3),
+                    },
+                  }),
+                },
+              })
             );
 
             const selected = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
@@ -3234,6 +3295,58 @@ describe("quality task adapter", () => {
               )
             );
             expect(selected.generated_at).toBe("base");
+            expect(selected.packages["@beep/a"]?.lines).toBe(80);
+            expect(selected.packages["@beep/a"]?.files["packages/a/src/Existing.ts"]?.lines).toBe(80);
+            expect(selected.packages["@beep/a"]?.files["packages/a/src/New.ts"]?.lines).toBe(65);
+          })
+        )
+      ));
+
+    it("reads the workspace baseline when TURBO_SCM_BASE is absent", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* S.encodeEffect(CoverageRegressionBaseline)(
+              CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "workspace" })
+            ).pipe(Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded))));
+
+            const selected = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
+              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+            );
+            expect(selected.generated_at).toBe("workspace");
+          })
+        )
+      ));
+
+    it("fails clearly when the configured comparison baseline cannot be read", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* S.encodeEffect(CoverageRegressionBaseline)(coverageRegressionBaseline).pipe(
+              Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+            );
+            yield* runGit(repoRoot, ["init"]);
+
+            const failure = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "refs/heads/missing" })
+              ),
+              Effect.flip
+            );
+
+            expect(failure.message).toContain("Failed to read the coverage comparison baseline");
           })
         )
       ));

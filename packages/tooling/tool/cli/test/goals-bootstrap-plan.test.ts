@@ -386,6 +386,27 @@ describe("goals adopt --plan index parity", () => {
   );
 });
 
+describe("goals index command", () => {
+  const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+
+  it("accepts an absent or matching local projection and rejects drift", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("goals", { recursive: true });
+
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--write"])))).toBe(true);
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
+
+          yield* fs.writeFileString(PORTFOLIO_INDEX_PATH, "# stale local projection\n");
+          expectReportedExit(yield* Effect.exit(runGoalsCommand(["index", "--check"])));
+        })
+      ).pipe(provideScopedLayer(commandTestLayer))
+    ));
+});
+
 describe("goals plan validation mapping", () => {
   const BLOCKING_KINDS: ReadonlyArray<GoalDoctorFindingKind> = [
     "manifest-missing",

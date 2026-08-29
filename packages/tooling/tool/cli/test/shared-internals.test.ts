@@ -553,6 +553,15 @@ describe("canUseTurboCacheSecretSession", () => {
         usable: false,
         spawned: 1,
       });
+      const probeFailure = PlatformError.badArgument({
+        module: "ChildProcess",
+        method: "spawn",
+        description: "reference probe failed",
+      });
+      expect(yield* sessionWith({}, [Effect.succeed(stubHandle(0)), Effect.fail(probeFailure)])).toEqual({
+        usable: false,
+        spawned: 2,
+      });
     })
   );
 

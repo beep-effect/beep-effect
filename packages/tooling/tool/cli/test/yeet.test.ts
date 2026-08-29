@@ -470,7 +470,8 @@ esac
 
           const writeExistingLease = Effect.fn("test.writeExistingPrLease")(function* (
             generationId: string,
-            prNumber: number
+            prNumber: number,
+            status: "active" | "claiming" | "retired" = "active"
           ) {
             const encoded = yield* encodeJson({
               schemaVersion: "yeet-pr-lease/v1",
@@ -484,16 +485,30 @@ esac
               prNumber,
               acquiredAt: "2026-08-27T00:00:00Z",
               refreshedAt: "2026-08-27T00:00:00Z",
-              status: "active",
+              status,
             });
             yield* fs.makeDirectory(path.dirname(leasePath), { recursive: true });
             yield* fs.writeFileString(leasePath, `${encoded}\n`);
           });
           const publish = withEnvVarEffect("PATH", `${bin}:${Bun.env.PATH ?? ""}`, writePublishedPrLease(tempContext));
 
+          yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
           yield* writeExistingLease("terminal-pr", 700);
           yield* publish;
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
+          yield* writeExistingLease("retired-current-pr", 874, "retired");
+          yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
+          yield* writeExistingLease("claiming-current-pr", 874, "claiming");
+          expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: "claiming-current-pr",
+            prNumber: 874,
+          });
 
           yield* writeExistingLease("open-pr", 701);
           expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);

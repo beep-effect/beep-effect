@@ -357,6 +357,18 @@ describe("supersedeYeetDispatchState", () => {
 });
 
 describe("dispatchYeetCheckFailure", () => {
+  it.live("records an optional failed check as P1", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const optionalCheck = YeetWatchCheck.make({ ...failingCheck, required: false });
+        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(optionalCheck), optionalCheck, AT);
+
+        const entry = yield* S.decodeUnknownEffect(YeetCheckFailedRow)((yield* readInboxRows(root))[0]);
+        expect(entry.severity).toBe("P1");
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+  );
+
   it.live("derives the capsule from the failing check's own record", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {

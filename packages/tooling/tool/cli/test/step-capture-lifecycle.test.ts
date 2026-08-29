@@ -1,4 +1,10 @@
-import { CaptureCommandTimedOutError, runCaptured, withAdmissionWorkloadBinding } from "@beep/repo-cli/test/Process";
+import {
+  CaptureCommandTimedOutError,
+  collectText,
+  ensureZeroExit,
+  runCaptured,
+  withAdmissionWorkloadBinding,
+} from "@beep/repo-cli/test/Process";
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { PosInt } from "@beep/schema/Int";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -46,6 +52,7 @@ const processGroupFromStat = (text: string): number | undefined => {
 const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   readonly output: string;
   readonly killEndsStream: boolean;
+  readonly pid?: number;
 }) {
   const closed = yield* Deferred.make<void>();
   const killCount = yield* Ref.make(0);
@@ -63,7 +70,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
         Effect.andThen(options.killEndsStream ? Deferred.succeed(closed, void 0) : Effect.void),
         Effect.asVoid
       ),
-    pid: ChildProcessSpawner.ProcessId(1),
+    pid: ChildProcessSpawner.ProcessId(options.pid ?? 1),
     stderr: Stream.empty,
     stdin: Sink.drain,
     stdout: pipe,
@@ -113,6 +120,77 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
 });
 
 describe("StepExec capture pipe lifecycle", () => {
+  it.effect("collects decoded text and distinguishes zero from nonzero exits", () =>
+    Effect.gen(function* () {
+      expect(yield* collectText(Stream.make(encoder.encode("a"), encoder.encode("b")))).toBe("ab");
+      expect(yield* ensureZeroExit({ exitCode: 0, value: "ok" }, (exitCode) => `exit ${exitCode}`)).toEqual({
+        exitCode: 0,
+        value: "ok",
+      });
+      expect(yield* ensureZeroExit({ exitCode: 7 }, (exitCode) => `exit ${exitCode}`).pipe(Effect.flip)).toBe("exit 7");
+    })
+  );
+
+  it.live("fails closed for partial explicit and inherited admission bindings", () =>
+    Effect.gen(function* () {
+      const { closed, spawner } = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+      yield* Deferred.succeed(closed, void 0);
+      const explicit = yield* runCaptured({
+        command: "fake-step",
+        args: [],
+        env: { BEEP_YEET_ADMISSION_WORKLOAD_PATH: "/tmp/workload" },
+      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.flip);
+      expect(explicit.message).toContain("must be provided together");
+
+      const previousPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+      const previousLease = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+      const inherited = yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = "/tmp/inherited-workload";
+          delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+        }),
+        () =>
+          runCaptured({ command: "fake-step", args: [] }).pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+            Effect.flip
+          ),
+        () =>
+          Effect.sync(() => {
+            if (previousPath === undefined) delete Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+            else Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = previousPath;
+            if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+            else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
+          })
+      );
+      expect(inherited.message).toContain("Inherited admission workload path and lease id");
+    })
+  );
+
+  it.live("reports workload write and process-generation registration failures", () =>
+    Effect.gen(function* () {
+      const blocked = yield* makeStuckSpawner({ output: "", killEndsStream: false });
+      yield* Deferred.succeed(blocked.closed, void 0);
+      const writeFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+        withAdmissionWorkloadBinding("/definitely-missing-parent/workload", "lease-write"),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, blocked.spawner),
+        Effect.flip
+      );
+      expect(writeFailure.message).toContain("Failed to write admission workload");
+
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-missing-proc-" });
+      const missing = yield* makeStuckSpawner({ output: "", killEndsStream: false, pid: 2_000_000_000 });
+      yield* Deferred.succeed(missing.closed, void 0);
+      const registrationFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+        withAdmissionWorkloadBinding(`${root}/workload`, "lease-proc"),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, missing.spawner),
+        Effect.flip,
+        Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+      );
+      expect(registrationFailure.message).toContain("Failed to read process generation");
+    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+  );
+
   it.live("inherits a scoped admission workload and lets an explicit nested binding override it", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -150,6 +228,62 @@ describe("StepExec capture pipe lifecycle", () => {
           }),
         (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
       );
+    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+  );
+
+  it.live("distinguishes inherited, matching explicit, and owned explicit admission generations", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-inherited-" });
+      const inheritedPath = `${root}/inherited.workload`;
+      const ownedPath = `${root}/owned.workload`;
+      const { closed, spawner } = yield* makeStuckSpawner({
+        output: "",
+        killEndsStream: false,
+        pid: process.pid,
+      });
+      yield* Deferred.succeed(closed, void 0);
+      const previousPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+      const previousLease = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = inheritedPath;
+          Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = "inherited-lease";
+        }),
+        () =>
+          Effect.gen(function* () {
+            yield* runCaptured({ command: "fake-step", args: [] }).pipe(
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            );
+            yield* runCaptured({
+              command: "fake-step",
+              args: [],
+              env: {
+                BEEP_YEET_ADMISSION_WORKLOAD_PATH: inheritedPath,
+                BEEP_YEET_ADMISSION_LEASE_ID: "inherited-lease",
+              },
+            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+            yield* runCaptured({
+              command: "fake-step",
+              args: [],
+              env: {
+                BEEP_YEET_ADMISSION_WORKLOAD_PATH: ownedPath,
+                BEEP_YEET_ADMISSION_LEASE_ID: "owned-lease",
+              },
+            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+
+            expect(yield* fs.exists(inheritedPath)).toBe(false);
+            expect(yield* fs.readFileString(ownedPath)).toContain('"status":"active"');
+          }),
+        () =>
+          Effect.sync(() => {
+            if (previousPath === undefined) delete Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
+            else Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH = previousPath;
+            if (previousLease === undefined) delete Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
+            else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
+          })
+      ).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore)));
     }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
   );
 

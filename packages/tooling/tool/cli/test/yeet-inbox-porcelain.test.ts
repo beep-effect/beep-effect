@@ -250,6 +250,45 @@ describe("parseYeetAckResolution", () => {
       expect(dangling.message).toContain("only applies with --wontfix");
     })
   );
+
+  it.live("refuses malformed, expired, and partially attributed waivers", () =>
+    Effect.gen(function* () {
+      const invalidTimestamp = yield* Effect.flip(
+        parseYeetAckResolution({
+          ...noResolutionFlags,
+          actor: "operator",
+          expiresAt: "not-a-timestamp",
+          reason: "dependency unavailable",
+          shard: "Security",
+          waive: true,
+        })
+      );
+      const expired = yield* Effect.flip(
+        parseYeetAckResolution({
+          ...noResolutionFlags,
+          actor: "operator",
+          expiresAt: "2000-01-01T00:00:00Z",
+          reason: "dependency unavailable",
+          shard: "Security",
+          waive: true,
+        })
+      );
+      const partial = yield* Effect.flip(
+        parseYeetAckResolution({
+          ...noResolutionFlags,
+          actor: "operator",
+          reason: "dependency unavailable",
+          waive: true,
+        })
+      );
+      const dangling = yield* Effect.flip(parseYeetAckResolution({ ...noResolutionFlags, actor: "operator" }));
+
+      expect(invalidTimestamp.message).toContain("valid --expires-at");
+      expect(expired.message).toContain("future --expires-at");
+      expect(partial.message).toContain("requires --actor, --expires-at, and --shard");
+      expect(dangling.message).toContain("only apply with --waive");
+    })
+  );
 });
 
 describe("ackYeetInboxRow", () => {

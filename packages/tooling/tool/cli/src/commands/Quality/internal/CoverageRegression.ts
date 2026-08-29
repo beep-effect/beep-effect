@@ -1642,13 +1642,36 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
   const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
   return yield* O.match(configuredBase, {
     onNone: () => readBaseline(repoRoot),
-    onSome: (base) =>
-      runGitRawOutput(repoRoot, ["show", `${base}:${coverageRegressionBaselinePath}`], coverageBaselineGitAdapter).pipe(
+    onSome: Effect.fn("CoverageRegression.readBaseComparisonBaseline")(function* (base) {
+      const baseBaseline = yield* runGitRawOutput(
+        repoRoot,
+        ["show", `${base}:${coverageRegressionBaselinePath}`],
+        coverageBaselineGitAdapter
+      ).pipe(
         Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
         Effect.mapError((cause) =>
           coverageConfigurationError(`Failed to read the coverage comparison baseline from ${base}`, cause)
         )
-      ),
+      );
+      const workspaceBaseline = yield* readBaseline(repoRoot);
+      return CoverageRegressionBaseline.make({
+        ...baseBaseline,
+        packages: R.map(baseBaseline.packages, (basePackage, packageName) =>
+          pipe(
+            R.get(workspaceBaseline.packages, packageName),
+            O.map((workspacePackage) =>
+              CoveragePackageBaseline.make({
+                ...basePackage,
+                // Base floors remain authoritative; the reviewed workspace
+                // baseline contributes identity only for newly added files.
+                files: { ...workspacePackage.files, ...basePackage.files },
+              })
+            ),
+            O.getOrElse(() => basePackage)
+          )
+        ),
+      });
+    }),
   });
 });
 

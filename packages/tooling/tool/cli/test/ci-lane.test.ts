@@ -415,6 +415,11 @@ describe("ciLaneStepsForTesting", () => {
   });
 
   it("builds docgen lanes per workflow lane-gate mode", () => {
+    const auto = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }))
+    );
+    expect([...auto.args]).toEqual(["run", "docgen:local", "--", "--base", "origin/main", "--head", "HEAD"]);
+
     expect(ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "none" }))).toEqual(
       []
     );
@@ -657,6 +662,35 @@ layer(
     })
   );
 });
+
+const autoDocgenCommands = A.empty<string>();
+layer(doctestCiLayer(["packages/a/src/index.ts"], dependentDoctestSources, autoDocgenCommands))(
+  "automatic Docgen CI lane",
+  (it) => {
+    it.effect("derives the affected mode from the base-to-head diff and executes it", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
+
+        expect(autoDocgenCommands[0]).toBe("git diff --name-only origin/main...HEAD");
+        expect(autoDocgenCommands[1]).toContain("bun run docgen:local -- --base origin/main --head HEAD");
+      })
+    );
+  }
+);
+
+const inertDocgenCommands = A.empty<string>();
+layer(doctestCiLayer(["scripts/release.sh"], dependentDoctestSources, inertDocgenCommands))(
+  "automatic inert Docgen CI lane",
+  (it) => {
+    it.effect("skips execution when the diff has no Docgen inputs", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
+
+        expect(inertDocgenCommands).toEqual(["git diff --name-only origin/main...HEAD"]);
+      })
+    );
+  }
+);
 
 const manifestDoctestCommands = A.empty<string>();
 

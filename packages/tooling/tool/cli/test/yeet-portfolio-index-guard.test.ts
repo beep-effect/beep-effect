@@ -249,6 +249,25 @@ describe("yeet publish derived goals index", () => {
       )
     ));
 
+  it("leaves a current unstaged local projection untouched", () =>
+    Effect.runPromise(
+      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const current = yield* buildPortfolioIndexContent(tmpDir);
+          yield* fs.writeFileString(indexPath, current);
+
+          const disposition = yield* enforcePortfolioIndexPublishIntent(
+            tempContext,
+            YeetStagedPublishIntent.make({ paths: ["goals/alpha-packet/ops/manifest.json"] })
+          );
+
+          expect(disposition).toBe("current");
+          expect(yield* fs.readFileString(indexPath)).toBe(current);
+        })
+      )
+    ));
+
   it("overwrites a stale unstaged index without staging the refresh", () =>
     Effect.runPromise(
       withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
