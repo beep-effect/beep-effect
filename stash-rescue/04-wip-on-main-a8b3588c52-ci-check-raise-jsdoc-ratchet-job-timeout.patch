@@ -1,0 +1,16 @@
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 7e7aeca466..276640d1df 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -32,7 +32,7 @@ services:
+       - "${DB_PG_PORT:-5432}:${DB_PG_PORT:-5432}"
+ 
+   grafana:
+-    image: grafana/otel-lgtm:0.28.0
++    image: grafana/otel-lgtm:0.29.0
+     container_name: grafana
+     restart: unless-stopped
+     ports:
+diff --git a/scratchpad/template/index.ts b/scratchpad/template/index.ts
+new file mode 100644
+index 0000000000..e69de29bb2
