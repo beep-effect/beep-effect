@@ -56,29 +56,51 @@ const makeClassificationFixture = Effect.fn("TmpfsReapTest.makeClassificationFix
   const youngScoped = path.join(tmpRoot, "beep-knowledge-refs-young");
   const headInstall = path.join(cacheRoot, "beep", "head-install", "beep-yeet-head-install-old");
 
+  const dirtyWorktree = path.join(tmpRoot, "fixture-worktree-dirty");
+  const oldSemanticDelta = path.join(tmpRoot, "beep-knowledge-semantic-delta-old");
+
   yield* Effect.forEach(
-    [tmpRoot, cacheRoot, fakeParent, fakeWorktree, fallow, youngScoped, headInstall],
+    [tmpRoot, cacheRoot, fakeParent, fallow, youngScoped, oldSemanticDelta, headInstall],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
     { discard: true }
   );
-  yield* fs.writeFileString(
-    path.join(fakeWorktree, ".git"),
-    `gitdir: ${path.join(fakeParent, ".git", "worktrees", "fixture-worktree")}\n`
+  yield* runCommand("git", ["init", "-q"], fakeParent);
+  yield* fs.writeFileString(path.join(fakeParent, "tracked.txt"), "tracked bytes\n");
+  yield* runCommand("git", ["add", "tracked.txt"], fakeParent);
+  yield* runCommand(
+    "git",
+    ["-c", "user.email=fixture@local", "-c", "user.name=fixture", "commit", "-q", "-m", "seed"],
+    fakeParent
   );
-  yield* fs.writeFileString(path.join(fakeWorktree, "payload.txt"), "worktree bytes\n");
+  yield* runCommand("git", ["worktree", "add", "--detach", "-q", fakeWorktree], fakeParent);
+  yield* runCommand("git", ["worktree", "add", "--detach", "-q", dirtyWorktree], fakeParent);
+  yield* fs.writeFileString(path.join(dirtyWorktree, "uncommitted.txt"), "unsaved work\n");
   yield* fs.writeFileString(fallowLastUsed, "used\n");
   yield* fs.writeFileString(fallowSiblingLastUsed, "used\n");
   yield* fs.writeFileString(path.join(fallow, "payload.txt"), "cache bytes\n");
   yield* fs.writeFileString(path.join(youngScoped, "payload.txt"), "young bytes\n");
+  yield* fs.writeFileString(path.join(oldSemanticDelta, "payload.txt"), "delta bytes\n");
   yield* fs.writeFileString(path.join(headInstall, "payload.txt"), "install bytes\n");
 
   yield* runCommand("touch", ["-d", fixtureTimestamp(3), fakeWorktree], root);
+  yield* runCommand("touch", ["-d", fixtureTimestamp(3), dirtyWorktree], root);
   yield* runCommand("touch", ["-d", fixtureTimestamp(8), fallowLastUsed], root);
   yield* runCommand("touch", ["-d", fixtureTimestamp(7), fallowSiblingLastUsed], root);
   yield* runCommand("touch", ["-d", fixtureTimestamp(0), youngScoped], root);
+  yield* runCommand("touch", ["-d", fixtureTimestamp(3), oldSemanticDelta], root);
   yield* runCommand("touch", ["-d", fixtureTimestamp(2), headInstall], root);
 
-  return { cacheRoot, fakeWorktree, fallow, fallowSiblingLastUsed, headInstall, tmpRoot, youngScoped };
+  return {
+    cacheRoot,
+    dirtyWorktree,
+    fakeWorktree,
+    fallow,
+    fallowSiblingLastUsed,
+    headInstall,
+    oldSemanticDelta,
+    tmpRoot,
+    youngScoped,
+  };
 });
 
 describe("tmpfs reap", () => {
@@ -107,6 +129,15 @@ describe("tmpfs reap", () => {
         expect(young.action).toBe("skip");
         expect(young.skipReason).toBe("too-young");
         expect(young.ageHours).toBeLessThan(2);
+
+        const dirty = candidateByPath(report, fixture.dirtyWorktree);
+        expect(dirty.reapClass).toBe("git-worktree");
+        expect(dirty.action).toBe("skip");
+        expect(dirty.skipReason).toBe("dirty-worktree");
+
+        const semanticDelta = candidateByPath(report, fixture.oldSemanticDelta);
+        expect(semanticDelta.reapClass).toBe("scoped-temp");
+        expect(semanticDelta.action).toBe("remove-dir");
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -145,6 +176,7 @@ describe("tmpfs reap", () => {
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
         const fixture = yield* makeClassificationFixture(root);
         const report = yield* runTmpfsReap({
           apply: true,
@@ -154,13 +186,16 @@ describe("tmpfs reap", () => {
         });
 
         expect(report.applied).toBe(true);
-        expect(report.reapedCount).toBe(3);
+        expect(report.reapedCount).toBe(4);
         expect(report.reclaimedBytes).toBeGreaterThan(0);
         expect(yield* fs.exists(fixture.fakeWorktree)).toBe(false);
         expect(yield* fs.exists(fixture.fallow)).toBe(false);
         expect(yield* fs.exists(fixture.fallowSiblingLastUsed)).toBe(false);
         expect(yield* fs.exists(fixture.headInstall)).toBe(false);
+        expect(yield* fs.exists(fixture.oldSemanticDelta)).toBe(false);
         expect(yield* fs.exists(fixture.youngScoped)).toBe(true);
+        expect(yield* fs.exists(fixture.dirtyWorktree)).toBe(true);
+        expect(yield* fs.exists(path.join(fixture.dirtyWorktree, "uncommitted.txt"))).toBe(true);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
