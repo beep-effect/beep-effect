@@ -22,7 +22,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { Clock, ConfigProvider, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -364,7 +364,7 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("fails the append under a live lock holder and reaps dead or malformed locks", () =>
+  it("fails the append under live or fresh unparseable locks and reaps dead or aged locks", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -378,10 +378,19 @@ describe("quality-scheduler", () => {
             const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
             expect(busy.message).toContain("stayed busy");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            // A fresh unparseable lock is a just-published generation mid-race,
+            // never insta-reaped.
+            yield* fs.writeFileString(lockPath, "not-a-pid");
+            const unparseable = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
+            expect(unparseable.message).toContain("stayed busy");
             yield* fs.writeFileString(lockPath, `${DEAD_PID}:dead-holder`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
-            yield* fs.writeFileString(lockPath, "not-a-pid");
+            // Pid reuse: a live owner pid with an over-age lock clears through
+            // the backstop.
+            yield* fs.writeFileString(lockPath, `${process.pid}:reused-pid`);
+            const agedSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
+            yield* fs.utimes(lockPath, agedSeconds, agedSeconds);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
             const events = yield* readJournalEvents(tempRoot.root);

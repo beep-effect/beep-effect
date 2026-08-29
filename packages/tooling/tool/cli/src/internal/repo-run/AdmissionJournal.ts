@@ -16,7 +16,7 @@
 import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { Clock, Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -31,6 +31,10 @@ const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
+// No legitimate writer holds the lock beyond one rewrite (milliseconds); the
+// backstop clears locks stranded by pid reuse or tampering without ever
+// racing a live hold.
+const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 const textEncoder = new TextEncoder();
 
 /**
@@ -199,13 +203,22 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
-  // An unreadable or unparseable lock counts as abandoned; a live owner keeps it.
-  const abandoned = pipe(
+  const info = yield* fs.stat(lockPath).pipe(Effect.option);
+  const nowMillis = yield* Clock.currentTimeMillis;
+  // A parseable owner that died abandons its lock immediately; anything else
+  // (pid reuse, unreadable content) clears through the age backstop so a
+  // just-published generation is never misread as abandoned.
+  const ownerDead = pipe(
     content,
     O.flatMap(lockOwnerPid),
-    O.match({ onNone: constant(true), onSome: (pid) => !pidIsAlive(pid) })
+    O.exists((pid) => !pidIsAlive(pid))
   );
-  if (abandoned) {
+  const outlivedBackstop = pipe(
+    info,
+    O.flatMap((fileInfo) => fileInfo.mtime),
+    O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
+  );
+  if (ownerDead || outlivedBackstop) {
     yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
   }
 });
@@ -215,15 +228,19 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
   token: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  // Any create failure (typically AlreadyExists contention) fails this
-  // attempt; reaping a dead owner's lock lets a later attempt acquire it.
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const file = yield* fs.open(lockPath, { flag: "wx" });
-      yield* file.writeAll(textEncoder.encode(token));
-      return true;
-    })
-  ).pipe(Effect.catch(() => reapAbandonedJournalLock(lockPath).pipe(Effect.as(false))));
+  // Publish the lock via hard link so it never exists without its token: a
+  // contender reading a just-created lock always sees a full generation.
+  const stagingPath = `${lockPath}.stage-${process.pid}-${randomUUID()}`;
+  const acquired = yield* fs
+    .writeFileString(stagingPath, token)
+    .pipe(Effect.andThen(fs.link(stagingPath, lockPath)), Effect.as(true), Effect.orElseSucceed(constant(false)));
+  yield* fs.remove(stagingPath, { force: true }).pipe(Effect.ignore);
+  // Contention fails this attempt; reaping an abandoned lock lets a later
+  // attempt acquire it.
+  if (!acquired) {
+    yield* reapAbandonedJournalLock(lockPath);
+  }
+  return acquired;
 });
 
 const acquireJournalLock = Effect.fnUntraced(function* (
@@ -342,11 +359,12 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
 /**
  * Appends one admission transition through a serialized journal rewrite.
  *
- * The writer takes `journal.lock` with a bounded wait, stamping it with its
- * `pid:uuid` generation token: a lock whose owning pid is dead (or whose
- * content is unreadable) is reaped, and release removes only the generation
- * this writer stamped. The rewrite drops undecodable records, ring-trims to
- * the newest admitted transitions, and publishes atomically via temp-file
+ * The writer takes `journal.lock` with a bounded wait, publishing its
+ * `pid:uuid` generation token by hard link so the lock never exists without
+ * an owner. A lock whose parseable owner pid is dead — or which outlived the
+ * reuse backstop — is reaped, and release removes only the generation this
+ * writer stamped. The rewrite drops undecodable records, ring-trims to the
+ * newest admitted transitions, and publishes atomically via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
  * that failure as a best-effort diagnostic write.
