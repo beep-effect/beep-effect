@@ -1,0 +1,66 @@
+diff --git a/tooling/repo-utils/src/JsonUtils.ts b/tooling/repo-utils/src/JsonUtils.ts
+index 2e69027926..8fddc93bed 100644
+--- a/tooling/repo-utils/src/JsonUtils.ts
++++ b/tooling/repo-utils/src/JsonUtils.ts
+@@ -12,7 +12,7 @@ import { Effect, SchemaGetter } from "effect";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import { DomainError } from "./errors/index.js";
+-
++import { thunkEmptyStr } from "@beep/utils";
+ const prettyGetter = SchemaGetter.stringifyJson({ space: 2 });
+ const compactGetter = SchemaGetter.stringifyJson();
+ 
+@@ -28,7 +28,7 @@ export const jsonStringifyPretty: (value: unknown) => Effect.Effect<string, Doma
+   const result = yield* prettyGetter
+     .run(O.some(value), {})
+     .pipe(Effect.mapError((issue) => new DomainError({ message: `JSON serialization failed: ${issue}` })));
+-  return O.getOrElse(result, () => "");
++  return O.getOrElse(result, thunkEmptyStr);
+ });
+ 
+ /**
+@@ -44,7 +44,7 @@ export const jsonStringifyCompact: (value: unknown) => Effect.Effect<string, Dom
+     const result = yield* compactGetter
+       .run(O.some(value), {})
+       .pipe(Effect.mapError((issue) => new DomainError({ message: `JSON serialization failed: ${issue}` })));
+-    return O.getOrElse(result, () => "");
++    return O.getOrElse(result, thunkEmptyStr);
+   }
+ );
+ 
+diff --git a/tooling/repo-utils/src/Root.ts b/tooling/repo-utils/src/Root.ts
+index 6fbc92a655..759cad6b96 100644
+--- a/tooling/repo-utils/src/Root.ts
++++ b/tooling/repo-utils/src/Root.ts
+@@ -11,7 +11,7 @@ import { Effect, FileSystem, pipe, String as Str } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+ import { NoSuchFileError } from "./errors/index.js";
+-
++import { thunkFalse } from "@beep/utils";
+ /**
+  * Markers that indicate a repository root directory.
+  *
+@@ -53,7 +53,7 @@ export const findRepoRoot: (
+   while (true) {
+     for (const marker of ROOT_MARKERS) {
+       const markerPath = Str.endsWith("/")(current) ? current + marker : `${current}/${marker}`;
+-      const exists = yield* fs.exists(markerPath).pipe(Effect.orElseSucceed(() => false));
++      const exists = yield* fs.exists(markerPath).pipe(Effect.orElseSucceed(thunkFalse));
+       if (exists) {
+         return current;
+       }
+diff --git a/tooling/repo-utils/src/TSMorphService.ts b/tooling/repo-utils/src/TSMorphService.ts
+index ee85014b7d..6fec54237a 100644
+--- a/tooling/repo-utils/src/TSMorphService.ts
++++ b/tooling/repo-utils/src/TSMorphService.ts
+@@ -43,7 +43,7 @@ import {
+   TsMorphTraverseDependenciesRequest,
+   type TsMorphValidateJSDocRequest,
+ } from "./codegraph/tsmorph/models.js";
+-import { createTsMorphProjectContext, resolveTsMorphProjectScope } from "./codegraph/tsmorph/project-scope.js";
++import { createTsMorphProjectContext, resolveTsMorphProjectScope } from "./codegraph/tsmorph/index.js";
+ import {
+   buildDeclarationSignature,
+   resolveDeclarationTarget,
