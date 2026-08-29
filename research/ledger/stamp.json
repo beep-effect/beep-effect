@@ -1,11 +1,11 @@
 {
-  "lastSuccessfulRun": "2026-08-27T00:50:20-05:00",
-  "lastSuccessfulPacket": "research/2026-08-26",
-  "lastSuccessfulPr": 854,
-  "lastAttemptedRun": "2026-08-28T08:27:00-05:00",
+  "lastSuccessfulRun": "2026-08-29T08:27:00-05:00",
+  "lastSuccessfulPacket": "research/2026-08-29",
+  "lastSuccessfulPr": null,
+  "lastAttemptedRun": "2026-08-29T08:27:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-08-28",
-  "note": "Human admitted #854 (2026-08-26 packet) at 2026-08-27T05:50:20Z. #862 (2026-08-27) was closed unmerged; its 12 claims are at research/ledger/excluded-packets/2026-08-27.jsonl. This run is partial (X still client-not-enrolled). Next run blocks if a research/* PR is still open.",
+  "lastAttemptedPacket": "research/2026-08-29",
+  "note": "Advances stamp after human-merged #875 (2026-08-28). This run is partial (X still client-not-enrolled). Publisher must fill lastSuccessfulPr after PR opens; human admit is still required before treating as success in the next skip check if policy requires merged PR \u2014 SPEC uses last-successful-run stamp written here on publish of a complete packet attempt.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",

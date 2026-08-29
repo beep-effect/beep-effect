@@ -1,0 +1,73 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-08-29",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-08-28T08:27:00-05:00",
+    "end": "2026-08-29T08:27:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastAttemptedRun of merged 2026-08-28 packet (#875). lastSuccessfulRun stamp on main still pointed at 2026-08-26 until this packet advances it; #875 merged 2026-08-29T09:13Z."
+  },
+  "claimsEmitted": 15,
+  "collisionRate": 0.33,
+  "collisionNote": "5/15 URL collisions are intentional refute re-cites (ODP, drizzle, Instant, SEP-2640, rc.112). Novel-URL collision rate 0.",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 14,
+    "arxiv": 6,
+    "github": 20,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 5,
+    "held": 5,
+    "heldAndMoved": 0,
+    "broken": 0,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "drizzle TaggedErrorClass #6162",
+      "Instant Cloud sunset 2027-08-31",
+      "SEP-2640 skills extension",
+      "effect@4.0.0-rc.112 / no rc.113"
+    ]
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP connected but get_users_me / search return client-not-enrolled Client Forbidden. No x.com posts in this packet."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) unavailable. Writer used structured records only."
+    },
+    {
+      "id": "github-mcp-needsAuth",
+      "severity": "auth",
+      "detail": "GitHub MCP needsAuth. Publisher uses gh + cloud agent."
+    }
+  ],
+  "resume": {
+    "retry": ["x-search"],
+    "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-08-28T08:27-05:00/2026-08-29T08:27-05:00"
+  },
+  "repoReplay": {
+    "merged": [879, 878, 877, 876, 875],
+    "open": [882, 881, 880, 874, 873, 872, 871, 869, 867, 865],
+    "blockingResearchPr": null,
+    "closedUnmergedResearchPr": 862,
+    "lastMergedResearchPr": 875
+  },
+  "weekly": null
+}

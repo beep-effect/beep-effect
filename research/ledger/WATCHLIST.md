@@ -1,6 +1,6 @@
 ---
 schema: beep.research.watchlist/v0
-updated: 2026-08-28
+updated: 2026-08-29
 ---
 
 # WATCHLIST
@@ -20,3 +20,8 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-daydreaming | Daydreaming skill steal | hosted skills leak via ordinary task results; Harvey named | arXiv 2608.26733 | add |
 | w-blanc-whitespace | BLANC patent white space | multi-view ΔNPMI; three views required | arXiv 2608.26685 | add |
 | w-legal-dms-mcp | DMS/research MCP fabric | iManage + Clarra + Bloomberg + Gemini 13+ connectors | ILTACON week leftover | add |
+| w-deepjudge-ahp | DeepJudge AHP handoff | app↔app on MCP; Harvey beta + TR CoCounsel | LawNext 2026-08-13 | add |
+| w-lawtoolbox-mcp | LawToolBox M365 MCP | 70 tools over matter containers in org M365 | LawNext 2026-08-24 | add |
+| w-harvey-pacerpro | Harvey↔PacerPro docket | firm litigation record into Harvey | LawNext 2026-08-24 | add |
+| w-mcp-enterprise-ig | MCP Enterprise IG | charter merged; SEP-2640 still open | mcp#2626 | add |
+| w-jazz-wire-v1 | Jazz sync wire v1 | wire reset + per-replica node identity | jazz#2330/#2345 | add |
