@@ -1,0 +1,954 @@
+diff --git a/packages/agents/client/docgen.json b/packages/agents/client/docgen.json
+index e916fa8bc5..c54074104d 100644
+--- a/packages/agents/client/docgen.json
++++ b/packages/agents/client/docgen.json
+@@ -46,8 +46,8 @@
+       "@beep/agents-domain/entities/Skill": [
+         "../../../packages/agents/domain/src/entities/Skill/index.ts"
+       ],
+-      "@beep/agents-domain/turn": [
+-        "../../../packages/agents/domain/src/turn/index.ts"
++      "@beep/agents-domain/values/AssistantContent": [
++        "../../../packages/agents/domain/src/values/AssistantContent/index.ts"
+       ],
+       "@beep/agents-use-cases": [
+         "../../../packages/agents/use-cases/src/index.ts"
+diff --git a/packages/agents/domain/.beep/repo-exports/catalog.shard.jsonc b/packages/agents/domain/.beep/repo-exports/catalog.shard.jsonc
+index c6f26fbedb..50ccb0247c 100644
+--- a/packages/agents/domain/.beep/repo-exports/catalog.shard.jsonc
++++ b/packages/agents/domain/.beep/repo-exports/catalog.shard.jsonc
+@@ -71,7 +71,7 @@
+         "bytes": 4042
+       },
+       {
+-        "path": "packages/agents/domain/src/turn/index.ts",
++        "path": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "sha256": "3321050312a9a7ade5612d8b2602b2ab59267215cbef5f898331389f972ad8eb",
+         "bytes": 602
+       },
+@@ -102,7 +102,7 @@
+       "@beep/agents-domain/entities",
+       "@beep/agents-domain/entities/Agent",
+       "@beep/agents-domain/entities/Skill",
+-      "@beep/agents-domain/turn"
++      "@beep/agents-domain/values/AssistantContent"
+     ],
+     "counts": {
+       "publicExportEntries": 29,
+@@ -236,13 +236,13 @@
+         "exportedFromPath": "packages/agents/domain/src/index.ts",
+         "symbolName": "Turn",
+         "exportKind": "SourceFile",
+-        "sourcePath": "packages/agents/domain/src/turn/index.ts",
++        "sourcePath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "sourceLine": 21,
+         "summary": "",
+         "categories": [],
+         "since": [],
+         "tags": [],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain . turn sourcefile packages/agents/domain/src/turn/index.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain . turn sourcefile packages/agents/domain/src/values/AssistantContent/index.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+@@ -448,9 +448,9 @@
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "AssistantBlock",
+         "exportKind": "const",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -467,15 +467,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn assistantblock const a single block of an assistant turn. schemas packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn assistantblock const a single block of an assistant turn. schemas packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "AssistantBlock",
+         "exportKind": "type",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -491,15 +491,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn assistantblock type runtime type for {@link assistantblock}. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn assistantblock type runtime type for {@link assistantblock}. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "AssistantContent",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -516,15 +516,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn assistantcontent class a complete assistant turn as structured rich text. this is the forced-tool models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn assistantcontent class a complete assistant turn as structured rich text. this is the forced-tool models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "assistantContentToDocument",
+         "exportKind": "const",
+         "sourcePath": "packages/agents/domain/src/turn/BlockToMd.ts",
+@@ -541,15 +541,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn assistantcontenttodocument const lift an ordered list of assistant blocks into a complete `@beep/md` lifting packages/agents/domain/src/turn/blocktomd.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn assistantcontenttodocument const lift an ordered list of assistant blocks into a complete `@beep/md` lifting packages/agents/domain/src/turn/blocktomd.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "blockToMd",
+         "exportKind": "const",
+         "sourcePath": "packages/agents/domain/src/turn/BlockToMd.ts",
+@@ -566,15 +566,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn blocktomd const lift a single {@link assistantblock} into a `@beep/md` block node. lifting packages/agents/domain/src/turn/blocktomd.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn blocktomd const lift a single {@link assistantblock} into a `@beep/md` block node. lifting packages/agents/domain/src/turn/blocktomd.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "CodeBlock",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -591,15 +591,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn codeblock class a fenced code block. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn codeblock class a fenced code block. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "HeadingBlock",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -616,15 +616,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn headingblock class a section heading. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn headingblock class a section heading. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "InlineNode",
+         "exportKind": "const",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -641,15 +641,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn inlinenode const inline content held by an assistant block. schemas packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn inlinenode const inline content held by an assistant block. schemas packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "InlineNode",
+         "exportKind": "type",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -665,15 +665,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn inlinenode type runtime type for {@link inlinenode}. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn inlinenode type runtime type for {@link inlinenode}. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "inlineToMd",
+         "exportKind": "const",
+         "sourcePath": "packages/agents/domain/src/turn/BlockToMd.ts",
+@@ -690,15 +690,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn inlinetomd const lift a single {@link inlinenode} into a `@beep/md` inline node. lifting packages/agents/domain/src/turn/blocktomd.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn inlinetomd const lift a single {@link inlinenode} into a `@beep/md` inline node. lifting packages/agents/domain/src/turn/blocktomd.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "LinkInline",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -715,15 +715,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn linkinline class a hyperlink inline. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn linkinline class a hyperlink inline. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "ListBlock",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -740,15 +740,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn listblock class a flat list of items. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn listblock class a flat list of items. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "ParagraphBlock",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -765,15 +765,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn paragraphblock class a paragraph of inline content. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn paragraphblock class a paragraph of inline content. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "QuoteBlock",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -790,15 +790,15 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn quoteblock class a block quotation. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn quoteblock class a block quotation. models packages/agents/domain/src/turn/assistantcontent.ts"
+       },
+       {
+         "packageName": "@beep/agents-domain",
+         "packagePath": "packages/agents/domain",
+         "topoOrder": 0,
+-        "importSpecifier": "@beep/agents-domain/turn",
++        "importSpecifier": "@beep/agents-domain/values/AssistantContent",
+         "exportSubpath": "./turn",
+-        "exportedFromPath": "packages/agents/domain/src/turn/index.ts",
++        "exportedFromPath": "packages/agents/domain/src/values/AssistantContent/index.ts",
+         "symbolName": "TextInline",
+         "exportKind": "class",
+         "sourcePath": "packages/agents/domain/src/turn/AssistantContent.ts",
+@@ -815,7 +815,7 @@
+           "@category",
+           "@since"
+         ],
+-        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/turn ./turn textinline class a run of styled text. models packages/agents/domain/src/turn/assistantcontent.ts"
++        "searchText": "@beep/agents-domain packages/agents/domain @beep/agents-domain/values/AssistantContent ./turn textinline class a run of styled text. models packages/agents/domain/src/turn/assistantcontent.ts"
+       }
+     ]
+   }
+diff --git a/packages/agents/domain/docgen.json b/packages/agents/domain/docgen.json
+index bc98624329..c472103962 100644
+--- a/packages/agents/domain/docgen.json
++++ b/packages/agents/domain/docgen.json
+@@ -41,8 +41,8 @@
+       "@beep/agents-domain/entities/Skill": [
+         "../../../packages/agents/domain/src/entities/Skill/index.ts"
+       ],
+-      "@beep/agents-domain/turn": [
+-        "../../../packages/agents/domain/src/turn/index.ts"
++      "@beep/agents-domain/values/AssistantContent": [
++        "../../../packages/agents/domain/src/values/AssistantContent/index.ts"
+       ],
+       "@beep/identity": [
+         "../../../packages/foundation/modeling/identity/src/index.ts"
+diff --git a/packages/agents/domain/package.json b/packages/agents/domain/package.json
+index c082dc69e5..f331e00042 100644
+--- a/packages/agents/domain/package.json
++++ b/packages/agents/domain/package.json
+@@ -33,7 +33,8 @@
+     "./entities": "./src/entities/index.ts",
+     "./entities/Agent": "./src/entities/Agent/index.ts",
+     "./entities/Skill": "./src/entities/Skill/index.ts",
+-    "./turn": "./src/turn/index.ts",
++    "./values": "./src/values/index.ts",
++    "./values/AssistantContent": "./src/values/AssistantContent/index.ts",
+     "./package.json": "./package.json"
+   },
+   "files": [
+diff --git a/packages/agents/domain/src/index.ts b/packages/agents/domain/src/index.ts
+index b476d1850b..5e4efcb172 100644
+--- a/packages/agents/domain/src/index.ts
++++ b/packages/agents/domain/src/index.ts
+@@ -34,7 +34,7 @@ export * as Entities from "./entities/index.js";
+  */
+ export * from "./entities/index.js";
+ /**
+- * Agents domain assistant-turn namespaces.
++ * Agents domain value-object namespaces.
+  *
+  * @example
+  * ```ts
+@@ -43,7 +43,21 @@ export * from "./entities/index.js";
+  * console.log(Module)
+  * ```
+ 
+- * @category turn
++ * @category value-objects
+  * @since 0.0.0
+  */
+-export * as Turn from "./turn/index.js";
++export * as Values from "./values/index.js";
++/**
++ * Root agents domain value-object exports.
++ *
++ * @example
++ * ```ts
++ * import * as Module from "@beep/agents-domain"
++ *
++ * console.log(Module)
++ * ```
++
++ * @category value-objects
++ * @since 0.0.0
++ */
++export * from "./values/index.js";
+diff --git a/packages/agents/domain/src/turn/index.ts b/packages/agents/domain/src/turn/index.ts
+deleted file mode 100644
+index e5062659a7..0000000000
+--- a/packages/agents/domain/src/turn/index.ts
++++ /dev/null
+@@ -1,35 +0,0 @@
+-/**
+- * Agents domain assistant-turn schema and Markdown lift exports.
+- *
+- * @packageDocumentation
+- * @since 0.0.0
+- */
+-
+-/**
+- * Assistant-turn block schema exports.
+- *
+- * @example
+- * ```ts
+- * import * as Module from "@beep/agents-domain/turn"
+- *
+- * console.log(Module)
+- * ```
+- *
+- * @category models
+- * @since 0.0.0
+- */
+-export * from "./AssistantContent.js";
+-/**
+- * Assistant-turn to `@beep/md` Markdown lift exports.
+- *
+- * @example
+- * ```ts
+- * import * as Module from "@beep/agents-domain/turn"
+- *
+- * console.log(Module)
+- * ```
+- *
+- * @category lifting
+- * @since 0.0.0
+- */
+-export * from "./BlockToMd.js";
+diff --git a/packages/agents/domain/src/turn/BlockToMd.ts b/packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts
+similarity index 91%
+rename from packages/agents/domain/src/turn/BlockToMd.ts
+rename to packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts
+index 4335bcd800..2c354d7972 100644
+--- a/packages/agents/domain/src/turn/BlockToMd.ts
++++ b/packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts
+@@ -11,7 +11,7 @@
+ import * as Md from "@beep/md/Md.model";
+ import { Match } from "effect";
+ import * as O from "effect/Option";
+-import { AssistantBlock, InlineNode } from "./AssistantContent.js";
++import { AssistantBlock, InlineNode } from "./AssistantContent.model.js";
+ 
+ /**
+  * Lift a single {@link InlineNode} into a `@beep/md` inline node.
+@@ -22,13 +22,13 @@ import { AssistantBlock, InlineNode } from "./AssistantContent.js";
+  *
+  * @example
+  * ```ts
+- * import { inlineToMd } from "@beep/agents-domain/turn"
++ * import { inlineToMd } from "@beep/agents-domain/values/AssistantContent"
+  *
+  * const node = inlineToMd({ type: "text", text: "Hello", bold: true })
+  * console.log(node._tag) // "strong"
+  * ```
+  *
+- * @category lifting
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export const inlineToMd = (node: InlineNode): Md.Inline.Type =>
+@@ -65,13 +65,13 @@ const inlinesToMd = (inlines: ReadonlyArray<InlineNode>): ReadonlyArray<Md.Inlin
+  *
+  * @example
+  * ```ts
+- * import { blockToMd } from "@beep/agents-domain/turn"
++ * import { blockToMd } from "@beep/agents-domain/values/AssistantContent"
+  *
+  * const node = blockToMd({ type: "heading", level: "h2", children: [{ type: "text", text: "Install" }] })
+  * console.log(node._tag) // "h2"
+  * ```
+  *
+- * @category lifting
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
+@@ -107,7 +107,7 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
+  *
+  * @example
+  * ```ts
+- * import { assistantContentToDocument } from "@beep/agents-domain/turn"
++ * import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent"
+  *
+  * const document = assistantContentToDocument([
+  *   { type: "paragraph", children: [{ type: "text", text: "Hello" }] },
+@@ -115,7 +115,7 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
+  * console.log(document._tag) // "document"
+  * ```
+  *
+- * @category lifting
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export const assistantContentToDocument = (blocks: ReadonlyArray<AssistantBlock>): Md.Document.Type =>
+diff --git a/packages/agents/domain/src/turn/AssistantContent.ts b/packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts
+similarity index 85%
+rename from packages/agents/domain/src/turn/AssistantContent.ts
+rename to packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts
+index 9fe2fe133e..e26b110454 100644
+--- a/packages/agents/domain/src/turn/AssistantContent.ts
++++ b/packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts
+@@ -1,6 +1,6 @@
+ /**
+- * Assistant-turn block schema — the stratified (non-recursive) block→inline
+- * subset of rich text used for forced-tool structured outputs. Blocks contain
++ * AssistantContent value-object model — the stratified (non-recursive)
++ * block-to-inline subset of rich text used for forced-tool structured outputs. Blocks contain
+  * inlines and inlines contain nothing, so the schema is non-recursive. Field
+  * annotations become JSON-Schema descriptions that steer generation.
+  *
+@@ -11,7 +11,7 @@
+ import { $AgentsDomainId } from "@beep/identity/packages";
+ import * as S from "effect/Schema";
+ 
+-const $I = $AgentsDomainId.create("turn/AssistantContent");
++const $I = $AgentsDomainId.create("values/AssistantContent/AssistantContent.model");
+ 
+ // ---------------------------------------------------------------------------
+ // Inlines (stratified, non-recursive — inlines contain no blocks)
+@@ -22,7 +22,7 @@ const $I = $AgentsDomainId.create("turn/AssistantContent");
+  *
+  * @example
+  * ```ts
+- * import { TextInline } from "@beep/agents-domain/turn"
++ * import { TextInline } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const inline = S.decodeUnknownSync(TextInline)({
+@@ -33,7 +33,7 @@ const $I = $AgentsDomainId.create("turn/AssistantContent");
+  * console.log(inline.text)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class TextInline extends S.Class<TextInline>($I`TextInline`)(
+@@ -58,7 +58,7 @@ export class TextInline extends S.Class<TextInline>($I`TextInline`)(
+  *
+  * @example
+  * ```ts
+- * import { LinkInline } from "@beep/agents-domain/turn"
++ * import { LinkInline } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const inline = S.decodeUnknownSync(LinkInline)({
+@@ -69,7 +69,7 @@ export class TextInline extends S.Class<TextInline>($I`TextInline`)(
+  * console.log(inline.url)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
+@@ -88,7 +88,7 @@ export class LinkInline extends S.Class<LinkInline>($I`LinkInline`)(
+  *
+  * @example
+  * ```ts
+- * import { InlineNode } from "@beep/agents-domain/turn"
++ * import { InlineNode } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const node = S.decodeUnknownSync(InlineNode)({ type: "text", text: "Hello" })
+@@ -108,7 +108,7 @@ export const InlineNode = S.Union([TextInline, LinkInline]).pipe(
+ /**
+  * Runtime type for {@link InlineNode}.
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export type InlineNode = typeof InlineNode.Type;
+@@ -122,7 +122,7 @@ export type InlineNode = typeof InlineNode.Type;
+  *
+  * @example
+  * ```ts
+- * import { ParagraphBlock } from "@beep/agents-domain/turn"
++ * import { ParagraphBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const block = S.decodeUnknownSync(ParagraphBlock)({
+@@ -132,7 +132,7 @@ export type InlineNode = typeof InlineNode.Type;
+  * console.log(block.type)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
+@@ -150,7 +150,7 @@ export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
+  *
+  * @example
+  * ```ts
+- * import { HeadingBlock } from "@beep/agents-domain/turn"
++ * import { HeadingBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const block = S.decodeUnknownSync(HeadingBlock)({
+@@ -161,7 +161,7 @@ export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
+  * console.log(block.level)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
+@@ -180,7 +180,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
+  *
+  * @example
+  * ```ts
+- * import { QuoteBlock } from "@beep/agents-domain/turn"
++ * import { QuoteBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const block = S.decodeUnknownSync(QuoteBlock)({
+@@ -190,7 +190,7 @@ export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
+  * console.log(block.type)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
+@@ -208,7 +208,7 @@ export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
+  *
+  * @example
+  * ```ts
+- * import { ListBlock } from "@beep/agents-domain/turn"
++ * import { ListBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const block = S.decodeUnknownSync(ListBlock)({
+@@ -219,7 +219,7 @@ export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
+  * console.log(block.listType)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class ListBlock extends S.Class<ListBlock>($I`ListBlock`)(
+@@ -242,7 +242,7 @@ export class ListBlock extends S.Class<ListBlock>($I`ListBlock`)(
+  *
+  * @example
+  * ```ts
+- * import { CodeBlock } from "@beep/agents-domain/turn"
++ * import { CodeBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const block = S.decodeUnknownSync(CodeBlock)({
+@@ -253,7 +253,7 @@ export class ListBlock extends S.Class<ListBlock>($I`ListBlock`)(
+  * console.log(block.code)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
+@@ -274,7 +274,7 @@ export class CodeBlock extends S.Class<CodeBlock>($I`CodeBlock`)(
+  *
+  * @example
+  * ```ts
+- * import { AssistantBlock } from "@beep/agents-domain/turn"
++ * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const block = S.decodeUnknownSync(AssistantBlock)({
+@@ -297,7 +297,7 @@ export const AssistantBlock = S.Union([ParagraphBlock, HeadingBlock, QuoteBlock,
+ /**
+  * Runtime type for {@link AssistantBlock}.
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export type AssistantBlock = typeof AssistantBlock.Type;
+@@ -308,7 +308,7 @@ export type AssistantBlock = typeof AssistantBlock.Type;
+  *
+  * @example
+  * ```ts
+- * import { AssistantContent } from "@beep/agents-domain/turn"
++ * import { AssistantContent } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+  * const content = S.decodeUnknownSync(AssistantContent)({
+@@ -317,7 +317,7 @@ export type AssistantBlock = typeof AssistantBlock.Type;
+  * console.log(content.blocks.length)
+  * ```
+  *
+- * @category models
++ * @category value-objects
+  * @since 0.0.0
+  */
+ export class AssistantContent extends S.Class<AssistantContent>($I`AssistantContent`)(
+diff --git a/packages/agents/domain/src/values/AssistantContent/index.ts b/packages/agents/domain/src/values/AssistantContent/index.ts
+new file mode 100644
+index 0000000000..398b30b88c
+--- /dev/null
++++ b/packages/agents/domain/src/values/AssistantContent/index.ts
+@@ -0,0 +1,35 @@
++/**
++ * AssistantContent value-object exports.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++/**
++ * AssistantContent pure behavior exports.
++ *
++ * @example
++ * ```ts
++ * import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent"
++ *
++ * console.log(assistantContentToDocument)
++ * ```
++ *
++ * @category value-objects
++ * @since 0.0.0
++ */
++export * from "./AssistantContent.behavior.js";
++/**
++ * AssistantContent schema model exports.
++ *
++ * @example
++ * ```ts
++ * import { AssistantContent } from "@beep/agents-domain/values/AssistantContent"
++ *
++ * console.log(AssistantContent)
++ * ```
++ *
++ * @category value-objects
++ * @since 0.0.0
++ */
++export * from "./AssistantContent.model.js";
+diff --git a/packages/agents/domain/src/values/index.ts b/packages/agents/domain/src/values/index.ts
+new file mode 100644
+index 0000000000..65c349cb63
+--- /dev/null
++++ b/packages/agents/domain/src/values/index.ts
+@@ -0,0 +1,21 @@
++/**
++ * Agents domain value-object exports.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++/**
++ * Root AssistantContent value-object exports.
++ *
++ * @example
++ * ```ts
++ * import { AssistantBlock } from "@beep/agents-domain/values"
++ *
++ * console.log(AssistantBlock)
++ * ```
++ *
++ * @category value-objects
++ * @since 0.0.0
++ */
++export * from "./AssistantContent/index.js";
+diff --git a/packages/agents/server/docgen.json b/packages/agents/server/docgen.json
+index b2d1dffc5b..0aead311ce 100644
+--- a/packages/agents/server/docgen.json
++++ b/packages/agents/server/docgen.json
+@@ -52,8 +52,8 @@
+       "@beep/agents-domain/entities/Skill": [
+         "../../../packages/agents/domain/src/entities/Skill/index.ts"
+       ],
+-      "@beep/agents-domain/turn": [
+-        "../../../packages/agents/domain/src/turn/index.ts"
++      "@beep/agents-domain/values/AssistantContent": [
++        "../../../packages/agents/domain/src/values/AssistantContent/index.ts"
+       ],
+       "@beep/agents-use-cases": [
+         "../../../packages/agents/use-cases/src/index.ts"
+diff --git a/packages/agents/use-cases/docgen.json b/packages/agents/use-cases/docgen.json
+index 4b547a4cf1..2a8b260fa4 100644
+--- a/packages/agents/use-cases/docgen.json
++++ b/packages/agents/use-cases/docgen.json
+@@ -53,8 +53,8 @@
+       "@beep/agents-domain/entities/Skill": [
+         "../../../packages/agents/domain/src/entities/Skill/index.ts"
+       ],
+-      "@beep/agents-domain/turn": [
+-        "../../../packages/agents/domain/src/turn/index.ts"
++      "@beep/agents-domain/values/AssistantContent": [
++        "../../../packages/agents/domain/src/values/AssistantContent/index.ts"
+       ],
+       "@beep/identity": [
+         "../../../packages/foundation/modeling/identity/src/index.ts"
+diff --git a/packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts b/packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts
+index 75ef7d2bd0..ea55368da8 100644
+--- a/packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts
++++ b/packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts
+@@ -7,7 +7,7 @@
+ 
+ import { $AgentsUseCasesId } from "@beep/identity/packages";
+ import * as S from "effect/Schema";
+-import type { Turn } from "@beep/agents-domain";
++import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
+ 
+ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contracts");
+ 
+@@ -17,25 +17,79 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contr
+  *
+  * @example
+  * ```ts
+- * import { TurnHistoryItem } from "@beep/agents-use-cases/public"
++ * import { UserTurnHistoryItem } from "@beep/agents-use-cases/public"
+  *
+- * const item = TurnHistoryItem.make({ role: "user", text: "Hello" })
++ * const item = UserTurnHistoryItem.make({ text: "Hello" })
+  * console.log(item.role)
+  * ```
+  *
+  * @category models
+  * @since 0.0.0
+  */
+-export class TurnHistoryItem extends S.Class<TurnHistoryItem>($I`TurnHistoryItem`)(
++export class UserTurnHistoryItem extends S.Class<UserTurnHistoryItem>($I`UserTurnHistoryItem`)(
+   {
+-    role: S.Literals(["user", "assistant"]),
++    role: S.tag("user"),
+     text: S.String,
+   },
+-  $I.annote("TurnHistoryItem", {
+-    description: "Plain-text prompt projection of a thread item consumed by the turn kernel.",
++  $I.annote("UserTurnHistoryItem", {
++    description: "Plain-text prompt projection of a user thread item consumed by the turn kernel.",
++  })
++) {}
++
++/**
++ * The plain-text prompt projection of a single assistant-authored thread item.
++ *
++ * @example
++ * ```ts
++ * import { AssistantTurnHistoryItem } from "@beep/agents-use-cases/public"
++ *
++ * const item = AssistantTurnHistoryItem.make({ text: "Hello" })
++ * console.log(item.role)
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class AssistantTurnHistoryItem extends S.Class<AssistantTurnHistoryItem>($I`AssistantTurnHistoryItem`)(
++  {
++    role: S.tag("assistant"),
++    text: S.String,
++  },
++  $I.annote("AssistantTurnHistoryItem", {
++    description: "Plain-text prompt projection of an assistant thread item consumed by the turn kernel.",
+   })
+ ) {}
+ 
++/**
++ * Plain-text prompt projection of a thread item consumed by the turn kernel.
++ *
++ * @example
++ * ```ts
++ * import { TurnHistoryItem } from "@beep/agents-use-cases/public"
++ * import * as S from "effect/Schema"
++ *
++ * const item = S.decodeUnknownSync(TurnHistoryItem)({ role: "user", text: "Hello" })
++ * console.log(item.role)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const TurnHistoryItem = S.Union([UserTurnHistoryItem, AssistantTurnHistoryItem]).pipe(
++  S.toTaggedUnion("role"),
++  $I.annoteSchema("TurnHistoryItem", {
++    description: "Plain-text prompt projection of a thread item consumed by the turn kernel.",
++  })
++);
++
++/**
++ * Runtime type for {@link TurnHistoryItem}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TurnHistoryItem = typeof TurnHistoryItem.Type;
++
+ /**
+  * A single assistant block paired with its position in the generated turn.
+  * Blocks may be emitted out of order on the wire, so the index restores the
+@@ -44,10 +98,10 @@ export class TurnHistoryItem extends S.Class<TurnHistoryItem>($I`TurnHistoryItem
+  * @example
+  * ```ts
+  * import type { IndexedBlock } from "@beep/agents-use-cases/public"
+- * import { Turn } from "@beep/agents-domain"
++ * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
+  * import * as S from "effect/Schema"
+  *
+- * const block = S.decodeUnknownSync(Turn.AssistantBlock)({
++ * const block = S.decodeUnknownSync(AssistantBlock)({
+  *   type: "paragraph",
+  *   children: [{ type: "text", text: "Hello" }],
+  * })
+@@ -59,6 +113,6 @@ export class TurnHistoryItem extends S.Class<TurnHistoryItem>($I`TurnHistoryItem
+  * @since 0.0.0
+  */
+ export interface IndexedBlock {
+-  readonly block: Turn.AssistantBlock;
++  readonly block: AssistantBlock;
+   readonly index: number;
+ }
+diff --git a/tsconfig.json b/tsconfig.json
+index 6d2e13a751..cb2a4ad391 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -1148,7 +1148,12 @@
+       "@beep/agents-client/ClientObservability": [
+         "./packages/agents/client/src/ClientObservability.ts"
+       ],
+-      "@beep/agents-domain/turn": ["./packages/agents/domain/src/turn/index.ts"]
++      "@beep/agents-domain/values": [
++        "./packages/agents/domain/src/values/index.ts"
++      ],
++      "@beep/agents-domain/values/AssistantContent": [
++        "./packages/agents/domain/src/values/AssistantContent/index.ts"
++      ]
+     }
+   }
+ }
