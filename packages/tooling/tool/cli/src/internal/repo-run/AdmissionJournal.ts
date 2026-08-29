@@ -16,7 +16,7 @@
 import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Clock, Console, Duration, Effect, FileSystem, Path, pipe } from "effect";
+import { Clock, Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -29,9 +29,12 @@ const $I = $RepoCliId.create("internal/repo-run/AdmissionJournal");
 const JOURNAL_FILE_NAME = "journal.ndjson";
 const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
-const LOCK_STALE_MILLIS = 60_000;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
+// No legitimate writer holds the lock beyond one rewrite (milliseconds); the
+// backstop clears locks stranded by pid reuse or tampering without ever
+// racing a live hold.
+const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 const textEncoder = new TextEncoder();
 
 /**
@@ -179,51 +182,111 @@ export const admissionJournalPath = Effect.fn("AdmissionJournal.path")(function*
   return path.join(root, JOURNAL_FILE_NAME);
 });
 
-// A lock recreated by a sibling between the staleness stat and the remove can
-// be reaped while fresh; the window is one syscall pair and the cost is one
-// competing serialized writer, so the telemetry-grade journal accepts it.
-const reapStaleJournalLock = Effect.fnUntraced(function* (
+// EPERM cannot masquerade as liveness here: the admission root is 0o700 and
+// uid-validated, so every lock writer shares the probing user.
+const pidIsAlive = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const lockOwnerPid = (content: string): O.Option<number> => pipe(content, Str.split(":"), A.head, O.flatMap(N.parse));
+
+// A lock replaced between the ownership read and the remove can be reaped
+// fresh; the window is one syscall pair and the cost is one competing
+// serialized writer, so the telemetry-grade journal accepts it.
+const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const nowMillis = yield* Clock.currentTimeMillis;
+  const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   const info = yield* fs.stat(lockPath).pipe(Effect.option);
-  const stale = pipe(
+  const nowMillis = yield* Clock.currentTimeMillis;
+  // A parseable owner that died abandons its lock immediately; anything else
+  // (pid reuse, unreadable content) clears through the age backstop so a
+  // just-published generation is never misread as abandoned.
+  const ownerDead = pipe(
+    content,
+    O.flatMap(lockOwnerPid),
+    O.exists((pid) => !pidIsAlive(pid))
+  );
+  const outlivedBackstop = pipe(
     info,
     O.flatMap((fileInfo) => fileInfo.mtime),
-    O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_STALE_MILLIS)
+    O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
   );
-  if (stale) {
+  if (ownerDead || outlivedBackstop) {
     yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
   }
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
-  lockPath: string
+  lockPath: string,
+  token: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  // Any create failure (typically AlreadyExists contention) fails this
-  // attempt; reaping an abandoned lock lets a later attempt acquire it.
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const file = yield* fs.open(lockPath, { flag: "wx" });
-      yield* file.writeAll(textEncoder.encode(`${process.pid}\n`));
-      return true;
-    })
-  ).pipe(Effect.catch(() => reapStaleJournalLock(lockPath).pipe(Effect.as(false))));
+  // Publish the lock via hard link so it never exists without its token: a
+  // contender reading a just-created lock always sees a full generation.
+  const stagingPath = `${lockPath}.stage-${process.pid}-${randomUUID()}`;
+  const acquired = yield* fs
+    .writeFileString(stagingPath, token)
+    .pipe(Effect.andThen(fs.link(stagingPath, lockPath)), Effect.as(true), Effect.orElseSucceed(constant(false)));
+  yield* fs.remove(stagingPath, { force: true }).pipe(Effect.ignore);
+  // Contention fails this attempt; reaping an abandoned lock lets a later
+  // attempt acquire it.
+  if (!acquired) {
+    yield* reapAbandonedJournalLock(lockPath);
+  }
+  return acquired;
 });
 
 const acquireJournalLock = Effect.fnUntraced(function* (
-  lockPath: string
+  lockPath: string,
+  token: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   for (let attempt = 0; attempt < LOCK_RETRY_ATTEMPTS; attempt++) {
-    if (yield* tryAcquireJournalLock(lockPath)) {
+    if (yield* tryAcquireJournalLock(lockPath, token)) {
       return true;
     }
     yield* Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS));
   }
   return false;
 });
+
+const releaseJournalLock = Effect.fnUntraced(function* (
+  lockPath: string,
+  token: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
+  // Remove only the generation this writer created; a lock reaped and
+  // replaced mid-write belongs to its new owner and stays.
+  if (O.exists(content, (current) => current === token)) {
+    yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
+  }
+});
+
+/**
+ * Test-only handle for the owned-generation journal lock release.
+ *
+ * **Example** (Reference the test-only release)
+ *
+ * ```ts
+ * import { releaseAdmissionJournalLockForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof releaseAdmissionJournalLockForTesting) // "function"
+ * ```
+ *
+ * @param lockPath - Journal lock path.
+ * @param token - The owning writer's `pid:uuid` lock token.
+ * @returns An effect that removes the lock only while the token still owns it.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const releaseAdmissionJournalLockForTesting = releaseJournalLock;
 
 const publishJournalAtomic = Effect.fnUntraced(function* (
   journalPath: string,
@@ -296,11 +359,15 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
 /**
  * Appends one admission transition through a serialized journal rewrite.
  *
- * The writer takes `journal.lock` (bounded wait, reaping an abandoned lock),
- * drops undecodable records, ring-trims to the newest admitted transitions,
- * and publishes atomically via temp-file rename. A lock that stays busy fails
- * the append with a typed error; scheduler correctness never depends on this
- * operation, so callers treat that failure as a best-effort diagnostic write.
+ * The writer takes `journal.lock` with a bounded wait, publishing its
+ * `pid:uuid` generation token by hard link so the lock never exists without
+ * an owner. A lock whose parseable owner pid is dead — or which outlived the
+ * reuse backstop — is reaped, and release removes only the generation this
+ * writer stamped. The rewrite drops undecodable records, ring-trims to the
+ * newest admitted transitions, and publishes atomically via temp-file
+ * rename. A lock that stays busy fails the append with a typed error;
+ * scheduler correctness never depends on this operation, so callers treat
+ * that failure as a best-effort diagnostic write.
  *
  * **Example** (Reference the journal append entry point)
  *
@@ -324,19 +391,17 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
   const path = yield* Path.Path;
   const journalPath = path.join(root, JOURNAL_FILE_NAME);
   const lockPath = path.join(root, LOCK_FILE_NAME);
+  const token = `${process.pid}:${randomUUID()}`;
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))
   );
   yield* fs
     .makeDirectory(root, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
-  if (!(yield* acquireJournalLock(lockPath))) {
+  if (!(yield* acquireJournalLock(lockPath, token))) {
     return yield* QualitySchedulerError.make({
       message: `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`,
     });
   }
-  yield* Effect.ensuring(
-    rewriteJournalLocked(journalPath, event, line),
-    fs.remove(lockPath, { force: true }).pipe(Effect.ignore)
-  );
+  yield* Effect.ensuring(rewriteJournalLocked(journalPath, event, line), releaseJournalLock(lockPath, token));
 });
