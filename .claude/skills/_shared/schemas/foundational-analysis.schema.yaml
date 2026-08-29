@@ -1,0 +1,19 @@
+# FoundationalAnalysis — internal working record joining hypothesis -> category tests.
+# File layout: one record per file, work/foundational/fa-<slug>-<nnn>.yaml.
+id: "fa:<slug>:<nnn>"
+hypothesis_ref: "dh:..."
+identity_card_ref: "ic:..."
+tests:
+  spec_vs_execution: separated | merged | not_applicable | unresolved
+  world_vs_information: separated | merged | not_applicable | unresolved
+  role_vs_bearer: separated | merged | not_applicable | unresolved
+  context_reification_needed: true | false | unresolved
+rival_models: [{label: "", still_viable: true}]
+strongest_counterexample: ""
+verdict: analyzed | explicitly_deferred
+needed_evidence: ""               # REQUIRED when explicitly_deferred (validator-enforced):
+                                  # the discriminating evidence that would settle it.
+                                  # Deferral is never a silent stop — it flows forward as
+                                  # a FLAGGED proposal (term shape defensible) OR as an
+                                  # `unresolved` index disposition (no shape defensible
+                                  # yet); both surfaces reach the steward.
