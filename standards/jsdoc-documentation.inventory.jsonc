@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-29T12:38:14.509Z",
+  "generatedAt": "2026-08-29T13:32:57.347Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -283665,8 +283665,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 65,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-65-aimetricsabsolutedataroot",
+          "line": 71,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-71-aimetricsabsolutedataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -283687,8 +283687,8 @@
           "exportKind": "type",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 79,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-79-aimetricsabsolutedataroot",
+          "line": 85,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-85-aimetricsabsolutedataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -283709,8 +283709,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 109,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-109-aimetricsdatarootsource",
+          "line": 115,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-115-aimetricsdatarootsource",
           "currentTags": [
             "@see",
             "@category",
@@ -283732,8 +283732,8 @@
           "exportKind": "type",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 122,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-122-aimetricsdatarootsource",
+          "line": 128,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-128-aimetricsdatarootsource",
           "currentTags": [
             "@see",
             "@category",
@@ -283755,8 +283755,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 171,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-171-aimetricsdatarootinput",
+          "line": 177,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-177-aimetricsdatarootinput",
           "currentTags": [
             "@category",
             "@since"
@@ -283777,8 +283777,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 207,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-207-aimetricsdataroot",
+          "line": 213,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-213-aimetricsdataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -283799,8 +283799,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 237,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-237-aimetricsdatarooterror",
+          "line": 243,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-243-aimetricsdatarooterror",
           "currentTags": [
             "@category",
             "@since"
@@ -283821,8 +283821,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 272,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-272-aimetricsstatehomeinput",
+          "line": 278,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-278-aimetricsstatehomeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -283843,8 +283843,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 331,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-331-aimetricsstatehome",
+          "line": 337,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-337-aimetricsstatehome",
           "currentTags": [
             "@param",
             "@returns",
@@ -283867,8 +283867,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 371,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-371-aimetricsstateroot",
+          "line": 377,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-377-aimetricsstateroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -283891,8 +283891,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 435,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-435-resolveaimetricsdataroot",
+          "line": 441,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-441-resolveaimetricsdataroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -283915,8 +283915,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 486,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-486-requireabsoluteaimetricsdataroot",
+          "line": 492,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-492-requireabsoluteaimetricsdataroot",
           "currentTags": [
             "@param",
             "@returns",

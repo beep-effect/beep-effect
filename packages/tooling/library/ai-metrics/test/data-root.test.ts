@@ -207,8 +207,21 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
 
   it.effect("rejects filesystem roots and invalid paths while accepting supported absolute paths", () =>
     Effect.gen(function* () {
-      const rejected = ["/", "C:\\", "\\\\server\\share", "relative/store", "/tmp/invalid\u0000store"];
-      const accepted = ["/tmp/ai-metrics", "C:\\state\\ai-metrics", "\\\\server\\share\\ai-metrics"];
+      const rejected = [
+        "/",
+        "C:\\",
+        "C:state\\ai-metrics",
+        "C:state/ai-metrics",
+        "\\\\server\\share",
+        "relative/store",
+        "/tmp/invalid\u0000store",
+      ];
+      const accepted = [
+        "/tmp/ai-metrics",
+        "C:\\state\\ai-metrics",
+        "C:/state/ai-metrics",
+        "\\\\server\\share\\ai-metrics",
+      ];
 
       yield* Effect.forEach(
         rejected,

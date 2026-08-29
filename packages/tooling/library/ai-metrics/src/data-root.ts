@@ -10,6 +10,7 @@ import { Defect, FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, Window
 import { Str } from "@beep/utils";
 import { Effect, pipe, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AiMetricsDeployTarget } from "./models.ts";
 
@@ -37,8 +38,13 @@ const OptionalNonBlank = S.optionalKey(NonBlankStringInput).pipe(
   SchemaUtils.withNoneDefault
 );
 
+const startsWithWindowsRootSeparator = P.or(Str.startsWith("\\"), Str.startsWith("/"));
+const isWindowsAbsoluteDrivePath = (value: FilePath): boolean =>
+  WindowsDrivePath.is(value) && pipe(value, Str.substring(2), startsWithWindowsRootSeparator);
+
 const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
-  (value: FilePath) => pipe(value, Str.startsWith("/")) || WindowsDrivePath.is(value) || WindowsUncPath.is(value),
+  (value: FilePath) =>
+    pipe(value, Str.startsWith("/")) || isWindowsAbsoluteDrivePath(value) || WindowsUncPath.is(value),
   {
     identifier: $I`AiMetricsAbsoluteDataRootCheck`,
     title: "AI Metrics Absolute Data Root",

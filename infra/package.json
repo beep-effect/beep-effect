@@ -56,8 +56,5 @@
     "effect": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "trustedDependencies": [
-    "@pulumi/gharunners"
-  ]
+  }
 }

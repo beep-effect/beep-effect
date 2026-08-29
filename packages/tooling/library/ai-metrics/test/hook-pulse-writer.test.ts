@@ -39,6 +39,7 @@ import { ChildProcess } from "effect/unstable/process";
 // checkout path containing a space or `#` would yield an unspawnable writer path.
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
+const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
@@ -158,6 +159,7 @@ const runWriter = Effect.fnUntraced(function* (
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
     readonly viaXdgFallback?: boolean;
+    readonly writerPath?: string;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -190,7 +192,7 @@ const runWriter = Effect.fnUntraced(function* (
   // and never the `coverage` one, so no local proof could reach it. The spawner behind
   // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
-  const handle = yield* ChildProcess.make(writerPath, [], {
+  const handle = yield* ChildProcess.make(options.writerPath ?? writerPath, [], {
     cwd: repoRoot,
     // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
     // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
@@ -522,6 +524,17 @@ const expectSilentRefusal = (run: WriterRun): void => {
 };
 
 layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
+  it.effect("tags Codex hook rows as codex-cli", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const run = yield* runWriter(encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
+      })
+    )
+  );
+
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
       Effect.scoped(

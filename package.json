@@ -360,7 +360,7 @@
     "files": "bun run beep files",
     "image": "bun run beep image",
     "images": "bun run beep image",
-    "infra:prepare-gha-runners": "bun run --cwd infra/node_modules/@pulumi/gharunners postinstall",
+    "infra:prepare-gha-runners": "node infra/node_modules/@pulumi/gharunners/scripts/build.js --compiler node_modules/typescript/bin/tsc",
     "jsdoc:inventory": "bun run beep quality jsdoc-inventory",
     "knip": "knip-bun",
     "knowledge:refs-rewrite": "bun scripts/knowledge-refs-rewrite.ts",
