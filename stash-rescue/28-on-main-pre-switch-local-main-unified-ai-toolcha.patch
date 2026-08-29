@@ -1,0 +1,648 @@
+diff --git a/goals/unified-ai-toolchain/PLAN.md b/goals/unified-ai-toolchain/PLAN.md
+new file mode 100644
+index 0000000000..f1c39cc0c7
+--- /dev/null
++++ b/goals/unified-ai-toolchain/PLAN.md
+@@ -0,0 +1,236 @@
++# Unified AI Toolchain Plan
++
++This plan executes [SPEC.md](./SPEC.md). P0 through P5 are complete for V1.
++V2 is active. V3 is planned.
++
++## Status
++
++| Phase | Status | Goal | Exit criteria |
++| --- | --- | --- | --- |
++| P0-P5 V1 | complete | Preserve schema truth layer evidence. | V1 evidence remains linked and package checks stay green. |
++| V2.0 Bootstrap | complete | Reopen packet for V2/V3 execution. | `GOAL.md`, spec, plan, manifest, and bootstrap evidence are updated. |
++| V2.1 Operator CLI | pending | Add root `beep ai-sync` commands. | `audit`, `check`, `drift`, and `refresh-pr` exist with tests. |
++| V2.2 Broad Dogfood | pending | Validate all registered repo agent config files. | Root/package checks cover `.codex/config.toml`, `.mcp.json`, `.claude/settings.json`, `AGENTS.md`, and `CLAUDE.md`. |
++| V2.3 Reports And Interop Evidence | pending | Add schema-first reports and rulesync audit/import evidence. | JSON reports decode through schemas; rulesync config/MCP evidence is tested; ruler remains research-only. |
++| V2.4 Drift Auto-PR | pending | Add weekly/manual scheduled refresh PR workflow. | Known drift can be refreshed into an automation PR with focused proof plus root check. |
++| V2.5 Closeout | pending | Prove V2 production-readiness. | V2 verification commands pass and closeout evidence is archived. |
++| V3.1 Canonical Models | planned | Add canonical per-domain config models. | Models decode fixtures and import current native repo files. |
++| V3.2 Canonical Source | planned | Introduce `.ai-sync/project.jsonc`. | File decodes, imports from native files, and is documented as the canonical source. |
++| V3.3 Native Plan/Apply | planned | Emit native files safely. | Dry-run plans, loss reports, temp-dir apply tests, and native validation pass. |
++| V3.4 Current-Matrix Emitters | planned | Support existing five target agents. | Claude Code, Codex, Grok Build, JetBrains AI Assistant, and Junie emitters are production-ready without guessing unknown cells. |
++| V3b Expansion | planned | Add a research-gated additional-agent batch. | Fresh source-map research selects a bounded batch with current evidence. |
++
++## V1 Closeout
++
++Status: complete.
++
++V1 implementation lives in `packages/tooling/library/ai-sync` as
++`@beep/ai-sync`.
++
++Evidence:
++
++- [history/outputs/p0-current-state.md](./history/outputs/p0-current-state.md)
++- [history/outputs/p1-source-of-truth-pinning-and-tier-1-codegen.md](./history/outputs/p1-source-of-truth-pinning-and-tier-1-codegen.md)
++- [history/outputs/p2-tier-2-semantic-field-diff-schemas.md](./history/outputs/p2-tier-2-semantic-field-diff-schemas.md)
++- [history/outputs/p3-drift-detection-pipeline.md](./history/outputs/p3-drift-detection-pipeline.md)
++- [history/outputs/p4-cross-agent-transforms.md](./history/outputs/p4-cross-agent-transforms.md)
++- [history/outputs/p5-first-real-consumer.md](./history/outputs/p5-first-real-consumer.md)
++
++Do not reopen V1 gates unless current implementation contradicts the V1
++completion criteria in [SPEC.md](./SPEC.md).
++
++## V2.0 Bootstrap
++
++Status: complete.
++
++- Add compact `GOAL.md` launcher.
++- Reframe packet status as V1 complete, V2 active, V3 planned.
++- Replace non-specific P6+ follow-ups with V2/V3 phase gates.
++- Record decisions in
++  [history/outputs/v2-v3-bootstrap.md](./history/outputs/v2-v3-bootstrap.md).
++
++Acceptance gate:
++
++- `GOAL.md` exists and is under 4,000 characters.
++- `ops/manifest.json` is valid JSON and marks the packet execution-capable.
++- `README.md`, `SPEC.md`, and `PLAN.md` agree on V2/V3 scope.
++
++## V2.1 Operator CLI
++
++Status: pending.
++
++- Add an `ai-sync` command group to `@beep/repo-cli`.
++- Implement:
++  - `bun run beep ai-sync audit [--json]`
++  - `bun run beep ai-sync check [--json]`
++  - `bun run beep ai-sync drift [--strict] [--json]`
++  - `bun run beep ai-sync refresh-pr [--json]`
++- Keep `@beep/ai-sync` as the reusable library and source of schema/drift
++  primitives.
++- Preserve the root `bun run ai-sync ...` delegate as a low-level compatibility
++  shortcut unless a dedicated cleanup is planned.
++
++Acceptance gate:
++
++- Command definitions are tested through `@beep/repo-cli`.
++- `--json` outputs decode through `@beep/ai-sync` report schemas.
++- Human output is a rendering of the same decoded report values.
++
++## V2.2 Broad Dogfood
++
++Status: pending.
++
++- Promote all currently registered repo agent config files to mandatory
++  dogfooding inputs:
++  - `.codex/config.toml`
++  - `.mcp.json`
++  - `.claude/settings.json`
++  - `AGENTS.md`
++  - `CLAUDE.md`
++- Keep validation offline in normal checks.
++- Preserve secret-redaction and bounded-error-output behavior.
++
++Acceptance gate:
++
++- `bun run beep ai-sync check --json` reports all five files.
++- `bun run --cwd packages/tooling/library/ai-sync check` validates all
++  mandatory files or delegates to an equivalent package-local helper.
++- `bun run check` includes the broadened dogfood gate.
++
++## V2.3 Reports And Interop Evidence
++
++Status: pending.
++
++- Add schema-first report models for audit, validation, drift, refresh, and
++  compatibility evidence.
++- Add rulesync config/MCP import or audit evidence only for schema-backed
++  surfaces already represented in V1 source metadata.
++- Keep ruler as research and mapping evidence in V2; do not promise a supported
++  ruler parser.
++- Record mapping losses explicitly so V3 native emission can build from tested
++  evidence.
++
++Acceptance gate:
++
++- Rulesync evidence tests cover supported and lossy/declined mappings.
++- Ruler evidence is documented as research-only.
++- Reports identify unsupported, N/A, and `unknown_schema` cells without
++  accepting them as finished support.
++
++## V2.4 Drift Auto-PR
++
++Status: pending.
++
++- Add `.github/workflows/ai-sync-drift.yml`.
++- Trigger weekly and via `workflow_dispatch`.
++- Refresh generated AI-sync artifacts through the root CLI.
++- Run:
++  - `bun run --cwd packages/tooling/library/ai-sync check`
++  - `bun run --cwd packages/tooling/library/ai-sync test`
++  - `bun run check`
++  - `git diff --check`
++- Use the existing scheduled PR pattern from `.github/workflows/data-sync.yml`.
++- Open/update an automation PR only when a diff exists.
++- Do not route through Yeet publish while Yeet remains proof-mode.
++
++Acceptance gate:
++
++- A dry run with known drift sources produces a report naming the moved source
++  ids and prepares the expected generated artifact diff.
++- The workflow skips PR creation when no diff exists.
++
++## V2.5 Closeout
++
++Status: pending.
++
++- Archive V2 closeout evidence under `history/outputs/`.
++- Update `README.md`, `PLAN.md`, and `ops/manifest.json` from V2 active to V2
++  complete.
++- Leave V3 planned unless V3 work begins in the same branch.
++
++Required V2 checks:
++
++```sh
++test "$(wc -m < goals/unified-ai-toolchain/GOAL.md)" -le 4000
++jq . goals/unified-ai-toolchain/ops/manifest.json
++bun run beep ai-sync audit --json
++bun run beep ai-sync check --json
++bun run beep ai-sync drift --strict --json
++bun run --cwd packages/tooling/library/ai-sync check
++bun run --cwd packages/tooling/library/ai-sync test
++bun run check
++git diff --check -- goals/unified-ai-toolchain packages/tooling/library/ai-sync packages/tooling/tool/cli .github/workflows
++```
++
++## V3.1 Canonical Models
++
++Status: planned.
++
++- Add schema-first canonical per-domain models in `@beep/ai-sync`.
++- Cover instructions/rules, skills, commands, hooks, plugins, MCP servers, and
++  config/profile data.
++- Model finite cases as discriminated unions.
++- Keep native schemas separate from canonical models.
++
++Acceptance gate:
++
++- Current native repo files import into canonical values.
++- Lossy mappings are explicit and tested.
++- Unknown native cells decline with typed errors.
++
++## V3.2 Canonical Source
++
++Status: planned.
++
++- Introduce `.ai-sync/project.jsonc` as the committed canonical source.
++- Decode it through canonical schemas.
++- Add import/report commands that show how current native files map into this
++  file before any native writing exists.
++
++Acceptance gate:
++
++- `.ai-sync/project.jsonc` decodes.
++- Import fixtures produce stable canonical JSONC.
++- The file path is documented in README, SPEC, and CLI help.
++
++## V3.3 Native Plan/Apply
++
++Status: planned.
++
++- Add dry-run native emission plans with target paths, diffs, validation, and
++  loss reports.
++- Add explicit apply commands that write only selected paths.
++- Prove apply in temp directories before real checkout writes are allowed.
++
++Acceptance gate:
++
++- Plan mode is default and read-only.
++- Apply mode validates emitted files against native schemas.
++- Conflicts with existing hand-authored files are reported before writes.
++
++## V3.4 Current-Matrix Emitters
++
++Status: planned.
++
++- Implement native emitters for Claude Code, Codex, Grok Build, JetBrains AI
++  Assistant, and Junie.
++- Decline emission for unsupported and `unknown_schema` cells.
++- Preserve lossy/lossless metadata through native emission reports.
++
++Acceptance gate:
++
++- Each supported emitter has round-trip or import-plan-apply validation tests.
++- No emitter invents undocumented Grok-native shapes.
++
++## V3b Expansion
++
++Status: planned.
++
++- Refresh public source maps before selecting additional agents.
++- Candidate agents must pass evidence criteria from [SPEC.md](./SPEC.md).
++- Add a bounded batch only after current-matrix emitters are green.
++
++Acceptance gate:
++
++- Expansion candidates are selected from current public evidence.
++- Unsupported or undocumented surfaces remain declined instead of guessed.
+diff --git a/goals/unified-ai-toolchain/history/outputs/v2-v3-bootstrap.md b/goals/unified-ai-toolchain/history/outputs/v2-v3-bootstrap.md
+new file mode 100644
+index 0000000000..a4946916f3
+--- /dev/null
++++ b/goals/unified-ai-toolchain/history/outputs/v2-v3-bootstrap.md
+@@ -0,0 +1,80 @@
++# V2/V3 Bootstrap
++
++## Status
++
++Complete.
++
++## Date
++
++2026-06-07
++
++## Purpose
++
++This output records the decision pass that reopened the V1-complete
++`unified-ai-toolchain` packet for V2 and V3 execution.
++
++V1 remains complete: `@beep/ai-sync` exists as a tooling library with native
++schemas, source metadata, drift checks, transform evidence, and `.codex`
++dogfooding.
++
++V2 becomes the active implementation target. V3 is planned as the production
++sync/emission target.
++
++## Decisions
++
++- Reopen the existing packet in place instead of creating separate V2/V3 child
++  packets.
++- Add `GOAL.md` as the compact `/goal` launcher required for execution-capable
++  packets.
++- Keep reusable schema, drift, validation, and transform primitives in
++  `packages/tooling/library/ai-sync`.
++- Put V2 operator behavior in the existing root repo CLI as
++  `bun run beep ai-sync ...`.
++- Expose V2 commands: `audit`, `check`, `drift`, and `refresh-pr`.
++- Make V2 validate all currently registered repo agent config files:
++  `.codex/config.toml`, `.mcp.json`, `.claude/settings.json`, `AGENTS.md`, and
++  `CLAUDE.md`.
++- Use schema-first JSON reports plus human summaries for V2 outputs.
++- Add V2 scheduled weekly plus manual-dispatch drift refresh PR automation.
++- Use the existing data-sync workflow pattern for Auto-PR; do not depend on
++  Yeet publish while Yeet remains proof-mode.
++- Include rulesync schema-backed config/MCP import and audit evidence in V2.
++- Keep ruler as research/mapping evidence in V2, not a supported parser.
++- Use canonical per-domain schema models in V3.
++- Introduce `.ai-sync/project.jsonc` as the V3 committed canonical source file.
++- Make V3 native emission plan-first and apply-explicit.
++- Ship V3 emitters for the current five target agents before V3b additional
++  agent expansion.
++- Make V3b expansion research-gated against fresh public sources.
++
++## Current Drift Snapshot
++
++The strict drift check was observed to report moved source hashes for:
++
++- `claude-code-settings`
++- `rulesync-config`
++- `rulesync-mcp`
++
++V2 should be able to refresh this class of drift through the scheduled/manual
++Auto-PR lane.
++
++## Packet Changes
++
++- `README.md`: reframed status as V1 complete, V2 active, V3 planned.
++- `SPEC.md`: added V2/V3 scope, boundaries, data products, and completion
++  criteria.
++- `PLAN.md`: replaced P6+ with versioned V2/V3 phases.
++- `GOAL.md`: added compact execution launcher.
++- `ops/manifest.json`: refreshed lifecycle, launcher metadata, phases, checks,
++  known gaps, and next action.
++
++## Verification
++
++Packet-shape verification for this bootstrap:
++
++```sh
++test "$(wc -m < goals/unified-ai-toolchain/GOAL.md)" -le 4000
++jq . goals/unified-ai-toolchain/ops/manifest.json
++rg -n "V2|V3|GOAL.md|agentLaunchers|packetAnchorDocument" goals/unified-ai-toolchain
++git diff --check -- goals/unified-ai-toolchain
++```
+diff --git a/goals/unified-ai-toolchain/ops/manifest.json b/goals/unified-ai-toolchain/ops/manifest.json
+index a63822be20..4d6a4d72cd 100644
+--- a/goals/unified-ai-toolchain/ops/manifest.json
++++ b/goals/unified-ai-toolchain/ops/manifest.json
+@@ -3,26 +3,51 @@
+   "initiative": {
+     "id": "unified-ai-toolchain",
+     "title": "Unified AI Toolchain",
+-    "status": "v1-complete",
++    "status": "v2-active",
+     "created": "2026-05-22",
+-    "updated": "2026-05-23",
++    "updated": "2026-06-07",
+     "packetAnchorDocument": "SPEC.md"
+   },
+-  "currentSourceOfTruth": "SPEC.md",
+-  "currentTargetPhase": "P6+",
+-  "completionEvidence": "schema library plus drift checks plus beep-effect dogfooding validation during bun run check",
++  "packetPath": "goals/unified-ai-toolchain",
++  "lifecycle": "active",
++  "executionCapable": true,
++  "currentSourceOfTruth": [
++    "AGENTS.md",
++    "CLAUDE.md",
++    "goals/unified-ai-toolchain/README.md",
++    "goals/unified-ai-toolchain/SPEC.md",
++    "goals/unified-ai-toolchain/PLAN.md",
++    "goals/unified-ai-toolchain/GOAL.md",
++    "goals/unified-ai-toolchain/ops/manifest.json"
++  ],
++  "currentTargetPhase": "V2.1",
++  "agentLaunchers": [
++    {
++      "kind": "codex-goal",
++      "path": "GOAL.md",
++      "targetChars": 3500,
++      "maxChars": 4000,
++      "command": "/goal follow the instructions in goals/unified-ai-toolchain/GOAL.md"
++    }
++  ],
+   "targets": {
+-    "package": "packages/tooling/library/ai-sync",
++    "schemaLibrary": "packages/tooling/library/ai-sync",
++    "operatorCli": "packages/tooling/tool/cli",
+     "publishedPackage": "@beep/ai-sync",
++    "rootCommandGroup": "bun run beep ai-sync",
++    "canonicalConfig": ".ai-sync/project.jsonc",
+     "dogfoodRepo": "beep-effect"
+   },
+   "defaults": {
+     "artifactFamily": "tooling",
+     "artifactKind": "library",
++    "operatorFamily": "tooling",
++    "operatorKind": "tool",
+     "schemaRuntime": "effect-schema",
+     "codegenPrecedent": "@beep/acp",
+     "validationPosture": "offline-local-by-default",
+-    "driftPosture": "tiered-pins-and-semantic-field-diff"
++    "driftPosture": "tiered-pins-and-semantic-field-diff",
++    "nativeEmissionPosture": "plan-first-explicit-apply"
+   },
+   "v1Completion": {
+     "status": "complete",
+@@ -40,119 +65,186 @@
+       "validate at least one real beep-effect agent config during bun run check",
+       "record deliberate invalid-config failure evidence"
+     ],
+-    "remainingGates": [],
+-    "nonBlockingFollowUps": [
+-      "P6+ CLI tool",
+-      "P6+ ruler/rulesync interoperability layer",
+-      "P6+ reverse-roundtrip emission",
+-      "P6+ additional agents"
++    "remainingGates": []
++  },
++  "v2Completion": {
++    "status": "active",
++    "activeGate": "V2.1 Operator CLI",
++    "closedGates": [
++      "V2/V3 packet bootstrap"
++    ],
++    "remainingGates": [
++      "root beep ai-sync command group",
++      "all registered repo agent config files validated during normal checks",
++      "schema-first JSON reports and human summaries",
++      "rulesync config/MCP audit-import evidence",
++      "weekly/manual drift refresh Auto-PR workflow",
++      "V2 closeout evidence"
++    ]
++  },
++  "v3Completion": {
++    "status": "planned",
++    "activeGate": null,
++    "remainingGates": [
++      "canonical per-domain models",
++      ".ai-sync/project.jsonc canonical source",
++      "native dry-run emission plans",
++      "explicit apply workflow",
++      "current-matrix native emitters",
++      "research-gated V3b additional-agent expansion"
+     ]
+   },
+   "owningSurfaces": {
+     "schemaLibrary": "packages/tooling/library/ai-sync",
++    "operatorCli": "packages/tooling/tool/cli",
+     "codegenPrecedent": "packages/drivers/acp/scripts/generate.ts",
+     "rootCheckIntegration": "root package scripts and check pipeline",
++    "workflowPrecedent": ".github/workflows/data-sync.yml",
+     "goalPacket": "goals/unified-ai-toolchain"
+   },
+   "phases": [
+     {
+-      "id": "P0",
+-      "name": "Initiative Bootstrap And Current State",
++      "id": "P0-P5",
++      "name": "V1 Schema Truth Layer",
+       "status": "complete",
+-      "output": "history/outputs/p0-current-state.md"
++      "version": "V1",
++      "outputs": [
++        "history/outputs/p0-current-state.md",
++        "history/outputs/p1-source-of-truth-pinning-and-tier-1-codegen.md",
++        "history/outputs/p2-tier-2-semantic-field-diff-schemas.md",
++        "history/outputs/p3-drift-detection-pipeline.md",
++        "history/outputs/p4-cross-agent-transforms.md",
++        "history/outputs/p5-first-real-consumer.md"
++      ]
+     },
+     {
+-      "id": "P1",
+-      "name": "Source-of-Truth Pinning And Tier-1 Codegen",
++      "id": "V2.0",
++      "name": "Bootstrap V2 And V3 Packet",
+       "status": "complete",
+-      "output": "history/outputs/p1-source-of-truth-pinning-and-tier-1-codegen.md"
++      "version": "V2",
++      "output": "history/outputs/v2-v3-bootstrap.md"
+     },
+     {
+-      "id": "P2",
+-      "name": "Tier-2 Semantic-Field-Diff Schemas",
+-      "status": "complete",
+-      "output": "history/outputs/p2-tier-2-semantic-field-diff-schemas.md"
++      "id": "V2.1",
++      "name": "Operator CLI",
++      "status": "pending",
++      "version": "V2"
+     },
+     {
+-      "id": "P3",
+-      "name": "Drift Detection Pipeline",
+-      "status": "complete",
+-      "output": "history/outputs/p3-drift-detection-pipeline.md"
++      "id": "V2.2",
++      "name": "Broad Dogfood",
++      "status": "pending",
++      "version": "V2"
+     },
+     {
+-      "id": "P4",
+-      "name": "Cross-Agent Transforms",
+-      "status": "complete",
+-      "output": "history/outputs/p4-cross-agent-transforms.md"
++      "id": "V2.3",
++      "name": "Reports And Interop Evidence",
++      "status": "pending",
++      "version": "V2"
+     },
+     {
+-      "id": "P5",
+-      "name": "First Real Consumer",
+-      "status": "complete",
+-      "v1Blocking": true,
+-      "output": "history/outputs/p5-first-real-consumer.md"
++      "id": "V2.4",
++      "name": "Drift Auto-PR",
++      "status": "pending",
++      "version": "V2"
+     },
+     {
+-      "id": "P6+",
+-      "name": "Non-V1-Blocking Follow-Ups",
++      "id": "V2.5",
++      "name": "V2 Closeout",
+       "status": "pending",
+-      "v1Blocking": false,
+-      "output": "history/outputs/p6-plus-follow-ups.md",
+-      "subphases": [
+-        {
+-          "id": "P6a",
+-          "name": "CLI Tool",
+-          "status": "pending",
+-          "v1Blocking": false
+-        },
+-        {
+-          "id": "P6b",
+-          "name": "Ruler And Rulesync Interoperability",
+-          "status": "pending",
+-          "v1Blocking": false
+-        },
+-        {
+-          "id": "P6c",
+-          "name": "Reverse Roundtrip Emission",
+-          "status": "pending",
+-          "v1Blocking": false
+-        },
+-        {
+-          "id": "P6d",
+-          "name": "Additional Agents",
+-          "status": "pending",
+-          "v1Blocking": false
+-        }
+-      ]
++      "version": "V2"
++    },
++    {
++      "id": "V3.1",
++      "name": "Canonical Models",
++      "status": "planned",
++      "version": "V3"
++    },
++    {
++      "id": "V3.2",
++      "name": "Canonical Source",
++      "status": "planned",
++      "version": "V3"
++    },
++    {
++      "id": "V3.3",
++      "name": "Native Plan And Apply",
++      "status": "planned",
++      "version": "V3"
++    },
++    {
++      "id": "V3.4",
++      "name": "Current-Matrix Emitters",
++      "status": "planned",
++      "version": "V3"
++    },
++    {
++      "id": "V3b",
++      "name": "Research-Gated Additional Agents",
++      "status": "planned",
++      "version": "V3"
+     }
+   ],
+   "commandGates": [
+     {
+-      "id": "root-check",
+-      "command": "bun run check"
++      "id": "goal-launcher-size",
++      "command": "test \"$(wc -m < goals/unified-ai-toolchain/GOAL.md)\" -le 4000"
++    },
++    {
++      "id": "manifest-json",
++      "command": "jq . goals/unified-ai-toolchain/ops/manifest.json"
++    },
++    {
++      "id": "ai-sync-audit-json",
++      "command": "bun run beep ai-sync audit --json"
+     },
+     {
+-      "id": "ai-sync-check",
++      "id": "ai-sync-check-json",
++      "command": "bun run beep ai-sync check --json"
++    },
++    {
++      "id": "ai-sync-drift-strict-json",
++      "command": "bun run beep ai-sync drift --strict --json"
++    },
++    {
++      "id": "ai-sync-package-check",
+       "command": "bun run --cwd packages/tooling/library/ai-sync check"
+     },
+     {
+-      "id": "ai-sync-generate",
+-      "command": "bun run --cwd packages/tooling/library/ai-sync generate"
++      "id": "ai-sync-package-test",
++      "command": "bun run --cwd packages/tooling/library/ai-sync test"
+     },
+     {
+-      "id": "ai-sync-drift-strict",
+-      "command": "bun run --cwd packages/tooling/library/ai-sync drift --strict"
++      "id": "root-check",
++      "command": "bun run check"
+     },
+     {
+-      "id": "ai-sync-dogfood",
+-      "command": "bun run --cwd packages/tooling/library/ai-sync validate -- --repo-root ../../../.. --config .codex/config.toml"
++      "id": "diff-check",
++      "command": "git diff --check -- goals/unified-ai-toolchain packages/tooling/library/ai-sync packages/tooling/tool/cli .github/workflows"
+     }
+   ],
++  "verificationCommands": [
++    "test \"$(wc -m < goals/unified-ai-toolchain/GOAL.md)\" -le 4000",
++    "jq . goals/unified-ai-toolchain/ops/manifest.json",
++    "rg -n \"V2|V3|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/unified-ai-toolchain",
++    "git diff --check -- goals/unified-ai-toolchain"
++  ],
+   "knownGaps": [
++    "Strict drift was observed to report moved hashes for claude-code-settings, rulesync-config, and rulesync-mcp",
+     "Grok Build hook event schemas, plugin manifest schema, and Grok-native MCP shape are undocumented and must remain unknown_schema until evidence exists",
+     "JetBrains AI Assistant has no repo-committed Skills or Hooks concept",
+     "Junie Hooks and Plugins are not V1 repo-committed concepts",
+-    "P6+ operator CLI, adapter interoperability, reverse-roundtrip emission, and additional agents are deferred"
++    "V2 does not write native agent files",
++    "V2 parses rulesync schema-backed config/MCP evidence but keeps ruler as research-only",
++    "V3b additional-agent expansion requires fresh source-map research before selecting candidates"
++  ],
++  "stopConditions": [
++    "Implementation starts modeling an undocumented native schema from guesswork.",
++    "V2 work starts writing native agent files instead of reporting or refreshing generated metadata.",
++    "The Auto-PR workflow is routed through Yeet publish while Yeet remains proof-mode.",
++    "Validation or reports would print raw secrets, bearer tokens, raw headers, private home paths, or full instruction documents.",
++    "Additional-agent support starts before current-matrix V3 emitters are production-ready.",
++    "Required source files are missing or materially contradictory."
+   ],
+-  "nextAction": "Open a deliberate P6+ follow-up if operator workflows, adapter interoperability, reverse-roundtrip emission, or additional agents become active scope."
++  "nextAction": "Implement V2.1 Operator CLI in @beep/repo-cli, backed by @beep/ai-sync report and validation primitives."
+ }
