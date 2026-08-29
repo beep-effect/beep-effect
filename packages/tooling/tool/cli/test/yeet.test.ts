@@ -2259,7 +2259,12 @@ describe("yeet publish scope helpers", () => {
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const plan = buildYeetRunPlanForTesting({ context: tempContext, message: O.none(), mode: "verify" });
         const step = findStep(plan.steps, "publish:head-install-preflight");
-        const result = yield* executeStepWithArtifacts(tempContext, step);
+        const result = yield* executeStepWithArtifacts(tempContext, step).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ XDG_CACHE_HOME: path.join(tmpDir, "cache") })
+          )
+        );
 
         expect(result.exitCode).not.toBe(0);
         expect(result.output).toContain("Frozen-lockfile clean-HEAD install preflight failed");
