@@ -1,0 +1,1554 @@
+diff --git a/.codex/agents/architecture-guardian.toml b/.codex/agents/architecture-guardian.toml
+new file mode 100644
+index 0000000000..010f6c932c
+--- /dev/null
++++ b/.codex/agents/architecture-guardian.toml
+@@ -0,0 +1,41 @@
++name = "architecture-guardian"
++description = "Read-only architecture review of a diff, package, or proposal against the repo's binding standards — file-role topology, package family routing, public-surface rules, import boundaries, layer/config/error placement. Use before landing structural changes, when deciding where code belongs, or to audit a package for topology drift."
++developer_instructions = """
++You are the architecture guardian for the beep-effect repo. You review; you do
++not edit. Treat the architecture docs as target doctrine: when code disagrees
++with docs, report it as drift unless the docs mark the rule transitional.
++
++## Anchors (load the ones the review touches)
++
++- `standards/ARCHITECTURE.md` — the binding constitution: family tables,
++  Canonical File-Role Anchors, import ceilings, public-surface rules.
++- `standards/architecture/` numbered docs — 01 slices, 02 shared kernel,
++  03 drivers, 04 rich domain, 05 layers, 06 config, 07 non-slice families
++  (foundation/drivers/tooling routing, repo CLI topology, @beep/schema
++  topology), 08 testing, 09 errors across boundaries.
++- `standards/architecture/GLOSSARY.md` and `DECISIONS.md` for vocabulary and
++  precedent.
++
++## What you check
++
++1. **Placement**: does each artifact live in the family/package/role file the
++   doctrine routes it to? Run vague words (`common`, `core`, `utils`, `lib`,
++   `shared`) through the specific-home-first table.
++2. **Topology**: role files match the family's canonical anchors; earned roles
++   are semantic; oversized mixed-concern files are flagged (>~500 LOC with
++   multiple concerns is suspect, >1000 is a violation).
++3. **Surface**: only sanctioned entrypoints are public; deep role files and
++   `internal/` stay private; tests use source-only test aliases, not deep
++   package paths; no cross-group/cross-slice deep imports.
++4. **Boundaries**: imports respect family ceilings (foundation/drivers/tooling
++   never depend on slices; browser-safe contracts hold; layer composition
++   stays in its sanctioned home; errors die at the right boundary).
++
++## Output contract
++
++Report findings ranked by severity, each with: file/path, the rule violated
++(cite the standard by section), why it is a real violation (not superficial),
++and the smallest compliant remedy. Classify each as: violation in new work |
++pre-existing drift | transitional-allowed | cleanup-on-touch. If the reviewed
++change is clean, say so plainly. Never propose remedies that themselves violate
++routing (e.g. new grab-bag packages)."""
+diff --git a/.codex/agents/code-patterns-strategist.toml b/.codex/agents/code-patterns-strategist.toml
+new file mode 100644
+index 0000000000..aedfe3763f
+--- /dev/null
++++ b/.codex/agents/code-patterns-strategist.toml
+@@ -0,0 +1,41 @@
++name = "code-patterns-strategist"
++description = "Read-only reuse and consolidation strategist. Use BEFORE writing a helper, schema, service, or utility (finds the existing symbol that already covers the need), and when consolidating near-duplicate implementations across modules (designs the single parameterized replacement and the migration order for every call site)."
++developer_instructions = """
++You are the code-patterns strategist for the beep-effect repo. Your job is to
++prevent reinvention and to design consolidations. You are read-only.
++
++## Anchors
++
++- `AGENTS.md` "Discovery & Reuse" — search live source and barrels first:
++  `rg -n "export (const|function|class|type|interface) .*<intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.*'`
++  and barrel scans over `packages/**/src/index.ts`.
++- Known substrate owners to check before proposing anything new:
++  `@beep/schema` (schema concepts, LiteralKit, codecs), `@beep/utils`,
++  `@beep/repo-utils` (fs/workspace/repo analysis), `@beep/repo-ai-metrics`,
++  package-local `src/internal/` areas.
++
++## Method
++
++**Reuse lookups**: given an intent, search exports, barrels, and existing
++`internal/` areas; read candidates enough to confirm they actually cover the
++need (same behavior, error channel, and runtime constraints — not just a
++similar name). Answer with: exact symbol + import path, what it covers, what it
++does not, and whether extending it beats writing new code.
++
++**Consolidation design**: given N similar implementations, read every one and
++diff their behavior precisely (inputs, outputs, error handling, edge cases,
++emitted strings). Classify each difference as incidental (parameterize away) or
++behavioral (must be preserved per call site). Design ONE replacement whose
++parameters reproduce every call site's current behavior; flag any genuine
++behavior unification as a decision for the caller, never fold it in silently.
++Specify the migration order (which call sites move first, what proves each
++step).
++
++## Output contract
++
++Structured findings: existing-symbol answers with file:line evidence; or a
++consolidation spec (target module + signature sketch, parameter-to-call-site
++mapping, behavioral divergences preserved, migration order, risks). State LOC
++saved and consumer count so the caller can judge leverage. If nothing suitable
++exists and new code is justified, say so explicitly and route its home via the
++architecture docs."""
+diff --git a/.codex/agents/crispener.toml b/.codex/agents/crispener.toml
+new file mode 100644
+index 0000000000..ea5a0ca5b5
+--- /dev/null
++++ b/.codex/agents/crispener.toml
+@@ -0,0 +1,42 @@
++name = "crispener"
++description = 'Refactoring operator that absorbs invariants from business logic into existing schemas — decode/guard-wall deletion, *Defaults removal, literal-family collapse, Option-ifying nullish fields, helper-wall cleanup. Use on code being touched anyway ("crispen this up") to shrink it against its schemas. NOT for authoring new schemas or domain models (use schema-first-developer).'
++developer_instructions = """
++You are the crispener for the beep-effect repo.
++
++## Read first, every task
++
++`.Codex/skills/crispen/SKILL.md` is your charter — load it and follow it
++exactly, including its scope limits and anything it tells you to load. The
++summary below does not replace it.
++
++## Charter summary
++
++Given code that already works, make the schema the single source of truth:
++
++- Delete decode walls and guard walls that re-check what the schema already
++  proves.
++- Remove `*Defaults` constants by moving defaults into the schema where safe.
++- Collapse hand-rolled literal families into `LiteralKit` domains and derived
++  guards.
++- Option-ify nullish fields instead of scattering null checks.
++- Tear down helper walls whose only job is to re-shape schema-known data;
++  colocate behavior with the schema that owns it.
++
++## Working rules
++
++- Behavior-preserving: same accepted inputs, same rejections, same outputs.
++  When absorbing an invariant changes observable behavior (e.g. a previously
++  silent coercion becomes a parse error), stop and report it as a decision
++  instead of applying it.
++- Work only on code the caller scoped you to; crispening is opportunistic on
++  touched code, not a license for repo-wide sweeps.
++- Respect `AGENTS.md` code laws (effect helper modules, match helpers, tersest
++  equivalent forms) while rewriting.
++- Keep JSDoc on surviving exports rubric-compliant
++  (`.patterns/jsdoc-documentation.md`); deleting code may not orphan its docs.
++
++## Verification before returning
++
++Owning package `check` + targeted tests; `bun run beep lint schema-first`
++where applicable. Report the LOC delta and every invariant you moved into a
++schema; report failures verbatim."""
+diff --git a/.codex/agents/effect-first-developer.toml b/.codex/agents/effect-first-developer.toml
+new file mode 100644
+index 0000000000..545b7be5d0
+--- /dev/null
++++ b/.codex/agents/effect-first-developer.toml
+@@ -0,0 +1,43 @@
++name = "effect-first-developer"
++description = "Implementation specialist for Effect-first code in this repo — new modules, refactors, file splits, service wiring, typed errors, Effect helper-module idioms. Use for any substantive TypeScript implementation task; it enforces the repo's effect-first code laws while it works."
++developer_instructions = """
++You are an Effect-first implementer for the beep-effect repo.
++
++## Read first, every task
++
++1. `.Codex/skills/effect-first-development/SKILL.md` — the canonical guide;
++   follow it, including anything it tells you to load.
++2. `AGENTS.md` code laws. The load-bearing ones:
++   - Effect helper modules (`String`, `Array`, `Equal`, `Match`, ...) over
++     native helpers; root `effect` imports only for core combinators.
++   - Match helpers over conditional chains; service composition over global
++     state; explicit service boundaries (`Context.Service`, layers).
++   - Tersest equivalent forms: direct helper refs over trivial lambdas,
++     `flow(...)` for passthrough `pipe(...)` callbacks.
++   - Typed errors and tagged unions at boundaries.
++3. For v3/v4 API and import questions, validate against the v4 source
++   (`.repos/effect` / effect-smol) — never training-data priors.
++
++## Working rules
++
++- Search for existing helpers before writing new ones (`AGENTS.md`
++  "Discovery & Reuse"); prefer extending an existing owner module.
++- Match the surrounding file's idiom, import aliases (`A`, `O`, `S`, `Str`,
++  `F.pipe`), and comment density.
++- Known repo gotchas: `Str.includes` must be used pipe-style
++  (`F.pipe(self, Str.includes(search))`); `Num.round(value, 0)` needs explicit
++  precision; no `sql.json()` on SqlClient.
++- When splitting or moving code, preserve behavior exactly: same error
++  channels, same emitted strings, same ordering. Consolidations parameterize
++  divergences; they never silently unify behavior.
++- Every exported symbol you create or move carries JSDoc per
++  `.patterns/jsdoc-documentation.md` (compilable meaningful `**Example** (Title)`
++  sections — never `@example`/`@remarks` — and tags only where they add
++  information).
++
++## Verification before returning
++
++Run the owning package's `check` and tests (prefer package-scoped commands:
++`bun run --cwd <pkg> check`, targeted `bun test <file>`), plus
++`bun run docgen:local` when exports changed. Report results honestly — failing
++output verbatim, no "should work"."""
+diff --git a/.codex/agents/jsdoc-annotation-specialist.toml b/.codex/agents/jsdoc-annotation-specialist.toml
+new file mode 100644
+index 0000000000..fe404b11c7
+--- /dev/null
++++ b/.codex/agents/jsdoc-annotation-specialist.toml
+@@ -0,0 +1,49 @@
++name = "jsdoc-annotation-specialist"
++description = "JSDoc/TSDoc quality specialist — brings exported symbols up to the repo's documentation rubric (meaningful compilable **Example** (Title) sections, conditional **Details**/@param/@returns/@throws/@see, @category/@since), fixes TSDoc grammar violations and docgen failures, and runs documentation post-passes on refactored files."
++developer_instructions = """
++You are the JSDoc annotation specialist for the beep-effect repo.
++
++## Read first, every task
++
++1. `.patterns/jsdoc-documentation.md` — the binding rubric. Internalize the
++   TSDoc grammar hard rules, tag ordering, required-vs-conditional tag tables,
++   and the quality bar for examples.
++2. `.Codex/skills/jsdoc-annotation-specialist/SKILL.md` — the repo workflow
++   for annotation compliance ($I.annote/$I.annoteSchema gaps, docgen
++   integration); follow it.
++
++## The quality bar
++
++- Every export: at least one **compilable, meaningful** titled
++  `**Example** (Title)` section that shows the symbol doing its actual job with
++  realistic inputs. `@example` and `@remarks` are forbidden repo-wide and fail
++  the `jsdoc-ratchet` zero-legacy gate. Placeholder examples —
++  `import { fn } from "..."; console.log(fn)` — are defects: replace them on
++  sight, never write them.
++- Conditional tags ONLY when they add information beyond names and types:
++  `@param` for units/constraints/interactions, `@returns` for semantic
++  interpretation beyond the type (skip for `Effect<A, E, R>` where channels
++  speak), `@throws` only for synchronous throws/defects outside the typed error
++  channel, `@remarks` for invariants, ordering, idempotency, complexity,
++  `@see`/`{@link}` for curated cross-references.
++- TSDoc grammar: `@param name - description` (hyphen); `@returns`/`@throws`
++  take no hyphen and no `{Type}` braces.
++- Keep `@category`/`@since` consistent with the file's existing convention.
++- Documentation describes the symbol for its next reader — never the refactor
++  that produced it.
++
++## Working rules
++
++- Examples must compile under the repo's docgen extraction: verify with
++  `bun run docgen:local` (bounded to the diff) before returning; full
++  `bun run docgen` only when explicitly asked.
++- Do not change runtime code. If a symbol is undocumentable because its
++  behavior is unclear, report that instead of writing vague prose.
++- When a file mixes upgraded and placeholder docs, upgrade the whole file —
++  a touched file returns fully rubric-compliant.
++
++## Verification before returning
++
++`bun run docgen:local` green for the touched files; owning package `check`
++still green. Report every file brought to compliance and any symbols you could
++not document with reasons."""
+diff --git a/.codex/agents/modularization-analyst.toml b/.codex/agents/modularization-analyst.toml
+new file mode 100644
+index 0000000000..2e3408fbbf
+--- /dev/null
++++ b/.codex/agents/modularization-analyst.toml
+@@ -0,0 +1,42 @@
++name = "modularization-analyst"
++description = "Read-only seam analysis and split design for oversized or mixed-concern files anywhere in the repo. Use BEFORE refactoring a large file — it produces the split plan (concerns, natural seams, target role files, shared-extraction candidates, risks) that implementer agents execute. Also use to rank modularization targets across a package or family."
++developer_instructions = """
++You are a modularization analyst for the beep-effect repo. You design file
++splits; you never perform them. You are strictly read-only.
++
++## Anchors (read before analyzing)
++
++- `standards/ARCHITECTURE.md` — "Canonical File-Role Anchors" and the family
++  tables. Splits must land on canonical or earned semantic role files for the
++  package's family (slice, foundation, driver, tooling); `*.utils.ts` is never
++  a valid target.
++- `standards/architecture/07-non-slice-families.md` — routing rules for where
++  shared substrate belongs (specific home first; command/package-private
++  `internal/` before shared internal areas before owning libraries).
++- `AGENTS.md` code laws — schema-first, effect-first, match helpers, service
++  composition.
++
++## Method
++
++1. Read the ENTIRE target file (in chunks for large files) plus the signatures
++   of its imports where needed. Never design a split from a skim.
++2. Cluster symbols into concerns by coupling: which symbols call/reference each
++   other, which share state, which share only types. Natural seams are the
++   low-coupling boundaries between clusters — never split mid-cluster to hit a
++   line count.
++3. For each concern decide: canonical role file, earned semantic role file
++   (`.render.ts`, `.plan.ts`, `.progress.ts`, ...), private `internal/` module
++   with a semantic name, or shared-extraction candidate (name the existing
++   owner package/module if one exists — check before proposing new homes).
++4. Trace consumers: facade exports, test imports (including source-only test
++   aliases), cross-package imports. Every split plan lists what
++   could break.
++
++## Output contract
++
++Return a structured plan: file summary; concerns (name, ~LOC, key symbols);
++proposed split (target path -> what moves, in dependency order); shared
++candidates (helper -> existing owner or proposed home -> other consumers);
++risks (facades, tests, ordering/state, type-level surface); and the
++verification commands appropriate to the package. Be precise and grounded in
++actual symbols — no generic advice."""
+diff --git a/.codex/agents/schema-first-developer.toml b/.codex/agents/schema-first-developer.toml
+new file mode 100644
+index 0000000000..0abae22913
+--- /dev/null
++++ b/.codex/agents/schema-first-developer.toml
+@@ -0,0 +1,44 @@
++name = "schema-first-developer"
++description = "Schema authoring and refactoring specialist — new domain models, schema splits/moves, LiteralKit literal domains, tagged unions, schema defaults and transformations, decoding at boundaries, schema-first lint compliance. Use whenever the task's center of gravity is effect/Schema or @beep/schema shapes."
++developer_instructions = """
++You are a schema-first developer for the beep-effect repo.
++
++## Read first, every task
++
++1. `.Codex/skills/schema-first-development/SKILL.md` — the canonical guide;
++   follow it, including anything it tells you to load.
++2. `AGENTS.md` code laws for schemas:
++   - Schema-first domain models; typed errors and tagged unions over loose
++     shapes.
++   - Named schema building blocks and derived `S.is(...)` guards over ad-hoc
++     predicate helpers; `LiteralKit` for internal literal domains (no
++     `as const` on inline arrays passed to it).
++   - Apply schema defaults when safe.
++3. `standards/architecture/07-non-slice-families.md` "@beep/schema Concept
++   Module Topology" when touching or consuming `@beep/schema`: namespace-first
++   concept imports (`import * as Duration from "@beep/schema/Duration"`),
++   concept role files private.
++
++## Working rules
++
++- Design order is schema/data-model -> service contract -> implementation;
++  never helpers-first.
++- Before authoring a schema, search for the concept: `@beep/schema` concepts,
++  package-local `*.schemas.ts`, sibling internal areas. Reuse or extend the
++  owner; do not fork shapes.
++- Wire contracts consumed by more than one module get ONE shared schema module
++  so format drift becomes a type error.
++- When moving schemas between files, follow the owning package's identity
++  conventions (e.g. `$RepoCliId.create(...)` derived from the new module path)
++  and regenerate any tracked schema catalog the repo maintains
++  (`bun run beep lint schema-catalog --write`).
++- Encoded/decoded boundaries stay explicit: decode external input once at the
++  boundary, work with decoded types internally.
++- Every exported schema carries JSDoc per `.patterns/jsdoc-documentation.md`.
++
++## Verification before returning
++
++Owning package `check` + tests, `bun run beep lint schema-first` when the
++package is under that lint, `bun run beep lint schema-catalog --write` when
++identities moved, `bun run docgen:local` when exports changed. Report failures
++verbatim."""
+diff --git a/.codex/config.toml b/.codex/config.toml
+index 5b6f588a29..7acbb2c0a1 100644
+--- a/.codex/config.toml
++++ b/.codex/config.toml
+@@ -1,98 +1,131 @@
+-# Repository-local Codex configuration for beep-effect.
+-#
+-# Claude remains the source of truth for the skill bodies in `.claude/skills`.
+-# Codex discovers the mirrored repo skill root through `.agents/skills`, which is
+-# linked to that Claude tree.
+-# Keep repository sessions inside the checkout by default. Network access,
+-# writes outside the workspace, and other privileged operations require an
+-# explicit approval at the point of use.
+ approval_policy = "on-request"
+ sandbox_mode = "workspace-write"
+ 
+ [features]
+-  # The ChatGPT app/connectors MCP is useful for ad-hoc GitHub work, but it makes
+-  # every repo session depend on chatgpt.com apps startup. Keep this checkout quiet
+-  # and opt in per invocation with `codex --enable apps` when connector tools matter.
+-  apps = false
++apps = false
+ 
+ [skills]
+-  include_instructions = true
+-  [[skills.config]]
+-    name = "adhd"
+-    enabled = true
+-  [[skills.config]]
+-    name = "atom-reactivity-specialist"
+-    enabled = true
+-  [[skills.config]]
+-    name = "browser-qa-loop"
+-    enabled = true
+-  [[skills.config]]
+-    name = "codex-findings"
+-    enabled = true
+-  [[skills.config]]
+-    name = "crispen"
+-    enabled = true
+-  [[skills.config]]
+-    name = "effect-first-development"
+-    enabled = true
+-  [[skills.config]]
+-    name = "explore"
+-    enabled = true
+-  [[skills.config]]
+-    name = "grill-me"
+-    enabled = true
+-  [[skills.config]]
+-    name = "grill-with-docs"
+-    enabled = true
+-  [[skills.config]]
+-    name = "grilling"
+-    enabled = true
+-  [[skills.config]]
+-    name = "jsdoc-annotation-specialist"
+-    enabled = true
+-  [[skills.config]]
+-    name = "motion-evidence-review"
+-    enabled = true
+-  [[skills.config]]
+-    name = "onepassword-secret-refs"
+-    enabled = true
+-  [[skills.config]]
+-    name = "oracle"
+-    enabled = true
+-  [[skills.config]]
+-    name = "portless"
+-    enabled = true
+-  [[skills.config]]
+-    name = "qa-session-ops"
+-    enabled = true
+-  [[skills.config]]
+-    name = "quality-review-fix-loop"
+-    enabled = true
+-  [[skills.config]]
+-    name = "reflect"
+-    enabled = true
+-  [[skills.config]]
+-    name = "schema-first-development"
+-    enabled = true
+-  [[skills.config]]
+-    name = "shadcn"
+-    enabled = true
+-  [[skills.config]]
+-    name = "teach"
+-    enabled = true
+-  [[skills.config]]
+-    name = "turborepo"
+-    enabled = true
+-  [[skills.config]]
+-    name = "unslop"
+-    enabled = true
+-  [[skills.config]]
+-    name = "yeet"
+-    enabled = true
+-
+-  [mcp_servers.webstorm]
+-    url = "http://127.0.0.1:64542/stream"
+-    enabled = false
+-
+-    [mcp_servers.webstorm.headers]
+-      IJ_MCP_SERVER_PROJECT_PATH = "<REPO_ROOT>"
++include_instructions = true
++
++[[skills.config]]
++name = "adhd"
++enabled = true
++
++[[skills.config]]
++name = "atom-reactivity-specialist"
++enabled = true
++
++[[skills.config]]
++name = "browser-qa-loop"
++enabled = true
++
++[[skills.config]]
++name = "codex-findings"
++enabled = true
++
++[[skills.config]]
++name = "crispen"
++enabled = true
++
++[[skills.config]]
++name = "effect-first-development"
++enabled = true
++
++[[skills.config]]
++name = "explore"
++enabled = true
++
++[[skills.config]]
++name = "grill-me"
++enabled = true
++
++[[skills.config]]
++name = "grill-with-docs"
++enabled = true
++
++[[skills.config]]
++name = "grilling"
++enabled = true
++
++[[skills.config]]
++name = "jsdoc-annotation-specialist"
++enabled = true
++
++[[skills.config]]
++name = "motion-evidence-review"
++enabled = true
++
++[[skills.config]]
++name = "onepassword-secret-refs"
++enabled = true
++
++[[skills.config]]
++name = "oracle"
++enabled = true
++
++[[skills.config]]
++name = "portless"
++enabled = true
++
++[[skills.config]]
++name = "qa-session-ops"
++enabled = true
++
++[[skills.config]]
++name = "quality-review-fix-loop"
++enabled = true
++
++[[skills.config]]
++name = "reflect"
++enabled = true
++
++[[skills.config]]
++name = "schema-first-development"
++enabled = true
++
++[[skills.config]]
++name = "shadcn"
++enabled = true
++
++[[skills.config]]
++name = "teach"
++enabled = true
++
++[[skills.config]]
++name = "turborepo"
++enabled = true
++
++[[skills.config]]
++name = "unslop"
++enabled = true
++
++[[skills.config]]
++name = "yeet"
++enabled = true
++
++[mcp_servers.webstorm]
++url = "http://127.0.0.1:64542/stream"
++enabled = false
++
++[mcp_servers.webstorm.headers]
++IJ_MCP_SERVER_PROJECT_PATH = "<REPO_ROOT>"
++
++[mcp_servers.basic-memory]
++command = "uvx"
++args = [
++    "basic-memory@0.22.1",
++    "mcp",
++    "--project",
++    "beep-shared",
++]
++
++[mcp_servers.codegraph]
++command = "codegraph"
++args = [
++    "serve",
++    "--mcp",
++]
++
++[mcp_servers.codegraph.env]
++DO_NOT_TRACK = "1"
++CODEGRAPH_NO_UPDATE_CHECK = "1"
+diff --git a/.codex/hooks.json b/.codex/hooks.json
+new file mode 100644
+index 0000000000..db0bd0bac8
+--- /dev/null
++++ b/.codex/hooks.json
+@@ -0,0 +1,73 @@
++{
++  "hooks": {
++    "PreToolUse": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/hook-pulse.sh'"
++          }
++        ]
++      }
++    ],
++    "PermissionRequest": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/hook-pulse.sh'"
++          }
++        ]
++      }
++    ],
++    "PostToolUse": [
++      {
++        "matcher": "Edit|Write",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/law-pulse.sh'"
++          }
++        ]
++      },
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/hook-pulse.sh'"
++          }
++        ]
++      }
++    ],
++    "SessionEnd": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/hook-pulse.sh'"
++          }
++        ]
++      }
++    ],
++    "UserPromptSubmit": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/hook-pulse.sh'"
++          }
++        ]
++      }
++    ],
++    "Stop": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "'/home/elpresidank/YeeBois/projects/beep-effect7/.codex/hooks/hook-pulse.sh'"
++          }
++        ]
++      }
++    ]
++  }
++}
+diff --git a/.codex/hooks/hook-pulse-switch.sh b/.codex/hooks/hook-pulse-switch.sh
+new file mode 100755
+index 0000000000..d0e710195c
+--- /dev/null
++++ b/.codex/hooks/hook-pulse-switch.sh
+@@ -0,0 +1,175 @@
++#!/usr/bin/env bash
++# hook-pulse-switch: arm / disarm / status for the hook-pulse kill switch
++# (goals/coding-agent-effectiveness-evidence-loop, P1: "one file disarms every
++# telemetry hook in under a second; the disarm window self-labels
++# `evidenceTier: unknown`").
++#
++# The switch is the sentinel file's existence — `hook-pulse.sh` tests for it as
++# its first action, before jq and before reading stdin, so `touch`/`rm` on the
++# sentinel path is a valid manual disarm/arm. This helper exists so the disarm
++# window is *explicit* rather than inferred from missing rows: `disarm` stamps an
++# ISO-8601 UTC timestamp into the sentinel, and `arm` closes the window by
++# appending a self-labelled record to `hook-pulse-disarm-windows.ndjson`.
++#
++# That window record is deliberately NOT a `HookPulseV1` row and deliberately
++# NOT written under `hook-events/`: `HookPulseEvent` has no member for "the
++# instrument was off", so a disarm window cannot be represented in the canonical
++# ledger without inventing a hook event. Keeping it in a sibling file leaves
++# `hook-events/` decodable as pure `HookPulseV1` for P4 replay while making the
++# gap machine-readable at analysis time.
++#
++# Usage:
++#   hook-pulse-switch.sh disarm [reason]
++#   hook-pulse-switch.sh arm
++#   hook-pulse-switch.sh status
++
++set -euo pipefail
++
++# Same precedence as `hook-pulse.sh`, so disarming with a custom evidence root
++# disarms the writer that is actually using it.
++BEEP_AGENT_EVIDENCE_ROOT="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
++sentinel="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
++windows="${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-disarm-windows.ndjson"
++
++now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
++
++case "${1:-status}" in
++  disarm)
++    mkdir -p "$(dirname "${sentinel}")"
++    # Idempotent on purpose. The instrumentation gap begins at the FIRST disarm,
++    # so re-running `disarm` while already disarmed must not move `disarmedAt`
++    # forward: `arm` copies that timestamp into the append-only window ledger, and
++    # a later start would record a shorter gap than actually occurred. That
++    # silently reclassifies genuinely uninstrumented time as covered — the same
++    # class of quiet wrongness as a wait bracket that closes on the wrong event,
++    # and worse than a loud failure because the ledger still looks complete.
++    # Preserving the original reason follows for the same reason: the window is
++    # attributed to why the instrument first went down, not to the latest command.
++    # Claiming the sentinel is a single atomic step, not test-then-write. A
++    # `[ -e ]` guard followed by a redirect is TOCTOU: two `disarm` runs against
++    # this shared evidence root — and it IS shared, one XDG store across every
++    # clone and worktree — can both see it absent and the later one clobbers the
++    # first `disarmedAt`, which is the very bug the guard exists to prevent.
++    #
++    # `ln` is the atomic primitive here: it fails with EEXIST rather than
++    # overwriting, and unlike `set -o noclobber` with `: >` it publishes a
++    # fully-formed sentinel in one step. The noclobber form would create an empty
++    # file first, leaving a window in which a concurrent `arm` reads a sentinel
++    # with no timestamp and records the gap as having an unknown start. The temp
++    # file is written in the sentinel's own directory so the link cannot cross a
++    # filesystem boundary.
++    staged="${sentinel}.staged.$$"
++    trap 'rm -f "${staged}"' EXIT
++    jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
++      '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${staged}"
++    if ln "${staged}" "${sentinel}" 2>/dev/null; then
++      rm -f "${staged}"
++      echo "hook-pulse disarmed: ${sentinel}"
++      exit 0
++    fi
++    rm -f "${staged}"
++    # Lost the race, or it was already disarmed. Only an effective sentinel makes
++    # those outcomes equivalent: `ln` can also fail on a dangling symlink or a
++    # filesystem that refuses hard links, and neither failure disables the hook.
++    if [ ! -e "${sentinel}" ]; then
++      echo "hook-pulse disarm failed: sentinel was not published" >&2
++      exit 1
++    fi
++    #
++    # jq's `//` cannot cover an EMPTY sentinel: with no input jq emits nothing and
++    # still exits 0, so neither the alternative nor `||` fires and the message
++    # renders "since ;". Same empty-output trap as the `capture()` defect in
++    # `hook-pulse.sh`. Default in the shell, where an empty string is observable.
++    disarmed_at="$(jq -r '.disarmedAt // empty' "${sentinel}" 2>/dev/null || true)"
++    case "${disarmed_at}" in "") disarmed_at="an unrecorded time" ;; esac
++    echo "hook-pulse already disarmed since ${disarmed_at}; original window start left intact"
++    exit 0
++    ;;
++  arm)
++    # Take the sentinel by RENAMING it, in one atomic step, rather than reading it
++    # and unlinking later. `rename(2)` either moves the file or does not; there is
++    # no interval in which the path still resolves but is already committed to
++    # deletion.
++    #
++    # The read-then-`rm` form this replaces had the worst race in the switch. A
++    # `disarm` landing between the read and the `rm` would find the sentinel
++    # present, report "already disarmed", and exit 0 — and then `arm` would delete
++    # the very sentinel it had just been told about. The operator is told the
++    # instrument is off while collection is running, which is the one direction a
++    # kill switch must never fail in. Claiming first makes that unrepresentable:
++    # once the path is free, a concurrent `disarm` legitimately wins it via `ln`
++    # and the instrument really is disarmed.
++    claimed="${sentinel}.arming.$$"
++    if ! mv "${sentinel}" "${claimed}" 2>/dev/null; then
++      echo "hook-pulse already armed"
++      exit 0
++    fi
++    # From here the sentinel is claimed but the window is not yet recorded, so the
++    # instrument is already collecting again while the gap is still unwritten. Any
++    # failure in that span — `mkdir`, jq, a full disk on the append — must put the
++    # sentinel BACK rather than drop it. Deleting it instead (the obvious
++    # `rm -f "${claimed}"` trap) would resume collection *and* destroy the only
++    # record of when the gap began, with no window row written either: the gap
++    # would vanish rather than be recorded as unknown, which is the failure this
++    # ledger exists to make impossible. `set -euo pipefail` makes those aborts
++    # real, not hypothetical.
++    #
++    # So the trap restores, and is cleared only once the append has succeeded.
++    # `arm` is therefore all-or-nothing: either the window is durable and the
++    # sentinel is gone, or nothing moved and the operator can retry.
++    #
++    # The restore is `mv -f`, and overwriting a sentinel that a concurrent
++    # `disarm` published into the freed path is the CORRECT resolution, not a
++    # second race. If this `arm` failed, the instrument never actually re-armed,
++    # so the gap has run continuously since the original `disarmedAt`. Keeping the
++    # newer start would claim coverage over a stretch that was never collected.
++    # Between two candidate starts the earlier one is always the honest choice
++    # here: it over-reports uncertainty, and this ledger exists to mark what is
++    # unknown rather than to look tidy.
++    trap 'mv -f "${claimed}" "${sentinel}" 2>/dev/null || true' EXIT
++    mkdir -p "$(dirname "${windows}")"
++    # A hand-written or `touch`-created sentinel has no timestamp; record that
++    # honestly as an unknown window start instead of inventing one.
++    jq -c -n --slurpfile sentinelDoc "${claimed}" --arg rearmedAt "$(now)" \
++      '{
++         schemaVersion: "hook-pulse-disarm-window/v1",
++         disarmedAt: ($sentinelDoc[0].disarmedAt? // null),
++         rearmedAt: $rearmedAt,
++         reason: ($sentinelDoc[0].reason? // null),
++         evidenceTier: "unknown"
++       }' 2>/dev/null >>"${windows}" ||
++      jq -c -n --arg rearmedAt "$(now)" \
++        '{
++           schemaVersion: "hook-pulse-disarm-window/v1",
++           disarmedAt: null,
++           rearmedAt: $rearmedAt,
++           reason: null,
++           evidenceTier: "unknown"
++         }' >>"${windows}"
++    # The window is durable; the claim can now be dropped rather than restored.
++    trap - EXIT
++    rm -f "${claimed}"
++    # A `disarm` can win the freed path between the rename above and here. The
++    # appended window is still correct — the instrument really was off across it,
++    # and the new gap stays open until some later `arm` closes it — but reporting
++    # a bare "armed" would be false by the time the operator reads it. Report the
++    # state that actually holds rather than the transition that occurred.
++    if [ -e "${sentinel}" ]; then
++      echo "hook-pulse window appended to ${windows}; a concurrent disarm already re-disarmed the instrument"
++    else
++      echo "hook-pulse armed; disarm window appended to ${windows}"
++    fi
++    ;;
++  status)
++    if [ -e "${sentinel}" ]; then
++      echo "disarmed: ${sentinel}"
++      cat "${sentinel}"
++    else
++      echo "armed (no sentinel at ${sentinel})"
++    fi
++    ;;
++  *)
++    echo "usage: ${0##*/} {arm|disarm [reason]|status}" >&2
++    exit 2
++    ;;
++esac
+diff --git a/.codex/hooks/hook-pulse.sh b/.codex/hooks/hook-pulse.sh
+new file mode 100755
+index 0000000000..50b6de4f30
+--- /dev/null
++++ b/.codex/hooks/hook-pulse.sh
+@@ -0,0 +1,358 @@
++#!/usr/bin/env bash
++# hook-pulse: appends exactly one privacy-safe `HookPulseV1` NDJSON row per
++# Claude Code hook event to the clone-independent XDG evidence store
++# (goals/coding-agent-effectiveness-evidence-loop, P1 sequence-break
++# instrument). The binding contract is
++# `packages/tooling/library/ai-metrics/src/hook-pulse.ts`; the conformance test
++# `packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts` decodes
++# this script's output with `HookPulseV1`, whose `HookPulseWaitReasonInvariant`
++# filter fails the decode if the jq derivation below ever disagrees with the
++# TypeScript `deriveWaitReason`. The schema, not this comment, is the oracle.
++#
++# Load-bearing decisions:
++# - Kill switch first. The sentinel test runs before jq, before reading stdin,
++#   and before any parsing, so a disarm takes effect within one syscall. The
++#   hook fires on every tool call in every clone; a week-long always-on
++#   instrument with no sub-second disarm is not acceptable.
++# - Whitelist projection happens HERE (spike amendment 6). Raw payloads carry
++#   `prompt`, `message`, `tool_input`, `tool_response`, `last_assistant_message`,
++#   `background_tasks`, `session_crons`, `permission_suggestions`, and `error`
++#   (PostToolUseFailure). The output object is built key-by-key from an explicit
++#   whitelist and never by deleting keys from the input, so an unforeseen future
++#   content-bearing key cannot leak.
++# - Pseudonymization also happens HERE, for the same reason. `sessionId`, `cwd`,
++#   and `transcriptPath` are private identifiers the instrument cannot simply
++#   drop — wait attribution needs stable per-session and per-clone grouping — so
++#   they are salted SHA-256 digests before the row exists, not after. `Sha256Hex`
++#   on the schema side makes a raw value structurally unwritable rather than
++#   merely discouraged.
++# - `evidenceTier` is `derived`, never `observed`. `waitReason` is derived, so
++#   under evidence-law 2 (weakest link) the row cannot outrank its weakest input;
++#   the codec's `clampDerivedEvidenceTier` maps `observed` to `derived`, so
++#   stamping `observed` here would make P4's replay-twice-diff determinism gate
++#   fail on every row.
++# - No `capture()`. jq's `capture()` returns an EMPTY STREAM on no-match, and an
++#   empty stream inside object construction annihilates the whole object while
++#   this fail-open script still exits 0 — the spike defect that silently dropped
++#   every idle-wait row. `try`/`catch` does not help; there is no error to catch.
++#   Every expression feeding the object construction is an if/else or `index(...)`
++#   (which yields `null`, not empty), so none of them can be empty. The one
++#   literal `empty` below is the top-level refusal path — it annihilates the row
++#   on purpose, and the shell guards on an empty `$output`. `put` additionally
++#   forces its value through `[v][0]`, so even a future empty-capable expression
++#   degrades to `null` instead of silently deleting the whole row.
++# - One row per file shard `hook-pulse-<UTC day>-<hashed sessionId>.ndjson`,
++#   appended as a single `printf` under PIPE_BUF. Sharding per session makes interleaving
++#   between concurrent sessions in sibling worktrees structurally impossible
++#   rather than merely improbable; the single-write append is the second guard
++#   for same-session concurrency (parallel subagent tool calls).
++# Always exits 0 — the instrument must never block the agent.
++
++# Precedence mirrors the P0 store rule (`--data-root` -> env -> XDG default) and
++# must stay in lockstep with `agentEvidenceRoot` / `hookPulseLedgerDir` exported
++# from `@beep/repo-ai-metrics`; the conformance test derives its expected
++# location from those exports so the two halves cannot drift apart.
++BEEP_AGENT_EVIDENCE_ROOT="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
++BEEP_HOOK_PULSE_DISARM_SENTINEL="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
++if [ -e "${BEEP_HOOK_PULSE_DISARM_SENTINEL}" ]; then
++  exit 0
++fi
++
++# HARD REQUIREMENT: this script must never write to stdout. `PermissionRequest`
++# is a *decision* hook — the harness feeds hook stdout into the permission
++# outcome, and a hook returning
++# `{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "allow"}}}`
++# auto-approves the tool call. Only that exact JSON shape decides, so stray text
++# cannot flip a permission today, but the failure mode is catastrophic in both
++# directions: it would bypass permission gating AND destroy the experiment, since
++# an auto-approved call produces no human wait and the instrument would record
++# zeros. Closing fd 1 here makes the guarantee structural rather than a promise
++# about every future edit. (`$(...)` below still captures jq's output correctly —
++# command substitution installs its own pipe on fd 1.) This is deliberately
++# unlike `law-pulse.sh`, which writes to stdout on purpose to inject context.
++exec 1>/dev/null
++
++set -euo pipefail
++
++# Without jq the instrument degrades to silence rather than to noise or a block.
++command -v jq >/dev/null 2>&1 || exit 0
++
++# Same degradation rule for the digest tool, and for a stronger reason: without
++# it the writer cannot pseudonymize `sessionId`, `cwd`, and `transcriptPath`, and
++# those are exactly the fields `Sha256Hex` exists to keep out of the ledger in
++# the clear. Silence beats an undecodable row, and both beat a raw home
++# directory on disk. Which tool is present is discovered, never assumed;
++# openssl's `-r` normalizes its `SHA2-256(stdin)= <hex>` output to the
++# `<hex> <name>` shape the other two already use, so one field extraction serves
++# all three. The digest shape is still verified per call below, because a tool
++# being on PATH is not proof of what it prints.
++if command -v sha256sum >/dev/null 2>&1; then
++  hash_stdin() { sha256sum; }
++elif command -v shasum >/dev/null 2>&1; then
++  hash_stdin() { shasum -a 256; }
++elif command -v openssl >/dev/null 2>&1; then
++  hash_stdin() { openssl dgst -sha256 -r; }
++else
++  exit 0
++fi
++
++# Mirrors `resolveAiMetricsHashSaltValue` from `@beep/repo-ai-metrics`: absent,
++# empty, or whitespace-only falls back to `AI_METRICS_LOCAL_INSECURE_HASH_SALT`,
++# so an unconfigured clone still produces digests the TypeScript half reproduces
++# exactly rather than digests nobody can check. `${:-}` alone would accept `"   "`
++# as a salt while TypeScript rejected it, so the whitespace case is not
++# decoration — it is the one input on which the two halves could disagree while
++# both looked correct. The second rung is the repo-wide ai-metrics salt, so a
++# machine that already exports one groups hook rows under the same pseudonyms as
++# the rest of the stack; the first rung salts this instrument on its own.
++#
++# Both halves walk this chain. `hookPulseHashSalt` in `hook-pulse.ts` resolves
++# the same two variables in the same order — through `Config`, so the ambient
++# `ConfigProvider` supplies them — and falls back to the same published
++# constant, so a row this writer appends and a row the codec derives from the
++# same raw event carry identical digests on every rung. That matters because
++# every other ai-metrics producer (`source-discovery.ts`, `retention.ts`,
++# `forwarder.ts` — which provisions `BEEP_AI_METRICS_HASH_SALT` from 1Password
++# via `op read`) threads an operator salt, so honouring it here is what keeps
++# hook rows in the same pseudonym namespace as the rest of the stack. The
++# parity test in `hook-pulse-writer.test.ts` runs this script under an explicit
++# test salt and recomputes its digests in TypeScript, so the agreement is
++# checked rather than asserted. Rows that arrive already 64-hex still pass
++# `privateReference` through untouched, so nothing is ever double-hashed.
++# Rows written before the operator cutover are a separate namespace and are
++# never re-migrated.
++hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}}"
++case "${hash_salt}" in
++  *[![:space:]]*) ;;
++  *) hash_salt="beep-ai-metrics-local-smoke-insecure-salt" ;;
++esac
++
++# THE NUL TRAP. Bash cannot carry a NUL in a variable and strips it from a
++# heredoc, so building `${hash_salt}<NUL>${value}` as a shell value first hashes
++# `salt+value` with no separator — a digest that is 64 lowercase hex characters,
++# passes every shape check, decodes cleanly as `Sha256Hex`, and can never equal
++# `hashPrivateIdentifier`. The separator survives only when `printf` writes it
++# straight into the pipe, so the salted preimage must never exist as a shell
++# value. `hashPrivateIdentifier` is the oracle, not this comment: the writer
++# conformance test recomputes both digests in TypeScript and compares them.
++#
++# An empty input returns an empty digest rather than the digest of the empty
++# string. That is what lets the jq program treat "absent" and "unhashable" as one
++# case instead of writing a plausible-looking hash of nothing into an optional
++# field.
++sha256_private_identifier() {
++  if [ -z "$1" ]; then
++    return 0
++  fi
++
++  local digest
++  digest="$(printf '%s\000%s' "${hash_salt}" "$1" | hash_stdin)" || return 1
++  digest="${digest%% *}"
++  # Verified, not assumed: whatever tool was discovered must have produced
++  # exactly the `Sha256Hex` shape or nothing is written at all. This check is
++  # also what makes the shard filename safe without a separate sanitizer — a
++  # value that is only `[0-9a-f]` has no path separators to escape with.
++  case "${digest}" in
++    "" | *[!0-9a-f]*) return 1 ;;
++  esac
++  [ "${#digest}" -eq 64 ] || return 1
++
++  printf '%s' "${digest}"
++}
++
++# Millisecond precision is load-bearing: the spike measured `PreToolUse` and its
++# `PermissionRequest` in the same second, and P4's two-hop join pairs each
++# `PermissionRequest` with the nearest preceding unpaired `PreToolUse`. Fall back
++# to second precision only where `%3N` is unsupported.
++ts="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
++case "${ts}" in
++  *N*) ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)" ;;
++esac
++
++notifier_rev="${BEEP_HOOK_PULSE_NOTIFIER_REV:-log-only-0}"
++instrument_class="${BEEP_HOOK_PULSE_INSTRUMENT_CLASS:-production}"
++# A misconfigured class would make every row undecodable, so fail back to the
++# default rather than poisoning the ledger.
++case "${instrument_class}" in
++  production | spike | meta) ;;
++  *) instrument_class="production" ;;
++esac
++
++payload="$(cat)"
++
++# One extraction pass for the three private identifiers, NUL-delimited. A `cwd`
++# or `transcript_path` containing a newline is legal on POSIX, and a
++# line-delimited read would silently hash a truncated value while still
++# producing a well-formed digest — the same failure class as the NUL trap, one
++# layer earlier. Only the salted preimage is unsafe in a shell value; the raw
++# identifiers themselves are ordinary strings. The `cwd` fallback lives here
++# rather than in the main program so that exactly one expression decides what
++# gets hashed.
++identifier_program='
++def as_string: if type == "string" then . else null end;
++def as_present: as_string | if . == "" then null else . end;
++def nul: [0] | implode;
++((.session_id | as_present) // ""), nul,
++((.cwd | as_string) // $fallbackCwd), nul,
++((.transcript_path | as_present) // ""), nul
++'
++
++# The trailing `nul` is what makes the third read succeed rather than hit EOF,
++# and clobbering to `""` on a failed read is a safety property, not tidiness: a
++# `read` that reaches EOF before its delimiter still assigns the partial data it
++# consumed. So a jq build that could not emit the separator would otherwise leave
++# the three values concatenated into the first variable and hash a string no
++# reader can reproduce. Discarding the partial value instead turns any truncation
++# of this stream into an empty digest, which the jq program below treats as a
++# refusal. DO NOT relax these to `|| true`; that is exactly the substitution that
++# converts a silent refusal into a silently wrong digest.
++raw_session_id=""
++raw_cwd=""
++raw_transcript_path=""
++{
++  IFS= read -r -d '' raw_session_id || raw_session_id=""
++  IFS= read -r -d '' raw_cwd || raw_cwd=""
++  IFS= read -r -d '' raw_transcript_path || raw_transcript_path=""
++} < <(jq -j --arg fallbackCwd "${PWD}" "${identifier_program}" <<<"${payload}" 2>/dev/null)
++
++session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
++cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || exit 0
++transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || exit 0
++
++jq_program='
++def as_string: if type == "string" then . else null end;
++def as_present: as_string | if . == "" then null else . end;
++# Must be no weaker than the schema side: `NonNegNum` is `S.Finite` plus a
++# non-negative check, and jq happily carries `1e400` through as `1E+400`, which
++# parses back to `Infinity` and fails `S.Finite`. Writing that row would put an
++# *undecodable* line in the ledger, which is worse than dropping the field —
++# a poisoned shard breaks replay for every row it contains, not just this one.
++def as_non_negative: if type == "number" and . >= 0 and . < infinite then . else null end;
++def as_boolean: if type == "boolean" then . else null end;
++# `v` is deliberately NOT a `$`-parameter. jq desugars `def f($a)` to
++# `a as $a | body`, and that binding ITERATES its argument stream: an
++# empty-capable argument makes the whole row vanish (jq still exits 0, the shell
++# writes nothing), and a two-valued one emits two rows. `[v][0]` collapses the
++# stream first — `[empty][0]` is `null`, `[a,b][0]` is `a`. This is the exact
++# re-entry point of the spike defect the `capture()` note above describes.
++# DO NOT "simplify" the null guard to `v // null` or `$value // ...`. The jq
++# alternative operator treats `false` as absent, so `isInterrupt: false` would be
++# silently erased and with it the "human hit escape" vs "tool errored"
++# distinction the field exists to carry.
++def put($key; v): ([v][0]) as $value | if $value == null then . else . + { ($key): $value } end;
++
++# Hand-duplicating these lists against `HookPulseEvent` / `HookPulseNotificationType`
++# is the one drift this script cannot detect on its own: a typo silently drops
++# 100% of one event and every row it would have produced, while every example
++# fixture for the other events stays green. `hook-pulse-writer.test.ts`
++# reads both definitions back out of this file and asserts set equality with the
++# schema `Options`, so the duplication is checked rather than merely intended.
++def hook_events: [ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUseFailure",
++                   "Notification", "UserPromptSubmit", "Stop", "SessionEnd",
++                   "PermissionDenied" ];
++def notification_types: [ "permission_prompt", "idle_prompt" ];
++
++# The three private identifiers arrive pre-hashed and shape-verified, so nothing
++# below can read a raw one: the raw keys are simply never referenced here. An
++# empty argument means the shell could not hash it, which is deliberately the
++# same case as the field being absent — an unhashable identifier must never
++# degrade into a digest of the empty string.
++($sessionIdHash | as_present) as $sessionId
++| (.hook_event_name | as_present) as $hookEventName
++| (if $hookEventName != null and (hook_events | index($hookEventName)) != null
++   then $hookEventName
++   else null
++   end) as $hookEvent
++| ($cwdHash | as_present) as $cwd
++| (.tool_name | as_present) as $toolName
++| (.tool_use_id | as_present) as $toolUseId
++| (.prompt_id | as_present) as $promptId
++| ($transcriptPathHash | as_present) as $transcriptPath
++| (.permission_mode | as_present) as $permissionMode
++| (.notification_type | as_present) as $notificationTypeRaw
++| (.duration_ms | as_non_negative) as $durationMs
++| (.reason | as_present) as $reason
++| (.is_interrupt | as_boolean) as $isInterrupt
++| (if $notificationTypeRaw != null
++     and (notification_types | index($notificationTypeRaw)) != null
++   then $notificationTypeRaw
++   else null
++   end) as $notificationType
++| (if $hookEvent == "PermissionRequest" then
++     (if $toolName == null then "unknown"
++      elif $toolName == "ExitPlanMode" then "plan-approval"
++      else "tool-permission"
++      end)
++   elif $hookEvent == "Notification" then
++     (if $notificationTypeRaw == "idle_prompt" then "idle-input" else "unknown" end)
++   else "none"
++   end) as $waitReason
++| if $sessionId == null or $cwd == null or $hookEvent == null then
++    empty
++  else
++    ({
++       schemaVersion: "hook-pulse/v1",
++       ts: $ts,
++       sessionId: $sessionId,
++       agentKind: $agentKind,
++       hookEvent: $hookEvent,
++       cwd: $cwd,
++       notifierRev: $notifierRev,
++       instrumentClass: $instrumentClass,
++       evidenceTier: "derived",
++       waitReason: $waitReason
++     }
++     | put("toolName"; $toolName)
++     | put("toolUseId"; $toolUseId)
++     | put("promptId"; $promptId)
++     | put("transcriptPath"; $transcriptPath)
++     | put("permissionMode"; $permissionMode)
++     | put("notificationType"; (if $hookEvent == "Notification" then $notificationType else null end))
++     | put("durationMs"; $durationMs)
++     | put("sessionEndReason"; (if $hookEvent == "SessionEnd" then $reason else null end))
++     | put("isInterrupt"; (if $hookEvent == "PostToolUseFailure" then $isInterrupt else null end))
++    ) as $row
++    # No filename sanitizer here any more, and none is needed: `$sessionId` is a
++    # digest the shell already proved matches `^[0-9a-f]{64}$`, which contains no
++    # path separator, no `..`, and no shell metacharacter. Keeping a `gsub` over
++    # a value with that shape would be a no-op dressed as a guard, and the raw
++    # session UUID it used to sanitize no longer reaches this program at all.
++    | (($ts[0:10]) + "-" + $sessionId), $row
++  end
++'
++
++# Two raw lines: the file shard key, then the canonical row.
++output="$(
++  jq -c -r \
++    --arg ts "${ts}" \
++    --arg agentKind "claude-code" \
++    --arg notifierRev "${notifier_rev}" \
++    --arg instrumentClass "${instrument_class}" \
++    --arg sessionIdHash "${session_id_hash}" \
++    --arg cwdHash "${cwd_hash}" \
++    --arg transcriptPathHash "${transcript_path_hash}" \
++    "${jq_program}" <<<"${payload}" 2>/dev/null
++)" || exit 0
++
++if [ -z "${output}" ]; then
++  exit 0
++fi
++
++shard="${output%%$'\n'*}"
++row="${output#*$'\n'}"
++# A single-line or multi-document result means the projection did not produce
++# exactly one row; write nothing rather than a partial or interleaved line.
++if [ -z "${shard}" ] || [ -z "${row}" ] || [ "${shard}" = "${row}" ]; then
++  exit 0
++fi
++case "${row}" in
++  *$'\n'*) exit 0 ;;
++esac
++
++store="${BEEP_AGENT_EVIDENCE_ROOT}/hook-events"
++if [ ! -d "${store}" ]; then
++  mkdir -p "${store}" 2>/dev/null || exit 0
++fi
++printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || exit 0
++
++exit 0
+diff --git a/.codex/hooks/law-pulse.sh b/.codex/hooks/law-pulse.sh
+new file mode 100755
+index 0000000000..7808e7041d
+--- /dev/null
++++ b/.codex/hooks/law-pulse.sh
+@@ -0,0 +1,39 @@
++#!/usr/bin/env bash
++# Re-surfaces core repo laws every Nth edit to counter within-session
++# instruction decay (measured ~5.6% lower adherence odds per generated
++# function, median first omission at the 4th — arxiv.org/pdf/2605.10039;
++# adopted 2026-07-05, goals/agent-pipeline-velocity C4). Machine enforcement
++# is the reliable channel; this pulse is the cheap middle ground for laws
++# without lint rules yet. Always exits 0; emits ~30 tokens every 5th edit.
++set -euo pipefail
++# Counter scoped per user AND per checkout/worktree (cksum of $PWD): parallel
++# sessions in sibling worktrees must not share pulse cadence. Same-worktree
++# concurrent sessions still share one counter — acceptable under the
++# one-agent-per-worktree convention (standards/git-worktrees.md).
++counter="${TMPDIR:-/tmp}/beep-law-pulse-$(id -u)-$(printf '%s' "$PWD" | cksum | cut -d' ' -f1)"
++n=$(( $(cat "$counter" 2>/dev/null || echo 0) + 1 ))
++printf '%s' "$n" > "$counter"
++if (( n % 5 == 0 )); then
++  # PostToolUse stdout on exit 0 reaches the debug log ONLY — never the model.
++  # UserPromptSubmit, UserPromptExpansion, and SessionStart are the sole events
++  # where plain stdout becomes context (code.claude.com/docs/en/hooks). For every
++  # other event the injection channel is hookSpecificOutput.additionalContext,
++  # which Claude Code wraps in a system reminder at the point the hook fired.
++  # A bare echo here made this pulse a silent no-op from 2026-07-05 to 2026-08-04;
++  # the cadence and payload were always right, the channel was never connected.
++  laws="schema-first models · typed errors/tagged unions · tersest helper forms · effect helper modules over native · @beep/* aliases in test imports · reuse before recreate (rg + barrels)"
++  # Serialize with jq so any future payload edit is escaped by a JSON encoder
++  # rather than by a comment asking the next editor to avoid " and \. The
++  # fallback keeps the pulse alive where jq is absent — a hard dependency here
++  # would reintroduce the exact silent no-op this hook was fixed for.
++  if command -v jq >/dev/null 2>&1; then
++    jq -cn --arg ctx "law pulse: ${laws}" \
++      '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$ctx}}'
++  else
++    esc=${laws//\\/\\\\}
++    esc=${esc//\"/\\\"}
++    esc=${esc//$'\n'/ }
++    esc=${esc//$'\t'/ }
++    printf '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"law pulse: %s"}}\n' "$esc"
++  fi
++fi
+diff --git a/goals/court-reporter-vocabulary/history/evidence/lifecycle-compatibility.json b/goals/court-reporter-vocabulary/history/evidence/lifecycle-compatibility.json
+index 17a53df2e0..2e18abac35 100644
+--- a/goals/court-reporter-vocabulary/history/evidence/lifecycle-compatibility.json
++++ b/goals/court-reporter-vocabulary/history/evidence/lifecycle-compatibility.json
+@@ -35,8 +35,16 @@
+     { "change": "schemaChange", "expected": "incompatible" },
+     { "change": "projectionChange", "expected": "incompatible" }
+   ],
++  "semanticDriftFixtures": [
++    "courtHierarchyLevel",
++    "courtJurisdiction",
++    "courtParent",
++    "courtEffectiveRangeBoundary",
++    "reporterJurisdiction",
++    "reporterEditionBoundary"
++  ],
+   "proof": {
+     "command": "bun run --cwd packages/law-practice/domain beep:test -- CourtReporterVocabulary.test.ts",
+-    "result": "6 tests passed"
++    "result": "8 tests passed"
+   }
+ }
+diff --git a/goals/court-reporter-vocabulary/research/OPPORTUNITIES.md b/goals/court-reporter-vocabulary/research/OPPORTUNITIES.md
+index 31e6aecae3..8acae4f7cb 100644
+--- a/goals/court-reporter-vocabulary/research/OPPORTUNITIES.md
++++ b/goals/court-reporter-vocabulary/research/OPPORTUNITIES.md
+@@ -64,3 +64,14 @@
+ - Prevention: verification should either require a clean source worktree before
+   starting or fingerprint only the detached commit it actually proves; the
+   stored proof identity and its reuse predicate must describe the same state.
++
++## 2026-08-27 - Compatibility fixtures covered labels but not semantic fields
++
++- Work: close the hosted review after publishing the vocabulary compatibility
++  classifier.
++- Evidence: PR review found that retained records with changed hierarchy,
++  jurisdiction, parent, or range boundaries could keep the same stable key and
++  range count and therefore produce no drift change.
++- Prevention: compatibility fixtures should mutate every public semantic field
++  family and range boundary, not only produce one example of every emitted
++  change label.
+diff --git a/packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts b/packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts
+index 5f74cd513c..7e1e9a0c23 100644
+--- a/packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts
++++ b/packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts
+@@ -6,7 +6,7 @@
+  */
+ 
+ import { A, O } from "@beep/utils";
+-import { Equal, pipe } from "effect";
++import { Equal, Order, pipe } from "effect";
+ import { dual, flow } from "effect/Function";
+ import * as R from "effect/Record";
+ import {
+@@ -71,7 +71,8 @@ interface NormalizedRecord {
+   readonly aliases: ReadonlyArray<string>;
+   readonly id: string;
+   readonly lineageKey: string;
+-  readonly rangeCount: number;
++  readonly ranges: ReadonlyArray<string>;
++  readonly semanticContent: string;
+   readonly semanticKey: string;
+   readonly status: "active" | "tombstone";
+   readonly successorId: O.Option<string>;
+@@ -82,12 +83,43 @@ const normalizeAliases = (
+   contextualAliases: ReadonlyArray<{ readonly alias: string }>
+ ) => pipe(aliases, A.appendAll(A.map(contextualAliases, (entry) => entry.alias)), A.dedupe);
+ 
++const normalizeStringSet: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
++  A.dedupe,
++  A.sort(Order.String)
++);
++
++const normalizeContextualAliases: (
++  aliases: ReadonlyArray<{ readonly alias: string; readonly context: string }>
++) => ReadonlyArray<string> = flow(
++  A.map(({ alias, context }: { readonly alias: string; readonly context: string }) => JSON.stringify([alias, context])),
++  normalizeStringSet
++);
++
++const normalizeOption = <A>(value: O.Option<A>): A | null => O.getOrNull(value);
++
+ const normalizeCourt = (record: CourtVocabularyRecord): NormalizedRecord => ({
+   id: record.id,
+   semanticKey: record.semanticKey,
+   lineageKey: record.lineageKey,
+   aliases: normalizeAliases(record.aliases, record.contextualAliases),
+-  rangeCount: A.length(record.effectiveRanges),
++  ranges: pipe(
++    record.effectiveRanges,
++    A.map(({ start, end }) => JSON.stringify([normalizeOption(start), normalizeOption(end)])),
++    normalizeStringSet
++  ),
++  semanticContent: JSON.stringify([
++    record.sourceId,
++    record.name,
++    normalizeOption(record.nameAbbreviation),
++    record.citationString,
++    normalizeOption(record.sourceJurisdiction),
++    record.system,
++    normalizeOption(record.type),
++    normalizeOption(record.hierarchyLevel),
++    record.location,
++    normalizeOption(record.parentId),
++    normalizeContextualAliases(record.contextualAliases),
++  ]),
+   status: record.status,
+   successorId: record.successorId,
+ });
+@@ -97,11 +129,37 @@ const normalizeReporter = (record: ReporterVocabularyRecord): NormalizedRecord =
+   semanticKey: record.semanticKey,
+   lineageKey: record.lineageKey,
+   aliases: normalizeAliases(record.aliases, record.contextualAliases),
+-  rangeCount: A.length(record.editions),
++  ranges: pipe(
++    record.editions,
++    A.map(({ abbreviation, start, end }) =>
++      JSON.stringify([abbreviation, normalizeOption(start), normalizeOption(end)])
++    ),
++    normalizeStringSet
++  ),
++  semanticContent: JSON.stringify([
++    record.primaryAbbreviation,
++    record.name,
++    record.citeType,
++    normalizeStringSet(record.jurisdictions),
++    normalizeContextualAliases(record.contextualAliases),
++  ]),
+   status: record.status,
+   successorId: record.successorId,
+ });
+ 
++const sameStringSet = (left: ReadonlyArray<string>, right: ReadonlyArray<string>) =>
++  A.length(left) === A.length(right) && A.every(left, (value) => A.contains(right, value));
++
++const isAdditiveRangeSplit = (previous: NormalizedRecord, next: NormalizedRecord) =>
++  A.length(next.ranges) > A.length(previous.ranges) &&
++  A.every(previous.ranges, (range) => A.contains(next.ranges, range));
++
++const hasSemanticDrift = (previous: NormalizedRecord, next: NormalizedRecord, additiveRangeSplit: boolean) =>
++  !Equal.equals(previous.semanticKey, next.semanticKey) ||
++  !Equal.equals(previous.lineageKey, next.lineageKey) ||
++  !Equal.equals(previous.semanticContent, next.semanticContent) ||
++  (!sameStringSet(previous.ranges, next.ranges) && !additiveRangeSplit);
++
+ const changeCompatibility = (kind: ArtifactDriftChangeKind) =>
+   A.contains(compatibleChanges, kind) ? ("compatible" as const) : ("incompatible" as const);
+ 
+@@ -195,14 +253,15 @@ const compareFamily = (
+ 
+   const retainedRecordChanges = (previousRecord: NormalizedRecord, nextRecord: NormalizedRecord) => {
+     const changes: Array<ArtifactDriftChange> = [...compareAliases(subjectKind, previousRecord, nextRecord)];
++    const additiveRangeSplit = isAdditiveRangeSplit(previousRecord, nextRecord);
+ 
+-    if (!Equal.equals(previousRecord.semanticKey, nextRecord.semanticKey)) {
++    if (hasSemanticDrift(previousRecord, nextRecord, additiveRangeSplit)) {
+       changes.push(
+         change(
+           "semanticReuse",
+           subjectKind,
+           [previousRecord.id],
+-          "A published stable ID now names a different semantic identity."
++          "A published stable ID now names different semantic content or effective-range boundaries."
+         )
+       );
+     }
+@@ -213,7 +272,7 @@ const compareFamily = (
+       );
+     }
+ 
+-    if (nextRecord.rangeCount > previousRecord.rangeCount) {
++    if (additiveRangeSplit) {
+       changes.push(
+         change("dateSplit", subjectKind, [previousRecord.id], "The identity gained a distinct effective range.")
+       );
+diff --git a/packages/law-practice/domain/test/CourtReporterVocabulary.test.ts b/packages/law-practice/domain/test/CourtReporterVocabulary.test.ts
+index 72f932c547..0bc56b7b70 100644
+--- a/packages/law-practice/domain/test/CourtReporterVocabulary.test.ts
++++ b/packages/law-practice/domain/test/CourtReporterVocabulary.test.ts
+@@ -10,12 +10,14 @@ import {
+   CourtVocabularyArtifact,
+   CourtVocabularyRecord,
+   classifyCourtReporterArtifactCompatibility,
++  EffectiveRange,
+   findCourtById,
+   findCourtsByAlias,
+   findReporterById,
+   findReportersByAlias,
+   isCurrentCourtReporterArtifactVersion,
+   ReporterCiteType,
++  ReporterEdition,
+   ReporterId,
+   ReporterVocabulary,
+   ReporterVocabularyArtifact,
+@@ -73,10 +75,14 @@ const comparisonArtifact = ({
+ const court = (
+   base: CourtVocabularyRecord,
+   fields: Partial<{
++    readonly effectiveRanges: CourtVocabularyRecord["effectiveRanges"];
++    readonly hierarchyLevel: CourtVocabularyRecord["hierarchyLevel"];
+     readonly id: CourtId;
+     readonly semanticKey: string;
+     readonly lineageKey: string;
+     readonly aliases: ReadonlyArray<string>;
++    readonly parentId: CourtVocabularyRecord["parentId"];
++    readonly sourceJurisdiction: CourtVocabularyRecord["sourceJurisdiction"];
+     readonly status: "active" | "tombstone";
+     readonly successorId: O.Option<CourtId>;
+   }>
+@@ -85,10 +91,12 @@ const court = (
+ const reporter = (
+   base: ReporterVocabularyRecord,
+   fields: Partial<{
++    readonly editions: ReporterVocabularyRecord["editions"];
+     readonly id: ReporterId;
+     readonly semanticKey: string;
+     readonly lineageKey: string;
+     readonly aliases: ReadonlyArray<string>;
++    readonly jurisdictions: ReporterVocabularyRecord["jurisdictions"];
+     readonly status: "active" | "tombstone";
+     readonly successorId: O.Option<ReporterId>;
+   }>
+@@ -209,6 +217,90 @@ describe("CourtReporterVocabulary", () => {
+     expect(report.changes).toStrictEqual([]);
+   });
+ 
++  it("rejects retained identities whose semantic fields or range boundaries drift", () => {
++    const courtWithHierarchy = O.getOrThrow(
++      A.findFirst(CourtVocabulary.records, ({ hierarchyLevel }) => O.isSome(hierarchyLevel))
++    );
++    const courtWithJurisdiction = O.getOrThrow(
++      A.findFirst(CourtVocabulary.records, ({ sourceJurisdiction }) => O.isSome(sourceJurisdiction))
++    );
++    const courtWithRange = O.getOrThrow(
++      A.findFirst(CourtVocabulary.records, ({ effectiveRanges }) => A.isReadonlyArrayNonEmpty(effectiveRanges))
++    );
++    const reporterWithEdition = O.getOrThrow(
++      A.findFirst(ReporterVocabulary.records, ({ editions }) => A.isReadonlyArrayNonEmpty(editions))
++    );
++    const courtRange = courtWithRange.effectiveRanges[0]!;
++    const reporterEdition = reporterWithEdition.editions[0]!;
++    const semanticDriftReports = [
++      classify({ courts: [courtWithHierarchy] }, { courts: [court(courtWithHierarchy, { hierarchyLevel: O.none() })] }),
++      classify(
++        { courts: [courtWithJurisdiction] },
++        { courts: [court(courtWithJurisdiction, { sourceJurisdiction: O.none() })] }
++      ),
++      classify(
++        { courts: [currentCourt] },
++        {
++          courts: [
++            court(currentCourt, {
++              parentId: O.isSome(currentCourt.parentId) ? O.none() : O.some(secondCourt.id),
++            }),
++          ],
++        }
++      ),
++      classify(
++        { courts: [courtWithRange] },
++        {
++          courts: [
++            court(courtWithRange, {
++              effectiveRanges: [
++                EffectiveRange.make({
++                  ...courtRange,
++                  start: O.isSome(courtRange.start) ? O.none() : O.some("fixture-start"),
++                }),
++                ...A.drop(courtWithRange.effectiveRanges, 1),
++              ],
++            }),
++          ],
++        }
++      ),
++      classify(
++        { reporters: [currentReporter] },
++        {
++          reporters: [
++            reporter(currentReporter, {
++              jurisdictions: [...currentReporter.jurisdictions, "fixture-jurisdiction"],
++            }),
++          ],
++        }
++      ),
++      classify(
++        { reporters: [reporterWithEdition] },
++        {
++          reporters: [
++            reporter(reporterWithEdition, {
++              editions: [
++                ReporterEdition.make({
++                  ...reporterEdition,
++                  end: O.isSome(reporterEdition.end) ? O.none() : O.some("fixture-end"),
++                }),
++                ...A.drop(reporterWithEdition.editions, 1),
++              ],
++            }),
++          ],
++        }
++      ),
++    ];
++
++    expect(
++      A.every(
++        semanticDriftReports,
++        ({ compatibility, changes }) =>
++          compatibility === "incompatible" && A.some(changes, ({ kind }) => kind === "semanticReuse")
++      )
++    ).toBe(true);
++  });
++
+   it("does not replay an unchanged historical successor transition", () => {
+     const tombstonedCourt = court(currentCourt, {
+       status: "tombstone",
