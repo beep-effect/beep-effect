@@ -1,0 +1,99 @@
+diff --git a/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts b/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts
+index 9e7e0c391a..b7edb6e66c 100644
+--- a/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts
++++ b/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts
+@@ -35,22 +35,28 @@ describe("MappedLiteralKit", () => {
+     );
+   });
+ 
+-  it("exposes directional enum maps", () => {
+-    expect(SqlState.From.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
+-    expect(SqlState.From.Enum.WARNING).toBe("01000");
+-    expect(SqlState.To.Enum["00000"]).toBe("SUCCESSFUL_COMPLETION");
+-    expect(SqlState.To.Enum["01000"]).toBe("WARNING");
++  it("exposes side-local literal enum maps", () => {
++    expect(SqlState.From.Enum.SUCCESSFUL_COMPLETION).toBe("SUCCESSFUL_COMPLETION");
++    expect(SqlState.From.Enum.WARNING).toBe("WARNING");
++    expect(SqlState.To.Enum["00000"]).toBe("00000");
++    expect(SqlState.To.Enum["01000"]).toBe("01000");
+   });
+ 
+-  it("aliases top-level helper surface to From", () => {
+-    expect(SqlState.From).toBe(SqlState);
+-    expect(SqlState.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
+-    expect(SqlState.Options).toEqual(["SUCCESSFUL_COMPLETION", "WARNING"]);
+-    expect(SqlState.is.SUCCESSFUL_COMPLETION("SUCCESSFUL_COMPLETION")).toBe(true);
+-    expect(SqlState.is.SUCCESSFUL_COMPLETION("WARNING")).toBe(false);
++  it("exposes directional lookup maps", () => {
++    expect(SqlState.Map.SUCCESSFUL_COMPLETION).toBe("00000");
++    expect(SqlState.Map.WARNING).toBe("01000");
++    expect(SqlState.ReverseMap["00000"]).toBe("SUCCESSFUL_COMPLETION");
++    expect(SqlState.ReverseMap["01000"]).toBe("WARNING");
+   });
+ 
+-  it("preserves the top-level From alias after annotation", () => {
++  it("aliases top-level helper surface to To", () => {
++    expect(SqlState.Enum["00000"]).toBe("00000");
++    expect(SqlState.Options).toEqual(["00000", "01000"]);
++    expect(SqlState.is["00000"]("00000")).toBe(true);
++    expect(SqlState.is["00000"]("01000")).toBe(false);
++  });
++
++  it("preserves helper surfaces after annotation", () => {
+     const annotated = SqlState.annotate({
+       title: "Annotated SQL state",
+     });
+@@ -59,14 +65,16 @@ describe("MappedLiteralKit", () => {
+     });
+ 
+     expect(annotated).not.toBe(SqlState);
+-    expect(annotated.From).toBe(annotated);
+-    expect(annotated.From).not.toBe(SqlState);
++    expect(annotated.From).toBe(SqlState.From);
+     expect(annotated.To).toBe(SqlState.To);
+-    expect(annotated.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
++    expect(annotated.Enum["00000"]).toBe("00000");
++    expect(annotated.Map.SUCCESSFUL_COMPLETION).toBe("00000");
++    expect(annotated.ReverseMap["00000"]).toBe("SUCCESSFUL_COMPLETION");
+     expect(S.decodeSync(annotated)("WARNING")).toBe("01000");
+ 
+-    expect(reannotated.From).toBe(reannotated);
++    expect(reannotated.From).toBe(SqlState.From);
+     expect(reannotated.To).toBe(SqlState.To);
++    expect(reannotated.Map.WARNING).toBe("01000");
+     expect(S.encodeSync(reannotated)("00000")).toBe("SUCCESSFUL_COMPLETION");
+   });
+ 
+@@ -74,6 +82,8 @@ describe("MappedLiteralKit", () => {
+     const fromDescriptor = Object.getOwnPropertyDescriptor(SqlState, "From");
+     const toDescriptor = Object.getOwnPropertyDescriptor(SqlState, "To");
+     const enumDescriptor = Object.getOwnPropertyDescriptor(SqlState, "Enum");
++    const mapDescriptor = Object.getOwnPropertyDescriptor(SqlState, "Map");
++    const reverseMapDescriptor = Object.getOwnPropertyDescriptor(SqlState, "ReverseMap");
+ 
+     expect(fromDescriptor?.enumerable).toBe(true);
+     expect(fromDescriptor?.writable).toBe(false);
+@@ -82,6 +92,10 @@ describe("MappedLiteralKit", () => {
+     expect(toDescriptor?.configurable).toBe(false);
+     expect(enumDescriptor?.writable).toBe(false);
+     expect(enumDescriptor?.configurable).toBe(false);
++    expect(mapDescriptor?.writable).toBe(false);
++    expect(mapDescriptor?.configurable).toBe(false);
++    expect(reverseMapDescriptor?.writable).toBe(false);
++    expect(reverseMapDescriptor?.configurable).toBe(false);
+   });
+ 
+   it("retains LiteralKit helper behavior on directional kits", () => {
+@@ -104,9 +118,9 @@ describe("MappedLiteralKit", () => {
+     expect(toMatch).toBe("ok-code");
+   });
+ 
+-  it("decodes and encodes on the reverse directional kit", () => {
+-    expect(S.decodeSync(SqlState.To)("00000")).toBe("SUCCESSFUL_COMPLETION");
+-    expect(S.encodeSync(SqlState.To)("SUCCESSFUL_COMPLETION")).toBe("00000");
++  it("keeps From and To as side-local literal schemas", () => {
++    expect(S.decodeSync(SqlState.From)("SUCCESSFUL_COMPLETION")).toBe("SUCCESSFUL_COMPLETION");
++    expect(S.decodeSync(SqlState.To)("00000")).toBe("00000");
+   });
+ 
+   it("rejects duplicate from-side literals", () => {
