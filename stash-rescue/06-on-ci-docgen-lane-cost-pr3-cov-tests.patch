@@ -1,0 +1,250 @@
+diff --git a/packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts b/packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts
+index c0030e8d0d..7fda60a7a5 100644
+--- a/packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts
++++ b/packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts
+@@ -39,6 +39,7 @@ const $I = $RepoCliId.create("commands/Docgen/internal/Local");
+ 
+ const DEFAULT_LOCAL_PARALLEL = 1 as const;
+ const DOCGEN_FULL_COMMAND = "bun run docgen" as const;
++const DOCGEN_FULL_AGGREGATE_ARGS = ["run", "docs:aggregate"] as const;
+ const DOCGEN_LOCAL_PACKAGE_INPUT_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".md", ".mdx"] as const;
+ const DOCGEN_LOCAL_PACKAGE_INPUT_PREFIXES = ["src/", "docs/"] as const;
+ const DOCGEN_LOCAL_PACKAGE_INPUT_FILES = [
+@@ -413,6 +414,12 @@ const turboArgsForSelectedPackages = (
+   "--no-daemon",
+ ];
+ 
++const fullTurboArgs = (parallel: number): ReadonlyArray<string> => [
++  "run",
++  "docgen",
++  `--concurrency=${localParallel(parallel)}`,
++];
++
+ const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
+   yield* assertNoOrphanDocgenConfigPaths();
+   return yield* discoverDocgenWorkspacePackages().pipe(
+@@ -780,6 +787,10 @@ const renderPlan = Effect.fn("DocgenLocal.renderPlan")(function* (plan: DocgenLo
+     yield* Console.log(`- turbo command: bunx ${A.join(plan.turboArgs, " ")}`);
+   }
+   yield* Console.log(`- full proof: ${plan.fallbackCommand}`);
++  if (plan.mode === "full") {
++    yield* Console.log(`- full turbo command: node_modules/.bin/turbo ${A.join(fullTurboArgs(plan.parallel), " ")}`);
++    yield* Console.log(`- full aggregate command: bun ${A.join(DOCGEN_FULL_AGGREGATE_ARGS, " ")}`);
++  }
+   if (A.isReadonlyArrayNonEmpty(plan.fullReasons)) {
+     yield* Console.log(`- full proof required:\n${renderFullReasons(plan.fullReasons)}`);
+   }
+@@ -856,14 +867,14 @@ const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot
+   yield* runStepWithStallWatchdog(
+     "full turbo docgen",
+     turboBinaryPath(repoRoot),
+-    ["run", "docgen", `--concurrency=${localParallel(parallel)}`],
++    fullTurboArgs(parallel),
+     repoRoot,
+     fullDocgenStepBudget
+   );
+   yield* runStepWithStallWatchdog(
+     "full docs aggregate",
+     "bun",
+-    ["run", "docs:aggregate"],
++    DOCGEN_FULL_AGGREGATE_ARGS,
+     repoRoot,
+     fullDocgenStepBudget
+   );
+diff --git a/packages/tooling/tool/cli/test/docgen.test.ts b/packages/tooling/tool/cli/test/docgen.test.ts
+index b8f0ac9b42..fe07bcc9bf 100644
+--- a/packages/tooling/tool/cli/test/docgen.test.ts
++++ b/packages/tooling/tool/cli/test/docgen.test.ts
+@@ -24,6 +24,7 @@ import {
+   loadDocgenConfigDocument,
+   makeQualityWorkerRunpodEvalPodCreateInput,
+   requiredQualityWorkerRunpodEvalModel,
++  runDocgenLocal,
+   runDocgenQualityWorkerRunpodEval,
+   selectDocgenLocalPackagesForTesting,
+   selectQualityWorkerRunpodTemplate,
+@@ -39,15 +40,29 @@ import { A, O } from "@beep/utils";
+ import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
+ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+ import * as NodePath from "@effect/platform-node/NodePath";
+-import { Cause, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Ref, Runtime } from "effect";
++import { describe, expect, it } from "@effect/vitest";
++import {
++  Cause,
++  ConfigProvider,
++  Duration,
++  Effect,
++  Exit,
++  FileSystem,
++  Layer,
++  Path,
++  pipe,
++  Ref,
++  Runtime,
++  Sink,
++  Stream,
++} from "effect";
+ import * as S from "effect/Schema";
+ import { FastCheck as fc } from "effect/testing";
+ import * as TestConsole from "effect/testing/TestConsole";
+ import { Command } from "effect/unstable/cli";
+ import { FetchHttpClient } from "effect/unstable/http";
+ import * as HttpClient from "effect/unstable/http/HttpClient";
+-import { ChildProcess } from "effect/unstable/process";
+-import { describe, expect, it } from "vitest";
++import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+ import type { DocgenQualityWorkerEvalRunner } from "@beep/repo-cli/test/Docgen";
+ 
+ const provideScopedLayer =
+@@ -79,6 +94,33 @@ const decodeWorkerEvalReportJson = S.decodeUnknownSync(S.fromJsonString(DocgenQu
+ const isString = (value: unknown): value is string => typeof value === "string";
+ const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
+ 
++const stubHandle = ChildProcessSpawner.makeHandle({
++  all: Stream.empty,
++  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
++  getInputFd: () => Sink.drain,
++  getOutputFd: () => Stream.empty,
++  isRunning: Effect.succeed(false),
++  kill: () => Effect.void,
++  pid: ChildProcessSpawner.ProcessId(1),
++  stderr: Stream.empty,
++  stdin: Sink.drain,
++  stdout: Stream.empty,
++  unref: Effect.succeed(Effect.void),
++});
++
++const recordingSpawnerLayer = (spawned: Array<string>) =>
++  Layer.succeed(
++    ChildProcessSpawner.ChildProcessSpawner,
++    ChildProcessSpawner.make((command) =>
++      Effect.sync(() => {
++        if (ChildProcess.isStandardCommand(command)) {
++          A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
++        }
++        return stubHandle;
++      })
++    )
++  );
++
+ const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
+   expect(Exit.isFailure(exit)).toBe(true);
+   if (Exit.isFailure(exit)) {
+@@ -144,6 +186,33 @@ const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
+       })
+   ).pipe(provideScopedLayer(CommandTestLayer));
+ 
++const withConfigEnv = <A, E, R>(
++  env: { readonly [key: string]: string },
++  use: Effect.Effect<A, E, R>
++): Effect.Effect<A, E, R> => provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))(use);
++
++const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* () {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const tmpDir = process.cwd();
++  yield* fs.writeFileString(
++    path.join(tmpDir, "package.json"),
++    encodeJson({
++      name: "@beep/test-root",
++      private: true,
++      workspaces: ["packages/foundation/*/*"],
++    })
++  );
++
++  const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
++  yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
++  yield* fs.writeFileString(
++    path.join(packageDir, "package.json"),
++    encodeJson({ name: "@beep/schema", version: "0.0.0" })
++  );
++  yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
++});
++
+ describe("Docgen operations", () => {
+   it("defaults docgen config source fields in the schema without changing explicit wire shape", () => {
+     const explicitConfig = DocgenConfigDocument.make({
+@@ -424,6 +493,83 @@ export const ProofFixture = 1;
+       )
+   );
+ 
++  it.effect("plans full docgen with configured concurrency and both execution steps", () =>
++    withTempRepoCommand(
++      withConfigEnv(
++        { BEEP_DOCGEN_CONCURRENCY: "6" },
++        Effect.gen(function* () {
++          yield* seedDocgenPackage();
++          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema"]);
++
++          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
++          expect(output).toContain("- mode: full");
++          expect(output).toContain("- package concurrency: 6");
++          expect(output).toContain("- full turbo command: node_modules/.bin/turbo run docgen --concurrency=6");
++          expect(output).toContain("- full aggregate command: bun run docs:aggregate");
++        })
++      )
++    )
++  );
++
++  it.effect("prefers the local --parallel flag over configured concurrency", () =>
++    withTempRepoCommand(
++      withConfigEnv(
++        { BEEP_DOCGEN_CONCURRENCY: "6" },
++        Effect.gen(function* () {
++          yield* seedDocgenPackage();
++          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema", "--parallel", "8"]);
++
++          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
++          expect(output).toContain("- package concurrency: 8");
++          expect(output).toContain("--concurrency=8");
++          expect(output).not.toContain("--concurrency=6");
++        })
++      )
++    )
++  );
++
++  it.effect("defaults local docgen concurrency to three", () =>
++    withTempRepoCommand(
++      withConfigEnv(
++        {},
++        Effect.gen(function* () {
++          yield* seedDocgenPackage();
++          yield* runDocgenCommand(["local", "--full", "--plan", "--package", "@beep/schema"]);
++
++          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
++          expect(output).toContain("- package concurrency: 3");
++          expect(output).toContain("--concurrency=3");
++        })
++      )
++    )
++  );
++
++  it.effect("executes full docgen through direct Turbo and aggregate steps", () => {
++    const spawned = A.empty<string>();
++    return withTempRepo(
++      Effect.gen(function* () {
++        yield* seedDocgenPackage();
++        const repoRoot = process.cwd();
++        const plan = yield* runDocgenLocal({
++          allowFull: false,
++          base: "origin/main",
++          full: true,
++          head: "HEAD",
++          json: false,
++          packageSelector: O.some("@beep/schema"),
++          parallel: 6,
++          plan: false,
++        }).pipe(provideScopedLayer(recordingSpawnerLayer(spawned)));
++
++        expect(plan.mode).toBe("full");
++        expect(spawned).toEqual([
++          `${repoRoot}/node_modules/.bin/turbo run docgen --concurrency=6`,
++          "bun run docs:aggregate",
++        ]);
++      })
++    );
++  });
++
+   it(
+     "rejects local docgen JSON output without plan mode",
+     {
