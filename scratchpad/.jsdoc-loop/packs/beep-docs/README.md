@@ -25,4 +25,3 @@
 ## Open owning exports
 
 - `beep-docs/api-reference/CodeSnippet.ts:72` `CodeSnippetLanguageFromExtension` (value/namespace) missing=@example findings=missing-required-tags
-

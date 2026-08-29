@@ -415,4 +415,3 @@
 - `codemode/stdlib/StdLib.value.ts:129` `coerceToString` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `codemode/stdlib/StdLib.value.ts:157` `coerceToNumber` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `codemode/stdlib/StdLib.value.ts:167` `invokeCoercion` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

@@ -38,8 +38,8 @@ entries** at [`ontology/extraction/s4/`](./ontology/extraction/s4/)
 WORK: the §4b NORMALIZATION GATE (the `ontology-foundational-auditor` skill run as
 written — adapter observations, blinded + adversary seats, mechanical `--gate`,
 STEWARD ratification by the operator) — precondition: re-sync the stale
-`~/.agents/skills` mirror (lacks the auditor's `_shared/schemas/`, which exist at
-`~/.claude/skills/`) or pass explicit `$SKILL`/`$SHARED` paths; then S5 adversarial
+Codex skills mirror (lacks the auditor's `_shared/schemas/`, which exist in the
+canonical Claude skills installation) or pass explicit `$SKILL`/`$SHARED` paths; then S5 adversarial
 taxonomy over the ledger.
 
 Superseded context below (kept for the trail):
@@ -106,7 +106,7 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   ruled efforts (codex ultra + max, grok xhigh) returned 26 blockers / 18 warns, all
   triaged and the adopted set FIXED same-session (round3-triage.md). Structural:
   `**/docs` gitignore had excluded the whole ontology/docs authority surface from
-  every commit (fixed, negation rule + landed); the `~/.agents/skills` mirror is
+  every commit (fixed, negation rule + landed); the Codex skills mirror is
   stale (S4 launch precondition recorded). Reality corrections against the RUNNING
   scheduler: CQ-009 rebuilt origin-keyed (deployed law was never checkout-scoped);
   grantedFrom removed (ticket→lease handoff self-erases — no stored edge exists);
@@ -210,7 +210,7 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   glossary (26 classes/36 properties), 17 generated SPARQL tests + manifest + traceability.
   S3 launched: 3 codex lanes (R1 agentic ontology learning, R2 reuse scan, R3 scheduling
   formalisms) + 1 grok lane (R4 live practice) running in background; R5 (agento chapter)
-  queued for Fable. effect-ontology (~/YeeBois/dev, MIT) added to SOURCES as candidate
+  queued for Fable. effect-ontology (external local checkout, MIT) added to SOURCES as candidate
   reasoner substrate, critique gated at S8. Stopped at: lane distillation + S4 kickoff.
 - 2026-08-27: packet opened from live session. Hygiene pass (raw transcript gitignored,
   `pros/`→`prose/`), proposal grilled via /grill-with-docs (2 rounds, 8 decisions locked,

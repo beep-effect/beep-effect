@@ -88,4 +88,3 @@
 - `schemastore/StoreDocument.ts:45` `StoreDocumentOptions` (type/interface) missing=@category|@since findings=missing-required-tags
 - `schemastore/StoreDocument.ts:134` `StoreDocument` (value/class) missing=@category|@since|@example findings=missing-required-tags
 - `schemastore/internal/limits.ts:11` `MAX_NESTING_DEPTH` (value/const) missing=@category|@since|@example findings=missing-required-tags
-

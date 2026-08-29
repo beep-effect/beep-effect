@@ -22,9 +22,10 @@ import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
+import { readTurboCacheEnvironment, turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
+import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { isDoctestSourcePath } from "../../internal/jsdoc/DoctestSource.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
@@ -688,6 +689,14 @@ const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
 
+const directTurboArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "turbo",
+  "run",
+  ...tasks,
+  ...turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" })),
+  ...args,
+];
+
 const turboRootLaneStep = (
   repoRoot: string,
   laneId: CiLaneId,
@@ -713,7 +722,7 @@ const turboTaskLaneStep = (
   QualityTaskStep.make({
     label: `ci:${laneId}`,
     command: "bunx",
-    args: ["turbo", "run", task, ...prefixArgs, ...turboShapeArgs(options)],
+    args: directTurboArgs([task], [...prefixArgs, ...turboShapeArgs(options)]),
     cwd: repoRoot,
     ...(options.affected ? { env: { TURBO_SCM_BASE: options.base } } : {}),
   });
@@ -991,16 +1000,14 @@ export const ciLaneStepsForTesting: {
         QualityTaskStep.make({
           label: "ci:labs",
           command: "bunx",
-          args: [
-            "turbo",
-            "run",
-            "check",
-            "lint",
-            "test",
-            LABS_TURBO_SELECT_FILTER,
-            HOSTED_16GB_TURBO_CONCURRENCY_ARG,
-            ...(options.summarize ? ["--summarize"] : A.empty<string>()),
-          ],
+          args: directTurboArgs(
+            ["check", "lint", "test"],
+            [
+              LABS_TURBO_SELECT_FILTER,
+              HOSTED_16GB_TURBO_CONCURRENCY_ARG,
+              ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+            ]
+          ),
           cwd: repoRoot,
         }),
       ],
@@ -1041,7 +1048,7 @@ export const ciLaneStepsForTesting: {
         QualityTaskStep.make({
           label: "ci:property",
           command: "bunx",
-          args: ["turbo", "run", "test:property", CI_LANE_TURBO_CONCURRENCY_ARG, ...turboShapeArgs(options)],
+          args: directTurboArgs(["test:property"], [CI_LANE_TURBO_CONCURRENCY_ARG, ...turboShapeArgs(options)]),
           cwd: repoRoot,
           env: {
             BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),

@@ -505,9 +505,6 @@
   "@beep/repo-cli/commands/Quality": [
     "./packages/tooling/tool/cli/src/commands/Quality/index.ts"
   ],
-  "@beep/repo-cli/commands/Reuse": [
-    "./packages/tooling/tool/cli/src/commands/Reuse/index.ts"
-  ],
   "@beep/repo-cli/commands/Root": [
     "./packages/tooling/tool/cli/src/commands/Root.ts"
   ],

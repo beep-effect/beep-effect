@@ -37,4 +37,3 @@
 - `memfs/internal/volume.ts:2829` `InspectableFileSystem` (type/interface) missing=@category|@since findings=missing-summary|missing-required-tags
 - `memfs/internal/volume.ts:2836` `makeInspectable` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `memfs/internal/volume.ts:2842` `layer` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

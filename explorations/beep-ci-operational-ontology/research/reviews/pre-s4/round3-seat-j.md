@@ -229,7 +229,7 @@ There is **no** `checkoutRoot` uniqueness check. Two full-proofs on **different 
 
 > SeatGrant = YeetAdmissionLease (grantedFrom ties lease to its ticket — **deployed linkage is the admission handoff**)
 
-> `grantedFrom` … complete_within: **"one admission-store snapshot (tickets dir x leases dir, read atomically)"**  
+> `grantedFrom` … complete_within: **"one admission-store snapshot (tickets dir x leases dir, read atomically)"**
 > source: **"deployed #870 admission store (durable on-disk queue + lease records)"**
 
 **What QualityScheduler actually copies.**

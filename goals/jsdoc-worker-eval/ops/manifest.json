@@ -119,7 +119,7 @@
     "grandfathered": true,
     "grandfatheredNote": "Completion predates the 2026-06-30 PR-mergeable gate (lifecycle reports P0-P6 implemented, evidence-complete); not reopened."
   },
-  "reflectionRequired": false,
+  "reflectionRequired": true,
   "statusNote": "legacy status: p0-p6-implemented-runpod-10-packet-evidence-complete",
   "lifecycle": "completed-retained",
   "packetPath": "goals/jsdoc-worker-eval"

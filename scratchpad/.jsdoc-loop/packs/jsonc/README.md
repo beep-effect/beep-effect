@@ -94,4 +94,3 @@
 - `jsonc/internal/scanner.ts:75` `createScanner` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `jsonc/internal/skip.ts:21` `SkipCursor` (type/interface) missing=@category|@since findings=missing-required-tags
 - `jsonc/internal/skip.ts:46` `skipBalancedValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
-

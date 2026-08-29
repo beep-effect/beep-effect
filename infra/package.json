@@ -19,7 +19,7 @@
     "codegen": "echo 'no codegen needed'",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "repo-exports:shard": "beep-cli quality repo-exports-catalog --package-shard",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",

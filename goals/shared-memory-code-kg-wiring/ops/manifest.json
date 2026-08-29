@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/shared-memory-code-kg-wiring",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 604,
   "mission": "Wire basic-memory (shared cross-CLI memory) and codegraph (deterministic code-KG) into all four coding agents, retire cognee as the durable dev-memory, and land the standards update.",
   "executionCapable": true,
   "reflectionRequired": true,

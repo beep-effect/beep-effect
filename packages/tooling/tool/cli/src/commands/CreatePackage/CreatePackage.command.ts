@@ -14,13 +14,12 @@ import { fileURLToPath } from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   DomainError,
-  decodePackageJsonEffect,
   encodePackageJsonCanonicalPrettyEffect,
   findRepoRoot,
+  readPackageJsonFile,
 } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { today } from "@beep/schema/LocalDate";
-import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe } from "effect";
@@ -781,19 +780,6 @@ export class TemplateContext extends S.Class<TemplateContext>($I`TemplateContext
  */
 const toRootRelative = (packagePath: string): string => Str.repeat("../", A.length(Str.split(packagePath, "/")));
 
-const parseJsonDocument: {
-  (content: string, filePath: string): Effect.Effect<unknown, DomainError>;
-  (filePath: string): (content: string) => Effect.Effect<unknown, DomainError>;
-} = dual(
-  2,
-  Effect.fn(function* (content: string, filePath: string) {
-    return yield* Unknown.decodeEffectFromJsonString(content).pipe(
-      Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${filePath}"`))
-    );
-  })
-);
-
-// fallow-ignore-next-line code-duplication -- converged with TsconfigSync's twin after the tstyche removal; consolidation onto @beep/repo-utils workspaceGlobsFrom/readPackageJsonFile is a recorded quality-speedup follow-up
 const readRootPackageJsonDocument = Effect.fn(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
@@ -801,9 +787,8 @@ const readRootPackageJsonDocument = Effect.fn(function* (repoRoot: string) {
   const content = yield* fs
     .readFileString(filePath)
     .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${filePath}"`)));
-  const parsed = yield* parseJsonDocument(content, filePath);
-  const packageJson = yield* decodePackageJsonEffect(parsed).pipe(
-    Effect.mapError(DomainError.newCause(`Failed to decode package.json at "${filePath}"`))
+  const packageJson = yield* readPackageJsonFile(filePath).pipe(
+    Effect.mapError(DomainError.newCause(`Failed to read or decode package.json at "${filePath}"`))
   );
 
   return {
@@ -1947,7 +1932,7 @@ const packageCheckScript = (withStoriesTsconfig: boolean): string =>
     : "tsgo -p tsconfig.check.json && bun run beep:check:tests";
 
 // Script table for library/tool package manifests.
-const packageScripts = (rootRelative: string, withStoriesTsconfig: boolean) => ({
+const packageScripts = (withStoriesTsconfig: boolean) => ({
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:audit":
@@ -1963,7 +1948,7 @@ const packageScripts = (rootRelative: string, withStoriesTsconfig: boolean) => (
   build: "bun run beep:build",
   check: "bun run beep:check",
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-  docgen: `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
+  docgen: "bunx --bun --no-install docgen",
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
   test: "bun run beep:test",
@@ -2018,7 +2003,7 @@ const generatePackageJson: (
       return yield* encodeManifestJson(appManifest.value);
     }
 
-    const scripts = packageScripts(toRootRelative(packagePath), withStoriesTsconfig);
+    const scripts = packageScripts(withStoriesTsconfig);
 
     const ecosystemMetadata = pipe(
       packageMetadata,

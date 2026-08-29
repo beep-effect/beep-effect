@@ -2,7 +2,12 @@
 
 ## Status
 
+Lifecycle: `completed-retained`
+
 P0-P6 implementation complete; Runpod Qwen 10-packet evidence complete
+
+On-demand reflection:
+[`history/reflections/2026-08-29-codex.md`](./history/reflections/2026-08-29-codex.md).
 
 ## Overview
 

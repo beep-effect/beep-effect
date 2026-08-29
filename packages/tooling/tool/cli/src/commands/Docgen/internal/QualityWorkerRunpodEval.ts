@@ -537,6 +537,33 @@ const fallbackTemplate = ({
     templateName: null,
   });
 
+const explicitTemplate = (templateId: string | undefined): O.Option<DocgenQualityWorkerRunpodEvalTemplate> =>
+  pipe(
+    O.fromUndefinedOr(templateId),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.map((normalizedTemplateId) =>
+      DocgenQualityWorkerRunpodEvalTemplate.make({
+        imageName: RUNPOD_PYTORCH_IMAGE,
+        searchIncludedPublicTemplates: false,
+        searchIncludedRunpodTemplates: false,
+        strategy: "explicit-template",
+        templateId: normalizedTemplateId,
+        templateName: null,
+      })
+    )
+  );
+
+const existingTemplate = (template: Template): DocgenQualityWorkerRunpodEvalTemplate =>
+  DocgenQualityWorkerRunpodEvalTemplate.make({
+    imageName: template.imageName ?? RUNPOD_PYTORCH_IMAGE,
+    searchIncludedPublicTemplates: true,
+    searchIncludedRunpodTemplates: true,
+    strategy: "existing-template",
+    templateId: template.id ?? null,
+    templateName: template.name ?? null,
+  });
+
 const resolveTemplate = Effect.fn("DocgenQualityWorkerRunpodEval.resolveTemplate")(function* ({
   allowPublicTemplateSearch,
   skipTemplateSearch,
@@ -546,17 +573,8 @@ const resolveTemplate = Effect.fn("DocgenQualityWorkerRunpodEval.resolveTemplate
   readonly skipTemplateSearch: boolean;
   readonly templateId?: string;
 }) {
-  const normalizedTemplateId = templateId === undefined ? undefined : Str.trim(templateId);
-  if (normalizedTemplateId !== undefined && Str.isNonEmpty(normalizedTemplateId)) {
-    return DocgenQualityWorkerRunpodEvalTemplate.make({
-      imageName: RUNPOD_PYTORCH_IMAGE,
-      searchIncludedPublicTemplates: false,
-      searchIncludedRunpodTemplates: false,
-      strategy: "explicit-template",
-      templateId: normalizedTemplateId,
-      templateName: null,
-    });
-  }
+  const selectedExplicitTemplate = explicitTemplate(templateId);
+  if (O.isSome(selectedExplicitTemplate)) return selectedExplicitTemplate.value;
 
   if (skipTemplateSearch || !allowPublicTemplateSearch) {
     return fallbackTemplate({
@@ -574,23 +592,16 @@ const resolveTemplate = Effect.fn("DocgenQualityWorkerRunpodEval.resolveTemplate
       })
     )
     .pipe(Effect.mapError(DomainError.newCause("Failed to list Runpod templates for worker eval.")));
-  const selected = selectQualityWorkerRunpodTemplate(templates);
-
-  if (O.isSome(selected)) {
-    return DocgenQualityWorkerRunpodEvalTemplate.make({
-      imageName: selected.value.imageName ?? RUNPOD_PYTORCH_IMAGE,
-      searchIncludedPublicTemplates: true,
-      searchIncludedRunpodTemplates: true,
-      strategy: "existing-template",
-      templateId: selected.value.id ?? null,
-      templateName: selected.value.name ?? null,
-    });
-  }
-
-  return fallbackTemplate({
-    searchIncludedPublicTemplates: true,
-    searchIncludedRunpodTemplates: true,
-  });
+  return pipe(
+    selectQualityWorkerRunpodTemplate(templates),
+    O.map(existingTemplate),
+    O.getOrElse(() =>
+      fallbackTemplate({
+        searchIncludedPublicTemplates: true,
+        searchIncludedRunpodTemplates: true,
+      })
+    )
+  );
 });
 
 const ollamaTagsIncludeModel = (model: string, tags: OllamaTagsResponse): boolean =>

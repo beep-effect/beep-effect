@@ -25,7 +25,7 @@ import {
   renderPrettyCommandJson,
 } from "../../../internal/cli/Json.ts";
 import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.ts";
-import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.ts";
+import { DocgenQualityFindingCode, DocgenQualityReport, docgenPacketCandidateOrder } from "./Quality.ts";
 import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerEval");
@@ -664,12 +664,8 @@ const workerPrompt = (candidate: PacketCandidate): string =>
     "\n"
   );
 
-const packetCandidateOrder: Order.Order<PacketCandidate> = Order.combine(
-  Order.mapInput(Order.Number, (candidate) => (candidate.isFail ? 0 : 1)),
-  Order.combine(
-    Order.flip(Order.mapInput(Order.Number, (candidate) => candidate.impact)),
-    Order.mapInput(Order.String, (candidate) => candidate.packet.subjectId)
-  )
+const packetCandidateOrder: Order.Order<PacketCandidate> = docgenPacketCandidateOrder(
+  Order.mapInput(Order.String, (candidate) => candidate.packet.subjectId)
 );
 
 const findSubject = (pkg: QualityPackageReport, subjectId: string): O.Option<QualitySubject> =>

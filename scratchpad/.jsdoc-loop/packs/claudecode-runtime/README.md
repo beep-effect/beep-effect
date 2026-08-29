@@ -63,4 +63,3 @@
 - `claudecode/Plugin/Validate.ts:95` `PluginIssue` (value/namespace) missing=@example findings=missing-required-tags
 - `claudecode/Plugin/Validate.ts:143` `PluginValidationError` (value/namespace) missing=@example findings=missing-required-tags
 - `claudecode/Plugin/Validate.ts:198` `PluginLintReport` (value/namespace) missing=@example findings=missing-required-tags
-

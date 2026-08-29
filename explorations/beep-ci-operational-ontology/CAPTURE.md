@@ -81,7 +81,7 @@ will cheapen anything about the `yeet` process."
    "veins" for prose extraction: aws cloudwatch, PRs, github, commit history, goal &
    exploration packet data, phoenix traces, ai-metrics-stack, .beep, memories, transcripts,
    OPPORTUNITIES.md, repo laws & quality/CI rules & standards, package & dependency
-   surface, package topology (`bun run beep topo sort`), architectural doctrine, official
+   surface, package topology (`bun run beep topo-sort`), architectural doctrine, official
    library docs. "VERY IMPORTANT TO CONSTANTLY CAPTURE PROSE DURING THE ENTIRETY OF OUR
    SESSION SO THAT NOTHING IS LOST IN TRANSIT OR PASSING!"
 3. Exhaustively enumerate the named classes of things (adversarial taxonomist debate,
@@ -93,7 +93,7 @@ will cheapen anything about the `yeet` process."
 7. Drafting stage: construct an OWL ontology using beep's bespoke system; make it
    structurally & logically valid with SHACL + logical reasoners (forward chaining, Rete,
    deductive/abductive, SPARQL, Datalog) — ideally built ourselves as further dogfooding;
-   implementations exist in `~/YeeBois/workstation-apps/semantica` but must not be
+   implementations exist in the operator's external Semantica checkout but must not be
    presumed correct (own critique/review loop required if used as reference).
 8. Everything through tests + rounds of review of our inferencers & reasoners; eventually
    a fully fledged OWL reasoner. "Until we do this we won't know what the best algorithm
@@ -103,14 +103,14 @@ will cheapen anything about the `yeet` process."
 
 - `A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md` — the "bush"; ontologies as backpressure
   infrastructure; the doubts section (meta-work hazard; "measurable, not assumable").
-- Book: *The Semantic Web* (PDF at `~/YeeBois/research/The Semantic Web.pdf`) — chapter on
+- Book: *The Semantic Web* (operator-supplied local PDF) — chapter on
   "agento", an ontology for AI agents; the valuable part is the derivation process, not the
   ontology.
 - Ontology skills installed for this packet: /ontology-architect, /ontology-conceptualizer,
   /ontology-curator, /ontology-mapper, /ontology-requirements, /ontology-scout,
   /ontology-validator.
 - Runtime substrate to be personally inspected by Fable at the projection stage:
-  `~/YeeBois/dev/t3code/packages/shared/src/DrainableWorker.{ts,test.ts}` and effect v4
+  the external t3code checkout's `packages/shared/src/DrainableWorker.{ts,test.ts}` and effect v4
   `TxSemaphore`, `TxPriorityQueue`, `TxReentrantLock`, `TxQueue`, `TxRef`, `TxHashSet`,
   `TxHashMap`, `TxDeferred`, `TxChunk`, `TxPubSub`, `Graph` (validate against
   `.repos/effect`).

@@ -67,4 +67,3 @@
 - `effect-ontology/Runtime/ProductionRuntime.ts:58` `TokenBudgetServiceLive` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/Runtime/WorkflowLayers.ts:597` `ConfigService` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
 - `effect-ontology/Runtime/WorkflowLayers.ts:597` `ConfigServiceDefault` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
-

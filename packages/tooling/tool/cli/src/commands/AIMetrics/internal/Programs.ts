@@ -1612,6 +1612,99 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
   );
 });
 
+const attachForwarderOtlpExport = Effect.fn("AIMetrics.attachForwarderOtlpExport")(function* (
+  enabled: boolean,
+  spec: AiMetricsInstallSpec,
+  otlpBaseUrl: O.Option<string>,
+  forwarderResult: AiMetricsForwarderRunResult,
+  target: AiMetricsDeployTarget
+) {
+  if (!enabled) return forwarderResult;
+  const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
+  const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath }));
+  const otlpExit = yield* Effect.scoped(
+    Layer.build(Layer.mergeAll(duckDbLayer, AiMetricsOtlpSpanSender.layer)).pipe(
+      Effect.flatMap((context) =>
+        exportForwarderDerivedOtlp({ endpoint, forwarderResult, target }).pipe(Effect.provide(context))
+      )
+    )
+  ).pipe(Effect.exit);
+  const otlpExport = Exit.isFailure(otlpExit)
+    ? forwarderOtlpExportFailed({ endpoint, forwarderResult, message: forwarderOtlpExportFailureMessage, target })
+    : otlpExit.value;
+  if (Exit.isFailure(otlpExit)) {
+    yield* Console.error(`ai-metrics: OTLP export failed after forwarder run: ${forwarderOtlpExportFailureMessage}`);
+  }
+  return forwarderRunResultWithOtlpExport(forwarderResult, otlpExport);
+});
+
+const enforceForwarderRetention = Effect.fn("AIMetrics.enforceForwarderRetention")(function* (
+  enabled: boolean,
+  spec: AiMetricsInstallSpec,
+  maxSnapshotExports: number
+) {
+  if (!enabled) return O.none();
+  const result = yield* enforceAiMetricsRetentionPolicy(
+    AiMetricsRetentionEnforcementPolicy.make({
+      dataRoot: spec.storage.dataRoot,
+      dryRun: false,
+      maxSnapshotExports,
+    })
+  );
+  return O.some(result);
+});
+
+const logForwarderOptionalOutputs = Effect.fn("AIMetrics.logForwarderOptionalOutputs")(function* (
+  result: AiMetricsForwarderRunResult,
+  retentionEnforcement: O.Option<AiMetricsRetentionEnforcementResult>
+) {
+  if (O.isSome(result.parquetExportDir)) yield* Console.log(`parquet export: ${result.parquetExportDir.value}`);
+  if (O.isSome(retentionEnforcement)) {
+    yield* Console.log(
+      `retention enforcement: deleted=${retentionEnforcement.value.deletedDerivedExportCount} kept=${retentionEnforcement.value.keptDerivedExportCount}`
+    );
+  }
+  if (O.isSome(result.otlpExport)) {
+    yield* Console.log(`otlp export: ${result.otlpExport.value.status}`);
+    if (result.otlpExport.value.status === "exported") {
+      yield* Console.log(`otlp spans: ${result.otlpExport.value.spanCount}`);
+      yield* Console.log(`otlp sessions: ${result.otlpExport.value.sessionSpanCount}`);
+      yield* Console.log(`otlp turns: ${result.otlpExport.value.turnSpanCount}`);
+    } else {
+      yield* Console.log(`otlp failure: ${result.otlpExport.value.message}`);
+    }
+  }
+});
+
+const renderForwarderRunResult = Effect.fn("AIMetrics.renderForwarderRunResult")(function* (
+  json: boolean,
+  target: AiMetricsDeployTarget,
+  result: AiMetricsForwarderRunResult,
+  retentionEnforcement: O.Option<AiMetricsRetentionEnforcementResult>
+) {
+  if (json) {
+    yield* Console.log(yield* forwarderRunCommandToJson(result, retentionEnforcement));
+    return;
+  }
+  yield* Console.log(`ai-metrics forwarder: target=${target}`);
+  yield* Console.log(`ingest run: ${result.ingestRunId}`);
+  yield* Console.log(`source files: ${result.sourceFileCount}`);
+  yield* Console.log(`archive objects: ${result.archiveObjectCount}`);
+  yield* Console.log(`turns: ${result.turnCount}`);
+  yield* Console.log(`raw archive: ${result.rawArchiveDir}`);
+  yield* Effect.forEach(
+    result.sourceCoverage,
+    (source) =>
+      Console.log(
+        `${source.sourceKind}: included=${source.includedFileCount} candidates=${source.candidateFileCount} limited=${source.limitedByMaxFiles}`
+      ),
+    { discard: true }
+  );
+  yield* Console.log(`derived duckdb: ${result.duckDbPath}`);
+  yield* Console.log(`parquet mode: ${result.parquetExportMode}`);
+  yield* logForwarderOptionalOutputs(result, retentionEnforcement);
+});
+
 /**
  * Option schema for the MakeForwarderRunProgram AI metrics helper.
  *
@@ -1713,89 +1806,9 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
       Effect.flatMap((context) => runAiMetricsForwarder(forwarderInput).pipe(Effect.provide(context)))
     )
   );
-  let result: AiMetricsForwarderRunResult = forwarderResult;
-  if (otlp) {
-    const endpoint = yield* defaultServiceEndpoint(spec, otlpBaseUrl);
-    const otlpExit = yield* Effect.scoped(
-      // The Node SDK trace layer used to stand here so `Effect.withSpan` had somewhere to
-      // emit. Export now goes straight to the collector through the OTLP protobuf sender,
-      // which reports whether the spans actually landed -- the whole point of the change.
-      Layer.build(Layer.mergeAll(duckDbLayer, AiMetricsOtlpSpanSender.layer)).pipe(
-        Effect.flatMap((context) =>
-          exportForwarderDerivedOtlp({
-            endpoint,
-            forwarderResult,
-            target,
-          }).pipe(Effect.provide(context))
-        )
-      )
-    ).pipe(Effect.exit);
-    const otlpExport = Exit.isFailure(otlpExit)
-      ? forwarderOtlpExportFailed({
-          endpoint,
-          forwarderResult,
-          message: forwarderOtlpExportFailureMessage,
-          target,
-        })
-      : otlpExit.value;
-
-    if (Exit.isFailure(otlpExit)) {
-      yield* Console.error(`ai-metrics: OTLP export failed after forwarder run: ${forwarderOtlpExportFailureMessage}`);
-    }
-
-    result = forwarderRunResultWithOtlpExport(forwarderResult, otlpExport);
-  }
-  const retentionEnforcement = retentionEnforce
-    ? O.some(
-        yield* enforceAiMetricsRetentionPolicy(
-          AiMetricsRetentionEnforcementPolicy.make({
-            dataRoot: spec.storage.dataRoot,
-            dryRun: false,
-            maxSnapshotExports: retentionMaxSnapshotExports,
-          })
-        )
-      )
-    : O.none();
-
-  if (json) {
-    yield* Console.log(yield* forwarderRunCommandToJson(result, retentionEnforcement));
-    return;
-  }
-
-  yield* Console.log(`ai-metrics forwarder: target=${target}`);
-  yield* Console.log(`ingest run: ${result.ingestRunId}`);
-  yield* Console.log(`source files: ${result.sourceFileCount}`);
-  yield* Console.log(`archive objects: ${result.archiveObjectCount}`);
-  yield* Console.log(`turns: ${result.turnCount}`);
-  yield* Console.log(`raw archive: ${result.rawArchiveDir}`);
-  for (const source of result.sourceCoverage) {
-    yield* Console.log(
-      `${source.sourceKind}: included=${source.includedFileCount} candidates=${source.candidateFileCount} limited=${source.limitedByMaxFiles}`
-    );
-  }
-  const duckDbLocation = result.duckDbPath;
-  yield* Console.log(`derived duckdb: ${duckDbLocation}`);
-  yield* Console.log(`parquet mode: ${result.parquetExportMode}`);
-  const parquetLocation = result.parquetExportDir;
-  if (O.isSome(parquetLocation)) {
-    yield* Console.log(`parquet export: ${parquetLocation.value}`);
-  }
-  if (O.isSome(retentionEnforcement)) {
-    yield* Console.log(
-      `retention enforcement: deleted=${retentionEnforcement.value.deletedDerivedExportCount} kept=${retentionEnforcement.value.keptDerivedExportCount}`
-    );
-  }
-  const otlpExport = result.otlpExport;
-  if (O.isSome(otlpExport)) {
-    yield* Console.log(`otlp export: ${otlpExport.value.status}`);
-    if (otlpExport.value.status === "exported") {
-      yield* Console.log(`otlp spans: ${otlpExport.value.spanCount}`);
-      yield* Console.log(`otlp sessions: ${otlpExport.value.sessionSpanCount}`);
-      yield* Console.log(`otlp turns: ${otlpExport.value.turnSpanCount}`);
-    } else {
-      yield* Console.log(`otlp failure: ${otlpExport.value.message}`);
-    }
-  }
+  const result = yield* attachForwarderOtlpExport(otlp, spec, otlpBaseUrl, forwarderResult, target);
+  const retentionEnforcement = yield* enforceForwarderRetention(retentionEnforce, spec, retentionMaxSnapshotExports);
+  yield* renderForwarderRunResult(json, target, result, retentionEnforcement);
 });
 
 /**
@@ -2727,6 +2740,55 @@ class MakeMirrorSyncProgramOpts extends S.Class<MakeMirrorSyncProgramOpts>($I`Ma
   })
 ) {}
 
+const requireMirrorSyncConfirmation = Effect.fn("AIMetrics.requireMirrorSyncConfirmation")(function* (
+  confirm: O.Option<string>
+) {
+  if (O.isNone(confirm)) return false;
+  if (confirm.value !== p7MirrorConfirmToken) {
+    return yield* AiMetricsCommandError.make({
+      cause: confirm.value,
+      message: `AI metrics mirror sync confirmation must be "${p7MirrorConfirmToken}".`,
+    });
+  }
+  return true;
+});
+
+const renderMirrorSyncPlan = Effect.fn("AIMetrics.renderMirrorSyncPlan")(function* (
+  json: boolean,
+  bundleDir: string,
+  remoteRoot: string,
+  plannedCommands: ReadonlyArray<string>
+) {
+  const result = {
+    bundleDir,
+    confirmToken: p7MirrorConfirmToken,
+    dryRun: true,
+    plannedCommands,
+    remoteRoot,
+    status: "planned",
+  };
+  yield* Console.log(
+    json
+      ? yield* encodeCommandJson(result)
+      : `ai-metrics mirror sync: dry-run; confirm with --confirm ${p7MirrorConfirmToken}`
+  );
+  if (!json) yield* Effect.forEach(plannedCommands, Console.log, { discard: true });
+});
+
+const renderMirrorSyncResult = Effect.fn("AIMetrics.renderMirrorSyncResult")(function* (
+  json: boolean,
+  bundleDir: string,
+  host: string,
+  remoteRoot: string,
+  results: ReadonlyArray<CapturedCommandResult>
+) {
+  if (json) {
+    yield* Console.log(yield* encodeCommandJson({ bundleDir, dryRun: false, remoteRoot, results, status: "synced" }));
+    return;
+  }
+  yield* Console.log(`ai-metrics mirror sync: synced ${bundleDir} -> ${host}:${remoteRoot}`);
+});
+
 const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(function* ({
   bundle,
   confirm,
@@ -2746,54 +2808,20 @@ const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(funct
     remoteRoot,
     target,
   });
-  const dryRun = O.isNone(confirm);
-  if (O.isSome(confirm) && confirm.value !== p7MirrorConfirmToken) {
-    return yield* AiMetricsCommandError.make({
-      cause: confirm.value,
-      message: `AI metrics mirror sync confirmation must be "${p7MirrorConfirmToken}".`,
-    });
-  }
+  const confirmed = yield* requireMirrorSyncConfirmation(confirm);
 
   const mkdirArgs = [host, `mkdir -p ${shellQuote(remoteRoot)}`];
   const rsyncArgs = ["-az", "--delete", `${bundleDir}/`, `${host}:${remoteRoot}/`];
   const plannedCommands = [commandText("ssh", mkdirArgs), commandText("rsync", rsyncArgs)];
 
-  if (dryRun) {
-    const result = {
-      bundleDir,
-      confirmToken: p7MirrorConfirmToken,
-      dryRun: true,
-      plannedCommands,
-      remoteRoot,
-      status: "planned",
-    };
-    yield* Console.log(
-      json
-        ? yield* encodeCommandJson(result)
-        : `ai-metrics mirror sync: dry-run; confirm with --confirm ${p7MirrorConfirmToken}`
-    );
-    if (!json) {
-      for (const command of plannedCommands) yield* Console.log(command);
-    }
+  if (!confirmed) {
+    yield* renderMirrorSyncPlan(json, bundleDir, remoteRoot, plannedCommands);
     return;
   }
 
   const mkdir = yield* runCapturedCommand("ssh", mkdirArgs);
   const rsync = yield* runCapturedCommand("rsync", rsyncArgs);
-  const result = {
-    bundleDir,
-    dryRun: false,
-    remoteRoot,
-    results: [mkdir, rsync],
-    status: "synced",
-  };
-
-  if (json) {
-    yield* Console.log(yield* encodeCommandJson(result));
-    return;
-  }
-
-  yield* Console.log(`ai-metrics mirror sync: synced ${bundleDir} -> ${host}:${remoteRoot}`);
+  yield* renderMirrorSyncResult(json, bundleDir, host, remoteRoot, [mkdir, rsync]);
 });
 
 class MakeMirrorStatusProgramParams extends S.Class<MakeMirrorStatusProgramParams>($I`MakeMirrorStatusProgramParams`)(

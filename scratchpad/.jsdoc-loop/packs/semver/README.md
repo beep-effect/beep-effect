@@ -67,4 +67,3 @@
 - `semver/internal/order.ts:32` `comparePrereleaseIdentifier` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `semver/internal/order.ts:43` `compareParts` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `semver/internal/order.ts:70` `compareBuild` (value/const) missing=@category|@since|@example findings=missing-required-tags
-

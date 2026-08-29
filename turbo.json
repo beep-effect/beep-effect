@@ -65,6 +65,10 @@
         "!.next/cache/**"
       ]
     },
+    "@beep/api-docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     "lint": {
       "cache": true,
       "dependsOn": ["^lint"],
@@ -100,7 +104,8 @@
     "test": {
       "passThroughEnv": [
         "GITHUB_STEP_SUMMARY",
-        "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE"
+        "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
+        "BEEP_NODE_BIN"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",

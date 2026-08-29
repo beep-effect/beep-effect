@@ -80,4 +80,3 @@
 - `jsonl/internal/tail.ts:164` `readTailUntil` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `jsonl/internal/tail.ts:202` `readRangeText` (value/const) missing=@category|@since|@example findings=missing-required-tags
 - `jsonl/internal/utf8.ts:25` `utf8Length` (value/const) missing=@category|@since|@example findings=missing-required-tags
-

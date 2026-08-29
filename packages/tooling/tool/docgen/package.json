@@ -22,7 +22,7 @@
     "codegen": "echo 'no codegen needed'",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run src/bin.ts",
-    "docs:aggregate": "bash -o pipefail -c 'cd ../../../.. && bun run packages/tooling/tool/cli/src/bin.ts -- docs aggregate --clean'",
+    "docs:aggregate": "bunx --bun --no-install beep-cli docs aggregate --clean",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",

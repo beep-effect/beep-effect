@@ -173,6 +173,13 @@ const runWriter = Effect.fnUntraced(function* (
     yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
   }
 
+  const childStdin = O.match(O.fromUndefinedOr(options.disarmSentinel), {
+    // The kill-switch guard exits before the writer reads stdin. Ignoring the pipe in
+    // that case avoids racing a payload write against the child's intentional exit.
+    onSome: () => "ignore" as const,
+    onNone: () => ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true }) as const,
+  });
+
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
   // `node:child_process`. Measured: inside a vitest worker under the coverage script
   // (`bunx vitest run --coverage`, a different runtime from `bunx --bun vitest run`),
@@ -228,7 +235,7 @@ const runWriter = Effect.fnUntraced(function* (
     // `endOnDone` is stated rather than left to its `true` default: closing stdin once
     // the payload is written is the whole reason this run terminates, so it is part of
     // what the helper promises and not an incidental default someone may retune.
-    stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },
+    stdin: childStdin,
     stdout: "pipe",
     stderr: "pipe",
   });

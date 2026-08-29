@@ -2486,58 +2486,55 @@ const buildJsdocWorkerUnavailable = (reportPath: string, message: string): Agent
 const isReachableHttpStatus = (status: number): boolean => status >= 200 && status < 400;
 const isOkHttpStatus = (status: number): boolean => status >= 200 && status < 300;
 
-const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(function* (
-  input: AgentEffectivenessDoctorInput
+const probePhoenixEndpoints = Effect.fn("AiMetrics.agentEffectiveness.probePhoenixEndpoints")(function* (
+  client: HttpClient.HttpClient,
+  baseUrl: string
 ) {
-  if (input.noPhoenix) {
-    return buildPhoenixUnavailable(input, "Phoenix probe disabled by --no-phoenix.");
-  }
-
-  const client = yield* HttpClient.HttpClient;
-  const root = yield* client.get(input.phoenixBaseUrl).pipe(Effect.option);
-  const projects = yield* client.get(`${input.phoenixBaseUrl}/projects`).pipe(Effect.option);
+  const root = yield* client.get(baseUrl).pipe(Effect.option);
+  const projects = yield* client.get(`${baseUrl}/projects`).pipe(Effect.option);
 
   if (O.isNone(root) || O.isNone(projects)) {
-    return buildPhoenixUnavailable(input, "Phoenix endpoint was not reachable.");
+    return { _tag: "Unavailable" as const, message: "Phoenix endpoint was not reachable." };
   }
 
-  if (!isReachableHttpStatus(root.value.status) || !isReachableHttpStatus(projects.value.status)) {
-    return buildPhoenixUnavailable(input, "Phoenix endpoint returned a non-success status.");
-  }
+  return isReachableHttpStatus(root.value.status) && isReachableHttpStatus(projects.value.status)
+    ? { _tag: "Available" as const, projects: projects.value, root: root.value }
+    : { _tag: "Unavailable" as const, message: "Phoenix endpoint returned a non-success status." };
+});
 
-  const request = yield* HttpClientRequest.bodyJson(HttpClientRequest.post(`${input.phoenixBaseUrl}/graphql`), {
+const queryPhoenixInventory = Effect.fn("AiMetrics.agentEffectiveness.queryPhoenixInventory")(function* (
+  client: HttpClient.HttpClient,
+  baseUrl: string
+) {
+  const request = yield* HttpClientRequest.bodyJson(HttpClientRequest.post(`${baseUrl}/graphql`), {
     query: phoenixInventoryQuery,
   }).pipe(Effect.option);
-
   if (O.isNone(request)) {
-    return buildPhoenixUnavailable(input, "Phoenix GraphQL request could not be encoded.");
+    return { _tag: "Unavailable" as const, message: "Phoenix GraphQL request could not be encoded." };
   }
 
   const response = yield* client
     .execute(pipe(request.value, HttpClientRequest.accept("application/json")))
     .pipe(Effect.option);
-
   if (O.isNone(response) || !isOkHttpStatus(response.value.status)) {
-    return buildPhoenixUnavailable(input, "Phoenix GraphQL inventory query failed.");
+    return { _tag: "Unavailable" as const, message: "Phoenix GraphQL inventory query failed." };
   }
 
   const inventory = yield* HttpClientResponse.schemaBodyJson(S.Unknown)(response.value).pipe(
     Effect.flatMap(PhoenixGraphqlResponse.decodeEffect),
     Effect.option
   );
+  return O.match(inventory, {
+    onNone: () => ({
+      _tag: "Unavailable" as const,
+      message: "Phoenix GraphQL inventory response could not be decoded.",
+    }),
+    onSome: (value) => ({ _tag: "Available" as const, value }),
+  });
+});
 
-  if (O.isNone(inventory)) {
-    return buildPhoenixUnavailable(input, "Phoenix GraphQL inventory response could not be decoded.");
-  }
-
-  // Aggregates run as their own bounded request. A store too large to aggregate
-  // must still yield a reachable, readable inventory, so every failure mode here
-  // -- encode, transport, non-2xx, decode, timeout -- degrades the counts to
-  // unmeasured rather than reporting Phoenix as down. Each mode carries its own
-  // operator-facing reason: a single "timed out" label would send an operator
-  // hunting store size when Phoenix actually rejected the query or was
-  // unreachable.
-  const stats = yield* HttpClientRequest.bodyJson(HttpClientRequest.post(`${input.phoenixBaseUrl}/graphql`), {
+const queryPhoenixProjectStats = (client: HttpClient.HttpClient, baseUrl: string) =>
+  HttpClientRequest.bodyJson(HttpClientRequest.post(`${baseUrl}/graphql`), {
     query: phoenixProjectStatsQuery,
   }).pipe(
     Effect.mapError(() => "the aggregate query could not be encoded"),
@@ -2567,6 +2564,45 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     Effect.result
   );
 
+const phoenixReachableMessage = (statsUnmeasuredReason: O.Option<string>, hasTraceBearingProject: boolean): string =>
+  pipe(
+    statsUnmeasuredReason,
+    O.match({
+      onNone: () =>
+        hasTraceBearingProject
+          ? "Phoenix is reachable and has trace-bearing projects."
+          : "Phoenix is reachable but no trace-bearing projects were reported.",
+      onSome: (reason) => `Phoenix is reachable; per-project trace counts are unmeasured because ${reason}.`,
+    })
+  );
+
+const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(function* (
+  input: AgentEffectivenessDoctorInput
+) {
+  if (input.noPhoenix) {
+    return buildPhoenixUnavailable(input, "Phoenix probe disabled by --no-phoenix.");
+  }
+
+  const client = yield* HttpClient.HttpClient;
+  const endpoints = yield* probePhoenixEndpoints(client, input.phoenixBaseUrl);
+  if (endpoints._tag === "Unavailable") {
+    return buildPhoenixUnavailable(input, endpoints.message);
+  }
+
+  const inventory = yield* queryPhoenixInventory(client, input.phoenixBaseUrl);
+  if (inventory._tag === "Unavailable") {
+    return buildPhoenixUnavailable(input, inventory.message);
+  }
+
+  // Aggregates run as their own bounded request. A store too large to aggregate
+  // must still yield a reachable, readable inventory, so every failure mode here
+  // -- encode, transport, non-2xx, decode, timeout -- degrades the counts to
+  // unmeasured rather than reporting Phoenix as down. Each mode carries its own
+  // operator-facing reason: a single "timed out" label would send an operator
+  // hunting store size when Phoenix actually rejected the query or was
+  // unreachable.
+  const stats = yield* queryPhoenixProjectStats(client, input.phoenixBaseUrl);
+
   const statsByProjectName = pipe(
     stats,
     Result.getSuccess,
@@ -2580,8 +2616,8 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
   );
 
   const version = O.firstSomeOf([
-    O.fromUndefinedOr(root.value.headers["x-phoenix-server-version"]),
-    O.fromUndefinedOr(projects.value.headers["x-phoenix-server-version"]),
+    O.fromUndefinedOr(endpoints.root.headers["x-phoenix-server-version"]),
+    O.fromUndefinedOr(endpoints.projects.headers["x-phoenix-server-version"]),
   ]);
   const data = inventory.value.data;
   const projectsList = pipe(
@@ -2623,16 +2659,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     baseUrl: input.phoenixBaseUrl,
     datasetCount: data.datasetCount,
     evaluatorCount: data.evaluatorCount,
-    message: pipe(
-      statsUnmeasuredReason,
-      O.match({
-        onNone: () =>
-          hasTraceBearingProject
-            ? "Phoenix is reachable and has trace-bearing projects."
-            : "Phoenix is reachable but no trace-bearing projects were reported.",
-        onSome: (reason) => `Phoenix is reachable; per-project trace counts are unmeasured because ${reason}.`,
-      })
-    ),
+    message: phoenixReachableMessage(statsUnmeasuredReason, hasTraceBearingProject),
     projectCount: data.projectCount,
     projects: projectsList,
     promptCount: data.promptCount,
@@ -3818,6 +3845,16 @@ const unconfirmedSyncResult = ({
     writtenPromptVersionIds: [],
   });
 
+const annotationCheckFailurePolicy = (dryRun: boolean): AgentEffectivenessMutationPolicy =>
+  dryRun
+    ? AgentEffectivenessMutationPolicy.Enum["dry-run-annotation-check-failed"]
+    : AgentEffectivenessMutationPolicy.Enum["blocked-annotation-check-failed"];
+
+const datasetCheckFailurePolicy = (dryRun: boolean): AgentEffectivenessMutationPolicy =>
+  dryRun
+    ? AgentEffectivenessMutationPolicy.Enum["dry-run-dataset-check-failed"]
+    : AgentEffectivenessMutationPolicy.Enum["blocked-dataset-check-failed"];
+
 /**
  * Sync agent-effectiveness datasets, prompts, experiments, and resolved annotations to Phoenix.
  *
@@ -3892,9 +3929,7 @@ export const syncAgentEffectivenessPhoenix: (
       datasetBundle,
       dryRun: input.dryRun,
       experimentBundle,
-      mutationPolicy: input.dryRun
-        ? AgentEffectivenessMutationPolicy.Enum["dry-run-annotation-check-failed"]
-        : AgentEffectivenessMutationPolicy.Enum["blocked-annotation-check-failed"],
+      mutationPolicy: annotationCheckFailurePolicy(input.dryRun),
       phoenixAnnotations,
       plannedAnnotationCount: A.length(plan.annotations),
       promptBundle,
@@ -3908,9 +3943,7 @@ export const syncAgentEffectivenessPhoenix: (
       datasetBundle,
       dryRun: input.dryRun,
       experimentBundle,
-      mutationPolicy: input.dryRun
-        ? AgentEffectivenessMutationPolicy.Enum["dry-run-dataset-check-failed"]
-        : AgentEffectivenessMutationPolicy.Enum["blocked-dataset-check-failed"],
+      mutationPolicy: datasetCheckFailurePolicy(input.dryRun),
       phoenixAnnotations,
       plannedAnnotationCount: A.length(plan.annotations),
       promptBundle,
