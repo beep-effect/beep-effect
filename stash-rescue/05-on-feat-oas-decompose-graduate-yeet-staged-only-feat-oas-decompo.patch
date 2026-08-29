@@ -1,0 +1,861 @@
+diff --git a/.claude/launch.json b/.claude/launch.json
+new file mode 100644
+index 0000000000..eb4fb8f7e0
+--- /dev/null
++++ b/.claude/launch.json
+@@ -0,0 +1,11 @@
++{
++  "version": "0.0.1",
++  "configurations": [
++    {
++      "name": "professional-desktop-web",
++      "runtimeExecutable": "bun",
++      "runtimeArgs": ["run", "--cwd", "apps/professional-desktop", "dev"],
++      "port": 1421
++    }
++  ]
++}
+diff --git a/explorations/ATLAS.md b/explorations/ATLAS.md
+index f4a920f98b..8bfefd80f4 100644
+--- a/explorations/ATLAS.md
++++ b/explorations/ATLAS.md
+@@ -39,15 +39,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
+ ## Explorations
+ 
+ ### Active
+-- [`ontology-agent-surface`](./ontology-agent-surface/README.md) — agent/MCP
+-  tool surface for the ontology workbench (stage `shape`): the named
+-  follow-up from [`goals/ontology-workbench`](../goals/ontology-workbench/README.md)
+-  (completed-retained). Thin-adapter thesis over the SPEC 13-16 agent-ready
+-  plumbing (partitioned session graphs, schema-typed protocol, real batch
+-  deltas, query safeguards), folding in the retrospective's hardening pre-work
+-  (repair-strategy registry, ROBOT validation, base-prefix codec fidelity) and
+-  architecture consolidations (single partition-ingestion pipeline, worker-safe
+-  entrypoint convention, shared action-state helper).
+ - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
+   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
+   goals/vision, centered on a gap map
+@@ -176,6 +167,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
+ 
+ ### Graduated
+ 
++- [`ontology-agent-surface`](./ontology-agent-surface/README.md) — graduated
++  2026-07-11 into
++  [`ontology-agent-surface`](../goals/ontology-agent-surface/README.md): a
++  curated ontology MCP toolkit on the professional-desktop sidecar, stateless
++  over saved Turtle files with fingerprint CAS and guarded by authenticated
++  streamable HTTP, TierGate, per-change attribution, and static budgets. First
++  live slice: `capability-metadata` + `sparql-query` from an actual MCP client;
++  P0 folds in verified-repair, base-prefix, and ROBOT hardening.
+ - [`skillopt-training-pilot`](./skillopt-training-pilot/README.md) — graduated
+   2026-07-06 (same-day compressed ceremony; BRIEF signed off) into
+   [`skillopt-training-pilot`](../goals/skillopt-training-pilot/README.md):
+diff --git a/explorations/ontology-agent-surface/MAP.md b/explorations/ontology-agent-surface/MAP.md
+index fa723a5a60..15b17cb1fe 100644
+--- a/explorations/ontology-agent-surface/MAP.md
++++ b/explorations/ontology-agent-surface/MAP.md
+@@ -11,18 +11,69 @@ explicitly marked NET-NEW.
+ 
+ | Slug | Mission | Depends on | Capabilities cited |
+ | --- | --- | --- | --- |
+-| `<goal-slug>` | <one-liner> | <other slugs / none> | <`@beep/*` refs or NET-NEW> |
++| `ontology-agent-surface` | Expose the ontology workbench to agents as a curated ~10-tool MCP surface served from the desktop sidecar over streamable HTTP — gated, attributed, budgeted, stateless over saved files with fingerprint CAS — with the workbench retrospective's hardening pre-work folded in. | `goals/ontology-workbench` (completed-retained); `goals/mcp-kit` (landed) | See capability table below |
++
++One packet, per the brief's appetite. A session-repository refactor or a second
++transport would trigger a split — both are v1 no-gos.
++
++### Capability table
++
++| Component | Basis |
++| --- | --- |
++| Tool gating / annotations / budgets | `@beep/mcp-kit` — `TierGate.ts`, `ToolAnnotations.ts` (RESEARCH in-repo inventory) |
++| MCP driver shape | `@beep/m365-mcp` — schema tools → thin handlers → sanitized server + end-to-end protocol test (template) |
++| Tool business logic | `@beep/ontology-use-cases` — Session services / projections / sparql / reasoner / validation |
++| Real engines | `@beep/oxigraph`, `@beep/shacl`, `@beep/n3` layers via `@beep/ontology-server` |
++| CAS fingerprint | `@beep/rdf-canonize` rdfc-1.0 fingerprint (workbench round-trip machinery) |
++| Sidecar HTTP + auth | `apps/professional-desktop/server/main.ts`, `RpcSessionAuth` |
++| PROV journal | `Session.validation.ts` provenance export + `@beep/rdf/Vocab/Prov` |
++| Streamable-HTTP MCP hosting | **NET-NEW** — repo MCP drivers are stdio-only (research gap #3); new transport mount patterned on the MCP spec |
++| CAS save precondition | **NET-NEW** — the fingerprint exists; the compare-and-swap write contract does not |
++| Repair strategy registry | **NET-NEW** — `sh:hasValue`-only today (research gap; P0 scope) |
++| Actor attribution threading | **NET-NEW** — `prov:Agent` emitted ad hoc; caller identity → journal is new |
+ 
+ ## Sequencing
+ 
+-<Order and why. Which candidate is the first bet, which are follow-ons, which
+-are optional.>
++Single packet, phased (seeds the goal PLAN); the ordering rationale is that
++each phase's outputs are the next phase's inputs:
++
++1. **P0 Bootstrap + hardening** — verify surfaces against research; repair
++   strategy registry beyond `sh:hasValue`; base-prefix codec fidelity; ROBOT
++   host validation of interop fixtures. The repair tool is hollow and file
++   rewrites are lossy until these land, and all three touch files later
++   phases touch again.
++2. **P1 Toolkit definition** — the ~10 tool schemas wrapping ontology
++   use-cases (open/inspect, snapshot/describe, search, sparql-query,
++   propose-change-batch, validate, repair, export-provenance,
++   capability-metadata); the stateless open → apply → CAS-save helper; static
++   budgets; typed tool errors including the drift-cap and CAS-rejection
++   contracts. Adopt the single partition-ingestion classifier here (same
++   files).
++3. **P2 Transport + safety wiring** — streamable-HTTP `/mcp` endpoint on the
++   sidecar beside `/rpc/` (Origin validation, loopback bind,
++   `RpcSessionAuth`); TierGate fail-closed on mutating tools; actor identity
++   threaded into the PROV-O journal; live end-to-end proof from a real agent
++   client.
++4. **P3 Harden + close** — per-call parse latency benchmark at 1k/10k/100k;
++   tool documentation; packet closeout with reflection.
+ 
+ ## First Vertical Slice
+ 
+-<The smallest end-to-end proof for the first candidate: what a user/agent can
+-do when it lands, and how we verify it.>
++`capability-metadata` + `sparql-query` served over the real `/mcp` endpoint
++with auth, driven by an actual MCP client: the thinnest path exercising
++transport, auth, toolkit registration, budgets, and a real engine (oxigraph)
++before any mutation ships. Verified by a scripted MCP client session
++(initialize → tools/list → tools/call) asserting bounded results.
+ 
+ ## Open Risks Inherited From The Brief
+ 
+-<Rabbit holes from BRIEF.md that graduate as constraints, one line each.>
++- Semantic-vs-byte CAS precondition choice — decide in P1 before the save
++  contract freezes.
++- Stateless per-call parse cost at 100k scale — benchmark gate in P3; no
++  silent caching (that recreates the session-ownership problem).
++- First production TierGate wiring sets the repo precedent — review as a
++  standard-setting change.
++- Actor identity source at the HTTP boundary must be settled before PROV
++  attribution is meaningful — P2 entry criterion.
++- Concurrent human edits: CAS rejection needs a recoverable error contract
++  (current fingerprint + refetch guidance), not bare failure.
+diff --git a/explorations/ontology-agent-surface/README.md b/explorations/ontology-agent-surface/README.md
+index f0bb7a6d10..c1b9966445 100644
+--- a/explorations/ontology-agent-surface/README.md
++++ b/explorations/ontology-agent-surface/README.md
+@@ -2,8 +2,8 @@
+ 
+ ## Status
+ 
+-Stage: `shape`
+-Status: `active`
++Stage: `graduate`
++Status: `graduated`
+ 
+ Source: [`ops/manifest.json`](./ops/manifest.json)
+ 
+@@ -17,9 +17,9 @@ workbench retrospective's hardening pre-work and architecture consolidations.
+ 
+ ## Next Open Question
+ 
+-BRIEF.md is drafted from the five resolved decisions — does it match the
+-picture in the user's head? (Shape-stage exit gate: user sign-off, then
+-decompose.)
++None — graduated.
++
++Goal: [`goals/ontology-agent-surface`](../../goals/ontology-agent-surface/README.md).
+ 
+ ## Read This First
+ 
+@@ -32,6 +32,10 @@ decompose.)
+ 
+ ## Trail
+ 
++- 2026-07-11: definition-of-ready passed after user sign-off and MAP
++  decomposition; graduated the single candidate into
++  `goals/ontology-agent-surface`, carried the provenance ledger, cross-linked
++  both manifests, and moved this packet to ATLAS Graduated.
+ - 2026-07-10: align completed — all 5 queued questions resolved in one
+   grilling pass (HTTP-on-sidecar transport; stateless+fingerprint-CAS session
+   model; TierGate+attribution+budgets launch-blocking; curated ~10-tool
+diff --git a/explorations/ontology-agent-surface/ops/manifest.json b/explorations/ontology-agent-surface/ops/manifest.json
+index 71949448b3..a76ec4bd7a 100644
+--- a/explorations/ontology-agent-surface/ops/manifest.json
++++ b/explorations/ontology-agent-surface/ops/manifest.json
+@@ -3,16 +3,16 @@
+   "exploration": {
+     "slug": "ontology-agent-surface",
+     "title": "Ontology Agent Surface",
+-    "status": "active",
+-    "stage": "shape",
++    "status": "graduated",
++    "stage": "graduate",
+     "openQuestions": [],
+     "sources": ["research/SOURCES.md"],
+     "links": {
+-      "goals": [],
++      "goals": ["goals/ontology-agent-surface"],
+       "docs": [],
+       "supersededBy": null
+     },
+     "created": "2026-07-10",
+-    "updated": "2026-07-10"
++    "updated": "2026-07-11"
+   }
+ }
+diff --git a/goals/ontology-agent-surface/GOAL.md b/goals/ontology-agent-surface/GOAL.md
+new file mode 100644
+index 0000000000..f6018dcdb4
+--- /dev/null
++++ b/goals/ontology-agent-surface/GOAL.md
+@@ -0,0 +1,82 @@
++# GOAL: expose the ontology workbench to agents safely
++
++Repo root: the current working directory — the `beep-effect` checkout you are
++running in. Do not assume an absolute path; several checkouts exist. All paths
++below are repo-relative.
++
++Outcome: agents can inspect, query, safely change, validate, repair, and export
++provenance for saved Turtle ontologies through a curated MCP toolkit on the
++professional-desktop sidecar, with real-engine and live-client proof.
++
++This is a compact `/goal` launcher. Treat the packet files as the contract:
++
++- `goals/ontology-agent-surface/README.md`
++- `goals/ontology-agent-surface/SPEC.md`
++- `goals/ontology-agent-surface/PLAN.md`
++- `goals/ontology-agent-surface/ops/manifest.json`
++- `goals/ontology-agent-surface/research/SOURCES.md`
++
++Read those first, then `AGENTS.md`, `CLAUDE.md`, and the standards named by
++`SPEC.md`. Repo standards outrank packet prose when they conflict.
++
++Scope:
++
++- In: ontology domain/use-case/server surfaces; N3, SHACL, Oxigraph, canonize,
++  and MCP-kit integration points; an ontology MCP driver/toolkit; the
++  professional-desktop sidecar `/mcp` mount and auth; focused tests, docs,
++  benchmarks, packet evidence, and necessary architecture consolidations.
++- Out: server session repositories or live two-writer sessions, stdio MCP,
++  OWL 2 DL reasoning, broad 25+ tool inventories, registry fetch,
++  multi-format import/export, server workspaces, unrelated product refactors.
++
++Hard constraints (details and numbering in `SPEC.md`):
++
++- Keep the curated agent-first vocabulary near ten task tools; wrap ontology
++  use-cases directly rather than mirroring UI RPC payloads.
++- V1 is stateless over saved files: open, apply typed change ops, and save only
++  under an rdfc-1.0 fingerprint CAS precondition. Unsaved webview state stays
++  invisible; reserve `sessionHandle` for v2 without implementing it.
++- Serve streamable HTTP at sidecar `/mcp`, loopback-only, Origin-validated,
++  authenticated through `RpcSessionAuth`; no v1 stdio transport.
++- Every mutation is fail-closed through TierGate, retains caller identity in
++  the per-change PROV-O journal, and obeys static operation/result budgets.
++  Refusals, drift caps, and CAS conflicts are typed, recoverable tool errors;
++  never silently no-op.
++- Prove tools with real N3/Oxigraph/SHACL layers and the endpoint with an
++  actual MCP client. Do not declare fakes-only coverage sufficient.
++
++Workflow:
++
++1. Inspect the source exploration, packet docs, and live repo state.
++2. Execute `PLAN.md` in order, P0 through P3, without widening the packet.
++3. Preserve unrelated worktree changes and keep decisions evidence-backed.
++4. Update phase evidence and packet state as work lands.
++5. Drive each implementation phase through `bun run beep yeet` (repair,
++   verify, publish, monitor); do not call the goal complete before mergeable.
++6. At P3 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
++   `/reflect`; `bun run beep lint reflection-artifacts` must pass.
++
++Acceptance:
++
++- [ ] Every `SPEC.md` acceptance criterion is satisfied.
++- [ ] Required checks pass, or unrelated failures are reproduced and recorded.
++- [ ] No unrelated refactors or formatting churn.
++
++Verification:
++
++```sh
++test "$(wc -m < goals/ontology-agent-surface/GOAL.md)" -le 4000
++jq . goals/ontology-agent-surface/ops/manifest.json
++git diff --check -- goals/ontology-agent-surface
++bun run beep yeet verify
++bun run beep lint reflection-artifacts
++```
++
++Stop and report if a stateful session repository, second transport, OWL 2 DL
++reasoning, broad tool expansion, unresolved actor identity, unreviewed auth or
++security redesign, new dependency/lockfile change, destructive state, or scope
++beyond `SPEC.md` becomes necessary. Also stop on contradictory source evidence
++or when a required real-engine/live-client proof cannot be produced.
++
++Done only when acceptance and verification pass and Yeet reports the PR work
++mergeable, or when a blocker is reported with file/command evidence.
+diff --git a/goals/ontology-agent-surface/PLAN.md b/goals/ontology-agent-surface/PLAN.md
+new file mode 100644
+index 0000000000..574edaab4c
+--- /dev/null
++++ b/goals/ontology-agent-surface/PLAN.md
+@@ -0,0 +1,53 @@
++# Ontology Agent Surface Plan
++
++## Status
++
++Status: `pending`
++
++## Phases
++
++| Phase | Status | Goal | Exit criteria |
++| --- | --- | --- | --- |
++| P0 Bootstrap + Hardening | pending | Re-verify the exploration inventory against live source; generalize verified repairs beyond `sh:hasValue`; preserve empty/base prefixes; run ROBOT host validation. Confirm exact toolkit/driver placement and record any decision-invalidating drift. | Capability facts and package placement are recorded; supported repair strategies retain verify-then-offer proof; base-prefix fingerprint fixtures pass; ROBOT interop evidence is archived or an explicit host blocker is recorded. |
++| P1 Toolkit Definition | pending | Define the curated agent-first schemas and thin handlers; implement stateless open/apply/CAS-save, real deltas, server-owned budgets, typed CAS/drift errors, and the shared ingestion classifier where touched. Resolve semantic-vs-byte CAS semantics before freezing the save contract. | Required tool capabilities are schema-typed and real-engine tested; stateless CAS rejects stale writes recoverably; operation/result ceilings cannot be overridden by callers; no session repository or silent cache exists. |
++| P2 Transport + Safety | pending | Mount authenticated, Origin-validated streamable HTTP `/mcp` on the loopback sidecar; wire TierGate fail-closed and per-change actor attribution. Land the `capability-metadata` + `sparql-query` first slice as live proof before enabling mutation. | An actual MCP client completes `initialize` → `tools/list` → `tools/call` against `/mcp`; the first slice returns bounded Oxigraph results; every mutation is gated, attributed, budgeted, and covered by typed refusal/conflict proof. |
++| P3 Harden + Close | pending | Benchmark stateless parse/open at 1k/10k/100k, finish tool/capability documentation and real-stack acceptance, drive Yeet to mergeable, and close with reflection. | Benchmarks and acceptance evidence are archived; reasoner/tool limits are documented; `bun run beep yeet` reports the PR work mergeable; README/manifest are current; a valid closeout reflection exists and reflection lint passes. |
++
++Each implementation phase lands through `bun run beep yeet` (repair → verify →
++publish → monitor). Do not mark the packet complete until P3's PR work is
++mergeable.
++
++## P3 Closeout Checklist
++
++Before marking the packet closed (`status` to `completed-retained` /
++`complete`):
++
++1. Write a closeout reflection via the `/reflect` skill to
++   `history/reflections/<YYYY-MM-DD>-<agent>.md`; its frontmatter must validate
++   against `ReflectionFrontmatter`.
++2. Run `bun run beep lint reflection-artifacts` (`reflectionRequired: true`).
++3. Update `README.md` status/latest evidence and synchronize PLAN/manifest
++   phase statuses plus `initiative.status`.
++4. Confirm Yeet/GitHub evidence shows the packet's PR work mergeable.
++
++## Execution Notes
++
++- Preserve unrelated worktree changes and keep `SPEC.md` normative.
++- Start from the inherited ledger in `research/SOURCES.md`; re-verify drifting
++  source paths and protocol/auth behavior before implementation.
++- Archive phase notes, ROBOT output, live-client transcripts, and benchmarks
++  under `history/` without recording bearer tokens or sensitive values.
++- Treat production TierGate wiring as a repo precedent requiring focused
++  review, not incidental transport glue.
++- Do not hide stateless latency with caching; that reopens the session model.
++
++## Verification Commands
++
++```sh
++test "$(wc -m < goals/ontology-agent-surface/GOAL.md)" -le 4000
++jq . goals/ontology-agent-surface/ops/manifest.json
++rg -n "ontology-agent-surface|GOAL.md|agentLaunchers|packetAnchorDocument" goals/ontology-agent-surface
++git diff --check -- goals/ontology-agent-surface
++bun run beep yeet verify
++bun run beep lint reflection-artifacts
++```
+diff --git a/goals/ontology-agent-surface/README.md b/goals/ontology-agent-surface/README.md
+new file mode 100644
+index 0000000000..932c3e11e7
+--- /dev/null
++++ b/goals/ontology-agent-surface/README.md
+@@ -0,0 +1,54 @@
++# Ontology Agent Surface
++
++## Status
++
++Lifecycle: `active`
++
++Source: [`ops/manifest.json`](./ops/manifest.json)
++
++## Mission
++
++Expose the ontology workbench to agents through a curated, task-oriented MCP
++toolkit on the professional-desktop sidecar: stateless over saved Turtle files,
++CAS-safe, authenticated, gated, attributed, budgeted, and proven against the
++real ontology engine stack.
++
++## Launch
++
++Use this command for execution-capable sessions:
++
++```text
++/goal follow the instructions in goals/ontology-agent-surface/GOAL.md
++```
++
++`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
++
++## Read This First
++
++1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
++2. [`SPEC.md`](./SPEC.md) - normative source of truth (locked constraints).
++3. [`PLAN.md`](./PLAN.md) - phased execution plan (P0 hardening to P3 close).
++4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
++5. [`research/SOURCES.md`](./research/SOURCES.md) - inherited implementation
++   source corpus and provenance.
++6. [`history/`](./history/) - evidence, benchmarks, closeouts, and reflections.
++
++## Current Phase
++
++P0 Bootstrap + Hardening is pending. Re-verify the exploration's capability
++inventory against the live checkout, then harden repair strategies, base-prefix
++codec fidelity, and ROBOT interop evidence before defining the toolkit.
++
++## Latest Evidence
++
++Graduated on 2026-07-11 from
++[`explorations/ontology-agent-surface`](../../explorations/ontology-agent-surface/README.md);
++implementation has not started.
++
++## Notes
++
++- The source exploration resolved five decisions and approved one goal packet.
++- The first live proof is `capability-metadata` + `sparql-query` over the real
++  authenticated `/mcp` endpoint from an actual MCP client.
++- This packet is not complete until its PR work is driven to mergeable through
++  `bun run beep yeet` and the P3 reflection gate passes.
+diff --git a/goals/ontology-agent-surface/SPEC.md b/goals/ontology-agent-surface/SPEC.md
+new file mode 100644
+index 0000000000..7eb0ac55c6
+--- /dev/null
++++ b/goals/ontology-agent-surface/SPEC.md
+@@ -0,0 +1,192 @@
++# Ontology Agent Surface Spec
++
++## Objective
++
++Expose the completed ontology workbench to agents through a curated MCP toolkit
++served by the existing professional-desktop sidecar. V1 operates statelessly on
++saved Turtle files, reuses typed ontology use-cases and real engine layers, and
++makes every write conflict-safe, fail-closed, attributed, budgeted, and
++recoverable. The first live slice proves authenticated `capability-metadata`
++and bounded `sparql-query` calls from an actual MCP client.
++
++## Non-Goals
++
++- A sidecar session repository, revisioned two-writer contract, shared
++  undo/redo, or access to unsaved webview state; `sessionHandle` is reserved for
++  a future stateful v2 only.
++- A stdio MCP transport in v1.
++- Full OWL 2 DL reasoning; the workbench t2/t3 deferral remains and capability
++  metadata must advertise the bounded inference actually available.
++- A broad 25+ tool inventory before usage evidence justifies it.
++- OLS/BioPortal registry fetch, multi-format import/export, or server-backed
++  ontology workspaces.
++- Unguarded mutation. A write that cannot be gated, attributed, and budgeted
++  does not ship.
++- Unrelated workbench UI, chat, foundation ontology, or identity-as-IRI work.
++
++## Source Hierarchy
++
++1. The user-approved graduation objective and
++   [`BRIEF.md`](../../explorations/ontology-agent-surface/BRIEF.md).
++2. `AGENTS.md`, `CLAUDE.md`, and required skills.
++3. `standards/ARCHITECTURE.md`, governing package standards, and the completed
++   [`ontology-workbench` spec](../ontology-workbench/SPEC.md).
++4. This `SPEC.md`.
++5. `PLAN.md`.
++6. `GOAL.md`.
++7. [`DECISIONS.md`](../../explorations/ontology-agent-surface/DECISIONS.md),
++   [`MAP.md`](../../explorations/ontology-agent-surface/MAP.md),
++   `research/`, `ops/`, and `history/`.
++
++Higher sources outrank lower sources when they conflict.
++
++## Target Surfaces
++
++- `packages/ontology/{domain,use-cases,server}` for schema-first tool contracts,
++  stateless file operations, CAS, attribution, validation, and shared
++  orchestration.
++- `packages/drivers/{n3,shacl,oxigraph}` and
++  `packages/foundation/{capability/{mcp-kit,semantic-web},modeling/rdf}` only
++  where the hardening and real-engine contracts require focused changes.
++- An ontology MCP toolkit/driver following the `@beep/m365-mcp` thin-handler
++  pattern; P0 must confirm its canonical package placement before scaffolding.
++- `apps/professional-desktop/server` for the authenticated streamable-HTTP MCP
++  mount beside `/rpc/` and the minimum runtime wiring needed to host it.
++- Focused tests, tool documentation, benchmarks, and this packet's evidence.
++
++## Constraints (locked decisions, normative)
++
++1. The v1 vocabulary is a curated, agent-first surface of approximately ten
++   task tools, not a 1:1 mirror of `OntologyRpcs`: `open-inspect`,
++   `snapshot-describe`, `search`, `sparql-query`, `propose-change-batch`,
++   `validate`, `repair`, `export-provenance`, and `capability-metadata` are the
++   required capabilities. A mechanically justified split may add one tool;
++   broader expansion requires usage evidence and a contract change.
++2. Toolkit schemas live with the ontology capability they describe; the MCP
++   driver stays a thin host with schema tools, service-delegating handlers,
++   sanitized spans, explicit read/write annotations, and protocol-level tests.
++3. V1 is stateless over saved Turtle files: each operation opens server-side,
++   derives or applies typed change operations, and writes atomically only when
++   the caller's expected rdfc-1.0 canonize fingerprint matches current disk
++   state. Unsaved webview state is neither observed nor overwritten.
++4. Tool schemas reserve an optional `sessionHandle` for a future stateful v2,
++   but v1 must not create a session repository, lock service, revision store,
++   cache, or two-writer undo model.
++5. Before the P1 save contract freezes, decide and record whether semantic
++   fingerprint equality alone is the CAS precondition or whether byte-hash
++   equality is also required. The decision must preserve explicit conflict
++   detection under prefix/formatting churn.
++6. CAS rejection is a typed, recoverable tool result containing the current
++   fingerprint and refetch/retry guidance; it is never last-writer-wins or a
++   bare failure.
++7. The only v1 transport is MCP streamable HTTP at `/mcp`, mounted beside
++   `/rpc/` in the existing sidecar, bound to loopback, Origin-validated, and
++   authenticated by the existing `RpcSessionAuth` boundary. Sidecar stdio
++   remains owned by Effect RPC framing.
++8. Every mutating tool is dispatched through `@beep/mcp-kit` TierGate and
++   fails closed when policy or approval is absent. This first production
++   wiring is reviewed and documented as a reusable repo precedent.
++9. Caller identity crosses the authenticated tool boundary and is retained on
++   every change-log entry so PROV-O export emits the correct `prov:Agent` and
++   association. P2 cannot begin until the actor identity source is explicit;
++   export-time-only attribution is insufficient.
++10. Static server-owned budgets bound operations/quads per batch and query or
++    report results independently of caller input. Reasoner drift beyond the
++    allowed cap returns a typed tool error instead of silently triggering an
++    unbounded full recompute.
++11. Constraints 8-10 are the indivisible write-safety trio: a mutation that is
++    not gated, attributed, and budgeted does not ship.
++12. P0 hardens the flagship path before tool exposure: repair generation uses
++    a constraint-component strategy registry beyond `sh:hasValue` while
++    preserving verify-then-offer; empty/base `@prefix :` round-trips without
++    loss; ROBOT validates the named interop fixtures on a capable host.
++13. Repair strategies may only offer operations supported by sufficient SHACL
++    detail and an explicit safety classification. Destructive or value-guessing
++    strategies do not inherit the safe posture of `sh:hasValue` additions.
++14. Every refusal or blocked action is surfaced as a typed tool state/error;
++    silent no-op guards are forbidden. Proposed batches return real added and
++    removed deltas.
++15. All tool tests exercise the real N3/Oxigraph/SHACL stack where applicable.
++    P2 includes an actual MCP client conversation (`initialize` → `tools/list`
++    → `tools/call`) against authenticated `/mcp`; fakes-only proof is not
++    acceptance evidence.
++16. The first live vertical slice is `capability-metadata` plus bounded
++    `sparql-query` over the real endpoint, proving transport, auth, toolkit
++    registration, budgets, and Oxigraph before any mutation ships.
++17. Stateless open/parse latency is benchmarked at 1k, 10k, and 100k elements
++    in P3. Do not add a silent cache to improve results; cache pressure reopens
++    the explicitly deferred session-ownership design and triggers a stop.
++18. Adopt the single partition-ingestion classifier, worker-safe entrypoints,
++    and shared surfaced-action-state helper only where planned work already
++    touches their files; they do not authorize a broad architecture refactor.
++
++## Decision Log
++
++The resolved rationale remains in the exploration; these links seed the
++implementation contract without duplicating the discussion.
++
++| Date | Locked decision | Source |
++| --- | --- | --- |
++| 2026-07-10 | Sidecar streamable HTTP `/mcp`; existing loopback/auth boundary; no v1 stdio. | [`DECISIONS.md` — MCP transport & placement](../../explorations/ontology-agent-surface/DECISIONS.md) |
++| 2026-07-10 | Stateless saved-file operations with fingerprint CAS; stateful session reserved for v2. | [`DECISIONS.md` — Agent session model](../../explorations/ontology-agent-surface/DECISIONS.md) |
++| 2026-07-10 | TierGate, per-change actor attribution, and static budgets are launch-blocking. | [`DECISIONS.md` — Mutation safety scope](../../explorations/ontology-agent-surface/DECISIONS.md) |
++| 2026-07-10 | Curated task-oriented toolkit near ten tools, wrapping use-cases directly. | [`DECISIONS.md` — Tool vocabulary](../../explorations/ontology-agent-surface/DECISIONS.md) |
++| 2026-07-10 | Repair registry, prefix fidelity, and ROBOT proof land in P0/P1. | [`DECISIONS.md` — Hardening pre-work](../../explorations/ontology-agent-surface/DECISIONS.md) |
++
++## Acceptance Criteria
++
++- [ ] The curated toolkit exposes every required capability in Constraint 1
++      with schema-typed inputs, outputs, and returned errors.
++- [ ] An actual MCP client authenticates to loopback `/mcp`, initializes, lists
++      tools, and invokes `capability-metadata` and bounded `sparql-query`
++      against Oxigraph.
++- [ ] A typed batch can be proposed, gated, applied, CAS-saved, and returned
++      with real deltas and caller-specific PROV-O attribution.
++- [ ] A stale caller receives the recoverable CAS conflict contract and cannot
++      overwrite newer saved content.
++- [ ] Query/result and mutation budgets are server-enforced; TierGate refusal
++      and reasoner drift-cap refusal are typed and visible.
++- [ ] SHACL validation returns verified repair proposals from the supported
++      strategy registry; applying a proposal resolves its target violation.
++- [ ] Empty/base prefix fidelity and ROBOT interop proof pass on named fixtures.
++- [ ] Stateless parse benchmarks at 1k/10k/100k are recorded without hidden
++      caching, and tool/capability documentation states actual reasoner limits.
++- [ ] Real engine tests, authenticated protocol proof, package/repo gates, and
++      P3 reflection lint pass; Yeet reports the PR work mergeable.
++- [ ] No unrelated refactors or formatting churn.
++
++## Verification Matrix
++
++| Check | Command or evidence | Required result |
++| --- | --- | --- |
++| Launcher size | `test "$(wc -m < goals/ontology-agent-surface/GOAL.md)" -le 4000` | Passes |
++| Manifest JSON | `jq . goals/ontology-agent-surface/ops/manifest.json` | Passes |
++| Packet references | `rg -n "ontology-agent-surface|GOAL.md|agentLaunchers|packetAnchorDocument" goals/ontology-agent-surface` | Expected references present |
++| Whitespace | `git diff --check -- goals/ontology-agent-surface explorations/ontology-agent-surface explorations/ATLAS.md` | Passes |
++| Real engine/tool tests | Exact package filters recorded in phase evidence as surfaces land | Green; no fakes-only substitution |
++| Live MCP slice | Scripted authenticated client session against sidecar `/mcp` | Initialize/list/call passes with bounded Oxigraph result |
++| Interop | Base-prefix fingerprint fixture + ROBOT host validation | Passes; evidence archived |
++| Performance | 1k/10k/100k stateless open/parse benchmark under `history/` | Results recorded; no silent cache |
++| Repo quality | `bun run beep yeet verify` | Green |
++| Reflection | `bun run beep lint reflection-artifacts` | Green at P3 close |
++
++## Stop Conditions
++
++- Required source files are missing, stale in a decision-invalidating way, or
++  materially contradictory.
++- V1 requires a stateful session repository, a second transport, OWL 2 DL
++  reasoning, broad tool expansion, or another named non-goal.
++- Actor identity cannot be derived meaningfully at the authenticated boundary
++  before attribution wiring begins.
++- The implementation requires an unapproved auth/security redesign,
++  dependency or lockfile change, generated-file churn, destructive state,
++  credentials, cost, or policy approval outside this spec.
++- A required real-engine, live-client, CAS-conflict, or ROBOT proof cannot be
++  produced; record evidence before stopping.
++- The same blocker repeats after reasonable investigation.
++
++## Exception Ledger
++
++| Exception | Scope | Owner | Rationale | Removal condition |
++| --- | --- | --- | --- | --- |
++| None | N/A | N/A | N/A | N/A |
+diff --git a/goals/ontology-agent-surface/history/.gitkeep b/goals/ontology-agent-surface/history/.gitkeep
+new file mode 100644
+index 0000000000..8b13789179
+--- /dev/null
++++ b/goals/ontology-agent-surface/history/.gitkeep
+@@ -0,0 +1 @@
++
+diff --git a/goals/ontology-agent-surface/history/reflections/.gitkeep b/goals/ontology-agent-surface/history/reflections/.gitkeep
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/goals/ontology-agent-surface/history/reflections/_TEMPLATE.md b/goals/ontology-agent-surface/history/reflections/_TEMPLATE.md
+new file mode 100644
+index 0000000000..8effb877f9
+--- /dev/null
++++ b/goals/ontology-agent-surface/history/reflections/_TEMPLATE.md
+@@ -0,0 +1,60 @@
++---
++goal: <goal-slug>
++agent: claude
++date: YYYY-MM-DD
++trigger: closeout
++confidence: medium
++findings:
++  - category: tooling-friction
++    confidence: high
++    instruction: What to change.
++    explanation: Why — the friction observed and the evidence for it.
++todos:
++  - Concrete item worth codifying as a standard, skill, or tracked issue.
++---
++
++# Reflection — <goal-slug> (<date>, <agent>)
++
++> Copy this file to `<YYYY-MM-DD>-<agent>.md` and fill it in. The YAML frontmatter
++> above is the machine-validated block (schema: `ReflectionFrontmatter`, enforced by
++> `bun run beep lint reflection-artifacts`); the body below is the human narrative.
++>
++> Frontmatter field domains:
++> - `trigger`: `closeout` | `on-demand` | `todo-codify`
++> - `confidence` (overall and per finding): `high` | `medium` | `low`
++> - `findings[].category`: `tooling-friction` | `implementation-improvement` |
++>   `goal-critique` | `prompt-critique` | `codification-todo`
++> - each finding carries an `instruction` (what to change) and an `explanation`
++>   (why) — information-rich reflections measurably outperform terse advice.
++
++## Summary
++
++<1–3 sentences: what this goal accomplished and the overall verdict.>
++
++## Tooling experience
++
++- **Worked:** <which tools/skills/commands moved the work forward.>
++- **Didn't:** <what got in the way or behaved unexpectedly.>
++- **Frustrating:** <friction, papercuts, confusing surfaces.>
++- **Wished existed:** <capabilities you reached for that weren't there.>
++
++## Implementation improvement opportunities
++
++- <Concrete improvements to what was built in this packet.>
++
++## Goal & prompt critique
++
++Would you revise the `GOAL.md` / prompt you were given to be clearer, easier, more
++efficient, or less confusing? Be specific — propose the actual edit.
++
++- <…>
++
++## TODOs worth codifying
++
++- <Agent-detected items that ought to become a standard, skill, lint rule, or issue.>
++
++## Lessons (confidence-tiered)
++
++- **HIGH — Critical:** <instruction> — <explanation>
++- **MEDIUM — Best practice:** <instruction> — <explanation>
++- **LOW — Consideration:** <instruction> — <explanation>
+diff --git a/goals/ontology-agent-surface/ops/manifest.json b/goals/ontology-agent-surface/ops/manifest.json
+new file mode 100644
+index 0000000000..2aca013677
+--- /dev/null
++++ b/goals/ontology-agent-surface/ops/manifest.json
+@@ -0,0 +1,92 @@
++{
++  "schemaVersion": "initiative-manifest/v1",
++  "initiative": {
++    "id": "ontology-agent-surface",
++    "title": "Ontology Agent Surface",
++    "status": "active",
++    "created": "2026-07-11",
++    "updated": "2026-07-11",
++    "packetAnchorDocument": "SPEC.md"
++  },
++  "packetPath": "goals/ontology-agent-surface",
++  "lifecycle": "active",
++  "executionCapable": true,
++  "reflectionRequired": true,
++  "provenance": {
++    "exploration": "explorations/ontology-agent-surface",
++    "graduated": "2026-07-11"
++  },
++  "completionGate": {
++    "operator": "yeet",
++    "requiresPullRequest": true,
++    "requiresMergeable": true,
++    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor); each implementation phase lands through yeet and P3 must close mergeable.",
++    "grandfathered": false
++  },
++  "currentSourceOfTruth": [
++    "AGENTS.md",
++    "CLAUDE.md",
++    "goals/ontology-agent-surface/README.md",
++    "goals/ontology-agent-surface/SPEC.md",
++    "goals/ontology-agent-surface/PLAN.md",
++    "goals/ontology-agent-surface/GOAL.md",
++    "goals/ontology-agent-surface/research/SOURCES.md",
++    "explorations/ontology-agent-surface/BRIEF.md",
++    "explorations/ontology-agent-surface/DECISIONS.md",
++    "explorations/ontology-agent-surface/MAP.md"
++  ],
++  "researchReports": [
++    "research/SOURCES.md"
++  ],
++  "agentLaunchers": [
++    {
++      "kind": "codex-goal",
++      "path": "GOAL.md",
++      "targetChars": 3500,
++      "maxChars": 4000,
++      "command": "/goal follow the instructions in goals/ontology-agent-surface/GOAL.md"
++    }
++  ],
++  "phases": [
++    {
++      "id": "P0",
++      "name": "Bootstrap + Hardening",
++      "status": "pending",
++      "exit": "Live capability facts and package placement confirmed; verified repair registry, base-prefix fidelity, and ROBOT interop evidence land or a host-only blocker is recorded."
++    },
++    {
++      "id": "P1",
++      "name": "Toolkit Definition",
++      "status": "pending",
++      "exit": "Curated schemas and thin handlers are real-engine tested; stateless CAS rejects stale writes recoverably; budgets and typed errors are server-enforced without a session repository or silent cache."
++    },
++    {
++      "id": "P2",
++      "name": "Transport + Safety",
++      "status": "pending",
++      "exit": "Authenticated loopback /mcp passes a real client initialize/list/call proof for capability-metadata plus bounded sparql-query, and every enabled mutation is gated, attributed, and budgeted."
++    },
++    {
++      "id": "P3",
++      "name": "Harden + Close",
++      "status": "pending",
++      "exit": "1k/10k/100k benchmarks, tool docs, real-stack acceptance, reflection, and packet evidence are complete; Yeet reports the PR work mergeable."
++    }
++  ],
++  "verificationCommands": [
++    "test \"$(wc -m < goals/ontology-agent-surface/GOAL.md)\" -le 4000",
++    "jq . goals/ontology-agent-surface/ops/manifest.json",
++    "rg -n \"ontology-agent-surface|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ontology-agent-surface",
++    "git diff --check -- goals/ontology-agent-surface",
++    "bun run beep yeet verify",
++    "bun run beep lint reflection-artifacts"
++  ],
++  "stopConditions": [
++    "Required source files are missing, materially contradictory, or decision-invalidating drift is found.",
++    "V1 requires a stateful session repository, second transport, OWL 2 DL reasoning, broad tool expansion, or another named non-goal.",
++    "Actor identity cannot be derived meaningfully at the authenticated boundary before attribution wiring begins.",
++    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
++    "A required real-engine, live-client, CAS-conflict, or ROBOT proof cannot be produced.",
++    "The same blocker repeats after reasonable investigation."
++  ]
++}
+diff --git a/goals/ontology-agent-surface/research/.gitkeep b/goals/ontology-agent-surface/research/.gitkeep
+new file mode 100644
+index 0000000000..8b13789179
+--- /dev/null
++++ b/goals/ontology-agent-surface/research/.gitkeep
+@@ -0,0 +1 @@
++
+diff --git a/goals/ontology-agent-surface/research/SOURCES.md b/goals/ontology-agent-surface/research/SOURCES.md
+new file mode 100644
+index 0000000000..75711c491e
+--- /dev/null
++++ b/goals/ontology-agent-surface/research/SOURCES.md
+@@ -0,0 +1,73 @@
++# Ontology Agent Surface — Implementation Sources & Provenance
++
++- **Primary ledger:**
++  [`explorations/ontology-agent-surface/research/SOURCES.md`](../../../explorations/ontology-agent-surface/research/SOURCES.md).
++  The implementation corpus below is reproduced from that exploration ledger;
++  provenance corrections begin there and are then synchronized here.
++- **Origin:** the in-repo capability inventory was read from the live
++  `feat/explore-ontology-agent-surface` checkout on 2026-07-10; implementation
++  must re-verify drift on the active goal branch.
++- **Governing sources:** capture at
++  `explorations/ontology-agent-surface/CAPTURE.md`, findings at
++  `explorations/ontology-agent-surface/RESEARCH.md`, decisions/brief/map in the
++  same packet, and predecessor constraints at `goals/ontology-workbench/SPEC.md`.
++
++## 1. In-repo capability references
++
++| Package / surface | Exact path | Role in this packet |
++| --- | --- | --- |
++| `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit/package.json`; `packages/foundation/capability/mcp-kit/src/{index,ApiKeyRequired,FieldTier,SanitizedSpan,SourceAuth,TierGate,ToolAnnotations,ToolkitComposition}.ts`; `packages/foundation/capability/mcp-kit/test/*.test.ts` | Reuse sanitized toolkit registration, explicit behavior hints, result budgets, credential composition, and fail-closed mutation gating; extend with production gate/audit integration. |
++| `@beep/m365-mcp` | `packages/drivers/m365-mcp/src/{M365Tools,M365Handlers,Server,bin}.ts`; `packages/drivers/m365-mcp/test/{Server,SanitizedSpan}.test.ts` | Primary ontology MCP template: schema tools, thin handlers, sanitized stdio server, and end-to-end protocol test. |
++| `@beep/nlp-mcp` | `packages/drivers/nlp-mcp/src/{StreamingTools,StreamingHandlers,Server,bin}.ts`; `packages/drivers/nlp-mcp/test/Server.test.ts`; `packages/drivers/nlp-mcp/test/integration/Streaming.test.ts` | Reference multi-toolkit composition and a large tool surface; do not copy its unclassified mutation precedent. |
++| `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing/src/Tools/NlpToolkit.ts`; `packages/foundation/capability/nlp-processing/src/Tools/*.ts` | Evidence that a canonical toolkit can live outside its MCP transport driver. |
++| `@beep/uspto-mcp` | `packages/drivers/uspto-mcp/src/{UsptoTools,UsptoHandlers,UsptoSourceAuth,UsptoDocumentTiers,Server,bin}.ts`; `packages/drivers/uspto-mcp/test/Server.test.ts` | Reference guarded executable launch, source gating, returned auth failures, field tiers, and response budgeting. |
++| `@beep/ontology-domain` | `packages/ontology/domain/src/aggregates/Session/{Session.model,Session.values}.ts`; `packages/ontology/domain/src/aggregates/Session/index.ts` | Reuse schema-typed `Session`, `ChangeOperation`, real deltas, derived partitions, inversion, and batch application; extend for actor/revision/concurrency if chosen. |
++| `@beep/ontology-use-cases` RPC contract | `packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts`; `packages/ontology/use-cases/src/aggregates/Session/index.ts` | Source of truth for the 9 wire-ready candidate tools and their request/response schemas. |
++| `@beep/ontology-use-cases` session services | `packages/ontology/use-cases/src/aggregates/Session/{Session.commands,Session.ports,Session.service}.ts` | Open/serialize/save service boundary and evidence that no server session repository exists. |
++| `@beep/ontology-use-cases` projections | `packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts` | Snapshot, hierarchy, metrics, and pure local search; search needs a schema/RPC or purpose-built MCP tool contract. |
++| `@beep/ontology-use-cases` query/reason/validation | `packages/ontology/use-cases/src/aggregates/Session/{Session.sparql,Session.reasoner,Session.validation}.ts`; `packages/ontology/use-cases/test/{Session,Session.validation,SchemaParity}.test.ts` | Reuse safeguarded SPARQL, bounded structural inference, SHACL validation, verify-then-offer repair, and PROV/VoID/DCAT export; extend the gaps inventoried in RESEARCH. |
++| `@beep/ontology-client` | `packages/ontology/client/src/aggregates/Session/Session.atoms.ts`; `packages/ontology/client/test/Session.atoms.test.ts` | Evidence for `AtomRpc.Service`, shared Chat transport, browser-owned session, local undo/redo/search, and surfaced action state. |
++| `@beep/ontology-server` | `packages/ontology/server/src/aggregates/Session/{Session.layer,Session.file-store}.ts`; `packages/ontology/server/src/Layer.ts`; `packages/ontology/server/test/{SessionServer,OntoauthorMatCompetency}.test.ts` | Reuse N3/Oxigraph/SHACL/reasoner/file Layers, path containment, atomic file writes, and live server proof. |
++| `@beep/semantic-web` | `packages/foundation/capability/semantic-web/src/services/{sparql-query,shacl-validation}.ts` | Canonical SPARQL and SHACL contracts; extend SHACL violation/component and shape detail for a repair strategy registry. |
++| `@beep/oxigraph` | `packages/drivers/oxigraph/src/Oxigraph.sparql.ts`; `packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts` | Real SPARQL execution adapter and evidence that result truncation currently occurs after synchronous engine materialization. |
++| `@beep/shacl` | `packages/drivers/shacl/src/Shacl.validation.ts`; `packages/drivers/shacl/test/ShaclEngineValidation.test.ts` | Real SHACL engine adapter and the point where constraint-component detail must be preserved. |
++| `@beep/rdf` PROV vocabulary | `packages/foundation/modeling/rdf/src/Vocab/Prov.ts` | Canonical PROV constants used by the journal exporter; `prov:wasAssociatedWith` is currently constructed ad hoc. |
++| `@beep/agents-use-cases` | `packages/agents/use-cases/src/processes/Chat/Chat.rpc.ts`; `packages/agents/use-cases/src/public.ts` | RPC-group declaration precedent followed by Ontology. |
++| `@beep/agents-client` | `packages/agents/client/src/Chat.atoms.ts` | HTTP/IPC `AtomRpc.Service` client and shared protocol selector used by Ontology. |
++| `@beep/professional-desktop` orchestration | `apps/professional-desktop/src/ontology/OntologyOrchestrator.ts`; `apps/professional-desktop/src/chat/ChatOrchestrator.ts`; `apps/professional-desktop/src/runtime/Layer.ts`; `apps/professional-desktop/src/App.tsx` | Handler adaptation, runtime Layer composition, Chat comparison, and client transport selection. |
++| `@beep/professional-desktop` sidecar | `apps/professional-desktop/server/{main,RpcSessionAuth,IpcStdoutGuard.prelude}.ts`; `apps/professional-desktop/src-tauri/src/lib.rs`; `apps/professional-desktop/test/ontology-sidecar-registration.test.ts`; `apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts` | Existing Effect RPC HTTP/stdio hosting, bearer-token boundary, stdio collision evidence, directional IPC framing bounds, and sidecar registration proof. |
++| Ontology workbench predecessor packet | `goals/ontology-workbench/{GOAL,PLAN,SPEC}.md`; `goals/ontology-workbench/history/2026-07-09-p4-sparql-reasoning.md` | Normative definitions of derived partitions, invalidation discipline, agent-ready deltas/query safeguards, and bounded reasoner intent. |
++| Repo-local skill directory | `.claude/skills/` | Audited requested location. NOT FOUND: any `ontology-*` skill directory in the 2026-07-10 checkout. |
++
++## 2. External research sources
++
++All sources are cited in the exploration `RESEARCH.md` section
++“2026-07-10 — External landscape (claude, web).” GitHub repository licenses
++were not verified during that sweep, so those repositories remain reference
++only: no code mining or vendoring until their licenses are read and recorded.
++
++| Source | URL | Disposition |
++| --- | --- | --- |
++| MCP spec — transports (2025-06-18) | <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports> | Normative protocol reference for streamable HTTP and local-server security. |
++| open-ontologies (fabio-rovai) | <https://github.com/fabio-rovai/open-ontologies> | Reference only (license unverified); build-vs-integrate and tool-vocabulary comparator. |
++| open-ontologies HN thread | <https://news.ycombinator.com/item?id=47356390> | Context only. |
++| owl-mcp (ai4curation) | <https://github.com/ai4curation/owl-mcp> | Reference only (license unverified); OWL axiom tool-shape comparator. |
++| mcp-graphdb (keonchennl) | <https://github.com/keonchennl/mcp-graphdb> | Reference only (license unverified); read-only SPARQL prior art. |
++| mcp-rdf-explorer (emekaokoye) | <https://github.com/emekaokoye/mcp-rdf-explorer> | Reference only (license unverified); local-file Turtle exploration prior art. |
++| mcp-proto-okn | <https://arxiv.org/abs/2605.30283> | Paper; multi-graph natural-language access patterns. |
++| Ontology-to-tools compilation | <https://arxiv.org/pdf/2602.03439> | Paper; T-Box-derived tool schema direction. |
++| GraphDB MCP announcement | <https://graphwise.ai/blog/the-power-of-model-context-protocol-using-natural-language-to-query-graphdb/> | Vendor prior art for streaming MCP over an RDF repository. |
++| MCP server directories | <https://glama.ai/mcp/servers?query=sparql>, <https://www.pulsemcp.com/servers/kludgeworks-sparql> | Landscape breadth only. |
++
++## 3. Cross-links and provenance
++
++- Primary inherited ledger:
++  `explorations/ontology-agent-surface/research/SOURCES.md`.
++- Capture (append-only): `explorations/ontology-agent-surface/CAPTURE.md`.
++- In-repo findings: `explorations/ontology-agent-surface/RESEARCH.md`, section
++  “2026-07-10 — In-repo capability inventory (codex)”.
++- Resolved contract: `explorations/ontology-agent-surface/{DECISIONS,BRIEF,MAP}.md`.
++- Predecessor implementation contract: `goals/ontology-workbench/SPEC.md`,
++  Constraints 13–17.
++- External landscape: `explorations/ontology-agent-surface/RESEARCH.md`, section
++  “2026-07-10 — External landscape (claude, web)”.
