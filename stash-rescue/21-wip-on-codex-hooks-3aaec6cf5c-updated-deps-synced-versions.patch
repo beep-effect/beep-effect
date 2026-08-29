@@ -1,0 +1,1524 @@
+diff --git a/apps/desktop/src/RepoMemoryDesktop.tsx b/apps/desktop/src/RepoMemoryDesktop.tsx
+index 88dacd1da1..a361bf8155 100644
+--- a/apps/desktop/src/RepoMemoryDesktop.tsx
++++ b/apps/desktop/src/RepoMemoryDesktop.tsx
+@@ -12,6 +12,7 @@ import {
+   InterruptRepoRunRequest,
+   QueryRepoRunInput,
+   type QueryRun,
++  type QueryStageTrace,
+   type RepoRegistration,
+   RepoRegistrationInput,
+   type RepoRun,
+@@ -40,6 +41,12 @@ import {
+   startManagedSidecar,
+   stopManagedSidecar,
+ } from "./native.ts";
++import {
++  formatOptionalPercent,
++  formatQueryStageLabel,
++  formatQueryStageStatusTone,
++  queryStageEntries,
++} from "./queryStages.ts";
+ 
+ const defaultBaseUrl = "http://127.0.0.1:8788";
+ const desktopSessionId = "desktop-shell";
+@@ -488,6 +495,7 @@ export function RepoMemoryDesktop() {
+   const visibleCitations = queryRun === null ? [] : citationsFromRun(queryRun, selectedRunEvents);
+   const visiblePacket =
+     queryRun === null ? O.none<RetrievalPacket>() : retrievalPacketFromRun(queryRun, selectedRunEvents);
++  const visibleQueryStages = queryRun === null ? O.none<QueryStageTrace>() : queryRun.queryStages;
+ 
+   useEffect(() => {
+     persistSidecarBaseUrl(baseUrlInput);
+@@ -1607,6 +1615,65 @@ export function RepoMemoryDesktop() {
+                     <p className="answer-copy">{visibleAnswer}</p>
+                   </section>
+ 
++                  <section className="detail-card">
++                    <h3>Query stages</h3>
++                    {pipe(
++                      visibleQueryStages,
++                      O.match({
++                        onNone: () => <p className="empty-state">No projected query stages are available yet.</p>,
++                        onSome: (queryStages) => (
++                          <div className="query-stage-grid">
++                            {queryStageEntries(queryStages).map((stage) => (
++                              <article key={stage.phase} className="query-stage-card">
++                                <div className="query-stage-top">
++                                  <strong>{formatQueryStageLabel(stage.phase)}</strong>
++                                  <span className={`metric-chip ${formatQueryStageStatusTone(stage.status)}`}>
++                                    {stage.status}
++                                  </span>
++                                </div>
++                                <p className="field-note">
++                                  {pipe(
++                                    stage.latestMessage,
++                                    O.getOrElse(() => "No stage message has been projected yet.")
++                                  )}
++                                </p>
++                                <dl className="meta-grid query-stage-meta">
++                                  <div>
++                                    <dt>Started</dt>
++                                    <dd>{formatOptionalDateTime(stage.startedAt)}</dd>
++                                  </div>
++                                  <div>
++                                    <dt>Completed</dt>
++                                    <dd>{formatOptionalDateTime(stage.completedAt)}</dd>
++                                  </div>
++                                  <div>
++                                    <dt>Percent</dt>
++                                    <dd>{formatOptionalPercent(stage.percent)}</dd>
++                                  </div>
++                                  {stage.phase === "packet" || stage.phase === "answer" ? (
++                                    <div>
++                                      <dt>Artifact</dt>
++                                      <dd>
++                                        {pipe(
++                                          stage.artifactAvailable,
++                                          O.match({
++                                            onNone: () => "Not yet",
++                                            onSome: (artifactAvailable) =>
++                                              artifactAvailable ? "Available" : "Not yet",
++                                          })
++                                        )}
++                                      </dd>
++                                    </div>
++                                  ) : null}
++                                </dl>
++                              </article>
++                            ))}
++                          </div>
++                        ),
++                      })
++                    )}
++                  </section>
++
+                   <section className="detail-card">
+                     <h3>Retrieval packet</h3>
+                     {pipe(
+diff --git a/apps/desktop/src/styles.css b/apps/desktop/src/styles.css
+index 4d88040720..98bf9e1650 100644
+--- a/apps/desktop/src/styles.css
++++ b/apps/desktop/src/styles.css
+@@ -368,6 +368,32 @@ code {
+   gap: 14px;
+ }
+ 
++.query-stage-grid {
++  display: grid;
++  gap: 12px;
++}
++
++.query-stage-card {
++  display: grid;
++  gap: 10px;
++  border: 1px solid rgba(245, 241, 230, 0.08);
++  border-radius: 16px;
++  padding: 0.9rem 1rem;
++  background: rgba(255, 255, 255, 0.025);
++}
++
++.query-stage-top {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  justify-content: space-between;
++  gap: 10px;
++}
++
++.query-stage-meta {
++  margin: 0;
++}
++
+ .field {
+   display: grid;
+   gap: 0.48rem;
+@@ -610,7 +636,9 @@ code {
+ .workspace-grid > *,
+ .stack > *,
+ .detail-stack > *,
+-.packet-shell > * {
++.packet-shell > *,
++.query-stage-grid > *,
++.query-stage-card > * {
+   min-width: 0;
+ }
+ 
+@@ -631,6 +659,7 @@ code {
+ .list-item p,
+ .answer-copy,
+ .packet-summary,
++.query-stage-card p,
+ .notice,
+ .status-line,
+ .field-note,
+diff --git a/bun.lock b/bun.lock
+index d99982a6c6..58fa297cd7 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -820,7 +820,7 @@
+   },
+   "catalog": {
+     "@1password/sdk": "^0.4.1-beta.1",
+-    "@anthropic-ai/claude-agent-sdk": "^0.2.86",
++    "@anthropic-ai/claude-agent-sdk": "^0.2.87",
+     "@arethetypeswrong/cli": "^0.18.2",
+     "@babel/cli": "^7.28.6",
+     "@babel/core": "^7.29.0",
+@@ -883,7 +883,7 @@
+     "@mui/x-date-pickers-pro": "^8.27.2",
+     "@mui/x-tree-view": "^8.27.2",
+     "@neondatabase/serverless": "^1.0.2",
+-    "@next/bundle-analyzer": "16.2.1-canary.11",
++    "@next/bundle-analyzer": "16.2.1-canary.12",
+     "@noble/hashes": "^2.0.1",
+     "@openai/codex-sdk": "^0.117.0",
+     "@opentelemetry/api": "^1.9.1",
+@@ -944,7 +944,7 @@
+     "drizzle-orm": "^1.0.0-beta.9-e89174b",
+     "effect": "^4.0.0-beta.42",
+     "eslint": "^10.1.0",
+-    "eslint-config-next": "16.2.1-canary.11",
++    "eslint-config-next": "16.2.1-canary.12",
+     "eslint-plugin-jsdoc": "^62.8.1",
+     "eslint-plugin-tsdoc": "^0.5.2",
+     "fast-check": "^4.6.0",
+@@ -963,7 +963,7 @@
+     "lost-pixel": "^3.8.3-beta.1",
+     "madge": "^8.0.0",
+     "markdownlint-cli2": "^0.22.0",
+-    "next": "16.2.1-canary.11",
++    "next": "16.2.1-canary.12",
+     "path-to-regexp": "^8.4.0",
+     "pg-connection-string": "^2.12.0",
+     "pg-protocol": "^1.13.0",
+@@ -1026,7 +1026,7 @@
+ 
+     "@antfu/install-pkg": ["@antfu/install-pkg@1.1.0", "", { "dependencies": { "package-manager-detector": "^1.3.0", "tinyexec": "^1.0.1" } }, "sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ=="],
+ 
+-    "@anthropic-ai/claude-agent-sdk": ["@anthropic-ai/claude-agent-sdk@0.2.86", "", { "dependencies": { "@anthropic-ai/sdk": "^0.74.0", "@modelcontextprotocol/sdk": "^1.27.1" }, "optionalDependencies": { "@img/sharp-darwin-arm64": "^0.34.2", "@img/sharp-darwin-x64": "^0.34.2", "@img/sharp-linux-arm": "^0.34.2", "@img/sharp-linux-arm64": "^0.34.2", "@img/sharp-linux-x64": "^0.34.2", "@img/sharp-linuxmusl-arm64": "^0.34.2", "@img/sharp-linuxmusl-x64": "^0.34.2", "@img/sharp-win32-arm64": "^0.34.2", "@img/sharp-win32-x64": "^0.34.2" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-Vynvs18smLzPSeSYk2/k/75IeiSa8AmrhkWgcwaVpZhLZOCuye5GYRv6uMZea0We/3N82c0udI5+hf2aOLiwMg=="],
++    "@anthropic-ai/claude-agent-sdk": ["@anthropic-ai/claude-agent-sdk@0.2.87", "", { "dependencies": { "@anthropic-ai/sdk": "^0.74.0", "@modelcontextprotocol/sdk": "^1.27.1" }, "optionalDependencies": { "@img/sharp-darwin-arm64": "^0.34.2", "@img/sharp-darwin-x64": "^0.34.2", "@img/sharp-linux-arm": "^0.34.2", "@img/sharp-linux-arm64": "^0.34.2", "@img/sharp-linux-x64": "^0.34.2", "@img/sharp-linuxmusl-arm64": "^0.34.2", "@img/sharp-linuxmusl-x64": "^0.34.2", "@img/sharp-win32-arm64": "^0.34.2", "@img/sharp-win32-x64": "^0.34.2" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-WWmgBPxPhBOvNT0ujI8vPTI2lK+w5YEkEZ/y1mH0EDkK/0kBnxVJNhCtG5vnueiAViwLoUOFn66pbkDiivijdA=="],
+ 
+     "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.74.0", "", { "dependencies": { "json-schema-to-ts": "^3.1.1" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-srbJV7JKsc5cQ6eVuFzjZO7UR3xEPJqPamHFIe29bs38Ij2IripoAhC0S5NslNbaFUYqBKypmmpzMTpqfHEUDw=="],
+ 
+@@ -2300,23 +2300,23 @@
+ 
+     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.2", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-sNXv5oLJ7ob93xkZ1XnxisYhGYXfaG9f65/ZgYuAu3qt7b3NadcOEhLvx28hv31PgX8SZJRYrAIPQilQmFpLVw=="],
+ 
+-    "@next/env": ["@next/env@16.2.1-canary.11", "", {}, "sha512-Xk32AydfWA4gJqP4aUJuNmbWFSh/kF2eVVnIa3AwsCfNbjl1yCGs8lRi0rlrV2EjmP/NDCPpocsabaWkjXS7BQ=="],
++    "@next/env": ["@next/env@16.2.1-canary.12", "", {}, "sha512-X5k1DO+U7bQaoBR5R/YdFX4uzDZXyYlNYvUIY8RtsTkDCWOeigvxGZ093Y939GUpXSlfsTwBNeu9jTinIoB+4g=="],
+ 
+-    "@next/swc-darwin-arm64": ["@next/swc-darwin-arm64@16.2.1-canary.11", "", { "os": "darwin", "cpu": "arm64" }, "sha512-eKVjYU3o785muUe5ERYk1EQazKblYI0tQFMUWx1TV7nA7UAg6LojgOZk/hfccLqrizztPjHAYn8R3d7w1i5tBw=="],
++    "@next/swc-darwin-arm64": ["@next/swc-darwin-arm64@16.2.1-canary.12", "", { "os": "darwin", "cpu": "arm64" }, "sha512-VJRKNzwposPXGV0mBE9AQ2FzelA2+IOj642yU4g84umPeiVuVeGBHnAW2F/9WfSpLK/VuufpLBB+JwurFxtjEg=="],
+ 
+-    "@next/swc-darwin-x64": ["@next/swc-darwin-x64@16.2.1-canary.11", "", { "os": "darwin", "cpu": "x64" }, "sha512-4ASmm9uRwJc1qdeEPuvY4cPWxRFC2KgwR74qzq6jGRM56S5FLTLGYUvEMHs9phQK5Rnfb0UL3TCQrZWw0cLERw=="],
++    "@next/swc-darwin-x64": ["@next/swc-darwin-x64@16.2.1-canary.12", "", { "os": "darwin", "cpu": "x64" }, "sha512-xylxPxefes3MZQZuwdiAHN8StaRSUcKvcEEehJ9MlYbnKyIX9BLB08QYEbUAvWUdpYaMh8CjBk/5hyEKcWLdbw=="],
+ 
+-    "@next/swc-linux-arm64-gnu": ["@next/swc-linux-arm64-gnu@16.2.1-canary.11", "", { "os": "linux", "cpu": "arm64" }, "sha512-+5Ne4AJUAO/gaLnDwTUTKIEWLeJB6w61yCE5HOhz+SN53uKy6qOJro+BfCz9ECQ2CiR/5nG1gWwFw1FfmQzCZQ=="],
++    "@next/swc-linux-arm64-gnu": ["@next/swc-linux-arm64-gnu@16.2.1-canary.12", "", { "os": "linux", "cpu": "arm64" }, "sha512-/u/AEw4xa/to69Vwho9/A44SS9sZZu5CoDcE9ejcLp2Xasd0vUW/r52KFsFqlga9FLQrWl5AQ5vTck2SO6OBpA=="],
+ 
+-    "@next/swc-linux-arm64-musl": ["@next/swc-linux-arm64-musl@16.2.1-canary.11", "", { "os": "linux", "cpu": "arm64" }, "sha512-WhDCyaIalAFKmfSVonLrDHx1xetrMBbTjKKotNfeY3MjtD8SaOtR2WzxT1kQgToOqeleN/nC2ioIDlYUPGVj7A=="],
++    "@next/swc-linux-arm64-musl": ["@next/swc-linux-arm64-musl@16.2.1-canary.12", "", { "os": "linux", "cpu": "arm64" }, "sha512-8bi7cGcduT0umSOFbp01htVdG+Nk2YXq6KKaWtiCDMk+ELINJrVeoKzbv9RygwUu+c/ptKy/0ocY6AixDQ/O3w=="],
+ 
+-    "@next/swc-linux-x64-gnu": ["@next/swc-linux-x64-gnu@16.2.1-canary.11", "", { "os": "linux", "cpu": "x64" }, "sha512-G1Nb0yTUIwOh43mKU+MQQl2jZnxj2HzMipDURl3ups4bnsZ+s1z7bkIjyakirEMJVW8C1NG/AdY8TeRkZ8SvUA=="],
++    "@next/swc-linux-x64-gnu": ["@next/swc-linux-x64-gnu@16.2.1-canary.12", "", { "os": "linux", "cpu": "x64" }, "sha512-A0zC/MZBb0M7nOjNTsU3zSip8kq9jE935HJu7H2Fvwxjaysljb6E3JM5yKjp5UOZ2CO4P4TiIYK/usLzXQfrtQ=="],
+ 
+-    "@next/swc-linux-x64-musl": ["@next/swc-linux-x64-musl@16.2.1-canary.11", "", { "os": "linux", "cpu": "x64" }, "sha512-msnfuq6Q5k1iJgtQSLWnC39kFBAzpgMmTWLk8BTJEqHQKUkYQCZAE/OKaHYhQqK+aNcAQLUyH+POoYAw9sq/JA=="],
++    "@next/swc-linux-x64-musl": ["@next/swc-linux-x64-musl@16.2.1-canary.12", "", { "os": "linux", "cpu": "x64" }, "sha512-+d3k5XEJM2y19xRxD4+0mvo3+sBaN3bX2nabKOdJgQte4OpPRq1jwtN4720He50f/QPIIsNpJ27XLhcHTHUQRQ=="],
+ 
+-    "@next/swc-win32-arm64-msvc": ["@next/swc-win32-arm64-msvc@16.2.1-canary.11", "", { "os": "win32", "cpu": "arm64" }, "sha512-+57cQWe00B1zJLgVKBSJTndpii2qwt7NeW0bltordnurXYVwzr1/wnB7iwLO1soE9o5YCzegoFWN1kiLrIrrjw=="],
++    "@next/swc-win32-arm64-msvc": ["@next/swc-win32-arm64-msvc@16.2.1-canary.12", "", { "os": "win32", "cpu": "arm64" }, "sha512-PhQx6XPaWPO8B9q5em8ganC5jtXVnmjEKi2wGXMLJ8S7N4PC2heBO6XqUcKyu5FxzeFrQ9ntNIco+0bDKASpng=="],
+ 
+-    "@next/swc-win32-x64-msvc": ["@next/swc-win32-x64-msvc@16.2.1-canary.11", "", { "os": "win32", "cpu": "x64" }, "sha512-lFhVpTLBU1hzo1yC2FMpoRB4HZ4xkJDUx9YQiF8QLstuF2CN5gsgzCWbCBKskAahptZ/f6yEI0PPbI38kejDhQ=="],
++    "@next/swc-win32-x64-msvc": ["@next/swc-win32-x64-msvc@16.2.1-canary.12", "", { "os": "win32", "cpu": "x64" }, "sha512-BzWLopV6XXs0pocovga5zpxJjXOxfgQyy689n03HcNVh732Sith+AbXDs/RGILX6XSIXvwVhSDmHPEMU5LYeeQ=="],
+ 
+     "@nicolo-ribaudo/chokidar-2": ["@nicolo-ribaudo/chokidar-2@2.1.8-no-fsevents.3", "", {}, "sha512-s88O1aVtXftvp5bCPB7WnmXc5IwOZZ7YPuwNPt+GtOOXpPvad1LfbmjYv+qII7zP6RU2QGnqve27dnLycEnyEQ=="],
+ 
+@@ -4090,7 +4090,7 @@
+ 
+     "neo-async": ["neo-async@2.6.2", "", {}, "sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw=="],
+ 
+-    "next": ["next@16.2.1-canary.11", "", { "dependencies": { "@next/env": "16.2.1-canary.11", "@swc/helpers": "0.5.15", "baseline-browser-mapping": "^2.9.19", "caniuse-lite": "^1.0.30001579", "postcss": "8.4.31", "styled-jsx": "5.1.6" }, "optionalDependencies": { "@next/swc-darwin-arm64": "16.2.1-canary.11", "@next/swc-darwin-x64": "16.2.1-canary.11", "@next/swc-linux-arm64-gnu": "16.2.1-canary.11", "@next/swc-linux-arm64-musl": "16.2.1-canary.11", "@next/swc-linux-x64-gnu": "16.2.1-canary.11", "@next/swc-linux-x64-musl": "16.2.1-canary.11", "@next/swc-win32-arm64-msvc": "16.2.1-canary.11", "@next/swc-win32-x64-msvc": "16.2.1-canary.11", "sharp": "^0.34.5" }, "peerDependencies": { "@opentelemetry/api": "^1.1.0", "@playwright/test": "^1.51.1", "babel-plugin-react-compiler": "*", "react": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "react-dom": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "sass": "^1.3.0" }, "optionalPeers": ["@opentelemetry/api", "@playwright/test", "babel-plugin-react-compiler", "sass"], "bin": { "next": "dist/bin/next" } }, "sha512-QHIpiY4N1Sl44bZkTz7Wekvi8b4BIi5ryoDP2qSSBmsyNPckTmnuu/hWgpFOi4bFvewuVWPdMeEHc4cwxaa0oQ=="],
++    "next": ["next@16.2.1-canary.12", "", { "dependencies": { "@next/env": "16.2.1-canary.12", "@swc/helpers": "0.5.15", "baseline-browser-mapping": "^2.9.19", "caniuse-lite": "^1.0.30001579", "postcss": "8.4.31", "styled-jsx": "5.1.6" }, "optionalDependencies": { "@next/swc-darwin-arm64": "16.2.1-canary.12", "@next/swc-darwin-x64": "16.2.1-canary.12", "@next/swc-linux-arm64-gnu": "16.2.1-canary.12", "@next/swc-linux-arm64-musl": "16.2.1-canary.12", "@next/swc-linux-x64-gnu": "16.2.1-canary.12", "@next/swc-linux-x64-musl": "16.2.1-canary.12", "@next/swc-win32-arm64-msvc": "16.2.1-canary.12", "@next/swc-win32-x64-msvc": "16.2.1-canary.12", "sharp": "^0.34.5" }, "peerDependencies": { "@opentelemetry/api": "^1.1.0", "@playwright/test": "^1.51.1", "babel-plugin-react-compiler": "*", "react": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "react-dom": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0", "sass": "^1.3.0" }, "optionalPeers": ["@opentelemetry/api", "@playwright/test", "babel-plugin-react-compiler", "sass"], "bin": { "next": "dist/bin/next" } }, "sha512-kTUixWWsRmJYFDskwg3/GFT6jFawpibQLLftExDbllhQeb4bUUTkdGaYVt3fXe/LWr2GWNmLsqWybl0g+eB+0Q=="],
+ 
+     "node-abi": ["node-abi@3.89.0", "", { "dependencies": { "semver": "^7.3.5" } }, "sha512-6u9UwL0HlAl21+agMN3YAMXcKByMqwGx+pq+P76vii5f7hTPtKDp08/H9py6DY+cfDw7kQNTGEj/rly3IgbNQA=="],
+ 
+diff --git a/package.json b/package.json
+index 6ec72ee21f..ec290ad795 100644
+--- a/package.json
++++ b/package.json
+@@ -233,7 +233,7 @@
+     "@opentelemetry/api": "^1.9.1",
+     "@microsoft/tsdoc-config": "^0.18.1",
+     "@opentelemetry/api-logs": "^0.214.0",
+-    "@anthropic-ai/claude-agent-sdk": "^0.2.86",
++    "@anthropic-ai/claude-agent-sdk": "^0.2.87",
+     "@cloudflare/sandbox": "^0.8.0",
+     "@phosphor-icons/react": "^2.1.10",
+     "@react-three/drei": "^10.7.7",
+@@ -285,7 +285,7 @@
+     "copyfiles": "^2.4.1",
+     "doctrine": "^3.0.0",
+     "eslint": "^10.1.0",
+-    "eslint-config-next": "16.2.1-canary.11",
++    "eslint-config-next": "16.2.1-canary.12",
+     "@types/estree": "^1.0.8",
+     "type-fest": "^5.5.0",
+     "drizzle-kit": "^1.0.0-beta.9-e89174b",
+@@ -300,7 +300,7 @@
+     "lefthook": "^2.1.4",
+     "madge": "^8.0.0",
+     "happy-dom": "^20.8.9",
+-    "next": "16.2.1-canary.11",
++    "next": "16.2.1-canary.12",
+     "path-to-regexp": "^8.4.0",
+     "react": "19.2.4",
+     "react-dom": "19.2.4",
+@@ -333,7 +333,7 @@
+     "vite": "^8.0.3",
+     "wink-bm25-text-search": "^3.1.2",
+     "fast-check": "^4.6.0",
+-    "@next/bundle-analyzer": "16.2.1-canary.11",
++    "@next/bundle-analyzer": "16.2.1-canary.12",
+     "@playwright/test": "^1.58.2",
+     "yaml": "^2.8.3",
+     "publint": "^0.3.18",
+diff --git a/packages/common/schema/docs/index.md b/packages/common/schema/docs/index.md
+deleted file mode 100644
+index d77a44118a..0000000000
+--- a/packages/common/schema/docs/index.md
++++ /dev/null
+@@ -1,4 +0,0 @@
+----
+-title: Home
+-nav_order: 1
+----
+diff --git a/packages/repo-memory/model/src/internal/protocolModels.ts b/packages/repo-memory/model/src/internal/protocolModels.ts
+index 263bd322eb..73cf7b07eb 100644
+--- a/packages/repo-memory/model/src/internal/protocolModels.ts
++++ b/packages/repo-memory/model/src/internal/protocolModels.ts
+@@ -117,6 +117,153 @@ export class IndexRun extends S.Class<IndexRun>($I`IndexRun`)(
+   })
+ ) {}
+ 
++/**
++ * Canonical query stage phases projected for deterministic repo-memory runs.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export const QueryStagePhase = LiteralKit(["grounding", "retrieval", "packet", "answer"]).annotate(
++  $I.annote("QueryStagePhase", {
++    description: "Canonical query stage phases projected for deterministic repo-memory runs.",
++  })
++);
++
++/**
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export type QueryStagePhase = typeof QueryStagePhase.Type;
++
++/**
++ * Lifecycle status projected for one query stage.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export const QueryStageStatus = LiteralKit(["pending", "running", "completed"]).annotate(
++  $I.annote("QueryStageStatus", {
++    description: "Lifecycle status projected for one query stage.",
++  })
++);
++
++/**
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export type QueryStageStatus = typeof QueryStageStatus.Type;
++
++const QueryStageStateFields = {
++  status: QueryStageStatus,
++  startedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromMillis),
++  completedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromMillis),
++  latestMessage: S.OptionFromOptionalKey(S.String),
++  percent: S.OptionFromOptionalKey(NonNegativeInt),
++  artifactAvailable: S.OptionFromOptionalKey(S.Boolean),
++} as const;
++
++/**
++ * Projected state for the grounding stage.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export class GroundingQueryStage extends S.Class<GroundingQueryStage>($I`GroundingQueryStage`)(
++  {
++    phase: S.tag("grounding"),
++    ...QueryStageStateFields,
++  },
++  $I.annote("GroundingQueryStage", {
++    description: "Projected state for the grounding stage.",
++  })
++) {}
++
++/**
++ * Projected state for the retrieval stage.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export class RetrievalQueryStage extends S.Class<RetrievalQueryStage>($I`RetrievalQueryStage`)(
++  {
++    phase: S.tag("retrieval"),
++    ...QueryStageStateFields,
++  },
++  $I.annote("RetrievalQueryStage", {
++    description: "Projected state for the retrieval stage.",
++  })
++) {}
++
++/**
++ * Projected state for the packet stage.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export class PacketQueryStage extends S.Class<PacketQueryStage>($I`PacketQueryStage`)(
++  {
++    phase: S.tag("packet"),
++    ...QueryStageStateFields,
++  },
++  $I.annote("PacketQueryStage", {
++    description: "Projected state for the packet stage.",
++  })
++) {}
++
++/**
++ * Projected state for the answer stage.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export class AnswerQueryStage extends S.Class<AnswerQueryStage>($I`AnswerQueryStage`)(
++  {
++    phase: S.tag("answer"),
++    ...QueryStageStateFields,
++  },
++  $I.annote("AnswerQueryStage", {
++    description: "Projected state for the answer stage.",
++  })
++) {}
++
++/**
++ * Projected state union for one query stage.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export const QueryStage = S.Union([GroundingQueryStage, RetrievalQueryStage, PacketQueryStage, AnswerQueryStage])
++  .annotate(
++    $I.annote("QueryStage", {
++      description: "Projected state union for one query stage.",
++    })
++  )
++  .pipe(S.toTaggedUnion("phase"));
++
++/**
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export type QueryStage = typeof QueryStage.Type;
++
++/**
++ * Fixed four-stage trace projected for one query run.
++ *
++ * @since 0.0.0
++ * @category DomainModel
++ */
++export class QueryStageTrace extends S.Class<QueryStageTrace>($I`QueryStageTrace`)(
++  {
++    grounding: GroundingQueryStage,
++    retrieval: RetrievalQueryStage,
++    packet: PacketQueryStage,
++    answer: AnswerQueryStage,
++  },
++  $I.annote("QueryStageTrace", {
++    description: "Fixed four-stage trace projected for one query run.",
++  })
++) {}
++
+ /**
+  * Projection shape for repository query runs.
+  *
+@@ -137,6 +284,7 @@ export class QueryRun extends S.Class<QueryRun>($I`QueryRun`)(
+     answer: S.OptionFromOptionalKey(S.String),
+     citations: S.Array(Citation),
+     retrievalPacket: S.OptionFromOptionalKey(RetrievalPacket),
++    queryStages: S.OptionFromOptionalKey(QueryStageTrace),
+     errorMessage: S.OptionFromOptionalKey(S.String),
+   },
+   $I.annote("QueryRun", {
+diff --git a/packages/repo-memory/model/src/run/RunProjection.ts b/packages/repo-memory/model/src/run/RunProjection.ts
+index 3833ddffab..7fa6bf8f86 100644
+--- a/packages/repo-memory/model/src/run/RunProjection.ts
++++ b/packages/repo-memory/model/src/run/RunProjection.ts
+@@ -9,6 +9,20 @@ export {
+ } from "../internal/domain.js";
+ 
+ export {
++  /**
++   * Answer stage projection model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  AnswerQueryStage,
++  /**
++   * Grounding stage projection model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  GroundingQueryStage,
+   /**
+    * Index run projection model.
+    *
+@@ -16,6 +30,13 @@ export {
+    * @category DomainModel
+    */
+   IndexRun,
++  /**
++   * Packet stage projection model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  PacketQueryStage,
+   /**
+    * Query run projection model.
+    *
+@@ -23,6 +44,34 @@ export {
+    * @category DomainModel
+    */
+   QueryRun,
++  /**
++   * One projected query stage model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  QueryStage,
++  /**
++   * Query run stage phase literal model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  QueryStagePhase,
++  /**
++   * Query run stage status literal model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  QueryStageStatus,
++  /**
++   * Fixed projected query stage trace model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  QueryStageTrace,
+   /**
+    * Repo run projection union model.
+    *
+@@ -30,4 +79,11 @@ export {
+    * @category DomainModel
+    */
+   RepoRun,
++  /**
++   * Retrieval stage projection model.
++   *
++   * @since 0.0.0
++   * @category DomainModel
++   */
++  RetrievalQueryStage,
+ } from "../internal/protocolModels.js";
+diff --git a/packages/repo-memory/model/src/run/RunProjector.ts b/packages/repo-memory/model/src/run/RunProjector.ts
+index c0876af68b..37a3e62815 100644
+--- a/packages/repo-memory/model/src/run/RunProjector.ts
++++ b/packages/repo-memory/model/src/run/RunProjector.ts
+@@ -4,11 +4,25 @@ import { type DateTime, Effect, Match, pipe } from "effect";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import { RunEventSequence, type RunEventSequence as RunEventSequenceValue } from "../internal/domain.js";
+-import { IndexRun, QueryRun, type RepoRun, type RunStreamEvent } from "../internal/protocolModels.js";
++import {
++  AnswerQueryStage,
++  GroundingQueryStage,
++  IndexRun,
++  PacketQueryStage,
++  QueryRun,
++  type QueryStagePhase,
++  QueryStageTrace,
++  type RepoRun,
++  RetrievalQueryStage,
++  type RunStreamEvent,
++} from "../internal/protocolModels.js";
+ 
+ const $I = $RepoMemoryModelId.create("run/RunProjector");
+ const decodeNonNegativeInt = S.decodeUnknownSync(NonNegativeInt);
+ const decodeRunEventSequence = S.decodeUnknownSync(RunEventSequence);
++const completedStagePercent = decodeNonNegativeInt(100);
++const queryStageOrder = ["grounding", "retrieval", "packet", "answer"] as const;
++type QueryStagePercentValue = GroundingQueryStage["percent"] extends O.Option<infer A> ? A : never;
+ 
+ const nextSequence = (event: RunStreamEvent) => decodeRunEventSequence(event.sequence);
+ 
+@@ -28,6 +42,180 @@ export class RunProjectorError extends TaggedErrorClass<RunProjectorError>($I`Ru
+ 
+ const toRunProjectorError = makeStatusCauseError(RunProjectorError);
+ 
++const makeQueryStage = (
++  phase: QueryStagePhase,
++  patch?: {
++    readonly artifactAvailable?: O.Option<boolean>;
++    readonly completedAt?: O.Option<DateTime.Utc>;
++    readonly latestMessage?: O.Option<string>;
++    readonly percent?: O.Option<QueryStagePercentValue>;
++    readonly startedAt?: O.Option<DateTime.Utc>;
++    readonly status?: "pending" | "running" | "completed";
++  }
++) => {
++  const base: {
++    readonly artifactAvailable: O.Option<boolean>;
++    readonly completedAt: O.Option<DateTime.Utc>;
++    readonly latestMessage: O.Option<string>;
++    readonly percent: O.Option<QueryStagePercentValue>;
++    readonly startedAt: O.Option<DateTime.Utc>;
++    readonly status: "pending" | "running" | "completed";
++  } = {
++    status: "pending" as const,
++    startedAt: O.none<DateTime.Utc>(),
++    completedAt: O.none<DateTime.Utc>(),
++    latestMessage: O.none<string>(),
++    percent: O.none<QueryStagePercentValue>(),
++    artifactAvailable: O.none<boolean>(),
++    ...patch,
++  };
++
++  switch (phase) {
++    case "grounding":
++      return new GroundingQueryStage(base);
++    case "retrieval":
++      return new RetrievalQueryStage(base);
++    case "packet":
++      return new PacketQueryStage(base);
++    case "answer":
++      return new AnswerQueryStage(base);
++  }
++};
++
++const makePendingQueryStageTrace = () =>
++  new QueryStageTrace({
++    grounding: makeQueryStage("grounding") as GroundingQueryStage,
++    retrieval: makeQueryStage("retrieval") as RetrievalQueryStage,
++    packet: makeQueryStage("packet") as PacketQueryStage,
++    answer: makeQueryStage("answer") as AnswerQueryStage,
++  });
++
++const queryStageFields = (stage: GroundingQueryStage | RetrievalQueryStage | PacketQueryStage | AnswerQueryStage) => ({
++  status: stage.status,
++  startedAt: stage.startedAt,
++  completedAt: stage.completedAt,
++  latestMessage: stage.latestMessage,
++  percent: stage.percent,
++  artifactAvailable: stage.artifactAvailable,
++});
++
++const updateQueryStageTrace = (
++  trace: QueryStageTrace,
++  phase: QueryStagePhase,
++  update: (
++    stage: GroundingQueryStage | RetrievalQueryStage | PacketQueryStage | AnswerQueryStage
++  ) => GroundingQueryStage | RetrievalQueryStage | PacketQueryStage | AnswerQueryStage
++) =>
++  new QueryStageTrace({
++    grounding: phase === "grounding" ? (update(trace.grounding) as GroundingQueryStage) : trace.grounding,
++    retrieval: phase === "retrieval" ? (update(trace.retrieval) as RetrievalQueryStage) : trace.retrieval,
++    packet: phase === "packet" ? (update(trace.packet) as PacketQueryStage) : trace.packet,
++    answer: phase === "answer" ? (update(trace.answer) as AnswerQueryStage) : trace.answer,
++  });
++
++const ensureQueryStageTrace = (run: QueryRun): QueryStageTrace =>
++  pipe(run.queryStages, O.getOrElse(makePendingQueryStageTrace));
++
++const completeQueryStage = (
++  trace: QueryStageTrace,
++  phase: QueryStagePhase,
++  at: DateTime.Utc,
++  options?: {
++    readonly artifactAvailable?: boolean;
++    readonly latestMessage?: string;
++  }
++) =>
++  updateQueryStageTrace(trace, phase, (stage) =>
++    makeQueryStage(phase, {
++      ...queryStageFields(stage),
++      status: "completed",
++      startedAt: pipe(
++        stage.startedAt,
++        O.orElse(() => O.some(at))
++      ),
++      completedAt: O.some(at),
++      latestMessage: options?.latestMessage === undefined ? stage.latestMessage : O.some(options.latestMessage),
++      percent: O.some(completedStagePercent),
++      artifactAvailable:
++        options?.artifactAvailable === undefined ? stage.artifactAvailable : O.some(options.artifactAvailable),
++    })
++  );
++
++const completeStagesBefore = (trace: QueryStageTrace, phase: QueryStagePhase, at: DateTime.Utc): QueryStageTrace => {
++  const targetIndex = queryStageOrder.indexOf(phase);
++  let nextTrace = trace;
++
++  for (const currentPhase of queryStageOrder) {
++    if (queryStageOrder.indexOf(currentPhase) >= targetIndex) {
++      break;
++    }
++
++    nextTrace = completeQueryStage(nextTrace, currentPhase, at);
++  }
++
++  return nextTrace;
++};
++
++const projectQueryProgress = (
++  run: QueryRun,
++  event: Extract<RunStreamEvent, { readonly kind: "progress" }>
++): QueryRun => {
++  if (
++    event.phase !== "grounding" &&
++    event.phase !== "retrieval" &&
++    event.phase !== "packet" &&
++    event.phase !== "answer"
++  ) {
++    return run;
++  }
++  const phase = event.phase as QueryStagePhase;
++
++  const nextTrace = pipe(
++    ensureQueryStageTrace(run),
++    (trace) => completeStagesBefore(trace, phase, event.emittedAt),
++    (trace) =>
++      updateQueryStageTrace(trace, phase, (stage) =>
++        makeQueryStage(phase, {
++          ...queryStageFields(stage),
++          status: "running",
++          startedAt: pipe(
++            stage.startedAt,
++            O.orElse(() => O.some(event.emittedAt))
++          ),
++          completedAt: O.none(),
++          latestMessage: O.some(event.message),
++          percent: event.percent,
++        })
++      )
++  );
++
++  return new QueryRun({
++    ...run,
++    queryStages: O.some(nextTrace),
++  });
++};
++
++const projectQueryArtifactStage = (
++  run: QueryRun,
++  phase: "packet" | "answer",
++  emittedAt: DateTime.Utc,
++  latestMessage: string
++): QueryRun =>
++  new QueryRun({
++    ...run,
++    queryStages: O.some(
++      pipe(
++        ensureQueryStageTrace(run),
++        (trace) => completeStagesBefore(trace, phase, emittedAt),
++        (trace) =>
++          completeQueryStage(trace, phase, emittedAt, {
++            artifactAvailable: true,
++            latestMessage,
++          })
++      )
++    ),
++  });
++
+ const requireCurrentRun = (
+   currentRun: O.Option<RepoRun>,
+   event: RunStreamEvent
+@@ -93,6 +281,7 @@ const acceptedRunFromEvent = (event: Extract<RunStreamEvent, { readonly kind: "a
+                 answer: O.none(),
+                 citations: [],
+                 retrievalPacket: O.none(),
++                queryStages: O.some(makePendingQueryStageTrace()),
+                 errorMessage: O.none(),
+               })
+             ),
+@@ -224,8 +413,7 @@ export const projectRunEvent = Effect.fn("RunProjector.projectRunEvent")(functio
+ 
+   if (event.kind === "progress") {
+     const run = yield* requireCurrentRun(currentRun, event);
+-
+-    return updateRunStatus(run, {
++    const updatedRun = updateRunStatus(run, {
+       status: "running",
+       startedAt: pipe(
+         run.startedAt,
+@@ -235,28 +423,40 @@ export const projectRunEvent = Effect.fn("RunProjector.projectRunEvent")(functio
+       lastEventSequence: nextSequence(event),
+       errorMessage: O.none(),
+     });
++
++    return updatedRun.kind === "query" ? projectQueryProgress(updatedRun, event) : updatedRun;
+   }
+ 
+   if (event.kind === "retrieval-packet") {
+     const run = yield* requireCurrentQueryRun(currentRun, event);
+ 
+-    return new QueryRun({
+-      ...run,
+-      status: "running",
+-      retrievalPacket: O.some(event.packet),
+-      lastEventSequence: nextSequence(event),
+-      errorMessage: O.none(),
+-    });
++    return projectQueryArtifactStage(
++      new QueryRun({
++        ...run,
++        status: "running",
++        retrievalPacket: O.some(event.packet),
++        lastEventSequence: nextSequence(event),
++        errorMessage: O.none(),
++      }),
++      "packet",
++      event.emittedAt,
++      "Retrieval packet materialized."
++    );
+   }
+ 
+   const run = yield* requireCurrentQueryRun(currentRun, event);
+ 
+-  return new QueryRun({
+-    ...run,
+-    status: "running",
+-    answer: O.some(event.answer),
+-    citations: event.citations,
+-    lastEventSequence: nextSequence(event),
+-    errorMessage: O.none(),
+-  });
++  return projectQueryArtifactStage(
++    new QueryRun({
++      ...run,
++      status: "running",
++      answer: O.some(event.answer),
++      citations: event.citations,
++      lastEventSequence: nextSequence(event),
++      errorMessage: O.none(),
++    }),
++    "answer",
++    event.emittedAt,
++    "Grounded answer drafted."
++  );
+ });
+diff --git a/packages/repo-memory/model/test/RepoMemoryModel.test.ts b/packages/repo-memory/model/test/RepoMemoryModel.test.ts
+index 77bec7559f..e8cc750b12 100644
+--- a/packages/repo-memory/model/test/RepoMemoryModel.test.ts
++++ b/packages/repo-memory/model/test/RepoMemoryModel.test.ts
+@@ -62,10 +62,50 @@ describe("repo-memory model", () => {
+       lastEventSequence: 3,
+       answer: "Symbol located.",
+       citations: [],
++      queryStages: {
++        grounding: {
++          phase: "grounding",
++          status: "completed",
++          startedAt: Date.parse("2026-03-06T17:00:01.000Z"),
++          completedAt: Date.parse("2026-03-06T17:00:02.000Z"),
++          latestMessage: "Normalized the question.",
++          percent: 100,
++        },
++        retrieval: {
++          phase: "retrieval",
++          status: "completed",
++          startedAt: Date.parse("2026-03-06T17:00:02.000Z"),
++          completedAt: Date.parse("2026-03-06T17:00:03.000Z"),
++          latestMessage: "Retrieved grounded evidence.",
++          percent: 100,
++        },
++        packet: {
++          phase: "packet",
++          status: "completed",
++          startedAt: Date.parse("2026-03-06T17:00:03.000Z"),
++          completedAt: Date.parse("2026-03-06T17:00:04.000Z"),
++          latestMessage: "Retrieval packet materialized.",
++          percent: 100,
++          artifactAvailable: true,
++        },
++        answer: {
++          phase: "answer",
++          status: "completed",
++          startedAt: Date.parse("2026-03-06T17:00:04.000Z"),
++          completedAt: Date.parse("2026-03-06T17:00:05.000Z"),
++          latestMessage: "Grounded answer drafted.",
++          percent: 100,
++          artifactAvailable: true,
++        },
++      },
+     });
+ 
+     expect(indexRun.kind).toBe("index");
+     expect(queryRun.kind).toBe("query");
++    if (queryRun.kind === "query") {
++      expect(O.getOrThrow(queryRun.queryStages).packet.status).toBe("completed");
++      expect(O.getOrThrow(O.getOrThrow(queryRun.queryStages).answer.artifactAvailable)).toBe(true);
++    }
+   });
+ 
+   it("decodes interrupt and resume command payloads plus their shared ack", () => {
+diff --git a/packages/repo-memory/runtime/src/internal/RepoMemoryRuntime.ts b/packages/repo-memory/runtime/src/internal/RepoMemoryRuntime.ts
+index 81e574ce5f..58e2873cec 100644
+--- a/packages/repo-memory/runtime/src/internal/RepoMemoryRuntime.ts
++++ b/packages/repo-memory/runtime/src/internal/RepoMemoryRuntime.ts
+@@ -6,6 +6,7 @@ import {
+   type InterruptRepoRunRequest,
+   QueryRepoRunInput,
+   QueryRun,
++  type QueryStagePhase,
+   RepoIndexArtifact,
+   type RepoRegistration,
+   type RepoRegistrationInput,
+@@ -497,6 +498,29 @@ const makeRepoRunService = Effect.fn("RepoRunService.make")(function* () {
+     return yield* mapProjectorError(projectRunEvent(O.some(currentRun), event));
+   });
+ 
++  const appendQueryStageProgress = Effect.fn("RepoRunService.appendQueryStageProgress")(function* (
++    currentRun: QueryRun,
++    progress: {
++      readonly message: string;
++      readonly percent: number;
++      readonly phase: QueryStagePhase;
++    }
++  ): Effect.fn.Return<QueryRun, RepoRunServiceError> {
++    return yield* ensureProjectedQueryRun(
++      yield* appendProjectedEvent(
++        currentRun,
++        new RunProgressUpdatedEvent({
++          runId: currentRun.id,
++          sequence: nextSequenceForRun(currentRun),
++          emittedAt: yield* DateTime.now,
++          phase: progress.phase,
++          message: progress.message,
++          percent: O.some(decodeNonNegativeInt(progress.percent)),
++        })
++      )
++    );
++  });
++
+   const suspendIfRunInterrupted = Effect.fn("RepoRunService.suspendIfRunInterrupted")(function* (
+     runId: RunId
+   ): Effect.fn.Return<void, RepoRunServiceError> {
+@@ -918,19 +942,11 @@ const makeRepoRunService = Effect.fn("RepoRunService.make")(function* () {
+           yield* recordRunStarted("query");
+         }
+ 
+-        runningRun = yield* ensureProjectedQueryRun(
+-          yield* appendProjectedEvent(
+-            runningRun,
+-            new RunProgressUpdatedEvent({
+-              runId,
+-              sequence: nextSequenceForRun(runningRun),
+-              emittedAt: yield* DateTime.now,
+-              phase: "grounding",
+-              message: "Normalizing the question into one supported deterministic query shape.",
+-              percent: O.some(decodeNonNegativeInt(25)),
+-            })
+-          )
+-        );
++        runningRun = yield* appendQueryStageProgress(runningRun, {
++          phase: "grounding",
++          message: "Normalizing the question into one supported deterministic query shape.",
++          percent: 25,
++        });
+         const grounding = yield* profileRunPhase(
+           "query",
+           "grounding",
+@@ -939,19 +955,11 @@ const makeRepoRunService = Effect.fn("RepoRunService.make")(function* () {
+             .pipe(Effect.mapError((error) => toRunServiceError(error.message, error.status, error.cause)))
+         );
+ 
+-        runningRun = yield* ensureProjectedQueryRun(
+-          yield* appendProjectedEvent(
+-            runningRun,
+-            new RunProgressUpdatedEvent({
+-              runId,
+-              sequence: nextSequenceForRun(runningRun),
+-              emittedAt: yield* DateTime.now,
+-              phase: "retrieval",
+-              message: "Retrieving bounded source-grounded artifacts from the latest persisted snapshot.",
+-              percent: O.some(decodeNonNegativeInt(60)),
+-            })
+-          )
+-        );
++        runningRun = yield* appendQueryStageProgress(runningRun, {
++          phase: "retrieval",
++          message: "Retrieving bounded source-grounded artifacts from the latest persisted snapshot.",
++          percent: 60,
++        });
+         yield* suspendIfRunInterrupted(runId);
+ 
+         const retrievedEvidence = yield* profileRunPhase(
+@@ -962,19 +970,11 @@ const makeRepoRunService = Effect.fn("RepoRunService.make")(function* () {
+             .pipe(Effect.mapError((error) => toRunServiceError(error.message, error.status, error.cause)))
+         );
+ 
+-        runningRun = yield* ensureProjectedQueryRun(
+-          yield* appendProjectedEvent(
+-            runningRun,
+-            new RunProgressUpdatedEvent({
+-              runId,
+-              sequence: nextSequenceForRun(runningRun),
+-              emittedAt: yield* DateTime.now,
+-              phase: "packet",
+-              message: "Freezing the bounded retrieval packet for durable inspection and replay.",
+-              percent: O.some(decodeNonNegativeInt(80)),
+-            })
+-          )
+-        );
++        runningRun = yield* appendQueryStageProgress(runningRun, {
++          phase: "packet",
++          message: "Freezing the bounded retrieval packet for durable inspection and replay.",
++          percent: 80,
++        });
+         yield* suspendIfRunInterrupted(runId);
+ 
+         const retrievalPacket = yield* profileRunPhase(
+@@ -985,19 +985,11 @@ const makeRepoRunService = Effect.fn("RepoRunService.make")(function* () {
+             .pipe(Effect.mapError((error) => toRunServiceError(error.message, error.status, error.cause)))
+         );
+ 
+-        runningRun = yield* ensureProjectedQueryRun(
+-          yield* appendProjectedEvent(
+-            runningRun,
+-            new RunProgressUpdatedEvent({
+-              runId,
+-              sequence: nextSequenceForRun(runningRun),
+-              emittedAt: yield* DateTime.now,
+-              phase: "answer",
+-              message: "Rendering the final answer from the frozen retrieval packet only.",
+-              percent: O.some(decodeNonNegativeInt(95)),
+-            })
+-          )
+-        );
++        runningRun = yield* appendQueryStageProgress(runningRun, {
++          phase: "answer",
++          message: "Rendering the final answer from the frozen retrieval packet only.",
++          percent: 95,
++        });
+         yield* suspendIfRunInterrupted(runId);
+ 
+         const groundedAnswer = yield* profileRunPhase(
+diff --git a/packages/repo-memory/runtime/src/run/RunStateMachine.ts b/packages/repo-memory/runtime/src/run/RunStateMachine.ts
+index 44f08c7af5..c7f940048b 100644
+--- a/packages/repo-memory/runtime/src/run/RunStateMachine.ts
++++ b/packages/repo-memory/runtime/src/run/RunStateMachine.ts
+@@ -1,12 +1,17 @@
+ import { $RepoMemoryRuntimeId } from "@beep/identity/packages";
+ import {
++  AnswerQueryStage,
++  GroundingQueryStage,
+   type IndexRepoRunInput,
+   IndexRun,
++  PacketQueryStage,
+   type QueryRepoRunInput,
+   QueryRun,
++  QueryStageTrace,
+   type RepoRun,
+   type RepoRunStatus,
+   type RetrievalPacket,
++  RetrievalQueryStage,
+   RunEventSequence,
+   type RunId,
+ } from "@beep/repo-memory-model";
+@@ -23,6 +28,42 @@ const nextRunEventSequence = (run: RepoRun) => decodeRunEventSequence(run.lastEv
+ 
+ const noErrorMessage = O.none<string>();
+ 
++const makePendingQueryStageTrace = () =>
++  new QueryStageTrace({
++    grounding: new GroundingQueryStage({
++      status: "pending",
++      startedAt: O.none(),
++      completedAt: O.none(),
++      latestMessage: O.none(),
++      percent: O.none(),
++      artifactAvailable: O.none(),
++    }),
++    retrieval: new RetrievalQueryStage({
++      status: "pending",
++      startedAt: O.none(),
++      completedAt: O.none(),
++      latestMessage: O.none(),
++      percent: O.none(),
++      artifactAvailable: O.none(),
++    }),
++    packet: new PacketQueryStage({
++      status: "pending",
++      startedAt: O.none(),
++      completedAt: O.none(),
++      latestMessage: O.none(),
++      percent: O.none(),
++      artifactAvailable: O.none(),
++    }),
++    answer: new AnswerQueryStage({
++      status: "pending",
++      startedAt: O.none(),
++      completedAt: O.none(),
++      latestMessage: O.none(),
++      percent: O.none(),
++      artifactAvailable: O.none(),
++    }),
++  });
++
+ const updateRunStatus = (
+   run: RepoRun,
+   patch: {
+@@ -155,6 +196,7 @@ export const acceptedQueryRun = (options: {
+     answer: O.none(),
+     citations: [],
+     retrievalPacket: O.none(),
++    queryStages: O.some(makePendingQueryStageTrace()),
+     errorMessage: O.none(),
+   });
+ 
+diff --git a/packages/repo-memory/runtime/test/RunProjector.test.ts b/packages/repo-memory/runtime/test/RunProjector.test.ts
+index 56d986432c..ad9cbcb58a 100644
+--- a/packages/repo-memory/runtime/test/RunProjector.test.ts
++++ b/packages/repo-memory/runtime/test/RunProjector.test.ts
+@@ -3,13 +3,16 @@ import {
+   Citation,
+   CitationSpan,
+   RepoId,
++  QueryRun,
+   RetrievalCountPayload,
+   RetrievalPacket,
+   RetrievalPacketMaterializedEvent,
+   RunAcceptedEvent,
+   RunEventSequence,
+   RunId,
++  RunInterruptedEvent,
+   RunProgressUpdatedEvent,
++  RunResumedEvent,
+ } from "@beep/repo-memory-model";
+ import { FilePath, NonNegativeInt, PosInt } from "@beep/schema";
+ import { describe, expect, it } from "@effect/vitest";
+@@ -68,8 +71,25 @@ const makePacket = (retrievedAt: DateTime.Utc) =>
+     issue: O.none(),
+   });
+ 
++const expectQueryStageStatuses = (
++  run: QueryRun,
++  expected: {
++    readonly grounding: "pending" | "running" | "completed";
++    readonly retrieval: "pending" | "running" | "completed";
++    readonly packet: "pending" | "running" | "completed";
++    readonly answer: "pending" | "running" | "completed";
++  }
++) => {
++  const queryStages = O.getOrThrow(run.queryStages);
++
++  expect(queryStages.grounding.status).toBe(expected.grounding);
++  expect(queryStages.retrieval.status).toBe(expected.retrieval);
++  expect(queryStages.packet.status).toBe(expected.packet);
++  expect(queryStages.answer.status).toBe(expected.answer);
++};
++
+ describe("repo-memory run projector", () => {
+-  it.effect("projects accepted progress packet and answer events onto a query run", () =>
++  it.effect("projects fixed query stages from accepted progress packet and answer events", () =>
+     Effect.gen(function* () {
+       const acceptedEvent = new RunAcceptedEvent({
+         runId: queryRunId,
+@@ -79,55 +99,220 @@ describe("repo-memory run projector", () => {
+         repoId,
+         question: O.some("describe symbol `answer`"),
+       });
+-      const progress = new RunProgressUpdatedEvent({
++      const groundingProgress = new RunProgressUpdatedEvent({
+         runId: queryRunId,
+         sequence: decodeRunEventSequence(2),
+         emittedAt: makeUtc(1_706_300_001_000),
++        phase: "grounding",
++        message: "Normalizing the question.",
++        percent: O.some(decodeNonNegativeInt(25)),
++      });
++      const retrievalProgress = new RunProgressUpdatedEvent({
++        runId: queryRunId,
++        sequence: decodeRunEventSequence(3),
++        emittedAt: makeUtc(1_706_300_002_000),
+         phase: "retrieval",
+         message: "Retrieving grounded evidence.",
+         percent: O.some(decodeNonNegativeInt(60)),
+       });
++      const packetProgress = new RunProgressUpdatedEvent({
++        runId: queryRunId,
++        sequence: decodeRunEventSequence(4),
++        emittedAt: makeUtc(1_706_300_003_000),
++        phase: "packet",
++        message: "Freezing the retrieval packet.",
++        percent: O.some(decodeNonNegativeInt(80)),
++      });
+       const retrievalPacket = new RetrievalPacketMaterializedEvent({
+         runId: queryRunId,
+-        sequence: decodeRunEventSequence(3),
+-        emittedAt: makeUtc(1_706_300_002_000),
+-        packet: makePacket(makeUtc(1_706_300_002_000)),
++        sequence: decodeRunEventSequence(5),
++        emittedAt: makeUtc(1_706_300_004_000),
++        packet: makePacket(makeUtc(1_706_300_004_000)),
++      });
++      const answerProgress = new RunProgressUpdatedEvent({
++        runId: queryRunId,
++        sequence: decodeRunEventSequence(6),
++        emittedAt: makeUtc(1_706_300_005_000),
++        phase: "answer",
++        message: "Rendering the answer from packet state.",
++        percent: O.some(decodeNonNegativeInt(95)),
+       });
+       const answer = new AnswerDraftedEvent({
+         runId: queryRunId,
+-        sequence: decodeRunEventSequence(4),
+-        emittedAt: makeUtc(1_706_300_003_000),
++        sequence: decodeRunEventSequence(7),
++        emittedAt: makeUtc(1_706_300_006_000),
+         answer: "Symbol `answer` is exported from src/index.ts.",
+         citations: [makeCitation()],
+       });
+ 
+       const accepted = yield* projectRunEvent(O.none(), acceptedEvent);
+-      const running = yield* projectRunEvent(O.some(accepted), progress);
+-      const withPacket = yield* projectRunEvent(O.some(running), retrievalPacket);
+-      const withAnswer = yield* projectRunEvent(O.some(withPacket), answer);
++      const grounded = yield* projectRunEvent(O.some(accepted), groundingProgress);
++      const retrieved = yield* projectRunEvent(O.some(grounded), retrievalProgress);
++      const packeting = yield* projectRunEvent(O.some(retrieved), packetProgress);
++      const withPacket = yield* projectRunEvent(O.some(packeting), retrievalPacket);
++      const answering = yield* projectRunEvent(O.some(withPacket), answerProgress);
++      const withAnswer = yield* projectRunEvent(O.some(answering), answer);
+ 
+       expect(accepted.kind).toBe("query");
+-      expect(accepted.status).toBe("accepted");
+-      expect(accepted.lastEventSequence).toBe(1);
+-      expect(running.status).toBe("running");
+-      expect(running.lastEventSequence).toBe(2);
+-      expect(withPacket.kind).toBe("query");
+-      expect(withPacket.lastEventSequence).toBe(3);
+-      if (withPacket.kind !== "query") {
+-        return yield* Effect.die("Expected projected query run after retrieval packet.");
++      if (accepted.kind !== "query") {
++        return yield* Effect.die("Expected projected query run after acceptance.");
+       }
+-      expect(O.getOrThrow(withPacket.retrievalPacket).summary).toContain("Projector packet");
++      expectQueryStageStatuses(accepted, {
++        grounding: "pending",
++        retrieval: "pending",
++        packet: "pending",
++        answer: "pending",
++      });
+ 
+-      expect(withAnswer.kind).toBe("query");
+-      expect(withAnswer.lastEventSequence).toBe(4);
+-      if (withAnswer.kind !== "query") {
+-        return yield* Effect.die("Expected projected query run after answer.");
++      if (grounded.kind !== "query" || retrieved.kind !== "query" || packeting.kind !== "query") {
++        return yield* Effect.die("Expected query runs while projecting stage progress.");
+       }
++
++      expectQueryStageStatuses(grounded, {
++        grounding: "running",
++        retrieval: "pending",
++        packet: "pending",
++        answer: "pending",
++      });
++      expectQueryStageStatuses(retrieved, {
++        grounding: "completed",
++        retrieval: "running",
++        packet: "pending",
++        answer: "pending",
++      });
++      expectQueryStageStatuses(packeting, {
++        grounding: "completed",
++        retrieval: "completed",
++        packet: "running",
++        answer: "pending",
++      });
++
++      if (withPacket.kind !== "query" || withAnswer.kind !== "query" || answering.kind !== "query") {
++        return yield* Effect.die("Expected projected query run after packet and answer artifacts.");
++      }
++
++      expectQueryStageStatuses(withPacket, {
++        grounding: "completed",
++        retrieval: "completed",
++        packet: "completed",
++        answer: "pending",
++      });
++      expect(O.getOrThrow(O.getOrThrow(withPacket.queryStages).packet.artifactAvailable)).toBe(true);
++      expect(O.getOrThrow(withPacket.retrievalPacket).summary).toContain("Projector packet");
++
++      expectQueryStageStatuses(answering, {
++        grounding: "completed",
++        retrieval: "completed",
++        packet: "completed",
++        answer: "running",
++      });
++
++      expectQueryStageStatuses(withAnswer, {
++        grounding: "completed",
++        retrieval: "completed",
++        packet: "completed",
++        answer: "completed",
++      });
++      expect(O.getOrThrow(O.getOrThrow(withAnswer.queryStages).answer.artifactAvailable)).toBe(true);
+       expect(O.getOrThrow(withAnswer.answer)).toContain("src/index.ts");
+       expect(withAnswer.citations.length).toBe(1);
+     })
+   );
+ 
++  it.effect("preserves projected query stage progress across interruption and resume", () =>
++    Effect.gen(function* () {
++      const accepted = yield* projectRunEvent(
++        O.none(),
++        new RunAcceptedEvent({
++          runId: queryRunId,
++          sequence: decodeRunEventSequence(1),
++          emittedAt: makeUtc(1_706_310_000_000),
++          runKind: "query",
++          repoId,
++          question: O.some("describe symbol `answer`"),
++        })
++      );
++      const grounding = yield* projectRunEvent(
++        O.some(accepted),
++        new RunProgressUpdatedEvent({
++          runId: queryRunId,
++          sequence: decodeRunEventSequence(2),
++          emittedAt: makeUtc(1_706_310_001_000),
++          phase: "grounding",
++          message: "Normalizing the question.",
++          percent: O.some(decodeNonNegativeInt(25)),
++        })
++      );
++      const retrieval = yield* projectRunEvent(
++        O.some(grounding),
++        new RunProgressUpdatedEvent({
++          runId: queryRunId,
++          sequence: decodeRunEventSequence(3),
++          emittedAt: makeUtc(1_706_310_002_000),
++          phase: "retrieval",
++          message: "Retrieving grounded evidence.",
++          percent: O.some(decodeNonNegativeInt(60)),
++        })
++      );
++      const interrupted = yield* projectRunEvent(
++        O.some(retrieval),
++        new RunInterruptedEvent({
++          runId: queryRunId,
++          sequence: decodeRunEventSequence(4),
++          emittedAt: makeUtc(1_706_310_003_000),
++        })
++      );
++      const resumed = yield* projectRunEvent(
++        O.some(interrupted),
++        new RunResumedEvent({
++          runId: queryRunId,
++          sequence: decodeRunEventSequence(5),
++          emittedAt: makeUtc(1_706_310_004_000),
++        })
++      );
++      const packeting = yield* projectRunEvent(
++        O.some(resumed),
++        new RunProgressUpdatedEvent({
++          runId: queryRunId,
++          sequence: decodeRunEventSequence(6),
++          emittedAt: makeUtc(1_706_310_005_000),
++          phase: "packet",
++          message: "Freezing the retrieval packet.",
++          percent: O.some(decodeNonNegativeInt(80)),
++        })
++      );
++
++      if (retrieval.kind !== "query" || interrupted.kind !== "query" || resumed.kind !== "query" || packeting.kind !== "query") {
++        return yield* Effect.die("Expected query runs while testing interruption and resume.");
++      }
++
++      expectQueryStageStatuses(retrieval, {
++        grounding: "completed",
++        retrieval: "running",
++        packet: "pending",
++        answer: "pending",
++      });
++      expectQueryStageStatuses(interrupted, {
++        grounding: "completed",
++        retrieval: "running",
++        packet: "pending",
++        answer: "pending",
++      });
++      expectQueryStageStatuses(resumed, {
++        grounding: "completed",
++        retrieval: "running",
++        packet: "pending",
++        answer: "pending",
++      });
++      expectQueryStageStatuses(packeting, {
++        grounding: "completed",
++        retrieval: "completed",
++        packet: "running",
++        answer: "pending",
++      });
++    })
++  );
++
+   it.effect("rejects projecting a retrieval packet onto an index run with a typed 409", () =>
+     Effect.gen(function* () {
+       const accepted = yield* projectRunEvent(
+diff --git a/packages/repo-memory/runtime/test/RunStateMachine.test.ts b/packages/repo-memory/runtime/test/RunStateMachine.test.ts
+index 41db285165..2b4dca014f 100644
+--- a/packages/repo-memory/runtime/test/RunStateMachine.test.ts
++++ b/packages/repo-memory/runtime/test/RunStateMachine.test.ts
+@@ -117,12 +117,14 @@ describe("repo-memory run state machine", () => {
+       expect(resumed.run.status).toBe("running");
+       expect(resumed.run.lastEventSequence).toBe(4);
+       expect(DateTime.toEpochMillis(O.getOrThrow(resumed.run.startedAt))).toBe(DateTime.toEpochMillis(startedAt));
++      expect(O.isSome(resumed.run.queryStages)).toBe(true);
+ 
+       expect(completed.status).toBe("completed");
+       expect(completed.lastEventSequence).toBe(5);
+       expect(DateTime.toEpochMillis(O.getOrThrow(completed.completedAt))).toBe(DateTime.toEpochMillis(completedAt));
+       expect(O.getOrThrow(completed.answer)).toContain("Symbol `answer`");
+       expect(O.isSome(completed.retrievalPacket)).toBe(true);
++      expect(O.isSome(completed.queryStages)).toBe(true);
+     })
+   );
+ 
+diff --git a/specs/pending/repo-expert-memory-local-first-v0/EVALUATION_AND_ACCEPTANCE.md b/specs/pending/repo-expert-memory-local-first-v0/EVALUATION_AND_ACCEPTANCE.md
+index 00815e0a37..484ee198ee 100644
+--- a/specs/pending/repo-expert-memory-local-first-v0/EVALUATION_AND_ACCEPTANCE.md
++++ b/specs/pending/repo-expert-memory-local-first-v0/EVALUATION_AND_ACCEPTANCE.md
+@@ -32,6 +32,7 @@ At minimum, include questions like:
+ - Spawned Bun sidecar tests already prove public-path interrupt/resume for durable index runs, including resume after sidecar restart.
+ - Grounded retrieval tests already prove source-backed answers, citation alignment, and retrieval-packet persistence for the current deterministic query classes.
+ - The current query interpreter already proves the stable typed boundary that retrieval-side NLP must preserve rather than replace.
++- Query-run projection tests now prove that accepted query runs start with fixed pending `grounding`, `retrieval`, `packet`, and `answer` stages and that existing progress/packet/answer events rebuild the same final stage trace through replay.
+ - The native Tauri wrapper already owns managed startup/shutdown and folder picking while the React shell stays thin over the public protocol.
+ 
+ ## Acceptance Checks
+@@ -50,6 +51,7 @@ At minimum, include questions like:
+ - start a query workflow and receive a deterministic `runId`
+ - stream progress through `StreamRunEvents`
+ - verify query progress uses `grounding`, `retrieval`, `packet`, and `answer`
++- verify `GET /runs/:runId` exposes the projected fixed query stage trace with stage status, timestamps, percent, and latest message
+ - verify disconnect does not kill the underlying run
+ - reconnect from cursor and receive missing events cleanly
+ - verify final run detail remains inspectable after completion
+@@ -71,6 +73,7 @@ At minimum, include questions like:
+ ### 5. Projection integrity
+ - `GET /runs` and `GET /runs/:runId` must reflect durable run state
+ - final retrieval packet and final answer must match the run event history
++- projected query stages must match the run event history and replay back into the same stage trace
+ - packet payload, packet citations, and final answer must agree exactly
+ - replay after restart must rebuild the same projection state
+ - stream consumers must be able to rebuild equivalent run state from journal replay plus live events without relying on embedded run snapshots
+diff --git a/specs/pending/repo-expert-memory-local-first-v0/IMPLEMENTATION_BREAKDOWN.md b/specs/pending/repo-expert-memory-local-first-v0/IMPLEMENTATION_BREAKDOWN.md
+index cb501e9e79..cf3ff11cfd 100644
+--- a/specs/pending/repo-expert-memory-local-first-v0/IMPLEMENTATION_BREAKDOWN.md
++++ b/specs/pending/repo-expert-memory-local-first-v0/IMPLEMENTATION_BREAKDOWN.md
+@@ -14,9 +14,10 @@ The point of this breakdown is to sequence the work so lifecycle, transport, and
+ - Desktop shell integration: landed with a real Tauri wrapper, Rust-managed sidecar lifecycle, native repo-folder picking, same-origin `portless` desktop dev over HTTPS, and a debug-only manual URL override.
+ - Compatibility cleanup: landed; the old HTTP run-mutation and SSE routes are no longer the active integration target.
+ - Grounded retrieval: landed with bounded deterministic query interpretation, durable citations/retrieval packets, and repo-local resolved file dependency/dependent retrieval over persisted import-edge targets.
++- Query stage trace projection: landed as a light fixed `QueryRun.queryStages` surface derived from existing `RunProgressUpdated`, `RetrievalPacketMaterialized`, and `AnswerDrafted` events without adding new durable event kinds.
+ - Retrieval-side NLP enrichment: not yet landed; it is the next bounded phase over the existing query-to-retrieval path and must preserve deterministic fallback plus citation-first grounding.
+ - Test split and lifecycle proof: landed with `@effect/vitest` supporting tests and spawned Bun subprocess lifecycle tests.
+-- Remaining `v0` closure: finish the explicit `grounding -> retrieval -> packet -> answer` split, extend the packet into a structured durable evidence product, then finish the broader projection bootstrap/cursor pipeline and decider-style runtime split without regressing the already-landed lifecycle behavior.
++- Remaining `v0` closure: keep the explicit `grounding -> retrieval -> packet -> answer` split and fixed light query-stage trace stable, then finish the broader projection bootstrap/cursor pipeline and decider-style runtime split without regressing the already-landed lifecycle behavior.
+ 
+ ## Workstream 1: Contracts
+ Lock the public contracts first.
+@@ -114,6 +115,7 @@ Current reality:
+ - lifecycle events are delta-shaped, not embedded full-run snapshots
+ - the shared `RunProjector` in `packages/repo-memory/model` is already the canonical projection function for runtime and desktop consumers
+ - `RetrievalPacketMaterialized` now conceptually freezes the packet before `AnswerDrafted`
++- `QueryRun.queryStages` can now be projected as a fixed light stage trace from existing progress/packet/answer events
+ - the remaining architecture gap is not projector existence but durable projection bootstrap/cursor ownership and the broader decider split around `RepoRunService`
+ 
+ ## Workstream 6: Shared router assembly
+diff --git a/specs/pending/repo-expert-memory-local-first-v0/QUERY_STAGES_AND_RETRIEVAL_PACKET.md b/specs/pending/repo-expert-memory-local-first-v0/QUERY_STAGES_AND_RETRIEVAL_PACKET.md
+index 7920ee5a7b..0aacd7b79c 100644
+--- a/specs/pending/repo-expert-memory-local-first-v0/QUERY_STAGES_AND_RETRIEVAL_PACKET.md
++++ b/specs/pending/repo-expert-memory-local-first-v0/QUERY_STAGES_AND_RETRIEVAL_PACKET.md
+@@ -304,12 +304,16 @@ The contract changes are:
+ - `RunProgressUpdated.phase` uses the canonical four-stage vocabulary
+ - `RetrievalPacketMaterialized` carries the frozen packet
+ - `AnswerDrafted` must be renderable from that packet alone
++- `QueryRun.queryStages` may project a fixed light stage trace from existing events without introducing new durable event kinds
+ - replay plus projection must rebuild the same final packet and answer state
+ 
+ ## UI And Read-Model Implications
+-The run detail view should treat the packet as a first-class inspection surface.
++The run detail view should treat the packet as a first-class inspection surface and should project query stages from the run model rather than manually inferring them from the raw event feed.
+ 
+ At minimum, query-run detail should show:
++- fixed `grounding`, `retrieval`, `packet`, and `answer` stage rows
++- stage status, timestamps, percent, and latest message
++- packet or answer artifact availability for the later two stages
+ - normalized query
+ - query kind
+ - retrieval outcome
+diff --git a/specs/pending/repo-expert-memory-local-first-v0/README.md b/specs/pending/repo-expert-memory-local-first-v0/README.md
+index 33e307c9c0..7dfe419fae 100644
+--- a/specs/pending/repo-expert-memory-local-first-v0/README.md
++++ b/specs/pending/repo-expert-memory-local-first-v0/README.md
+@@ -94,8 +94,8 @@ Important reading posture:
+ 
+ ## Known Remaining P0 Gaps
+ - `RunProjector` and `RunStateMachine` now exist as explicit seams, but the broader projection bootstrap/cursor pipeline and decider-style service split still live mostly inside `RepoRunService`.
+-- The concrete query-run contract now expects the canonical `grounding -> retrieval -> packet -> answer` stage split, structured retrieval-packet payloads/issues, and packet-only answer rendering; code should keep converging on that shape.
+-- Extraction provenance and query-time explainability are now intentionally separated in the docs, but the runtime still needs to finish making that split obvious in its internal artifacts and UI rendering.
++- The concrete query-run contract is now implemented around the canonical `grounding -> retrieval -> packet -> answer` stage split, structured retrieval-packet payloads/issues, packet-only answer rendering, and a light `QueryRun.queryStages` projection derived from existing progress/packet/answer events without adding new durable event kinds.
++- Extraction provenance and query-time explainability are now intentionally separated in both the docs and the repo-memory `v0` read model; the next closure work is broader projection bootstrap/cursor ownership and the decider-style runtime split rather than new query artifact kinds.
+ - Grounded query expansion should continue only through deterministic source-backed additions, not freeform semantic repo chat.
+ 
+ ## Relationship To Upstream Context
+diff --git a/specs/pending/repo-expert-memory-local-first-v0/VERTICAL_SLICE.md b/specs/pending/repo-expert-memory-local-first-v0/VERTICAL_SLICE.md
+index c713568644..53e5b2be25 100644
+--- a/specs/pending/repo-expert-memory-local-first-v0/VERTICAL_SLICE.md
++++ b/specs/pending/repo-expert-memory-local-first-v0/VERTICAL_SLICE.md
+@@ -92,6 +92,7 @@ The progress story for query runs should be explicit:
+ 
+ ### 5. Inspect grounded result
+ The final query view must show:
++- query stage trace
+ - final answer
+ - citations
+ - retrieval packet
+@@ -133,7 +134,7 @@ Testing posture for this slice:
+ 
+ ## Remaining Slice Gaps
+ - `RunProjector` and `RunStateMachine` still need to become real runtime seams instead of staying embedded in `RepoRunService`.
+-- The runtime still needs to make the new stage split and structured packet contract explicit in code, replay, and UI rendering.
++- The broader projection bootstrap/cursor pipeline and decider-style runtime split still need to move out of `RepoRunService` without regressing the now-landed query stage trace, structured packet contract, and packet-driven answer rendering.
+ 
+ ## Minimal Data Shown In The UI
+ The first UI does not need to be broad, but it does need to be inspectable.
