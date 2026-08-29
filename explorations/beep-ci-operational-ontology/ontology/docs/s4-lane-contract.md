@@ -148,8 +148,8 @@ review 2). The gate between lane merge (§5) and S5 admission is the
 abridgment (round-3 seat I-02 killed the previous paraphrase). Canonical install:
 `~/.claude/skills/ontology-foundational-auditor/` with the family contracts at
 `~/.claude/skills/_shared/` (all eight `schemas/*.schema.yaml` exist there; the
-`~/.agents/skills/` mirror is STALE and lacks them — **S4 LAUNCH PRECONDITION:
-re-sync the mirror or pass `$SKILL`/`$SHARED` paths pointing at `~/.claude/skills/`
+the Codex skills mirror is STALE and lacks them — **S4 LAUNCH PRECONDITION:
+re-sync the mirror or pass `$SKILL`/`$SHARED` paths pointing at the canonical Claude skills installation
 explicitly**, since codex lanes resolve the mirror).
 
 The skill's artifact chain is
@@ -160,8 +160,14 @@ not a parser); null-hypothesis discriminators; a blinded alternative seat + an
 OntoClean adversary seat (independent by construction); the MECHANICAL `--gate` mode
 of `scripts/validate_artifacts.py`; per-proposal STEWARD ratification (the operator);
 and a total dispositions index. Working directory:
-`ontology/extraction/s4/normalization/` plays the skill's `ontologies/{name}/work/`
-role (`{name}` = `beep-ci-ops`).
+`ontology/extraction/s4/beep-ci-ops/` plays the skill's `ontologies/{name}/` ROOT
+role (`{name}` = `beep-ci-ops`): the validator hard-requires the literal layout
+`work/run-manifest.yaml`, `work/dispositions.index.yaml`, `work/alternative/`, and
+`governance/ratifications/` under the scanned ontology root AND that the root
+directory be NAMED after `ontology.name`, so `beep-ci-ops/` holds `work/`,
+`adapters/` (+`golden/`), `governance/`, and `runs/` (layout clarified at gate
+launch 2026-08-29 — the skill as written wins over the earlier `normalization/`
+work-dir phrasing here).
 
 Reconciliation with §3 lane output (the two flows compose, they do not compete):
 

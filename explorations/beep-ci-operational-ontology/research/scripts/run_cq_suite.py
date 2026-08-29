@@ -23,7 +23,7 @@ import re
 import sys
 from pathlib import Path
 
-from pyoxigraph import Store
+from pyoxigraph import RdfFormat, Store
 
 PACKET = Path(__file__).resolve().parents[2]
 TESTS = PACKET / "ontology/tests"
@@ -90,7 +90,7 @@ def fail(msg):
 def load_store(*ttl_paths):
     store = Store()
     for p in ttl_paths:
-        store.load(p.read_bytes(), "text/turtle")
+        store.load(p.read_bytes(), RdfFormat.TURTLE)
     return store
 
 

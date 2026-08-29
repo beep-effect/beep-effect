@@ -115,15 +115,15 @@ UFO, BFO, and DOLCE are foundational/top-level ontologies or foundational ontolo
 
 The right choice is therefore not “pick UFO or BFO and import it.” The correct architecture for this packet is more conservative:
 
-**UFO/OntoUML should govern conceptual analysis.**  
-**OntoClean should govern taxonomy QA.**  
-**PROV-O should carry reusable provenance semantics.**  
-**OWL 2 RL should carry the deliberately small executable ontology.**  
-**SHACL should carry integrity/closure requirements.**  
-**Datalog should carry explicitly closed operational derivations.**  
-**BFO alignment should be a separate optional mapping module.**  
-**DOLCE/DnS should be mined for useful contextual patterns rather than imported wholesale.**  
-**OBO principles should govern release discipline.**  
+**UFO/OntoUML should govern conceptual analysis.**
+**OntoClean should govern taxonomy QA.**
+**PROV-O should carry reusable provenance semantics.**
+**OWL 2 RL should carry the deliberately small executable ontology.**
+**SHACL should carry integrity/closure requirements.**
+**Datalog should carry explicitly closed operational derivations.**
+**BFO alignment should be a separate optional mapping module.**
+**DOLCE/DnS should be mined for useful contextual patterns rather than imported wholesale.**
+**OBO principles should govern release discipline.**
 **ISO 21838 should inform top-level quality criteria.**
 
 That recommendation deliberately avoids strong equivalence mappings among foundational ontologies. UFO, BFO and DOLCE embody different foundational commitments and modeling objectives; asserting `owl:equivalentClass` across their top categories is much stronger than documenting conceptual similarity. Conservative `rdfs:subClassOf`, `skos:closeMatch`, or an external mapping artifact is preferable until equivalence has actually been demonstrated. UFO is explicitly motivated by conceptual-model semantics, BFO has a realist continuant/occurrent architecture, and DOLCE explicitly adopts a descriptive/cognitive stance. citeturn17search0turn19search0turn22search2
@@ -425,7 +425,7 @@ into:
 
 > **Every T-Box term must have an explicit admission justification of one of two kinds:**
 >
-> **decision term** — directly required to answer a Must/Should CQ; or  
+> **decision term** — directly required to answer a Must/Should CQ; or
 > **semantic-support term** — required to define, constrain, disambiguate, align, or preserve the correctness of a decision term.
 
 Otherwise CQ minimalism can optimize for query surfaces while forcing ontological shortcuts. For example, `VerificationObligation` may be necessary to distinguish a normative requirement from the `VerificationProcedureSpecification` that satisfies it even if a query only returns the procedure. Rejecting the supporting class because no SELECT projects it would make the ontology *less* correct.
