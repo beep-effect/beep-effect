@@ -1,0 +1,197 @@
+diff --git a/packages/tooling/tool/docgen/src/Domain.ts b/packages/tooling/tool/docgen/src/Domain.ts
+index 85c7512175..04c9cb91c9 100644
+--- a/packages/tooling/tool/docgen/src/Domain.ts
++++ b/packages/tooling/tool/docgen/src/Domain.ts
+@@ -19,50 +19,6 @@ const StringArray = S.Array(S.String);
+ const OptionalString = S.UndefinedOr(S.String);
+ const OptionalStringArray = S.UndefinedOr(StringArray);
+ 
+-type DocNewOptions = {
+-  readonly since: ReadonlyArray<string>;
+-  readonly deprecated: ReadonlyArray<string>;
+-  readonly examples: ReadonlyArray<string>;
+-  readonly category: ReadonlyArray<string>;
+-  readonly throws: ReadonlyArray<string>;
+-  readonly sees: ReadonlyArray<string>;
+-  readonly tags: Record<string, ReadonlyArray<string> | undefined>;
+-};
+-
+-type SignaturePositionOptions = {
+-  readonly signature: string;
+-  readonly position: Position;
+-};
+-
+-type ClassNewOptions = SignaturePositionOptions & {
+-  readonly methods: ReadonlyArray<DocEntry>;
+-  readonly staticMethods: ReadonlyArray<DocEntry>;
+-  readonly properties: ReadonlyArray<DocEntry>;
+-};
+-
+-type ExportNewOptions = SignaturePositionOptions & {
+-  readonly isNamespaceExport: boolean;
+-};
+-
+-type NamespaceNewOptions = {
+-  readonly position: Position;
+-  readonly interfaces: ReadonlyArray<Interface>;
+-  readonly typeAliases: ReadonlyArray<TypeAlias>;
+-  readonly namespaces: ReadonlyArray<Namespace>;
+-};
+-
+-type ModuleNewOptions = {
+-  readonly doc: Doc;
+-  readonly path: ReadonlyArray<string>;
+-  readonly classes: ReadonlyArray<Class>;
+-  readonly interfaces: ReadonlyArray<Interface>;
+-  readonly functions: ReadonlyArray<Function>;
+-  readonly typeAliases: ReadonlyArray<TypeAlias>;
+-  readonly constants: ReadonlyArray<Constant>;
+-  readonly exports: ReadonlyArray<Export>;
+-  readonly namespaces: ReadonlyArray<Namespace>;
+-};
+-
+ /**
+  * Represents a one-based source location in a parsed file.
+  *
+@@ -99,6 +55,40 @@ export class Position extends S.Class<Position>($I`Position`)({
+   );
+ }
+ 
++class DocNewOptions extends S.Class<DocNewOptions>($I`DocNewOptions`)(
++  {
++    since: S.Array(S.String),
++    deprecated: S.Array(S.String),
++    examples: S.Array(S.String),
++    category: S.Array(S.String),
++    throws: S.Array(S.String),
++    sees: S.Array(S.String),
++    tags: S.Record(S.String, S.String.pipe(S.Array, S.UndefinedOr)),
++  },
++  $I.annote("DocNewOptions", {
++    description: "Options for creating a new doc entry.",
++  })
++) {}
++
++export class SignaturePositionOptions extends S.Class<SignaturePositionOptions>($I`SignaturePositionOptions`)(
++  {
++    signature: S.String,
++    position: Position,
++  },
++  $I.annote("SignaturePositionOptions", {
++    description: "Options for creating a new signature position.",
++  })
++) {}
++
++export class ExportNewOptions extends SignaturePositionOptions.extend<ExportNewOptions>($I`ExportNewOptions`)(
++  {
++    isNamespaceExport: S.Boolean,
++  },
++  $I.annote("ExportNewOptions", {
++    description: "Options for creating a new export entry.",
++  })
++) {}
++
+ /**
+  * Represents normalized JSDoc metadata for a documented symbol.
+  *
+@@ -226,6 +216,17 @@ export class DocEntry extends S.Class<DocEntry>($I`DocEntry`)({
+   );
+ }
+ 
++class ClassNewOptions extends SignaturePositionOptions.extend<ClassNewOptions>($I`ClassNewOptions`)(
++  {
++    methods: S.Array(DocEntry),
++    staticMethods: S.Array(DocEntry),
++    properties: S.Array(DocEntry),
++  },
++  $I.annote("ClassNewOptions", {
++    description: "Options for creating a new class entry.",
++  })
++) {}
++
+ /**
+  * Represents a documented class and its emitted member structure.
+  *
+@@ -564,6 +565,30 @@ export class Export extends S.TaggedClass<Export>($I`Export`)("Export", {
+   );
+ }
+ 
++/**
++ * Namespace for {@link Namespace} containing the recursive encoded type.
++ *
++ * @category type-level
++ * @since 0.0.0
++ */
++export declare namespace Namespace {
++  /**
++   * The encoded form of {@link Namespace}, expressed recursively to break the schema cycle.
++   *
++   * @category type-level
++   * @since 0.0.0
++   */
++  export type Encoded = {
++    readonly _tag: "Namespace";
++    readonly name: string;
++    readonly doc: typeof Doc.Encoded;
++    readonly position: typeof Position.Encoded;
++    readonly interfaces: ReadonlyArray<typeof Interface.Encoded>;
++    readonly typeAliases: ReadonlyArray<typeof TypeAlias.Encoded>;
++    readonly namespaces: ReadonlyArray<Encoded>;
++  };
++}
++
+ /**
+  * Represents a documented namespace and its nested exported members.
+  *
+@@ -596,7 +621,7 @@ export class Namespace extends S.TaggedClass<Namespace>($I`Namespace`)("Namespac
+   position: Position,
+   interfaces: S.Array(Interface),
+   typeAliases: S.Array(TypeAlias),
+-  namespaces: S.Array(S.Any),
++  namespaces: S.Array(S.suspend((): S.Codec<Namespace, Namespace.Encoded> => Namespace)),
+ }) {
+   declare readonly namespaces: ReadonlyArray<Namespace>;
+ 
+@@ -625,6 +650,18 @@ export class Namespace extends S.TaggedClass<Namespace>($I`Namespace`)("Namespac
+   );
+ }
+ 
++export class NamespaceNewOptions extends S.Class<NamespaceNewOptions>($I`NamespaceNewOptions`)(
++  {
++    position: Position,
++    interfaces: S.Array(Interface),
++    typeAliases: S.Array(TypeAlias),
++    namespaces: S.Array(Namespace),
++  },
++  $I.annote("NamespaceNewOptions", {
++    description: "Options for creating a new namespace entry.",
++  })
++) {}
++
+ /**
+  * Represents a fully parsed module ready for validation and printing.
+  *
+@@ -739,6 +776,23 @@ export class File extends S.Class<File>($I`File`)({
+   });
+ }
+ 
++export class ModuleNewOptions extends S.Class<ModuleNewOptions>($I`ModuleNewOptions`)(
++  {
++    doc: Doc,
++    path: S.Array(S.String),
++    classes: S.Array(Class),
++    interfaces: S.Array(Interface),
++    functions: S.Array(Function),
++    typeAliases: S.Array(TypeAlias),
++    constants: S.Array(Constant),
++    exports: S.Array(Export),
++    namespaces: S.Array(Namespace),
++  },
++  $I.annote("ModuleNewOptions", {
++    description: "Options for creating a new module entry.",
++  })
++) {}
++
+ /**
+  * Unique symbol used to brand docgen-specific errors.
+  *
