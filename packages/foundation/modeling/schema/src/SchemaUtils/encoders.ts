@@ -1,5 +1,9 @@
 /**
+ * Schema encoding helpers that normalize Effect Schema failures as
+ * {@link S.SchemaError} values.
  *
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as S from "effect/Schema";
@@ -22,7 +26,19 @@ import type * as O from "effect/Option";
  * Options may be provided either when creating the encoder or when applying it;
  * application options override creation options.
  *
- * @see {@link S.SchemaParser.encodeEffect} for the adapter that fails with `SchemaIssue.Issue` directly
+ * **Example** (Encode a typed value in an Effect)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { encodeEffect } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const encoded = await Effect.runPromise(encodeEffect(S.NumberFromString)(42))
+ * console.log(encoded) // "42"
+ * ```
+ *
+ * @see {@link encodeUnknownEffect} when the input is not already typed by the schema.
+ * @see {@link S.SchemaParser.encodeEffect} for the adapter that fails with `SchemaIssue.Issue` directly.
  *
  * @category encoding
  * @since 0.0.0
@@ -33,32 +49,39 @@ export const encodeEffect =
     S.encodeUnknownEffect(schema, options)(input);
 
 /**
- * Encodes an `unknown` input against a schema, returning an `Effect` that
- * succeeds with the encoded value or fails with a {@link S.SchemaError}.
+ * Encodes unknown input with schema errors preserved in an `Effect` failure
+ * channel.
  *
  * **When to use**
  *
- * Use when you need to encode unknown input in an `Effect` whose failure
- * channel is `SchemaError`.
+ * Use when untrusted or erased input must be validated before serialization
+ * without throwing.
  *
  * **Details**
  *
- * Prefer {@link encodeEffect} when the value is already typed as the schema's
- * `Type`.
- * Options may be provided either when creating the encoder or when applying it;
- * application options override creation options.
+ * Successful encoding yields the schema's `Encoded` representation. Options
+ * supplied at application time override options supplied when creating the
+ * encoder.
+ *
+ * **Gotchas**
+ *
+ * Prefer {@link encodeEffect} when the input already has the schema's decoded
+ * `Type`; this helper deliberately accepts `unknown` and validates it first.
  *
  * **Example** (Encoding a value to a string)
  *
  * ```ts
- * import { Effect, Schema } from "effect"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { encodeUnknownEffect } from "@beep/schema/SchemaUtils/encoders"
  *
- * const NumberFromString = Schema.NumberFromString
- *
- * Effect.runPromise(Schema.encodeUnknownEffect(NumberFromString)(42)).then(console.log)
- * // Output: "42"
+ * const input: unknown = 42
+ * const encoded = await Effect.runPromise(encodeUnknownEffect(S.NumberFromString)(input))
+ * console.log(encoded) // "42"
  * ```
  *
+ * @see {@link encodeEffect} for encoding an input already typed by the schema.
+ * @see {@link S.encodeUnknownEffect} for the underlying Effect Schema operation.
  * @category encoding
  * @since 0.0.0
  */
@@ -91,6 +114,18 @@ export const encodeUnknownEffect =
  * interruptions, and other non-schema reasons remain in the returned `Cause`,
  * including when they are mixed with schema issues.
  *
+ * **Example** (Inspect unknown-input encoding as an Exit)
+ *
+ * ```ts
+ * import * as Exit from "effect/Exit"
+ * import * as S from "effect/Schema"
+ * import { encodeUnknownExit } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const encoded = encodeUnknownExit(S.NumberFromString)(42)
+ * console.log(Exit.isSuccess(encoded)) // true
+ * ```
+ *
+ * @see {@link encodeExit} for input already typed by the schema.
  * @category encoding
  * @since 0.0.0
  */
@@ -124,6 +159,18 @@ export const encodeUnknownExit =
  * interruptions, and other non-schema reasons remain in the returned `Cause`,
  * including when they are mixed with schema issues.
  *
+ * **Example** (Inspect typed-input encoding as an Exit)
+ *
+ * ```ts
+ * import * as Exit from "effect/Exit"
+ * import * as S from "effect/Schema"
+ * import { encodeExit } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const encoded = encodeExit(S.NumberFromString)(42)
+ * console.log(Exit.isSuccess(encoded)) // true
+ * ```
+ *
+ * @see {@link encodeUnknownExit} for validating unknown input before encoding.
  * @category encoding
  * @since 0.0.0
  */
@@ -154,6 +201,18 @@ export const encodeExit =
  * that contain defects, interruptions, or other non-schema reasons throw
  * instead.
  *
+ * **Example** (Discard unknown-input error details)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { encodeUnknownOption } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * console.log(O.isSome(encodeUnknownOption(S.NumberFromString)(42))) // true
+ * console.log(O.isNone(encodeUnknownOption(S.NumberFromString)("nope"))) // true
+ * ```
+ *
+ * @see {@link encodeOption} for input already typed by the schema.
  * @category encoding
  * @since 0.0.0
  */
@@ -184,6 +243,18 @@ export const encodeUnknownOption =
  * that contain defects, interruptions, or other non-schema reasons throw
  * instead.
  *
+ * **Example** (Encode a typed value as an Option)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { encodeOption } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const encoded = encodeOption(S.NumberFromString)(42)
+ * console.log(O.getOrElse(encoded, () => "missing")) // "42"
+ * ```
+ *
+ * @see {@link encodeUnknownOption} for validating unknown input before encoding.
  * @category encoding
  * @since 0.0.0
  */
@@ -214,6 +285,18 @@ export const encodeOption =
  * Causes that contain defects, interruptions, or other non-schema reasons throw
  * instead.
  *
+ * **Example** (Inspect unknown-input encoding as a Result)
+ *
+ * ```ts
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
+ * import { encodeUnknownResult } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const encoded = encodeUnknownResult(S.NumberFromString)(42)
+ * console.log(Result.isSuccess(encoded)) // true
+ * ```
+ *
+ * @see {@link encodeResult} for input already typed by the schema.
  * @category encoding
  * @since 0.0.0
  */
@@ -245,6 +328,18 @@ export const encodeUnknownResult =
  * Causes that contain defects, interruptions, or other non-schema reasons throw
  * instead.
  *
+ * **Example** (Inspect typed-input encoding as a Result)
+ *
+ * ```ts
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
+ * import { encodeResult } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const encoded = encodeResult(S.NumberFromString)(42)
+ * console.log(Result.isSuccess(encoded)) // true
+ * ```
+ *
+ * @see {@link encodeUnknownResult} for validating unknown input before encoding.
  * @category encoding
  * @since 0.0.0
  */
@@ -273,6 +368,17 @@ export const encodeResult =
  * Non-schema failures may reject with a runtime failure instead of
  * `SchemaError`.
  *
+ * **Example** (Encode unknown input as a Promise)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { encodeUnknownPromise } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const input: unknown = 42
+ * console.log(await encodeUnknownPromise(S.NumberFromString)(input)) // "42"
+ * ```
+ *
+ * @see {@link encodePromise} for input already typed by the schema.
  * @category encoding
  * @since 0.0.0
  */
@@ -303,6 +409,16 @@ export const encodeUnknownPromise =
  * Non-schema failures may reject with a runtime failure instead of
  * `SchemaError`.
  *
+ * **Example** (Encode a typed value as a Promise)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { encodePromise } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * console.log(await encodePromise(S.NumberFromString)(42)) // "42"
+ * ```
+ *
+ * @see {@link encodeUnknownPromise} for validating unknown input before encoding.
  * @category encoding
  * @since 0.0.0
  */
@@ -332,6 +448,17 @@ export const encodePromise =
  *
  * Non-schema failures may throw a runtime failure instead of `SchemaError`.
  *
+ * **Example** (Synchronously encode unknown input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { encodeUnknownSync } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * const input: unknown = 42
+ * console.log(encodeUnknownSync(S.NumberFromString)(input)) // "42"
+ * ```
+ *
+ * @see {@link encodeSync} for input already typed by the schema.
  * @category encoding
  * @since 0.0.0
  */
@@ -359,6 +486,16 @@ export const encodeUnknownSync =
  *
  * Non-schema failures may throw a runtime failure instead of `SchemaError`.
  *
+ * **Example** (Synchronously encode a typed value)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { encodeSync } from "@beep/schema/SchemaUtils/encoders"
+ *
+ * console.log(encodeSync(S.NumberFromString)(42)) // "42"
+ * ```
+ *
+ * @see {@link encodeUnknownSync} for validating unknown input before encoding.
  * @category encoding
  * @since 0.0.0
  */

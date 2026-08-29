@@ -13,7 +13,15 @@ const $I = $LawPracticeDomainId.create("values/ApplicationNumber/ApplicationNumb
 const applicationNumberPattern = /^(?:1[0-9]|91)[0-9]{4}[A-Z0-9]{2}[0-9]{7}$/u;
 
 /**
- * Canonical WIPO ST.13 patent application number in machine-readable form.
+ * Validates canonical WIPO ST.13 patent application numbers in machine-readable
+ * form.
+ *
+ * **When to use**
+ *
+ * Use when a patent application identifier must cross a domain or persistence
+ * boundary in its separator-free ST.13 representation.
+ *
+ * **Details**
  *
  * The schema models the 15-character ST.13 form for patent applications:
  * two numeric type characters, four year-designation digits, and nine serial
@@ -22,10 +30,13 @@ const applicationNumberPattern = /^(?:1[0-9]|91)[0-9]{4}[A-Z0-9]{2}[0-9]{7}$/u;
  * The first two serial positions may be alphanumeric for office-internal
  * regional filing information; the remaining serial positions are digits.
  *
+ * **Gotchas**
+ *
  * ST.3 office codes and separators are presentation metadata and are
  * intentionally not part of this value.
  *
- * @example
+ * **Example** (Distinguish canonical and presented numbers)
+ *
  * ```ts
  * import { ApplicationNumber } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -34,7 +45,7 @@ const applicationNumberPattern = /^(?:1[0-9]|91)[0-9]{4}[A-Z0-9]{2}[0-9]{7}$/u;
  * console.log(S.is(ApplicationNumber)("XX 10 2014 345678")) // false
  * ```
  *
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-13-01.pdf
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-13-01.pdf} for the WIPO ST.13 specification.
  * @category value-objects
  * @since 0.0.0
  */
@@ -67,7 +78,8 @@ export const ApplicationNumber = S.String.check(
 /**
  * Type-level brand produced by {@link ApplicationNumber}.
  *
- * @example
+ * **Example** (Annotate a decoded application number)
+ *
  * ```ts
  * import { ApplicationNumber } from "@beep/law-practice-domain"
  * import * as S from "effect/Schema"
@@ -76,6 +88,7 @@ export const ApplicationNumber = S.String.check(
  * console.log(applicationNumber)
  * ```
  *
+ * @see {@link ApplicationNumber} for the runtime schema and validation behavior.
  * @category type-level
  * @since 0.0.0
  */
