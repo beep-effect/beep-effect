@@ -59,7 +59,7 @@
     }
   ],
   "resume": {
-    "retry": ["x-search"],
+    "retry": ["x-search", "verify"],
     "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-08-28T08:27-05:00/2026-08-29T08:27-05:00"
   },
   "repoReplay": {
