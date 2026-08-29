@@ -1,0 +1,30 @@
+diff --git a/.codex/config.toml b/.codex/config.toml
+index 6584809191..208759f2cc 100644
+--- a/.codex/config.toml
++++ b/.codex/config.toml
+@@ -1,4 +1,8 @@
+-[mcp_servers.next-devtools]
+-command = "bunx"
+-args = ['--bun', '-y', 'next-devtools-mcp@latest']
++# Project-scoped Graphiti MCP for beep-effect repos
++notify = ["bash", "/home/elpresidank/.local/bin/codex-graphiti-notify-hook.sh"]
+ 
++[mcp_servers.graphiti-memory]
++url = "http://localhost:8000/mcp"
++startup_timeout_sec = 30
++tool_timeout_sec = 60
++enabled = true
+diff --git a/.gitignore b/.gitignore
+index cda3b3a228..d5bbd0896a 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -47,4 +47,7 @@ playwright-report/
+ test-results/
+ 
+ # Claude plugin state files (ralph-wiggum loop state)
+-.claude/ralph-loop.local.md
+\ No newline at end of file
++.claude/ralph-loop.local.md
++# Local MCP + Codex config (project-scoped, not committed)
++.mcp.json
++.codex/
