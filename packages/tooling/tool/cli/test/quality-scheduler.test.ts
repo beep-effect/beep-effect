@@ -357,14 +357,13 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(journalPath, `${intact}{"schemaVersion":"yeet-admission-jour`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
             const events = yield* readJournalEvents(tempRoot.root);
-            expect(events).toHaveLength(1);
-            expect(events[0]?.nonce).toBe("nonce-1");
+            expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1", "nonce-2"]);
           })
         );
       })
     ));
 
-  it("skips compaction while the journal lock is held and reaps a stale lock", () =>
+  it("fails the append while the journal lock is held and reaps a stale lock", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -375,18 +374,15 @@ describe("quality-scheduler", () => {
             const lockPath = path.join(tempRoot.root, "journal.lock");
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             yield* fs.writeFileString(lockPath, `${process.pid}\n`);
-            yield* Effect.forEach(
-              A.makeBy(201, (index) => index),
-              (index) => appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(index)),
-              { discard: true, concurrency: 1 }
-            );
-            const journalPath = yield* admissionJournalPath(tempRoot.root);
-            const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-            expect(lines).toHaveLength(201);
+            const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
+            expect(busy.message).toContain("stayed busy");
+            expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
             const staleSeconds = ((yield* Clock.currentTimeMillis) - 61_000) / 1_000;
             yield* fs.utimes(lockPath, staleSeconds, staleSeconds);
-            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(201));
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
+            const events = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           })
         );
       })

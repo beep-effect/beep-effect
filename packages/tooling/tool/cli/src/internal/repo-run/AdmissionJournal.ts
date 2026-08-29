@@ -2,17 +2,21 @@
  * Machine-wide best-effort admission-transition journal at
  * `<admission root>/journal.ndjson`.
  *
- * The journal is ring-buffered for diagnostics. Scheduler correctness lives
- * exclusively in ticket and lease files; `bypassAdmission` on sub-envelope
- * machines mints neither file and journals no transition.
+ * Every write serializes under `<admission root>/journal.lock`: the writer
+ * reads the journal, drops undecodable records, appends its event, ring-trims
+ * to the newest admitted transitions, and publishes the result with an atomic
+ * temp-file rename. Scheduler correctness lives exclusively in ticket and
+ * lease files; `bypassAdmission` on sub-envelope machines mints neither file
+ * and journals no transition.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Clock, Console, Effect, FileSystem, Path, pipe } from "effect";
+import { Clock, Console, Duration, Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -26,6 +30,8 @@ const JOURNAL_FILE_NAME = "journal.ndjson";
 const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_STALE_MILLIS = 60_000;
+const LOCK_RETRY_ATTEMPTS = 8;
+const LOCK_RETRY_DELAY_MILLIS = 25;
 const textEncoder = new TextEncoder();
 
 /**
@@ -173,9 +179,12 @@ export const admissionJournalPath = Effect.fn("AdmissionJournal.path")(function*
   return path.join(root, JOURNAL_FILE_NAME);
 });
 
-const inspectStaleCompactionLock = Effect.fnUntraced(function* (
+// A lock recreated by a sibling between the staleness stat and the remove can
+// be reaped while fresh; the window is one syscall pair and the cost is one
+// competing serialized writer, so the telemetry-grade journal accepts it.
+const reapStaleJournalLock = Effect.fnUntraced(function* (
   lockPath: string
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const nowMillis = yield* Clock.currentTimeMillis;
   const info = yield* fs.stat(lockPath).pipe(Effect.option);
@@ -187,84 +196,111 @@ const inspectStaleCompactionLock = Effect.fnUntraced(function* (
   if (stale) {
     yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
   }
-  return false;
 });
 
-const tryAcquireCompactionLock = Effect.fnUntraced(function* (
+const tryAcquireJournalLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  // Any create failure (typically AlreadyExists contention) skips this round;
-  // the stale inspection reaps an abandoned lock so the next append compacts.
+  // Any create failure (typically AlreadyExists contention) fails this
+  // attempt; reaping an abandoned lock lets a later attempt acquire it.
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs.open(lockPath, { flag: "wx" });
       yield* file.writeAll(textEncoder.encode(`${process.pid}\n`));
       return true;
     })
-  ).pipe(Effect.catch(() => inspectStaleCompactionLock(lockPath)));
+  ).pipe(Effect.catch(() => reapStaleJournalLock(lockPath).pipe(Effect.as(false))));
 });
 
-const compactLocked = Effect.fnUntraced(function* (
-  journalPath: string
+const acquireJournalLock = Effect.fnUntraced(function* (
+  lockPath: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  for (let attempt = 0; attempt < LOCK_RETRY_ATTEMPTS; attempt++) {
+    if (yield* tryAcquireJournalLock(lockPath)) {
+      return true;
+    }
+    yield* Effect.sleep(Duration.millis(LOCK_RETRY_DELAY_MILLIS));
+  }
+  return false;
+});
+
+const publishJournalAtomic = Effect.fnUntraced(function* (
+  journalPath: string,
+  content: string
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const stagingPath = `${journalPath}.tmp-${process.pid}-${randomUUID()}`;
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const file = yield* fs.open(stagingPath, { flag: "w" });
+      yield* file.writeAll(textEncoder.encode(content));
+      yield* file.sync;
+    })
+  ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission journal "${journalPath}".`)));
+  yield* fs
+    .rename(stagingPath, journalPath)
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission journal "${journalPath}".`)));
+});
+
+const rewriteJournalLocked = Effect.fnUntraced(function* (
+  journalPath: string,
+  event: AdmissionJournalEvent,
+  line: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(journalPath)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to read admission journal "${journalPath}".`)));
+    .pipe(
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "NotFound"
+          ? Effect.succeed(Str.empty)
+          : Effect.fail(QualitySchedulerError.new(`Failed to read admission journal "${journalPath}".`)(error))
+      )
+    );
   const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
-  const probed = yield* Effect.forEach(rawLines, (line) =>
-    decodeAdmissionJournalEvent(line).pipe(Effect.option, Effect.map(O.map((event) => ({ event, line }))))
+  const probed = yield* Effect.forEach(rawLines, (raw) =>
+    decodeAdmissionJournalEvent(raw).pipe(
+      Effect.option,
+      Effect.map(O.map((decoded) => ({ event: decoded, line: raw })))
+    )
   );
-  const records = A.getSomes(probed);
-  const droppedCount = A.length(rawLines) - A.length(records);
+  const retained = A.getSomes(probed);
+  const droppedCount = A.length(rawLines) - A.length(retained);
   if (droppedCount > 0) {
     yield* Console.warn(`dropped ${droppedCount} undecodable admission journal record(s) from "${journalPath}"`);
   }
+  const records = A.append(retained, { event, line });
   const admittedIndexes = pipe(
     A.zip(
-      A.map(records, ({ event }) => event),
+      A.map(records, (record) => record.event),
       A.range(0, A.length(records) - 1)
     ),
-    A.map(([event, index]) => (event._tag === "admission-admitted" ? O.some(index) : O.none())),
+    A.map(([recorded, index]) => (recorded._tag === "admission-admitted" ? O.some(index) : O.none())),
     A.getSomes
   );
   const firstRetainedIndex =
     A.length(admittedIndexes) <= RETAINED_ADMISSIONS
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
-  if (droppedCount === 0 && firstRetainedIndex === 0) {
-    return;
-  }
-  yield* fs
-    .writeFileString(
-      journalPath,
-      pipe(
-        A.drop(records, firstRetainedIndex),
-        A.map(({ line }) => `${line}\n`),
-        A.join(Str.empty)
-      )
+  yield* publishJournalAtomic(
+    journalPath,
+    pipe(
+      A.drop(records, firstRetainedIndex),
+      A.map((record) => `${record.line}\n`),
+      A.join(Str.empty)
     )
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to compact admission journal "${journalPath}".`)));
-});
-
-const compactAdmissionJournal = Effect.fnUntraced(function* (
-  journalPath: string,
-  lockPath: string
-): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
-  const acquired = yield* tryAcquireCompactionLock(lockPath);
-  if (!acquired) {
-    return;
-  }
-  const fs = yield* FileSystem.FileSystem;
-  yield* Effect.ensuring(compactLocked(journalPath), fs.remove(lockPath, { force: true }).pipe(Effect.ignore));
+  );
 });
 
 /**
- * Appends, syncs, self-heals, and bounds the machine-wide admission journal.
+ * Appends one admission transition through a serialized journal rewrite.
  *
- * Scheduler correctness does not depend on this operation; callers may handle
- * its typed failure as a best-effort diagnostic write.
+ * The writer takes `journal.lock` (bounded wait, reaping an abandoned lock),
+ * drops undecodable records, ring-trims to the newest admitted transitions,
+ * and publishes atomically via temp-file rename. A lock that stays busy fails
+ * the append with a typed error; scheduler correctness never depends on this
+ * operation, so callers treat that failure as a best-effort diagnostic write.
  *
  * **Example** (Reference the journal append entry point)
  *
@@ -276,7 +312,7 @@ const compactAdmissionJournal = Effect.fnUntraced(function* (
  *
  * @param root - Machine-wide admission root directory.
  * @param event - Admission transition to append.
- * @returns An effect that appends and compacts the admission journal.
+ * @returns An effect that appends to the serialized admission journal.
  * @category utilities
  * @since 0.0.0
  */
@@ -286,7 +322,7 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const journalPath = yield* admissionJournalPath(root);
+  const journalPath = path.join(root, JOURNAL_FILE_NAME);
   const lockPath = path.join(root, LOCK_FILE_NAME);
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))
@@ -294,18 +330,13 @@ export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(
   yield* fs
     .makeDirectory(root, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
-  yield* Effect.scoped(
-    Effect.gen(function* () {
-      const file = yield* fs
-        .open(journalPath, { flag: "a" })
-        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to open admission journal "${journalPath}".`)));
-      yield* file
-        .writeAll(textEncoder.encode(`${line}\n`))
-        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to append admission journal "${journalPath}".`)));
-      yield* file.sync.pipe(
-        Effect.mapError(QualitySchedulerError.new(`Failed to sync admission journal "${journalPath}".`))
-      );
-    })
+  if (!(yield* acquireJournalLock(lockPath))) {
+    return yield* QualitySchedulerError.make({
+      message: `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`,
+    });
+  }
+  yield* Effect.ensuring(
+    rewriteJournalLocked(journalPath, event, line),
+    fs.remove(lockPath, { force: true }).pipe(Effect.ignore)
   );
-  yield* compactAdmissionJournal(journalPath, lockPath);
 });
