@@ -54,6 +54,9 @@
     name = "onepassword-secret-refs"
     enabled = true
   [[skills.config]]
+    name = "ontology-foundational-auditor"
+    enabled = true
+  [[skills.config]]
     name = "oracle"
     enabled = true
   [[skills.config]]

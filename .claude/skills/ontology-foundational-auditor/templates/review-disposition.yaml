@@ -1,0 +1,60 @@
+# Adversary review disposition for ONE proposal. This is
+# the ontoclean-adversary seat's artifact ONLY — the blinded alternative seat
+# emits its own ic-/fa- record PAIRS under work/alternative/ (the validator
+# joins the seats on hypothesis_ref and computes divergence deterministically).
+#
+# Filename: otp-<slug>-<nnn>.review.yaml beside the target proposal; a
+# re-review after revision appends -r2/-r3 before .review.yaml — the HIGHEST
+# NUMERIC ROUND per target governs the gate (not lexicographic order).
+#
+# CONTENT + HISTORY BINDING: target_sha256 = sha256 of the reviewed proposal
+# FILE's bytes; chain_sha256 = FRAMED sha256 over the FULL analysis closure:
+# the OTP + its IdentityCard + FoundationalAnalysis + DenotationHypothesis
+# files PLUS every SO/PO record the hypothesis cites, sorted by filename, each
+# member contributing "<filename>\n<byte-length>\n" then its bytes, and
+# finally the CQ-suite digest as a virtual member ("cq:<sha256_12>\n") — a
+# PASS must not survive its evidence OR its warrant changing. Landed attack
+# rules join the revision protocol: a PASS after a FAIL on new bytes requires
+# the proposal's revision_log to name the failed digest AND address every rule
+# that landed (FAILs are UNIONED per digest; a FAIL must land at least one
+# NAMED attack — verdict FAIL with nothing landed is self-contradictory).
+# Every attack row needs a non-blank rule and a concrete counterexample, and
+# `evidence` must cite the observation/CQ ids the verdict stands on. Review
+# rounds are contiguous with exactly ONE review per round, filenames
+# correspond to targets (otp-<slug>-<nnn>[-rN].review.yaml), and targets are
+# otp: ids ONLY — taxonomy edges live in the proposal's `parents`.
+#
+# Gate semantics (mechanical — validate_artifacts.py --gate --repo .): FAIL
+# blocks until revised + re-reviewed; INDETERMINATE submits FLAGGED with
+# needed_evidence. Surface coverage: `identity`, `warrant`, and
+# `null_discriminator` can NEVER be no_surface (every submittable proposal has
+# an identity card, a warrant, and a rejected-null discriminator to attack);
+# only `taxonomy` may be no_surface, with a concrete reason. A PASS verdict
+# with any attack outcome `landed` is self-contradictory and rejected.
+# Repairs go in revision_requests HERE on the review — never in notes,
+# never applied in place.
+target: "otp:REPLACE:001"        # otp: ids only
+target_sha256: "<sha256 of the reviewed proposal file bytes>"
+chain_sha256: "<FRAMED sha256 of OTP+IC+FA+DH+cited SO/PO (sorted by filename; filename\n length\n bytes per member) + trailing virtual member 'cq:<cq_suite sha256_12>\n'>"
+seat: ontoclean-adversary
+verdict: PASS | FAIL | INDETERMINATE
+needed_evidence: ""              # REQUIRED when INDETERMINATE — name what would settle it
+surfaces:                        # attacked | no_surface — an unlisted surface is an
+  taxonomy: attacked             # unreviewed one, and the validator rejects it
+  identity: attacked             # never no_surface
+  warrant: attacked              # never no_surface
+  null_discriminator: attacked   # never no_surface
+no_surface_reasons: {}           # concrete reason when taxonomy is no_surface
+revision_requests: []            # OPTIONAL: the adversary's proposed fixes, as
+                                  # non-blank strings — the ONLY legal channel
+                                  # for repair proposals (the adversary never
+                                  # edits the target); a NEW synthesis pass
+                                  # consumes them
+attacks:
+  - surface: taxonomy | identity | warrant | null_discriminator
+    rule: ""                     # e.g. anti-rigid-superclass, identity-conflict,
+                                 # listing-cq-warrant, discriminator-true-of-dto
+    counterexample: ""
+    outcome: landed | survived
+rival_models_still_viable: []
+evidence: []                     # observation/CQ ids only
