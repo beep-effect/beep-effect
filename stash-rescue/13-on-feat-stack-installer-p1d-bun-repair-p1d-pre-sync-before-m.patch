@@ -1,0 +1,4321 @@
+diff --git a/apps/stack-installer/AGENTS.md b/apps/stack-installer/AGENTS.md
+index a16a11785d..5ba0bc47cb 100644
+--- a/apps/stack-installer/AGENTS.md
++++ b/apps/stack-installer/AGENTS.md
+@@ -1,6 +1,6 @@
+ # Agent Notes
+ 
+ - Keep the app UI on `@beep/ui` primitives and `@beep/ui/styles/globals.css`.
+-- Keep installer dry-run composition in TypeScript until later phases introduce live adapters.
++- Keep app-local runtime composition in TypeScript; live dependency mutation must stay owned by installer slice contracts and drivers, not ad hoc app shell glue.
+ - Keep the Tauri bridge narrow: app health and explicit capabilities only.
+-- Do not add live install commands, Discord mutation, or plaintext-secret handling in this package.
++- Do not add Discord mutation, plaintext-secret handling, or product logic that belongs in installer slice packages.
+diff --git a/apps/stack-installer/README.md b/apps/stack-installer/README.md
+index 16d73c3024..737d79c5c7 100644
+--- a/apps/stack-installer/README.md
++++ b/apps/stack-installer/README.md
+@@ -5,5 +5,6 @@ Tauri and React shell for the Stack Installer P1 proof flow.
+ P1A proved the dry-run app surface, slice-owned verb contracts, deterministic
+ manifest snapshot, and UI baseline. P1 live now adds Manual Mode validators,
+ the Tauri proof command, and CLI artifact capture/audit for fresh-machine proof
+-runs. It still does not run live installers, provision Discord, accept
+-plaintext credentials, implement AI Mode, or persist host configuration.
++runs. P1D now begins the first app-first live mutation lane with a focused Bun
++repair flow on Linux. It still does not provision Discord, accept plaintext
++credentials, implement AI Mode, or persist wider host configuration.
+diff --git a/apps/stack-installer/docgen.json b/apps/stack-installer/docgen.json
+index b916f52d61..994159b1c8 100644
+--- a/apps/stack-installer/docgen.json
++++ b/apps/stack-installer/docgen.json
+@@ -36,6 +36,8 @@
+       "@beep/ai-provider-cli/*": [
+         "../../packages/drivers/ai-provider-cli/src/*.ts"
+       ],
++      "@beep/bun-cli": ["../../packages/drivers/bun-cli/src/index.ts"],
++      "@beep/bun-cli/*": ["../../packages/drivers/bun-cli/src/*.ts"],
+       "@beep/discord": ["../../packages/drivers/discord/src/index.ts"],
+       "@beep/discord/*": ["../../packages/drivers/discord/src/*.ts"],
+       "@beep/identity": [
+@@ -80,6 +82,21 @@
+       "@beep/installer-channels-use-cases/server": [
+         "../../packages/installer-channels/use-cases/src/server.ts"
+       ],
++      "@beep/installer-dependencies-config": [
++        "../../packages/installer-dependencies/config/src/index.ts"
++      ],
++      "@beep/installer-dependencies-config/server": [
++        "../../packages/installer-dependencies/config/src/server.ts"
++      ],
++      "@beep/installer-dependencies-config/layer": [
++        "../../packages/installer-dependencies/config/src/layer.ts"
++      ],
++      "@beep/installer-dependencies-config/test": [
++        "../../packages/installer-dependencies/config/src/test.ts"
++      ],
++      "@beep/installer-dependencies-config/aggregates/BunRuntime": [
++        "../../packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts"
++      ],
+       "@beep/installer-dependencies-server": [
+         "../../packages/installer-dependencies/server/src/index.ts"
+       ],
+diff --git a/apps/stack-installer/package.json b/apps/stack-installer/package.json
+index 89ac5753ae..f640d23d11 100644
+--- a/apps/stack-installer/package.json
++++ b/apps/stack-installer/package.json
+@@ -16,6 +16,7 @@
+     "codegen": "echo 'no codegen needed'",
+     "dev": "vite --host 0.0.0.0",
+     "dev:tauri": "tauri dev",
++    "p1d:bun-runtime": "bun run src/repair/run-bun-runtime-repair.ts",
+     "p1:proof": "bun run src/proof/run-p1-manual-proof.ts",
+     "p1:proof:audit-all": "bun run src/proof/capture-p1-manual-proof.ts -- --audit-all",
+     "p1:proof:audit": "bun run src/proof/capture-p1-manual-proof.ts -- --audit-only",
+@@ -53,11 +54,13 @@
+   ],
+   "dependencies": {
+     "@beep/ai-provider-cli": "workspace:^",
++    "@beep/bun-cli": "workspace:^",
+     "@beep/discord": "workspace:^",
+     "@beep/identity": "workspace:^",
+     "@beep/installer-channels-domain": "workspace:^",
+     "@beep/installer-channels-server": "workspace:^",
+     "@beep/installer-channels-use-cases": "workspace:^",
++    "@beep/installer-dependencies-config": "workspace:^",
+     "@beep/installer-dependencies-server": "workspace:^",
+     "@beep/installer-dependencies-use-cases": "workspace:^",
+     "@beep/installer-providers-server": "workspace:^",
+diff --git a/apps/stack-installer/src-tauri/capabilities/default.json b/apps/stack-installer/src-tauri/capabilities/default.json
+index c9de2b597f..743c382a64 100644
+--- a/apps/stack-installer/src-tauri/capabilities/default.json
++++ b/apps/stack-installer/src-tauri/capabilities/default.json
+@@ -1,7 +1,7 @@
+ {
+   "$schema": "../gen/schemas/desktop-schema.json",
+   "identifier": "default",
+-  "description": "Default capability set for the dry-run stack installer shell.",
++  "description": "Default capability set for the stack installer shell.",
+   "windows": ["main"],
+   "permissions": ["core:default"]
+ }
+diff --git a/apps/stack-installer/src-tauri/src/lib.rs b/apps/stack-installer/src-tauri/src/lib.rs
+index 7adc1a0a68..085bdb1ef0 100644
+--- a/apps/stack-installer/src-tauri/src/lib.rs
++++ b/apps/stack-installer/src-tauri/src/lib.rs
+@@ -21,6 +21,12 @@ struct P1ManualProofRequest {
+     test_message_content: String,
+ }
+ 
++#[derive(Deserialize, Serialize)]
++#[serde(rename_all = "camelCase")]
++struct BunRuntimeRepairRequest {
++    approved: bool,
++}
++
+ #[tauri::command]
+ fn stack_installer_health() -> StackInstallerHealth {
+     StackInstallerHealth {
+@@ -54,10 +60,56 @@ fn run_p1_manual_proof(request: P1ManualProofRequest) -> Result<String, String>
+     Err(stderr)
+ }
+ 
++fn run_stack_installer_script(args: &[&str], launch_error: &str) -> Result<String, String> {
++    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++    let app_dir = manifest_dir
++        .parent()
++        .ok_or_else(|| "Unable to resolve Stack Installer app directory.".to_string())?;
++    let output = Command::new("bun")
++        .current_dir(app_dir)
++        .args(args)
++        .output()
++        .map_err(|_| launch_error.to_string())?;
++
++    if output.status.success() {
++        return String::from_utf8(output.stdout)
++            .map_err(|_| "Stack Installer workflow returned non-UTF-8 output.".to_string());
++    }
++
++    let stderr =
++        String::from_utf8(output.stderr).unwrap_or_else(|_| "Stack Installer workflow failed with non-UTF-8 stderr.".to_string());
++    Err(stderr)
++}
++
++#[tauri::command]
++fn inspect_bun_runtime() -> Result<String, String> {
++    run_stack_installer_script(
++        &["run", "p1d:bun-runtime", "--", "--mode", "inspect"],
++        "Unable to launch the Bun runtime inspection workflow.",
++    )
++}
++
++#[tauri::command]
++fn repair_bun_runtime(request: BunRuntimeRepairRequest) -> Result<String, String> {
++    if !request.approved {
++        return Err("Explicit user approval is required before mutating the Bun runtime.".to_string());
++    }
++
++    run_stack_installer_script(
++        &["run", "p1d:bun-runtime", "--", "--mode", "repair"],
++        "Unable to launch the Bun runtime repair workflow.",
++    )
++}
++
+ #[cfg_attr(mobile, tauri::mobile_entry_point)]
+ pub fn run() {
+     tauri::Builder::default()
+-        .invoke_handler(tauri::generate_handler![stack_installer_health, run_p1_manual_proof])
++        .invoke_handler(tauri::generate_handler![
++            stack_installer_health,
++            run_p1_manual_proof,
++            inspect_bun_runtime,
++            repair_bun_runtime
++        ])
+         .run(tauri::generate_context!())
+         .expect("error while running stack installer");
+ }
+diff --git a/apps/stack-installer/src/App.tsx b/apps/stack-installer/src/App.tsx
+index 2d6f0e29a2..8608ced663 100644
+--- a/apps/stack-installer/src/App.tsx
++++ b/apps/stack-installer/src/App.tsx
+@@ -6,413 +6,344 @@
+  * @since 0.0.0
+  */
+ 
+-import { isOnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
++import type { ReactNode } from "react";
++import { useEffect, useState } from "react";
+ import { Badge } from "@beep/ui/components/badge";
+ import { Button } from "@beep/ui/components/button";
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@beep/ui/components/card";
+ import { Progress } from "@beep/ui/components/progress";
+ import { Separator } from "@beep/ui/components/separator";
+-import { useAtom } from "@effect/atom-react";
+-import {
+-  CheckCircle,
+-  ClipboardText,
+-  DiscordLogo,
+-  LockKey,
+-  Play,
+-  ShieldCheck,
+-  TerminalWindow,
+-} from "@phosphor-icons/react";
++import { ArrowClockwise, CheckCircle, Hammer, Lightning, TerminalWindow, WarningCircle } from "@phosphor-icons/react";
+ import { invoke } from "@tauri-apps/api/core";
+-import * as A from "effect/Array";
+-import * as P from "effect/Predicate";
+-import { Atom } from "effect/unstable/reactivity";
+-import type { FormEvent } from "react";
+-import { p1aDryRunRegistry, p1aDryRunSnapshot } from "./dry-run-registry.js";
+ 
+-const workbenchSteps = [
+-  {
+-    icon: TerminalWindow,
+-    label: "Dependencies",
+-    status: "Dry-run ready",
+-  },
+-  {
+-    icon: LockKey,
+-    label: "Secret References",
+-    status: "1Password refs only",
+-  },
+-  {
+-    icon: ShieldCheck,
+-    label: "Providers",
+-    status: "Claude + Codex",
+-  },
+-  {
+-    icon: DiscordLogo,
+-    label: "Discord",
+-    status: "Only v1 channel",
+-  },
+-] as const;
+-
+-type ProofState =
+-  | {
+-      readonly _tag: "idle";
+-    }
+-  | {
+-      readonly _tag: "running";
+-    }
+-  | {
+-      readonly _tag: "failed";
+-      readonly message: string;
+-    }
+-  | {
+-      readonly _tag: "completed";
+-      readonly output: string;
+-    };
++type BunRuntimeHealthView = {
++  readonly dependency: {
++    readonly detectedVersion?: string;
++    readonly id: string;
++    readonly installHint: string;
++    readonly kind: string;
++    readonly name: string;
++    readonly requiredVersion?: string;
++    readonly status: string;
++  };
++  readonly state: "healthy" | "repair-required" | "missing";
++  readonly summary: string;
++};
+ 
+-type P1ManualProofFormRequest = {
+-  readonly discordBotTokenReference: string;
+-  readonly discordChannelDisplayName: string;
+-  readonly discordChannelId: string;
+-  readonly discordGuildId: string;
+-  readonly operatorLabel: string;
+-  readonly targetPlatform: string;
+-  readonly testMessageContent: string;
++type BunRuntimeRepairView = {
++  readonly after: BunRuntimeHealthView;
++  readonly before: BunRuntimeHealthView;
++  readonly changed: boolean;
++  readonly command: string;
++  readonly summary: string;
+ };
+ 
+-type RunP1ManualProof = (request: P1ManualProofFormRequest) => Promise<string>;
++type LoadBunRuntimeHealth = () => Promise<BunRuntimeHealthView>;
++type RunBunRuntimeRepair = () => Promise<BunRuntimeRepairView>;
+ 
+-const proofStateAtom = Atom.make<ProofState>({ _tag: "idle" });
++type LoadState =
++  | { readonly _tag: "loading" }
++  | { readonly _tag: "failed"; readonly message: string }
++  | { readonly _tag: "loaded"; readonly health: BunRuntimeHealthView };
+ 
+-const runTauriP1ManualProof: RunP1ManualProof = (request) => invoke<string>("run_p1_manual_proof", { request });
++type RepairState =
++  | { readonly _tag: "idle" }
++  | { readonly _tag: "running" }
++  | { readonly _tag: "failed"; readonly message: string }
++  | { readonly _tag: "completed"; readonly result: BunRuntimeRepairView };
+ 
+-const valueFor = (formData: FormData, name: string): string => {
+-  const value = formData.get(name);
+-  return P.isString(value) ? value : "";
++const previewHealth: BunRuntimeHealthView = {
++  dependency: {
++    detectedVersion: "1.3.11",
++    id: "bun",
++    installHint: "Run the focused Bun repair flow from the desktop app.",
++    kind: "runtime",
++    name: "Bun",
++    requiredVersion: "1.3.14",
++    status: "present",
++  },
++  state: "repair-required",
++  summary: "Bun 1.3.11 is older than the required version 1.3.14.",
+ };
+ 
+-const errorMessage = (error: unknown): string => {
+-  if (P.isString(error)) {
+-    return error;
+-  }
+-  if (P.isObject(error) && P.hasProperty(error, "message") && P.isString(error.message)) {
+-    return error.message;
++const defaultLoadBunRuntimeHealth: LoadBunRuntimeHealth = async () => {
++  try {
++    const encoded = await invoke<string>("inspect_bun_runtime");
++    return JSON.parse(encoded) as BunRuntimeHealthView;
++  } catch {
++    return previewHealth;
+   }
+-  return "P1 proof failed before sanitized output was returned.";
+ };
+ 
+-const submitProof = async (
+-  event: FormEvent<HTMLFormElement>,
+-  setProofState: (state: ProofState) => void,
+-  runP1ManualProof: RunP1ManualProof
+-) => {
+-  event.preventDefault();
+-  const formData = new FormData(event.currentTarget);
+-  const discordBotTokenReference = valueFor(formData, "discordBotTokenReference");
+-
+-  if (!isOnePasswordReference(discordBotTokenReference)) {
+-    setProofState({
+-      _tag: "failed",
+-      message: "Discord bot token must be a 1Password reference.",
++const defaultRunBunRuntimeRepair: RunBunRuntimeRepair = async () => {
++  try {
++    const encoded = await invoke<string>("repair_bun_runtime", {
++      request: { approved: true },
+     });
+-    return;
++    return JSON.parse(encoded) as BunRuntimeRepairView;
++  } catch (error) {
++    throw new Error(errorMessage(error, "Desktop Bun repair is only available in the Tauri app."));
+   }
++};
+ 
+-  setProofState({ _tag: "running" });
+-
+-  try {
+-    const output = await runP1ManualProof({
+-      discordBotTokenReference,
+-      discordChannelDisplayName: valueFor(formData, "discordChannelDisplayName"),
+-      discordChannelId: valueFor(formData, "discordChannelId"),
+-      discordGuildId: valueFor(formData, "discordGuildId"),
+-      operatorLabel: valueFor(formData, "operatorLabel"),
+-      targetPlatform: valueFor(formData, "targetPlatform"),
+-      testMessageContent: valueFor(formData, "testMessageContent"),
+-    });
++const stateBadge = (state: BunRuntimeHealthView["state"]) => {
++  switch (state) {
++    case "healthy":
++      return { label: "Healthy", variant: "secondary" as const };
++    case "repair-required":
++      return { label: "Repair Needed", variant: "outline" as const };
++    case "missing":
++      return { label: "Missing", variant: "outline" as const };
++  }
++};
+ 
+-    setProofState({ _tag: "completed", output });
+-  } catch (error) {
+-    setProofState({ _tag: "failed", message: errorMessage(error) });
++const errorMessage = (error: unknown, fallback: string): string => {
++  if (typeof error === "string") {
++    return error;
+   }
++  if (error instanceof Error) {
++    return error.message;
++  }
++  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
++    return error.message;
++  }
++  return fallback;
+ };
+ 
+-function AppHeader() {
+-  return (
+-    <header className="border-b bg-background">
+-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+-        <div className="min-w-0">
+-          <p className="text-sm font-medium text-muted-foreground">Stack Installer</p>
+-          <h1 className="text-2xl font-semibold tracking-normal text-foreground">Install Workbench</h1>
+-        </div>
+-        <div className="flex flex-wrap items-center gap-2">
+-          <Badge variant="outline">P1</Badge>
+-          <Badge variant="secondary">Live proof ready</Badge>
+-          <Button variant="outline" size="sm">
+-            <ClipboardText weight="bold" />
+-            Manifest
+-          </Button>
+-          <Button size="sm">
+-            <Play weight="fill" />
+-            Preview
+-          </Button>
+-        </div>
+-      </div>
+-    </header>
+-  );
+-}
++export function App({
++  loadBunRuntimeHealth = defaultLoadBunRuntimeHealth,
++  runBunRuntimeRepair = defaultRunBunRuntimeRepair,
++}: {
++  readonly loadBunRuntimeHealth?: LoadBunRuntimeHealth;
++  readonly runBunRuntimeRepair?: RunBunRuntimeRepair;
++}) {
++  const [loadState, setLoadState] = useState<LoadState>({ _tag: "loading" });
++  const [repairState, setRepairState] = useState<RepairState>({ _tag: "idle" });
+ 
+-function ChecklistPanel() {
+-  return (
+-    <section className="space-y-3">
+-      <div className="flex items-center justify-between gap-3">
+-        <div>
+-          <h2 className="text-base font-semibold">Checklist</h2>
+-          <p className="text-sm text-muted-foreground">Manual-mode proof gates</p>
+-        </div>
+-        <Badge variant="outline">4 / 4</Badge>
+-      </div>
+-      <div className="grid gap-3 sm:grid-cols-2">
+-        {A.map(workbenchSteps, (step) => {
+-          const Icon = step.icon;
++  useEffect(() => {
++    let cancelled = false;
+ 
+-          return (
+-            <Card key={step.label} size="sm" className="rounded-lg">
+-              <CardContent className="flex items-start gap-3">
+-                <div className="rounded-md border bg-background p-2">
+-                  <Icon className="size-4" weight="bold" />
+-                </div>
+-                <div className="min-w-0">
+-                  <p className="font-medium">{step.label}</p>
+-                  <p className="text-sm text-muted-foreground">{step.status}</p>
+-                </div>
+-              </CardContent>
+-            </Card>
+-          );
+-        })}
+-      </div>
+-    </section>
+-  );
+-}
++    void loadBunRuntimeHealth()
++      .then((health) => {
++        if (!cancelled) {
++          setLoadState({ _tag: "loaded", health });
++        }
++      })
++      .catch((error) => {
++        if (!cancelled) {
++          setLoadState({
++            _tag: "failed",
++            message: errorMessage(error, "Bun runtime inspection failed."),
++          });
++        }
++      });
+ 
+-function ApprovalPanel() {
+-  return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>Approval Queue</CardTitle>
+-        <CardDescription>
+-          Install actions remain previews; validation runs through the P1 proof harness.
+-        </CardDescription>
+-      </CardHeader>
+-      <CardContent className="space-y-4">
+-        <Progress value={80} />
+-        <div className="space-y-3">
+-          {A.map(p1aDryRunRegistry, (verb) => (
+-            <div key={verb.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
+-              <div className="min-w-0">
+-                <p className="font-medium">{verb.label}</p>
+-                <p className="text-sm text-muted-foreground">{verb.summary}</p>
+-              </div>
+-              <Badge variant={verb.requiresApproval ? "outline" : "secondary"}>
+-                {verb.requiresApproval ? "Approval" : "Auto"}
+-              </Badge>
+-            </div>
+-          ))}
+-        </div>
+-      </CardContent>
+-    </Card>
+-  );
+-}
++    return () => {
++      cancelled = true;
++    };
++  }, [loadBunRuntimeHealth]);
+ 
+-function ValidationFeed() {
+-  return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>Validation Feed</CardTitle>
+-        <CardDescription>Deterministic events emitted from the P1A snapshot.</CardDescription>
+-      </CardHeader>
+-      <CardContent className="space-y-3">
+-        {A.map(p1aDryRunSnapshot.validationEvents, (event) => (
+-          <div key={event.id} className="grid grid-cols-[auto_1fr] gap-3">
+-            <CheckCircle className="mt-0.5 size-5 text-emerald-600" weight="fill" />
+-            <div className="min-w-0">
+-              <div className="flex flex-wrap items-center gap-2">
+-                <p className="font-medium">{event.subject}</p>
+-                <Badge variant="outline">{event.tier}</Badge>
+-              </div>
+-              <p className="text-sm text-muted-foreground">{event.message}</p>
+-            </div>
+-          </div>
+-        ))}
+-      </CardContent>
+-    </Card>
+-  );
+-}
++  const currentHealth = loadState._tag === "loaded" ? loadState.health : undefined;
++  const currentBadge = currentHealth !== undefined ? stateBadge(currentHealth.state) : undefined;
++  const repairProgress =
++    repairState._tag === "running"
++      ? 55
++      : repairState._tag === "completed"
++        ? 100
++        : currentHealth?.state === "healthy"
++          ? 100
++          : 35;
+ 
+-function ManifestPreview() {
+-  const manifest = p1aDryRunSnapshot.manifest;
++  const handleRepair = async () => {
++    setRepairState({ _tag: "running" });
++
++    try {
++      const result = await runBunRuntimeRepair();
++      setRepairState({ _tag: "completed", result });
++      setLoadState({ _tag: "loaded", health: result.after });
++    } catch (error) {
++      setRepairState({
++        _tag: "failed",
++        message: errorMessage(error, "Bun repair failed."),
++      });
++    }
++  };
+ 
+   return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>Manifest Preview</CardTitle>
+-        <CardDescription>{manifest.manifestId}</CardDescription>
+-      </CardHeader>
+-      <CardContent className="space-y-4">
+-        <div className="grid gap-3 sm:grid-cols-3">
+-          <div>
+-            <p className="text-xs font-medium uppercase text-muted-foreground">Platform</p>
+-            <p className="font-medium">{manifest.targetPlatform}</p>
+-          </div>
+-          <div>
+-            <p className="text-xs font-medium uppercase text-muted-foreground">Version</p>
+-            <p className="font-medium">{manifest.version}</p>
+-          </div>
++    <div className="min-h-screen bg-muted/30 text-foreground">
++      <header className="border-b bg-background">
++        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+           <div>
+-            <p className="text-xs font-medium uppercase text-muted-foreground">Mode</p>
+-            <p className="font-medium">{manifest.dryRunOnly ? "Dry-run" : "Live"}</p>
++            <p className="text-sm font-medium text-muted-foreground">Stack Installer</p>
++            <h1 className="text-2xl font-semibold tracking-normal">Bun Repair</h1>
+           </div>
+-        </div>
+-        <Separator />
+-        <div className="space-y-3">
+-          <p className="text-sm font-medium">Providers</p>
+-          <div className="grid gap-2 sm:grid-cols-2">
+-            {A.map(manifest.providers, (provider) => (
+-              <div key={provider.provider} className="rounded-md border p-3">
+-                <p className="font-medium capitalize">{provider.provider}</p>
+-                <p className="text-sm text-muted-foreground">{provider.authMode}</p>
+-              </div>
+-            ))}
++          <div className="flex flex-wrap items-center gap-2">
++            <Badge variant="outline">P1D</Badge>
++            {currentBadge !== undefined ? <Badge variant={currentBadge.variant}>{currentBadge.label}</Badge> : null}
+           </div>
+         </div>
+-        <div className="rounded-md border p-3">
+-          <p className="text-sm font-medium">Discord</p>
+-          <p className="text-sm text-muted-foreground">{manifest.discordChannel.displayName}</p>
+-          <p className="text-xs text-muted-foreground">{manifest.discordChannel.channelId}</p>
+-        </div>
+-        <div className="space-y-2">
+-          <p className="text-sm font-medium">Capabilities</p>
+-          {A.map(manifest.capabilities, (capability) => (
+-            <div key={capability.id} className="rounded-md border p-3">
+-              <p className="font-medium">{capability.label}</p>
+-              <p className="text-sm text-muted-foreground">{capability.summary}</p>
+-            </div>
+-          ))}
+-        </div>
+-      </CardContent>
+-    </Card>
+-  );
+-}
++      </header>
+ 
+-function LiveProofPanel({ runP1ManualProof }: { readonly runP1ManualProof: RunP1ManualProof }) {
+-  const [proofState, setProofState] = useAtom(proofStateAtom);
++      <main className="mx-auto grid max-w-5xl gap-6 px-5 py-6 lg:grid-cols-[minmax(0,1.4fr)_20rem]">
++        <section className="space-y-6">
++          <Card className="rounded-lg">
++            <CardHeader>
++              <CardTitle>Focused Repair Flow</CardTitle>
++              <CardDescription>
++                This milestone proves one real app-driven dependency mutation: inspect Bun, request approval, run repair,
++                and show the before/after state.
++              </CardDescription>
++            </CardHeader>
++            <CardContent className="space-y-5">
++              <Progress value={repairProgress} />
+ 
+-  return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>P1 Live Proof</CardTitle>
+-        <CardDescription>Manual Mode desktop validation for Discord, Claude, Codex, and 1Password.</CardDescription>
+-      </CardHeader>
+-      <CardContent>
+-        <form
+-          className="grid gap-3"
+-          onSubmit={(event) => {
+-            void submitProof(event, setProofState, runP1ManualProof);
+-          }}
+-        >
+-          <div className="grid gap-3 sm:grid-cols-2">
+-            <label className="grid gap-1 text-sm font-medium">
+-              Platform
+-              <select
+-                className="h-10 rounded-md border bg-background px-3 text-sm"
+-                defaultValue="macos"
+-                name="targetPlatform"
+-              >
+-                <option value="macos">macOS</option>
+-                <option value="windows">Windows</option>
+-                <option value="linux">Linux</option>
+-              </select>
+-            </label>
+-            <label className="grid gap-1 text-sm font-medium">
+-              Operator
+-              <input
+-                className="h-10 rounded-md border bg-background px-3 text-sm"
+-                defaultValue="manual"
+-                name="operatorLabel"
+-              />
+-            </label>
+-          </div>
+-          <div className="grid gap-3 sm:grid-cols-2">
+-            <label className="grid gap-1 text-sm font-medium">
+-              Guild ID
+-              <input className="h-10 rounded-md border bg-background px-3 text-sm" name="discordGuildId" />
+-            </label>
+-            <label className="grid gap-1 text-sm font-medium">
+-              Channel ID
+-              <input className="h-10 rounded-md border bg-background px-3 text-sm" name="discordChannelId" />
+-            </label>
+-          </div>
+-          <label className="grid gap-1 text-sm font-medium">
+-            Channel Name
+-            <input
+-              className="h-10 rounded-md border bg-background px-3 text-sm"
+-              defaultValue="ai-stack-installer"
+-              name="discordChannelDisplayName"
+-            />
+-          </label>
+-          <label className="grid gap-1 text-sm font-medium">
+-            Bot Token Reference
+-            <input
+-              className="h-10 rounded-md border bg-background px-3 text-sm"
+-              defaultValue="op://Private/Discord Bot/token"
+-              name="discordBotTokenReference"
+-            />
+-          </label>
+-          <label className="grid gap-1 text-sm font-medium">
+-            Test Message
+-            <input
+-              className="h-10 rounded-md border bg-background px-3 text-sm"
+-              defaultValue="Stack Installer P1 Manual Mode proof"
+-              name="testMessageContent"
+-            />
+-          </label>
+-          <Button className="w-fit" disabled={proofState._tag === "running"} type="submit">
+-            <Play weight="fill" />
+-            {proofState._tag === "running" ? "Running" : "Run Proof"}
+-          </Button>
+-          {proofState._tag === "failed" ? (
+-            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+-              {proofState.message}
+-            </div>
+-          ) : null}
+-          {proofState._tag === "completed" ? (
+-            <pre className="max-h-72 overflow-auto rounded-md border bg-muted p-3 text-xs">{proofState.output}</pre>
+-          ) : null}
+-        </form>
+-      </CardContent>
+-    </Card>
++              {loadState._tag === "loading" ? (
++                <div className="flex items-center gap-3 rounded-md border p-4 text-sm text-muted-foreground">
++                  <ArrowClockwise className="size-5 animate-spin" weight="bold" />
++                  Inspecting Bun runtime health...
++                </div>
++              ) : null}
++
++              {loadState._tag === "failed" ? (
++                <div className="flex items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
++                  <WarningCircle className="mt-0.5 size-5" weight="fill" />
++                  <p>{loadState.message}</p>
++                </div>
++              ) : null}
++
++              {currentHealth !== undefined ? (
++                <div className="space-y-4">
++                  <div className="grid gap-3 sm:grid-cols-3">
++                    <StatusCard
++                      icon={<TerminalWindow className="size-4" weight="bold" />}
++                      label="Detected"
++                      value={renderVersion(currentHealth.dependency.detectedVersion)}
++                    />
++                    <StatusCard
++                      icon={<Lightning className="size-4" weight="bold" />}
++                      label="Required"
++                      value={renderVersion(currentHealth.dependency.requiredVersion)}
++                    />
++                    <StatusCard
++                      icon={<Hammer className="size-4" weight="bold" />}
++                      label="Action"
++                      value={currentHealth.state === "healthy" ? "None" : "Repair"}
++                    />
++                  </div>
++
++                  <div className="rounded-md border p-4">
++                    <div className="flex items-start justify-between gap-3">
++                      <div>
++                        <p className="font-medium">Current health</p>
++                        <p className="text-sm text-muted-foreground">{currentHealth.summary}</p>
++                      </div>
++                      {currentBadge !== undefined ? <Badge variant={currentBadge.variant}>{currentBadge.label}</Badge> : null}
++                    </div>
++                    <Separator className="my-4" />
++                    <p className="text-sm text-muted-foreground">{currentHealth.dependency.installHint}</p>
++                  </div>
++
++                  <div className="flex flex-wrap items-center gap-3">
++                    <Button
++                      onClick={handleRepair}
++                      disabled={currentHealth.state !== "repair-required" || repairState._tag === "running"}
++                    >
++                      <Hammer weight="fill" />
++                      {repairState._tag === "running" ? "Repairing Bun" : "Approve Repair"}
++                    </Button>
++                    <p className="text-sm text-muted-foreground">
++                      Clicking repair is the explicit approval boundary for this host mutation.
++                    </p>
++                  </div>
++                </div>
++              ) : null}
++
++              {repairState._tag === "failed" ? (
++                <div className="flex items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
++                  <WarningCircle className="mt-0.5 size-5" weight="fill" />
++                  <p>{repairState.message}</p>
++                </div>
++              ) : null}
++
++              {repairState._tag === "completed" ? (
++                <div className="space-y-3 rounded-md border border-emerald-300/60 bg-emerald-50 p-4 dark:bg-emerald-950/20">
++                  <div className="flex items-start gap-3">
++                    <CheckCircle className="mt-0.5 size-5 text-emerald-600" weight="fill" />
++                    <div className="min-w-0">
++                      <p className="font-medium">Repair complete</p>
++                      <p className="text-sm text-muted-foreground">{repairState.result.summary}</p>
++                    </div>
++                  </div>
++                  <div className="grid gap-3 sm:grid-cols-2">
++                    <StatusCard
++                      icon={<ArrowClockwise className="size-4" weight="bold" />}
++                      label="Before"
++                      value={renderVersion(repairState.result.before.dependency.detectedVersion)}
++                    />
++                    <StatusCard
++                      icon={<CheckCircle className="size-4" weight="bold" />}
++                      label="After"
++                      value={renderVersion(repairState.result.after.dependency.detectedVersion)}
++                    />
++                  </div>
++                  <p className="text-sm text-muted-foreground">Executed command: {repairState.result.command}</p>
++                </div>
++              ) : null}
++            </CardContent>
++          </Card>
++        </section>
++
++        <aside className="space-y-6">
++          <Card className="rounded-lg">
++            <CardHeader>
++              <CardTitle>Why This Step</CardTitle>
++              <CardDescription>Turn the installer from proof harness into one real repair surface.</CardDescription>
++            </CardHeader>
++            <CardContent className="space-y-3 text-sm text-muted-foreground">
++              <p>The app is the primary operator surface for this milestone.</p>
++              <p>The mutation stays owned by installer slice contracts and the Bun CLI driver.</p>
++              <p>The broader P1 manual proof harness remains available, but it is not the lead experience here.</p>
++            </CardContent>
++          </Card>
++
++          <Card className="rounded-lg">
++            <CardHeader>
++              <CardTitle>Secondary Flow</CardTitle>
++              <CardDescription>P1 manual proof stays in the repo as the audited validation spine.</CardDescription>
++            </CardHeader>
++            <CardContent className="space-y-2 text-sm text-muted-foreground">
++              <p>CLI capture, Discord liveness checks, and returned proof bundle auditing remain part of the project.</p>
++              <p>This screen narrows the next product-facing milestone to one crisp repair task.</p>
++            </CardContent>
++          </Card>
++        </aside>
++      </main>
++    </div>
+   );
+ }
+ 
+-/**
+- * Render the Stack Installer P1 workbench.
+- *
+- * @category components
+- * @since 0.0.0
+- */
+-export function App({ runP1ManualProof = runTauriP1ManualProof }: { readonly runP1ManualProof?: RunP1ManualProof }) {
++function StatusCard({
++  icon,
++  label,
++  value,
++}: {
++  readonly icon: ReactNode;
++  readonly label: string;
++  readonly value: string;
++}) {
+   return (
+-    <main className="min-h-screen bg-background text-foreground">
+-      <AppHeader />
+-      <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
+-        <div className="space-y-5">
+-          <ChecklistPanel />
+-          <LiveProofPanel runP1ManualProof={runP1ManualProof} />
+-          <ApprovalPanel />
+-        </div>
+-        <div className="space-y-5">
+-          <ValidationFeed />
+-          <ManifestPreview />
+-        </div>
++    <div className="rounded-md border p-3">
++      <div className="mb-2 flex items-center gap-2 text-muted-foreground">
++        {icon}
++        <span className="text-xs font-medium uppercase tracking-normal">{label}</span>
+       </div>
+-    </main>
++      <p className="font-medium">{value}</p>
++    </div>
+   );
+ }
++
++function renderVersion(
++  version: string | undefined
++): string {
++  return version ?? "Unknown";
++}
+diff --git a/apps/stack-installer/src/index.ts b/apps/stack-installer/src/index.ts
+index 83a74674de..3ce604f233 100644
+--- a/apps/stack-installer/src/index.ts
++++ b/apps/stack-installer/src/index.ts
+@@ -15,9 +15,10 @@
+ export const VERSION = "0.0.0" as const;
+ 
+ /**
+- * App-local live proof harness exports.
++ * App-local workflow exports.
+  *
+  * @category workflows
+  * @since 0.0.0
+  */
+ export * from "./proof/P1ManualProof.js";
++export * from "./repair/BunRuntimeRepair.js";
+diff --git a/apps/stack-installer/src/proof/capture-p1-manual-proof.ts b/apps/stack-installer/src/proof/capture-p1-manual-proof.ts
+index 6e99a9a11c..4c27a046f2 100644
+--- a/apps/stack-installer/src/proof/capture-p1-manual-proof.ts
++++ b/apps/stack-installer/src/proof/capture-p1-manual-proof.ts
+@@ -9,11 +9,15 @@
+  */
+ 
+ import { AiProviderCli } from "@beep/ai-provider-cli";
++import { BunCli } from "@beep/bun-cli";
+ import { Discord } from "@beep/discord";
++import { makeInstallerDependenciesConfigLayer } from "@beep/installer-dependencies-config/layer";
+ import { P1ManualProofRequest, P1ManualProofResult } from "@beep/installer-workspace-use-cases";
+ import { OnePasswordCli } from "@beep/onepassword-cli";
+ import { Sha256HexFromBytes } from "@beep/schema/Sha256";
+ import { BunChildProcessSpawner, BunHttpClient, BunRuntime, BunServices } from "@effect/platform-bun";
++import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
++import * as BunPath from "@effect/platform-bun/BunPath";
+ import { Duration, Effect, Exit, FileSystem, Layer, Order, Path, pipe, RegExp as Rx, Stream } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -46,13 +50,20 @@ const decodeProofJson = S.decodeUnknownEffect(S.fromJsonString(P1ManualProofResu
+ const encodeProofResult = S.encodeUnknownEffect(S.fromJsonString(P1ManualProofResult));
+ const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+ 
+-const BaseLayer = Layer.mergeAll(BunServices.layer, BunHttpClient.layer);
+-const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), Discord.layer).pipe(
++const appDir = process.cwd();
++const repoRoot = new URL("../..", `file://${appDir.endsWith("/") ? appDir : `${appDir}/`}`).pathname;
++
++const BaseLayer = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunFileSystem.layer, BunPath.layer);
++const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), BunCli.makeLayer(), Discord.layer).pipe(
+   Layer.provideMerge(BunChildProcessSpawner.layer),
+   Layer.provideMerge(BaseLayer)
+ );
+ const ProcessLayer = BunChildProcessSpawner.layer.pipe(Layer.provideMerge(BaseLayer));
+-const SliceRuntimeLayer = P1ManualProofSliceLayer.pipe(Layer.provideMerge(DriverLayer), Layer.provideMerge(BaseLayer));
++const SliceRuntimeLayer = P1ManualProofSliceLayer.pipe(
++  Layer.provideMerge(DriverLayer),
++  Layer.provideMerge(makeInstallerDependenciesConfigLayer(repoRoot)),
++  Layer.provideMerge(BaseLayer)
++);
+ const RuntimeLayer = Layer.mergeAll(ProcessLayer, SliceRuntimeLayer);
+ 
+ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
+diff --git a/apps/stack-installer/src/proof/run-p1-manual-proof.ts b/apps/stack-installer/src/proof/run-p1-manual-proof.ts
+index 821ee6e69d..3e372692f1 100644
+--- a/apps/stack-installer/src/proof/run-p1-manual-proof.ts
++++ b/apps/stack-installer/src/proof/run-p1-manual-proof.ts
+@@ -9,10 +9,14 @@
+  */
+ 
+ import { AiProviderCli } from "@beep/ai-provider-cli";
++import { BunCli } from "@beep/bun-cli";
+ import { Discord } from "@beep/discord";
++import { makeInstallerDependenciesConfigLayer } from "@beep/installer-dependencies-config/layer";
+ import { P1ManualProofRequest, P1ManualProofResult } from "@beep/installer-workspace-use-cases";
+ import { OnePasswordCli } from "@beep/onepassword-cli";
+ import { BunChildProcessSpawner, BunHttpClient, BunRuntime, BunServices } from "@effect/platform-bun";
++import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
++import * as BunPath from "@effect/platform-bun/BunPath";
+ import { Effect, Layer, pipe } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -22,12 +26,19 @@ import { P1ManualProofSliceLayer, runP1ManualProof } from "./P1ManualProof.js";
+ const decodeRequestJson = S.decodeUnknownEffect(S.fromJsonString(P1ManualProofRequest));
+ const encodeProofResult = S.encodeUnknownEffect(S.fromJsonString(P1ManualProofResult));
+ 
+-const BaseLayer = Layer.mergeAll(BunServices.layer, BunHttpClient.layer);
+-const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), Discord.layer).pipe(
++const appDir = process.cwd();
++const repoRoot = new URL("../..", `file://${appDir.endsWith("/") ? appDir : `${appDir}/`}`).pathname;
++
++const BaseLayer = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunFileSystem.layer, BunPath.layer);
++const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), BunCli.makeLayer(), Discord.layer).pipe(
+   Layer.provideMerge(BunChildProcessSpawner.layer),
+   Layer.provideMerge(BaseLayer)
+ );
+-const RuntimeLayer = P1ManualProofSliceLayer.pipe(Layer.provideMerge(DriverLayer));
++const RuntimeLayer = P1ManualProofSliceLayer.pipe(
++  Layer.provideMerge(DriverLayer),
++  Layer.provideMerge(makeInstallerDependenciesConfigLayer(repoRoot)),
++  Layer.provideMerge(BaseLayer)
++);
+ 
+ const argAfter = (name: string): O.Option<string> =>
+   pipe(
+diff --git a/apps/stack-installer/src/repair/BunRuntimeRepair.ts b/apps/stack-installer/src/repair/BunRuntimeRepair.ts
+new file mode 100644
+index 0000000000..0c654fb275
+--- /dev/null
++++ b/apps/stack-installer/src/repair/BunRuntimeRepair.ts
+@@ -0,0 +1,115 @@
++/**
++ * App-local Bun repair workflow.
++ *
++ * @packageDocumentation
++ * @category workflows
++ * @since 0.0.0
++ */
++
++import { BunCli } from "@beep/bun-cli";
++import { makeInstallerDependenciesConfigLayer } from "@beep/installer-dependencies-config/layer";
++import {
++  BunRuntimeHealthResult, BunRuntimeRepairRequest, BunRuntimeRepairResult
++} from "@beep/installer-dependencies-use-cases/public";
++import { InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
++import { InstallerDependenciesServerLive } from "@beep/installer-dependencies-server";
++import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
++import * as BunPath from "@effect/platform-bun/BunPath";
++import { BunChildProcessSpawner, BunRuntime, BunServices } from "@effect/platform-bun";
++import { Effect, Layer, pipe } from "effect";
++import * as S from "effect/Schema";
++const encodeBunRuntimeHealthResult = S.encodeUnknownEffect(S.fromJsonString(BunRuntimeHealthResult));
++const encodeBunRuntimeRepairResult = S.encodeUnknownEffect(S.fromJsonString(BunRuntimeRepairResult));
++
++const BaseLayer = Layer.mergeAll(BunServices.layer, BunFileSystem.layer, BunPath.layer);
++const DriverLayer = BunCli.makeLayer().pipe(Layer.provideMerge(BunChildProcessSpawner.layer), Layer.provideMerge(BaseLayer));
++const makeBunRuntimeRepairLayer = (repoRoot: string) =>
++  InstallerDependenciesServerLive.pipe(
++    Layer.provideMerge(DriverLayer),
++    Layer.provideMerge(makeInstallerDependenciesConfigLayer(repoRoot)),
++    Layer.provideMerge(BaseLayer)
++  );
++
++/**
++ * Inspect Bun runtime health for the focused app-first repair flow.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const inspectBunRuntimeForApp = Effect.fn("StackInstaller.inspectBunRuntimeForApp")(function* () {
++  const dependencies = yield* InstallerDependenciesUseCases;
++  return yield* dependencies.inspectBunRuntime();
++});
++
++/**
++ * Run the approval-first Bun repair flow for the app.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const repairBunRuntimeForApp = Effect.fn("StackInstaller.repairBunRuntimeForApp")(function* () {
++  const dependencies = yield* InstallerDependenciesUseCases;
++  return yield* dependencies.repairBunRuntime(
++    new BunRuntimeRepairRequest({
++      approved: true,
++    })
++  );
++});
++
++/**
++ * Encode the Bun health result as JSON for the Tauri bridge.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const inspectBunRuntimeJson = Effect.fn("StackInstaller.inspectBunRuntimeJson")(function* () {
++  const result = yield* inspectBunRuntimeForApp();
++  return yield* encodeBunRuntimeHealthResult(result);
++});
++
++/**
++ * Encode the Bun repair result as JSON for the Tauri bridge.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const repairBunRuntimeJson = Effect.fn("StackInstaller.repairBunRuntimeJson")(function* () {
++  const result = yield* repairBunRuntimeForApp();
++  return yield* encodeBunRuntimeRepairResult(result);
++});
++
++/**
++ * Run the Bun repair CLI main entrypoint.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const runBunRuntimeRepairMain = (program: Effect.Effect<string, string>) =>
++  BunRuntime.runMain(
++    pipe(
++      program,
++      Effect.tap((encoded) =>
++        Effect.sync(() => {
++          console.log(encoded);
++        })
++      ),
++      Effect.catch((message: string) =>
++        Effect.sync(() => {
++          console.error(message);
++          process.exitCode = 1;
++        })
++      )
++    )
++  );
++
++/**
++ * Build the runtime layer for the Bun repair workflow.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const provideBunRuntimeRepairLayer = <A, E, R>(repoRoot: string, program: Effect.Effect<A, E, R>) =>
++  program.pipe(
++    // @effect-diagnostics-next-line strictEffectProvide:off
++    Effect.provide(makeBunRuntimeRepairLayer(repoRoot))
++  );
+diff --git a/apps/stack-installer/src/repair/run-bun-runtime-repair.ts b/apps/stack-installer/src/repair/run-bun-runtime-repair.ts
+new file mode 100644
+index 0000000000..c628af07b7
+--- /dev/null
++++ b/apps/stack-installer/src/repair/run-bun-runtime-repair.ts
+@@ -0,0 +1,48 @@
++#!/usr/bin/env bun
++
++/**
++ * Bun entrypoint for the focused Bun repair workflow.
++ *
++ * @internal
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { Effect, pipe } from "effect";
++import * as A from "effect/Array";
++import * as O from "effect/Option";
++import { inspectBunRuntimeJson, provideBunRuntimeRepairLayer, repairBunRuntimeJson, runBunRuntimeRepairMain } from "./BunRuntimeRepair.js";
++
++const argAfter = (name: string): O.Option<string> =>
++  pipe(
++    Bun.argv,
++    A.findFirstIndex((value) => value === name),
++    O.flatMap((index) => A.get(Bun.argv, index + 1))
++  );
++
++const mode = O.getOrElse(argAfter("--mode"), () => "inspect");
++const appDir = process.cwd();
++const repoRoot = new URL("../..", `file://${appDir.endsWith("/") ? appDir : `${appDir}/`}`).pathname;
++
++const program =
++  mode === "repair"
++    ? provideBunRuntimeRepairLayer(repoRoot, repairBunRuntimeJson())
++    : provideBunRuntimeRepairLayer(repoRoot, inspectBunRuntimeJson());
++
++runBunRuntimeRepairMain(program.pipe(Effect.mapError(renderRepairError)));
++
++function renderRepairError(error: unknown): string {
++  if (typeof error === "string") {
++    return error;
++  }
++  if (error instanceof Error) {
++    return error.message;
++  }
++  if (typeof error === "object" && error !== null && "reason" in error && typeof error.reason === "string") {
++    return error.reason;
++  }
++  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
++    return error.message;
++  }
++  return "Bun runtime workflow failed.";
++}
+diff --git a/apps/stack-installer/test/App.test.tsx b/apps/stack-installer/test/App.test.tsx
+index 1f83bf6f98..51d1a04a93 100644
+--- a/apps/stack-installer/test/App.test.tsx
++++ b/apps/stack-installer/test/App.test.tsx
+@@ -2,110 +2,87 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
+ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ import { App } from "../src/App.js";
+ 
+-const runProofMock = vi.fn();
+-
+-const submitProofForm = () => {
+-  const runButton = screen.getAllByRole("button", { name: "Run Proof" })[0];
+-  const form = runButton?.closest("form");
+-
+-  expect(form).toBeDefined();
+-  if (form === null) {
+-    return;
+-  }
++const loadHealthMock = vi.fn();
++const runRepairMock = vi.fn();
++
++const repairRequiredHealth = {
++  dependency: {
++    detectedVersion: "1.3.11",
++    id: "bun",
++    installHint: "Run the focused Bun repair flow from the desktop app.",
++    kind: "runtime",
++    name: "Bun",
++    requiredVersion: "1.3.14",
++    status: "present",
++  },
++  state: "repair-required",
++  summary: "Bun 1.3.11 is older than the required version 1.3.14.",
++};
+ 
+-  fireEvent.submit(form);
++const healthyRepairResult = {
++  after: {
++    dependency: {
++      detectedVersion: "1.3.14",
++      id: "bun",
++      installHint: "Run the focused Bun repair flow from the desktop app.",
++      kind: "runtime",
++      name: "Bun",
++      requiredVersion: "1.3.14",
++      status: "present",
++    },
++    state: "healthy",
++    summary: "Bun 1.3.14 satisfies the required version 1.3.14.",
++  },
++  before: repairRequiredHealth,
++  changed: true,
++  command: "bun upgrade",
++  summary: "Bun repair completed. Bun 1.3.14 satisfies the required version 1.3.14.",
+ };
+ 
+ describe.sequential("Stack Installer app", () => {
+   beforeEach(() => {
+-    runProofMock.mockReset();
++    loadHealthMock.mockReset();
++    runRepairMock.mockReset();
++    loadHealthMock.mockResolvedValue(repairRequiredHealth);
+   });
+ 
+   afterEach(cleanup);
+ 
+-  it("renders the P1 workbench", () => {
+-    render(<App />);
+-
+-    expect(screen.getByRole("heading", { name: "Install Workbench" })).toBeDefined();
+-    expect(screen.getByText("Claude Provider")).toBeDefined();
+-    expect(screen.getByText("Discord is represented as the only v1 channel.")).toBeDefined();
+-  });
+-
+-  it("rejects plaintext Discord bot tokens before invoking the desktop proof runner", () => {
+-    render(<App runP1ManualProof={runProofMock} />);
+-
+-    const tokenInput = screen.getAllByLabelText("Bot Token Reference")[0];
+-    const runButton = screen.getAllByRole("button", { name: "Run Proof" })[0];
++  it("renders the focused Bun repair flow", async () => {
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    expect(tokenInput).toBeDefined();
+-    expect(runButton).toBeDefined();
+-    if (tokenInput === undefined || runButton === undefined) {
+-      return;
+-    }
+-
+-    fireEvent.change(tokenInput, {
+-      target: { value: "plaintext-token" },
+-    });
+-    submitProofForm();
+-
+-    expect(screen.getAllByText("Discord bot token must be a 1Password reference.").length).toBeGreaterThan(0);
+-    expect(runProofMock).not.toHaveBeenCalled();
++    expect(screen.getByRole("heading", { name: "Bun Repair" })).toBeDefined();
++    await waitFor(() => expect(screen.getAllByText("Repair Needed").length).toBeGreaterThan(0));
++    expect(screen.getByText("Bun 1.3.11 is older than the required version 1.3.14.")).toBeDefined();
+   });
+ 
+-  it("runs the Tauri P1 proof command with sanitized form values", async () => {
+-    runProofMock.mockResolvedValueOnce("sanitized proof output");
+-    render(<App runP1ManualProof={runProofMock} />);
++  it("runs the repair action and renders the before and after state", async () => {
++    runRepairMock.mockResolvedValueOnce(healthyRepairResult);
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    fireEvent.change(screen.getAllByLabelText("Guild ID")[0], {
+-      target: { value: "guild-1" },
+-    });
+-    fireEvent.change(screen.getAllByLabelText("Channel ID")[0], {
+-      target: { value: "channel-1" },
+-    });
+-    fireEvent.change(screen.getAllByLabelText("Operator")[0], {
+-      target: { value: "operator-macos-001" },
+-    });
+-    submitProofForm();
++    await waitFor(() => expect(screen.getByRole("button", { name: "Approve Repair" })).toBeDefined());
++    fireEvent.click(screen.getByRole("button", { name: "Approve Repair" }));
+ 
+-    await waitFor(() => expect(runProofMock).toHaveBeenCalled());
+-    await waitFor(() => expect(screen.getByText("sanitized proof output")).toBeDefined());
+-    expect(runProofMock).toHaveBeenCalledWith({
+-      discordBotTokenReference: "op://Private/Discord Bot/token",
+-      discordChannelDisplayName: "ai-stack-installer",
+-      discordChannelId: "channel-1",
+-      discordGuildId: "guild-1",
+-      operatorLabel: "operator-macos-001",
+-      targetPlatform: "macos",
+-      testMessageContent: "Stack Installer P1 Manual Mode proof",
+-    });
++    await waitFor(() => expect(runRepairMock).toHaveBeenCalled());
++    await waitFor(() => expect(screen.getByText("Repair complete")).toBeDefined());
++    expect(screen.getByText("Executed command: bun upgrade")).toBeDefined();
++    expect(screen.getAllByText("1.3.14").length).toBeGreaterThan(0);
+   });
+ 
+-  it("renders string Tauri proof errors", async () => {
+-    runProofMock.mockRejectedValueOnce("proof rejected");
+-    render(<App runP1ManualProof={runProofMock} />);
+-
+-    submitProofForm();
+-
+-    await waitFor(() => expect(screen.getByText("proof rejected")).toBeDefined());
+-  });
+-
+-  it("renders object Tauri proof errors", async () => {
+-    runProofMock.mockRejectedValueOnce(new Error("provider auth missing"));
+-    render(<App runP1ManualProof={runProofMock} />);
+-
+-    submitProofForm();
++  it("renders inspection errors", async () => {
++    loadHealthMock.mockRejectedValueOnce(new Error("inspection unavailable"));
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    await waitFor(() => expect(screen.getByText("provider auth missing")).toBeDefined());
++    await waitFor(() => expect(screen.getByText("inspection unavailable")).toBeDefined());
+   });
+ 
+-  it("falls back for unknown Tauri proof errors", async () => {
+-    runProofMock.mockRejectedValueOnce({ reason: "opaque" });
+-    render(<App runP1ManualProof={runProofMock} />);
++  it("renders repair errors", async () => {
++    runRepairMock.mockRejectedValueOnce(new Error("upgrade failed"));
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    submitProofForm();
++    await waitFor(() => expect(screen.getByRole("button", { name: "Approve Repair" })).toBeDefined());
++    fireEvent.click(screen.getByRole("button", { name: "Approve Repair" }));
+ 
+-    await waitFor(() =>
+-      expect(screen.getByText("P1 proof failed before sanitized output was returned.")).toBeDefined()
+-    );
++    await waitFor(() => expect(screen.getByText("upgrade failed")).toBeDefined());
+   });
+ });
+diff --git a/apps/stack-installer/test/P1ManualProof.test.ts b/apps/stack-installer/test/P1ManualProof.test.ts
+index 932e3f17f4..49c19de3ea 100644
+--- a/apps/stack-installer/test/P1ManualProof.test.ts
++++ b/apps/stack-installer/test/P1ManualProof.test.ts
+@@ -1,14 +1,23 @@
+ import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliProvider } from "@beep/ai-provider-cli";
++import { BunCli, BunCliProcessResult } from "@beep/bun-cli";
+ import { Discord, DiscordConfigInput } from "@beep/discord";
+ import { InstallerChannelsServerLive } from "@beep/installer-channels-server";
+-import { HostDependencyPlan, HostDependencyValidationResult } from "@beep/installer-dependencies-use-cases";
++import {
++  BunRuntimeHealthResult,
++  BunRuntimeRepairResult,
++  HostDependencyPlan,
++  HostDependencyValidationResult,
++} from "@beep/installer-dependencies-use-cases";
+ import { InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
+ import { InstallerProvidersServerLive } from "@beep/installer-providers-server";
+ import { InstallerSecurityServerLive } from "@beep/installer-security-server";
+ import { P1ManualProofRequest, P1ManualProofResult } from "@beep/installer-workspace-use-cases";
+ import { OnePasswordCli, OnePasswordCliProcessResult } from "@beep/onepassword-cli";
+ import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
+-import { describe, expect, it, layer } from "@effect/vitest";
++import { describe, expect, it } from "@effect/vitest";
++import { BunChildProcessSpawner } from "@effect/platform-bun";
++import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
++import * as BunPath from "@effect/platform-bun/BunPath";
+ import { Effect, Layer } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -47,6 +56,15 @@ const providerRunner = (provider: AiProviderCliProvider) =>
+     })
+   );
+ 
++const bunRunner = () =>
++  Effect.succeed(
++    new BunCliProcessResult({
++      exitCode: 0,
++      stderr: "",
++      stdout: "1.3.14\n",
++    })
++  );
++
+ const TestHttpClientLayer = Layer.succeed(
+   HttpClient.HttpClient,
+   HttpClient.make((request) =>
+@@ -64,6 +82,7 @@ const TestHttpClientLayer = Layer.succeed(
+ const DriverLayer = Layer.mergeAll(
+   OnePasswordCli.makeLayerFromRunner(onePasswordRunner),
+   AiProviderCli.makeLayerFromRunner(providerRunner),
++  BunCli.makeLayerFromRunner(bunRunner),
+   Discord.makeLayer(new DiscordConfigInput({ baseUrl: "https://discord.example.test/api/v10" })).pipe(
+     Layer.provide(TestHttpClientLayer)
+   )
+@@ -72,9 +91,61 @@ const DriverLayer = Layer.mergeAll(
+ const TestDependenciesLayer = Layer.succeed(
+   InstallerDependenciesUseCases,
+   InstallerDependenciesUseCases.of({
++    inspectBunRuntime: Effect.fn("TestDependencies.inspectBunRuntime")(function* () {
++      return yield* Effect.succeed(
++        new BunRuntimeHealthResult({
++          dependency: {
++            detectedVersion: O.some("1.0.0"),
++            id: "bun",
++            installHint: "Run repair.",
++            kind: "runtime",
++            name: "Bun",
++            requiredVersion: O.some("1.0.0"),
++            status: "present",
++          },
++          state: "healthy",
++          summary: "Bun satisfies the requested version.",
++        })
++      );
++    }),
+     previewHostDependencies: Effect.fn("TestDependencies.previewHostDependencies")(function* () {
+       return yield* Effect.succeed(new HostDependencyPlan({ dependencies: [], notes: ["test"], verbs: [] }));
+     }),
++    repairBunRuntime: Effect.fn("TestDependencies.repairBunRuntime")(function* () {
++      return yield* Effect.succeed(
++        new BunRuntimeRepairResult({
++          after: new BunRuntimeHealthResult({
++            dependency: {
++              detectedVersion: O.some("1.0.0"),
++              id: "bun",
++              installHint: "Run repair.",
++              kind: "runtime",
++              name: "Bun",
++              requiredVersion: O.some("1.0.0"),
++              status: "present",
++            },
++            state: "healthy",
++            summary: "Bun satisfies the requested version.",
++          }),
++          before: new BunRuntimeHealthResult({
++            dependency: {
++              detectedVersion: O.some("0.9.0"),
++              id: "bun",
++              installHint: "Run repair.",
++              kind: "runtime",
++              name: "Bun",
++              requiredVersion: O.some("1.0.0"),
++              status: "present",
++            },
++            state: "repair-required",
++            summary: "Bun requires repair.",
++          }),
++          changed: true,
++          command: "bun upgrade",
++          summary: "Bun repaired.",
++        })
++      );
++    }),
+     validateRequiredCommands: Effect.fn("TestDependencies.validateRequiredCommands")(function* () {
+       return yield* Effect.succeed([
+         new HostDependencyValidationResult({
+@@ -101,93 +172,96 @@ const TestSliceLayer = Layer.mergeAll(
+   InstallerChannelsServerLive
+ );
+ 
+-const TestLayer = TestSliceLayer.pipe(Layer.provideMerge(DriverLayer));
++const TestLayer = TestSliceLayer.pipe(
++  Layer.provideMerge(DriverLayer),
++  Layer.provideMerge(BunChildProcessSpawner.layer),
++  Layer.provideMerge(BunFileSystem.layer),
++  Layer.provideMerge(BunPath.layer)
++);
+ 
+ describe("P1 Manual Mode proof harness", () => {
+-  layer(TestLayer)((it) => {
+-    it.effect("returns a sanitized live proof snapshot without exposing raw secret or provider CLI output", () =>
+-      Effect.gen(function* () {
+-        const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
+-        const result = yield* runP1ManualProof(
+-          new P1ManualProofRequest({
+-            discordBotTokenReference,
+-            discordChannelDisplayName: "proof-channel",
+-            discordChannelId: "channel-1",
+-            discordGuildId: "guild-1",
+-            operatorLabel: "test",
+-            targetPlatform: "macos",
+-            testMessageContent: "Stack Installer P1 proof",
+-          })
+-        );
+-        const encoded = yield* encodeProofResult(result);
+-
+-        expect(result.snapshot.manifest.dryRunOnly).toBe(false);
+-        expect(A.every(result.snapshot.validationEvents, (event) => event.status === "passed")).toBe(true);
+-        expect(encoded).not.toContain("raw-secret-value");
+-        expect(encoded).not.toContain("claude-raw-provider-status-output");
+-        expect(encoded).not.toContain("codex-raw-provider-status-output");
+-        expect(encoded).toContain("message-1");
+-      })
+-    );
+-
+-    it.effect("records Bash commands for macOS proof artifacts", () =>
+-      Effect.gen(function* () {
+-        const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
+-        const commands = buildP1ProofCommandsText(
+-          new P1ManualProofRequest({
+-            discordBotTokenReference,
+-            discordChannelDisplayName: "proof-channel",
+-            discordChannelId: "channel-1",
+-            discordGuildId: "guild-1",
+-            operatorLabel: "operator-macos-001",
+-            targetPlatform: "macos",
+-            testMessageContent: "Stack Installer P1 macOS proof",
+-          }),
+-          {
+-            outputDir: "/repo/output/stack-installer/p1-live/macos",
+-            requestJson: '{"targetPlatform":"macos"}',
+-          }
+-        );
+-
+-        expect(commands).toContain("command -v op");
+-        expect(commands).toContain("(cd apps/stack-installer && bun run p1:proof:capture");
+-        expect(commands).toContain("--output-dir '/repo/output/stack-installer/p1-live/macos'");
+-        expect(commands).not.toContain("Get-Command op");
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(true);
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(false);
+-      })
+-    );
+-
+-    it.effect("records PowerShell commands for Windows proof artifacts", () =>
+-      Effect.gen(function* () {
+-        const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
+-        const commands = buildP1ProofCommandsText(
+-          new P1ManualProofRequest({
+-            discordBotTokenReference,
+-            discordChannelDisplayName: "proof-channel",
+-            discordChannelId: "channel-1",
+-            discordGuildId: "guild-1",
+-            operatorLabel: "operator-windows-001",
+-            targetPlatform: "windows",
+-            testMessageContent: "Stack Installer P1 Windows proof",
+-          }),
+-          {
+-            outputDir: "C:\\repo\\output\\stack-installer\\p1-live\\windows",
+-            requestJson: '{"targetPlatform":"windows"}',
+-          }
+-        );
+-
+-        expect(commands).toContain("Get-Command op");
+-        expect(commands).toContain("Push-Location apps/stack-installer");
+-        expect(commands).toContain("$stackInstallerOutputDir = 'C:\\repo\\output\\stack-installer\\p1-live\\windows'");
+-        expect(commands).toContain('--output-dir "$stackInstallerOutputDir"');
+-        expect(commands).not.toContain("command -v op");
+-        expect(commands).not.toContain("(cd apps/stack-installer");
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(true);
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(false);
+-      })
+-    );
+-  });
++  it.effect("returns a sanitized live proof snapshot without exposing raw secret or provider CLI output", () =>
++    Effect.gen(function* () {
++      const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
++      const result = yield* runP1ManualProof(
++        new P1ManualProofRequest({
++          discordBotTokenReference,
++          discordChannelDisplayName: "proof-channel",
++          discordChannelId: "channel-1",
++          discordGuildId: "guild-1",
++          operatorLabel: "test",
++          targetPlatform: "macos",
++          testMessageContent: "Stack Installer P1 proof",
++        })
++      );
++      const encoded = yield* encodeProofResult(result);
++
++      expect(result.snapshot.manifest.dryRunOnly).toBe(false);
++      expect(A.every(result.snapshot.validationEvents, (event) => event.status === "passed")).toBe(true);
++      expect(encoded).not.toContain("raw-secret-value");
++      expect(encoded).not.toContain("claude-raw-provider-status-output");
++      expect(encoded).not.toContain("codex-raw-provider-status-output");
++      expect(encoded).toContain("message-1");
++    }).pipe(Effect.provide(TestLayer))
++  );
++
++  it.effect("records Bash commands for macOS proof artifacts", () =>
++    Effect.gen(function* () {
++      const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
++      const commands = buildP1ProofCommandsText(
++        new P1ManualProofRequest({
++          discordBotTokenReference,
++          discordChannelDisplayName: "proof-channel",
++          discordChannelId: "channel-1",
++          discordGuildId: "guild-1",
++          operatorLabel: "operator-macos-001",
++          targetPlatform: "macos",
++          testMessageContent: "Stack Installer P1 macOS proof",
++        }),
++        {
++          outputDir: "/repo/output/stack-installer/p1-live/macos",
++          requestJson: '{"targetPlatform":"macos"}',
++        }
++      );
++
++      expect(commands).toContain("command -v op");
++      expect(commands).toContain("(cd apps/stack-installer && bun run p1:proof:capture");
++      expect(commands).toContain("--output-dir '/repo/output/stack-installer/p1-live/macos'");
++      expect(commands).not.toContain("Get-Command op");
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(true);
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(false);
++    }).pipe(Effect.provide(TestLayer))
++  );
++
++  it.effect("records PowerShell commands for Windows proof artifacts", () =>
++    Effect.gen(function* () {
++      const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
++      const commands = buildP1ProofCommandsText(
++        new P1ManualProofRequest({
++          discordBotTokenReference,
++          discordChannelDisplayName: "proof-channel",
++          discordChannelId: "channel-1",
++          discordGuildId: "guild-1",
++          operatorLabel: "operator-windows-001",
++          targetPlatform: "windows",
++          testMessageContent: "Stack Installer P1 Windows proof",
++        }),
++        {
++          outputDir: "C:\\repo\\output\\stack-installer\\p1-live\\windows",
++          requestJson: '{"targetPlatform":"windows"}',
++        }
++      );
++
++      expect(commands).toContain("Get-Command op");
++      expect(commands).toContain("Push-Location apps/stack-installer");
++      expect(commands).toContain("$stackInstallerOutputDir = 'C:\\repo\\output\\stack-installer\\p1-live\\windows'");
++      expect(commands).toContain('--output-dir "$stackInstallerOutputDir"');
++      expect(commands).not.toContain("command -v op");
++      expect(commands).not.toContain("(cd apps/stack-installer");
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(true);
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(false);
++    }).pipe(Effect.provide(TestLayer))
++  );
+ });
+ 
+ describe("P1 proof artifact helpers", () => {
+diff --git a/apps/stack-installer/tsconfig.json b/apps/stack-installer/tsconfig.json
+index c71957d60b..36a100ab37 100644
+--- a/apps/stack-installer/tsconfig.json
++++ b/apps/stack-installer/tsconfig.json
+@@ -26,6 +26,9 @@
+     {
+       "path": "../../packages/drivers/ai-provider-cli/tsconfig.json"
+     },
++    {
++      "path": "../../packages/drivers/bun-cli/tsconfig.json"
++    },
+     {
+       "path": "../../packages/drivers/discord/tsconfig.json"
+     },
+@@ -50,6 +53,9 @@
+     {
+       "path": "../../packages/installer-channels/use-cases/tsconfig.json"
+     },
++    {
++      "path": "../../packages/installer-dependencies/config/tsconfig.json"
++    },
+     {
+       "path": "../../packages/installer-dependencies/server/tsconfig.json"
+     },
+diff --git a/bun.lock b/bun.lock
+index deaf7ca357..8d99f47cae 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -169,11 +169,13 @@
+       "version": "0.0.0",
+       "dependencies": {
+         "@beep/ai-provider-cli": "workspace:^",
++        "@beep/bun-cli": "workspace:^",
+         "@beep/discord": "workspace:^",
+         "@beep/identity": "workspace:^",
+         "@beep/installer-channels-domain": "workspace:^",
+         "@beep/installer-channels-server": "workspace:^",
+         "@beep/installer-channels-use-cases": "workspace:^",
++        "@beep/installer-dependencies-config": "workspace:^",
+         "@beep/installer-dependencies-server": "workspace:^",
+         "@beep/installer-dependencies-use-cases": "workspace:^",
+         "@beep/installer-providers-server": "workspace:^",
+@@ -412,6 +414,19 @@
+         "@types/node": "catalog:",
+       },
+     },
++    "packages/drivers/bun-cli": {
++      "name": "@beep/bun-cli",
++      "version": "0.0.0",
++      "dependencies": {
++        "@beep/identity": "workspace:^",
++        "@beep/schema": "workspace:^",
++        "effect": "catalog:",
++      },
++      "devDependencies": {
++        "@effect/vitest": "catalog:",
++        "@types/node": "catalog:",
++      },
++    },
+     "packages/drivers/discord": {
+       "name": "@beep/discord",
+       "version": "0.0.0",
+@@ -949,6 +964,19 @@
+         "@types/node": "catalog:",
+       },
+     },
++    "packages/installer-dependencies/config": {
++      "name": "@beep/installer-dependencies-config",
++      "version": "0.0.0",
++      "dependencies": {
++        "@beep/identity": "workspace:^",
++        "@beep/schema": "workspace:^",
++        "effect": "catalog:",
++      },
++      "devDependencies": {
++        "@effect/vitest": "catalog:",
++        "@types/node": "catalog:",
++      },
++    },
+     "packages/installer-dependencies/domain": {
+       "name": "@beep/installer-dependencies-domain",
+       "version": "0.0.0",
+@@ -967,7 +995,9 @@
+       "name": "@beep/installer-dependencies-server",
+       "version": "0.0.0",
+       "dependencies": {
++        "@beep/bun-cli": "workspace:^",
+         "@beep/identity": "workspace:^",
++        "@beep/installer-dependencies-config": "workspace:^",
+         "@beep/installer-dependencies-domain": "workspace:^",
+         "@beep/installer-dependencies-use-cases": "workspace:^",
+         "@beep/schema": "workspace:^",
+@@ -1954,6 +1984,8 @@
+ 
+     "@beep/architecture-lab-use-cases": ["@beep/architecture-lab-use-cases@workspace:packages/architecture-lab/use-cases"],
+ 
++    "@beep/bun-cli": ["@beep/bun-cli@workspace:packages/drivers/bun-cli"],
++
+     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
+ 
+     "@beep/codedank-web": ["@beep/codedank-web@workspace:apps/codedank-web"],
+@@ -1988,6 +2020,8 @@
+ 
+     "@beep/installer-channels-use-cases": ["@beep/installer-channels-use-cases@workspace:packages/installer-channels/use-cases"],
+ 
++    "@beep/installer-dependencies-config": ["@beep/installer-dependencies-config@workspace:packages/installer-dependencies/config"],
++
+     "@beep/installer-dependencies-domain": ["@beep/installer-dependencies-domain@workspace:packages/installer-dependencies/domain"],
+ 
+     "@beep/installer-dependencies-server": ["@beep/installer-dependencies-server@workspace:packages/installer-dependencies/server"],
+diff --git a/initiatives/stack-installer/PLAN.md b/initiatives/stack-installer/PLAN.md
+index 1ab1e4fd75..70a81459b3 100644
+--- a/initiatives/stack-installer/PLAN.md
++++ b/initiatives/stack-installer/PLAN.md
+@@ -1,10 +1,11 @@
+ # Stack Installer Plan
+ 
+-This plan executes [SPEC.md](./SPEC.md). P0 is complete. P1 is the active
+-target: Discord vertical, Manual Mode. P1A is complete as a runnable dry-run
+-checkpoint. The P1 live harness is implemented; full P1 still requires
+-fresh-OS macOS and Windows proof artifacts plus the post-proof PR readiness
+-review/fix loop.
++This plan executes [SPEC.md](./SPEC.md). P0 is complete. P1 remains open:
++Discord vertical, Manual Mode. P1A is complete as a runnable dry-run
++checkpoint. The P1 live harness is implemented. macOS proof is complete and
++audited. Windows proof is still missing and remains explicit open P1 debt.
++P1C is complete. P1D is now the active next execution lane on Linux while full
++P1 still requires the real Windows proof artifact.
+ 
+ ## P0: Initiative Bootstrap
+ 
+@@ -44,7 +45,8 @@ Stop Conditions:
+ ## P1: Discord Vertical, Manual Mode
+ 
+ Status: in progress; P1A dry-run runnable spine complete, P1 live harness
+-implemented, fresh-OS live Discord proof and PR readiness review pending
++implemented, macOS proof complete, Windows proof temporarily waived for P1C
++start only, full P1 closure still pending
+ 
+ Goal: Prove the smallest end-to-end v1 path without AI Mode: provider auth,
+ 1Password, Discord bot/channel setup, manifest creation, validation, and a
+@@ -142,7 +144,7 @@ Stop Conditions:
+ 
+ ### P1C: PR Readiness Review And Fix Loop
+ 
+-Status: pending; run after fresh-machine proof artifacts exist
++Status: completed under sequencing-only temporary Windows missing-proof waiver
+ 
+ Goal: review the whole implemented P1 initiative surface and directly affected
+ code paths before the PR is called ready. The review uses
+@@ -152,8 +154,9 @@ flow.
+ 
+ Exit Criteria:
+ 
+-- [ ] Fresh macOS and Windows proof artifacts have been produced and audited
+-  for secret safety before the review starts.
++- [ ] Audited macOS proof artifact exists before the review starts.
++- [ ] Audited Windows proof artifact exists, or an explicit temporary Windows
++  missing-proof waiver is recorded for P1C start.
+ - [ ] Baseline quality commands are green on the current branch.
+ - [ ] Reviewer panel covers quality gates, architecture boundaries, schema and
+   domain models, Effect laws, error boundaries, tests, observability,
+@@ -181,8 +184,9 @@ Required Checks:
+ 
+ Stop Conditions:
+ 
+-- Do not start P1C before the macOS and Windows fresh-machine proof artifacts
+-  exist.
++- Do not start P1C before the audited macOS proof artifact exists.
++- Do not treat a Windows missing-proof waiver as Windows success or as full P1
++  closure evidence.
+ - Do not route vague reuse findings into generic `common`, `core`, `utils`, or
+   `lib` packages.
+ - Do not call the PR ready while baseline quality is red or required blockers
+@@ -231,6 +235,64 @@ Stop Conditions:
+ - Do not include AI Mode evidence as a substitute for Manual Mode.
+ - Do not accept any verb that handles plaintext credentials.
+ 
++## P1D: App-First Manual Installer UX
++
++Status: active next execution lane; implementation proceeds on the dedicated
++P1D branch/worktree while full P1 remains open on the missing Windows proof
++
++Goal: move the next meaningful milestone from proof-harness confidence to
++product confidence by making the Tauri app the primary operator surface and
++having it complete one real dependency repair action.
++
++Scope notes:
++
++- Stage this milestone on Linux first so the next proof loop can run locally.
++- Keep macOS and Windows as the long-term parity target; Linux-first staging
++  does not change the v1 parity doctrine.
++- The first real action is repair-only Bun upgrade for an existing Bun install
++  owned by `installer-dependencies`, not app-local glue code.
++- The required Bun version is an installer-owned config contract. App workflow
++  code must not read repo metadata directly to discover it.
++
++Exit Criteria:
++
++- [ ] `apps/stack-installer` opens as the primary surface for this milestone.
++- [ ] The app detects Bun unhealthy and presents a typed repair action for an
++  existing Bun install.
++- [ ] The action is approval-first and mutates the host only after explicit
++  user approval.
++- [ ] `installer-dependencies` owns the live Bun repair contract and server
++  implementation.
++- [ ] `installer-dependencies-config` or equivalent installer-owned config
++  surface owns the required Bun version contract and its live resolution.
++- [ ] After the action runs, the same validation spine reports Bun as present
++  or returns a typed failure with visible status.
++- [ ] Linux-first proof artifacts show the app-first Bun flow end to end.
++
++Required Outputs:
++
++- `history/outputs/p1d-app-first-manual-installer-ux.md`
++- `ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md`
++
++Required Checks:
++
++- targeted package/app `check`, `test`, and `lint` for the touched installer
++  slices and app
++- `bun run config-sync:check`
++- `cd apps/stack-installer && bun run build`
++- `cd apps/stack-installer/src-tauri && cargo check`
++- Linux-first app-driven Bun repair proof capture and audit
++
++Stop Conditions:
++
++- Do not start P2 before both P1D closes and the real Windows proof audit
++  closes the remaining P1 debt.
++- Do not hide the real dependency mutation in shell scripts owned outside the
++  installer slice boundary.
++- Do not broaden this milestone into first-time Bun bootstrap.
++- Do not add plaintext credential handling or broaden this milestone into AI
++  Mode, MCP runtime, recovery, portability, signing, or distribution.
++
+ ## P2: AI Mode Parity
+ 
+ Status: pending
+diff --git a/initiatives/stack-installer/README.md b/initiatives/stack-installer/README.md
+index eae49d0578..d1f48290cd 100644
+--- a/initiatives/stack-installer/README.md
++++ b/initiatives/stack-installer/README.md
+@@ -23,8 +23,11 @@ package contracts, deterministic manifest snapshot, `@beep/ui` web shell, and
+ a minimal Tauri 2 bridge. The P1 live Manual Mode harness is now implemented:
+ driver packages validate 1Password, provider auth, host commands, and Discord
+ liveness, and the app exposes Tauri and CLI proof capture commands. Fresh-OS
+-macOS and Windows proof artifacts plus a post-proof PR readiness review are
+-still required before P1 can close.
++macOS proof is complete and audited. Windows proof is temporarily waived only
++to let the P1C review/fix loop start. Full P1 still stays open until a real
++Windows proof artifact is returned and audited. P1D is now the active next
++execution lane: the app-first Bun repair milestone proceeds on Linux while the
++Windows proof remains explicit open P1 debt and a hard gate before P2.
+ 
+ ## Read This First
+ 
+@@ -42,9 +45,15 @@ still required before P1 can close.
+ - [history/outputs/p1-completion-audit.md](./history/outputs/p1-completion-audit.md)
+   - current prompt-to-artifact completion audit for the active P1 goal
+ - [history/outputs/p1-pr-readiness-review.md](./history/outputs/p1-pr-readiness-review.md)
+-  - pending post-proof quality review and fix-loop record
++  - post-proof quality review and fix-loop record, including the temporary
++    Windows missing-proof waiver
++- [history/outputs/p1d-app-first-manual-installer-ux.md](./history/outputs/p1d-app-first-manual-installer-ux.md)
++  - next milestone stub: app-first Manual Installer UX with one real repair
++    action
+ - [ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md](./ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md)
+   - user-operated macOS and Windows proof runbook
++- [ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md](./ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md)
++  - next milestone handoff stub for Linux-first app-driven Bun repair
+ - [ops/handoffs/GOAL_P1_MACOS_PROOF.md](./ops/handoffs/GOAL_P1_MACOS_PROOF.md)
+   - short `/goal` indirection target for the buddy MacBook Pro proof run
+ - [research/README.md](./research/README.md) - research index
+@@ -61,12 +70,17 @@ still required before P1 can close.
+   exist, validate 1Password-reference-only inputs, compose slice-owned verb
+   contracts, and render a deterministic manifest preview.
+ - P1 live harness is implemented: app-local proof composition, Tauri command,
+-  CLI artifact capture/audit, and live driver-backed validators exist. P1
+-  remains open until fresh-OS proof on macOS and Windows is recorded and the
+-  PR readiness review/fix loop returns zero required blockers or explicit
+-  waivers.
+-- P2 is pending: AI Mode parity across Claude and Codex with byte-identical
+-  manifest output modulo timestamps.
++  CLI artifact capture/audit, and live driver-backed validators exist. macOS
++  proof is complete. Windows proof is missing but temporarily waived only for
++  sequencing; full P1 remains open until Windows proof is real and audited.
++- P1C is complete: the PR readiness review/fix loop is recorded with the
++  temporary Windows missing-proof waiver and zero remaining required blockers.
++- P1D is the active next execution lane: the app must become the primary
++  operator surface and complete one real machine-changing dependency repair
++  action, starting on Linux with Bun repair for an existing Bun install.
++- P2 is pending after both P1D and the real Windows proof: AI Mode parity
++  across Claude and Codex with byte-identical manifest output modulo
++  timestamps.
+ - P3 is pending: recovery proof from salted-broken-state machines.
+ - P4 is pending: portability proof from exported manifest on Machine A to
+   imported validator suite on Machine B.
+@@ -81,6 +95,8 @@ This initiative is done only when all are true:
+ - [ ] P1 Discord Manual Mode fresh-OS Windows proof is recorded.
+ - [ ] P1 PR readiness review/fix loop is recorded with zero required blockers
+   or explicit waivers.
++- [ ] P1D app-first Manual Installer UX is recorded with a real app-driven
++  dependency repair action.
+ - [ ] P2 AI Mode parity is recorded for Claude and Codex with a
+   byte-identical-manifest gate modulo timestamps.
+ - [ ] P3 recovery scenarios prove repair for wrong Node version, invalid
+diff --git a/initiatives/stack-installer/SPEC.md b/initiatives/stack-installer/SPEC.md
+index 0f22a3ed88..bc45491452 100644
+--- a/initiatives/stack-installer/SPEC.md
++++ b/initiatives/stack-installer/SPEC.md
+@@ -12,6 +12,7 @@
+ 
+ - **Created:** 2026-05-14
+ - **Updated:** 2026-05-14
++- **Updated:** 2026-05-16
+ 
+ ## Purpose
+ 
+@@ -248,12 +249,24 @@ P1 is complete when fresh-OS macOS and Windows Manual Mode runs complete
+ provider auth, 1Password setup, Discord setup, and an end-to-end test message,
+ with screencasts, sanitized manifest, CI green for the vertical verbs, and a
+ post-proof PR readiness review/fix loop with zero required blockers or explicit
+-waivers.
+-Local harness implementation alone is not sufficient to close P1.
++waivers. Local harness implementation alone is not sufficient to close P1.
++
++P1C, the post-proof review/fix loop, may begin after audited macOS proof plus
++either audited Windows proof or an explicit temporary Windows missing-proof
++waiver. That waiver is sequencing-only. It does not count as Windows success
++and does not close P1.
++
++P1D is complete when the Tauri app becomes the primary operator surface for a
++Linux-first proof run and completes one real machine-changing dependency
++repair action through installer-owned code, with proof artifacts and
++validation showing the before and after state. For this milestone, the Bun flow
++is repair-only for an existing Bun install, and the required Bun version is an
++installer-owned config contract rather than an app-local repo metadata read.
+ 
+ P2 is complete when the same flow runs in AI Mode for Claude and Codex, with
+ screencasts, structured action logs, and a byte-identical-manifest gate modulo
+-timestamps between P1 and P2.
++timestamps between P1D and P2. P2 does not start until the real Windows proof
++artifact is returned and audited, closing the remaining P1 debt.
+ 
+ P3 is complete when AI Mode repairs salted broken states for wrong Node
+ version, invalid Discord token, and missing 1Password reference, with
+diff --git a/initiatives/stack-installer/history/outputs/p1d-app-first-manual-installer-ux.md b/initiatives/stack-installer/history/outputs/p1d-app-first-manual-installer-ux.md
+new file mode 100644
+index 0000000000..bc14d3c44c
+--- /dev/null
++++ b/initiatives/stack-installer/history/outputs/p1d-app-first-manual-installer-ux.md
+@@ -0,0 +1,15 @@
++# P1D App-First Manual Installer UX
++
++Status: pending.
++
++This file will record evidence from phase P1D once that phase is executed. See
++[PLAN.md](../../PLAN.md) for exit criteria.
++
++Expected evidence:
++
++- Tauri app opens as the primary operator surface
++- Bun missing or unhealthy state detected in-app
++- approval-first install or repair action
++- real Linux-first Bun mutation driven through installer-owned code
++- before and after validation output
++- screencast or equivalent app-first proof artifacts
+diff --git a/initiatives/stack-installer/ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md b/initiatives/stack-installer/ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md
+new file mode 100644
+index 0000000000..3363d715b0
+--- /dev/null
++++ b/initiatives/stack-installer/ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md
+@@ -0,0 +1,29 @@
++# Handoff P1D - App-First Manual Installer UX
++
++Status: stub.
++
++## Mission
++
++Make the Tauri app the primary operator surface for the next milestone and
++prove one real dependency install or repair action end to end.
++
++The first real action is Linux-first Bun install or repair owned by
++`installer-dependencies`.
++
++## Required Startup
++
++- Read `../../SPEC.md`.
++- Read `../../PLAN.md`.
++- Read `../manifest.json`.
++- Read `../../history/outputs/p1-pr-readiness-review.md`.
++- Read `../../history/outputs/p1-completion-audit.md`.
++
++## Scope Guardrails
++
++- Keep the mutation owned by installer slice contracts and server
++  implementation, not app-local shell glue.
++- Keep the UX approval-first.
++- Keep this milestone Linux-first for proof staging.
++- Do not start P2 AI Mode work from this handoff.
++
++Full prompt to be authored after the P1C loop closes.
+diff --git a/package.json b/package.json
+index d38a6638c3..5f606343aa 100644
+--- a/package.json
++++ b/package.json
+@@ -52,6 +52,7 @@
+     "packages/architecture-lab/ui",
+     "apps/architecture-lab-proof",
+     "packages/drivers/runpod",
++    "packages/drivers/bun-cli",
+     "packages/drivers/onepassword-cli",
+     "packages/drivers/discord",
+     "packages/drivers/ai-provider-cli",
+diff --git a/packages/drivers/bun-cli/AGENTS.md b/packages/drivers/bun-cli/AGENTS.md
+new file mode 100644
+index 0000000000..0c4d6fee84
+--- /dev/null
++++ b/packages/drivers/bun-cli/AGENTS.md
+@@ -0,0 +1,33 @@
++# @beep/bun-cli Agent Guide
++
++## Purpose & Fit
++- Driver-level Bun CLI capability wrapper for product-neutral Bun version probes and upgrade execution.
++
++## Surface Map
++| Surface | Key exports | Notes |
++| --- | --- | --- |
++| entry module | VERSION | package entry point |
++
++## Laws
++- Follow repository laws through command discovery.
++- Run `bun run beep docs laws`.
++- Prefer tersest equivalent helper forms when behavior is unchanged.
++- In `test/` and `dtslint/`, import package source through `@beep/bun-cli` or other `@beep/*` package aliases; keep relative imports for local helpers, fixtures, and snapshots only.
++- Keep package guidance concise and avoid duplicating long policy prose.
++
++## Quick Recipes
++```ts
++import { VERSION } from "@beep/bun-cli"
++```
++
++## Verifications
++- `bunx turbo run test --filter=@beep/bun-cli`
++- `bunx turbo run lint --filter=@beep/bun-cli`
++- `bunx turbo run check --filter=@beep/bun-cli`
++
++## Contributor Checklist
++- [ ] New exports include jsdoc metadata
++- [ ] Tests added or updated for behavior changes
++- [ ] `bun run check` passes
++- [ ] `bun run test` passes
++- [ ] `bun run lint` passes
+diff --git a/packages/drivers/bun-cli/LICENSE b/packages/drivers/bun-cli/LICENSE
+new file mode 100644
+index 0000000000..a22a2da24d
+--- /dev/null
++++ b/packages/drivers/bun-cli/LICENSE
+@@ -0,0 +1 @@
++MIT
+diff --git a/packages/drivers/bun-cli/README.md b/packages/drivers/bun-cli/README.md
+new file mode 100644
+index 0000000000..338ec681ac
+--- /dev/null
++++ b/packages/drivers/bun-cli/README.md
+@@ -0,0 +1,37 @@
++# @beep/bun-cli
++
++Driver-level Bun CLI capability wrapper for product-neutral Bun version probes and upgrade execution.
++
++## Installation
++
++```bash
++bun add @beep/bun-cli
++```
++
++## Usage
++
++```ts
++import { VERSION } from "@beep/bun-cli"
++```
++
++## Development
++
++```bash
++# Build
++bun run build
++
++# Type check
++bun run check
++
++# Test
++bun run test
++
++# Lint
++bun run lint:fix
++```
++
++Tests and dtslint files import package source through `@beep/bun-cli` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
++
++## License
++
++MIT
+diff --git a/packages/drivers/bun-cli/docgen.json b/packages/drivers/bun-cli/docgen.json
+new file mode 100644
+index 0000000000..e82711bc2d
+--- /dev/null
++++ b/packages/drivers/bun-cli/docgen.json
+@@ -0,0 +1,51 @@
++{
++  "$schema": "../../../packages/tooling/tool/docgen/schema.json",
++  "exclude": ["src/internal/**/*.ts"],
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/drivers/bun-cli/src/",
++  "examplesCompilerOptions": {
++    "noEmit": true,
++    "strict": true,
++    "skipLibCheck": true,
++    "moduleResolution": "bundler",
++    "module": "es2022",
++    "target": "es2022",
++    "lib": ["ESNext", "DOM", "DOM.Iterable"],
++    "rewriteRelativeImportExtensions": true,
++    "allowImportingTsExtensions": true,
++    "moduleDetection": "force",
++    "verbatimModuleSyntax": true,
++    "allowJs": false,
++    "erasableSyntaxOnly": true,
++    "declaration": true,
++    "declarationMap": true,
++    "sourceMap": true,
++    "exactOptionalPropertyTypes": true,
++    "noUnusedLocals": true,
++    "noUnusedParameters": true,
++    "noImplicitOverride": true,
++    "noFallthroughCasesInSwitch": true,
++    "stripInternal": false,
++    "noErrorTruncation": true,
++    "types": [],
++    "jsx": "react-jsx",
++    "paths": {
++      "@beep/bun-cli": ["../../../packages/drivers/bun-cli/src/index.ts"],
++      "@beep/bun-cli/*": ["../../../packages/drivers/bun-cli/src/*.ts"],
++      "@beep/identity": [
++        "../../../packages/foundation/modeling/identity/src/index.ts"
++      ],
++      "@beep/identity/*": [
++        "../../../packages/foundation/modeling/identity/src/*.ts"
++      ],
++      "@beep/identity/packages": [
++        "../../../packages/foundation/modeling/identity/src/packages.ts"
++      ],
++      "@beep/schema": [
++        "../../../packages/foundation/modeling/schema/src/index.ts"
++      ],
++      "@beep/schema/*": [
++        "../../../packages/foundation/modeling/schema/src/*.ts"
++      ]
++    }
++  }
++}
+diff --git a/packages/drivers/bun-cli/package.json b/packages/drivers/bun-cli/package.json
+new file mode 100644
+index 0000000000..d5791c6d31
+--- /dev/null
++++ b/packages/drivers/bun-cli/package.json
+@@ -0,0 +1,67 @@
++{
++  "name": "@beep/bun-cli",
++  "version": "0.0.0",
++  "description": "Driver-level Bun CLI capability wrapper for product-neutral version probes and upgrade execution.",
++  "license": "MIT",
++  "private": true,
++  "type": "module",
++  "homepage": "https://github.com/kriegcloud/beep-effect/tree/main/packages/drivers/bun-cli",
++  "repository": {
++    "type": "git",
++    "url": "git@github.com:kriegcloud/beep-effect.git",
++    "directory": "packages/drivers/bun-cli"
++  },
++  "beep": {
++    "family": "drivers"
++  },
++  "scripts": {
++    "audit": "bun run --if-present beep:audit",
++    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
++    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
++    "beep:build": "tsc -b tsconfig.json && bun run babel",
++    "beep:check": "tsgo -b tsconfig.json",
++    "beep:lint": "biome check .",
++    "beep:lint:fix": "biome check . --write",
++    "beep:test": "bunx --bun vitest run --passWithNoTests",
++    "build": "bun run beep:build",
++    "check": "bun run beep:check",
++    "coverage": "bunx --bun vitest run --coverage --passWithNoTests",
++    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
++    "lint": "bun run beep:lint",
++    "lint:fix": "bun run beep:lint:fix",
++    "test": "bun run beep:test"
++  },
++  "exports": {
++    ".": "./src/index.ts",
++    "./*": "./src/*.ts",
++    "./internal/*": null,
++    "./package.json": "./package.json"
++  },
++  "files": [
++    "src/**/*.ts",
++    "dist/**/*.js",
++    "dist/**/*.js.map",
++    "dist/**/*.d.ts",
++    "dist/**/*.d.ts.map"
++  ],
++  "sideEffects": [],
++  "publishConfig": {
++    "access": "public",
++    "provenance": true,
++    "exports": {
++      ".": "./dist/index.ts",
++      "./*": "./dist/*.js",
++      "./internal/*": null,
++      "./package.json": "./package.json"
++    }
++  },
++  "dependencies": {
++    "@beep/identity": "workspace:^",
++    "@beep/schema": "workspace:^",
++    "effect": "catalog:"
++  },
++  "devDependencies": {
++    "@effect/vitest": "catalog:",
++    "@types/node": "catalog:"
++  }
++}
+diff --git a/packages/drivers/bun-cli/src/BunCli.errors.ts b/packages/drivers/bun-cli/src/BunCli.errors.ts
+new file mode 100644
+index 0000000000..6d808dde66
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/BunCli.errors.ts
+@@ -0,0 +1,77 @@
++/**
++ * Typed errors for the Bun CLI driver.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { TaggedErrorClass } from "@beep/schema";
++import { dual } from "effect/Function";
++import * as O from "effect/Option";
++import * as S from "effect/Schema";
++
++const $BunCliId = $PackagesId.compose("bun-cli").$BunCliId;
++const $I = $BunCliId.create("BunCli.errors");
++
++/**
++ * Options captured while normalizing unknown Bun CLI failures.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunCliErrorOptions extends S.Class<BunCliErrorOptions>($I`BunCliErrorOptions`)(
++  {
++    cause: S.optionalKey(S.DefectWithStack),
++    command: S.optionalKey(S.String),
++    exitCode: S.optionalKey(S.Number),
++    stderr: S.optionalKey(S.String),
++    stdout: S.optionalKey(S.String),
++  },
++  $I.annote("BunCliErrorOptions", {
++    description: "Optional process context captured while normalizing a Bun CLI failure.",
++  })
++) {}
++
++/**
++ * Technical failure raised by the Bun CLI driver boundary.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunCliError extends TaggedErrorClass<BunCliError>($I`BunCliError`)(
++  "BunCliError",
++  {
++    cause: S.optionalKey(S.DefectWithStack),
++    command: S.optionalKey(S.String),
++    exitCode: S.optionalKey(S.Number),
++    message: S.String,
++    operation: S.String,
++    stderr: S.optionalKey(S.String),
++    stdout: S.optionalKey(S.String),
++  },
++  $I.annote("BunCliError", {
++    description: "Technical failure emitted by the Bun CLI driver.",
++  })
++) {
++  /**
++   * Normalize a process or platform failure into a driver error.
++   *
++   * @category errors
++   * @since 0.0.0
++   */
++  static readonly fromUnknown: {
++    (operation: string, message: string, options: BunCliErrorOptions): BunCliError;
++    (message: string, options: BunCliErrorOptions): (operation: string) => BunCliError;
++  } = dual(3, (operation: string, message: string, options: BunCliErrorOptions): BunCliError => {
++    const { cause, ...context } = options;
++    const normalizedCause = S.is(S.DefectWithStack)(cause) ? O.some(cause) : O.none();
++
++    return new BunCliError({
++      ...context,
++      message,
++      operation,
++      ...(O.isSome(normalizedCause) ? { cause: normalizedCause.value } : {}),
++    });
++  });
++}
+diff --git a/packages/drivers/bun-cli/src/BunCli.models.ts b/packages/drivers/bun-cli/src/BunCli.models.ts
+new file mode 100644
+index 0000000000..9fec3c3879
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/BunCli.models.ts
+@@ -0,0 +1,67 @@
++/**
++ * Bun CLI driver models.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { LiteralKit } from "@beep/schema";
++import * as S from "effect/Schema";
++
++const $BunCliId = $PackagesId.compose("bun-cli").$BunCliId;
++const $I = $BunCliId.create("BunCli.models");
++
++/**
++ * Bun runtime presence states reported by the driver.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const BunCliProbeStatus = LiteralKit(["present", "missing"] as const).pipe(
++  $I.annoteSchema("BunCliProbeStatus", {
++    description: "Whether the Bun command appears to be available on the host.",
++  })
++);
++
++/**
++ * Runtime type for {@link BunCliProbeStatus}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type BunCliProbeStatus = typeof BunCliProbeStatus.Type;
++
++/**
++ * Bun version probe result.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class BunCliProbe extends S.Class<BunCliProbe>($I`BunCliProbe`)(
++  {
++    command: S.NonEmptyString,
++    status: BunCliProbeStatus,
++    version: S.OptionFromOptionalKey(S.NonEmptyString),
++  },
++  $I.annote("BunCliProbe", {
++    description: "Product-neutral Bun version probe result.",
++  })
++) {}
++
++/**
++ * Captured process output from a Bun CLI command.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class BunCliProcessResult extends S.Class<BunCliProcessResult>($I`BunCliProcessResult`)(
++  {
++    exitCode: S.Number,
++    stderr: S.String,
++    stdout: S.String,
++  },
++  $I.annote("BunCliProcessResult", {
++    description: "Process output captured by a Bun CLI command.",
++  })
++) {}
+diff --git a/packages/drivers/bun-cli/src/BunCli.service.ts b/packages/drivers/bun-cli/src/BunCli.service.ts
+new file mode 100644
+index 0000000000..756ee1b2da
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/BunCli.service.ts
+@@ -0,0 +1,159 @@
++/**
++ * Effect service for the native Bun CLI.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { Context, Effect, Layer, Stream } from "effect";
++import * as A from "effect/Array";
++import * as O from "effect/Option";
++import * as Str from "effect/String";
++import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
++import { BunCliError } from "./BunCli.errors.ts";
++import { BunCliProbe, BunCliProcessResult } from "./BunCli.models.ts";
++
++const $BunCliId = $PackagesId.compose("bun-cli").$BunCliId;
++const $I = $BunCliId.create("BunCli.service");
++
++const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
++  stream.pipe(
++    Stream.decodeText(),
++    Stream.runFold(
++      () => "",
++      (acc, chunk) => `${acc}${chunk}`
++    )
++  );
++
++/**
++ * Product-neutral process runner used by the Bun CLI driver.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++export type BunCliRunner = (
++  command: string,
++  args: ReadonlyArray<string>
++) => Effect.Effect<BunCliProcessResult, BunCliError>;
++
++/**
++ * Runtime shape exposed by the Bun CLI driver service.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++interface BunCliShape {
++  readonly probe: () => Effect.Effect<BunCliProbe>;
++  readonly upgrade: () => Effect.Effect<void, BunCliError>;
++}
++
++const runNative = (
++  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
++  commandPath: string,
++  args: ReadonlyArray<string>
++): Effect.Effect<BunCliProcessResult, BunCliError> => {
++  const command = ChildProcess.make(commandPath, A.fromIterable(args), {
++    stdin: "ignore",
++    stderr: "pipe",
++    stdout: "pipe",
++  });
++
++  return Effect.scoped(
++    Effect.gen(function* () {
++      const handle = yield* spawner.spawn(command);
++      const [stdout, stderr, exitCode] = yield* Effect.all(
++        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
++        { concurrency: "unbounded" }
++      );
++
++      return new BunCliProcessResult({ exitCode, stderr, stdout });
++    })
++  ).pipe(
++    Effect.mapError((cause) =>
++      BunCliError.fromUnknown("run", "Failed to execute the Bun CLI.", { cause, command: commandPath })
++    )
++  );
++};
++
++const makeService = (commandPath: string, runner: BunCliRunner): BunCliShape => {
++  const probe = Effect.fn("BunCli.probe")(function* () {
++    const result = yield* runner(commandPath, ["--version"]).pipe(
++      Effect.catch(() =>
++        Effect.succeed(
++          new BunCliProcessResult({
++            exitCode: 1,
++            stderr: "",
++            stdout: "",
++          })
++        )
++      )
++    );
++
++    if (result.exitCode !== 0) {
++      return new BunCliProbe({
++        command: commandPath,
++        status: "missing",
++        version: O.none(),
++      });
++    }
++
++    const version = Str.trim(result.stdout);
++    return new BunCliProbe({
++      command: commandPath,
++      status: Str.isNonEmpty(version) ? "present" : "missing",
++      version: Str.isNonEmpty(version) ? O.some(version) : O.none(),
++    });
++  });
++
++  const upgrade = Effect.fn("BunCli.upgrade")(function* () {
++    const result = yield* runner(commandPath, ["upgrade"]);
++    if (result.exitCode !== 0) {
++      return yield* new BunCliError({
++        command: commandPath,
++        exitCode: result.exitCode,
++        message: "Bun upgrade failed.",
++        operation: "upgrade",
++        stderr: Str.trim(result.stderr),
++        stdout: Str.trim(result.stdout),
++      });
++    }
++  });
++
++  return {
++    probe,
++    upgrade,
++  };
++};
++
++/**
++ * Effect service for native `bun` execution.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++export class BunCli extends Context.Service<BunCli, BunCliShape>()($I`BunCli`) {
++  /**
++   * Build a live Bun CLI layer.
++   *
++   * @category layers
++   * @since 0.0.0
++   */
++  static readonly makeLayer = (commandPath = "bun"): Layer.Layer<BunCli, never, ChildProcessSpawner.ChildProcessSpawner> =>
++    Layer.effect(
++      BunCli,
++      Effect.gen(function* () {
++        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
++        return BunCli.of(makeService(commandPath, (command, args) => runNative(spawner, command, args)));
++      })
++    );
++
++  /**
++   * Build a deterministic test layer from an injected command runner.
++   *
++   * @category layers
++   * @since 0.0.0
++   */
++  static readonly makeLayerFromRunner = (runner: BunCliRunner, commandPath = "bun"): Layer.Layer<BunCli> =>
++    Layer.succeed(BunCli, BunCli.of(makeService(commandPath, runner)));
++}
+diff --git a/packages/drivers/bun-cli/src/index.ts b/packages/drivers/bun-cli/src/index.ts
+new file mode 100644
+index 0000000000..da8f612ba4
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/index.ts
+@@ -0,0 +1,30 @@
++/**
++ * Native Bun CLI driver package.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++/**
++ * Public Bun CLI driver error exports.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export * from "./BunCli.errors.ts";
++
++/**
++ * Public Bun CLI driver model exports.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export * from "./BunCli.models.ts";
++
++/**
++ * Public Bun CLI driver service exports.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++export * from "./BunCli.service.ts";
+diff --git a/packages/drivers/bun-cli/test/BunCli.service.test.ts b/packages/drivers/bun-cli/test/BunCli.service.test.ts
+new file mode 100644
+index 0000000000..855f9a3a3f
+--- /dev/null
++++ b/packages/drivers/bun-cli/test/BunCli.service.test.ts
+@@ -0,0 +1,68 @@
++import { BunCli, BunCliError, BunCliProcessResult } from "@beep/bun-cli";
++import { describe, expect, layer } from "@effect/vitest";
++import { Effect } from "effect";
++
++const successRunner = (command: string, args: ReadonlyArray<string>) =>
++  Effect.succeed(
++    new BunCliProcessResult({
++      exitCode: 0,
++      stderr: "",
++      stdout: args[0] === "--version" ? "1.3.11\n" : "upgraded\n",
++    })
++  );
++
++const missingRunner = () =>
++  Effect.fail(
++    BunCliError.fromUnknown("run", "Failed to execute the Bun CLI.", {
++      command: "bun",
++    })
++  );
++
++const failedUpgradeRunner = (command: string, args: ReadonlyArray<string>) =>
++  Effect.succeed(
++    new BunCliProcessResult({
++      exitCode: args[0] === "upgrade" ? 1 : 0,
++      stderr: args[0] === "upgrade" ? "network unavailable" : "",
++      stdout: args[0] === "--version" ? "1.3.11\n" : "",
++    })
++  );
++
++describe("@beep/bun-cli", () => {
++  layer(BunCli.makeLayerFromRunner(successRunner))((it) => {
++    it.effect("probes Bun version and upgrades successfully", () =>
++      Effect.gen(function* () {
++        const bunCli = yield* BunCli;
++        const probe = yield* bunCli.probe();
++
++        expect(probe.status).toBe("present");
++        expect(probe.version._tag).toBe("Some");
++        yield* bunCli.upgrade();
++      })
++    );
++  });
++
++  layer(BunCli.makeLayerFromRunner(missingRunner))((it) => {
++    it.effect("treats a missing Bun command as a missing probe result", () =>
++      Effect.gen(function* () {
++        const bunCli = yield* BunCli;
++        const probe = yield* bunCli.probe();
++
++        expect(probe.status).toBe("missing");
++        expect(probe.version._tag).toBe("None");
++      })
++    );
++  });
++
++  layer(BunCli.makeLayerFromRunner(failedUpgradeRunner))((it) => {
++    it.effect("returns typed driver errors for failed upgrades", () =>
++      Effect.gen(function* () {
++        const bunCli = yield* BunCli;
++        const error = yield* bunCli.upgrade().pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunCliError);
++        expect(error.operation).toBe("upgrade");
++        expect(error.stderr).toBe("network unavailable");
++      })
++    );
++  });
++});
+diff --git a/packages/drivers/bun-cli/tsconfig.json b/packages/drivers/bun-cli/tsconfig.json
+new file mode 100644
+index 0000000000..fe8ed5469d
+--- /dev/null
++++ b/packages/drivers/bun-cli/tsconfig.json
+@@ -0,0 +1,18 @@
++{
++  "$schema": "http://json.schemastore.org/tsconfig",
++  "extends": "../../../tsconfig.base.json",
++  "include": ["src"],
++  "compilerOptions": {
++    "types": ["node"],
++    "outDir": "dist",
++    "rootDir": "src"
++  },
++  "references": [
++    {
++      "path": "../../foundation/modeling/identity/tsconfig.json"
++    },
++    {
++      "path": "../../foundation/modeling/schema/tsconfig.json"
++    }
++  ]
++}
+diff --git a/packages/drivers/bun-cli/vitest.config.ts b/packages/drivers/bun-cli/vitest.config.ts
+new file mode 100644
+index 0000000000..864bd41e7b
+--- /dev/null
++++ b/packages/drivers/bun-cli/vitest.config.ts
+@@ -0,0 +1,11 @@
++import { defineConfig, mergeConfig } from "vitest/config";
++import shared from "../../../vitest.shared.ts";
++
++export default mergeConfig(
++  shared,
++  defineConfig({
++    test: {
++      // Package-specific overrides
++    },
++  })
++);
+diff --git a/packages/installer-dependencies/config/AGENTS.md b/packages/installer-dependencies/config/AGENTS.md
+new file mode 100644
+index 0000000000..c654ccb545
+--- /dev/null
++++ b/packages/installer-dependencies/config/AGENTS.md
+@@ -0,0 +1,25 @@
++# @beep/installer-dependencies-config Agent Guide
++
++## Purpose & Fit
++
++- Installer-owned typed configuration contracts for the dependency slice.
++- Runtime-only resolution helpers for the Bun repair milestone.
++
++## Surface Map
++
++| Surface | Key exports | Notes |
++| --- | --- | --- |
++| entry module | config exports | Re-export of canonical config surfaces. |
++| `/server` | `BunRuntimeServerConfig` | Server-only config contract. |
++| `/layer` | `InstallerDependenciesConfig`, `makeInstallerDependenciesConfigLayer` | Runtime-only resolution helpers. |
++| `/test` | test layer helpers | Deterministic fixtures for tests. |
++
++## Add Here
++
++- Typed config schemas and services owned by installer-dependencies.
++- Runtime-only layer helpers that resolve those contracts.
++
++## Keep Out
++
++- Repair actions, Bun CLI process execution, or UI workflow logic.
++- Broad repo constants that are not installer configuration meaning.
+diff --git a/packages/installer-dependencies/config/LICENSE b/packages/installer-dependencies/config/LICENSE
+new file mode 100644
+index 0000000000..a22a2da24d
+--- /dev/null
++++ b/packages/installer-dependencies/config/LICENSE
+@@ -0,0 +1 @@
++MIT
+diff --git a/packages/installer-dependencies/config/README.md b/packages/installer-dependencies/config/README.md
+new file mode 100644
+index 0000000000..c3ef87b2f9
+--- /dev/null
++++ b/packages/installer-dependencies/config/README.md
+@@ -0,0 +1,33 @@
++# @beep/installer-dependencies-config
++
++Typed configuration contracts for the installer-dependencies slice.
++
++This package owns the required Bun-version contract for the P1D app-first
++repair milestone. It provides the typed server contract plus runtime-only layer
++helpers that resolve the live value from repo metadata.
++
++## Belongs Here
++
++- Installer-owned configuration contracts for dependency validation and repair.
++- Server/runtime-only config resolution helpers for those contracts.
++- Test config layers for installer dependency workflows.
++
++## Does Not Belong Here
++
++- Product behavior or repair workflows.
++- Driver process execution.
++- App-local UI state or Tauri bridge code.
++- Generic repo metadata helpers outside installer configuration meaning.
++
++## Development
++
++```bash
++bun run check
++bun run test
++bun run docgen
++bun run lint
++```
++
++## License
++
++MIT
+diff --git a/packages/installer-dependencies/config/docgen.json b/packages/installer-dependencies/config/docgen.json
+new file mode 100644
+index 0000000000..bb444486e0
+--- /dev/null
++++ b/packages/installer-dependencies/config/docgen.json
+@@ -0,0 +1,64 @@
++{
++  "$schema": "../../../packages/tooling/tool/docgen/schema.json",
++  "exclude": ["src/internal/**/*.ts"],
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/installer-dependencies/config/src/",
++  "examplesCompilerOptions": {
++    "noEmit": true,
++    "strict": true,
++    "skipLibCheck": true,
++    "moduleResolution": "bundler",
++    "module": "es2022",
++    "target": "es2022",
++    "lib": ["ESNext", "DOM", "DOM.Iterable"],
++    "rewriteRelativeImportExtensions": true,
++    "allowImportingTsExtensions": true,
++    "moduleDetection": "force",
++    "verbatimModuleSyntax": true,
++    "allowJs": false,
++    "erasableSyntaxOnly": true,
++    "declaration": true,
++    "declarationMap": true,
++    "sourceMap": true,
++    "exactOptionalPropertyTypes": true,
++    "noUnusedLocals": true,
++    "noUnusedParameters": true,
++    "noImplicitOverride": true,
++    "noFallthroughCasesInSwitch": true,
++    "stripInternal": false,
++    "noErrorTruncation": true,
++    "types": [],
++    "jsx": "react-jsx",
++    "paths": {
++      "@beep/installer-dependencies-config": [
++        "../../../packages/installer-dependencies/config/src/index.ts"
++      ],
++      "@beep/installer-dependencies-config/server": [
++        "../../../packages/installer-dependencies/config/src/server.ts"
++      ],
++      "@beep/installer-dependencies-config/layer": [
++        "../../../packages/installer-dependencies/config/src/layer.ts"
++      ],
++      "@beep/installer-dependencies-config/test": [
++        "../../../packages/installer-dependencies/config/src/test.ts"
++      ],
++      "@beep/installer-dependencies-config/aggregates/BunRuntime": [
++        "../../../packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts"
++      ],
++      "@beep/identity": [
++        "../../../packages/foundation/modeling/identity/src/index.ts"
++      ],
++      "@beep/identity/*": [
++        "../../../packages/foundation/modeling/identity/src/*.ts"
++      ],
++      "@beep/identity/packages": [
++        "../../../packages/foundation/modeling/identity/src/packages.ts"
++      ],
++      "@beep/schema": [
++        "../../../packages/foundation/modeling/schema/src/index.ts"
++      ],
++      "@beep/schema/*": [
++        "../../../packages/foundation/modeling/schema/src/*.ts"
++      ]
++    }
++  }
++}
+diff --git a/packages/installer-dependencies/config/package.json b/packages/installer-dependencies/config/package.json
+new file mode 100644
+index 0000000000..e5d8ef1304
+--- /dev/null
++++ b/packages/installer-dependencies/config/package.json
+@@ -0,0 +1,70 @@
++{
++  "name": "@beep/installer-dependencies-config",
++  "version": "0.0.0",
++  "description": "installer dependencies typed configuration package for the Bun repair milestone.",
++  "license": "MIT",
++  "private": true,
++  "type": "module",
++  "homepage": "https://github.com/kriegcloud/beep-effect/tree/main/packages/installer-dependencies/config",
++  "repository": {
++    "type": "git",
++    "url": "git@github.com:kriegcloud/beep-effect.git",
++    "directory": "packages/installer-dependencies/config"
++  },
++  "scripts": {
++    "audit": "bun run --if-present beep:audit",
++    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
++    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
++    "beep:build": "tsc -b tsconfig.json && bun run babel",
++    "beep:check": "tsgo -b tsconfig.json",
++    "beep:lint": "biome check .",
++    "beep:lint:fix": "biome check . --write",
++    "beep:test": "bunx --bun vitest run --passWithNoTests",
++    "build": "bun run beep:build",
++    "check": "bun run beep:check",
++    "coverage": "bunx --bun vitest run --coverage --passWithNoTests",
++    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
++    "lint": "bun run beep:lint",
++    "lint:fix": "bun run beep:lint:fix",
++    "test": "bun run beep:test"
++  },
++  "exports": {
++    ".": "./src/index.ts",
++    "./server": "./src/server.ts",
++    "./layer": "./src/layer.ts",
++    "./test": "./src/test.ts",
++    "./aggregates/BunRuntime": "./src/aggregates/BunRuntime/index.ts",
++    "./internal/*": null,
++    "./package.json": "./package.json"
++  },
++  "files": [
++    "src/**/*.ts",
++    "dist/**/*.js",
++    "dist/**/*.js.map",
++    "dist/**/*.d.ts",
++    "dist/**/*.d.ts.map"
++  ],
++  "sideEffects": [],
++  "publishConfig": {
++    "access": "public",
++    "provenance": true,
++    "exports": {
++      ".": "./dist/index.js",
++      "./server": "./dist/server.js",
++      "./layer": "./dist/layer.js",
++      "./test": "./dist/test.js",
++      "./aggregates/BunRuntime": "./dist/aggregates/BunRuntime/index.js",
++      "./internal/*": null,
++      "./package.json": "./package.json"
++    }
++  },
++  "dependencies": {
++    "@beep/identity": "workspace:^",
++    "@beep/schema": "workspace:^",
++    "effect": "catalog:"
++  },
++  "devDependencies": {
++    "@effect/vitest": "catalog:",
++    "@types/node": "catalog:"
++  }
++}
+diff --git a/packages/installer-dependencies/config/src/aggregates/BunRuntime/BunRuntime.config.ts b/packages/installer-dependencies/config/src/aggregates/BunRuntime/BunRuntime.config.ts
+new file mode 100644
+index 0000000000..fa080d8acd
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/aggregates/BunRuntime/BunRuntime.config.ts
+@@ -0,0 +1,28 @@
++/**
++ * Bun runtime installer configuration contracts.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import * as S from "effect/Schema";
++
++const $InstallerDependenciesConfigId =
++  $PackagesId.compose("installer-dependencies-config").$InstallerDependenciesConfigId;
++const $I = $InstallerDependenciesConfigId.create("BunRuntime.config");
++
++/**
++ * Server-only Bun runtime configuration contract.
++ *
++ * @category configuration
++ * @since 0.0.0
++ */
++export class BunRuntimeServerConfig extends S.Class<BunRuntimeServerConfig>($I`BunRuntimeServerConfig`)(
++  {
++    requiredVersion: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeServerConfig", {
++    description: "Installer-owned Bun runtime requirement for the app-first repair flow.",
++  })
++) {}
+diff --git a/packages/installer-dependencies/config/src/aggregates/BunRuntime/BunRuntime.layer.ts b/packages/installer-dependencies/config/src/aggregates/BunRuntime/BunRuntime.layer.ts
+new file mode 100644
+index 0000000000..29bd8ad3bd
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/aggregates/BunRuntime/BunRuntime.layer.ts
+@@ -0,0 +1,165 @@
++/**
++ * Bun runtime installer configuration layers.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { decodeJsonString } from "@beep/schema/Json";
++import { TaggedErrorClass } from "@beep/schema";
++import { Context, Effect, FileSystem, Layer, Path } from "effect";
++import * as S from "effect/Schema";
++import { BunRuntimeServerConfig } from "./BunRuntime.config.js";
++
++const $InstallerDependenciesConfigId =
++  $PackagesId.compose("installer-dependencies-config").$InstallerDependenciesConfigId;
++const $I = $InstallerDependenciesConfigId.create("BunRuntime.layer");
++
++const decodePackageJson = S.decodeUnknownEffect(
++  S.Struct({
++    packageManager: S.optionalKey(S.String),
++  })
++);
++
++/**
++ * Resolved installer-dependencies configuration value.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export class InstallerDependenciesConfigValue extends S.Class<InstallerDependenciesConfigValue>(
++  $I`InstallerDependenciesConfigValue`
++)(
++  {
++    bunRuntime: BunRuntimeServerConfig,
++  },
++  $I.annote("InstallerDependenciesConfigValue", {
++    description: "Resolved installer-dependencies configuration for runtime repair flows.",
++  })
++) {}
++
++/**
++ * Installer-dependencies configuration service contract.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export type InstallerDependenciesConfigShape = InstallerDependenciesConfigValue;
++
++/**
++ * Runtime failure while resolving installer-dependencies configuration.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class InstallerDependenciesConfigResolutionError extends TaggedErrorClass<InstallerDependenciesConfigResolutionError>(
++  $I`InstallerDependenciesConfigResolutionError`
++)(
++  "InstallerDependenciesConfigResolutionError",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("InstallerDependenciesConfigResolutionError", {
++    description: "Runtime failure while resolving installer-dependencies configuration.",
++  })
++) {}
++
++/**
++ * Installer-dependencies configuration service.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export class InstallerDependenciesConfig extends Context.Service<
++  InstallerDependenciesConfig,
++  InstallerDependenciesConfigShape
++>()($I`InstallerDependenciesConfig`) {}
++
++const parseRequiredVersionFromRepo = Effect.fn("InstallerDependenciesConfig.parseRequiredVersionFromRepo")(function* (repoRoot: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const bunVersionPath = path.join(repoRoot, ".bun-version");
++  const packageJsonPath = path.join(repoRoot, "package.json");
++
++  const bunVersion = yield* fs.readFileString(bunVersionPath).pipe(
++    Effect.map((content) => content.trim()),
++    Effect.catch(() => Effect.succeed(""))
++  );
++
++  if (bunVersion.length > 0) {
++    return bunVersion;
++  }
++
++  const packageJsonContent = yield* fs.readFileString(packageJsonPath).pipe(
++    Effect.mapError(
++      () =>
++      new InstallerDependenciesConfigResolutionError({
++        reason: "Unable to read package.json while resolving the required Bun version.",
++      })
++    )
++  );
++
++  const packageJson = yield* decodeJsonString(packageJsonContent).pipe(
++    Effect.mapError(
++      () =>
++        new InstallerDependenciesConfigResolutionError({
++          reason: "Unable to parse package.json while resolving the required Bun version.",
++        })
++    )
++  );
++
++  const decoded = yield* decodePackageJson(packageJson).pipe(
++    Effect.mapError(
++      () =>
++        new InstallerDependenciesConfigResolutionError({
++          reason: "package.json does not expose a valid Bun packageManager field.",
++        })
++    )
++  );
++
++  const packageManager = decoded.packageManager ?? "";
++  const match = /^bun@(.+)$/.exec(packageManager);
++
++  if (match?.[1] !== undefined && match[1].length > 0) {
++    return match[1];
++  }
++
++  return yield* new InstallerDependenciesConfigResolutionError({
++    reason: "Unable to resolve the required Bun version from repo metadata.",
++  });
++});
++
++const readInstallerDependenciesConfig = Effect.fn("InstallerDependenciesConfig.read")(function* (repoRoot: string) {
++  const requiredVersion = yield* parseRequiredVersionFromRepo(repoRoot);
++
++  return new InstallerDependenciesConfigValue({
++    bunRuntime: new BunRuntimeServerConfig({ requiredVersion }),
++  });
++});
++
++/**
++ * Build the live installer-dependencies configuration layer from repo metadata.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export const makeInstallerDependenciesConfigLayer = (repoRoot: string): Layer.Layer<
++  InstallerDependenciesConfig,
++  InstallerDependenciesConfigResolutionError,
++  FileSystem.FileSystem | Path.Path
++> => Layer.effect(InstallerDependenciesConfig, readInstallerDependenciesConfig(repoRoot));
++
++/**
++ * Build a deterministic test configuration layer.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export const makeInstallerDependenciesConfigTestLayer = (requiredVersion: string): Layer.Layer<InstallerDependenciesConfig> =>
++  Layer.succeed(
++    InstallerDependenciesConfig,
++    new InstallerDependenciesConfigValue({
++      bunRuntime: new BunRuntimeServerConfig({ requiredVersion }),
++    })
++  );
+diff --git a/packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts b/packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts
+new file mode 100644
+index 0000000000..5f3b489145
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts
+@@ -0,0 +1,9 @@
++/**
++ * Bun runtime installer configuration exports.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++export * from "./BunRuntime.config.js";
++export * from "./BunRuntime.layer.js";
+diff --git a/packages/installer-dependencies/config/src/index.ts b/packages/installer-dependencies/config/src/index.ts
+new file mode 100644
+index 0000000000..896ca7099b
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/index.ts
+@@ -0,0 +1,10 @@
++/**
++ * installer-dependencies config exports.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++export * from "./server.js";
++export * from "./layer.js";
++export * from "./test.js";
+diff --git a/packages/installer-dependencies/config/src/layer.ts b/packages/installer-dependencies/config/src/layer.ts
+new file mode 100644
+index 0000000000..6059db069d
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/layer.ts
+@@ -0,0 +1,15 @@
++/**
++ * Installer-dependencies configuration layer exports.
++ *
++ * @packageDocumentation
++ * @category layers
++ * @since 0.0.0
++ */
++
++export {
++  InstallerDependenciesConfig,
++  InstallerDependenciesConfigResolutionError,
++  InstallerDependenciesConfigValue,
++  type InstallerDependenciesConfigShape,
++  makeInstallerDependenciesConfigLayer,
++} from "./aggregates/BunRuntime/index.js";
+diff --git a/packages/installer-dependencies/config/src/server.ts b/packages/installer-dependencies/config/src/server.ts
+new file mode 100644
+index 0000000000..5096f48cc1
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/server.ts
+@@ -0,0 +1,9 @@
++/**
++ * Server installer-dependencies configuration exports.
++ *
++ * @packageDocumentation
++ * @category configuration
++ * @since 0.0.0
++ */
++
++export { BunRuntimeServerConfig } from "./aggregates/BunRuntime/index.js";
+diff --git a/packages/installer-dependencies/config/src/test.ts b/packages/installer-dependencies/config/src/test.ts
+new file mode 100644
+index 0000000000..f21e4ce38b
+--- /dev/null
++++ b/packages/installer-dependencies/config/src/test.ts
+@@ -0,0 +1,9 @@
++/**
++ * Installer-dependencies test configuration exports.
++ *
++ * @packageDocumentation
++ * @category layers
++ * @since 0.0.0
++ */
++
++export { makeInstallerDependenciesConfigTestLayer } from "./aggregates/BunRuntime/index.js";
+diff --git a/packages/installer-dependencies/config/test/BunRuntimeConfig.test.ts b/packages/installer-dependencies/config/test/BunRuntimeConfig.test.ts
+new file mode 100644
+index 0000000000..4c50daca58
+--- /dev/null
++++ b/packages/installer-dependencies/config/test/BunRuntimeConfig.test.ts
+@@ -0,0 +1,57 @@
++import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
++import * as NodePath from "@effect/platform-node/NodePath";
++import { encodeJsonString } from "@beep/schema/Json";
++import { describe, expect, it } from "@effect/vitest";
++import { Effect, FileSystem, Layer, Path } from "effect";
++import { InstallerDependenciesConfig, makeInstallerDependenciesConfigLayer } from "@beep/installer-dependencies-config/layer";
++
++const TestLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
++
++const makeTempRepo = Effect.fnUntraced(function* () {
++  const fs = yield* FileSystem.FileSystem;
++  return yield* fs.makeTempDirectoryScoped({ prefix: "installer-dependencies-config-" });
++});
++
++const writeJsonFile = Effect.fnUntraced(function* (filePath: string, value: unknown) {
++  const fs = yield* FileSystem.FileSystem;
++  const encoded = yield* encodeJsonString(value);
++  yield* fs.writeFileString(filePath, `${encoded}\n`);
++});
++
++describe("@beep/installer-dependencies-config", () => {
++  it.effect(
++    "prefers .bun-version when present",
++    Effect.fnUntraced(function* () {
++      yield* Effect.gen(function* () {
++        const path = yield* Path.Path;
++        const fs = yield* FileSystem.FileSystem;
++        const repoRoot = yield* makeTempRepo();
++        yield* fs.writeFileString(path.join(repoRoot, ".bun-version"), "1.3.14\n");
++        yield* writeJsonFile(path.join(repoRoot, "package.json"), { packageManager: "bun@1.3.13" });
++
++        const config = yield* InstallerDependenciesConfig.pipe(
++          Effect.provide(makeInstallerDependenciesConfigLayer(repoRoot))
++        );
++
++        expect(config.bunRuntime.requiredVersion).toBe("1.3.14");
++      }).pipe(Effect.provide(TestLayer));
++    })
++  );
++
++  it.effect(
++    "falls back to packageManager when .bun-version is absent",
++    Effect.fnUntraced(function* () {
++      yield* Effect.gen(function* () {
++        const path = yield* Path.Path;
++        const repoRoot = yield* makeTempRepo();
++        yield* writeJsonFile(path.join(repoRoot, "package.json"), { packageManager: "bun@1.3.14" });
++
++        const config = yield* InstallerDependenciesConfig.pipe(
++          Effect.provide(makeInstallerDependenciesConfigLayer(repoRoot))
++        );
++
++        expect(config.bunRuntime.requiredVersion).toBe("1.3.14");
++      }).pipe(Effect.provide(TestLayer));
++    })
++  );
++});
+diff --git a/packages/installer-dependencies/config/tsconfig.json b/packages/installer-dependencies/config/tsconfig.json
+new file mode 100644
+index 0000000000..cd383f3630
+--- /dev/null
++++ b/packages/installer-dependencies/config/tsconfig.json
+@@ -0,0 +1,18 @@
++{
++  "$schema": "http://json.schemastore.org/tsconfig",
++  "extends": "../../../tsconfig.base.json",
++  "include": ["src", "test"],
++  "compilerOptions": {
++    "types": ["node"],
++    "outDir": "dist",
++    "rootDir": "."
++  },
++  "references": [
++    {
++      "path": "../../foundation/modeling/identity/tsconfig.json"
++    },
++    {
++      "path": "../../foundation/modeling/schema/tsconfig.json"
++    }
++  ]
++}
+diff --git a/packages/installer-dependencies/config/vitest.config.ts b/packages/installer-dependencies/config/vitest.config.ts
+new file mode 100644
+index 0000000000..864bd41e7b
+--- /dev/null
++++ b/packages/installer-dependencies/config/vitest.config.ts
+@@ -0,0 +1,11 @@
++import { defineConfig, mergeConfig } from "vitest/config";
++import shared from "../../../vitest.shared.ts";
++
++export default mergeConfig(
++  shared,
++  defineConfig({
++    test: {
++      // Package-specific overrides
++    },
++  })
++);
+diff --git a/packages/installer-dependencies/server/docgen.json b/packages/installer-dependencies/server/docgen.json
+index 5f6be87285..ae11c5e647 100644
+--- a/packages/installer-dependencies/server/docgen.json
++++ b/packages/installer-dependencies/server/docgen.json
+@@ -38,6 +38,8 @@
+       "@beep/installer-dependencies-server/test": [
+         "../../../packages/installer-dependencies/server/src/test.ts"
+       ],
++      "@beep/bun-cli": ["../../../packages/drivers/bun-cli/src/index.ts"],
++      "@beep/bun-cli/*": ["../../../packages/drivers/bun-cli/src/*.ts"],
+       "@beep/identity": [
+         "../../../packages/foundation/modeling/identity/src/index.ts"
+       ],
+@@ -47,6 +49,21 @@
+       "@beep/identity/packages": [
+         "../../../packages/foundation/modeling/identity/src/packages.ts"
+       ],
++      "@beep/installer-dependencies-config": [
++        "../../../packages/installer-dependencies/config/src/index.ts"
++      ],
++      "@beep/installer-dependencies-config/server": [
++        "../../../packages/installer-dependencies/config/src/server.ts"
++      ],
++      "@beep/installer-dependencies-config/layer": [
++        "../../../packages/installer-dependencies/config/src/layer.ts"
++      ],
++      "@beep/installer-dependencies-config/test": [
++        "../../../packages/installer-dependencies/config/src/test.ts"
++      ],
++      "@beep/installer-dependencies-config/aggregates/BunRuntime": [
++        "../../../packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts"
++      ],
+       "@beep/installer-dependencies-domain": [
+         "../../../packages/installer-dependencies/domain/src/index.ts"
+       ],
+diff --git a/packages/installer-dependencies/server/package.json b/packages/installer-dependencies/server/package.json
+index ad28eff430..c4ed2e3113 100644
+--- a/packages/installer-dependencies/server/package.json
++++ b/packages/installer-dependencies/server/package.json
+@@ -61,6 +61,8 @@
+     }
+   },
+   "dependencies": {
++    "@beep/bun-cli": "workspace:^",
++    "@beep/installer-dependencies-config": "workspace:^",
+     "@beep/installer-dependencies-domain": "workspace:^",
+     "@beep/installer-dependencies-use-cases": "workspace:^",
+     "@beep/identity": "workspace:^",
+diff --git a/packages/installer-dependencies/server/src/Layer.ts b/packages/installer-dependencies/server/src/Layer.ts
+index b0e4331ed4..ec6674bed7 100644
+--- a/packages/installer-dependencies/server/src/Layer.ts
++++ b/packages/installer-dependencies/server/src/Layer.ts
+@@ -6,12 +6,26 @@
+  * @since 0.0.0
+  */
+ 
++import { BunCli } from "@beep/bun-cli";
++import { InstallerDependenciesConfig } from "@beep/installer-dependencies-config/layer";
+ import {
++  BunRuntimeAlreadyHealthy,
++  BunRuntimeHealthResult,
++  BunRuntimeInspectionFailed,
++  BunRuntimeRepairApprovalRequired,
++  BunRuntimeRepairFailed,
++  BunRuntimeRepairRequest,
++  BunRuntimeRepairResult,
+   HostDependencyPlan,
+   HostDependencyValidationResult,
+   P1A_HOST_DEPENDENCY_VERB_INPUTS,
+ } from "@beep/installer-dependencies-use-cases/public";
+-import { InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
++import {
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPortError,
++  type BunRuntimeProbe,
++  InstallerDependenciesUseCases,
++} from "@beep/installer-dependencies-use-cases/server";
+ import { Effect, Layer, Stream } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -19,8 +33,8 @@ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+ 
++const decodeBunRuntimeRepairRequest = S.decodeUnknownEffect(BunRuntimeRepairRequest);
+ const decodeHostDependencyPlan = S.decodeUnknownEffect(HostDependencyPlan);
+-
+ const p1aHostDependencyPlanInput = {
+   dependencies: [
+     {
+@@ -85,6 +99,78 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
+     )
+   );
+ 
++const makeBunDependency = (probe: BunRuntimeProbe, expectedVersion: string) => {
++  const detectedVersion = probe.version;
++  const state = O.match(detectedVersion, {
++    onNone: () => "missing" as const,
++    onSome: (version) => (isVersionAtLeast(version, expectedVersion) ? "healthy" : "repair-required"),
++  });
++  const status = state === "missing" ? "missing" : "present";
++  const summary = state === "healthy"
++    ? `Bun ${renderVersion(detectedVersion)} satisfies the required version ${expectedVersion}.`
++    : state === "repair-required"
++      ? `Bun ${renderVersion(detectedVersion)} is older than the required version ${expectedVersion}.`
++      : `Bun is missing; the focused repair flow currently supports upgrading an existing Bun install.`;
++
++  return new BunRuntimeHealthResult({
++    dependency: {
++      detectedVersion,
++      id: "bun",
++      installHint: "Run the focused Bun repair flow from the Stack Installer app.",
++      kind: "runtime",
++      name: "Bun",
++      requiredVersion: O.some(expectedVersion),
++      status,
++    },
++    state,
++    summary,
++  });
++};
++
++const parseSemver = (value: string): O.Option<readonly [number, number, number]> => {
++  const match = /^\s*v?(\d+)\.(\d+)\.(\d+)/.exec(value);
++  if (match === null) {
++    return O.none();
++  }
++
++  const major = Number(match[1]);
++  const minor = Number(match[2]);
++  const patch = Number(match[3]);
++
++  return Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)
++    ? O.none()
++    : O.some([major, minor, patch] as const);
++};
++
++const compareSemver = (left: readonly [number, number, number], right: readonly [number, number, number]): number => {
++  if (left[0] !== right[0]) {
++    return left[0] - right[0];
++  }
++  if (left[1] !== right[1]) {
++    return left[1] - right[1];
++  }
++  return left[2] - right[2];
++};
++
++const isVersionAtLeast = (detected: string, expected: string): boolean =>
++  O.match(parseSemver(detected), {
++    onNone: () => false,
++    onSome: (left) =>
++      O.match(parseSemver(expected), {
++        onNone: () => false,
++        onSome: (right) => compareSemver(left, right) >= 0,
++      }),
++  });
++
++const renderVersion = (version: O.Option<string>): string =>
++  O.match(version, {
++    onNone: () => "unknown",
++    onSome: (value) => value,
++  });
++
++const renderInspectionError = (error: BunRuntimeInspectionFailed | S.SchemaError): string =>
++  error._tag === "BunRuntimeInspectionFailed" ? error.reason : "Unable to inspect the Bun runtime.";
++
+ const probeCommand = (
+   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
+   probe: CommandProbe
+@@ -136,6 +222,39 @@ const probeCommand = (
+     )
+   );
+ 
++const makeBunRuntimeCommandPort = Effect.fn("InstallerDependenciesServer.makeBunRuntimeCommandPort")(function* () {
++  const bunCli = yield* BunCli;
++
++  return BunRuntimeCommandPort.of({
++    probe: Effect.fn("BunRuntimeCommandPort.probe")(function* () {
++      return yield* bunCli.probe().pipe(
++        Effect.map((probe) => ({
++          status: probe.status,
++          version: probe.version,
++        })),
++        Effect.mapError(
++          (error: { readonly message: string }) =>
++            new BunRuntimeCommandPortError({
++              message: error.message,
++              operation: "probe",
++            })
++        )
++      );
++    }),
++    upgrade: Effect.fn("BunRuntimeCommandPort.upgrade")(function* () {
++      return yield* bunCli.upgrade().pipe(
++        Effect.mapError(
++          (error: { readonly message: string }) =>
++            new BunRuntimeCommandPortError({
++              message: error.message,
++              operation: "upgrade",
++            })
++        )
++      );
++    }),
++  });
++});
++
+ /**
+  * Build the deterministic dependency dry-run service.
+  *
+@@ -144,15 +263,143 @@ const probeCommand = (
+  */
+ export const makeInstallerDependenciesServer = Effect.fn("InstallerDependenciesServer.make")(function* () {
+   const plan = yield* decodeHostDependencyPlan(p1aHostDependencyPlanInput);
+-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
++  const bunRuntime = yield* BunRuntimeCommandPort;
++  const config = yield* InstallerDependenciesConfig;
++
++  const inspectBunRuntime = Effect.fn("InstallerDependenciesServer.inspectBunRuntime")(function* () {
++      const expectedVersion = config.bunRuntime.requiredVersion;
++      const probe = yield* bunRuntime.probe().pipe(
++        Effect.mapError(
++          (error: BunRuntimeCommandPortError) =>
++            new BunRuntimeInspectionFailed({
++              reason: error.message,
++            })
++        )
++      );
++
++      return makeBunDependency(probe, expectedVersion);
++  });
+ 
+   return {
++    inspectBunRuntime,
+     previewHostDependencies: () => Effect.succeed(plan),
+-    validateRequiredCommands: () =>
+-      Effect.forEach(p1CommandProbes, (probe) => probeCommand(spawner, probe), { concurrency: 4 }),
++    repairBunRuntime: Effect.fn("InstallerDependenciesServer.repairBunRuntime")(function* (rawRequest: BunRuntimeRepairRequest) {
++        const request = yield* decodeBunRuntimeRepairRequest(rawRequest).pipe(
++          Effect.mapError(
++            () =>
++              new BunRuntimeRepairFailed({
++                reason: "Repair request payload is invalid.",
++              })
++          )
++        );
++
++        if (!request.approved) {
++          return yield* new BunRuntimeRepairApprovalRequired({
++            reason: "Explicit user approval is required before mutating the Bun runtime.",
++          });
++        }
++
++        const before = yield* inspectBunRuntime().pipe(
++          Effect.mapError(
++            (error) =>
++              new BunRuntimeRepairFailed({
++                reason: renderInspectionError(error),
++              })
++          )
++        );
++        if (before.state === "healthy") {
++          return yield* new BunRuntimeAlreadyHealthy({
++            reason: "Bun already satisfies the current required version.",
++          });
++        }
++        if (before.state === "missing") {
++          return yield* new BunRuntimeRepairFailed({
++            reason: "The focused Bun repair flow requires an existing Bun install.",
++          });
++        }
++
++        yield* bunRuntime.upgrade().pipe(
++          Effect.mapError(
++            (error: BunRuntimeCommandPortError) =>
++              new BunRuntimeRepairFailed({
++                reason: error.message,
++              })
++          )
++        );
++
++        const after = yield* inspectBunRuntime().pipe(
++          Effect.mapError(
++            (error) =>
++              new BunRuntimeRepairFailed({
++                reason: renderInspectionError(error),
++              })
++          )
++        );
++
++        if (after.state !== "healthy") {
++          return yield* new BunRuntimeRepairFailed({
++            reason: after.summary,
++          });
++        }
++
++        return new BunRuntimeRepairResult({
++          after,
++          before,
++          changed: before.summary !== after.summary,
++          command: "bun upgrade",
++          summary: `Bun repair completed. ${after.summary}`,
++        });
++      }),
++    validateRequiredCommands: Effect.fn("InstallerDependenciesServer.validateRequiredCommands")(function* () {
++        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
++        const [otherProbes, bunProbe] = yield* Effect.all(
++          [
++            Effect.forEach(
++              A.filter(p1CommandProbes, (probe) => probe.name !== "bun"),
++              (probe) => probeCommand(spawner, probe),
++              { concurrency: 3 }
++            ),
++            bunRuntime.probe().pipe(
++              Effect.catch(() =>
++                Effect.succeed({
++                  status: "missing" as const,
++                  version: O.none(),
++                })
++              )
++            ),
++          ],
++          { concurrency: 2 }
++        );
++
++        const bunResult = new HostDependencyValidationResult({
++          dependency: {
++            detectedVersion: bunProbe.version,
++            id: "bun",
++            installHint: "Run the Stack Installer Bun repair flow before continuing.",
++            kind: "runtime",
++            name: "bun",
++            requiredVersion: O.none(),
++            status: bunProbe.status === "present" ? "present" : "missing",
++          },
++          message:
++            bunProbe.status === "present"
++              ? `bun command is available${O.isSome(bunProbe.version) ? ` (${bunProbe.version.value})` : ""}.`
++              : "bun command is missing or unavailable.",
++        });
++
++        return [...otherProbes, bunResult];
++      }),
+   };
+ });
+ 
++/**
++ * Live Bun runtime command port adapted from the Bun CLI driver.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export const BunRuntimeCommandPortLive = Layer.effect(BunRuntimeCommandPort, makeBunRuntimeCommandPort());
++
+ /**
+  * Deterministic dependency server layer for P1A.
+  *
+@@ -162,4 +409,4 @@ export const makeInstallerDependenciesServer = Effect.fn("InstallerDependenciesS
+ export const InstallerDependenciesServerLive = Layer.effect(
+   InstallerDependenciesUseCases,
+   makeInstallerDependenciesServer()
+-);
++).pipe(Layer.provideMerge(BunRuntimeCommandPortLive));
+diff --git a/packages/installer-dependencies/server/src/test.ts b/packages/installer-dependencies/server/src/test.ts
+index 857e2b5b96..78890b31cf 100644
+--- a/packages/installer-dependencies/server/src/test.ts
++++ b/packages/installer-dependencies/server/src/test.ts
+@@ -6,6 +6,8 @@
+  * @since 0.0.0
+  */
+ 
++import { makeInstallerDependenciesConfigTestLayer } from "@beep/installer-dependencies-config/test";
++import { Layer } from "effect";
+ import { InstallerDependenciesServerLive } from "./Layer.js";
+ 
+ /**
+@@ -14,4 +16,6 @@ import { InstallerDependenciesServerLive } from "./Layer.js";
+  * @category testing
+  * @since 0.0.0
+  */
+-export const InstallerDependenciesServerTest = InstallerDependenciesServerLive;
++export const InstallerDependenciesServerTest = InstallerDependenciesServerLive.pipe(
++  Layer.provideMerge(makeInstallerDependenciesConfigTestLayer("1.3.14"))
++);
+diff --git a/packages/installer-dependencies/server/test/BunRuntimeRepair.test.ts b/packages/installer-dependencies/server/test/BunRuntimeRepair.test.ts
+new file mode 100644
+index 0000000000..aecc3e28af
+--- /dev/null
++++ b/packages/installer-dependencies/server/test/BunRuntimeRepair.test.ts
+@@ -0,0 +1,175 @@
++import type { BunCliProbe } from "@beep/bun-cli";
++import { makeInstallerDependenciesConfigTestLayer } from "@beep/installer-dependencies-config/test";
++import {
++  BunRuntimeAlreadyHealthy,
++  BunRuntimeRepairApprovalRequired,
++  BunRuntimeRepairFailed,
++  BunRuntimeRepairRequest,
++} from "@beep/installer-dependencies-use-cases/public";
++import { BunRuntimeCommandPort, BunRuntimeCommandPortError, InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
++import { describe, expect, layer } from "@effect/vitest";
++import { Effect, Layer } from "effect";
++import * as O from "effect/Option";
++import { makeInstallerDependenciesServer } from "../src/Layer.js";
++
++const makeProbe = (version: O.Option<string>): BunCliProbe => ({
++  command: "bun",
++  status: O.isSome(version) ? "present" : "missing",
++  version,
++});
++
++const healthyPort = Layer.succeed(
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPort.of({
++    probe: () => Effect.succeed(makeProbe(O.some("1.3.14"))),
++    upgrade: () => Effect.void,
++  })
++);
++
++const repairingPort = (() => {
++  let upgraded = false;
++
++  return Layer.succeed(
++    BunRuntimeCommandPort,
++    BunRuntimeCommandPort.of({
++      probe: () => Effect.succeed(makeProbe(O.some(upgraded ? "1.3.14" : "1.3.11"))),
++      upgrade: () =>
++        Effect.sync(() => {
++          upgraded = true;
++        }),
++    })
++  );
++})();
++
++const failedRepairPort = Layer.succeed(
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPort.of({
++    probe: () => Effect.succeed(makeProbe(O.some("1.3.11"))),
++    upgrade: () =>
++      Effect.fail(
++        new BunRuntimeCommandPortError({
++          message: "Bun upgrade failed.",
++          operation: "upgrade",
++        })
++      ),
++    
++  })
++);
++
++const missingBunPort = Layer.succeed(
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPort.of({
++    probe: () => Effect.succeed(makeProbe(O.none())),
++    upgrade: () => Effect.void,
++  })
++);
++
++const makeTestLayer = (portLayer: Layer.Layer<BunRuntimeCommandPort>) =>
++  Layer.effect(InstallerDependenciesUseCases, makeInstallerDependenciesServer()).pipe(
++    Layer.provideMerge(portLayer),
++  Layer.provideMerge(makeInstallerDependenciesConfigTestLayer("1.3.14"))
++);
++
++describe("@beep/installer-dependencies-server Bun repair flow", () => {
++  layer(makeTestLayer(healthyPort))((it) => {
++    it.effect(
++      "reports Bun as healthy when the detected version meets the minimum",
++      Effect.fnUntraced(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const result = yield* dependencies.inspectBunRuntime();
++
++        expect(result.state).toBe("healthy");
++        expect(result.summary).toContain("satisfies the required version");
++      })
++    );
++
++    it.effect(
++      "rejects repair when Bun is already healthy",
++      Effect.fnUntraced(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: true,
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeAlreadyHealthy);
++      })
++    );
++  });
++
++  layer(makeTestLayer(repairingPort))((it) => {
++    it.effect(
++      "runs Bun repair and returns before/after evidence",
++      Effect.fnUntraced(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const result = yield* dependencies.repairBunRuntime(
++          new BunRuntimeRepairRequest({
++            approved: true,
++          })
++        );
++
++        expect(result.before.state).toBe("repair-required");
++        expect(result.after.state).toBe("healthy");
++        expect(result.command).toBe("bun upgrade");
++      })
++    );
++  });
++
++  layer(makeTestLayer(healthyPort))((it) => {
++    it.effect(
++      "requires explicit approval before mutating Bun",
++      Effect.fnUntraced(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: false,
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeRepairApprovalRequired);
++      })
++    );
++  });
++
++  layer(makeTestLayer(failedRepairPort))((it) => {
++    it.effect(
++      "translates failed upgrades into public repair failures",
++      Effect.fnUntraced(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: true,
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeRepairFailed);
++      })
++    );
++  });
++
++  layer(makeTestLayer(missingBunPort))((it) => {
++    it.effect(
++      "keeps missing Bun outside the repair-only success path",
++      Effect.fnUntraced(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: true,
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeRepairFailed);
++        expect(error.reason).toContain("existing Bun install");
++      })
++    );
++  });
++});
+diff --git a/packages/installer-dependencies/server/tsconfig.json b/packages/installer-dependencies/server/tsconfig.json
+index 97b11f2231..f17fcb8701 100644
+--- a/packages/installer-dependencies/server/tsconfig.json
++++ b/packages/installer-dependencies/server/tsconfig.json
+@@ -8,12 +8,18 @@
+     "rootDir": "src"
+   },
+   "references": [
++    {
++      "path": "../../drivers/bun-cli/tsconfig.json"
++    },
+     {
+       "path": "../../foundation/modeling/identity/tsconfig.json"
+     },
+     {
+       "path": "../../foundation/modeling/schema/tsconfig.json"
+     },
++    {
++      "path": "../config/tsconfig.json"
++    },
+     {
+       "path": "../domain/tsconfig.json"
+     },
+diff --git a/packages/installer-dependencies/use-cases/src/public.ts b/packages/installer-dependencies/use-cases/src/public.ts
+index 80cfa45030..b924dd3378 100644
+--- a/packages/installer-dependencies/use-cases/src/public.ts
++++ b/packages/installer-dependencies/use-cases/src/public.ts
+@@ -8,6 +8,7 @@
+ 
+ import { $InstallerDependenciesUseCasesId } from "@beep/identity/packages";
+ import { HostDependency } from "@beep/installer-dependencies-domain/aggregates/HostDependency";
++import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+ import * as S from "effect/Schema";
+ 
+ const $I = $InstallerDependenciesUseCasesId.create("public");
+@@ -69,6 +70,147 @@ export class HostDependencyValidationResult extends S.Class<HostDependencyValida
+   })
+ ) {}
+ 
++/**
++ * Bun runtime health states visible to the app.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export const BunRuntimeHealthState = LiteralKit(["healthy", "repair-required", "missing"] as const).pipe(
++  $I.annoteSchema("BunRuntimeHealthState", {
++    description: "App-facing Bun runtime health state for the focused repair flow.",
++  })
++);
++
++/**
++ * Runtime type for {@link BunRuntimeHealthState}.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export type BunRuntimeHealthState = typeof BunRuntimeHealthState.Type;
++
++/**
++ * App-facing Bun runtime health result.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export class BunRuntimeHealthResult extends S.Class<BunRuntimeHealthResult>($I`BunRuntimeHealthResult`)(
++  {
++    dependency: HostDependency,
++    state: BunRuntimeHealthState,
++    summary: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeHealthResult", {
++    description: "Current Bun runtime health as presented by the Stack Installer app.",
++  })
++) {}
++
++/**
++ * App-facing Bun repair request.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairRequest extends S.Class<BunRuntimeRepairRequest>($I`BunRuntimeRepairRequest`)(
++  {
++    approved: S.Boolean,
++  },
++  $I.annote("BunRuntimeRepairRequest", {
++    description: "Approval-first request to repair the Bun runtime for the focused app flow.",
++  })
++) {}
++
++/**
++ * App-facing Bun repair result.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairResult extends S.Class<BunRuntimeRepairResult>($I`BunRuntimeRepairResult`)(
++  {
++    after: BunRuntimeHealthResult,
++    before: BunRuntimeHealthResult,
++    changed: S.Boolean,
++    command: S.NonEmptyString,
++    summary: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairResult", {
++    description: "Before and after evidence for the app-driven Bun repair flow.",
++  })
++) {}
++
++/**
++ * Public failure when Bun health cannot be inspected.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeInspectionFailed extends TaggedErrorClass<BunRuntimeInspectionFailed>(
++  $I`BunRuntimeInspectionFailed`
++)(
++  "BunRuntimeInspectionFailed",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeInspectionFailed", {
++    description: "The app could not inspect the Bun runtime health.",
++  })
++) {}
++
++/**
++ * Public failure when the repair action is invoked without approval.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairApprovalRequired extends TaggedErrorClass<BunRuntimeRepairApprovalRequired>(
++  $I`BunRuntimeRepairApprovalRequired`
++)(
++  "BunRuntimeRepairApprovalRequired",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairApprovalRequired", {
++    description: "The app requires explicit user approval before mutating the Bun runtime.",
++  })
++) {}
++
++/**
++ * Public failure when the Bun runtime is already healthy.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeAlreadyHealthy extends TaggedErrorClass<BunRuntimeAlreadyHealthy>(
++  $I`BunRuntimeAlreadyHealthy`
++)(
++  "BunRuntimeAlreadyHealthy",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeAlreadyHealthy", {
++    description: "The Bun runtime already satisfies the current requirement.",
++  })
++) {}
++
++/**
++ * Public failure when Bun repair cannot complete successfully.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairFailed extends TaggedErrorClass<BunRuntimeRepairFailed>($I`BunRuntimeRepairFailed`)(
++  "BunRuntimeRepairFailed",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairFailed", {
++    description: "The Bun repair flow failed or did not reach a healthy state.",
++  })
++) {}
++
+ /**
+  * Static P1A verb contracts owned by the dependency slice.
+  *
+diff --git a/packages/installer-dependencies/use-cases/src/server.ts b/packages/installer-dependencies/use-cases/src/server.ts
+index f741616c39..7a758dbb45 100644
+--- a/packages/installer-dependencies/use-cases/src/server.ts
++++ b/packages/installer-dependencies/use-cases/src/server.ts
+@@ -7,13 +7,70 @@
+  */
+ 
+ import { $InstallerDependenciesUseCasesId } from "@beep/identity/packages";
++import { TaggedErrorClass } from "@beep/schema";
+ import type { Effect } from "effect";
+ import { Context } from "effect";
+-import type * as S from "effect/Schema";
+-import type { HostDependencyPlan, HostDependencyValidationResult } from "./public.js";
++import * as S from "effect/Schema";
++import type { ChildProcessSpawner } from "effect/unstable/process";
++import type {
++  BunRuntimeAlreadyHealthy,
++  BunRuntimeHealthResult,
++  BunRuntimeInspectionFailed,
++  BunRuntimeRepairApprovalRequired,
++  BunRuntimeRepairFailed,
++  BunRuntimeRepairResult,
++  HostDependencyPlan,
++  HostDependencyValidationResult,
++} from "./public.js";
++import { BunRuntimeRepairRequest } from "./public.js";
+ 
+ const $I = $InstallerDependenciesUseCasesId.create("server");
+ 
++/**
++ * Server-only failure emitted by the Bun runtime command port.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeCommandPortError extends TaggedErrorClass<BunRuntimeCommandPortError>(
++  $I`BunRuntimeCommandPortError`
++)(
++  "BunRuntimeCommandPortError",
++  {
++    message: S.NonEmptyString,
++    operation: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeCommandPortError", {
++    description: "Server-only failure emitted while adapting the Bun runtime command port.",
++  })
++) {}
++
++/**
++ * Server-side Bun runtime probe shape.
++ *
++ * @category repositories
++ * @since 0.0.0
++ */
++export type BunRuntimeProbe = {
++  readonly status: "present" | "missing";
++  readonly version: import("effect/Option").Option<string>;
++};
++
++interface BunRuntimeCommandPortShape {
++  readonly probe: () => Effect.Effect<BunRuntimeProbe, BunRuntimeCommandPortError>;
++  readonly upgrade: () => Effect.Effect<void, BunRuntimeCommandPortError>;
++}
++
++/**
++ * Server-side Bun runtime command port.
++ *
++ * @category repositories
++ * @since 0.0.0
++ */
++export class BunRuntimeCommandPort extends Context.Service<BunRuntimeCommandPort, BunRuntimeCommandPortShape>()(
++  $I`BunRuntimeCommandPort`
++) {}
++
+ /**
+  * Dependency use-case service shape.
+  *
+@@ -21,8 +78,19 @@ const $I = $InstallerDependenciesUseCasesId.create("server");
+  * @since 0.0.0
+  */
+ interface InstallerDependenciesUseCasesShape {
++  readonly inspectBunRuntime: () => Effect.Effect<BunRuntimeHealthResult, BunRuntimeInspectionFailed>;
+   readonly previewHostDependencies: () => Effect.Effect<HostDependencyPlan, S.SchemaError>;
+-  readonly validateRequiredCommands: () => Effect.Effect<ReadonlyArray<HostDependencyValidationResult>, S.SchemaError>;
++  readonly repairBunRuntime: (
++    request: BunRuntimeRepairRequest
++  ) => Effect.Effect<
++    BunRuntimeRepairResult,
++    BunRuntimeAlreadyHealthy | BunRuntimeRepairApprovalRequired | BunRuntimeRepairFailed
++  >;
++  readonly validateRequiredCommands: () => Effect.Effect<
++    ReadonlyArray<HostDependencyValidationResult>,
++    S.SchemaError,
++    ChildProcessSpawner.ChildProcessSpawner
++  >;
+ }
+ 
+ /**
+diff --git a/syncpack.config.ts b/syncpack.config.ts
+index 81b99f6a83..17a3f0f337 100644
+--- a/syncpack.config.ts
++++ b/syncpack.config.ts
+@@ -51,6 +51,7 @@ const config = {
+     "packages/architecture-lab/ui/package.json",
+     "apps/architecture-lab-proof/package.json",
+     "packages/drivers/runpod/package.json",
++    "packages/drivers/bun-cli/package.json",
+     "packages/drivers/onepassword-cli/package.json",
+     "packages/drivers/discord/package.json",
+     "packages/drivers/ai-provider-cli/package.json",
+diff --git a/tsconfig.json b/tsconfig.json
+index ff04414f96..ebf9e28248 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -738,7 +738,30 @@
+       ],
+       "@beep/opip-web/app/manifest": ["./apps/opip-web/src/app/manifest.ts"],
+       "@beep/opip-web/app/robots": ["./apps/opip-web/src/app/robots.ts"],
+-      "@beep/opip-web/app/sitemap": ["./apps/opip-web/src/app/sitemap.ts"]
++      "@beep/opip-web/app/sitemap": [
++        "./apps/opip-web/src/app/sitemap.ts"
++      ],
++      "@beep/bun-cli": [
++        "./packages/drivers/bun-cli/src/index.ts"
++      ],
++      "@beep/bun-cli/*": [
++        "./packages/drivers/bun-cli/src/*"
++      ],
++      "@beep/installer-dependencies-config": [
++        "./packages/installer-dependencies/config/src/index.ts"
++      ],
++      "@beep/installer-dependencies-config/aggregates/BunRuntime": [
++        "./packages/installer-dependencies/config/src/aggregates/BunRuntime/index.ts"
++      ],
++      "@beep/installer-dependencies-config/layer": [
++        "./packages/installer-dependencies/config/src/layer.ts"
++      ],
++      "@beep/installer-dependencies-config/server": [
++        "./packages/installer-dependencies/config/src/server.ts"
++      ],
++      "@beep/installer-dependencies-config/test": [
++        "./packages/installer-dependencies/config/src/test.ts"
++      ]
+     }
+   }
+ }
+diff --git a/tsconfig.packages.json b/tsconfig.packages.json
+index f4528706c2..231498f831 100644
+--- a/tsconfig.packages.json
++++ b/tsconfig.packages.json
+@@ -60,6 +60,9 @@
+     {
+       "path": "packages/drivers/ai-provider-cli"
+     },
++    {
++      "path": "packages/drivers/bun-cli"
++    },
+     {
+       "path": "packages/drivers/discord"
+     },
+@@ -156,6 +159,9 @@
+     {
+       "path": "packages/installer-channels/use-cases"
+     },
++    {
++      "path": "packages/installer-dependencies/config"
++    },
+     {
+       "path": "packages/installer-dependencies/domain"
+     },
+diff --git a/tsconfig.quality.packages.json b/tsconfig.quality.packages.json
+index d49a4bb4f4..ec737d2cad 100644
+--- a/tsconfig.quality.packages.json
++++ b/tsconfig.quality.packages.json
+@@ -57,6 +57,9 @@
+     {
+       "path": "packages/drivers/ai-provider-cli"
+     },
++    {
++      "path": "packages/drivers/bun-cli"
++    },
+     {
+       "path": "packages/drivers/discord"
+     },
+@@ -153,6 +156,9 @@
+     {
+       "path": "packages/installer-channels/use-cases"
+     },
++    {
++      "path": "packages/installer-dependencies/config"
++    },
+     {
+       "path": "packages/installer-dependencies/domain"
+     },
+diff --git a/tstyche.json b/tstyche.json
+index f44bb96d12..6c779730be 100644
+--- a/tstyche.json
++++ b/tstyche.json
+@@ -48,6 +48,7 @@
+     "packages/architecture-lab/ui/dtslint/**/*.tst.*",
+     "apps/architecture-lab-proof/dtslint/**/*.tst.*",
+     "packages/drivers/runpod/dtslint/**/*.tst.*",
++    "packages/drivers/bun-cli/dtslint/**/*.tst.*",
+     "packages/drivers/onepassword-cli/dtslint/**/*.tst.*",
+     "packages/drivers/discord/dtslint/**/*.tst.*",
+     "packages/drivers/ai-provider-cli/dtslint/**/*.tst.*",
+@@ -56,6 +57,7 @@
+     "packages/installer-channels/domain/dtslint/**/*.tst.*",
+     "packages/installer-channels/server/dtslint/**/*.tst.*",
+     "packages/installer-channels/use-cases/dtslint/**/*.tst.*",
++    "packages/installer-dependencies/config/dtslint/**/*.tst.*",
+     "packages/installer-dependencies/domain/dtslint/**/*.tst.*",
+     "packages/installer-dependencies/server/dtslint/**/*.tst.*",
+     "packages/installer-dependencies/use-cases/dtslint/**/*.tst.*",

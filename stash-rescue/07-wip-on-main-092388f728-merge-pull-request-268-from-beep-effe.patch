@@ -1,0 +1,136 @@
+diff --git a/scratchpad/Consumer.ts b/scratchpad/Consumer.ts
+new file mode 100644
+index 0000000000..0f9e59790d
+--- /dev/null
++++ b/scratchpad/Consumer.ts
+@@ -0,0 +1,28 @@
++import { Effect } from "effect";
++import * as Message from "./Message.ts";
++
++export interface Consumer<
++	Name extends string,
++	TMessage extends Message.AnyMessage
++> {
++	readonly _tag: "Consumer";
++	readonly name: Name;
++	readonly message: TMessage;
++	readonly handler: (payload: Message.PayloadOf<TMessage>) => Effect.Effect<void>;
++}
++
++export const make = <
++	const Name extends string,
++	TMessage extends Message.AnyMessage
++>(options: {
++	readonly name: Name;
++	readonly message: TMessage;
++	readonly handler: (payload: Message.PayloadOf<TMessage>) => Effect.Effect<void>;
++}): Consumer<Name, TMessage> => ({
++	_tag: "Consumer",
++	name: options.name,
++	message: options.message,
++	handler: options.handler
++});
++
++export type AnyConsumer = Consumer<string, Message.AnyMessage>;
+\ No newline at end of file
+diff --git a/scratchpad/Driver.ts b/scratchpad/Driver.ts
+new file mode 100644
+index 0000000000..7ee188b00c
+--- /dev/null
++++ b/scratchpad/Driver.ts
+@@ -0,0 +1,16 @@
++import { Context, Effect } from "effect";
++import type * as Message from "./Message.js";
++import type * as Consumer from "./Consumer.js";
++
++const DriverId = "@signalgraph/Driver" as const
++
++export class Driver extends Context.Service<Driver, {
++	readonly publish: <TMessage extends Message.AnyMessage> (
++		message: TMessage,
++		payload: Message.PayloadOf<TMessage>
++	) => Effect.Effect<void>;
++
++	readonly subscribe: (
++		consumer: Consumer.AnyConsumer
++	) => Effect.Effect<void>;
++}>()(DriverId) { }
+\ No newline at end of file
+diff --git a/scratchpad/Errors.ts b/scratchpad/Errors.ts
+new file mode 100644
+index 0000000000..a82e8b34f4
+--- /dev/null
++++ b/scratchpad/Errors.ts
+@@ -0,0 +1,8 @@
++import * as S from "effect/Schema";
++
++export class InvalidMessagePayload extends S.TaggedErrorClass<InvalidMessagePayload>()("InvalidMessagePayload", {
++	messageName: S.String,
++	payload: S.Unknown,
++	cause: S.Defect({includeStack: true}),
++}) {
++}
+\ No newline at end of file
+diff --git a/scratchpad/Message.ts b/scratchpad/Message.ts
+new file mode 100644
+index 0000000000..67b7828470
+--- /dev/null
++++ b/scratchpad/Message.ts
+@@ -0,0 +1,26 @@
++import * as S from "effect/Schema";
++
++export interface Message<
++	Name extends string,
++	Payload extends S.Top
++> {
++	readonly _tag: "Message";
++	readonly name: Name;
++	readonly schema: Payload;
++}
++
++export const make = <
++	const Name extends string,
++	Payload extends S.Top
++>(options: {
++	readonly name: Name;
++	readonly schema: Payload;
++}): Message<Name, Payload> => ({
++	_tag: "Message",
++	name: options.name,
++	schema: options.schema
++});
++
++export type PayloadOf<T extends AnyMessage> = T["schema"]["Type"];
++
++export type AnyMessage<TSchema extends S.Top = S.Top> = Message<string, TSchema>;
+diff --git a/scratchpad/index.ts b/scratchpad/index.ts
+index 693da49fc4..9b3b050155 100644
+--- a/scratchpad/index.ts
++++ b/scratchpad/index.ts
+@@ -1 +1,24 @@
+-export {}
+\ No newline at end of file
++import * as Message from "./Message.ts";
++import {Effect} from "effect";
++import * as S from "effect/Schema";
++import * as Driver from "./Driver.ts";
++import * as Errors from "./Errors.ts";
++
++export const publish = Effect.fn("Scratchpad.publish")(function* <
++	const Name extends string,
++	TSchema extends S.Top,
++>(
++	message: Message.Message<Name, TSchema>,
++	payload: TSchema["Type"],
++) {
++	const driver = yield* Driver.Driver;
++
++	const validatedPayload = yield* S.decodeUnknownEffect(message.schema)(payload)
++		.pipe(Effect.mapError((cause) => Errors.InvalidMessagePayload.make({
++			messageName: message.name,
++			payload,
++			cause,
++		})));
++
++	yield* driver.publish(message, validatedPayload);
++});

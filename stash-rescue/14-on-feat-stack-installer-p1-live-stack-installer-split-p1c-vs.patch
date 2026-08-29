@@ -1,0 +1,3928 @@
+diff --git a/apps/stack-installer/AGENTS.md b/apps/stack-installer/AGENTS.md
+index a16a11785d..5ba0bc47cb 100644
+--- a/apps/stack-installer/AGENTS.md
++++ b/apps/stack-installer/AGENTS.md
+@@ -1,6 +1,6 @@
+ # Agent Notes
+ 
+ - Keep the app UI on `@beep/ui` primitives and `@beep/ui/styles/globals.css`.
+-- Keep installer dry-run composition in TypeScript until later phases introduce live adapters.
++- Keep app-local runtime composition in TypeScript; live dependency mutation must stay owned by installer slice contracts and drivers, not ad hoc app shell glue.
+ - Keep the Tauri bridge narrow: app health and explicit capabilities only.
+-- Do not add live install commands, Discord mutation, or plaintext-secret handling in this package.
++- Do not add Discord mutation, plaintext-secret handling, or product logic that belongs in installer slice packages.
+diff --git a/apps/stack-installer/README.md b/apps/stack-installer/README.md
+index 16d73c3024..737d79c5c7 100644
+--- a/apps/stack-installer/README.md
++++ b/apps/stack-installer/README.md
+@@ -5,5 +5,6 @@ Tauri and React shell for the Stack Installer P1 proof flow.
+ P1A proved the dry-run app surface, slice-owned verb contracts, deterministic
+ manifest snapshot, and UI baseline. P1 live now adds Manual Mode validators,
+ the Tauri proof command, and CLI artifact capture/audit for fresh-machine proof
+-runs. It still does not run live installers, provision Discord, accept
+-plaintext credentials, implement AI Mode, or persist host configuration.
++runs. P1D now begins the first app-first live mutation lane with a focused Bun
++repair flow on Linux. It still does not provision Discord, accept plaintext
++credentials, implement AI Mode, or persist wider host configuration.
+diff --git a/apps/stack-installer/package.json b/apps/stack-installer/package.json
+index 89ac5753ae..5d238440c7 100644
+--- a/apps/stack-installer/package.json
++++ b/apps/stack-installer/package.json
+@@ -16,6 +16,7 @@
+     "codegen": "echo 'no codegen needed'",
+     "dev": "vite --host 0.0.0.0",
+     "dev:tauri": "tauri dev",
++    "p1d:bun-runtime": "bun run src/repair/run-bun-runtime-repair.ts",
+     "p1:proof": "bun run src/proof/run-p1-manual-proof.ts",
+     "p1:proof:audit-all": "bun run src/proof/capture-p1-manual-proof.ts -- --audit-all",
+     "p1:proof:audit": "bun run src/proof/capture-p1-manual-proof.ts -- --audit-only",
+@@ -53,6 +54,7 @@
+   ],
+   "dependencies": {
+     "@beep/ai-provider-cli": "workspace:^",
++    "@beep/bun-cli": "workspace:^",
+     "@beep/discord": "workspace:^",
+     "@beep/identity": "workspace:^",
+     "@beep/installer-channels-domain": "workspace:^",
+diff --git a/apps/stack-installer/src-tauri/capabilities/default.json b/apps/stack-installer/src-tauri/capabilities/default.json
+index c9de2b597f..743c382a64 100644
+--- a/apps/stack-installer/src-tauri/capabilities/default.json
++++ b/apps/stack-installer/src-tauri/capabilities/default.json
+@@ -1,7 +1,7 @@
+ {
+   "$schema": "../gen/schemas/desktop-schema.json",
+   "identifier": "default",
+-  "description": "Default capability set for the dry-run stack installer shell.",
++  "description": "Default capability set for the stack installer shell.",
+   "windows": ["main"],
+   "permissions": ["core:default"]
+ }
+diff --git a/apps/stack-installer/src-tauri/src/lib.rs b/apps/stack-installer/src-tauri/src/lib.rs
+index 7adc1a0a68..085bdb1ef0 100644
+--- a/apps/stack-installer/src-tauri/src/lib.rs
++++ b/apps/stack-installer/src-tauri/src/lib.rs
+@@ -21,6 +21,12 @@ struct P1ManualProofRequest {
+     test_message_content: String,
+ }
+ 
++#[derive(Deserialize, Serialize)]
++#[serde(rename_all = "camelCase")]
++struct BunRuntimeRepairRequest {
++    approved: bool,
++}
++
+ #[tauri::command]
+ fn stack_installer_health() -> StackInstallerHealth {
+     StackInstallerHealth {
+@@ -54,10 +60,56 @@ fn run_p1_manual_proof(request: P1ManualProofRequest) -> Result<String, String>
+     Err(stderr)
+ }
+ 
++fn run_stack_installer_script(args: &[&str], launch_error: &str) -> Result<String, String> {
++    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++    let app_dir = manifest_dir
++        .parent()
++        .ok_or_else(|| "Unable to resolve Stack Installer app directory.".to_string())?;
++    let output = Command::new("bun")
++        .current_dir(app_dir)
++        .args(args)
++        .output()
++        .map_err(|_| launch_error.to_string())?;
++
++    if output.status.success() {
++        return String::from_utf8(output.stdout)
++            .map_err(|_| "Stack Installer workflow returned non-UTF-8 output.".to_string());
++    }
++
++    let stderr =
++        String::from_utf8(output.stderr).unwrap_or_else(|_| "Stack Installer workflow failed with non-UTF-8 stderr.".to_string());
++    Err(stderr)
++}
++
++#[tauri::command]
++fn inspect_bun_runtime() -> Result<String, String> {
++    run_stack_installer_script(
++        &["run", "p1d:bun-runtime", "--", "--mode", "inspect"],
++        "Unable to launch the Bun runtime inspection workflow.",
++    )
++}
++
++#[tauri::command]
++fn repair_bun_runtime(request: BunRuntimeRepairRequest) -> Result<String, String> {
++    if !request.approved {
++        return Err("Explicit user approval is required before mutating the Bun runtime.".to_string());
++    }
++
++    run_stack_installer_script(
++        &["run", "p1d:bun-runtime", "--", "--mode", "repair"],
++        "Unable to launch the Bun runtime repair workflow.",
++    )
++}
++
+ #[cfg_attr(mobile, tauri::mobile_entry_point)]
+ pub fn run() {
+     tauri::Builder::default()
+-        .invoke_handler(tauri::generate_handler![stack_installer_health, run_p1_manual_proof])
++        .invoke_handler(tauri::generate_handler![
++            stack_installer_health,
++            run_p1_manual_proof,
++            inspect_bun_runtime,
++            repair_bun_runtime
++        ])
+         .run(tauri::generate_context!())
+         .expect("error while running stack installer");
+ }
+diff --git a/apps/stack-installer/src/App.tsx b/apps/stack-installer/src/App.tsx
+index 2d6f0e29a2..8608ced663 100644
+--- a/apps/stack-installer/src/App.tsx
++++ b/apps/stack-installer/src/App.tsx
+@@ -6,413 +6,344 @@
+  * @since 0.0.0
+  */
+ 
+-import { isOnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
++import type { ReactNode } from "react";
++import { useEffect, useState } from "react";
+ import { Badge } from "@beep/ui/components/badge";
+ import { Button } from "@beep/ui/components/button";
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@beep/ui/components/card";
+ import { Progress } from "@beep/ui/components/progress";
+ import { Separator } from "@beep/ui/components/separator";
+-import { useAtom } from "@effect/atom-react";
+-import {
+-  CheckCircle,
+-  ClipboardText,
+-  DiscordLogo,
+-  LockKey,
+-  Play,
+-  ShieldCheck,
+-  TerminalWindow,
+-} from "@phosphor-icons/react";
++import { ArrowClockwise, CheckCircle, Hammer, Lightning, TerminalWindow, WarningCircle } from "@phosphor-icons/react";
+ import { invoke } from "@tauri-apps/api/core";
+-import * as A from "effect/Array";
+-import * as P from "effect/Predicate";
+-import { Atom } from "effect/unstable/reactivity";
+-import type { FormEvent } from "react";
+-import { p1aDryRunRegistry, p1aDryRunSnapshot } from "./dry-run-registry.js";
+ 
+-const workbenchSteps = [
+-  {
+-    icon: TerminalWindow,
+-    label: "Dependencies",
+-    status: "Dry-run ready",
+-  },
+-  {
+-    icon: LockKey,
+-    label: "Secret References",
+-    status: "1Password refs only",
+-  },
+-  {
+-    icon: ShieldCheck,
+-    label: "Providers",
+-    status: "Claude + Codex",
+-  },
+-  {
+-    icon: DiscordLogo,
+-    label: "Discord",
+-    status: "Only v1 channel",
+-  },
+-] as const;
+-
+-type ProofState =
+-  | {
+-      readonly _tag: "idle";
+-    }
+-  | {
+-      readonly _tag: "running";
+-    }
+-  | {
+-      readonly _tag: "failed";
+-      readonly message: string;
+-    }
+-  | {
+-      readonly _tag: "completed";
+-      readonly output: string;
+-    };
++type BunRuntimeHealthView = {
++  readonly dependency: {
++    readonly detectedVersion?: string;
++    readonly id: string;
++    readonly installHint: string;
++    readonly kind: string;
++    readonly name: string;
++    readonly requiredVersion?: string;
++    readonly status: string;
++  };
++  readonly state: "healthy" | "repair-required" | "missing";
++  readonly summary: string;
++};
+ 
+-type P1ManualProofFormRequest = {
+-  readonly discordBotTokenReference: string;
+-  readonly discordChannelDisplayName: string;
+-  readonly discordChannelId: string;
+-  readonly discordGuildId: string;
+-  readonly operatorLabel: string;
+-  readonly targetPlatform: string;
+-  readonly testMessageContent: string;
++type BunRuntimeRepairView = {
++  readonly after: BunRuntimeHealthView;
++  readonly before: BunRuntimeHealthView;
++  readonly changed: boolean;
++  readonly command: string;
++  readonly summary: string;
+ };
+ 
+-type RunP1ManualProof = (request: P1ManualProofFormRequest) => Promise<string>;
++type LoadBunRuntimeHealth = () => Promise<BunRuntimeHealthView>;
++type RunBunRuntimeRepair = () => Promise<BunRuntimeRepairView>;
+ 
+-const proofStateAtom = Atom.make<ProofState>({ _tag: "idle" });
++type LoadState =
++  | { readonly _tag: "loading" }
++  | { readonly _tag: "failed"; readonly message: string }
++  | { readonly _tag: "loaded"; readonly health: BunRuntimeHealthView };
+ 
+-const runTauriP1ManualProof: RunP1ManualProof = (request) => invoke<string>("run_p1_manual_proof", { request });
++type RepairState =
++  | { readonly _tag: "idle" }
++  | { readonly _tag: "running" }
++  | { readonly _tag: "failed"; readonly message: string }
++  | { readonly _tag: "completed"; readonly result: BunRuntimeRepairView };
+ 
+-const valueFor = (formData: FormData, name: string): string => {
+-  const value = formData.get(name);
+-  return P.isString(value) ? value : "";
++const previewHealth: BunRuntimeHealthView = {
++  dependency: {
++    detectedVersion: "1.3.11",
++    id: "bun",
++    installHint: "Run the focused Bun repair flow from the desktop app.",
++    kind: "runtime",
++    name: "Bun",
++    requiredVersion: "1.3.14",
++    status: "present",
++  },
++  state: "repair-required",
++  summary: "Bun 1.3.11 is older than the required version 1.3.14.",
+ };
+ 
+-const errorMessage = (error: unknown): string => {
+-  if (P.isString(error)) {
+-    return error;
+-  }
+-  if (P.isObject(error) && P.hasProperty(error, "message") && P.isString(error.message)) {
+-    return error.message;
++const defaultLoadBunRuntimeHealth: LoadBunRuntimeHealth = async () => {
++  try {
++    const encoded = await invoke<string>("inspect_bun_runtime");
++    return JSON.parse(encoded) as BunRuntimeHealthView;
++  } catch {
++    return previewHealth;
+   }
+-  return "P1 proof failed before sanitized output was returned.";
+ };
+ 
+-const submitProof = async (
+-  event: FormEvent<HTMLFormElement>,
+-  setProofState: (state: ProofState) => void,
+-  runP1ManualProof: RunP1ManualProof
+-) => {
+-  event.preventDefault();
+-  const formData = new FormData(event.currentTarget);
+-  const discordBotTokenReference = valueFor(formData, "discordBotTokenReference");
+-
+-  if (!isOnePasswordReference(discordBotTokenReference)) {
+-    setProofState({
+-      _tag: "failed",
+-      message: "Discord bot token must be a 1Password reference.",
++const defaultRunBunRuntimeRepair: RunBunRuntimeRepair = async () => {
++  try {
++    const encoded = await invoke<string>("repair_bun_runtime", {
++      request: { approved: true },
+     });
+-    return;
++    return JSON.parse(encoded) as BunRuntimeRepairView;
++  } catch (error) {
++    throw new Error(errorMessage(error, "Desktop Bun repair is only available in the Tauri app."));
+   }
++};
+ 
+-  setProofState({ _tag: "running" });
+-
+-  try {
+-    const output = await runP1ManualProof({
+-      discordBotTokenReference,
+-      discordChannelDisplayName: valueFor(formData, "discordChannelDisplayName"),
+-      discordChannelId: valueFor(formData, "discordChannelId"),
+-      discordGuildId: valueFor(formData, "discordGuildId"),
+-      operatorLabel: valueFor(formData, "operatorLabel"),
+-      targetPlatform: valueFor(formData, "targetPlatform"),
+-      testMessageContent: valueFor(formData, "testMessageContent"),
+-    });
++const stateBadge = (state: BunRuntimeHealthView["state"]) => {
++  switch (state) {
++    case "healthy":
++      return { label: "Healthy", variant: "secondary" as const };
++    case "repair-required":
++      return { label: "Repair Needed", variant: "outline" as const };
++    case "missing":
++      return { label: "Missing", variant: "outline" as const };
++  }
++};
+ 
+-    setProofState({ _tag: "completed", output });
+-  } catch (error) {
+-    setProofState({ _tag: "failed", message: errorMessage(error) });
++const errorMessage = (error: unknown, fallback: string): string => {
++  if (typeof error === "string") {
++    return error;
+   }
++  if (error instanceof Error) {
++    return error.message;
++  }
++  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
++    return error.message;
++  }
++  return fallback;
+ };
+ 
+-function AppHeader() {
+-  return (
+-    <header className="border-b bg-background">
+-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+-        <div className="min-w-0">
+-          <p className="text-sm font-medium text-muted-foreground">Stack Installer</p>
+-          <h1 className="text-2xl font-semibold tracking-normal text-foreground">Install Workbench</h1>
+-        </div>
+-        <div className="flex flex-wrap items-center gap-2">
+-          <Badge variant="outline">P1</Badge>
+-          <Badge variant="secondary">Live proof ready</Badge>
+-          <Button variant="outline" size="sm">
+-            <ClipboardText weight="bold" />
+-            Manifest
+-          </Button>
+-          <Button size="sm">
+-            <Play weight="fill" />
+-            Preview
+-          </Button>
+-        </div>
+-      </div>
+-    </header>
+-  );
+-}
++export function App({
++  loadBunRuntimeHealth = defaultLoadBunRuntimeHealth,
++  runBunRuntimeRepair = defaultRunBunRuntimeRepair,
++}: {
++  readonly loadBunRuntimeHealth?: LoadBunRuntimeHealth;
++  readonly runBunRuntimeRepair?: RunBunRuntimeRepair;
++}) {
++  const [loadState, setLoadState] = useState<LoadState>({ _tag: "loading" });
++  const [repairState, setRepairState] = useState<RepairState>({ _tag: "idle" });
+ 
+-function ChecklistPanel() {
+-  return (
+-    <section className="space-y-3">
+-      <div className="flex items-center justify-between gap-3">
+-        <div>
+-          <h2 className="text-base font-semibold">Checklist</h2>
+-          <p className="text-sm text-muted-foreground">Manual-mode proof gates</p>
+-        </div>
+-        <Badge variant="outline">4 / 4</Badge>
+-      </div>
+-      <div className="grid gap-3 sm:grid-cols-2">
+-        {A.map(workbenchSteps, (step) => {
+-          const Icon = step.icon;
++  useEffect(() => {
++    let cancelled = false;
+ 
+-          return (
+-            <Card key={step.label} size="sm" className="rounded-lg">
+-              <CardContent className="flex items-start gap-3">
+-                <div className="rounded-md border bg-background p-2">
+-                  <Icon className="size-4" weight="bold" />
+-                </div>
+-                <div className="min-w-0">
+-                  <p className="font-medium">{step.label}</p>
+-                  <p className="text-sm text-muted-foreground">{step.status}</p>
+-                </div>
+-              </CardContent>
+-            </Card>
+-          );
+-        })}
+-      </div>
+-    </section>
+-  );
+-}
++    void loadBunRuntimeHealth()
++      .then((health) => {
++        if (!cancelled) {
++          setLoadState({ _tag: "loaded", health });
++        }
++      })
++      .catch((error) => {
++        if (!cancelled) {
++          setLoadState({
++            _tag: "failed",
++            message: errorMessage(error, "Bun runtime inspection failed."),
++          });
++        }
++      });
+ 
+-function ApprovalPanel() {
+-  return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>Approval Queue</CardTitle>
+-        <CardDescription>
+-          Install actions remain previews; validation runs through the P1 proof harness.
+-        </CardDescription>
+-      </CardHeader>
+-      <CardContent className="space-y-4">
+-        <Progress value={80} />
+-        <div className="space-y-3">
+-          {A.map(p1aDryRunRegistry, (verb) => (
+-            <div key={verb.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
+-              <div className="min-w-0">
+-                <p className="font-medium">{verb.label}</p>
+-                <p className="text-sm text-muted-foreground">{verb.summary}</p>
+-              </div>
+-              <Badge variant={verb.requiresApproval ? "outline" : "secondary"}>
+-                {verb.requiresApproval ? "Approval" : "Auto"}
+-              </Badge>
+-            </div>
+-          ))}
+-        </div>
+-      </CardContent>
+-    </Card>
+-  );
+-}
++    return () => {
++      cancelled = true;
++    };
++  }, [loadBunRuntimeHealth]);
+ 
+-function ValidationFeed() {
+-  return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>Validation Feed</CardTitle>
+-        <CardDescription>Deterministic events emitted from the P1A snapshot.</CardDescription>
+-      </CardHeader>
+-      <CardContent className="space-y-3">
+-        {A.map(p1aDryRunSnapshot.validationEvents, (event) => (
+-          <div key={event.id} className="grid grid-cols-[auto_1fr] gap-3">
+-            <CheckCircle className="mt-0.5 size-5 text-emerald-600" weight="fill" />
+-            <div className="min-w-0">
+-              <div className="flex flex-wrap items-center gap-2">
+-                <p className="font-medium">{event.subject}</p>
+-                <Badge variant="outline">{event.tier}</Badge>
+-              </div>
+-              <p className="text-sm text-muted-foreground">{event.message}</p>
+-            </div>
+-          </div>
+-        ))}
+-      </CardContent>
+-    </Card>
+-  );
+-}
++  const currentHealth = loadState._tag === "loaded" ? loadState.health : undefined;
++  const currentBadge = currentHealth !== undefined ? stateBadge(currentHealth.state) : undefined;
++  const repairProgress =
++    repairState._tag === "running"
++      ? 55
++      : repairState._tag === "completed"
++        ? 100
++        : currentHealth?.state === "healthy"
++          ? 100
++          : 35;
+ 
+-function ManifestPreview() {
+-  const manifest = p1aDryRunSnapshot.manifest;
++  const handleRepair = async () => {
++    setRepairState({ _tag: "running" });
++
++    try {
++      const result = await runBunRuntimeRepair();
++      setRepairState({ _tag: "completed", result });
++      setLoadState({ _tag: "loaded", health: result.after });
++    } catch (error) {
++      setRepairState({
++        _tag: "failed",
++        message: errorMessage(error, "Bun repair failed."),
++      });
++    }
++  };
+ 
+   return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>Manifest Preview</CardTitle>
+-        <CardDescription>{manifest.manifestId}</CardDescription>
+-      </CardHeader>
+-      <CardContent className="space-y-4">
+-        <div className="grid gap-3 sm:grid-cols-3">
+-          <div>
+-            <p className="text-xs font-medium uppercase text-muted-foreground">Platform</p>
+-            <p className="font-medium">{manifest.targetPlatform}</p>
+-          </div>
+-          <div>
+-            <p className="text-xs font-medium uppercase text-muted-foreground">Version</p>
+-            <p className="font-medium">{manifest.version}</p>
+-          </div>
++    <div className="min-h-screen bg-muted/30 text-foreground">
++      <header className="border-b bg-background">
++        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+           <div>
+-            <p className="text-xs font-medium uppercase text-muted-foreground">Mode</p>
+-            <p className="font-medium">{manifest.dryRunOnly ? "Dry-run" : "Live"}</p>
++            <p className="text-sm font-medium text-muted-foreground">Stack Installer</p>
++            <h1 className="text-2xl font-semibold tracking-normal">Bun Repair</h1>
+           </div>
+-        </div>
+-        <Separator />
+-        <div className="space-y-3">
+-          <p className="text-sm font-medium">Providers</p>
+-          <div className="grid gap-2 sm:grid-cols-2">
+-            {A.map(manifest.providers, (provider) => (
+-              <div key={provider.provider} className="rounded-md border p-3">
+-                <p className="font-medium capitalize">{provider.provider}</p>
+-                <p className="text-sm text-muted-foreground">{provider.authMode}</p>
+-              </div>
+-            ))}
++          <div className="flex flex-wrap items-center gap-2">
++            <Badge variant="outline">P1D</Badge>
++            {currentBadge !== undefined ? <Badge variant={currentBadge.variant}>{currentBadge.label}</Badge> : null}
+           </div>
+         </div>
+-        <div className="rounded-md border p-3">
+-          <p className="text-sm font-medium">Discord</p>
+-          <p className="text-sm text-muted-foreground">{manifest.discordChannel.displayName}</p>
+-          <p className="text-xs text-muted-foreground">{manifest.discordChannel.channelId}</p>
+-        </div>
+-        <div className="space-y-2">
+-          <p className="text-sm font-medium">Capabilities</p>
+-          {A.map(manifest.capabilities, (capability) => (
+-            <div key={capability.id} className="rounded-md border p-3">
+-              <p className="font-medium">{capability.label}</p>
+-              <p className="text-sm text-muted-foreground">{capability.summary}</p>
+-            </div>
+-          ))}
+-        </div>
+-      </CardContent>
+-    </Card>
+-  );
+-}
++      </header>
+ 
+-function LiveProofPanel({ runP1ManualProof }: { readonly runP1ManualProof: RunP1ManualProof }) {
+-  const [proofState, setProofState] = useAtom(proofStateAtom);
++      <main className="mx-auto grid max-w-5xl gap-6 px-5 py-6 lg:grid-cols-[minmax(0,1.4fr)_20rem]">
++        <section className="space-y-6">
++          <Card className="rounded-lg">
++            <CardHeader>
++              <CardTitle>Focused Repair Flow</CardTitle>
++              <CardDescription>
++                This milestone proves one real app-driven dependency mutation: inspect Bun, request approval, run repair,
++                and show the before/after state.
++              </CardDescription>
++            </CardHeader>
++            <CardContent className="space-y-5">
++              <Progress value={repairProgress} />
+ 
+-  return (
+-    <Card className="rounded-lg">
+-      <CardHeader>
+-        <CardTitle>P1 Live Proof</CardTitle>
+-        <CardDescription>Manual Mode desktop validation for Discord, Claude, Codex, and 1Password.</CardDescription>
+-      </CardHeader>
+-      <CardContent>
+-        <form
+-          className="grid gap-3"
+-          onSubmit={(event) => {
+-            void submitProof(event, setProofState, runP1ManualProof);
+-          }}
+-        >
+-          <div className="grid gap-3 sm:grid-cols-2">
+-            <label className="grid gap-1 text-sm font-medium">
+-              Platform
+-              <select
+-                className="h-10 rounded-md border bg-background px-3 text-sm"
+-                defaultValue="macos"
+-                name="targetPlatform"
+-              >
+-                <option value="macos">macOS</option>
+-                <option value="windows">Windows</option>
+-                <option value="linux">Linux</option>
+-              </select>
+-            </label>
+-            <label className="grid gap-1 text-sm font-medium">
+-              Operator
+-              <input
+-                className="h-10 rounded-md border bg-background px-3 text-sm"
+-                defaultValue="manual"
+-                name="operatorLabel"
+-              />
+-            </label>
+-          </div>
+-          <div className="grid gap-3 sm:grid-cols-2">
+-            <label className="grid gap-1 text-sm font-medium">
+-              Guild ID
+-              <input className="h-10 rounded-md border bg-background px-3 text-sm" name="discordGuildId" />
+-            </label>
+-            <label className="grid gap-1 text-sm font-medium">
+-              Channel ID
+-              <input className="h-10 rounded-md border bg-background px-3 text-sm" name="discordChannelId" />
+-            </label>
+-          </div>
+-          <label className="grid gap-1 text-sm font-medium">
+-            Channel Name
+-            <input
+-              className="h-10 rounded-md border bg-background px-3 text-sm"
+-              defaultValue="ai-stack-installer"
+-              name="discordChannelDisplayName"
+-            />
+-          </label>
+-          <label className="grid gap-1 text-sm font-medium">
+-            Bot Token Reference
+-            <input
+-              className="h-10 rounded-md border bg-background px-3 text-sm"
+-              defaultValue="op://Private/Discord Bot/token"
+-              name="discordBotTokenReference"
+-            />
+-          </label>
+-          <label className="grid gap-1 text-sm font-medium">
+-            Test Message
+-            <input
+-              className="h-10 rounded-md border bg-background px-3 text-sm"
+-              defaultValue="Stack Installer P1 Manual Mode proof"
+-              name="testMessageContent"
+-            />
+-          </label>
+-          <Button className="w-fit" disabled={proofState._tag === "running"} type="submit">
+-            <Play weight="fill" />
+-            {proofState._tag === "running" ? "Running" : "Run Proof"}
+-          </Button>
+-          {proofState._tag === "failed" ? (
+-            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+-              {proofState.message}
+-            </div>
+-          ) : null}
+-          {proofState._tag === "completed" ? (
+-            <pre className="max-h-72 overflow-auto rounded-md border bg-muted p-3 text-xs">{proofState.output}</pre>
+-          ) : null}
+-        </form>
+-      </CardContent>
+-    </Card>
++              {loadState._tag === "loading" ? (
++                <div className="flex items-center gap-3 rounded-md border p-4 text-sm text-muted-foreground">
++                  <ArrowClockwise className="size-5 animate-spin" weight="bold" />
++                  Inspecting Bun runtime health...
++                </div>
++              ) : null}
++
++              {loadState._tag === "failed" ? (
++                <div className="flex items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
++                  <WarningCircle className="mt-0.5 size-5" weight="fill" />
++                  <p>{loadState.message}</p>
++                </div>
++              ) : null}
++
++              {currentHealth !== undefined ? (
++                <div className="space-y-4">
++                  <div className="grid gap-3 sm:grid-cols-3">
++                    <StatusCard
++                      icon={<TerminalWindow className="size-4" weight="bold" />}
++                      label="Detected"
++                      value={renderVersion(currentHealth.dependency.detectedVersion)}
++                    />
++                    <StatusCard
++                      icon={<Lightning className="size-4" weight="bold" />}
++                      label="Required"
++                      value={renderVersion(currentHealth.dependency.requiredVersion)}
++                    />
++                    <StatusCard
++                      icon={<Hammer className="size-4" weight="bold" />}
++                      label="Action"
++                      value={currentHealth.state === "healthy" ? "None" : "Repair"}
++                    />
++                  </div>
++
++                  <div className="rounded-md border p-4">
++                    <div className="flex items-start justify-between gap-3">
++                      <div>
++                        <p className="font-medium">Current health</p>
++                        <p className="text-sm text-muted-foreground">{currentHealth.summary}</p>
++                      </div>
++                      {currentBadge !== undefined ? <Badge variant={currentBadge.variant}>{currentBadge.label}</Badge> : null}
++                    </div>
++                    <Separator className="my-4" />
++                    <p className="text-sm text-muted-foreground">{currentHealth.dependency.installHint}</p>
++                  </div>
++
++                  <div className="flex flex-wrap items-center gap-3">
++                    <Button
++                      onClick={handleRepair}
++                      disabled={currentHealth.state !== "repair-required" || repairState._tag === "running"}
++                    >
++                      <Hammer weight="fill" />
++                      {repairState._tag === "running" ? "Repairing Bun" : "Approve Repair"}
++                    </Button>
++                    <p className="text-sm text-muted-foreground">
++                      Clicking repair is the explicit approval boundary for this host mutation.
++                    </p>
++                  </div>
++                </div>
++              ) : null}
++
++              {repairState._tag === "failed" ? (
++                <div className="flex items-start gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
++                  <WarningCircle className="mt-0.5 size-5" weight="fill" />
++                  <p>{repairState.message}</p>
++                </div>
++              ) : null}
++
++              {repairState._tag === "completed" ? (
++                <div className="space-y-3 rounded-md border border-emerald-300/60 bg-emerald-50 p-4 dark:bg-emerald-950/20">
++                  <div className="flex items-start gap-3">
++                    <CheckCircle className="mt-0.5 size-5 text-emerald-600" weight="fill" />
++                    <div className="min-w-0">
++                      <p className="font-medium">Repair complete</p>
++                      <p className="text-sm text-muted-foreground">{repairState.result.summary}</p>
++                    </div>
++                  </div>
++                  <div className="grid gap-3 sm:grid-cols-2">
++                    <StatusCard
++                      icon={<ArrowClockwise className="size-4" weight="bold" />}
++                      label="Before"
++                      value={renderVersion(repairState.result.before.dependency.detectedVersion)}
++                    />
++                    <StatusCard
++                      icon={<CheckCircle className="size-4" weight="bold" />}
++                      label="After"
++                      value={renderVersion(repairState.result.after.dependency.detectedVersion)}
++                    />
++                  </div>
++                  <p className="text-sm text-muted-foreground">Executed command: {repairState.result.command}</p>
++                </div>
++              ) : null}
++            </CardContent>
++          </Card>
++        </section>
++
++        <aside className="space-y-6">
++          <Card className="rounded-lg">
++            <CardHeader>
++              <CardTitle>Why This Step</CardTitle>
++              <CardDescription>Turn the installer from proof harness into one real repair surface.</CardDescription>
++            </CardHeader>
++            <CardContent className="space-y-3 text-sm text-muted-foreground">
++              <p>The app is the primary operator surface for this milestone.</p>
++              <p>The mutation stays owned by installer slice contracts and the Bun CLI driver.</p>
++              <p>The broader P1 manual proof harness remains available, but it is not the lead experience here.</p>
++            </CardContent>
++          </Card>
++
++          <Card className="rounded-lg">
++            <CardHeader>
++              <CardTitle>Secondary Flow</CardTitle>
++              <CardDescription>P1 manual proof stays in the repo as the audited validation spine.</CardDescription>
++            </CardHeader>
++            <CardContent className="space-y-2 text-sm text-muted-foreground">
++              <p>CLI capture, Discord liveness checks, and returned proof bundle auditing remain part of the project.</p>
++              <p>This screen narrows the next product-facing milestone to one crisp repair task.</p>
++            </CardContent>
++          </Card>
++        </aside>
++      </main>
++    </div>
+   );
+ }
+ 
+-/**
+- * Render the Stack Installer P1 workbench.
+- *
+- * @category components
+- * @since 0.0.0
+- */
+-export function App({ runP1ManualProof = runTauriP1ManualProof }: { readonly runP1ManualProof?: RunP1ManualProof }) {
++function StatusCard({
++  icon,
++  label,
++  value,
++}: {
++  readonly icon: ReactNode;
++  readonly label: string;
++  readonly value: string;
++}) {
+   return (
+-    <main className="min-h-screen bg-background text-foreground">
+-      <AppHeader />
+-      <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
+-        <div className="space-y-5">
+-          <ChecklistPanel />
+-          <LiveProofPanel runP1ManualProof={runP1ManualProof} />
+-          <ApprovalPanel />
+-        </div>
+-        <div className="space-y-5">
+-          <ValidationFeed />
+-          <ManifestPreview />
+-        </div>
++    <div className="rounded-md border p-3">
++      <div className="mb-2 flex items-center gap-2 text-muted-foreground">
++        {icon}
++        <span className="text-xs font-medium uppercase tracking-normal">{label}</span>
+       </div>
+-    </main>
++      <p className="font-medium">{value}</p>
++    </div>
+   );
+ }
++
++function renderVersion(
++  version: string | undefined
++): string {
++  return version ?? "Unknown";
++}
+diff --git a/apps/stack-installer/src/index.ts b/apps/stack-installer/src/index.ts
+index 83a74674de..3ce604f233 100644
+--- a/apps/stack-installer/src/index.ts
++++ b/apps/stack-installer/src/index.ts
+@@ -15,9 +15,10 @@
+ export const VERSION = "0.0.0" as const;
+ 
+ /**
+- * App-local live proof harness exports.
++ * App-local workflow exports.
+  *
+  * @category workflows
+  * @since 0.0.0
+  */
+ export * from "./proof/P1ManualProof.js";
++export * from "./repair/BunRuntimeRepair.js";
+diff --git a/apps/stack-installer/src/proof/capture-p1-manual-proof.ts b/apps/stack-installer/src/proof/capture-p1-manual-proof.ts
+index 6e99a9a11c..9029fe1a56 100644
+--- a/apps/stack-installer/src/proof/capture-p1-manual-proof.ts
++++ b/apps/stack-installer/src/proof/capture-p1-manual-proof.ts
+@@ -9,6 +9,7 @@
+  */
+ 
+ import { AiProviderCli } from "@beep/ai-provider-cli";
++import { BunCli } from "@beep/bun-cli";
+ import { Discord } from "@beep/discord";
+ import { P1ManualProofRequest, P1ManualProofResult } from "@beep/installer-workspace-use-cases";
+ import { OnePasswordCli } from "@beep/onepassword-cli";
+@@ -47,7 +48,7 @@ const encodeProofResult = S.encodeUnknownEffect(S.fromJsonString(P1ManualProofRe
+ const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+ 
+ const BaseLayer = Layer.mergeAll(BunServices.layer, BunHttpClient.layer);
+-const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), Discord.layer).pipe(
++const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), BunCli.makeLayer(), Discord.layer).pipe(
+   Layer.provideMerge(BunChildProcessSpawner.layer),
+   Layer.provideMerge(BaseLayer)
+ );
+diff --git a/apps/stack-installer/src/proof/run-p1-manual-proof.ts b/apps/stack-installer/src/proof/run-p1-manual-proof.ts
+index 821ee6e69d..6249e13cc2 100644
+--- a/apps/stack-installer/src/proof/run-p1-manual-proof.ts
++++ b/apps/stack-installer/src/proof/run-p1-manual-proof.ts
+@@ -9,6 +9,7 @@
+  */
+ 
+ import { AiProviderCli } from "@beep/ai-provider-cli";
++import { BunCli } from "@beep/bun-cli";
+ import { Discord } from "@beep/discord";
+ import { P1ManualProofRequest, P1ManualProofResult } from "@beep/installer-workspace-use-cases";
+ import { OnePasswordCli } from "@beep/onepassword-cli";
+@@ -23,7 +24,7 @@ const decodeRequestJson = S.decodeUnknownEffect(S.fromJsonString(P1ManualProofRe
+ const encodeProofResult = S.encodeUnknownEffect(S.fromJsonString(P1ManualProofResult));
+ 
+ const BaseLayer = Layer.mergeAll(BunServices.layer, BunHttpClient.layer);
+-const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), Discord.layer).pipe(
++const DriverLayer = Layer.mergeAll(OnePasswordCli.makeLayer(), AiProviderCli.makeLayer(), BunCli.makeLayer(), Discord.layer).pipe(
+   Layer.provideMerge(BunChildProcessSpawner.layer),
+   Layer.provideMerge(BaseLayer)
+ );
+diff --git a/apps/stack-installer/src/repair/BunRuntimeRepair.ts b/apps/stack-installer/src/repair/BunRuntimeRepair.ts
+new file mode 100644
+index 0000000000..dd0d35e5a8
+--- /dev/null
++++ b/apps/stack-installer/src/repair/BunRuntimeRepair.ts
+@@ -0,0 +1,133 @@
++/**
++ * App-local Bun repair workflow.
++ *
++ * @packageDocumentation
++ * @category workflows
++ * @since 0.0.0
++ */
++
++import { BunCli } from "@beep/bun-cli";
++import {
++  BunRuntimeHealthResult,
++  BunRuntimeRepairRequest,
++  BunRuntimeRepairResult,
++} from "@beep/installer-dependencies-use-cases/public";
++import { InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
++import { InstallerDependenciesServerLive } from "@beep/installer-dependencies-server";
++import { BunChildProcessSpawner, BunRuntime, BunServices } from "@effect/platform-bun";
++import * as BunPath from "@effect/platform-bun/BunPath";
++import { Effect, Layer, pipe } from "effect";
++import * as Path from "effect/Path";
++import * as S from "effect/Schema";
++
++const decodePackageJson = S.decodeUnknownEffect(
++  S.Struct({
++    packageManager: S.optionalKey(S.String),
++  })
++);
++const encodeBunRuntimeHealthResult = S.encodeUnknownEffect(S.fromJsonString(BunRuntimeHealthResult));
++const encodeBunRuntimeRepairResult = S.encodeUnknownEffect(S.fromJsonString(BunRuntimeRepairResult));
++
++const BaseLayer = Layer.mergeAll(BunServices.layer, BunPath.layer);
++const DriverLayer = BunCli.makeLayer().pipe(Layer.provideMerge(BunChildProcessSpawner.layer), Layer.provideMerge(BaseLayer));
++export const BunRuntimeRepairLayer = InstallerDependenciesServerLive.pipe(Layer.provideMerge(DriverLayer));
++
++const readRequiredBunVersion = Effect.fn("StackInstaller.readRequiredBunVersion")(function* (repoRoot: string) {
++  const path = yield* Path.Path;
++  const bunVersionPath = path.join(repoRoot, ".bun-version");
++  const packageJsonPath = path.join(repoRoot, "package.json");
++  const bunVersionFile = Bun.file(bunVersionPath);
++
++  if (yield* Effect.promise(() => bunVersionFile.exists())) {
++    const version = (yield* Effect.promise(() => bunVersionFile.text())).trim();
++    if (version.length > 0) {
++      return version;
++    }
++  }
++
++  const packageJson = yield* Effect.promise(() => Bun.file(packageJsonPath).json());
++  const decoded = yield* decodePackageJson(packageJson);
++  const packageManager = decoded.packageManager ?? "";
++  const match = /^bun@(.+)$/.exec(packageManager);
++
++  if (match !== null && match[1] !== undefined && match[1].length > 0) {
++    return match[1];
++  }
++
++  return yield* Effect.fail("Unable to resolve the required Bun version from repo metadata.");
++});
++
++/**
++ * Inspect Bun runtime health for the focused app-first repair flow.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const inspectBunRuntimeForApp = Effect.fn("StackInstaller.inspectBunRuntimeForApp")(function* (repoRoot: string) {
++  const expectedVersion = yield* readRequiredBunVersion(repoRoot);
++  const dependencies = yield* InstallerDependenciesUseCases;
++  return yield* dependencies.inspectBunRuntime(expectedVersion);
++});
++
++/**
++ * Run the approval-first Bun repair flow for the app.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const repairBunRuntimeForApp = Effect.fn("StackInstaller.repairBunRuntimeForApp")(function* (repoRoot: string) {
++  const expectedVersion = yield* readRequiredBunVersion(repoRoot);
++  const dependencies = yield* InstallerDependenciesUseCases;
++  return yield* dependencies.repairBunRuntime(
++    new BunRuntimeRepairRequest({
++      approved: true,
++      expectedVersion,
++    })
++  );
++});
++
++/**
++ * Encode the Bun health result as JSON for the Tauri bridge.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const inspectBunRuntimeJson = Effect.fn("StackInstaller.inspectBunRuntimeJson")(function* (repoRoot: string) {
++  const result = yield* inspectBunRuntimeForApp(repoRoot);
++  return yield* encodeBunRuntimeHealthResult(result);
++});
++
++/**
++ * Encode the Bun repair result as JSON for the Tauri bridge.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const repairBunRuntimeJson = Effect.fn("StackInstaller.repairBunRuntimeJson")(function* (repoRoot: string) {
++  const result = yield* repairBunRuntimeForApp(repoRoot);
++  return yield* encodeBunRuntimeRepairResult(result);
++});
++
++/**
++ * Run the Bun repair CLI main entrypoint.
++ *
++ * @category workflows
++ * @since 0.0.0
++ */
++export const runBunRuntimeRepairMain = (program: Effect.Effect<string, string>) =>
++  BunRuntime.runMain(
++    pipe(
++      program,
++      Effect.tap((encoded) =>
++        Effect.sync(() => {
++          console.log(encoded);
++        })
++      ),
++      Effect.catch((message: string) =>
++        Effect.sync(() => {
++          console.error(message);
++          process.exitCode = 1;
++        })
++      )
++    )
++  );
+diff --git a/apps/stack-installer/src/repair/run-bun-runtime-repair.ts b/apps/stack-installer/src/repair/run-bun-runtime-repair.ts
+new file mode 100644
+index 0000000000..936559a6df
+--- /dev/null
++++ b/apps/stack-installer/src/repair/run-bun-runtime-repair.ts
+@@ -0,0 +1,54 @@
++#!/usr/bin/env bun
++
++/**
++ * Bun entrypoint for the focused Bun repair workflow.
++ *
++ * @internal
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { Effect, pipe } from "effect";
++import * as A from "effect/Array";
++import * as O from "effect/Option";
++import { BunRuntimeRepairLayer, inspectBunRuntimeJson, repairBunRuntimeJson, runBunRuntimeRepairMain } from "./BunRuntimeRepair.js";
++
++const argAfter = (name: string): O.Option<string> =>
++  pipe(
++    Bun.argv,
++    A.findFirstIndex((value) => value === name),
++    O.flatMap((index) => A.get(Bun.argv, index + 1))
++  );
++
++const mode = O.getOrElse(argAfter("--mode"), () => "inspect");
++const appDir = process.cwd();
++const repoRoot = new URL("../..", `file://${appDir.endsWith("/") ? appDir : `${appDir}/`}`).pathname;
++
++const program =
++  mode === "repair"
++    ? repairBunRuntimeJson(repoRoot).pipe(
++        // @effect-diagnostics-next-line strictEffectProvide:off
++        Effect.provide(BunRuntimeRepairLayer)
++      )
++    : inspectBunRuntimeJson(repoRoot).pipe(
++        // @effect-diagnostics-next-line strictEffectProvide:off
++        Effect.provide(BunRuntimeRepairLayer)
++      );
++
++runBunRuntimeRepairMain(program.pipe(Effect.mapError(renderRepairError)));
++
++function renderRepairError(error: unknown): string {
++  if (typeof error === "string") {
++    return error;
++  }
++  if (error instanceof Error) {
++    return error.message;
++  }
++  if (typeof error === "object" && error !== null && "reason" in error && typeof error.reason === "string") {
++    return error.reason;
++  }
++  if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
++    return error.message;
++  }
++  return "Bun runtime workflow failed.";
++}
+diff --git a/apps/stack-installer/test/App.test.tsx b/apps/stack-installer/test/App.test.tsx
+index 1f83bf6f98..51d1a04a93 100644
+--- a/apps/stack-installer/test/App.test.tsx
++++ b/apps/stack-installer/test/App.test.tsx
+@@ -2,110 +2,87 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
+ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ import { App } from "../src/App.js";
+ 
+-const runProofMock = vi.fn();
+-
+-const submitProofForm = () => {
+-  const runButton = screen.getAllByRole("button", { name: "Run Proof" })[0];
+-  const form = runButton?.closest("form");
+-
+-  expect(form).toBeDefined();
+-  if (form === null) {
+-    return;
+-  }
++const loadHealthMock = vi.fn();
++const runRepairMock = vi.fn();
++
++const repairRequiredHealth = {
++  dependency: {
++    detectedVersion: "1.3.11",
++    id: "bun",
++    installHint: "Run the focused Bun repair flow from the desktop app.",
++    kind: "runtime",
++    name: "Bun",
++    requiredVersion: "1.3.14",
++    status: "present",
++  },
++  state: "repair-required",
++  summary: "Bun 1.3.11 is older than the required version 1.3.14.",
++};
+ 
+-  fireEvent.submit(form);
++const healthyRepairResult = {
++  after: {
++    dependency: {
++      detectedVersion: "1.3.14",
++      id: "bun",
++      installHint: "Run the focused Bun repair flow from the desktop app.",
++      kind: "runtime",
++      name: "Bun",
++      requiredVersion: "1.3.14",
++      status: "present",
++    },
++    state: "healthy",
++    summary: "Bun 1.3.14 satisfies the required version 1.3.14.",
++  },
++  before: repairRequiredHealth,
++  changed: true,
++  command: "bun upgrade",
++  summary: "Bun repair completed. Bun 1.3.14 satisfies the required version 1.3.14.",
+ };
+ 
+ describe.sequential("Stack Installer app", () => {
+   beforeEach(() => {
+-    runProofMock.mockReset();
++    loadHealthMock.mockReset();
++    runRepairMock.mockReset();
++    loadHealthMock.mockResolvedValue(repairRequiredHealth);
+   });
+ 
+   afterEach(cleanup);
+ 
+-  it("renders the P1 workbench", () => {
+-    render(<App />);
+-
+-    expect(screen.getByRole("heading", { name: "Install Workbench" })).toBeDefined();
+-    expect(screen.getByText("Claude Provider")).toBeDefined();
+-    expect(screen.getByText("Discord is represented as the only v1 channel.")).toBeDefined();
+-  });
+-
+-  it("rejects plaintext Discord bot tokens before invoking the desktop proof runner", () => {
+-    render(<App runP1ManualProof={runProofMock} />);
+-
+-    const tokenInput = screen.getAllByLabelText("Bot Token Reference")[0];
+-    const runButton = screen.getAllByRole("button", { name: "Run Proof" })[0];
++  it("renders the focused Bun repair flow", async () => {
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    expect(tokenInput).toBeDefined();
+-    expect(runButton).toBeDefined();
+-    if (tokenInput === undefined || runButton === undefined) {
+-      return;
+-    }
+-
+-    fireEvent.change(tokenInput, {
+-      target: { value: "plaintext-token" },
+-    });
+-    submitProofForm();
+-
+-    expect(screen.getAllByText("Discord bot token must be a 1Password reference.").length).toBeGreaterThan(0);
+-    expect(runProofMock).not.toHaveBeenCalled();
++    expect(screen.getByRole("heading", { name: "Bun Repair" })).toBeDefined();
++    await waitFor(() => expect(screen.getAllByText("Repair Needed").length).toBeGreaterThan(0));
++    expect(screen.getByText("Bun 1.3.11 is older than the required version 1.3.14.")).toBeDefined();
+   });
+ 
+-  it("runs the Tauri P1 proof command with sanitized form values", async () => {
+-    runProofMock.mockResolvedValueOnce("sanitized proof output");
+-    render(<App runP1ManualProof={runProofMock} />);
++  it("runs the repair action and renders the before and after state", async () => {
++    runRepairMock.mockResolvedValueOnce(healthyRepairResult);
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    fireEvent.change(screen.getAllByLabelText("Guild ID")[0], {
+-      target: { value: "guild-1" },
+-    });
+-    fireEvent.change(screen.getAllByLabelText("Channel ID")[0], {
+-      target: { value: "channel-1" },
+-    });
+-    fireEvent.change(screen.getAllByLabelText("Operator")[0], {
+-      target: { value: "operator-macos-001" },
+-    });
+-    submitProofForm();
++    await waitFor(() => expect(screen.getByRole("button", { name: "Approve Repair" })).toBeDefined());
++    fireEvent.click(screen.getByRole("button", { name: "Approve Repair" }));
+ 
+-    await waitFor(() => expect(runProofMock).toHaveBeenCalled());
+-    await waitFor(() => expect(screen.getByText("sanitized proof output")).toBeDefined());
+-    expect(runProofMock).toHaveBeenCalledWith({
+-      discordBotTokenReference: "op://Private/Discord Bot/token",
+-      discordChannelDisplayName: "ai-stack-installer",
+-      discordChannelId: "channel-1",
+-      discordGuildId: "guild-1",
+-      operatorLabel: "operator-macos-001",
+-      targetPlatform: "macos",
+-      testMessageContent: "Stack Installer P1 Manual Mode proof",
+-    });
++    await waitFor(() => expect(runRepairMock).toHaveBeenCalled());
++    await waitFor(() => expect(screen.getByText("Repair complete")).toBeDefined());
++    expect(screen.getByText("Executed command: bun upgrade")).toBeDefined();
++    expect(screen.getAllByText("1.3.14").length).toBeGreaterThan(0);
+   });
+ 
+-  it("renders string Tauri proof errors", async () => {
+-    runProofMock.mockRejectedValueOnce("proof rejected");
+-    render(<App runP1ManualProof={runProofMock} />);
+-
+-    submitProofForm();
+-
+-    await waitFor(() => expect(screen.getByText("proof rejected")).toBeDefined());
+-  });
+-
+-  it("renders object Tauri proof errors", async () => {
+-    runProofMock.mockRejectedValueOnce(new Error("provider auth missing"));
+-    render(<App runP1ManualProof={runProofMock} />);
+-
+-    submitProofForm();
++  it("renders inspection errors", async () => {
++    loadHealthMock.mockRejectedValueOnce(new Error("inspection unavailable"));
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    await waitFor(() => expect(screen.getByText("provider auth missing")).toBeDefined());
++    await waitFor(() => expect(screen.getByText("inspection unavailable")).toBeDefined());
+   });
+ 
+-  it("falls back for unknown Tauri proof errors", async () => {
+-    runProofMock.mockRejectedValueOnce({ reason: "opaque" });
+-    render(<App runP1ManualProof={runProofMock} />);
++  it("renders repair errors", async () => {
++    runRepairMock.mockRejectedValueOnce(new Error("upgrade failed"));
++    render(<App loadBunRuntimeHealth={loadHealthMock} runBunRuntimeRepair={runRepairMock} />);
+ 
+-    submitProofForm();
++    await waitFor(() => expect(screen.getByRole("button", { name: "Approve Repair" })).toBeDefined());
++    fireEvent.click(screen.getByRole("button", { name: "Approve Repair" }));
+ 
+-    await waitFor(() =>
+-      expect(screen.getByText("P1 proof failed before sanitized output was returned.")).toBeDefined()
+-    );
++    await waitFor(() => expect(screen.getByText("upgrade failed")).toBeDefined());
+   });
+ });
+diff --git a/apps/stack-installer/test/P1ManualProof.test.ts b/apps/stack-installer/test/P1ManualProof.test.ts
+index 932e3f17f4..49c19de3ea 100644
+--- a/apps/stack-installer/test/P1ManualProof.test.ts
++++ b/apps/stack-installer/test/P1ManualProof.test.ts
+@@ -1,14 +1,23 @@
+ import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliProvider } from "@beep/ai-provider-cli";
++import { BunCli, BunCliProcessResult } from "@beep/bun-cli";
+ import { Discord, DiscordConfigInput } from "@beep/discord";
+ import { InstallerChannelsServerLive } from "@beep/installer-channels-server";
+-import { HostDependencyPlan, HostDependencyValidationResult } from "@beep/installer-dependencies-use-cases";
++import {
++  BunRuntimeHealthResult,
++  BunRuntimeRepairResult,
++  HostDependencyPlan,
++  HostDependencyValidationResult,
++} from "@beep/installer-dependencies-use-cases";
+ import { InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
+ import { InstallerProvidersServerLive } from "@beep/installer-providers-server";
+ import { InstallerSecurityServerLive } from "@beep/installer-security-server";
+ import { P1ManualProofRequest, P1ManualProofResult } from "@beep/installer-workspace-use-cases";
+ import { OnePasswordCli, OnePasswordCliProcessResult } from "@beep/onepassword-cli";
+ import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
+-import { describe, expect, it, layer } from "@effect/vitest";
++import { describe, expect, it } from "@effect/vitest";
++import { BunChildProcessSpawner } from "@effect/platform-bun";
++import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
++import * as BunPath from "@effect/platform-bun/BunPath";
+ import { Effect, Layer } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -47,6 +56,15 @@ const providerRunner = (provider: AiProviderCliProvider) =>
+     })
+   );
+ 
++const bunRunner = () =>
++  Effect.succeed(
++    new BunCliProcessResult({
++      exitCode: 0,
++      stderr: "",
++      stdout: "1.3.14\n",
++    })
++  );
++
+ const TestHttpClientLayer = Layer.succeed(
+   HttpClient.HttpClient,
+   HttpClient.make((request) =>
+@@ -64,6 +82,7 @@ const TestHttpClientLayer = Layer.succeed(
+ const DriverLayer = Layer.mergeAll(
+   OnePasswordCli.makeLayerFromRunner(onePasswordRunner),
+   AiProviderCli.makeLayerFromRunner(providerRunner),
++  BunCli.makeLayerFromRunner(bunRunner),
+   Discord.makeLayer(new DiscordConfigInput({ baseUrl: "https://discord.example.test/api/v10" })).pipe(
+     Layer.provide(TestHttpClientLayer)
+   )
+@@ -72,9 +91,61 @@ const DriverLayer = Layer.mergeAll(
+ const TestDependenciesLayer = Layer.succeed(
+   InstallerDependenciesUseCases,
+   InstallerDependenciesUseCases.of({
++    inspectBunRuntime: Effect.fn("TestDependencies.inspectBunRuntime")(function* () {
++      return yield* Effect.succeed(
++        new BunRuntimeHealthResult({
++          dependency: {
++            detectedVersion: O.some("1.0.0"),
++            id: "bun",
++            installHint: "Run repair.",
++            kind: "runtime",
++            name: "Bun",
++            requiredVersion: O.some("1.0.0"),
++            status: "present",
++          },
++          state: "healthy",
++          summary: "Bun satisfies the requested version.",
++        })
++      );
++    }),
+     previewHostDependencies: Effect.fn("TestDependencies.previewHostDependencies")(function* () {
+       return yield* Effect.succeed(new HostDependencyPlan({ dependencies: [], notes: ["test"], verbs: [] }));
+     }),
++    repairBunRuntime: Effect.fn("TestDependencies.repairBunRuntime")(function* () {
++      return yield* Effect.succeed(
++        new BunRuntimeRepairResult({
++          after: new BunRuntimeHealthResult({
++            dependency: {
++              detectedVersion: O.some("1.0.0"),
++              id: "bun",
++              installHint: "Run repair.",
++              kind: "runtime",
++              name: "Bun",
++              requiredVersion: O.some("1.0.0"),
++              status: "present",
++            },
++            state: "healthy",
++            summary: "Bun satisfies the requested version.",
++          }),
++          before: new BunRuntimeHealthResult({
++            dependency: {
++              detectedVersion: O.some("0.9.0"),
++              id: "bun",
++              installHint: "Run repair.",
++              kind: "runtime",
++              name: "Bun",
++              requiredVersion: O.some("1.0.0"),
++              status: "present",
++            },
++            state: "repair-required",
++            summary: "Bun requires repair.",
++          }),
++          changed: true,
++          command: "bun upgrade",
++          summary: "Bun repaired.",
++        })
++      );
++    }),
+     validateRequiredCommands: Effect.fn("TestDependencies.validateRequiredCommands")(function* () {
+       return yield* Effect.succeed([
+         new HostDependencyValidationResult({
+@@ -101,93 +172,96 @@ const TestSliceLayer = Layer.mergeAll(
+   InstallerChannelsServerLive
+ );
+ 
+-const TestLayer = TestSliceLayer.pipe(Layer.provideMerge(DriverLayer));
++const TestLayer = TestSliceLayer.pipe(
++  Layer.provideMerge(DriverLayer),
++  Layer.provideMerge(BunChildProcessSpawner.layer),
++  Layer.provideMerge(BunFileSystem.layer),
++  Layer.provideMerge(BunPath.layer)
++);
+ 
+ describe("P1 Manual Mode proof harness", () => {
+-  layer(TestLayer)((it) => {
+-    it.effect("returns a sanitized live proof snapshot without exposing raw secret or provider CLI output", () =>
+-      Effect.gen(function* () {
+-        const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
+-        const result = yield* runP1ManualProof(
+-          new P1ManualProofRequest({
+-            discordBotTokenReference,
+-            discordChannelDisplayName: "proof-channel",
+-            discordChannelId: "channel-1",
+-            discordGuildId: "guild-1",
+-            operatorLabel: "test",
+-            targetPlatform: "macos",
+-            testMessageContent: "Stack Installer P1 proof",
+-          })
+-        );
+-        const encoded = yield* encodeProofResult(result);
+-
+-        expect(result.snapshot.manifest.dryRunOnly).toBe(false);
+-        expect(A.every(result.snapshot.validationEvents, (event) => event.status === "passed")).toBe(true);
+-        expect(encoded).not.toContain("raw-secret-value");
+-        expect(encoded).not.toContain("claude-raw-provider-status-output");
+-        expect(encoded).not.toContain("codex-raw-provider-status-output");
+-        expect(encoded).toContain("message-1");
+-      })
+-    );
+-
+-    it.effect("records Bash commands for macOS proof artifacts", () =>
+-      Effect.gen(function* () {
+-        const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
+-        const commands = buildP1ProofCommandsText(
+-          new P1ManualProofRequest({
+-            discordBotTokenReference,
+-            discordChannelDisplayName: "proof-channel",
+-            discordChannelId: "channel-1",
+-            discordGuildId: "guild-1",
+-            operatorLabel: "operator-macos-001",
+-            targetPlatform: "macos",
+-            testMessageContent: "Stack Installer P1 macOS proof",
+-          }),
+-          {
+-            outputDir: "/repo/output/stack-installer/p1-live/macos",
+-            requestJson: '{"targetPlatform":"macos"}',
+-          }
+-        );
+-
+-        expect(commands).toContain("command -v op");
+-        expect(commands).toContain("(cd apps/stack-installer && bun run p1:proof:capture");
+-        expect(commands).toContain("--output-dir '/repo/output/stack-installer/p1-live/macos'");
+-        expect(commands).not.toContain("Get-Command op");
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(true);
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(false);
+-      })
+-    );
+-
+-    it.effect("records PowerShell commands for Windows proof artifacts", () =>
+-      Effect.gen(function* () {
+-        const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
+-        const commands = buildP1ProofCommandsText(
+-          new P1ManualProofRequest({
+-            discordBotTokenReference,
+-            discordChannelDisplayName: "proof-channel",
+-            discordChannelId: "channel-1",
+-            discordGuildId: "guild-1",
+-            operatorLabel: "operator-windows-001",
+-            targetPlatform: "windows",
+-            testMessageContent: "Stack Installer P1 Windows proof",
+-          }),
+-          {
+-            outputDir: "C:\\repo\\output\\stack-installer\\p1-live\\windows",
+-            requestJson: '{"targetPlatform":"windows"}',
+-          }
+-        );
+-
+-        expect(commands).toContain("Get-Command op");
+-        expect(commands).toContain("Push-Location apps/stack-installer");
+-        expect(commands).toContain("$stackInstallerOutputDir = 'C:\\repo\\output\\stack-installer\\p1-live\\windows'");
+-        expect(commands).toContain('--output-dir "$stackInstallerOutputDir"');
+-        expect(commands).not.toContain("command -v op");
+-        expect(commands).not.toContain("(cd apps/stack-installer");
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(true);
+-        expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(false);
+-      })
+-    );
+-  });
++  it.effect("returns a sanitized live proof snapshot without exposing raw secret or provider CLI output", () =>
++    Effect.gen(function* () {
++      const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
++      const result = yield* runP1ManualProof(
++        new P1ManualProofRequest({
++          discordBotTokenReference,
++          discordChannelDisplayName: "proof-channel",
++          discordChannelId: "channel-1",
++          discordGuildId: "guild-1",
++          operatorLabel: "test",
++          targetPlatform: "macos",
++          testMessageContent: "Stack Installer P1 proof",
++        })
++      );
++      const encoded = yield* encodeProofResult(result);
++
++      expect(result.snapshot.manifest.dryRunOnly).toBe(false);
++      expect(A.every(result.snapshot.validationEvents, (event) => event.status === "passed")).toBe(true);
++      expect(encoded).not.toContain("raw-secret-value");
++      expect(encoded).not.toContain("claude-raw-provider-status-output");
++      expect(encoded).not.toContain("codex-raw-provider-status-output");
++      expect(encoded).toContain("message-1");
++    }).pipe(Effect.provide(TestLayer))
++  );
++
++  it.effect("records Bash commands for macOS proof artifacts", () =>
++    Effect.gen(function* () {
++      const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
++      const commands = buildP1ProofCommandsText(
++        new P1ManualProofRequest({
++          discordBotTokenReference,
++          discordChannelDisplayName: "proof-channel",
++          discordChannelId: "channel-1",
++          discordGuildId: "guild-1",
++          operatorLabel: "operator-macos-001",
++          targetPlatform: "macos",
++          testMessageContent: "Stack Installer P1 macOS proof",
++        }),
++        {
++          outputDir: "/repo/output/stack-installer/p1-live/macos",
++          requestJson: '{"targetPlatform":"macos"}',
++        }
++      );
++
++      expect(commands).toContain("command -v op");
++      expect(commands).toContain("(cd apps/stack-installer && bun run p1:proof:capture");
++      expect(commands).toContain("--output-dir '/repo/output/stack-installer/p1-live/macos'");
++      expect(commands).not.toContain("Get-Command op");
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(true);
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(false);
++    }).pipe(Effect.provide(TestLayer))
++  );
++
++  it.effect("records PowerShell commands for Windows proof artifacts", () =>
++    Effect.gen(function* () {
++      const discordBotTokenReference = yield* decodeOnePasswordReference("op://Private/Discord Bot/token");
++      const commands = buildP1ProofCommandsText(
++        new P1ManualProofRequest({
++          discordBotTokenReference,
++          discordChannelDisplayName: "proof-channel",
++          discordChannelId: "channel-1",
++          discordGuildId: "guild-1",
++          operatorLabel: "operator-windows-001",
++          targetPlatform: "windows",
++          testMessageContent: "Stack Installer P1 Windows proof",
++        }),
++        {
++          outputDir: "C:\\repo\\output\\stack-installer\\p1-live\\windows",
++          requestJson: '{"targetPlatform":"windows"}',
++        }
++      );
++
++      expect(commands).toContain("Get-Command op");
++      expect(commands).toContain("Push-Location apps/stack-installer");
++      expect(commands).toContain("$stackInstallerOutputDir = 'C:\\repo\\output\\stack-installer\\p1-live\\windows'");
++      expect(commands).toContain('--output-dir "$stackInstallerOutputDir"');
++      expect(commands).not.toContain("command -v op");
++      expect(commands).not.toContain("(cd apps/stack-installer");
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "windows")).toBe(true);
++      expect(p1ProofCommandsTextMatchesPlatform(commands, "macos")).toBe(false);
++    }).pipe(Effect.provide(TestLayer))
++  );
+ });
+ 
+ describe("P1 proof artifact helpers", () => {
+diff --git a/bun.lock b/bun.lock
+index deaf7ca357..f140a0a81b 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -169,6 +169,7 @@
+       "version": "0.0.0",
+       "dependencies": {
+         "@beep/ai-provider-cli": "workspace:^",
++        "@beep/bun-cli": "workspace:^",
+         "@beep/discord": "workspace:^",
+         "@beep/identity": "workspace:^",
+         "@beep/installer-channels-domain": "workspace:^",
+@@ -412,6 +413,19 @@
+         "@types/node": "catalog:",
+       },
+     },
++    "packages/drivers/bun-cli": {
++      "name": "@beep/bun-cli",
++      "version": "0.0.0",
++      "dependencies": {
++        "@beep/identity": "workspace:^",
++        "@beep/schema": "workspace:^",
++        "effect": "catalog:",
++      },
++      "devDependencies": {
++        "@effect/vitest": "catalog:",
++        "@types/node": "catalog:",
++      },
++    },
+     "packages/drivers/discord": {
+       "name": "@beep/discord",
+       "version": "0.0.0",
+@@ -967,6 +981,7 @@
+       "name": "@beep/installer-dependencies-server",
+       "version": "0.0.0",
+       "dependencies": {
++        "@beep/bun-cli": "workspace:^",
+         "@beep/identity": "workspace:^",
+         "@beep/installer-dependencies-domain": "workspace:^",
+         "@beep/installer-dependencies-use-cases": "workspace:^",
+@@ -1954,6 +1969,8 @@
+ 
+     "@beep/architecture-lab-use-cases": ["@beep/architecture-lab-use-cases@workspace:packages/architecture-lab/use-cases"],
+ 
++    "@beep/bun-cli": ["@beep/bun-cli@workspace:packages/drivers/bun-cli"],
++
+     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
+ 
+     "@beep/codedank-web": ["@beep/codedank-web@workspace:apps/codedank-web"],
+diff --git a/initiatives/stack-installer/PLAN.md b/initiatives/stack-installer/PLAN.md
+index 1ab1e4fd75..12b5be4d81 100644
+--- a/initiatives/stack-installer/PLAN.md
++++ b/initiatives/stack-installer/PLAN.md
+@@ -2,9 +2,10 @@
+ 
+ This plan executes [SPEC.md](./SPEC.md). P0 is complete. P1 is the active
+ target: Discord vertical, Manual Mode. P1A is complete as a runnable dry-run
+-checkpoint. The P1 live harness is implemented; full P1 still requires
+-fresh-OS macOS and Windows proof artifacts plus the post-proof PR readiness
+-review/fix loop.
++checkpoint. The P1 live harness is implemented. macOS proof is complete and
++audited. Windows proof is still missing, but is temporarily waived only so the
++P1C review/fix loop can start. Full P1 still requires a real Windows proof
++artifact plus the post-proof PR readiness review/fix loop.
+ 
+ ## P0: Initiative Bootstrap
+ 
+@@ -44,7 +45,8 @@ Stop Conditions:
+ ## P1: Discord Vertical, Manual Mode
+ 
+ Status: in progress; P1A dry-run runnable spine complete, P1 live harness
+-implemented, fresh-OS live Discord proof and PR readiness review pending
++implemented, macOS proof complete, Windows proof temporarily waived for P1C
++start only, full P1 closure still pending
+ 
+ Goal: Prove the smallest end-to-end v1 path without AI Mode: provider auth,
+ 1Password, Discord bot/channel setup, manifest creation, validation, and a
+@@ -142,7 +144,8 @@ Stop Conditions:
+ 
+ ### P1C: PR Readiness Review And Fix Loop
+ 
+-Status: pending; run after fresh-machine proof artifacts exist
++Status: pending; may start after audited macOS proof plus either audited
++Windows proof or an explicit temporary Windows missing-proof waiver
+ 
+ Goal: review the whole implemented P1 initiative surface and directly affected
+ code paths before the PR is called ready. The review uses
+@@ -152,8 +155,9 @@ flow.
+ 
+ Exit Criteria:
+ 
+-- [ ] Fresh macOS and Windows proof artifacts have been produced and audited
+-  for secret safety before the review starts.
++- [ ] Audited macOS proof artifact exists before the review starts.
++- [ ] Audited Windows proof artifact exists, or an explicit temporary Windows
++  missing-proof waiver is recorded for P1C start.
+ - [ ] Baseline quality commands are green on the current branch.
+ - [ ] Reviewer panel covers quality gates, architecture boundaries, schema and
+   domain models, Effect laws, error boundaries, tests, observability,
+@@ -181,8 +185,9 @@ Required Checks:
+ 
+ Stop Conditions:
+ 
+-- Do not start P1C before the macOS and Windows fresh-machine proof artifacts
+-  exist.
++- Do not start P1C before the audited macOS proof artifact exists.
++- Do not treat a Windows missing-proof waiver as Windows success or as full P1
++  closure evidence.
+ - Do not route vague reuse findings into generic `common`, `core`, `utils`, or
+   `lib` packages.
+ - Do not call the PR ready while baseline quality is red or required blockers
+@@ -231,6 +236,57 @@ Stop Conditions:
+ - Do not include AI Mode evidence as a substitute for Manual Mode.
+ - Do not accept any verb that handles plaintext credentials.
+ 
++## P1D: App-First Manual Installer UX
++
++Status: pending
++
++Goal: move the next meaningful milestone from proof-harness confidence to
++product confidence by making the Tauri app the primary operator surface and
++having it complete one real dependency install or repair action.
++
++Scope notes:
++
++- Stage this milestone on Linux first so the next proof loop can run locally.
++- Keep macOS and Windows as the long-term parity target; Linux-first staging
++  does not change the v1 parity doctrine.
++- The first real action is Bun install or repair owned by
++  `installer-dependencies`, not app-local glue code.
++
++Exit Criteria:
++
++- [ ] `apps/stack-installer` opens as the primary surface for this milestone.
++- [ ] The app detects Bun missing or unhealthy and presents a typed install or
++  repair action.
++- [ ] The action is approval-first and mutates the host only after explicit
++  user approval.
++- [ ] `installer-dependencies` owns the live Bun install/repair contract and
++  server implementation.
++- [ ] After the action runs, the same validation spine reports Bun as present
++  or returns a typed failure with visible status.
++- [ ] Linux-first proof artifacts show the app-first Bun flow end to end.
++
++Required Outputs:
++
++- `history/outputs/p1d-app-first-manual-installer-ux.md`
++- `ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md`
++
++Required Checks:
++
++- targeted package/app `check`, `test`, and `lint` for the touched installer
++  slices and app
++- `bun run config-sync:check`
++- `cd apps/stack-installer && bun run build`
++- `cd apps/stack-installer/src-tauri && cargo check`
++- Linux-first app-driven Bun install/repair proof capture and audit
++
++Stop Conditions:
++
++- Do not start P2 before P1D closes.
++- Do not hide the real dependency mutation in shell scripts owned outside the
++  installer slice boundary.
++- Do not add plaintext credential handling or broaden this milestone into AI
++  Mode, MCP runtime, recovery, portability, signing, or distribution.
++
+ ## P2: AI Mode Parity
+ 
+ Status: pending
+diff --git a/initiatives/stack-installer/README.md b/initiatives/stack-installer/README.md
+index eae49d0578..96d55262ba 100644
+--- a/initiatives/stack-installer/README.md
++++ b/initiatives/stack-installer/README.md
+@@ -23,8 +23,10 @@ package contracts, deterministic manifest snapshot, `@beep/ui` web shell, and
+ a minimal Tauri 2 bridge. The P1 live Manual Mode harness is now implemented:
+ driver packages validate 1Password, provider auth, host commands, and Discord
+ liveness, and the app exposes Tauri and CLI proof capture commands. Fresh-OS
+-macOS and Windows proof artifacts plus a post-proof PR readiness review are
+-still required before P1 can close.
++macOS proof is complete and audited. Windows proof is temporarily waived only
++to let the P1C review/fix loop start. Full P1 still stays open until a real
++Windows proof artifact and the post-proof PR readiness review are both
++complete.
+ 
+ ## Read This First
+ 
+@@ -42,9 +44,14 @@ still required before P1 can close.
+ - [history/outputs/p1-completion-audit.md](./history/outputs/p1-completion-audit.md)
+   - current prompt-to-artifact completion audit for the active P1 goal
+ - [history/outputs/p1-pr-readiness-review.md](./history/outputs/p1-pr-readiness-review.md)
+-  - pending post-proof quality review and fix-loop record
++  - post-proof quality review and fix-loop record, including the temporary
++    Windows missing-proof waiver
++- [history/outputs/p1d-app-first-manual-installer-ux.md](./history/outputs/p1d-app-first-manual-installer-ux.md)
++  - next milestone stub: app-first Manual Installer UX with one real action
+ - [ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md](./ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md)
+   - user-operated macOS and Windows proof runbook
++- [ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md](./ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md)
++  - next milestone handoff stub for Linux-first app-driven Bun install/repair
+ - [ops/handoffs/GOAL_P1_MACOS_PROOF.md](./ops/handoffs/GOAL_P1_MACOS_PROOF.md)
+   - short `/goal` indirection target for the buddy MacBook Pro proof run
+ - [research/README.md](./research/README.md) - research index
+@@ -61,12 +68,14 @@ still required before P1 can close.
+   exist, validate 1Password-reference-only inputs, compose slice-owned verb
+   contracts, and render a deterministic manifest preview.
+ - P1 live harness is implemented: app-local proof composition, Tauri command,
+-  CLI artifact capture/audit, and live driver-backed validators exist. P1
+-  remains open until fresh-OS proof on macOS and Windows is recorded and the
+-  PR readiness review/fix loop returns zero required blockers or explicit
+-  waivers.
+-- P2 is pending: AI Mode parity across Claude and Codex with byte-identical
+-  manifest output modulo timestamps.
++  CLI artifact capture/audit, and live driver-backed validators exist. macOS
++  proof is complete. Windows proof is missing but temporarily waived so P1C
++  can start; full P1 remains open until Windows proof is real and audited.
++- P1D is pending after P1C: the app must become the primary operator surface
++  and complete one real machine-changing dependency action, starting on Linux
++  with Bun install/repair.
++- P2 is pending after P1D: AI Mode parity across Claude and Codex with
++  byte-identical manifest output modulo timestamps.
+ - P3 is pending: recovery proof from salted-broken-state machines.
+ - P4 is pending: portability proof from exported manifest on Machine A to
+   imported validator suite on Machine B.
+@@ -81,6 +90,8 @@ This initiative is done only when all are true:
+ - [ ] P1 Discord Manual Mode fresh-OS Windows proof is recorded.
+ - [ ] P1 PR readiness review/fix loop is recorded with zero required blockers
+   or explicit waivers.
++- [ ] P1D app-first Manual Installer UX is recorded with a real app-driven
++  dependency install/repair action.
+ - [ ] P2 AI Mode parity is recorded for Claude and Codex with a
+   byte-identical-manifest gate modulo timestamps.
+ - [ ] P3 recovery scenarios prove repair for wrong Node version, invalid
+diff --git a/initiatives/stack-installer/SPEC.md b/initiatives/stack-installer/SPEC.md
+index 0f22a3ed88..f499d62d92 100644
+--- a/initiatives/stack-installer/SPEC.md
++++ b/initiatives/stack-installer/SPEC.md
+@@ -248,12 +248,21 @@ P1 is complete when fresh-OS macOS and Windows Manual Mode runs complete
+ provider auth, 1Password setup, Discord setup, and an end-to-end test message,
+ with screencasts, sanitized manifest, CI green for the vertical verbs, and a
+ post-proof PR readiness review/fix loop with zero required blockers or explicit
+-waivers.
+-Local harness implementation alone is not sufficient to close P1.
++waivers. Local harness implementation alone is not sufficient to close P1.
++
++P1C, the post-proof review/fix loop, may begin after audited macOS proof plus
++either audited Windows proof or an explicit temporary Windows missing-proof
++waiver. That waiver is sequencing-only. It does not count as Windows success
++and does not close P1.
++
++P1D is complete when the Tauri app becomes the primary operator surface for a
++Linux-first proof run and completes one real machine-changing dependency
++install or repair action through installer-owned code, with proof artifacts and
++validation showing the before and after state.
+ 
+ P2 is complete when the same flow runs in AI Mode for Claude and Codex, with
+ screencasts, structured action logs, and a byte-identical-manifest gate modulo
+-timestamps between P1 and P2.
++timestamps between P1D and P2.
+ 
+ P3 is complete when AI Mode repairs salted broken states for wrong Node
+ version, invalid Discord token, and missing 1Password reference, with
+diff --git a/initiatives/stack-installer/history/outputs/p1-completion-audit.md b/initiatives/stack-installer/history/outputs/p1-completion-audit.md
+index 05643caef9..4cf701a59f 100644
+--- a/initiatives/stack-installer/history/outputs/p1-completion-audit.md
++++ b/initiatives/stack-installer/history/outputs/p1-completion-audit.md
+@@ -1,223 +1,75 @@
+ # P1 Completion Audit
+ 
+-Status: blocked; not complete.
++Status: blocked for full P1 close; P1C may start under waiver.
+ 
+-Audit date: 2026-05-14
++Audit date: 2026-05-16
+ 
+-This audit maps the active `/goal` objective to concrete repository evidence.
+-It is intentionally strict: substantial implementation work, green targeted
+-checks, and a complete manifest are not enough to close P1 unless every
+-required artifact and gate below has direct evidence.
++This audit now distinguishes two truths:
++
++- the current branch is ready to start the P1C review/fix loop because macOS
++  proof is complete and Windows has an explicit temporary missing-proof waiver
++  for sequencing
++- full P1 is still blocked until a real Windows proof artifact exists and is
++  audited
+ 
+ ## Objective Restated
+ 
+-Complete Stack Installer P1 live Manual Mode proof from the current P1A branch
+-without stopping until:
++Keep the P1 packet honest after the completed macOS proof:
++
++- preserve the rule that full P1 needs real macOS and Windows fresh-machine
++  proof artifacts
++- allow the current branch to start P1C under an explicit temporary Windows
++  missing-proof waiver
++- queue the next meaningful product milestone as app-first Manual Installer UX
++- keep P2 AI Mode, MCP runtime, recovery, portability, signing, and
++  distribution work untouched for now
++
++## Current Gate Position
++
++- macOS proof: complete and audited on the coordinator checkout
++- Windows proof: still missing
++- Windows disposition: temporarily waived for P1C start only
++- P1C review/fix loop: may start now
++- full P1 close: still blocked
++
++## Evidence Snapshot
++
++- `output/stack-installer/p1-live/macos/` exists and includes:
++  - `proof.json`
++  - `commands.txt`
++  - `sha256sums.txt`
++  - `screencast.mp4`
++- `output/stack-installer/p1-live/stack-installer-p1-macos.tgz` exists
++- `bun run p1:proof:audit -- --platform macos` passed after intake
++- returned Windows bundle and extracted Windows proof directory are still
++  missing
++- `history/outputs/p1-pr-readiness-review.md` now records the temporary
++  Windows missing-proof waiver and its follow-up trigger
++
++## Completion Interpretation
++
++What is complete:
++
++- P1A dry-run runnable spine
++- P1 live Manual Mode harness implementation
++- macOS fresh-machine Manual Mode proof
++- packet updates needed to let P1C start under an explicit waiver
++
++What is not complete:
+ 
+-- P1A is committed.
+-- P1 live validators and Tauri proof flow are implemented.
+-- targeted repo checks pass.
+-- macOS and Windows user-operated fresh-machine proof artifacts are recorded.
+-- initiative manifest and history are updated.
+-- P2 AI Mode, MCP runtime, recovery, portability, signing, and distribution
+-  work remain untouched.
++- Windows fresh-machine Manual Mode proof
++- full P1 closure
++- P1D app-first Manual Installer UX
++- P2 and later phases
+ 
+-## Current Checkout Evidence
++## Required Follow-Up
+ 
+-- Branch: `feat/stack-installer-p1-live`
+-- Latest branch evidence includes the proof upload status progress update,
+-  which makes `initiatives/stack-installer/ops/proof-upload-status.mjs` parse
+-  detached `proof-watch.log` progress and print pending, passed, or exhausted
+-  watcher state plus remaining attempts and time estimate without printing the
+-  upload token or endpoint response bodies.
+-- Earlier branch evidence includes the proof upload smoke harness, which adds
+-  `initiatives/stack-installer/ops/proof-upload-smoke.mjs` as a repeatable
+-  temporary-local check for upload-window endpoint authentication, generated
+-  operator notes, file modes, token-leak indicators, and `--reuse-token`
+-  behavior without touching live proof artifacts.
+-- Earlier branch evidence also includes
+-  `initiatives/stack-installer/ops/p1-completion-check.mjs`, a conservative
+-  prompt-to-artifact completion checklist that exits nonzero until the fresh
+-  macOS and Windows artifacts exist, `p1:proof:audit-all` passes, and the
+-  post-proof review is complete. It also checks the branch diff against
+-  `origin/main` for forbidden P2 AI Mode, MCP, runtime, skill-bundle, or
+-  executor implementation paths while allowing pending future-phase packet
+-  stubs.
+-- Earlier branch evidence includes the remote operator next-actions endpoint
+-  update, which exposes generated `OPERATOR_NEXT_ACTIONS.md` through
+-  token-protected `GET /next-actions` so proof machines with the bearer token
+-  can fetch the full current runbook without coordinator file sharing.
+-- Earlier branch evidence includes the upload-window operator inbox generation
+-  update, which makes `start-proof-upload-window.mjs` regenerate ignored
+-  `README.operator-inbox.md` and `OPERATOR_NEXT_ACTIONS.md` files alongside
+-  `proof-upload-commands.txt` so local proof-window notes do not drift from the
+-  active upload endpoints.
+-- Earlier branch evidence includes the upload-window endpoint status update,
+-  which makes `proof-upload-status.mjs` validate the public landing page plus
+-  token-protected `/status` and `/commands` behavior without printing the token
+-  or endpoint response bodies.
+-- Earlier branch evidence includes the upload command endpoint update, which
+-  lets a proof machine fetch the current coordinator-generated upload commands
+-  through token-protected `GET /commands` without SSH or file sharing.
+-- Earlier branch evidence includes the upload restart and landing-page update,
+-  which lets the coordinator restart the live upload helper with `--reuse-token`
+-  and exposes a non-secret `GET /` operator landing page while keeping
+-  `/status`, `/commands`, and `/upload/*` token-protected.
+-- Earlier branch evidence includes the detached proof-window status update,
+-  which keeps `initiatives/stack-installer/ops/proof-upload-status.mjs` as the
+-  single coordinator command for upload server health, private-file modes,
+-  returned bundle presence, platform artifact status, and detached watcher
+-  state.
+-- Earlier branch evidence includes `76e62e1d0c docs(stack-installer): add
+-  proof watch starter`, which adds the detached coordinator watch starter at
+-  `initiatives/stack-installer/ops/start-proof-watch-window.mjs` and documents
+-  its private `proof-watch.log`, `proof-watch.pid`, and
+-  `proof-watch-command.txt` outputs under the ignored proof inbox.
+-- Earlier branch evidence includes `91fa8041a5 docs(stack-installer):
+-  advertise upload aliases`, which lets the upload-window starter emit both
+-  raw tailnet and MagicDNS operator URLs without rotating the live upload token.
+-- Earlier branch evidence includes `d93e83320b chore: merge origin main into
+-  stack installer p1`, which syncs the branch with `origin/main` at
+-  `97636ab4ff`, keeps both the `opip-web-launch` and `stack-installer`
+-  initiative index entries, and keeps both the Stack Installer TypeScript path
+-  aliases plus main's `@beep/ui/themes/theme-init-script` alias.
+-- Earlier branch evidence includes `57d518069f docs(stack-installer): record
+-  upload route blockers`, which records the verified MagicDNS upload endpoint,
+-  the absence of `PUT` or `POST` upload attempts, and the Taildrop peer
+-  ownership blocker for coordinator-side sends to the Windows peer.
+-- Earlier branch evidence includes `2475433ad0 docs(stack-installer): tighten
+-  pr readiness review gate`, which records the stricter post-proof requirement
+-  to run `$quality-review-fix-loop` across the whole implemented P1 initiative
+-  surface and directly affected code paths, including reuse opportunities,
+-  structural simplification, flat idiomatic modules, and repo-law alignment.
+-- Earlier branch evidence includes `0e95b717ce test(stack-installer): cover
+-  desktop proof flow`, `7c8ccac126 test(stack-installer): cover p1 proof
+-  artifact helpers`, `61c9a94f1c feat(stack-installer): surface proof bundle
+-  extraction`, and `7923a2387a feat(stack-installer): report p1 proof artifact
+-  status`.
+-- Relevant audit evidence lives on the pushed branch in
+-  `apps/stack-installer/src/proof/capture-p1-manual-proof.ts`,
+-  `ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md`, and this completion audit
+-  output.
+-- Base evidence after latest `git fetch origin main`: `origin/main` remains at
+-  `97636ab4ff` and is an ancestor of the current branch.
+-- Worktree status before this proof-status progress update: clean and even with
+-  `origin/feat/stack-installer-p1-live` at `d20e8637f5`.
+-- Latest post-main-sync verification:
+-  `bun run config-sync:check`, `bun run --filter @beep/stack-installer check`,
+-  `bun run --filter @beep/stack-installer test`,
+-  `bun run --filter @beep/stack-installer lint`,
+-  `bun run --filter @beep/stack-installer build`, `cargo check` in
+-  `apps/stack-installer/src-tauri`, and `git diff --check` all pass after the
+-  merge. `bun run --filter @beep/stack-installer p1:proof:audit-all --
+-  --output-root output/stack-installer/p1-live` still fails only because the
+-  real `macos` and `windows` proof artifact directories are missing.
+-- Latest proof upload smoke verification:
+-  `node initiatives/stack-installer/ops/proof-upload-smoke.mjs` passes against
+-  a temporary localhost upload window. It verifies upload-window token reuse,
+-  private/public generated file modes, `/health`, public `/`, token-protected
+-  `/status`, `/commands`, and `/next-actions`, expected route/runbook content,
+-  invalid-token upload rejection, unsupported file-name rejection, approved
+-  macOS `PUT` and Windows `POST` bundle storage, `/status` bundle reporting
+-  after upload, stored bundle content, stored bundle `0600` file modes, and
+-  absence of token-like text in generated notes and endpoint responses.
+-- Latest completion check verification:
+-  `node initiatives/stack-installer/ops/p1-completion-check.mjs --output-root
+-  output/stack-installer/p1-live --base-ref origin/main` exits `1` as
+-  expected. It passes manifest evidence for P1A, the P1 live harness, active P1
+-  target, pending P2, and the branch-diff check for no forbidden P2 AI
+-  Mode/MCP/runtime implementation paths, then blocks on missing macOS and
+-  Windows returned bundles, missing platform proof directories, skipped
+-  `p1:proof:audit-all`, and pending post-proof review.
+-- Latest proof upload status verification:
+-  `node initiatives/stack-installer/ops/proof-upload-status.mjs --host
+-  100.117.213.114 --port 8765 --alternate-url-base
+-  http://dankputer.tailc7c348.ts.net:8765 --output-root
+-  output/stack-installer/p1-live --fail-on-missing` exits `1` as expected
+-  because returned bundles and platform artifact directories are still missing.
+-  The same run verifies upload-window health, private file modes,
+-  token-protected status, commands, and next-actions endpoints, token-leak
+-  indicators, detached watcher progress, and MagicDNS alternate endpoint
+-  health/landing/status/commands/next-actions responses. It also reports
+-  `runbook activity: landing 54; commands 51; next-actions 51; remotes:
+-  100.117.213.114` and `upload activity: 0 attempts; 0 stored; 0 rejected;
+-  remotes: none`, confirming no non-coordinator proof machine has fetched the
+-  runbook endpoints or attempted a `PUT` or `POST` upload yet. The same status
+-  command now checks the local process table for watchers tied to the proof
+-  output root; current active processes are the expected watcher parent/child
+-  pair only, and the stale-process check reports `ok`.
+-- Latest upload-window operator-routing hardening:
+-  `proof-upload-server.mjs` now makes the public landing page spell out the
+-  non-secret proof-operator path for users who only have the endpoint URL:
+-  get the private token out-of-band, set `STACK_INSTALLER_PROOF_UPLOAD_TOKEN`,
+-  fetch token-protected `/next-actions`, then upload only an approved bundle
+-  name. `proof-upload-status.mjs` summarizes upload attempts, stored uploads,
+-  rejected uploads, and upload remotes from the private log. The upload-window
+-  starter supports `--preserve-log` so a `--reuse-token` restart can refresh
+-  server code without erasing active transfer-window evidence.
+-- Latest live upload-window refresh:
+-  `start-proof-upload-window.mjs --replace-existing --reuse-token
+-  --preserve-log` restarted the live upload server with the existing token,
+-  preserved the private transfer log, and made the clearer public landing page
+-  visible at the active endpoint. The refreshed status command reports upload
+-  PID `1199734`, `upload activity: 0 attempts; 0 stored; 0 rejected; remotes:
+-  none`, and missing macOS/Windows bundles. The public landing page now renders
+-  request-host-specific `/health`, `/status`, `/commands`, `/next-actions`, and
+-  approved `/upload/*` URLs so an operator who receives only the endpoint URL
+-  sees copy-ready, non-secret command shapes. The MagicDNS landing page was
+-  verified at `http://dankputer.tailc7c348.ts.net:8765/`, and the upload smoke
+-  harness now asserts request-host-specific landing URLs plus absence of
+-  token-like text in the public landing response.
+-- Latest coordinator-side Taildrop unblock attempt:
+-  `sudo -n tailscale set --operator=$USER` fails with `sudo: a password is
+-  required`, so Taildrop still requires an interactive coordinator-side sudo
+-  step. Until that is done, the tokenized temporary tailnet upload window
+-  remains the active private transfer path.
+-- Local artifact scan before this audit update:
+-  `output/stack-installer/p1-live` exists, but the required `macos` and
+-  `windows` platform directories are missing.
+-- Current read-only artifact status:
+-  `bun run --filter @beep/stack-installer p1:proof:status` exits successfully
+-  and reports the `macos` and `windows` platform directories as missing. When
+-  returned `stack-installer-p1-*.tgz` or `.zip` bundles are present at the
+-  output root, the same status command prints the extraction command before the
+-  final audit gate.
+-- Current artifact intake status:
+-  `bun run --filter @beep/stack-installer p1:proof:intake` exits successfully
+-  against the empty output root, reports that no returned bundles are present,
+-  and prints the same missing-directory status. When returned platform bundles
+-  are present, this command extracts them before the final audit gate. A
+-  temporary coordinator smoke verified extraction of both
+-  `stack-installer-p1-macos.tgz` and `stack-installer-p1-windows.zip` into the
+-  required platform directories.
+-- Current artifact watch status:
+-  `cd apps/stack-installer && bun run p1:proof:watch -- --watch-attempts 1 --watch-interval-ms 1`
+-  fails as expected against the empty output root, printing the same missing
+-  macOS and Windows directory status. The watch helper is a bounded polling
+-  convenience for transfer windows, not a proof substitute.
+-- Current detached proof-watch state:
+-  `node initiatives/stack-installer/ops/start-proof-watch-window.mjs
+-  --output-root output/stack-installer/p1-live --watch-attempts 2880
+-  --watch-interval-ms 5000 --replace-existing --preserve-log` starts or
+-  extends a detached coordinator-side `p1:proof:watch` process with private
+-  `0600` `proof-watch.log`, `proof-watch.pid`, and
+-  `proof-watch-command.txt` files. The watcher starter now stops the existing
+-  detached process group on replacement so a stale Bun child does not continue
+-  writing to the same private log. After stopping stale watcher children and
+-  restarting with preserved private log evidence, the current detached watcher
+-  is alive as PID `1188608`, with one expected Bun child, polling the proof
+-  inbox for roughly four more hours, but has not found any returned bundles or
+-  platform artifact directories.
+-- Latest coordinator wait:
+-  `bun run --filter @beep/stack-installer p1:proof:watch -- --watch-attempts 6 --watch-interval-ms 5000`
+-  exhausted all attempts without finding returned bundles and ended with the
+-  same missing `macos` and `windows` platform directories.
+-- Latest upload-window wait:
+-  after starting a temporary ignored tailnet upload endpoint at
+-  `http://100.117.213.114:8765`, the coordinator ran
+-  `bun run --filter @beep/stack-installer p1:proof:watch -- --watch-attempts 24 --watch-interval-ms 5000`.
+-  The endpoint health check passed, invalid tokens returned `403`, and the
+-  watch exhausted without returned bundles. The tokenized operator commands
++1. Run P1C now under the recorded temporary Windows missing-proof waiver.
++2. Keep the waiver visible in the reviewer inventory instead of treating it as
++   hidden debt.
++3. Remove the waiver only after a real Windows proof bundle is produced,
++   returned, and audited.
++4. Start P1D only after the P1C loop is complete.
+   live only in ignored `output/stack-installer/p1-live/proof-upload-commands.txt`
+   and are not committed.
+ - Current upload fallback state:
+diff --git a/initiatives/stack-installer/history/outputs/p1-pr-readiness-review.md b/initiatives/stack-installer/history/outputs/p1-pr-readiness-review.md
+index 774682f402..0d81a10531 100644
+--- a/initiatives/stack-installer/history/outputs/p1-pr-readiness-review.md
++++ b/initiatives/stack-installer/history/outputs/p1-pr-readiness-review.md
+@@ -1,11 +1,12 @@
+ # P1 PR Readiness Review
+ 
+-Status: pending; run after fresh macOS and Windows proof artifacts are
+-available.
++Status: pending; P1C may start after audited macOS proof plus either audited
++Windows proof or the temporary waiver recorded below.
+ 
+ This output records the post-proof `$quality-review-fix-loop` closure pass for
+-Stack Installer P1. It must not start until the fresh-machine Manual Mode proof
+-artifacts have been produced and audited for secret safety.
++Stack Installer P1. Full P1 still requires real macOS and Windows Manual Mode
++proof artifacts, but the review loop may start under a sequencing-only
++temporary Windows missing-proof waiver.
+ 
+ This is a comprehensive review of the whole P1 initiative surface and directly
+ affected code paths as a system, not a narrow final lint pass.
+@@ -65,3 +66,32 @@ Populate this section after the loop runs:
+ - files changed:
+ - remaining risk:
+ - publish status:
++
++## Current Gate Position
++
++- macOS proof artifact: complete and audited
++- Windows proof artifact: missing
++- review-loop startability: allowed under temporary waiver
++- full P1 close: still blocked on real Windows proof
++
++## Temporary Waiver Record
++
++- source rule: `PLAN.md` P1C may start after audited macOS proof plus either
++  audited Windows proof or an explicit temporary Windows missing-proof waiver
++- waived item: Windows fresh-machine Manual Mode proof artifact for P1C start
++  only
++- disposition: accepted temporary waiver for P1C start only
++- reason: avoid blocking the P1C closure pass on an additional remote-machine
++  proof run while still keeping full P1 open until the real Windows proof
++  exists
++- owner: `@beep-team`
++- follow-up trigger: remove this waiver only after a real returned Windows
++  proof bundle exists on the coordinator checkout and the Windows proof audit
++  passes
++- residual risk: Windows-specific operator flow, auth behavior, dependency
++  setup friction, proof capture, and artifact-return behavior remain
++  unverified
++- acceptance evidence:
++  - `history/outputs/p1-completion-audit.md`
++  - `output/stack-installer/p1-live/macos/`
++  - `output/stack-installer/p1-live/stack-installer-p1-macos.tgz`
+diff --git a/initiatives/stack-installer/history/outputs/p1d-app-first-manual-installer-ux.md b/initiatives/stack-installer/history/outputs/p1d-app-first-manual-installer-ux.md
+new file mode 100644
+index 0000000000..bc14d3c44c
+--- /dev/null
++++ b/initiatives/stack-installer/history/outputs/p1d-app-first-manual-installer-ux.md
+@@ -0,0 +1,15 @@
++# P1D App-First Manual Installer UX
++
++Status: pending.
++
++This file will record evidence from phase P1D once that phase is executed. See
++[PLAN.md](../../PLAN.md) for exit criteria.
++
++Expected evidence:
++
++- Tauri app opens as the primary operator surface
++- Bun missing or unhealthy state detected in-app
++- approval-first install or repair action
++- real Linux-first Bun mutation driven through installer-owned code
++- before and after validation output
++- screencast or equivalent app-first proof artifacts
+diff --git a/initiatives/stack-installer/history/outputs/p2-ai-mode-parity.md b/initiatives/stack-installer/history/outputs/p2-ai-mode-parity.md
+index 8cfd4dd283..079414a82f 100644
+--- a/initiatives/stack-installer/history/outputs/p2-ai-mode-parity.md
++++ b/initiatives/stack-installer/history/outputs/p2-ai-mode-parity.md
+@@ -5,6 +5,8 @@ Status: pending.
+ This file will record evidence from phase P2 once that phase is executed. See
+ [PLAN.md](../../PLAN.md) for exit criteria.
+ 
++P2 does not start until P1D app-first Manual Installer UX is complete.
++
+ Expected evidence:
+ 
+ - Claude AI Mode screencast
+diff --git a/initiatives/stack-installer/ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md b/initiatives/stack-installer/ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md
+new file mode 100644
+index 0000000000..3363d715b0
+--- /dev/null
++++ b/initiatives/stack-installer/ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md
+@@ -0,0 +1,29 @@
++# Handoff P1D - App-First Manual Installer UX
++
++Status: stub.
++
++## Mission
++
++Make the Tauri app the primary operator surface for the next milestone and
++prove one real dependency install or repair action end to end.
++
++The first real action is Linux-first Bun install or repair owned by
++`installer-dependencies`.
++
++## Required Startup
++
++- Read `../../SPEC.md`.
++- Read `../../PLAN.md`.
++- Read `../manifest.json`.
++- Read `../../history/outputs/p1-pr-readiness-review.md`.
++- Read `../../history/outputs/p1-completion-audit.md`.
++
++## Scope Guardrails
++
++- Keep the mutation owned by installer slice contracts and server
++  implementation, not app-local shell glue.
++- Keep the UX approval-first.
++- Keep this milestone Linux-first for proof staging.
++- Do not start P2 AI Mode work from this handoff.
++
++Full prompt to be authored after the P1C loop closes.
+diff --git a/initiatives/stack-installer/ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md b/initiatives/stack-installer/ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md
+index abd6e62e5b..79a45f2114 100644
+--- a/initiatives/stack-installer/ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md
++++ b/initiatives/stack-installer/ops/handoffs/HANDOFF_P1_DISCORD_MANUAL.md
+@@ -1,12 +1,20 @@
+ # Handoff P1 - Discord Vertical, Manual Mode
+ 
+-Status: ready for user-operated fresh-machine proof.
++Status: macOS proof complete; Windows proof still pending; full P1 not closed.
+ 
+ ## Mission
+ 
+ Implement and prove the Discord-only Manual Mode vertical for macOS and
+ Windows. Do not implement AI Mode in this phase.
+ 
++## Current Gate Position
++
++- macOS proof has been completed and audited on the coordinator checkout.
++- Windows proof is still required for full P1 closure.
++- P1C may now start under the explicit temporary Windows missing-proof waiver
++  recorded in `../../history/outputs/p1-pr-readiness-review.md`.
++- Do not treat that waiver as Windows success.
++
+ ## Required Startup
+ 
+ - Read `../../SPEC.md`.
+diff --git a/initiatives/stack-installer/ops/handoffs/HANDOFF_P2_AI_MODE.md b/initiatives/stack-installer/ops/handoffs/HANDOFF_P2_AI_MODE.md
+index 961eb51326..5bec85c5a1 100644
+--- a/initiatives/stack-installer/ops/handoffs/HANDOFF_P2_AI_MODE.md
++++ b/initiatives/stack-installer/ops/handoffs/HANDOFF_P2_AI_MODE.md
+@@ -6,6 +6,7 @@ Status: stub.
+ 
+ Implement AI Mode parity across Claude and Codex using the same manifest,
+ validation spine, approval UI, and slice-owned verb registry contracts as P1.
++Do not start this handoff until P1D app-first Manual Installer UX is complete.
+ 
+ ## Required Startup
+ 
+diff --git a/initiatives/stack-installer/ops/handoffs/README.md b/initiatives/stack-installer/ops/handoffs/README.md
+index a52026735d..c55ac5fb8f 100644
+--- a/initiatives/stack-installer/ops/handoffs/README.md
++++ b/initiatives/stack-installer/ops/handoffs/README.md
+@@ -12,6 +12,8 @@ initiative.
+   gate.
+ - [GOAL_P1_MACOS_PROOF.md](./GOAL_P1_MACOS_PROOF.md) - short `/goal`
+   indirection target for the buddy MacBook Pro macOS P1 proof run.
++- [HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md](./HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md)
++  - P1D app-first Manual Installer UX stub for Linux-first Bun install/repair.
+ - [HANDOFF_P2_AI_MODE.md](./HANDOFF_P2_AI_MODE.md) - P2 AI Mode parity stub.
+ - [HANDOFF_P3_RECOVERY.md](./HANDOFF_P3_RECOVERY.md) - P3 recovery proof
+   stub.
+@@ -53,5 +55,7 @@ not let generated notes accumulate at the initiative root.
+   smoke harness for upload-window endpoint auth, generated operator notes,
+   file modes, and `--reuse-token` behavior.
+ - [../p1-completion-check.mjs](../p1-completion-check.mjs) - conservative P1
+-  prompt-to-artifact checklist that exits nonzero until fresh macOS and Windows
+-  proof artifacts, `p1:proof:audit-all`, and the post-proof review are complete.
++  prompt-to-artifact checklist that keeps full P1 blocked until fresh macOS and
++  Windows proof artifacts, `p1:proof:audit-all`, and the post-proof review are
++  complete, while also reporting when P1C may start under the temporary
++  Windows waiver.
+diff --git a/initiatives/stack-installer/ops/manifest.json b/initiatives/stack-installer/ops/manifest.json
+index c3a1bab82b..ebfaabf222 100644
+--- a/initiatives/stack-installer/ops/manifest.json
++++ b/initiatives/stack-installer/ops/manifest.json
+@@ -3,9 +3,9 @@
+   "initiative": {
+     "id": "stack-installer",
+     "title": "Stack Installer",
+-    "status": "active-p1-live-harness-ready-fresh-proof-and-review-pending",
++    "status": "active-p1c-startable-full-p1-blocked-on-windows-proof",
+     "created": "2026-05-14",
+-    "updated": "2026-05-14",
++    "updated": "2026-05-16",
+     "packetAnchorDocument": "SPEC.md"
+   },
+   "currentSourceOfTruth": "SPEC.md",
+@@ -27,17 +27,22 @@
+     "p1LiveHarness": {
+       "status": "implemented",
+       "output": "history/outputs/p1-discord-vertical-manual.md",
+-      "summary": "Live Manual Mode proof harness, driver packages, Tauri command, and app UI are implemented. Full P1 remains blocked on user-operated fresh macOS and Windows proof artifacts."
++      "summary": "Live Manual Mode proof harness, driver packages, Tauri command, and app UI are implemented. macOS proof is complete, and full P1 remains blocked on the real Windows proof artifact."
+     },
+     "p1PrReadinessReview": {
+       "status": "pending",
+       "output": "history/outputs/p1-pr-readiness-review.md",
+-      "summary": "Run the post-proof quality-review-fix-loop across the implemented P1 initiative surface and code paths before declaring the branch PR ready."
++      "summary": "Run the post-proof quality-review-fix-loop across the implemented P1 initiative surface and code paths. P1C may start under the temporary Windows missing-proof waiver, but full P1 still requires real Windows proof."
+     },
+     "p1CompletionAudit": {
+       "status": "blocked",
+       "output": "history/outputs/p1-completion-audit.md",
+-      "summary": "Prompt-to-artifact completion audit shows P1 remains blocked on fresh macOS and Windows proof artifacts plus post-proof review."
++      "summary": "Prompt-to-artifact completion audit records macOS proof complete, Windows proof temporarily waived for P1C start only, and full P1 still blocked on the real Windows artifact plus post-proof review."
++    },
++    "p1dAppFirstManualInstallerUx": {
++      "status": "pending",
++      "output": "history/outputs/p1d-app-first-manual-installer-ux.md",
++      "summary": "Next milestone after P1C: make the Tauri app the primary surface and complete one real Linux-first Bun install or repair action through installer-owned code."
+     },
+     "p1PauseHandoff": {
+       "status": "recorded",
+@@ -55,6 +60,7 @@
+       "remainingGates": [
+         "P1 Discord vertical, Manual Mode fresh-OS macOS and Windows proof",
+         "P1 PR readiness quality-review-fix-loop",
++        "P1D app-first Manual Installer UX",
+         "P2 AI Mode parity",
+         "P3 Recovery",
+         "P4 Portability",
+@@ -107,6 +113,7 @@
+     "remainingGates": [
+       "P1 Discord vertical, Manual Mode fresh-OS macOS and Windows proof",
+       "P1 PR readiness quality-review-fix-loop",
++      "P1D app-first Manual Installer UX",
+       "P2 AI Mode parity across Claude and Codex",
+       "P3 salted recovery proof",
+       "P4 cross-OS manifest portability proof",
+@@ -230,7 +237,14 @@
+       "name": "Discord Vertical, Manual Mode",
+       "status": "in_progress",
+       "output": "history/outputs/p1-discord-vertical-manual.md",
+-      "exitCriteriaSummary": "P1A dry-run spine and P1 live harness are implemented; full P1 still needs fresh-OS macOS and Windows manual runs that complete provider auth, 1Password, Discord setup, sanitized proof JSON, screencasts, test messages, and a post-proof PR readiness review/fix loop."
++      "exitCriteriaSummary": "P1A dry-run spine and P1 live harness are implemented; macOS proof is complete; full P1 still needs the real Windows manual run plus the post-proof PR readiness review/fix loop."
++    },
++    {
++      "id": "P1D",
++      "name": "App-First Manual Installer UX",
++      "status": "pending",
++      "output": "history/outputs/p1d-app-first-manual-installer-ux.md",
++      "exitCriteriaSummary": "The Tauri app becomes the primary operator surface and completes one real Linux-first Bun install or repair action through installer-owned code."
+     },
+     {
+       "id": "P2",
+@@ -310,6 +324,19 @@
+         "future evidence: P1 PR readiness review inventory"
+       ]
+     },
++    {
++      "phase": "P1D",
++      "proof": "App-First Manual Installer UX",
++      "status": "pending",
++      "evidenceArtifacts": [
++        "history/outputs/p1d-app-first-manual-installer-ux.md",
++        "ops/handoffs/HANDOFF_P1D_APP_FIRST_MANUAL_INSTALLER_UX.md",
++        "future evidence: app-open screencast",
++        "future evidence: Bun missing-to-installed proof",
++        "future evidence: approval-first action log",
++        "future evidence: before/after validation output"
++      ]
++    },
+     {
+       "phase": "P2",
+       "proof": "AI Mode Parity",
+@@ -411,6 +438,13 @@
+       "future: comprehensive review of the whole implemented P1 initiative surface and directly affected code paths for reuse opportunities, structural simplification, flat idiomatic modules, and repo-law alignment",
+       "future: verify zero required blockers or explicit waivers before PR-ready status"
+     ],
++    "p1dAppFirstManualInstallerUx": [
++      "future: Linux-first app-driven Bun install or repair proof",
++      "future: app validation detects Bun missing or unhealthy before mutation",
++      "future: approval-first action path performs one real host mutation",
++      "future: post-action validation reports Bun present or returns typed failure",
++      "future: targeted package/app quality commands for touched slices"
++    ],
+     "repoWidePlaceholders": [
+       "bun run check",
+       "bun run lint",
+diff --git a/initiatives/stack-installer/ops/p1-completion-check.mjs b/initiatives/stack-installer/ops/p1-completion-check.mjs
+index dd73af2949..15d179d305 100644
+--- a/initiatives/stack-installer/ops/p1-completion-check.mjs
++++ b/initiatives/stack-installer/ops/p1-completion-check.mjs
+@@ -67,6 +67,12 @@ const p1ReviewStatus = (reviewText) => {
+   return "unknown";
+ };
+ 
++const hasTemporaryWindowsWaiver = (reviewText) =>
++  /waived item:\s*Windows fresh-machine Manual Mode proof artifact/i.test(reviewText) &&
++  /disposition:\s*accepted temporary waiver for P1C start only/i.test(reviewText) &&
++  /owner:\s*`?@beep-team`?/i.test(reviewText) &&
++  /follow-up trigger:\s*remove this waiver only after a real returned Windows/i.test(reviewText);
++
+ const changedPathsSinceBase = () => {
+   const result = spawnSync("git", ["diff", "--name-status", `${baseRef}...HEAD`], {
+     cwd: repoRoot,
+@@ -154,6 +160,7 @@ const p2Phase = manifest.phases.find((phase) => phase.id === "P2");
+ const p1aEvidence = manifest.completionEvidence?.p1a?.status;
+ const p1LiveEvidence = manifest.completionEvidence?.p1LiveHarness?.status;
+ const p1ReviewEvidence = manifest.completionEvidence?.p1PrReadinessReview?.status;
++const windowsWaiverAccepted = hasTemporaryWindowsWaiver(p1ReviewText);
+ 
+ addCheck(
+   p1aEvidence === "completed",
+@@ -186,6 +193,26 @@ for (const [fileName, label] of [
+ }
+ 
+ const platformStatuses = await Promise.all(requiredPlatforms.map(platformArtifactStatus));
++const [macosStatus, windowsStatus] = platformStatuses;
++const p1cStartStatus =
++  macosStatus.ok && (windowsStatus.ok || windowsWaiverAccepted)
++    ? windowsStatus.ok
++      ? {
++          detail: "audited macOS and Windows proof artifacts are present",
++          ok: true,
++        }
++      : {
++          detail: "audited macOS proof artifact is present and Windows is under an accepted temporary waiver",
++          ok: true,
++        }
++    : {
++        detail: !macosStatus.ok
++          ? "blocked because audited macOS proof artifact is not complete"
++          : "blocked because Windows proof is incomplete and no accepted temporary waiver was found",
++        ok: false,
++      };
++
++addCheck(p1cStartStatus.ok, "P1C start gate", p1cStartStatus.detail);
+ 
+ for (const [index, platform] of requiredPlatforms.entries()) {
+   const status = platformStatuses[index];
+@@ -206,7 +233,13 @@ if (platformStatuses.every((status) => status.ok)) {
+ 
+   addCheck(result.status === 0, "p1:proof:audit-all", output || `exit=${result.status}`);
+ } else {
+-  addCheck(false, "p1:proof:audit-all", "skipped because both platform artifact directories are not complete");
++  addCheck(
++    false,
++    "p1:proof:audit-all",
++    windowsWaiverAccepted
++      ? "skipped because full P1 still requires both platform artifact directories even though P1C may start under waiver"
++      : "skipped because both platform artifact directories are not complete"
++  );
+ }
+ 
+ const reviewStatus = p1ReviewStatus(p1ReviewText);
+@@ -223,6 +256,9 @@ console.log(`Stack Installer P1 completion check for ${rel(outputRoot)}`);
+ for (const check of checks) {
+   console.log(`${check.ok ? "[pass]" : "[block]"} ${check.label}: ${check.detail}`);
+ }
++if (!allComplete && p1cStartStatus.ok) {
++  console.log("P1C may start, but full P1 completion remains blocked.");
++}
+ console.log(allComplete ? "P1 completion check passed." : "P1 completion check blocked.");
+ 
+ if (!allComplete) {
+diff --git a/package.json b/package.json
+index d38a6638c3..5f606343aa 100644
+--- a/package.json
++++ b/package.json
+@@ -52,6 +52,7 @@
+     "packages/architecture-lab/ui",
+     "apps/architecture-lab-proof",
+     "packages/drivers/runpod",
++    "packages/drivers/bun-cli",
+     "packages/drivers/onepassword-cli",
+     "packages/drivers/discord",
+     "packages/drivers/ai-provider-cli",
+diff --git a/packages/drivers/bun-cli/AGENTS.md b/packages/drivers/bun-cli/AGENTS.md
+new file mode 100644
+index 0000000000..0c4d6fee84
+--- /dev/null
++++ b/packages/drivers/bun-cli/AGENTS.md
+@@ -0,0 +1,33 @@
++# @beep/bun-cli Agent Guide
++
++## Purpose & Fit
++- Driver-level Bun CLI capability wrapper for product-neutral Bun version probes and upgrade execution.
++
++## Surface Map
++| Surface | Key exports | Notes |
++| --- | --- | --- |
++| entry module | VERSION | package entry point |
++
++## Laws
++- Follow repository laws through command discovery.
++- Run `bun run beep docs laws`.
++- Prefer tersest equivalent helper forms when behavior is unchanged.
++- In `test/` and `dtslint/`, import package source through `@beep/bun-cli` or other `@beep/*` package aliases; keep relative imports for local helpers, fixtures, and snapshots only.
++- Keep package guidance concise and avoid duplicating long policy prose.
++
++## Quick Recipes
++```ts
++import { VERSION } from "@beep/bun-cli"
++```
++
++## Verifications
++- `bunx turbo run test --filter=@beep/bun-cli`
++- `bunx turbo run lint --filter=@beep/bun-cli`
++- `bunx turbo run check --filter=@beep/bun-cli`
++
++## Contributor Checklist
++- [ ] New exports include jsdoc metadata
++- [ ] Tests added or updated for behavior changes
++- [ ] `bun run check` passes
++- [ ] `bun run test` passes
++- [ ] `bun run lint` passes
+diff --git a/packages/drivers/bun-cli/LICENSE b/packages/drivers/bun-cli/LICENSE
+new file mode 100644
+index 0000000000..a22a2da24d
+--- /dev/null
++++ b/packages/drivers/bun-cli/LICENSE
+@@ -0,0 +1 @@
++MIT
+diff --git a/packages/drivers/bun-cli/README.md b/packages/drivers/bun-cli/README.md
+new file mode 100644
+index 0000000000..338ec681ac
+--- /dev/null
++++ b/packages/drivers/bun-cli/README.md
+@@ -0,0 +1,37 @@
++# @beep/bun-cli
++
++Driver-level Bun CLI capability wrapper for product-neutral Bun version probes and upgrade execution.
++
++## Installation
++
++```bash
++bun add @beep/bun-cli
++```
++
++## Usage
++
++```ts
++import { VERSION } from "@beep/bun-cli"
++```
++
++## Development
++
++```bash
++# Build
++bun run build
++
++# Type check
++bun run check
++
++# Test
++bun run test
++
++# Lint
++bun run lint:fix
++```
++
++Tests and dtslint files import package source through `@beep/bun-cli` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
++
++## License
++
++MIT
+diff --git a/packages/drivers/bun-cli/docgen.json b/packages/drivers/bun-cli/docgen.json
+new file mode 100644
+index 0000000000..49d5571e46
+--- /dev/null
++++ b/packages/drivers/bun-cli/docgen.json
+@@ -0,0 +1,55 @@
++{
++  "$schema": "../../../packages/tooling/tool/docgen/schema.json",
++  "exclude": ["src/internal/**/*.ts"],
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/drivers/bun-cli/src/",
++  "examplesCompilerOptions": {
++    "noEmit": true,
++    "strict": true,
++    "skipLibCheck": true,
++    "moduleResolution": "bundler",
++    "module": "es2022",
++    "target": "es2022",
++    "lib": ["ESNext", "DOM", "DOM.Iterable"],
++    "rewriteRelativeImportExtensions": true,
++    "allowImportingTsExtensions": true,
++    "moduleDetection": "force",
++    "verbatimModuleSyntax": true,
++    "allowJs": false,
++    "erasableSyntaxOnly": true,
++    "declaration": true,
++    "declarationMap": true,
++    "sourceMap": true,
++    "exactOptionalPropertyTypes": true,
++    "noUnusedLocals": true,
++    "noUnusedParameters": true,
++    "noImplicitOverride": true,
++    "noFallthroughCasesInSwitch": true,
++    "stripInternal": false,
++    "noErrorTruncation": true,
++    "types": [],
++    "jsx": "react-jsx",
++    "paths": {
++      "@beep/bun-cli": [
++        "../../../packages/drivers/bun-cli/src/index.ts"
++      ],
++      "@beep/bun-cli/*": [
++        "../../../packages/drivers/bun-cli/src/*.ts"
++      ],
++      "@beep/identity": [
++        "../../../packages/foundation/modeling/identity/src/index.ts"
++      ],
++      "@beep/identity/*": [
++        "../../../packages/foundation/modeling/identity/src/*.ts"
++      ],
++      "@beep/identity/packages": [
++        "../../../packages/foundation/modeling/identity/src/packages.ts"
++      ],
++      "@beep/schema": [
++        "../../../packages/foundation/modeling/schema/src/index.ts"
++      ],
++      "@beep/schema/*": [
++        "../../../packages/foundation/modeling/schema/src/*.ts"
++      ]
++    }
++  }
++}
+diff --git a/packages/drivers/bun-cli/package.json b/packages/drivers/bun-cli/package.json
+new file mode 100644
+index 0000000000..d5791c6d31
+--- /dev/null
++++ b/packages/drivers/bun-cli/package.json
+@@ -0,0 +1,67 @@
++{
++  "name": "@beep/bun-cli",
++  "version": "0.0.0",
++  "description": "Driver-level Bun CLI capability wrapper for product-neutral version probes and upgrade execution.",
++  "license": "MIT",
++  "private": true,
++  "type": "module",
++  "homepage": "https://github.com/kriegcloud/beep-effect/tree/main/packages/drivers/bun-cli",
++  "repository": {
++    "type": "git",
++    "url": "git@github.com:kriegcloud/beep-effect.git",
++    "directory": "packages/drivers/bun-cli"
++  },
++  "beep": {
++    "family": "drivers"
++  },
++  "scripts": {
++    "audit": "bun run --if-present beep:audit",
++    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
++    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
++    "beep:build": "tsc -b tsconfig.json && bun run babel",
++    "beep:check": "tsgo -b tsconfig.json",
++    "beep:lint": "biome check .",
++    "beep:lint:fix": "biome check . --write",
++    "beep:test": "bunx --bun vitest run --passWithNoTests",
++    "build": "bun run beep:build",
++    "check": "bun run beep:check",
++    "coverage": "bunx --bun vitest run --coverage --passWithNoTests",
++    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
++    "lint": "bun run beep:lint",
++    "lint:fix": "bun run beep:lint:fix",
++    "test": "bun run beep:test"
++  },
++  "exports": {
++    ".": "./src/index.ts",
++    "./*": "./src/*.ts",
++    "./internal/*": null,
++    "./package.json": "./package.json"
++  },
++  "files": [
++    "src/**/*.ts",
++    "dist/**/*.js",
++    "dist/**/*.js.map",
++    "dist/**/*.d.ts",
++    "dist/**/*.d.ts.map"
++  ],
++  "sideEffects": [],
++  "publishConfig": {
++    "access": "public",
++    "provenance": true,
++    "exports": {
++      ".": "./dist/index.ts",
++      "./*": "./dist/*.js",
++      "./internal/*": null,
++      "./package.json": "./package.json"
++    }
++  },
++  "dependencies": {
++    "@beep/identity": "workspace:^",
++    "@beep/schema": "workspace:^",
++    "effect": "catalog:"
++  },
++  "devDependencies": {
++    "@effect/vitest": "catalog:",
++    "@types/node": "catalog:"
++  }
++}
+diff --git a/packages/drivers/bun-cli/src/BunCli.errors.ts b/packages/drivers/bun-cli/src/BunCli.errors.ts
+new file mode 100644
+index 0000000000..6d808dde66
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/BunCli.errors.ts
+@@ -0,0 +1,77 @@
++/**
++ * Typed errors for the Bun CLI driver.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { TaggedErrorClass } from "@beep/schema";
++import { dual } from "effect/Function";
++import * as O from "effect/Option";
++import * as S from "effect/Schema";
++
++const $BunCliId = $PackagesId.compose("bun-cli").$BunCliId;
++const $I = $BunCliId.create("BunCli.errors");
++
++/**
++ * Options captured while normalizing unknown Bun CLI failures.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunCliErrorOptions extends S.Class<BunCliErrorOptions>($I`BunCliErrorOptions`)(
++  {
++    cause: S.optionalKey(S.DefectWithStack),
++    command: S.optionalKey(S.String),
++    exitCode: S.optionalKey(S.Number),
++    stderr: S.optionalKey(S.String),
++    stdout: S.optionalKey(S.String),
++  },
++  $I.annote("BunCliErrorOptions", {
++    description: "Optional process context captured while normalizing a Bun CLI failure.",
++  })
++) {}
++
++/**
++ * Technical failure raised by the Bun CLI driver boundary.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunCliError extends TaggedErrorClass<BunCliError>($I`BunCliError`)(
++  "BunCliError",
++  {
++    cause: S.optionalKey(S.DefectWithStack),
++    command: S.optionalKey(S.String),
++    exitCode: S.optionalKey(S.Number),
++    message: S.String,
++    operation: S.String,
++    stderr: S.optionalKey(S.String),
++    stdout: S.optionalKey(S.String),
++  },
++  $I.annote("BunCliError", {
++    description: "Technical failure emitted by the Bun CLI driver.",
++  })
++) {
++  /**
++   * Normalize a process or platform failure into a driver error.
++   *
++   * @category errors
++   * @since 0.0.0
++   */
++  static readonly fromUnknown: {
++    (operation: string, message: string, options: BunCliErrorOptions): BunCliError;
++    (message: string, options: BunCliErrorOptions): (operation: string) => BunCliError;
++  } = dual(3, (operation: string, message: string, options: BunCliErrorOptions): BunCliError => {
++    const { cause, ...context } = options;
++    const normalizedCause = S.is(S.DefectWithStack)(cause) ? O.some(cause) : O.none();
++
++    return new BunCliError({
++      ...context,
++      message,
++      operation,
++      ...(O.isSome(normalizedCause) ? { cause: normalizedCause.value } : {}),
++    });
++  });
++}
+diff --git a/packages/drivers/bun-cli/src/BunCli.models.ts b/packages/drivers/bun-cli/src/BunCli.models.ts
+new file mode 100644
+index 0000000000..9fec3c3879
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/BunCli.models.ts
+@@ -0,0 +1,67 @@
++/**
++ * Bun CLI driver models.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { LiteralKit } from "@beep/schema";
++import * as S from "effect/Schema";
++
++const $BunCliId = $PackagesId.compose("bun-cli").$BunCliId;
++const $I = $BunCliId.create("BunCli.models");
++
++/**
++ * Bun runtime presence states reported by the driver.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export const BunCliProbeStatus = LiteralKit(["present", "missing"] as const).pipe(
++  $I.annoteSchema("BunCliProbeStatus", {
++    description: "Whether the Bun command appears to be available on the host.",
++  })
++);
++
++/**
++ * Runtime type for {@link BunCliProbeStatus}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type BunCliProbeStatus = typeof BunCliProbeStatus.Type;
++
++/**
++ * Bun version probe result.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class BunCliProbe extends S.Class<BunCliProbe>($I`BunCliProbe`)(
++  {
++    command: S.NonEmptyString,
++    status: BunCliProbeStatus,
++    version: S.OptionFromOptionalKey(S.NonEmptyString),
++  },
++  $I.annote("BunCliProbe", {
++    description: "Product-neutral Bun version probe result.",
++  })
++) {}
++
++/**
++ * Captured process output from a Bun CLI command.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class BunCliProcessResult extends S.Class<BunCliProcessResult>($I`BunCliProcessResult`)(
++  {
++    exitCode: S.Number,
++    stderr: S.String,
++    stdout: S.String,
++  },
++  $I.annote("BunCliProcessResult", {
++    description: "Process output captured by a Bun CLI command.",
++  })
++) {}
+diff --git a/packages/drivers/bun-cli/src/BunCli.service.ts b/packages/drivers/bun-cli/src/BunCli.service.ts
+new file mode 100644
+index 0000000000..756ee1b2da
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/BunCli.service.ts
+@@ -0,0 +1,159 @@
++/**
++ * Effect service for the native Bun CLI.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++import { $I as $PackagesId } from "@beep/identity/packages";
++import { Context, Effect, Layer, Stream } from "effect";
++import * as A from "effect/Array";
++import * as O from "effect/Option";
++import * as Str from "effect/String";
++import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
++import { BunCliError } from "./BunCli.errors.ts";
++import { BunCliProbe, BunCliProcessResult } from "./BunCli.models.ts";
++
++const $BunCliId = $PackagesId.compose("bun-cli").$BunCliId;
++const $I = $BunCliId.create("BunCli.service");
++
++const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
++  stream.pipe(
++    Stream.decodeText(),
++    Stream.runFold(
++      () => "",
++      (acc, chunk) => `${acc}${chunk}`
++    )
++  );
++
++/**
++ * Product-neutral process runner used by the Bun CLI driver.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++export type BunCliRunner = (
++  command: string,
++  args: ReadonlyArray<string>
++) => Effect.Effect<BunCliProcessResult, BunCliError>;
++
++/**
++ * Runtime shape exposed by the Bun CLI driver service.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++interface BunCliShape {
++  readonly probe: () => Effect.Effect<BunCliProbe>;
++  readonly upgrade: () => Effect.Effect<void, BunCliError>;
++}
++
++const runNative = (
++  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
++  commandPath: string,
++  args: ReadonlyArray<string>
++): Effect.Effect<BunCliProcessResult, BunCliError> => {
++  const command = ChildProcess.make(commandPath, A.fromIterable(args), {
++    stdin: "ignore",
++    stderr: "pipe",
++    stdout: "pipe",
++  });
++
++  return Effect.scoped(
++    Effect.gen(function* () {
++      const handle = yield* spawner.spawn(command);
++      const [stdout, stderr, exitCode] = yield* Effect.all(
++        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
++        { concurrency: "unbounded" }
++      );
++
++      return new BunCliProcessResult({ exitCode, stderr, stdout });
++    })
++  ).pipe(
++    Effect.mapError((cause) =>
++      BunCliError.fromUnknown("run", "Failed to execute the Bun CLI.", { cause, command: commandPath })
++    )
++  );
++};
++
++const makeService = (commandPath: string, runner: BunCliRunner): BunCliShape => {
++  const probe = Effect.fn("BunCli.probe")(function* () {
++    const result = yield* runner(commandPath, ["--version"]).pipe(
++      Effect.catch(() =>
++        Effect.succeed(
++          new BunCliProcessResult({
++            exitCode: 1,
++            stderr: "",
++            stdout: "",
++          })
++        )
++      )
++    );
++
++    if (result.exitCode !== 0) {
++      return new BunCliProbe({
++        command: commandPath,
++        status: "missing",
++        version: O.none(),
++      });
++    }
++
++    const version = Str.trim(result.stdout);
++    return new BunCliProbe({
++      command: commandPath,
++      status: Str.isNonEmpty(version) ? "present" : "missing",
++      version: Str.isNonEmpty(version) ? O.some(version) : O.none(),
++    });
++  });
++
++  const upgrade = Effect.fn("BunCli.upgrade")(function* () {
++    const result = yield* runner(commandPath, ["upgrade"]);
++    if (result.exitCode !== 0) {
++      return yield* new BunCliError({
++        command: commandPath,
++        exitCode: result.exitCode,
++        message: "Bun upgrade failed.",
++        operation: "upgrade",
++        stderr: Str.trim(result.stderr),
++        stdout: Str.trim(result.stdout),
++      });
++    }
++  });
++
++  return {
++    probe,
++    upgrade,
++  };
++};
++
++/**
++ * Effect service for native `bun` execution.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++export class BunCli extends Context.Service<BunCli, BunCliShape>()($I`BunCli`) {
++  /**
++   * Build a live Bun CLI layer.
++   *
++   * @category layers
++   * @since 0.0.0
++   */
++  static readonly makeLayer = (commandPath = "bun"): Layer.Layer<BunCli, never, ChildProcessSpawner.ChildProcessSpawner> =>
++    Layer.effect(
++      BunCli,
++      Effect.gen(function* () {
++        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
++        return BunCli.of(makeService(commandPath, (command, args) => runNative(spawner, command, args)));
++      })
++    );
++
++  /**
++   * Build a deterministic test layer from an injected command runner.
++   *
++   * @category layers
++   * @since 0.0.0
++   */
++  static readonly makeLayerFromRunner = (runner: BunCliRunner, commandPath = "bun"): Layer.Layer<BunCli> =>
++    Layer.succeed(BunCli, BunCli.of(makeService(commandPath, runner)));
++}
+diff --git a/packages/drivers/bun-cli/src/index.ts b/packages/drivers/bun-cli/src/index.ts
+new file mode 100644
+index 0000000000..da8f612ba4
+--- /dev/null
++++ b/packages/drivers/bun-cli/src/index.ts
+@@ -0,0 +1,30 @@
++/**
++ * Native Bun CLI driver package.
++ *
++ * @packageDocumentation
++ * @since 0.0.0
++ */
++
++/**
++ * Public Bun CLI driver error exports.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export * from "./BunCli.errors.ts";
++
++/**
++ * Public Bun CLI driver model exports.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export * from "./BunCli.models.ts";
++
++/**
++ * Public Bun CLI driver service exports.
++ *
++ * @category services
++ * @since 0.0.0
++ */
++export * from "./BunCli.service.ts";
+diff --git a/packages/drivers/bun-cli/test/BunCli.service.test.ts b/packages/drivers/bun-cli/test/BunCli.service.test.ts
+new file mode 100644
+index 0000000000..855f9a3a3f
+--- /dev/null
++++ b/packages/drivers/bun-cli/test/BunCli.service.test.ts
+@@ -0,0 +1,68 @@
++import { BunCli, BunCliError, BunCliProcessResult } from "@beep/bun-cli";
++import { describe, expect, layer } from "@effect/vitest";
++import { Effect } from "effect";
++
++const successRunner = (command: string, args: ReadonlyArray<string>) =>
++  Effect.succeed(
++    new BunCliProcessResult({
++      exitCode: 0,
++      stderr: "",
++      stdout: args[0] === "--version" ? "1.3.11\n" : "upgraded\n",
++    })
++  );
++
++const missingRunner = () =>
++  Effect.fail(
++    BunCliError.fromUnknown("run", "Failed to execute the Bun CLI.", {
++      command: "bun",
++    })
++  );
++
++const failedUpgradeRunner = (command: string, args: ReadonlyArray<string>) =>
++  Effect.succeed(
++    new BunCliProcessResult({
++      exitCode: args[0] === "upgrade" ? 1 : 0,
++      stderr: args[0] === "upgrade" ? "network unavailable" : "",
++      stdout: args[0] === "--version" ? "1.3.11\n" : "",
++    })
++  );
++
++describe("@beep/bun-cli", () => {
++  layer(BunCli.makeLayerFromRunner(successRunner))((it) => {
++    it.effect("probes Bun version and upgrades successfully", () =>
++      Effect.gen(function* () {
++        const bunCli = yield* BunCli;
++        const probe = yield* bunCli.probe();
++
++        expect(probe.status).toBe("present");
++        expect(probe.version._tag).toBe("Some");
++        yield* bunCli.upgrade();
++      })
++    );
++  });
++
++  layer(BunCli.makeLayerFromRunner(missingRunner))((it) => {
++    it.effect("treats a missing Bun command as a missing probe result", () =>
++      Effect.gen(function* () {
++        const bunCli = yield* BunCli;
++        const probe = yield* bunCli.probe();
++
++        expect(probe.status).toBe("missing");
++        expect(probe.version._tag).toBe("None");
++      })
++    );
++  });
++
++  layer(BunCli.makeLayerFromRunner(failedUpgradeRunner))((it) => {
++    it.effect("returns typed driver errors for failed upgrades", () =>
++      Effect.gen(function* () {
++        const bunCli = yield* BunCli;
++        const error = yield* bunCli.upgrade().pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunCliError);
++        expect(error.operation).toBe("upgrade");
++        expect(error.stderr).toBe("network unavailable");
++      })
++    );
++  });
++});
+diff --git a/packages/drivers/bun-cli/tsconfig.json b/packages/drivers/bun-cli/tsconfig.json
+new file mode 100644
+index 0000000000..fe8ed5469d
+--- /dev/null
++++ b/packages/drivers/bun-cli/tsconfig.json
+@@ -0,0 +1,18 @@
++{
++  "$schema": "http://json.schemastore.org/tsconfig",
++  "extends": "../../../tsconfig.base.json",
++  "include": ["src"],
++  "compilerOptions": {
++    "types": ["node"],
++    "outDir": "dist",
++    "rootDir": "src"
++  },
++  "references": [
++    {
++      "path": "../../foundation/modeling/identity/tsconfig.json"
++    },
++    {
++      "path": "../../foundation/modeling/schema/tsconfig.json"
++    }
++  ]
++}
+diff --git a/packages/drivers/bun-cli/vitest.config.ts b/packages/drivers/bun-cli/vitest.config.ts
+new file mode 100644
+index 0000000000..864bd41e7b
+--- /dev/null
++++ b/packages/drivers/bun-cli/vitest.config.ts
+@@ -0,0 +1,11 @@
++import { defineConfig, mergeConfig } from "vitest/config";
++import shared from "../../../vitest.shared.ts";
++
++export default mergeConfig(
++  shared,
++  defineConfig({
++    test: {
++      // Package-specific overrides
++    },
++  })
++);
+diff --git a/packages/installer-dependencies/server/package.json b/packages/installer-dependencies/server/package.json
+index ad28eff430..12e1dd6995 100644
+--- a/packages/installer-dependencies/server/package.json
++++ b/packages/installer-dependencies/server/package.json
+@@ -61,6 +61,7 @@
+     }
+   },
+   "dependencies": {
++    "@beep/bun-cli": "workspace:^",
+     "@beep/installer-dependencies-domain": "workspace:^",
+     "@beep/installer-dependencies-use-cases": "workspace:^",
+     "@beep/identity": "workspace:^",
+diff --git a/packages/installer-dependencies/server/src/Layer.ts b/packages/installer-dependencies/server/src/Layer.ts
+index b0e4331ed4..e131cd5b32 100644
+--- a/packages/installer-dependencies/server/src/Layer.ts
++++ b/packages/installer-dependencies/server/src/Layer.ts
+@@ -6,12 +6,25 @@
+  * @since 0.0.0
+  */
+ 
++import { BunCli } from "@beep/bun-cli";
+ import {
++  BunRuntimeAlreadyHealthy,
++  BunRuntimeHealthResult,
++  BunRuntimeInspectionFailed,
++  BunRuntimeRepairApprovalRequired,
++  BunRuntimeRepairFailed,
++  BunRuntimeRepairRequest,
++  BunRuntimeRepairResult,
+   HostDependencyPlan,
+   HostDependencyValidationResult,
+   P1A_HOST_DEPENDENCY_VERB_INPUTS,
+ } from "@beep/installer-dependencies-use-cases/public";
+-import { InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
++import {
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPortError,
++  type BunRuntimeProbe,
++  InstallerDependenciesUseCases,
++} from "@beep/installer-dependencies-use-cases/server";
+ import { Effect, Layer, Stream } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+@@ -19,7 +32,9 @@ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+ 
++const decodeBunRuntimeRepairRequest = S.decodeUnknownEffect(BunRuntimeRepairRequest);
+ const decodeHostDependencyPlan = S.decodeUnknownEffect(HostDependencyPlan);
++const decodeNonEmptyString = S.decodeUnknownEffect(S.NonEmptyString);
+ 
+ const p1aHostDependencyPlanInput = {
+   dependencies: [
+@@ -85,6 +100,78 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
+     )
+   );
+ 
++const makeBunDependency = (probe: BunRuntimeProbe, expectedVersion: string) => {
++  const detectedVersion = probe.version;
++  const state = O.match(detectedVersion, {
++    onNone: () => "missing" as const,
++    onSome: (version) => (isVersionAtLeast(version, expectedVersion) ? "healthy" : "repair-required"),
++  });
++  const status = state === "missing" ? "missing" : "present";
++  const summary = state === "healthy"
++    ? `Bun ${renderVersion(detectedVersion)} satisfies the required version ${expectedVersion}.`
++    : state === "repair-required"
++      ? `Bun ${renderVersion(detectedVersion)} is older than the required version ${expectedVersion}.`
++      : `Bun is missing; the focused repair flow currently supports upgrading an existing Bun install.`;
++
++  return new BunRuntimeHealthResult({
++    dependency: {
++      detectedVersion,
++      id: "bun",
++      installHint: "Run the focused Bun repair flow from the Stack Installer app.",
++      kind: "runtime",
++      name: "Bun",
++      requiredVersion: O.some(expectedVersion),
++      status,
++    },
++    state,
++    summary,
++  });
++};
++
++const parseSemver = (value: string): O.Option<readonly [number, number, number]> => {
++  const match = /^\s*v?(\d+)\.(\d+)\.(\d+)/.exec(value);
++  if (match === null) {
++    return O.none();
++  }
++
++  const major = Number(match[1]);
++  const minor = Number(match[2]);
++  const patch = Number(match[3]);
++
++  return Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)
++    ? O.none()
++    : O.some([major, minor, patch] as const);
++};
++
++const compareSemver = (left: readonly [number, number, number], right: readonly [number, number, number]): number => {
++  if (left[0] !== right[0]) {
++    return left[0] - right[0];
++  }
++  if (left[1] !== right[1]) {
++    return left[1] - right[1];
++  }
++  return left[2] - right[2];
++};
++
++const isVersionAtLeast = (detected: string, expected: string): boolean =>
++  O.match(parseSemver(detected), {
++    onNone: () => false,
++    onSome: (left) =>
++      O.match(parseSemver(expected), {
++        onNone: () => false,
++        onSome: (right) => compareSemver(left, right) >= 0,
++      }),
++  });
++
++const renderVersion = (version: O.Option<string>): string =>
++  O.match(version, {
++    onNone: () => "unknown",
++    onSome: (value) => value,
++  });
++
++const renderInspectionError = (error: BunRuntimeInspectionFailed | S.SchemaError): string =>
++  error._tag === "BunRuntimeInspectionFailed" ? error.reason : "Unable to inspect the Bun runtime.";
++
+ const probeCommand = (
+   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
+   probe: CommandProbe
+@@ -136,6 +223,39 @@ const probeCommand = (
+     )
+   );
+ 
++const makeBunRuntimeCommandPort = Effect.fn("InstallerDependenciesServer.makeBunRuntimeCommandPort")(function* () {
++  const bunCli = yield* BunCli;
++
++  return BunRuntimeCommandPort.of({
++    probe: Effect.fn("BunRuntimeCommandPort.probe")(function* () {
++      return yield* bunCli.probe().pipe(
++        Effect.map((probe) => ({
++          status: probe.status,
++          version: probe.version,
++        })),
++        Effect.mapError(
++          (error: { readonly message: string }) =>
++            new BunRuntimeCommandPortError({
++              message: error.message,
++              operation: "probe",
++            })
++        )
++      );
++    }),
++    upgrade: Effect.fn("BunRuntimeCommandPort.upgrade")(function* () {
++      return yield* bunCli.upgrade().pipe(
++        Effect.mapError(
++          (error: { readonly message: string }) =>
++            new BunRuntimeCommandPortError({
++              message: error.message,
++              operation: "upgrade",
++            })
++        )
++      );
++    }),
++  });
++});
++
+ /**
+  * Build the deterministic dependency dry-run service.
+  *
+@@ -144,15 +264,130 @@ const probeCommand = (
+  */
+ export const makeInstallerDependenciesServer = Effect.fn("InstallerDependenciesServer.make")(function* () {
+   const plan = yield* decodeHostDependencyPlan(p1aHostDependencyPlanInput);
+-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
++  const bunRuntime = yield* BunRuntimeCommandPort;
++
++  const inspectBunRuntime = Effect.fn("InstallerDependenciesServer.inspectBunRuntime")(function* (rawExpectedVersion: string) {
++      const expectedVersion = yield* decodeNonEmptyString(rawExpectedVersion);
++      const probe = yield* bunRuntime.probe().pipe(
++        Effect.mapError(
++          (error: BunRuntimeCommandPortError) =>
++            new BunRuntimeInspectionFailed({
++              reason: error.message,
++            })
++        )
++      );
++
++      return makeBunDependency(probe, expectedVersion);
++  });
+ 
+   return {
++    inspectBunRuntime,
+     previewHostDependencies: () => Effect.succeed(plan),
+-    validateRequiredCommands: () =>
+-      Effect.forEach(p1CommandProbes, (probe) => probeCommand(spawner, probe), { concurrency: 4 }),
++    repairBunRuntime: Effect.fn("InstallerDependenciesServer.repairBunRuntime")(function* (rawRequest: BunRuntimeRepairRequest) {
++        const request = yield* decodeBunRuntimeRepairRequest(rawRequest);
++
++        if (!request.approved) {
++          return yield* new BunRuntimeRepairApprovalRequired({
++            reason: "Explicit user approval is required before mutating the Bun runtime.",
++          });
++        }
++
++        const before = yield* inspectBunRuntime(request.expectedVersion).pipe(
++          Effect.mapError(
++            (error) =>
++              new BunRuntimeRepairFailed({
++                reason: renderInspectionError(error),
++              })
++          )
++        );
++        if (before.state === "healthy") {
++          return yield* new BunRuntimeAlreadyHealthy({
++            reason: "Bun already satisfies the current required version.",
++          });
++        }
++
++        yield* bunRuntime.upgrade().pipe(
++          Effect.mapError(
++            (error: BunRuntimeCommandPortError) =>
++              new BunRuntimeRepairFailed({
++                reason: error.message,
++              })
++          )
++        );
++
++        const after = yield* inspectBunRuntime(request.expectedVersion).pipe(
++          Effect.mapError(
++            (error) =>
++              new BunRuntimeRepairFailed({
++                reason: renderInspectionError(error),
++              })
++          )
++        );
++
++        if (after.state !== "healthy") {
++          return yield* new BunRuntimeRepairFailed({
++            reason: after.summary,
++          });
++        }
++
++        return new BunRuntimeRepairResult({
++          after,
++          before,
++          changed: before.summary !== after.summary,
++          command: "bun upgrade",
++          summary: `Bun repair completed. ${after.summary}`,
++        });
++      }),
++    validateRequiredCommands: Effect.fn("InstallerDependenciesServer.validateRequiredCommands")(function* () {
++        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
++        const [otherProbes, bunProbe] = yield* Effect.all(
++          [
++            Effect.forEach(
++              A.filter(p1CommandProbes, (probe) => probe.name !== "bun"),
++              (probe) => probeCommand(spawner, probe),
++              { concurrency: 3 }
++            ),
++            bunRuntime.probe().pipe(
++              Effect.catch(() =>
++                Effect.succeed({
++                  status: "missing" as const,
++                  version: O.none(),
++                })
++              )
++            ),
++          ],
++          { concurrency: 2 }
++        );
++
++        const bunResult = new HostDependencyValidationResult({
++          dependency: {
++            detectedVersion: bunProbe.version,
++            id: "bun",
++            installHint: "Run the Stack Installer Bun repair flow before continuing.",
++            kind: "runtime",
++            name: "bun",
++            requiredVersion: O.none(),
++            status: bunProbe.status === "present" ? "present" : "missing",
++          },
++          message:
++            bunProbe.status === "present"
++              ? `bun command is available${O.isSome(bunProbe.version) ? ` (${bunProbe.version.value})` : ""}.`
++              : "bun command is missing or unavailable.",
++        });
++
++        return [...otherProbes, bunResult];
++      }),
+   };
+ });
+ 
++/**
++ * Live Bun runtime command port adapted from the Bun CLI driver.
++ *
++ * @category layers
++ * @since 0.0.0
++ */
++export const BunRuntimeCommandPortLive = Layer.effect(BunRuntimeCommandPort, makeBunRuntimeCommandPort());
++
+ /**
+  * Deterministic dependency server layer for P1A.
+  *
+@@ -162,4 +397,4 @@ export const makeInstallerDependenciesServer = Effect.fn("InstallerDependenciesS
+ export const InstallerDependenciesServerLive = Layer.effect(
+   InstallerDependenciesUseCases,
+   makeInstallerDependenciesServer()
+-);
++).pipe(Layer.provideMerge(BunRuntimeCommandPortLive));
+diff --git a/packages/installer-dependencies/server/test/BunRuntimeRepair.test.ts b/packages/installer-dependencies/server/test/BunRuntimeRepair.test.ts
+new file mode 100644
+index 0000000000..db0d8fef06
+--- /dev/null
++++ b/packages/installer-dependencies/server/test/BunRuntimeRepair.test.ts
+@@ -0,0 +1,143 @@
++import type { BunCliProbe } from "@beep/bun-cli";
++import {
++  BunRuntimeAlreadyHealthy,
++  BunRuntimeRepairApprovalRequired,
++  BunRuntimeRepairFailed,
++  BunRuntimeRepairRequest,
++} from "@beep/installer-dependencies-use-cases/public";
++import { BunRuntimeCommandPort, BunRuntimeCommandPortError, InstallerDependenciesUseCases } from "@beep/installer-dependencies-use-cases/server";
++import { describe, expect, layer } from "@effect/vitest";
++import { Effect, Layer } from "effect";
++import * as O from "effect/Option";
++import { makeInstallerDependenciesServer } from "../src/Layer.js";
++
++const makeProbe = (version: O.Option<string>): BunCliProbe => ({
++  command: "bun",
++  status: O.isSome(version) ? "present" : "missing",
++  version,
++});
++
++const healthyPort = Layer.succeed(
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPort.of({
++    probe: () => Effect.succeed(makeProbe(O.some("1.3.14"))),
++    upgrade: () => Effect.void,
++  })
++);
++
++const repairingPort = (() => {
++  let upgraded = false;
++
++  return Layer.succeed(
++    BunRuntimeCommandPort,
++    BunRuntimeCommandPort.of({
++      probe: () => Effect.succeed(makeProbe(O.some(upgraded ? "1.3.14" : "1.3.11"))),
++      upgrade: () =>
++        Effect.sync(() => {
++          upgraded = true;
++        }),
++    })
++  );
++})();
++
++const failedRepairPort = Layer.succeed(
++  BunRuntimeCommandPort,
++  BunRuntimeCommandPort.of({
++    probe: () => Effect.succeed(makeProbe(O.some("1.3.11"))),
++    upgrade: () =>
++      Effect.fail(
++        new BunRuntimeCommandPortError({
++          message: "Bun upgrade failed.",
++          operation: "upgrade",
++        })
++      ),
++    
++  })
++);
++
++const makeTestLayer = (portLayer: Layer.Layer<BunRuntimeCommandPort>) =>
++  Layer.effect(InstallerDependenciesUseCases, makeInstallerDependenciesServer()).pipe(Layer.provideMerge(portLayer));
++
++describe("@beep/installer-dependencies-server Bun repair flow", () => {
++  layer(makeTestLayer(healthyPort))((it) => {
++    it.effect("reports Bun as healthy when the detected version meets the minimum", () =>
++      Effect.gen(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const result = yield* dependencies.inspectBunRuntime("1.3.14");
++
++        expect(result.state).toBe("healthy");
++        expect(result.summary).toContain("satisfies the required version");
++      })
++    );
++
++    it.effect("rejects repair when Bun is already healthy", () =>
++      Effect.gen(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: true,
++              expectedVersion: "1.3.14",
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeAlreadyHealthy);
++      })
++    );
++  });
++
++  layer(makeTestLayer(repairingPort))((it) => {
++    it.effect("runs Bun repair and returns before/after evidence", () =>
++      Effect.gen(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const result = yield* dependencies.repairBunRuntime(
++          new BunRuntimeRepairRequest({
++            approved: true,
++            expectedVersion: "1.3.14",
++          })
++        );
++
++        expect(result.before.state).toBe("repair-required");
++        expect(result.after.state).toBe("healthy");
++        expect(result.command).toBe("bun upgrade");
++      })
++    );
++  });
++
++  layer(makeTestLayer(healthyPort))((it) => {
++    it.effect("requires explicit approval before mutating Bun", () =>
++      Effect.gen(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: false,
++              expectedVersion: "1.3.14",
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeRepairApprovalRequired);
++      })
++    );
++  });
++
++  layer(makeTestLayer(failedRepairPort))((it) => {
++    it.effect("translates failed upgrades into public repair failures", () =>
++      Effect.gen(function* () {
++        const dependencies = yield* InstallerDependenciesUseCases;
++        const error = yield* dependencies
++          .repairBunRuntime(
++            new BunRuntimeRepairRequest({
++              approved: true,
++              expectedVersion: "1.3.14",
++            })
++          )
++          .pipe(Effect.flip);
++
++        expect(error).toBeInstanceOf(BunRuntimeRepairFailed);
++      })
++    );
++  });
++});
+diff --git a/packages/installer-dependencies/use-cases/src/public.ts b/packages/installer-dependencies/use-cases/src/public.ts
+index 80cfa45030..ecb66a63a1 100644
+--- a/packages/installer-dependencies/use-cases/src/public.ts
++++ b/packages/installer-dependencies/use-cases/src/public.ts
+@@ -8,6 +8,7 @@
+ 
+ import { $InstallerDependenciesUseCasesId } from "@beep/identity/packages";
+ import { HostDependency } from "@beep/installer-dependencies-domain/aggregates/HostDependency";
++import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+ import * as S from "effect/Schema";
+ 
+ const $I = $InstallerDependenciesUseCasesId.create("public");
+@@ -69,6 +70,148 @@ export class HostDependencyValidationResult extends S.Class<HostDependencyValida
+   })
+ ) {}
+ 
++/**
++ * Bun runtime health states visible to the app.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export const BunRuntimeHealthState = LiteralKit(["healthy", "repair-required", "missing"] as const).pipe(
++  $I.annoteSchema("BunRuntimeHealthState", {
++    description: "App-facing Bun runtime health state for the focused repair flow.",
++  })
++);
++
++/**
++ * Runtime type for {@link BunRuntimeHealthState}.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export type BunRuntimeHealthState = typeof BunRuntimeHealthState.Type;
++
++/**
++ * App-facing Bun runtime health result.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export class BunRuntimeHealthResult extends S.Class<BunRuntimeHealthResult>($I`BunRuntimeHealthResult`)(
++  {
++    dependency: HostDependency,
++    state: BunRuntimeHealthState,
++    summary: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeHealthResult", {
++    description: "Current Bun runtime health as presented by the Stack Installer app.",
++  })
++) {}
++
++/**
++ * App-facing Bun repair request.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairRequest extends S.Class<BunRuntimeRepairRequest>($I`BunRuntimeRepairRequest`)(
++  {
++    approved: S.Boolean,
++    expectedVersion: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairRequest", {
++    description: "Approval-first request to repair the Bun runtime for the focused app flow.",
++  })
++) {}
++
++/**
++ * App-facing Bun repair result.
++ *
++ * @category use-cases
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairResult extends S.Class<BunRuntimeRepairResult>($I`BunRuntimeRepairResult`)(
++  {
++    after: BunRuntimeHealthResult,
++    before: BunRuntimeHealthResult,
++    changed: S.Boolean,
++    command: S.NonEmptyString,
++    summary: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairResult", {
++    description: "Before and after evidence for the app-driven Bun repair flow.",
++  })
++) {}
++
++/**
++ * Public failure when Bun health cannot be inspected.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeInspectionFailed extends TaggedErrorClass<BunRuntimeInspectionFailed>(
++  $I`BunRuntimeInspectionFailed`
++)(
++  "BunRuntimeInspectionFailed",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeInspectionFailed", {
++    description: "The app could not inspect the Bun runtime health.",
++  })
++) {}
++
++/**
++ * Public failure when the repair action is invoked without approval.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairApprovalRequired extends TaggedErrorClass<BunRuntimeRepairApprovalRequired>(
++  $I`BunRuntimeRepairApprovalRequired`
++)(
++  "BunRuntimeRepairApprovalRequired",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairApprovalRequired", {
++    description: "The app requires explicit user approval before mutating the Bun runtime.",
++  })
++) {}
++
++/**
++ * Public failure when the Bun runtime is already healthy.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeAlreadyHealthy extends TaggedErrorClass<BunRuntimeAlreadyHealthy>(
++  $I`BunRuntimeAlreadyHealthy`
++)(
++  "BunRuntimeAlreadyHealthy",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeAlreadyHealthy", {
++    description: "The Bun runtime already satisfies the current requirement.",
++  })
++) {}
++
++/**
++ * Public failure when Bun repair cannot complete successfully.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeRepairFailed extends TaggedErrorClass<BunRuntimeRepairFailed>($I`BunRuntimeRepairFailed`)(
++  "BunRuntimeRepairFailed",
++  {
++    reason: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeRepairFailed", {
++    description: "The Bun repair flow failed or did not reach a healthy state.",
++  })
++) {}
++
+ /**
+  * Static P1A verb contracts owned by the dependency slice.
+  *
+diff --git a/packages/installer-dependencies/use-cases/src/server.ts b/packages/installer-dependencies/use-cases/src/server.ts
+index f741616c39..f7099f438f 100644
+--- a/packages/installer-dependencies/use-cases/src/server.ts
++++ b/packages/installer-dependencies/use-cases/src/server.ts
+@@ -7,13 +7,70 @@
+  */
+ 
+ import { $InstallerDependenciesUseCasesId } from "@beep/identity/packages";
++import { TaggedErrorClass } from "@beep/schema";
+ import type { Effect } from "effect";
+ import { Context } from "effect";
+-import type * as S from "effect/Schema";
+-import type { HostDependencyPlan, HostDependencyValidationResult } from "./public.js";
++import * as S from "effect/Schema";
++import type { ChildProcessSpawner } from "effect/unstable/process";
++import type {
++  BunRuntimeAlreadyHealthy,
++  BunRuntimeHealthResult,
++  BunRuntimeInspectionFailed,
++  BunRuntimeRepairApprovalRequired,
++  BunRuntimeRepairFailed,
++  BunRuntimeRepairResult,
++  HostDependencyPlan,
++  HostDependencyValidationResult,
++} from "./public.js";
++import { BunRuntimeRepairRequest } from "./public.js";
+ 
+ const $I = $InstallerDependenciesUseCasesId.create("server");
+ 
++/**
++ * Server-only failure emitted by the Bun runtime command port.
++ *
++ * @category errors
++ * @since 0.0.0
++ */
++export class BunRuntimeCommandPortError extends TaggedErrorClass<BunRuntimeCommandPortError>(
++  $I`BunRuntimeCommandPortError`
++)(
++  "BunRuntimeCommandPortError",
++  {
++    message: S.NonEmptyString,
++    operation: S.NonEmptyString,
++  },
++  $I.annote("BunRuntimeCommandPortError", {
++    description: "Server-only failure emitted while adapting the Bun runtime command port.",
++  })
++) {}
++
++/**
++ * Server-side Bun runtime probe shape.
++ *
++ * @category repositories
++ * @since 0.0.0
++ */
++export type BunRuntimeProbe = {
++  readonly status: "present" | "missing";
++  readonly version: import("effect/Option").Option<string>;
++};
++
++interface BunRuntimeCommandPortShape {
++  readonly probe: () => Effect.Effect<BunRuntimeProbe, BunRuntimeCommandPortError>;
++  readonly upgrade: () => Effect.Effect<void, BunRuntimeCommandPortError>;
++}
++
++/**
++ * Server-side Bun runtime command port.
++ *
++ * @category repositories
++ * @since 0.0.0
++ */
++export class BunRuntimeCommandPort extends Context.Service<BunRuntimeCommandPort, BunRuntimeCommandPortShape>()(
++  $I`BunRuntimeCommandPort`
++) {}
++
+ /**
+  * Dependency use-case service shape.
+  *
+@@ -21,8 +78,21 @@ const $I = $InstallerDependenciesUseCasesId.create("server");
+  * @since 0.0.0
+  */
+ interface InstallerDependenciesUseCasesShape {
++  readonly inspectBunRuntime: (
++    expectedVersion: string
++  ) => Effect.Effect<BunRuntimeHealthResult, BunRuntimeInspectionFailed | S.SchemaError>;
+   readonly previewHostDependencies: () => Effect.Effect<HostDependencyPlan, S.SchemaError>;
+-  readonly validateRequiredCommands: () => Effect.Effect<ReadonlyArray<HostDependencyValidationResult>, S.SchemaError>;
++  readonly repairBunRuntime: (
++    request: BunRuntimeRepairRequest
++  ) => Effect.Effect<
++    BunRuntimeRepairResult,
++    BunRuntimeAlreadyHealthy | BunRuntimeRepairApprovalRequired | BunRuntimeRepairFailed | S.SchemaError
++  >;
++  readonly validateRequiredCommands: () => Effect.Effect<
++    ReadonlyArray<HostDependencyValidationResult>,
++    S.SchemaError,
++    ChildProcessSpawner.ChildProcessSpawner
++  >;
+ }
+ 
+ /**

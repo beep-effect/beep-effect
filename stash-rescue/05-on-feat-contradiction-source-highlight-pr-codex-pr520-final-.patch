@@ -1,0 +1,188 @@
+diff --git a/packages/epistemic/client/src/ContradictionTriage/ContradictionTriage.atoms.ts b/packages/epistemic/client/src/ContradictionTriage/ContradictionTriage.atoms.ts
+index 70bcfaeb4d..850e016303 100644
+--- a/packages/epistemic/client/src/ContradictionTriage/ContradictionTriage.atoms.ts
++++ b/packages/epistemic/client/src/ContradictionTriage/ContradictionTriage.atoms.ts
+@@ -544,7 +544,12 @@ export const reviewContradictionCandidateAtom = ContradictionClient.runtime.fn<R
+       client("ReviewContradictionCandidate", command).pipe(
+         Effect.tap((disposition) =>
+           Effect.sync(() => {
+-            ctx.set(contradictionKnownAtAtom, disposition.resolvedAt);
++            const knownAt = pipe(
++              AsyncResult.value(ctx(contradictionKnownAtAtom)),
++              O.map((current) => DateTime.max(current, disposition.resolvedAt)),
++              O.getOrElse(() => disposition.resolvedAt)
++            );
++            ctx.set(contradictionKnownAtAtom, knownAt);
+             ctx.set(contradictionQueueOffsetAtom, NonNegativeInt.make(0));
+             ctx.set(selectedContradictionEvidenceSourceAtom, O.none());
+           })
+diff --git a/packages/epistemic/client/test/ContradictionTriage.atoms.test.ts b/packages/epistemic/client/test/ContradictionTriage.atoms.test.ts
+index 876c1fde37..25c7034613 100644
+--- a/packages/epistemic/client/test/ContradictionTriage.atoms.test.ts
++++ b/packages/epistemic/client/test/ContradictionTriage.atoms.test.ts
+@@ -387,6 +387,34 @@ describe("@beep/epistemic-client contradiction atoms", () => {
+     })
+   );
+ 
++  it.effect(
++    "preserves a selected transaction time later than a successful review",
++    Effect.fnUntraced(function* () {
++      const registry = registryWithReviewSuccess();
++      const unmount = registry.mount(reviewContradictionCandidateAtom);
++      const command = Result.getOrThrow(
++        decodeReview({
++          candidateId: 7,
++          decision: {
++            decision: "reject",
++            reason: "The evidence concerns different periods.",
++          },
++          expectedCandidateVersion: 1,
++        })
++      );
++
++      registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(4_000));
++      registry.set(reviewContradictionCandidateAtom, command);
++      yield* AtomRegistry.getResult(registry, reviewContradictionCandidateAtom);
++
++      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
++        O.some(4_000)
++      );
++      unmount();
++      registry.dispose();
++    })
++  );
++
+   it.effect(
+     "surfaces a typed review failure through the mutation AsyncResult",
+     Effect.fnUntraced(function* () {
+diff --git a/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts b/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts
+index 11f91ab68c..91ba61dd69 100644
+--- a/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts
++++ b/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts
+@@ -8,7 +8,7 @@ import { $LangExtractId } from "@beep/identity";
+ import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
+ import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+ import { A, O } from "@beep/utils";
+-import { Effect, flow, identity, pipe } from "effect";
++import { Effect, flow, identity } from "effect";
+ import * as Eq from "effect/Equal";
+ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+@@ -436,14 +436,7 @@ const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets =
+  */
+ export const normalizeTextLocator = (value: string): string => normalizeWithRawOffsets(value).text;
+ 
+-const indexOfFrom = (text: string, locator: string, from: number): number =>
+-  pipe(
+-    text,
+-    Str.slice(from),
+-    Str.indexOf(locator),
+-    O.map((index) => index + from),
+-    O.getOrElse(() => -1)
+-  );
++const indexOfFrom = (text: string, locator: string, from: number): number => text.indexOf(locator, from);
+ 
+ const hasSameRange = (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor): boolean =>
+   A.some(
+@@ -452,6 +445,10 @@ const hasSameRange = (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor)
+   );
+ 
+ const appendRawMatch = (matches: Array<TextAnchor>, sourceText: string, startChar: number, endChar: number): void => {
++  if (!isUtf16Boundary(sourceText, startChar) || !isUtf16Boundary(sourceText, endChar)) {
++    return;
++  }
++
+   const anchor = TextAnchor.make({
+     endChar: NonNegativeInt.make(endChar),
+     quote: Str.slice(startChar, endChar)(sourceText),
+@@ -482,17 +479,39 @@ const findRawMatches = (
+ 
+   while (normalizedStart >= 0 && A.length(matches) < 2) {
+     const normalizedEnd = normalizedStart + Str.length(normalizedLocator);
+-    O.match(O.all([A.get(normalizedSource.starts, normalizedStart), A.get(normalizedSource.ends, normalizedEnd - 1)]), {
+-      onNone: () => undefined,
+-      onSome: ([startChar, endChar]) => {
+-        const quote = Str.slice(startChar, endChar)(sourceText);
+-        if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
+-          appendRawMatch(matches, sourceText, startChar, endChar);
+-        }
+-      },
+-    });
+-
+-    normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, normalizedStart + 1);
++    let nextNormalizedStart = normalizedStart + 1;
++    O.match(
++      O.all([
++        A.get(normalizedSource.starts, normalizedStart),
++        A.get(normalizedSource.ends, normalizedStart),
++        A.get(normalizedSource.ends, normalizedEnd - 1),
++      ]),
++      {
++        onNone: () => undefined,
++        onSome: ([startChar, startClusterEnd, endChar]) => {
++          const startsAtRawBoundary = !O.exists(
++            A.get(normalizedSource.starts, normalizedStart - 1),
++            Eq.equals(startChar)
++          );
++          const endsAtRawBoundary = !O.exists(A.get(normalizedSource.ends, normalizedEnd), Eq.equals(endChar));
++          if (startsAtRawBoundary && endsAtRawBoundary) {
++            const quote = Str.slice(startChar, endChar)(sourceText);
++            if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
++              appendRawMatch(matches, sourceText, startChar, endChar);
++              return;
++            }
++          }
++
++          while (
++            O.exists(A.get(normalizedSource.starts, nextNormalizedStart), (nextStart) => nextStart < startClusterEnd)
++          ) {
++            nextNormalizedStart += 1;
++          }
++        },
++      }
++    );
++
++    normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, nextNormalizedStart);
+   }
+ 
+   return matches;
+diff --git a/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts b/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts
+index 68fa4beadb..4b03504a8b 100644
+--- a/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts
++++ b/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts
+@@ -41,6 +41,15 @@ describe("verified-span hostile-text contract", () => {
+     })
+   );
+ 
++  it.effect(
++    "rejects exact raw locators that split a surrogate pair",
++    Effect.fnUntraced(function* () {
++      const failure = yield* locateRawText("😀", "\uD83D").pipe(Effect.flip);
++
++      expect(failure.reason).toBe("not-found");
++    })
++  );
++
+   it.effect(
+     "maps a composed locator onto decomposed raw combining-mark text",
+     Effect.fnUntraced(function* () {
+@@ -127,6 +136,19 @@ describe("verified-span hostile-text contract", () => {
+     })
+   );
+ 
++  it.effect(
++    "skips rejected compatibility clusters without repeatedly slicing the remaining source",
++    Effect.fnUntraced(function* () {
++      const ligatures = Str.repeat(100_000)("ﬁ");
++      const failure = yield* locateRawText(ligatures, "f").pipe(Effect.flip);
++      const source = Str.concat(ligatures, "f");
++      const anchor = yield* locateRawText(source, "f");
++
++      expect(failure.reason).toBe("not-found");
++      expect(anchor).toEqual({ endChar: 100_001, quote: "f", startChar: 100_000 });
++    })
++  );
++
+   it.effect(
+     "reconstructs an explicit page separator once and locates across the boundary",
+     Effect.fnUntraced(function* () {

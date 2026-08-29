@@ -1,0 +1,656 @@
+diff --git a/packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts b/packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts
+index b28768967c..7ebd87e67c 100644
+--- a/packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts
++++ b/packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts
+@@ -15,11 +15,12 @@ import { SemanticVersion } from "@beep/schema/SemanticVersion";
+ import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
+ import { sha256 } from "@noble/hashes/sha2.js";
+ import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
+-import { flow, identity, Order, pipe, Result } from "effect";
++import { DateTime, flow, identity, Order, pipe, Result } from "effect";
+ import * as A from "effect/Array";
+ import * as Bool from "effect/Boolean";
+ import * as Eq from "effect/Equal";
+ import { dual } from "effect/Function";
++import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import { Confidence } from "../EvidenceSpan/index.ts";
+ import { canonicalJson } from "../internal/CanonicalJson.ts";
+@@ -563,21 +564,8 @@ export class ContradictionMatchBasis extends S.Class<ContradictionMatchBasis>($I
+   })
+ ) {}
+ 
+-/**
+- * Human-reviewable replacement proposed for one conflicting lineage.
+- *
+- * @example
+- * ```ts
+- * import { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction"
+- *
+- * console.log(ContradictionResolutionProposal.fields.proposalDigest !== undefined)
+- * ```
+- *
+- * @category value-objects
+- * @since 0.0.0
+- */
+-export class ContradictionResolutionProposal extends S.Class<ContradictionResolutionProposal>(
+-  $I`ContradictionResolutionProposal`
++class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolutionProposalStruct>(
++  $I`ContradictionResolutionProposalStruct`
+ )(
+   {
+     fact: JsonObject.annotateKey({
+@@ -602,6 +590,56 @@ export class ContradictionResolutionProposal extends S.Class<ContradictionResolu
+       description: "Exclusive valid-time upper bound of the replacement, when known.",
+     }),
+   },
++  $I.annote("ContradictionResolutionProposalStruct", {
++    description: "Structural contradiction proposal before its half-open valid interval is checked.",
++  })
++) {}
++
++const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
++const contradictionResolutionProposalStructArbitrary = S.toArbitraryLazy(ContradictionResolutionProposalStruct);
++const ContradictionResolutionProposalSchema = ContradictionResolutionProposalStruct.mapFields(identity)
++  .check(
++    S.makeFilter(
++      ({ validFrom, validTo }) =>
++        O.match(validTo, {
++          onNone: () => true,
++          onSome: (upperBound) => validIntervalIsOrdered(validFrom, upperBound),
++        }),
++      {
++        identifier: $I`ContradictionResolutionProposalValidIntervalCheck`,
++        title: "Contradiction Resolution Proposal Valid Interval",
++        description: "Checks that a closed proposal validity interval is a non-empty forward half-open range.",
++        message: "Expected validFrom to be earlier than validTo when validTo is present.",
++      }
++    )
++  )
++  .annotate({
++    toArbitrary: () => (fc) =>
++      contradictionResolutionProposalStructArbitrary(fc).map((proposal) =>
++        ContradictionResolutionProposalStruct.make({
++          ...proposal,
++          validTo: O.filter(proposal.validTo, (upperBound) => validIntervalIsOrdered(proposal.validFrom, upperBound)),
++        })
++      ),
++  });
++
++/**
++ * Human-reviewable replacement proposed for one conflicting lineage.
++ *
++ * @example
++ * ```ts
++ * import { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction"
++ *
++ * console.log(ContradictionResolutionProposal.fields.proposalDigest !== undefined)
++ * ```
++ *
++ * @category value-objects
++ * @since 0.0.0
++ */
++export class ContradictionResolutionProposal extends S.Class<ContradictionResolutionProposal>(
++  $I`ContradictionResolutionProposal`
++)(
++  ContradictionResolutionProposalSchema,
+   $I.annote("ContradictionResolutionProposal", {
+     description: "Human-reviewable replacement proposed for one conflicting logical lineage.",
+   })
+diff --git a/packages/epistemic/domain/test/Contradiction.test.ts b/packages/epistemic/domain/test/Contradiction.test.ts
+index bef3933533..ecbe750cbe 100644
+--- a/packages/epistemic/domain/test/Contradiction.test.ts
++++ b/packages/epistemic/domain/test/Contradiction.test.ts
+@@ -151,6 +151,15 @@ describe("Contradiction domain invariants", () => {
+     ).toBe(true);
+   });
+ 
++  it("rejects empty or reversed proposal validity intervals", () => {
++    const encoded = Result.getOrThrow(S.encodeUnknownResult(ContradictionResolutionProposal)(proposal));
++    const decode = S.decodeUnknownResult(ContradictionResolutionProposal);
++
++    expect(Result.isFailure(decode({ ...encoded, validFrom: 1_000, validTo: 1_000 }))).toBe(true);
++    expect(Result.isFailure(decode({ ...encoded, validFrom: 1_001, validTo: 1_000 }))).toBe(true);
++    expect(Result.isSuccess(decode({ ...encoded, validFrom: 1_000, validTo: 1_001 }))).toBe(true);
++  });
++
+   it("separates unordered submissions from canonical persisted pairs", () => {
+     const reversed = ContradictionBeliefPair.make({ left: right, right: left });
+     const reversedBasis = ContradictionMatchBasis.make({
+@@ -223,6 +232,14 @@ describe("Contradiction domain invariants", () => {
+           expect(A.dedupe(arbitraryAssessment.proposals.map(({ proposalId }) => proposalId))).toHaveLength(
+             arbitraryAssessment.proposals.length
+           );
++          expect(
++            A.every(arbitraryAssessment.proposals, ({ validFrom, validTo }) =>
++              O.match(validTo, {
++                onNone: () => true,
++                onSome: (upperBound) => DateTime.isLessThan(validFrom, upperBound),
++              })
++            )
++          ).toBe(true);
+           expect(S.is(CanonicalContradictionBeliefPair)(canonicalPair)).toBe(true);
+         }
+       ),
+diff --git a/packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.repo.ts b/packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.repo.ts
+index 7fef78b101..37a6b92ed6 100644
+--- a/packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.repo.ts
++++ b/packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.repo.ts
+@@ -458,7 +458,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
+           and(
+             eq(evidenceVerificationTable.orgId, query.orgId),
+             inArray(evidenceVerificationTable.evidenceId, evidenceIds),
+-            lte(evidenceVerificationTable.createdAt, DateTime.toEpochMillis(candidate.recordedAt))
++            lte(evidenceVerificationTable.createdAt, knownAt)
+           )
+         )
+         .orderBy(desc(evidenceVerificationTable.createdAt), desc(evidenceVerificationTable.id))
+@@ -603,7 +603,6 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
+         db
+           .transaction(
+             Effect.fnUntraced(function* (tx) {
+-              const resolvedAt = yield* DateTime.now;
+               const candidateRows = yield* tx
+                 .select()
+                 .from(candidateTable)
+@@ -617,7 +616,11 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
+                 });
+               }
+               const candidate = yield* Effect.fromResult(fromContradictionCandidateRow(candidateRow.value));
+-              if (!Eq.equals(candidate.rowVersion, command.expectedCandidateVersion)) {
++              const resolvedAt = yield* DateTime.now;
++              if (
++                DateTime.isLessThan(resolvedAt, candidate.recordedAt) ||
++                !Eq.equals(candidate.rowVersion, command.expectedCandidateVersion)
++              ) {
+                 return yield* ContradictionReviewConflict.make({
+                   candidateId: command.candidateId,
+                   reason: "stale-candidate",
+diff --git a/packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts b/packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts
+index 7f06065dbf..81fff8ccc2 100644
+--- a/packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts
++++ b/packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts
+@@ -622,7 +622,7 @@ if (!shouldRunPgliteIntegration) {
+       );
+ 
+       it.effect(
+-        "expands exact beliefs with organization-scoped verification as of candidate time",
++        "expands exact beliefs with organization-scoped verification as of query transaction time",
+         Effect.fnUntraced(function* () {
+           const seeded = yield* seedScenario(106);
+           const decodedEvidenceA = fromEvidenceRow(seeded.evidenceA);
+@@ -630,13 +630,13 @@ if (!shouldRunPgliteIntegration) {
+           const db = yield* makeDrizzle();
+           yield* insertVerification(106, 1, seeded.evidenceA, 1_100);
+           yield* insertVerification(106, 2, seeded.evidenceA, 1_150);
+-          const selected = yield* insertVerification(106, 3, seeded.evidenceA, 1_150);
++          const preCandidateVerification = yield* insertVerification(106, 3, seeded.evidenceA, 1_150);
+           const unrelatedAnchor = TextAnchorVerificationReceipt.make({
+             anchor: TextAnchor.make({
+-              ...selected.verifiedAnchor.anchor,
++              ...preCandidateVerification.verifiedAnchor.anchor,
+               quote: "amount B",
+             }),
+-            source: selected.verifiedAnchor.source,
++            source: preCandidateVerification.verifiedAnchor.source,
+           });
+           const unrelatedVerification = decodeVerification({
+             ...baseEntityFixtureInput("EpistemicEvidenceVerification", 10_605),
+@@ -656,7 +656,7 @@ if (!shouldRunPgliteIntegration) {
+           const { id: _id, ...uncheckedUnrelatedInsert } = encodedUnrelated;
+           yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);
+           const submitted = yield* repository.submit(makeSubmission(106, seeded));
+-          yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
++          const selected = yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
+ 
+           const expanded = yield* repository.getExpanded(
+             GetExpandedContradictionCandidate.make({
+@@ -713,6 +713,45 @@ if (!shouldRunPgliteIntegration) {
+         120_000
+       );
+ 
++      it.effect(
++        "refuses to record a review before the candidate transaction time",
++        Effect.fnUntraced(function* () {
++          const seeded = yield* seedScenario(110);
++          const repository = yield* ContradictionTriageRepository;
++          const submitted = yield* repository.submit(makeSubmission(110, seeded, { recordedAt: 5_000 }));
++          yield* TestClock.setTime(2_000);
++
++          const conflict = yield* Effect.flip(
++            repository.review(
++              ReviewContradictionCandidate.make({
++                candidateId: submitted.candidate.id,
++                decision: { decision: "reject", reason: "A review cannot predate the candidate." },
++                expectedCandidateVersion: submitted.candidate.rowVersion,
++              }),
++              systemPrincipal,
++              reviewScope(submitted.candidate.orgId)
++            )
++          );
++          expect(ContradictionReviewConflict.is(conflict)).toBe(true);
++          expect(ContradictionReviewConflict.is(conflict) && conflict.reason).toBe("stale-candidate");
++
++          const detail = yield* repository.get(
++            GetContradictionCandidate.make({
++              candidateId: submitted.candidate.id,
++              knownAt: instant(6_000),
++              validAt: instant(1_500),
++            })
++          );
++          expect(
++            pipe(
++              detail,
++              O.flatMap((value) => value.disposition)
++            )
++          ).toStrictEqual(O.none());
++        }),
++        120_000
++      );
++
+       it.effect(
+         "queries both axes and records a durable rejection",
+         Effect.fnUntraced(function* () {
+diff --git a/packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts b/packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts
+index c300a83e07..2ae1685953 100644
+--- a/packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts
++++ b/packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts
+@@ -68,20 +68,22 @@ const validateEvidenceAssociation = (
+   verification: EvidenceVerification,
+   evidence: Evidence
+ ): Result.Result<EvidenceVerification, S.SchemaError> =>
++  Eq.equals(verification.orgId, evidence.orgId) &&
+   Eq.equals(verification.evidenceId, evidence.id) &&
+   EvidenceSpan.matchesAnchor(evidence.span, verification.verifiedAnchor.anchor)
+     ? Result.succeed(verification)
+     : Result.fail(
+         new S.SchemaError(
+           new SchemaIssue.InvalidValue(O.some(verification.verifiedAnchor.anchor), {
+-            message: "Evidence-verification association does not match the referenced evidence id and span.",
++            message:
++              "Evidence-verification association does not match the referenced organization, evidence id, and span.",
+           })
+         )
+       );
+ 
+ /**
+  * Convert an EvidenceVerification entity into an insert row after proving its
+- * evidence id and verified anchor match the referenced evidence span.
++ * organization, evidence id, and verified anchor match the referenced evidence.
+  *
+  * The database-managed serial id is omitted so inserts use the table sequence.
+  *
+diff --git a/packages/epistemic/tables/test/EvidenceVerificationTables.test.ts b/packages/epistemic/tables/test/EvidenceVerificationTables.test.ts
+index fbc1eff0ed..9ab15e6cc5 100644
+--- a/packages/epistemic/tables/test/EvidenceVerificationTables.test.ts
++++ b/packages/epistemic/tables/test/EvidenceVerificationTables.test.ts
+@@ -9,6 +9,7 @@ import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnch
+ import { NonNegativeInt } from "@beep/schema";
+ import { PosixPath } from "@beep/schema/PosixPath";
+ import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
++import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
+ import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+ import { describe, expect, it } from "@effect/vitest";
+ import { getColumns } from "drizzle-orm";
+@@ -233,6 +234,14 @@ describe("EvidenceVerificationTable", () => {
+     expect(
+       Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedEvidenceVerification, evidence))
+     ).toBe(true);
++
++    const mismatchedOrganizationVerification = EvidenceVerificationModel.make({
++      ...verification,
++      orgId: SharedIdentity.OrganizationId.make(2),
++    });
++    expect(
++      Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedOrganizationVerification, evidence))
++    ).toBe(true);
+   });
+ 
+   it("uses the manifestation schema as the digest input contract", () => {
+diff --git a/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts b/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts
+index 391a563c0d..11f91ab68c 100644
+--- a/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts
++++ b/packages/foundation/capability/langextract/src/VerifiedSpan/index.ts
+@@ -451,12 +451,33 @@ const hasSameRange = (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor)
+     (anchor) => Eq.equals(anchor.startChar, candidate.startChar) && Eq.equals(anchor.endChar, candidate.endChar)
+   );
+ 
+-const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<TextAnchor> => {
++const appendRawMatch = (matches: Array<TextAnchor>, sourceText: string, startChar: number, endChar: number): void => {
++  const anchor = TextAnchor.make({
++    endChar: NonNegativeInt.make(endChar),
++    quote: Str.slice(startChar, endChar)(sourceText),
++    startChar: NonNegativeInt.make(startChar),
++  });
++  if (!hasSameRange(matches, anchor)) {
++    A.appendInPlace(matches, anchor);
++  }
++};
++
++const findRawMatches = (
++  sourceText: string,
++  normalizedSource: NormalizedTextWithRawOffsets,
++  locator: string
++): ReadonlyArray<TextAnchor> => {
+   // crispen: overlapping-match enumeration is deliberately explicit; replacing
+   // it with a first-match combinator would violate the ambiguity contract.
+   const normalizedLocator = normalizeTextLocator(locator);
+-  const normalizedSource = normalizeWithRawOffsets(sourceText);
+   const matches: Array<TextAnchor> = A.empty();
++  let rawStart = indexOfFrom(sourceText, locator, 0);
++
++  while (rawStart >= 0 && A.length(matches) < 2) {
++    appendRawMatch(matches, sourceText, rawStart, rawStart + Str.length(locator));
++    rawStart = indexOfFrom(sourceText, locator, rawStart + 1);
++  }
++
+   let normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, 0);
+ 
+   while (normalizedStart >= 0 && A.length(matches) < 2) {
+@@ -466,14 +487,7 @@ const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<Text
+       onSome: ([startChar, endChar]) => {
+         const quote = Str.slice(startChar, endChar)(sourceText);
+         if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
+-          const anchor = TextAnchor.make({
+-            endChar: NonNegativeInt.make(endChar),
+-            quote,
+-            startChar: NonNegativeInt.make(startChar),
+-          });
+-          if (!hasSameRange(matches, anchor)) {
+-            A.appendInPlace(matches, anchor);
+-          }
++          appendRawMatch(matches, sourceText, startChar, endChar);
+         }
+       },
+     });
+@@ -484,6 +498,32 @@ const findRawMatches = (sourceText: string, locator: string): ReadonlyArray<Text
+   return matches;
+ };
+ 
++const locatePreparedRawText = Effect.fnUntraced(function* (
++  sourceText: string,
++  normalizedSource: NormalizedTextWithRawOffsets,
++  locator: string
++): Effect.fn.Return<TextAnchor, VerifiedSpanError> {
++  if (Str.isEmpty(Str.trim(locator))) {
++    return yield* VerifiedSpanError.fromReason("absent-text");
++  }
++  if (Str.length(locator) > MAX_LOCATOR_LENGTH) {
++    return yield* VerifiedSpanError.fromReason("limit-exceeded");
++  }
++
++  const matches = findRawMatches(sourceText, normalizedSource, locator);
++  if (Eq.equals(A.length(matches), 0)) {
++    return yield* VerifiedSpanError.fromReason("not-found");
++  }
++  if (A.length(matches) > 1) {
++    return yield* VerifiedSpanError.fromReason("ambiguous");
++  }
++
++  return yield* O.match(A.head(matches), {
++    onNone: () => Effect.fail(VerifiedSpanError.fromReason("not-found")),
++    onSome: Effect.succeed,
++  });
++});
++
+ /**
+  * Locate one normalized candidate and recover its unique exact raw slice.
+  *
+@@ -507,25 +547,14 @@ export const locateRawText = Effect.fn("VerifiedSpan.locateRawText")(function* (
+   sourceText: string,
+   locator: string
+ ): Effect.fn.Return<TextAnchor, VerifiedSpanError> {
+-  if (Str.isEmpty(sourceText) || Str.isEmpty(Str.trim(locator))) {
++  if (Str.isEmpty(sourceText)) {
+     return yield* VerifiedSpanError.fromReason("absent-text");
+   }
+-  if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH || Str.length(locator) > MAX_LOCATOR_LENGTH) {
++  if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH) {
+     return yield* VerifiedSpanError.fromReason("limit-exceeded");
+   }
+ 
+-  const matches = findRawMatches(sourceText, locator);
+-  if (Eq.equals(A.length(matches), 0)) {
+-    return yield* VerifiedSpanError.fromReason("not-found");
+-  }
+-  if (A.length(matches) > 1) {
+-    return yield* VerifiedSpanError.fromReason("ambiguous");
+-  }
+-
+-  return yield* O.match(A.head(matches), {
+-    onNone: () => Effect.fail(VerifiedSpanError.fromReason("not-found")),
+-    onSome: Effect.succeed,
+-  });
++  return yield* locatePreparedRawText(sourceText, normalizeWithRawOffsets(sourceText), locator);
+ });
+ 
+ /**
+@@ -664,10 +693,20 @@ export const locateGroundedExtractions = Effect.fn("VerifiedSpan.locateGroundedE
+   sourceText: string,
+   extractions: ReadonlyArray<GroundedExtraction>
+ ): Effect.fn.Return<ReadonlyArray<TextAnchor>, VerifiedSpanError> {
++  if (Eq.equals(A.length(extractions), 0)) {
++    return [];
++  }
++  if (Str.isEmpty(sourceText)) {
++    return yield* VerifiedSpanError.fromReason("absent-text");
++  }
++  if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH) {
++    return yield* VerifiedSpanError.fromReason("limit-exceeded");
++  }
++  const normalizedSource = normalizeWithRawOffsets(sourceText);
+   return yield* Effect.forEach(
+     extractions,
+     (extraction, index) =>
+-      locateRawText(sourceText, extraction.text).pipe(
++      locatePreparedRawText(sourceText, normalizedSource, extraction.text).pipe(
+         Effect.mapError((error) =>
+           VerifiedSpanError.make({
+             candidateIndex: NonNegativeInt.make(index),
+diff --git a/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts b/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts
+index 03a40fe0ec..68fa4beadb 100644
+--- a/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts
++++ b/packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts
+@@ -52,6 +52,17 @@ describe("verified-span hostile-text contract", () => {
+     })
+   );
+ 
++  it.effect(
++    "preserves an exact raw locator that ends inside a normalization cluster",
++    Effect.fnUntraced(function* () {
++      const source = "Cafe\u0301 noir";
++      const anchor = yield* locateRawText(source, "Cafe");
++
++      expect(anchor).toEqual({ endChar: 4, quote: "Cafe", startChar: 0 });
++      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
++    })
++  );
++
+   it.effect(
+     "maps a precomposed Hangul locator onto decomposed Jamo source text",
+     Effect.fnUntraced(function* () {
+diff --git a/packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts b/packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts
+index dd9f973916..9a5296a9fe 100644
+--- a/packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts
++++ b/packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts
+@@ -23,16 +23,18 @@ import { Sha256HexFromBytes } from "@beep/schema";
+ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+ import { O } from "@beep/utils";
+ import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
+-import { Effect, FileSystem, Layer, Match, Path } from "effect";
++import { Cache, Effect, FileSystem, Layer, Match, Path } from "effect";
+ import * as Eq from "effect/Equal";
+ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+ import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
+ import type { ResolveSourceTextRequest } from "@beep/file-processing/SourceText";
++import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+ import type * as Crypto from "effect/Crypto";
+ 
+ const $I = $WorkspaceServerId.create("SourceText/WorkspaceSourceTextResolver");
+ const LOCATOR_NORMALIZATION_VERSION = "1";
++const CANONICAL_TEXT_CACHE_CAPACITY = 32;
+ const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
+ const utf8Encoder = new TextEncoder();
+ const sourceTextDigestEquals = S.toEquivalence(SourceTextDigest);
+@@ -181,6 +183,13 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
+   const fs = yield* FileSystem.FileSystem;
+   const path = yield* Path.Path;
+   const vaultStore = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
++  const canonicalTextCache = yield* Cache.make<SourceTextIdentity, ResolvedSourceText, SourceTextResolverError>({
++    capacity: CANONICAL_TEXT_CACHE_CAPACITY,
++    lookup: () =>
++      Effect.fail(
++        SourceTextResolverError.new("extraction-failed", "Canonical source text must be verified before it is cached.")
++      ),
++  });
+ 
+   return SourceTextResolver.of({
+     resolve: Effect.fn("source_text.resolve")((request) =>
+@@ -252,35 +261,44 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
+           "The source bytes no longer match the pinned source digest."
+         );
+ 
+-        const extension = Str.toLowerCase(Str.slice(1)(path.extname(resolvedPath)));
+-        const format = classifyFormatFromExtension(extension);
+-        const text = yield* Match.value(format).pipe(
+-          Match.whenOr("plain-text", "markdown", () => decodeUtf8(bytes, request.identity.extractor)),
+-          Match.when("pdf-text-layer", () =>
+-            extractDocumentText(request, resolvedPath, extension, "pdf-text-layer", bytes, fileProcessing, path)
+-          ),
+-          Match.when("docx", () =>
+-            extractDocumentText(request, resolvedPath, extension, "docx", bytes, fileProcessing, path)
+-          ),
+-          Match.orElse(() =>
+-            Effect.fail(
+-              SourceTextResolverError.new(
+-                "extractor-unavailable",
+-                `No canonical source-text extractor is available for extension "${extension}".`
++        const cached = yield* Cache.getOption(canonicalTextCache, request.identity);
++        const source = yield* O.match(cached, {
++          onNone: Effect.fn("source_text.resolve.cache_miss")(function* () {
++            const extension = Str.toLowerCase(Str.slice(1)(path.extname(resolvedPath)));
++            const format = classifyFormatFromExtension(extension);
++            const text = yield* Match.value(format).pipe(
++              Match.whenOr("plain-text", "markdown", () => decodeUtf8(bytes, request.identity.extractor)),
++              Match.when("pdf-text-layer", () =>
++                extractDocumentText(request, resolvedPath, extension, "pdf-text-layer", bytes, fileProcessing, path)
++              ),
++              Match.when("docx", () =>
++                extractDocumentText(request, resolvedPath, extension, "docx", bytes, fileProcessing, path)
++              ),
++              Match.orElse(() =>
++                Effect.fail(
++                  SourceTextResolverError.new(
++                    "extractor-unavailable",
++                    `No canonical source-text extractor is available for extension "${extension}".`
++                  )
++                )
+               )
+-            )
+-          )
+-        );
+-        const textDigest = yield* digestBytes(utf8Encoder.encode(text)).pipe(Effect.provide(crypto));
+-        yield* verifyDigest(
+-          textDigest,
+-          request.identity.textDigest,
+-          "text-digest-mismatch",
+-          "The canonical text no longer matches the pinned text digest."
+-        );
++            );
++            const textDigest = yield* digestBytes(utf8Encoder.encode(text)).pipe(Effect.provide(crypto));
++            yield* verifyDigest(
++              textDigest,
++              request.identity.textDigest,
++              "text-digest-mismatch",
++              "The canonical text no longer matches the pinned text digest."
++            );
++            const resolved = ResolvedSourceText.make({ identity: request.identity, text });
++            yield* Cache.set(canonicalTextCache, request.identity, resolved);
++            return resolved;
++          }),
++          onSome: Effect.succeed,
++        });
+ 
+         yield* Effect.annotateCurrentSpan("source_text.outcome", "resolved");
+-        return ResolvedSourceText.make({ identity: request.identity, text });
++        return source;
+       }).pipe(
+         Effect.tapError((error) =>
+           Effect.annotateCurrentSpan({
+diff --git a/packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts b/packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts
+index 224dd9ba2a..b83273796c 100644
+--- a/packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts
++++ b/packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts
+@@ -19,9 +19,10 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+ import * as BunPath from "@effect/platform-bun/BunPath";
+ import { assert, describe, expect, it } from "@effect/vitest";
+ import { Document, Packer, Paragraph, TextRun } from "docx";
+-import { Effect, FileSystem, Layer, Path, Result } from "effect";
++import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
+ import * as A from "effect/Array";
+ import * as Eq from "effect/Equal";
++import * as N from "effect/Number";
+ import * as O from "effect/Option";
+ import * as P from "effect/Predicate";
+ import * as S from "effect/Schema";
+@@ -280,6 +281,59 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
+     }, provideScopedLayer(ResolverTestLayer))
+   );
+ 
++  it.effect(
++    "reuses canonical document text while rechecking pinned source bytes",
++    Effect.fnUntraced(function* () {
++      const extractionCount = yield* Ref.make(0);
++      const countingDocTextEngine = {
++        ...DocTextFileProcessingEngine,
++        extract: Effect.fnUntraced(function* (operation) {
++          yield* Ref.update(extractionCount, N.increment);
++          return yield* DocTextFileProcessingEngine.extract(operation);
++        }),
++      };
++      const countingFileProcessingLayer = makeFileProcessingServiceLayer([countingDocTextEngine]).pipe(
++        Layer.provideMerge(BunCrypto.layer)
++      );
++      const countingResolverTestLayer = WorkspaceSourceTextResolverLayer.pipe(
++        Layer.provideMerge(Layer.mergeAll(PlatformLayer, WorkspaceVaultLayer, countingFileProcessingLayer))
++      );
++
++      yield* Effect.gen(function* () {
++        const fs = yield* FileSystem.FileSystem;
++        const path = yield* Path.Path;
++        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-source-text-cache-" });
++        const locator = "source.docx";
++        const sourcePath = path.join(root, locator);
++        const bytes = yield* Effect.promise(() => makeDocx("Cached canonical source"));
++        const sourceDigest = yield* digestBytes(bytes);
++        const canonicalText = "Cached canonical source\n\n";
++        const textDigest = yield* digestBytes(new TextEncoder().encode(canonicalText));
++        const identityInput = {
++          extractorName: DocTextFileProcessingEngine.descriptor.name,
++          extractorVersion: DOC_TEXT_ENGINE_VERSION,
++          locator,
++          sourceDigest,
++          textDigest,
++        };
++        const identity = identityFor(identityInput);
++        yield* fs.writeFile(sourcePath, bytes);
++        yield* configureVault(root);
++
++        const first = yield* resolve(identity);
++        const second = yield* resolve(identityFor(identityInput));
++        expect(first.text).toBe(canonicalText);
++        expect(second.text).toBe(canonicalText);
++        expect(yield* Ref.get(extractionCount)).toBe(1);
++
++        yield* fs.writeFile(sourcePath, yield* Effect.promise(() => makeDocx("Drifted source")));
++        const drift = yield* resolve(identity).pipe(Effect.flip);
++        expect(drift.reason).toBe("source-digest-mismatch");
++        expect(yield* Ref.get(extractionCount)).toBe(1);
++      }).pipe(Effect.provide(countingResolverTestLayer), Effect.scoped);
++    })
++  );
++
+   it.effect(
+     "fails closed when source bytes drift from the pinned digest",
+     Effect.fnUntraced(function* () {

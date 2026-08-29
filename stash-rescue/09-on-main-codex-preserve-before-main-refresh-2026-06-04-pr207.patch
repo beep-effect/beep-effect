@@ -1,0 +1,318 @@
+diff --git a/scratchpad/index.ts b/scratchpad/index.ts
+index 336ce12bb9..4ab96bbab1 100644
+--- a/scratchpad/index.ts
++++ b/scratchpad/index.ts
+@@ -1 +1,312 @@
+-export {}
++import { $ScratchpadId } from "@beep/identity";
++import * as S from "effect/Schema";
++
++const $I = $ScratchpadId.create("index");
++
++/**
++ * The literal tag for a Party.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const PartyTag = S.Literal("Party").pipe(
++  $I.annoteSchema("PartyTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link PartyTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PartyTag = typeof PartyTag.Type;
++
++
++/**
++ * The literal tag for a Document.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const DocumentTag = S.Literal("Document").pipe(
++  $I.annoteSchema("DocumentTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link DocumentTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type DocumentTag = typeof DocumentTag.Type;
++
++/**
++ * The literal tag for a Communication.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const CommunicationTag = S.Literal("Communication").pipe(
++  $I.annoteSchema("CommunicationTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link CommunicationTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type CommunicationTag = typeof CommunicationTag.Type;
++
++/**
++ * The literal tag for a Matter.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const MatterTag = S.Literal("Matter").pipe(
++  $I.annoteSchema("MatterTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link MatterTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type MatterTag = typeof MatterTag.Type;
++
++/**
++ * The literal tag for a Person.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const PersonTag = S.Literal("Person").pipe(
++  $I.annoteSchema("PersonTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link PersonTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PersonTag = typeof PersonTag.Type;
++
++/**
++ * The literal tag for a Activity.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const ActivityTag = S.Literal("Activity").pipe(
++  $I.annoteSchema("ActivityTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link ActivityTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type ActivityTag = typeof ActivityTag.Type;
++
++/**
++ * The literal tag for a Knowledge.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const KnowledgeTag = S.Literal("Knowledge").pipe(
++  $I.annoteSchema("KnowledgeTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link KnowledgeTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type KnowledgeTag = typeof KnowledgeTag.Type;
++
++/**
++ * The literal tag for a Permission.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const PermissionTag = S.Literal("Permission").pipe(
++  $I.annoteSchema("PermissionTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link PermissionTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PermissionTag = typeof PermissionTag.Type;
++
++
++/**
++ * The literal tag for a WorkProduct.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const WorkProductTag = S.Literal("WorkProduct").pipe(
++  $I.annoteSchema("WorkProductTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link WorkProductTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type WorkProductTag = typeof WorkProductTag.Type;
++
++
++/**
++ * The literal tag for a Judgement.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const JudgementTag = S.Literal("Judgement").pipe(
++  $I.annoteSchema("JudgementTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link JudgementTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type JudgementTag = typeof JudgementTag.Type;
++
++/**
++ * The literal tag for a Product.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const ProductTag = S.Literal("Product").pipe(
++  $I.annoteSchema("ProductTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link ProductTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type ProductTag = typeof ProductTag.Type;
++
++/**
++ * The literal tag for a Context.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const ContextTag = S.Literal("Context").pipe(
++  $I.annoteSchema("ContextTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link ContextTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type ContextTag = typeof ContextTag.Type;
++
++/**
++ * The literal tag for a Email.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const EmailTag = S.Literal("Email").pipe(
++  $I.annoteSchema("EmailTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link EmailTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type EmailTag = typeof EmailTag.Type;
++
++/**
++ * The literal tag for a Timeline.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const TimelineTag = S.Literal("Timeline").pipe(
++  $I.annoteSchema("TimelineTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link TimelineTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type TimelineTag = typeof TimelineTag.Type;
++
++/**
++ * The literal tag for a Agent.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const AgentTag = S.Literal("Agent").pipe(
++  $I.annoteSchema("AgentTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link AgentTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type AgentTag = typeof AgentTag.Type;
++
++/**
++ * The literal tag for a MatterRule.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++const MatterRuleTag = S.Literal("MatterRule").pipe(
++  $I.annoteSchema("MatterRuleTag", {
++    description: ""
++  })
++)
++/**
++ * Companion type for {@link MatterRuleTag}.
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type MatterRuleTag = typeof MatterRuleTag.Type;
++
