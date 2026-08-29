@@ -276,7 +276,7 @@ First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 
 `.repos/effect` is a gitignored symlink to a machine-local clone of
 [Effect-TS/effect](https://github.com/Effect-TS/effect), provisioned by
-`scripts/setup-agent-memory.sh`, so agents validate APIs against real Effect
+`scripts/setup-effect-ref.sh`, so agents validate APIs against real Effect
 v4 source instead of training-data priors. Nothing under `.repos/` is part
 of the tracked tree.
 

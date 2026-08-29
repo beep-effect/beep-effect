@@ -4,10 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, FileSystem, Path, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
-const writeExecutable = Effect.fn("SetupAgentMemoryTest.writeExecutable")(function* (
-  filePath: string,
-  content: string
-) {
+const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(filePath, content);
   yield* fs.chmod(filePath, 0o755);
@@ -17,7 +14,7 @@ const withTempDirectory = <A, E, R>(use: (tempDir: string) => Effect.Effect<A, E
   Effect.acquireUseRelease(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory({ prefix: "setup-agent-memory-test-" });
+      return yield* fs.makeTempDirectory({ prefix: "setup-effect-ref-test-" });
     }),
     use,
     (tempDir) =>
@@ -27,7 +24,7 @@ const withTempDirectory = <A, E, R>(use: (tempDir: string) => Effect.Effect<A, E
       })
   );
 
-describe("setup-agent-memory", () => {
+describe("setup-effect-ref", () => {
   it.effect("resolves a missing relative Effect checkout without GNU realpath", () =>
     withTempDirectory((tempDir) =>
       Effect.gen(function* () {
@@ -35,20 +32,17 @@ describe("setup-agent-memory", () => {
         const path = yield* Path.Path;
         const ambientPath = yield* Config.string("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
-          new URL("../../../../../scripts/setup-agent-memory.sh", import.meta.url)
+          new URL("../../../../../scripts/setup-effect-ref.sh", import.meta.url)
         );
         const binDir = path.join(tempDir, "bin");
         const repoRoot = path.join(tempDir, "repo");
-        const storeDir = path.join(tempDir, "store");
         const workingDirectory = path.join(tempDir, "working");
 
         yield* Effect.forEach(
-          [binDir, repoRoot, storeDir, workingDirectory],
+          [binDir, repoRoot, workingDirectory],
           (directory) => fs.makeDirectory(directory, { recursive: true }),
           { discard: true }
         );
-        yield* writeExecutable(path.join(binDir, "uvx"), "#!/bin/sh\nprintf 'beep-shared\\n'\n");
-        yield* writeExecutable(path.join(binDir, "codegraph"), "#!/bin/sh\nexit 0\n");
         yield* writeExecutable(
           path.join(binDir, "git"),
           '#!/bin/sh\nif [ "$1" = "clone" ]; then\n  for argument do target=$argument; done\n  mkdir -p "$target/.git"\nfi\n'
@@ -68,7 +62,6 @@ describe("setup-agent-memory", () => {
               cwd: workingDirectory,
               env: {
                 BEEP_EFFECT_CHECKOUT: "missing-segment/../effect-reference",
-                BEEP_SHARED_STORE: storeDir,
                 PATH: `${binDir}:${ambientPath}`,
               },
               stdin: "ignore",
