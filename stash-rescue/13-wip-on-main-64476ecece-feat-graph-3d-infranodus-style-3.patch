@@ -1,0 +1,555 @@
+diff --git a/apps/professional-desktop/src/chat/ChatOrchestrator.ts b/apps/professional-desktop/src/chat/ChatOrchestrator.ts
+index 25b0e224e1..5a9a7ec43b 100644
+--- a/apps/professional-desktop/src/chat/ChatOrchestrator.ts
++++ b/apps/professional-desktop/src/chat/ChatOrchestrator.ts
+@@ -28,6 +28,7 @@ import {
+   UserTurnHistoryItem,
+ } from "@beep/agents-use-cases/public";
+ import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
++import { $ProfessionalDesktopId } from "@beep/identity/packages";
+ import { Document, P, Text } from "@beep/md/Md.model";
+ import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+@@ -41,14 +42,11 @@ import * as Str from "effect/String";
+ import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
+ import { UsageRecordSink } from "./UsageRecordSink.ts";
+ import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
+-import type {
+-  IndexedBlock,
+-  TurnGenerationError,
+-  TurnHistoryItem,
+-  TurnRequestStatus,
+-} from "@beep/agents-use-cases/public";
++import type { IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
+ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+ 
++const $I = $ProfessionalDesktopId.create("chat/ChatOrchestrator");
++
+ // ---------------------------------------------------------------------------
+ // Document → plain text
+ // ---------------------------------------------------------------------------
+@@ -343,7 +341,12 @@ const streamAndPersist = (
+             });
+             yield* store.appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content }).pipe(
+               Effect.catch(toChatActionError("SendMessage.persistAssistant")),
+-              Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "persisted")),
++              Effect.andThen(
++                setTurnRequestStatus(
++                  requestId,
++                  TurnRequestReceipts.cases.persisted.make({ generation: requestGeneration })
++                )
++              ),
+               Effect.tapError(() => Ref.set(persisted, false))
+             );
+             return true;
+@@ -539,23 +542,35 @@ const titleGuardForEditedTurn = (
+  * so a concurrent send waits rather than racing.
+  */
+ const threadTurnLocks = Ref.makeUnsafe(HashMap.empty<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>());
+-interface TurnRequestReceipt {
+-  readonly generation: number;
+-  readonly status: TurnRequestStatus;
+-}
++const TurnRequestReceipts = S.Union([
++  S.Struct({ generation: S.Int, status: S.tag("pending") }),
++  S.Struct({ generation: S.Int, status: S.tag("accepted") }),
++  S.Struct({ generation: S.Int, status: S.tag("persisted") }),
++  S.Struct({ generation: S.Int, status: S.tag("user_persisted") }),
++  S.Struct({ generation: S.Int, status: S.tag("not_persisted") }),
++]).pipe(
++  $I.annoteSchema("TurnRequestReceipts", {
++    description: "Generation-scoped persistence receipts for chat turn requests.",
++  }),
++  S.toTaggedUnion("status")
++);
++type TurnRequestReceipt = typeof TurnRequestReceipts.Type;
+ const turnRequestStatuses = Ref.makeUnsafe(HashMap.empty<string, TurnRequestReceipt>());
+ const TURN_REQUEST_STATUS_TTL = Duration.minutes(5);
+ let internalRequestSequence = 0;
+ let requestReceiptGeneration = 0;
+ const nextInternalRequestId = (): string => `internal:${internalRequestSequence++}`;
+ 
+-const setTurnRequestStatus = (requestId: string, generation: number, status: TurnRequestStatus) =>
++const setTurnRequestStatus = (requestId: string, receipt: TurnRequestReceipt) =>
+   Ref.update(turnRequestStatuses, (statuses) =>
+-    O.match(HashMap.get(statuses, requestId), {
+-      onNone: () => statuses,
+-      onSome: (receipt) =>
+-        receipt.generation === generation ? HashMap.set(statuses, requestId, { generation, status }) : statuses,
+-    })
++    pipe(
++      HashMap.get(statuses, requestId),
++      O.filter((current) => current.generation === receipt.generation),
++      O.match({
++        onNone: () => statuses,
++        onSome: () => HashMap.set(statuses, requestId, receipt),
++      })
++    )
+   );
+ 
+ const getTurnRequestStatus = (requestId: string) =>
+@@ -567,13 +582,18 @@ const getTurnRequestStatus = (requestId: string) =>
+ 
+ const expireTurnRequestStatus = (requestId: string, terminalReceipt: TurnRequestReceipt) =>
+   Ref.update(turnRequestStatuses, (statuses) =>
+-    O.match(HashMap.get(statuses, requestId), {
+-      onNone: () => statuses,
+-      onSome: (current) =>
+-        current.generation === terminalReceipt.generation && current.status === terminalReceipt.status
+-          ? HashMap.remove(statuses, requestId)
+-          : statuses,
+-    })
++    pipe(
++      HashMap.get(statuses, requestId),
++      O.filter(
++        (current) =>
++          current.generation === terminalReceipt.generation &&
++          TurnRequestReceipts.isAnyOf([terminalReceipt.status])(current)
++      ),
++      O.match({
++        onNone: () => statuses,
++        onSome: () => HashMap.remove(statuses, requestId),
++      })
++    )
+   ).pipe(Effect.delay(TURN_REQUEST_STATUS_TTL), Effect.forkDetach, Effect.asVoid);
+ 
+ const finalizeTurnRequestStatus = (requestId: string, generation: number) =>
+@@ -584,13 +604,13 @@ const finalizeTurnRequestStatus = (requestId: string, generation: number) =>
+         onNone: () => [O.none(), statuses],
+         onSome: (receipt) => {
+           if (receipt.generation !== generation) return [O.none(), statuses];
+-          const status: TurnRequestStatus =
+-            receipt.status === "pending"
+-              ? "not_persisted"
+-              : receipt.status === "accepted"
+-                ? "user_persisted"
+-                : receipt.status;
+-          const terminalReceipt = { generation, status };
++          const terminalReceipt = TurnRequestReceipts.match(receipt, {
++            pending: ({ generation }) => TurnRequestReceipts.cases.not_persisted.make({ generation }),
++            accepted: ({ generation }) => TurnRequestReceipts.cases.user_persisted.make({ generation }),
++            persisted: (receipt) => receipt,
++            user_persisted: (receipt) => receipt,
++            not_persisted: (receipt) => receipt,
++          });
+           return [O.some(terminalReceipt), HashMap.set(statuses, requestId, terminalReceipt)];
+         },
+       })
+@@ -605,7 +625,7 @@ const trackTurnRequest = <A, E>(
+   generation: number,
+   stream: Stream.Stream<A, E>
+ ): Stream.Stream<A, E> => {
+-  const pendingReceipt: TurnRequestReceipt = { generation, status: "pending" };
++  const pendingReceipt = TurnRequestReceipts.cases.pending.make({ generation });
+   return Stream.unwrap(
+     Ref.update(turnRequestStatuses, (statuses) => HashMap.set(statuses, requestId, pendingReceipt)).pipe(
+       Effect.as(stream)
+@@ -709,7 +729,12 @@ export const makeChatOperations = (
+               .appendTurn({ threadId, parentTurnId: O.none(), role: "user", content })
+               .pipe(
+                 Effect.catch(toChatActionError("SendMessage")),
+-                Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "accepted"))
++                Effect.andThen(
++                  setTurnRequestStatus(
++                    requestId,
++                    TurnRequestReceipts.cases.accepted.make({ generation: requestGeneration })
++                  )
++                )
+               )
+           );
+           yield* setTitleFromFirstUserMessage(store, threadId, content);
+@@ -738,7 +763,12 @@ export const makeChatOperations = (
+               .appendTurn({ threadId, parentTurnId: O.some(turnId), role: "user", content })
+               .pipe(
+                 Effect.catch(toChatActionError("EditMessage")),
+-                Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "accepted"))
++                Effect.andThen(
++                  setTurnRequestStatus(
++                    requestId,
++                    TurnRequestReceipts.cases.accepted.make({ generation: requestGeneration })
++                  )
++                )
+               )
+           );
+           yield* pipe(
+diff --git a/apps/professional-desktop/src/runtime/Pglite.ts b/apps/professional-desktop/src/runtime/Pglite.ts
+index 4a9b4d6357..33040a13a7 100644
+--- a/apps/professional-desktop/src/runtime/Pglite.ts
++++ b/apps/professional-desktop/src/runtime/Pglite.ts
+@@ -27,12 +27,15 @@
+ /// <reference path="../assets.d.ts" />
+ 
+ import { fileURLToPath } from "node:url";
++import { $ProfessionalDesktopId } from "@beep/identity/packages";
+ import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
+ import { makeLayer as makePgliteLayer } from "@beep/pglite";
+ import { makeDrizzleLayer } from "@beep/postgres";
++import { TaggedErrorClass } from "@beep/schema";
+ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+ import * as BunPath from "@effect/platform-bun/BunPath";
+-import { Clock, Config, Data, Effect, FileSystem, Layer, Path } from "effect";
++import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
++import * as S from "effect/Schema";
+ import * as SqlClient from "effect/unstable/sql/SqlClient";
+ import initdbWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
+ import pgliteDataPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
+@@ -42,6 +45,8 @@ import type { PgliteClientOptions } from "@beep/pglite";
+ import type { PostgresDrizzle } from "@beep/postgres";
+ import type { Context } from "effect";
+ 
++const $I = $ProfessionalDesktopId.create("runtime/Pglite");
++
+ // Bun resolves `type: "file"` imports while compiling the sidecar executable;
+ // Vite exposes the same files through `/@fs/` during integration tests.
+ 
+@@ -86,11 +91,17 @@ const ChatDbIncompatibleRecoveryMessage =
+ 
+ const ViteFileSystemPrefix = "/@fs/";
+ 
+-class IncompatiblePgliteDataDir extends Data.TaggedError("IncompatiblePgliteDataDir")<{
+-  readonly cause: unknown;
+-  readonly dataDir: string;
+-  readonly recovery: string;
+-}> {}
++class IncompatiblePgliteDataDir extends TaggedErrorClass<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
++  "IncompatiblePgliteDataDir",
++  {
++    cause: S.Unknown.annotateKey({ description: "Failure raised while probing the existing PGlite data directory." }),
++    dataDir: S.String.annotateKey({ description: "PGlite data directory that failed the compatibility probe." }),
++    recovery: S.String.annotateKey({ description: "Operator guidance for safely recovering the incompatible data." }),
++  },
++  $I.annote("IncompatiblePgliteDataDir", {
++    description: "An existing PGlite data directory cannot be opened by the bundled in-process runtime.",
++  })
++) {}
+ 
+ const pathExists = (fs: FileSystem.FileSystem, target: string): Effect.Effect<boolean> =>
+   fs.exists(target).pipe(Effect.orElseSucceed(() => false));
+@@ -160,7 +171,7 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
+         ).pipe(
+           Effect.andThen(
+             Effect.fail(
+-              new IncompatiblePgliteDataDir({
++              IncompatiblePgliteDataDir.make({
+                 cause,
+                 dataDir,
+                 recovery: ChatDbIncompatibleRecoveryMessage,
+diff --git a/apps/professional-desktop/src/spikes/Graph3DSpike.tsx b/apps/professional-desktop/src/spikes/Graph3DSpike.tsx
+index 075f97f350..5c3caf293c 100644
+--- a/apps/professional-desktop/src/spikes/Graph3DSpike.tsx
++++ b/apps/professional-desktop/src/spikes/Graph3DSpike.tsx
+@@ -13,26 +13,104 @@
+  */
+ import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d";
+ import { useGraph3DFps, useGraph3DHandle } from "@beep/graph-3d/react";
+-import { useEffect, useMemo, useState } from "react";
++import { $ProfessionalDesktopId } from "@beep/identity/packages";
++import { NonNegativeInt, PosInt } from "@beep/schema";
++import { A, N, O, pipe, thunkNull, thunkVoid } from "@beep/utils";
++import { useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
++import { Duration } from "effect";
++import * as S from "effect/Schema";
++import { Atom } from "effect/unstable/reactivity";
+ import type { JSX } from "react";
+ 
+-const PRESETS = [
+-  { label: "1k / 2k", nodeCount: 1_000, edgeCount: 2_000 },
+-  { label: "2.5k / 5k", nodeCount: 2_500, edgeCount: 5_000 },
+-  { label: "2.5k / 12.5k", nodeCount: 2_500, edgeCount: 12_500 },
+-  { label: "5k / 10k", nodeCount: 5_000, edgeCount: 10_000 },
+-] as const;
++const $I = $ProfessionalDesktopId.create("spikes/Graph3DSpike");
++
++class StressPreset extends S.Class<StressPreset>($I`StressPreset`)(
++  {
++    label: S.NonEmptyString,
++    nodeCount: NonNegativeInt,
++    edgeCount: NonNegativeInt,
++  },
++  $I.annote("StressPreset", {
++    description: "Synthetic graph dimensions used by one Graph3D stress preset.",
++  })
++) {}
++
++class StressReport extends S.Class<StressReport>($I`StressReport`)(
++  {
++    avgUpdateMs: S.DurationFromMillis,
++    updates: PosInt,
++    worstUpdateMs: S.DurationFromMillis,
++  },
++  $I.annote("StressReport", {
++    description: "Measured projection-update latency from one Graph3D stress pass.",
++  })
++) {}
+ 
+-interface StressReport {
+-  readonly avgUpdateMs: number;
+-  readonly updates: number;
+-  readonly worstUpdateMs: number;
++class BrowserHeapMemory extends S.Class<BrowserHeapMemory>($I`BrowserHeapMemory`)(
++  {
++    usedJSHeapSize: NonNegativeInt,
++  },
++  $I.annote("BrowserHeapMemory", {
++    description: "Chromium-specific browser heap measurement when the performance extension is available.",
++  })
++) {}
++
++class BrowserPerformance extends S.Class<BrowserPerformance>($I`BrowserPerformance`)(
++  {
++    memory: S.OptionFromOptionalKey(BrowserHeapMemory),
++  },
++  $I.annote("BrowserPerformance", {
++    description: "Browser performance boundary with an optional Chromium heap measurement.",
++  })
++) {
++  static readonly decodeOption = S.decodeUnknownOption(BrowserPerformance);
+ }
+ 
+-const heapMb = (): number | undefined => {
+-  const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
+-  return memory === undefined ? undefined : Math.round(memory.usedJSHeapSize / 1_048_576);
+-};
++const DEFAULT_PRESET = StressPreset.make({
++  label: "2.5k / 5k",
++  nodeCount: NonNegativeInt.make(2_500),
++  edgeCount: NonNegativeInt.make(5_000),
++});
++const stressPresetEquivalence = S.toEquivalence(StressPreset);
++const PRESETS = [
++  StressPreset.make({
++    label: "1k / 2k",
++    nodeCount: NonNegativeInt.make(1_000),
++    edgeCount: NonNegativeInt.make(2_000),
++  }),
++  DEFAULT_PRESET,
++  StressPreset.make({
++    label: "2.5k / 12.5k",
++    nodeCount: NonNegativeInt.make(2_500),
++    edgeCount: NonNegativeInt.make(12_500),
++  }),
++  StressPreset.make({
++    label: "5k / 10k",
++    nodeCount: NonNegativeInt.make(5_000),
++    edgeCount: NonNegativeInt.make(10_000),
++  }),
++];
++
++const selectedPresetAtom = Atom.make(DEFAULT_PRESET);
++const stressReportAtom = Atom.make<O.Option<StressReport>>(O.none());
++const projectionAtom = Atom.readable((get) => {
++  const preset = get(selectedPresetAtom);
++  return generateSyntheticGraph3DProjection(
++    SyntheticGraph3DOptions.make({
++      nodeCount: preset.nodeCount,
++      edgeCount: preset.edgeCount,
++      communityCount: 8,
++      seed: 1_337,
++    })
++  );
++});
++
++const heapMb = (): O.Option<number> =>
++  pipe(
++    BrowserPerformance.decodeOption(globalThis.performance),
++    O.flatMap((performance) => performance.memory),
++    O.map((memory) => N.round(memory.usedJSHeapSize / 1_048_576, 0))
++  );
+ 
+ /**
+  * Full-screen benchmark surface: preset scale buttons, an fps/heap/stats HUD,
+@@ -52,53 +130,52 @@ const heapMb = (): number | undefined => {
+  * @since 0.0.0
+  */
+ export function Graph3DSpike(): JSX.Element {
+-  const [presetIndex, setPresetIndex] = useState(1);
+-  const [stress, setStress] = useState<StressReport | undefined>(undefined);
+-  const preset = PRESETS[presetIndex] ?? PRESETS[1];
+-
+-  const projection = useMemo(
+-    () =>
+-      generateSyntheticGraph3DProjection(
+-        SyntheticGraph3DOptions.make({
+-          nodeCount: preset.nodeCount,
+-          edgeCount: preset.edgeCount,
+-          communityCount: 8,
+-          seed: 1_337,
+-        })
+-      ),
+-    [preset]
+-  );
++  const preset = useAtomValue(selectedPresetAtom);
++  const setPreset = useAtomSet(selectedPresetAtom);
++  const stress = useAtomValue(stressReportAtom);
++  const setStress = useAtomSet(stressReportAtom);
++  const projection = useAtomValue(projectionAtom);
+ 
+   const { containerRef, handle, error } = useGraph3DHandle(projection);
+   const fps = useGraph3DFps(handle);
++  const maybeHandle = O.fromUndefinedOr(handle);
++  const stats = O.map(maybeHandle, (current) => current.stats());
++  const heap = heapMb();
+ 
+   // A remount (new handle) invalidates any stress report from the old one.
+-  useEffect(() => {
+-    setStress(undefined);
+-  }, [handle]);
++  useAtomSubscribe(projectionAtom, () => setStress(O.none()), { immediate: true });
+ 
+   // Stress pass: 20 full projection updates + select/clear rewrites, timed.
+-  const runStress = (): void => {
+-    if (handle === undefined) {
+-      return;
+-    }
+-    const durations: number[] = [];
+-    for (let round = 0; round < 20; round += 1) {
+-      const start = performance.now();
+-      handle.update(projection);
+-      handle.select(round % 2 === 0 ? round % projection.nodeCount : undefined);
+-      durations.push(performance.now() - start);
+-    }
+-    handle.select(undefined);
+-    const total = durations.reduce((sum, value) => sum + value, 0);
+-    setStress({
+-      updates: durations.length,
+-      avgUpdateMs: Math.round((total / durations.length) * 100) / 100,
+-      worstUpdateMs: Math.round(Math.max(...durations) * 100) / 100,
++  const runStress = (): void =>
++    O.match(maybeHandle, {
++      onNone: thunkVoid,
++      onSome: (current) => {
++        const durations = A.makeBy(20, (round) => {
++          const start = globalThis.performance.now();
++          current.update(projection);
++          current.select(
++            pipe(
++              O.some(round),
++              O.filter((index) => index % 2 === 0),
++              O.map((index) => index % projection.nodeCount),
++              O.getOrUndefined
++            )
++          );
++          return globalThis.performance.now() - start;
++        });
++        current.select(O.getOrUndefined(O.none<number>()));
++        const updates = A.length(durations);
++        setStress(
++          O.some(
++            StressReport.make({
++              updates: PosInt.make(updates),
++              avgUpdateMs: Duration.millis(N.round(N.sumAll(durations) / updates, 2)),
++              worstUpdateMs: Duration.millis(N.round(A.reduce(durations, 0, N.max), 2)),
++            })
++          )
++        );
++      },
+     });
+-  };
+-
+-  const stats = handle?.stats();
+ 
+   return (
+     <div className="relative h-screen w-full bg-[#111111] text-[#9ee2e2]">
+@@ -107,27 +184,41 @@ export function Graph3DSpike(): JSX.Element {
+         <div>graph3d spike — {preset.label}</div>
+         <div>
+           fps {fps.toFixed(1)} dpr {window.devicePixelRatio}
+-          {heapMb() === undefined ? "" : ` heap ${heapMb()}MB`}
++          {pipe(
++            heap,
++            O.map((megabytes) => ` heap ${megabytes}MB`),
++            O.getOrElse(() => "")
++          )}
+         </div>
+-        {stats === undefined ? null : (
+-          <div>
+-            nodes {stats.nodeCount} edges {stats.edgeCount} labels {stats.visibleLabelCount}
+-          </div>
+-        )}
+-        {stress === undefined ? null : (
+-          <div>
+-            stress: {stress.updates} updates avg {stress.avgUpdateMs}ms worst {stress.worstUpdateMs}ms
+-          </div>
+-        )}
+-        {error === undefined ? null : <div className="text-red-400">error: {error}</div>}
++        {O.match(stats, {
++          onNone: thunkNull,
++          onSome: (current) => (
++            <div>
++              nodes {current.nodeCount} edges {current.edgeCount} labels {current.visibleLabelCount}
++            </div>
++          ),
++        })}
++        {O.match(stress, {
++          onNone: thunkNull,
++          onSome: (report) => (
++            <div>
++              stress: {report.updates} updates avg {Duration.toMillis(report.avgUpdateMs)}ms worst{" "}
++              {Duration.toMillis(report.worstUpdateMs)}ms
++            </div>
++          ),
++        })}
++        {O.match(O.fromUndefinedOr(error), {
++          onNone: thunkNull,
++          onSome: (message) => <div className="text-red-400">error: {message}</div>,
++        })}
+       </div>
+       <div className="absolute bottom-3 left-3 flex gap-2">
+-        {PRESETS.map((candidate, index) => (
++        {A.map(PRESETS, (candidate) => (
+           <button
+             key={candidate.label}
+             type="button"
+-            className={`rounded border px-2 py-1 text-xs ${index === presetIndex ? "border-cyan-400 text-cyan-300" : "border-slate-600 text-slate-300"}`}
+-            onClick={() => setPresetIndex(index)}
++            className={`rounded border px-2 py-1 text-xs ${stressPresetEquivalence(candidate, preset) ? "border-cyan-400 text-cyan-300" : "border-slate-600 text-slate-300"}`}
++            onClick={() => setPreset(candidate)}
+           >
+             {candidate.label}
+           </button>
+diff --git a/apps/professional-desktop/src/transport/DesktopHttpProtocol.ts b/apps/professional-desktop/src/transport/DesktopHttpProtocol.ts
+index 9613411b79..beb1fe1989 100644
+--- a/apps/professional-desktop/src/transport/DesktopHttpProtocol.ts
++++ b/apps/professional-desktop/src/transport/DesktopHttpProtocol.ts
+@@ -6,20 +6,31 @@
+  * @since 0.0.0
+  */
+ 
+-import { Layer } from "effect";
++import { O, pipe } from "@beep/utils";
++import { Layer, Result } from "effect";
+ import * as Str from "effect/String";
+ import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
+ import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
+ 
+-const SERVER_URL = ((): string => {
+-  if (typeof window !== "undefined") {
+-    const origin = window.location.origin;
+-    if (Str.startsWith("http://")(origin) || Str.startsWith("https://")(origin)) {
+-      return new URL("/rpc", origin).toString();
+-    }
+-  }
+-  return "http://127.0.0.1:3939/rpc";
+-})();
++const LOOPBACK_SERVER_URL = "http://127.0.0.1:3939/rpc";
++
++const browserOrigin = pipe(
++  O.fromUndefinedOr(globalThis.window),
++  O.map((runtimeWindow) => runtimeWindow.location.origin),
++  O.filter((origin) => Str.startsWith("http://")(origin) || Str.startsWith("https://")(origin))
++);
++
++const SERVER_URL = pipe(
++  browserOrigin,
++  O.match({
++    onNone: () => LOOPBACK_SERVER_URL,
++    onSome: (origin) =>
++      pipe(
++        Result.try(() => new URL("/rpc", origin).href),
++        Result.getOrElse(() => LOOPBACK_SERVER_URL)
++      ),
++  })
++);
+ 
+ /**
+  * Build the desktop HTTP RPC protocol, optionally carrying the shell-issued
