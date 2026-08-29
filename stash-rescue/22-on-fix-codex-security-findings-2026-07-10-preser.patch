@@ -1,0 +1,2898 @@
+diff --git a/.changeset/secure-ontology-thread-boundaries.md b/.changeset/secure-ontology-thread-boundaries.md
+new file mode 100644
+index 0000000000..e4c9b8c57f
+--- /dev/null
++++ b/.changeset/secure-ontology-thread-boundaries.md
+@@ -0,0 +1,13 @@
++---
++"@beep/ontology-server": patch
++"@beep/professional-desktop": patch
++"@beep/workspace-server": patch
++---
++
++Harden ontology filesystem authority and workspace entity public IDs.
++
++Ontology open and save operations now require a configured workspace root,
++accept only root-relative Turtle paths, and reject traversal and symlink
++escapes. Workspace threads, turns, and messages now use independently
++generated public IDs so concurrent inserts cannot collide on predicted
++database sequence values.
+diff --git a/.env.example b/.env.example
+index 84e2f6c03b..6b3d033db5 100644
+--- a/.env.example
++++ b/.env.example
+@@ -68,6 +68,7 @@
+ # CHAT_SIDECAR_PORT=
+ # CHAT_DB_PATH=
+ # CHAT_DB_PORT=
++# ONTOLOGY_WORKSPACE_ROOT=
+ # BEEP_TEST_REAL_ANTHROPIC_CHAT=
+ # BEEP_TEST_SIDECAR_SMOKE=
+ 
+diff --git a/apps/professional-desktop/package.json b/apps/professional-desktop/package.json
+index 99903a20ba..bd72a1aab3 100644
+--- a/apps/professional-desktop/package.json
++++ b/apps/professional-desktop/package.json
+@@ -16,7 +16,7 @@
+     "codegen": "bun run scripts/sync-migration-bundle.ts --write",
+     "codegen:check": "bun run scripts/sync-migration-bundle.ts --check",
+     "dev": "vite --host 127.0.0.1",
+-    "dev:sidecar": "CHAT_AGENT=fixture bun run server/main.ts",
++    "dev:sidecar": "test ! -L ../../.beep/professional-desktop/ontology-workspace && mkdir -p ../../.beep/professional-desktop/ontology-workspace && test ! -L ../../.beep/professional-desktop/ontology-workspace && chmod 700 ../../.beep/professional-desktop/ontology-workspace && CHAT_AGENT=fixture ONTOLOGY_WORKSPACE_ROOT=../../.beep/professional-desktop/ontology-workspace bun run server/main.ts",
+     "sidecar": "bun run server/main.ts",
+     "build:sidecar": "bun run scripts/build-sidecar.ts",
+     "dev:tauri": "tauri dev",
+diff --git a/apps/professional-desktop/src-tauri/src/lib.rs b/apps/professional-desktop/src-tauri/src/lib.rs
+index 75bfd1557c..f3510b7bc9 100644
+--- a/apps/professional-desktop/src-tauri/src/lib.rs
++++ b/apps/professional-desktop/src-tauri/src/lib.rs
+@@ -1,4 +1,5 @@
+ use serde::Serialize;
++use std::path::Path;
+ use std::sync::{
+     atomic::{AtomicBool, Ordering},
+     Arc, Mutex, MutexGuard,
+@@ -52,6 +53,30 @@ struct RpcSession {
+ }
+ 
+ const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
++const ONTOLOGY_WORKSPACE_ROOT_ENV: &str = "ONTOLOGY_WORKSPACE_ROOT";
++
++fn ensure_private_directory(path: &Path) -> std::io::Result<()> {
++    std::fs::create_dir_all(path)?;
++    let metadata = std::fs::symlink_metadata(path)?;
++    if !metadata.file_type().is_dir() {
++        return Err(std::io::Error::new(
++            std::io::ErrorKind::InvalidInput,
++            format!(
++                "private directory path is not a directory: {}",
++                path.display()
++            ),
++        ));
++    }
++
++    #[cfg(unix)]
++    {
++        use std::os::unix::fs::PermissionsExt;
++
++        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))?;
++    }
++
++    Ok(())
++}
+ 
+ #[tauri::command]
+ fn sidecar_transport(state: tauri::State<'_, RpcSession>) -> SidecarTransport {
+@@ -492,13 +517,19 @@ pub fn run() {
+             if ipc || !cfg!(debug_assertions) {
+                 let mut command = app.shell().sidecar("sidecar")?;
+                 let rpc_session_token = app.state::<RpcSession>().token.clone();
++                let data_dir = app.path().app_data_dir()?;
++                let ontology_workspace_root = data_dir.join("ontology-workspace");
++                ensure_private_directory(&ontology_workspace_root)?;
++                command = command.env(
++                    ONTOLOGY_WORKSPACE_ROOT_ENV,
++                    ontology_workspace_root.to_string_lossy().to_string(),
++                );
+ 
+                 if cfg!(debug_assertions) {
+                     // Dev + ipc: keyless fixture kernel; the sidecar falls back to
+                     // its repo-local PGlite dir when CHAT_DB_PATH is unset.
+                     command = command.env("CHAT_AGENT", "fixture");
+                 } else {
+-                    let data_dir = app.path().app_data_dir()?;
+                     std::fs::create_dir_all(&data_dir)?;
+                     // CHAT_DB_PATH is a directory PGlite persists into (see the
+                     // sidecar's ChatDbConfig), not a single file.
+@@ -567,7 +598,54 @@ pub fn run() {
+ 
+ #[cfg(test)]
+ mod tests {
+-    use super::{authorize_sidecar_send, is_blank_ipc_stdout_frame};
++    use super::{authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame};
++    use uuid::Uuid;
++
++    #[test]
++    fn creates_private_ontology_workspace_directory() {
++        let root = std::env::temp_dir().join(format!("beep-ontology-root-{}", Uuid::new_v4()));
++        let workspace = root.join("ontology-workspace");
++
++        ensure_private_directory(&workspace)
++            .expect("ontology workspace directory should be created");
++        assert!(workspace.is_dir());
++
++        #[cfg(unix)]
++        {
++            use std::os::unix::fs::PermissionsExt;
++
++            let permissions = std::fs::metadata(&workspace)
++                .expect("ontology workspace metadata should be readable")
++                .permissions();
++            assert_eq!(permissions.mode() & 0o777, 0o700);
++        }
++
++        std::fs::remove_dir_all(root).expect("ontology workspace fixture should be removed");
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn rejects_symlinked_ontology_workspace_directory() {
++        use std::os::unix::fs::{symlink, PermissionsExt};
++
++        let root = std::env::temp_dir().join(format!("beep-ontology-symlink-{}", Uuid::new_v4()));
++        let target = root.join("target");
++        let workspace = root.join("ontology-workspace");
++        std::fs::create_dir_all(&target).expect("ontology symlink target should be created");
++        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755))
++            .expect("ontology symlink target permissions should be set");
++        symlink(&target, &workspace).expect("ontology workspace symlink should be created");
++
++        let error = ensure_private_directory(&workspace)
++            .expect_err("symlinked ontology workspace should be rejected");
++        assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
++        let target_permissions = std::fs::metadata(&target)
++            .expect("ontology symlink target metadata should be readable")
++            .permissions();
++        assert_eq!(target_permissions.mode() & 0o777, 0o755);
++
++        std::fs::remove_dir_all(root).expect("ontology workspace fixture should be removed");
++    }
+ 
+     #[test]
+     fn detects_blank_ipc_stdout_frames() {
+diff --git a/apps/professional-desktop/test/chat-contract.test.ts b/apps/professional-desktop/test/chat-contract.test.ts
+index 1b53f28a65..388169f46a 100644
+--- a/apps/professional-desktop/test/chat-contract.test.ts
++++ b/apps/professional-desktop/test/chat-contract.test.ts
+@@ -16,6 +16,7 @@ import { Thread } from "@beep/workspace-use-cases/server";
+ import { describe, expect, it } from "@effect/vitest";
+ import { Deferred, Effect, Fiber, Layer, Ref, Stream } from "effect";
+ import * as A from "effect/Array";
++import * as Crypto from "effect/Crypto";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import * as Str from "effect/String";
+@@ -32,7 +33,15 @@ const makeStack = Effect.gen(function* () {
+   return { operations: makeChatOperations(store, kernel, sink), usageRef: ref };
+ });
+ 
+-const StackLayer = Layer.merge(ThreadStoreInMemoryLayer, FixtureTurnKernel);
++const TestCryptoLayer = Layer.succeed(
++  Crypto.Crypto,
++  Crypto.make({
++    digest: (_algorithm, data) => Effect.succeed(data),
++    randomBytes: (size) => new Uint8Array(size).fill(1),
++  })
++);
++const ThreadStoreTestLayer = ThreadStoreInMemoryLayer.pipe(Layer.provide(TestCryptoLayer));
++const StackLayer = Layer.merge(ThreadStoreTestLayer, FixtureTurnKernel);
+ 
+ type MessageItem = { readonly role: Thread.TimelineMessageItem["role"]; readonly content: Md.Document.Type };
+ 
+@@ -307,7 +316,7 @@ describe("@beep/professional-desktop chat contract", () => {
+ 
+         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("first")));
+         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("second")));
+-      }).pipe(provideScopedLayer(Layer.merge(ThreadStoreInMemoryLayer, CaptureKernel)));
++      }).pipe(provideScopedLayer(Layer.merge(ThreadStoreTestLayer, CaptureKernel)));
+ 
+       const history = yield* Ref.get(historyRef);
+       const firstAssistantText = documentToPlainText(
+diff --git a/apps/professional-desktop/test/integration/chat-persist.pglite.test.ts b/apps/professional-desktop/test/integration/chat-persist.pglite.test.ts
+index d3712bc5be..68eb8cbf26 100644
+--- a/apps/professional-desktop/test/integration/chat-persist.pglite.test.ts
++++ b/apps/professional-desktop/test/integration/chat-persist.pglite.test.ts
+@@ -29,6 +29,7 @@ import { makeDrizzleLayer } from "@beep/postgres";
+ import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
+ import { Thread as ThreadLayers } from "@beep/workspace-server";
+ import { Thread } from "@beep/workspace-use-cases/server";
++import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+ import * as BunPath from "@effect/platform-bun/BunPath";
+ import { describe, expect, layer } from "@effect/vitest";
+@@ -53,7 +54,11 @@ const ChatPersistLayer = Layer.mergeAll(
+   FixtureTurnKernel,
+   BunFileSystem.layer,
+   BunPath.layer
+-).pipe(Layer.provideMerge(makeDrizzleLayer()), Layer.provideMerge(makeInProcessPgliteLayer()));
++).pipe(
++  Layer.provideMerge(makeDrizzleLayer()),
++  Layer.provideMerge(makeInProcessPgliteLayer()),
++  Layer.provideMerge(BunCrypto.layer)
++);
+ 
+ if (!shouldRunPgliteIntegration) {
+   describe.skip("Professional desktop chat persistence PgLite integration", () => {});
+diff --git a/apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts b/apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts
+index cf4fa8bc4a..df87867313 100644
+--- a/apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts
++++ b/apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts
+@@ -23,6 +23,7 @@ import { makeDrizzleLayer } from "@beep/postgres";
+ import { makePgliteSqlTestLayer } from "@beep/test-utils";
+ import { Thread as ThreadLayers } from "@beep/workspace-server";
+ import { Thread } from "@beep/workspace-use-cases/server";
++import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+ import * as BunPath from "@effect/platform-bun/BunPath";
+ import { describe, expect, it, layer } from "@effect/vitest";
+@@ -102,7 +103,11 @@ const RealAnthropicChatLayer = Layer.mergeAll(
+   AnthropicTurnKernel,
+   BunFileSystem.layer,
+   BunPath.layer
+-).pipe(Layer.provideMerge(makeDrizzleLayer()), Layer.provideMerge(makeInProcessPgliteLayer()));
++).pipe(
++  Layer.provideMerge(makeDrizzleLayer()),
++  Layer.provideMerge(makeInProcessPgliteLayer()),
++  Layer.provideMerge(BunCrypto.layer)
++);
+ 
+ const hasAnthropicApiKey =
+   P.isString(Bun.env[anthropicApiKeyEnv]) && Str.isNonEmpty(Str.trim(Bun.env[anthropicApiKeyEnv]));
+diff --git a/apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts b/apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts
+index 28fe404b38..338dbed541 100644
+--- a/apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts
++++ b/apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts
+@@ -96,6 +96,10 @@ const ipcStdioProgram = Effect.gen(function* () {
+   const dbDir = yield* Effect.acquireRelease(fs.makeTempDirectory({ prefix: "ipc-stdio-" }), (path) =>
+     fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
+   );
++  const ontologyWorkspaceRoot = yield* Effect.acquireRelease(
++    fs.makeTempDirectory({ prefix: "ipc-stdio-ontology-" }),
++    (path) => fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
++  );
+ 
+   // Boot the real sidecar; kill it when the scope closes.
+   const sidecarBinaryPath = yield* resolveSidecarBinaryPath;
+@@ -103,7 +107,13 @@ const ipcStdioProgram = Effect.gen(function* () {
+     Effect.sync(() =>
+       Bun.spawn([sidecarBinaryPath], {
+         cwd: process.cwd(),
+-        env: { ...process.env, CHAT_TRANSPORT: "ipc", CHAT_AGENT: "fixture", CHAT_DB_PATH: dbDir },
++        env: {
++          ...process.env,
++          CHAT_TRANSPORT: "ipc",
++          CHAT_AGENT: "fixture",
++          CHAT_DB_PATH: dbDir,
++          ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot,
++        },
+         stdin: "pipe",
+         stdout: "pipe",
+         stderr: "pipe",
+diff --git a/apps/professional-desktop/test/integration/sidecar-smoke.test.ts b/apps/professional-desktop/test/integration/sidecar-smoke.test.ts
+index 02bbbe5960..d3011587c9 100644
+--- a/apps/professional-desktop/test/integration/sidecar-smoke.test.ts
++++ b/apps/professional-desktop/test/integration/sidecar-smoke.test.ts
+@@ -22,8 +22,9 @@
+  */
+ import { ChatRpcs } from "@beep/agents-use-cases/public";
+ import { provideScopedLayer } from "@beep/test-utils";
++import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+ import { describe, expect, it } from "@effect/vitest";
+-import { Chunk, Effect } from "effect";
++import { Chunk, ConfigProvider, Effect, FileSystem, Layer } from "effect";
+ import * as Stream from "effect/Stream";
+ import { RpcTest } from "effect/unstable/rpc";
+ import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
+@@ -31,9 +32,7 @@ import { RuntimeTest } from "@/runtime/Layer";
+ 
+ const shouldRun = Bun.env.BEEP_TEST_SIDECAR_SMOKE === "1";
+ 
+-// Build a fresh in-process rpc client wired to the fixture runtime handler
+-// group, mirroring how the sidecar binds ChatRpcs to RuntimeLive.
+-const smoke = Effect.gen(function* () {
++const smokeProgram = Effect.gen(function* () {
+   const client = yield* RpcTest.makeClient(ChatRpcs);
+   const workspaceId = decodeWorkspaceId(1);
+ 
+@@ -51,7 +50,20 @@ const smoke = Effect.gen(function* () {
+   );
+   expect(roles).toContain("user");
+   expect(roles).toContain("assistant");
+-}).pipe(provideScopedLayer(RuntimeTest));
++});
++
++// Build a fresh in-process rpc client wired to the fixture runtime handler
++// group, mirroring how the sidecar binds ChatRpcs to RuntimeLive.
++const smoke = Effect.gen(function* () {
++  const fileSystem = yield* FileSystem.FileSystem;
++  const ontologyWorkspaceRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "sidecar-smoke-ontology-" });
++  const OntologyWorkspaceConfigTest = ConfigProvider.layer(
++    ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot })
++  );
++  const runtime = RuntimeTest.pipe(Layer.provide(OntologyWorkspaceConfigTest));
++
++  yield* smokeProgram.pipe(provideScopedLayer(runtime));
++}).pipe(provideScopedLayer(BunFileSystem.layer));
+ 
+ if (!shouldRun) {
+   describe.skip("Professional desktop sidecar smoke (set BEEP_TEST_SIDECAR_SMOKE=1)", () => {});
+diff --git a/bun.lock b/bun.lock
+index b66abde6f5..d44fc4ffd5 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -2121,6 +2121,7 @@
+       "dependencies": {
+         "@beep/md": "workspace:^",
+         "@beep/postgres": "workspace:^",
++        "@beep/schema": "workspace:^",
+         "@beep/shared-domain": "workspace:^",
+         "@beep/utils": "workspace:^",
+         "@beep/workspace-domain": "workspace:^",
+diff --git a/docs/research/GITHUB_SEARCH_RESEARCH.md b/docs/research/GITHUB_SEARCH_RESEARCH.md
+new file mode 100644
+index 0000000000..b8317024c2
+--- /dev/null
++++ b/docs/research/GITHUB_SEARCH_RESEARCH.md
+@@ -0,0 +1,218 @@
++# Automated GitHub Code Search and Repository Intelligence for TypeScript Agents
++
++## Executive Summary
++
++For agent-driven research across TypeScript repositories, the most important distinction is between **GitHub’s web code search experience** and **GitHub’s public APIs/CLI for code search**. GitHub’s web code search supports regular expressions, boolean operators, qualifiers such as `repo:`, `org:`, `language:`, `path:`, `content:`, and `symbol:`, and symbol search for TypeScript via Tree-sitter-backed parsing. By contrast, GitHub’s public API-backed code search remains tied to the legacy code-search engine: the GitHub CLI explicitly says the results may differ from `github.com`, and that newer features such as regex search are not yet available via the GitHub API. That gap is the single biggest reason many serious agent workflows adopt a secondary indexer instead of relying on GitHub’s official code-search API alone. citeturn39view0turn5view4turn11search10
++
++Official GitHub APIs are still valuable, but today they are better thought of as a **discovery-and-metadata layer** than as a full-fidelity agent retrieval layer. The REST Search API gives you searchable code results with repository/path/SHA/text-match metadata, but it only searches the default branch, only indexes files smaller than 384 KB, caps search results at 1,000, and the docs currently show a notable inconsistency on the code-search endpoint’s authenticated rate limit: one section says 9 requests per minute, while the endpoint section says 10 requests per minute. GitHub GraphQL adds flexible metadata retrieval and a generic `search` field with up to 1,000 results, but its value for code search is primarily around joining search results to richer repository intelligence under GraphQL’s points-based rate model rather than replacing a real regex-capable code index. citeturn6view0turn12search3turn12search0turn38view0
++
++If you want the strongest out-of-the-box platform for large multi-repo TypeScript search and agent context, **Sourcegraph** is the most complete hosted option in the materials reviewed: it has regex and symbol search, repo/file/language/revision filters, commit/diff search, code insights, MCP/API/CLI access, and managed plus self-hosted deployment; its public pricing page currently starts at **$16K** for the enterprise plan. For low-friction public-repo agent work, **searchcode.com** is unusually agent-native: it exposes MCP and REST APIs, supports regex/boolean/structural code search over public Git repositories, and is currently free during beta. For public-code-only ad hoc discovery, **grep.app** and **livegrep** are useful, but they are materially weaker for authenticated, private-repo, or enterprise automation than Sourcegraph or self-hosted engines. citeturn16search1turn15search0turn24search10turn25search0turn22view1turn22view0
++
++For self-hosted/privacy-sensitive deployments, the best choices depend on whether you want a **purpose-built code search engine** or a **build-your-own search platform**. **Zoekt** and **OpenGrok** are the strongest open-source code-search-specific engines in the reviewed material. Zoekt supports fast substring and regex search plus repo sync/indexing services and an API/webserver. OpenGrok is a mature Java-based source browser and cross-reference engine with container deployment and an OpenAPI specification in-repo. A custom **Elasticsearch** stack is the most flexible if you want hybrid lexical/semantic retrieval and large-scale control, but it comes with the highest implementation burden because you must design the code document schema, ingest/indexing pipeline, ranking, and repo/line metadata yourself. A **ripgrep-based local clone cache** is still the lowest-friction private option, but it is not a real central index and scales poorly once you need many repositories, history-aware metadata, or multi-agent concurrency. citeturn26view0turn27view0turn28view0turn31search14turn31search0turn29view0
++
++My bottom-line recommendations are straightforward. For **quick discovery with minimal setup**, use GitHub web code search plus GitHub REST/GraphQL for metadata enrichment, optionally adding searchcode.com for agent-friendly public-repo drilling. For **continuous indexing across many repos**, use Sourcegraph if you can accept a commercial platform. For **privacy-sensitive self-hosting**, choose Zoekt when you want fast code search with moderate implementation effort, or Elasticsearch only when you specifically need custom ranking, hybrid semantic retrieval, or deep integration with your existing search stack. Pair any of these with GitHub webhooks, GitHub App auth, and a small incremental index-update pipeline instead of polling. citeturn36view0turn32search0turn32search3turn32search16turn16search1turn26view0turn31search14
++
++## Official GitHub Capabilities
++
++GitHub’s **current web code search** is strong for manual and browser-based investigation. It supports exact phrases, boolean operators, regular expressions delimited by slashes, and qualifiers such as `repo:`, `org:`, `user:`, `enterprise:`, `language:`, `path:`, `content:`, and `is:`. It also supports `symbol:` search, and GitHub explicitly lists **TypeScript** among the symbol-extraction-supported languages. This is especially valuable for TypeScript repository intelligence because symbol search lets you jump from “find files containing a token” to “find actual definitions,” which sharply reduces noise for concepts such as `Dataset`, `RdfStore`, `KnowledgeGraph`, `EmbeddingStore`, or `ContractAnalyzer`. GitHub notes that symbol search is based on Tree-sitter and does not require build-tool integration. citeturn39view0
++
++The catch is that **GitHub’s official API surface does not yet match the web experience**. The REST Search API supports code search with the same broad family of qualifiers as the web interface, and it can return `text_matches` when you request the `application/vnd.github.text-match+json` media type. The endpoint returns up to 100 results per page, supports pagination, and is restricted to the default branch. It only searches files smaller than 384 KB, requires at least one search term, caps each search at 1,000 results overall, and the general Search API limits each query to 256 characters plus at most five boolean operators. GitHub also limits scope to at most 4,000 repositories per query and may set `incomplete_results: true` when a query times out. Those constraints matter for agent workflows because they strongly favor **narrow, repo-scoped, high-signal queries** instead of broad global mining. citeturn6view0
++
++The CLI reflects the same limitation. `gh search code` supports repo, owner, language, filename, extension, content-vs-path matching, JSON output, and `jq` filtering. The returned JSON fields include `path`, `repository`, `sha`, `textMatches`, and `url`, which is convenient for automation. But GitHub’s own CLI documentation says these results are powered by the **legacy code search engine**, that they may not match the results on `github.com`, and that newer features like regex search are not yet available via the API. For agent integration, that means `gh search code` is useful for shell-first automation and prototyping, but it should not be treated as a parity layer for modern GitHub web code search. citeturn5view3turn5view4
++
++GitHub GraphQL has a different role. The GraphQL API exposes a generic `search` field that uses GitHub search syntax and returns a maximum of 1,000 results. Its rate model is points-based rather than request-count-based; for example, user-authenticated requests generally get 5,000 points per hour, enterprise-owned GitHub App installations can get 10,000 points per hour, and a `GITHUB_TOKEN` in Actions gets 1,000 points per hour per repository for most repositories. GraphQL also has node-count limits and secondary limits on concurrency and per-minute points. In practice, GraphQL is best used to **join repository intelligence**—owners, topics, default branches, security settings, languages, dependency graph context, pull requests, discussions, audit data—onto a search pipeline, not as the primary engine for regex-heavy code retrieval. That is an inference from the combination of GraphQL search’s generic structure and GitHub’s explicit note that API-backed code search remains legacy-powered. citeturn12search3turn12search0turn38view0turn5view4
++
++For repository intelligence beyond string search, **GitHub Code Security and code scanning** are highly relevant. GitHub documents code scanning as a repository analysis feature that can use CodeQL or third-party tools, and its workflow configuration for CodeQL explicitly supports `javascript-typescript` for JavaScript and TypeScript repositories. Code scanning is available on public repositories and on organization-owned repositories with GitHub Code Security enabled on Team, Enterprise Cloud, or Enterprise Server. This makes GitHub code scanning a strong complement to code search: use search to locate candidate implementations and code scanning/CodeQL to identify higher-confidence security and correctness findings. GitHub also tracks code scanning upload rate limits separately, which is useful if your agents upload SARIF at scale. citeturn14search4turn14search1turn14search13turn35search8turn36view3
++
++On the enterprise side, GitHub offers both **GitHub Enterprise Cloud** and **GitHub Enterprise Server**. The public pricing page currently lists Enterprise as starting at **$21 per user/month**, and GitHub positions **GitHub Advanced Security / GitHub Code Security** as add-ons on Team and Enterprise. Enterprise Cloud adds features such as data residency, Enterprise Managed Users, SCIM provisioning, centralized enterprise account management, repository rules, and Audit Log API access. Enterprise Server is the self-hosted GitHub offering, and GitHub’s admin docs state that GHES uses **Elasticsearch to power search features**. GHES can also be connected to Enterprise Cloud via GitHub Connect for **unified search** across environments. For organizations that need GitHub-native governance and auditability, these enterprise capabilities are important—but they still do not remove the official API’s current code-search parity gap. citeturn40view0turn14search12turn35search2turn35search16turn35search1turn14search15
++
++Two operational footnotes are worth calling out. First, GitHub’s REST docs currently contain a **documentation inconsistency**: the “About search” section says authenticated code search is limited to 9 requests per minute, while the endpoint-specific “Search code” section says 10 requests per minute. Second, GitHub’s own REST best-practices guide recommends avoiding polling, using authenticated requests, avoiding concurrent requests, pausing between mutative requests, using conditional requests where appropriate, and not ignoring errors. For agent systems, the right response is not to hardcode assumptions, but to inspect rate-limit headers, `/rate_limit`, and build for graceful degradation. citeturn6view0turn36view0turn36view3
++
++## Tool Landscape and Comparison
++
++The current landscape falls into three buckets. **Official GitHub** is the natural system of record and is excellent for permissions, metadata, webhooks, and governance, but currently weak for regex-capable API search. **Hosted code-search platforms** differ sharply in maturity: Sourcegraph is the only reviewed option that is clearly enterprise-grade for large authenticated codebases and agent integration; searchcode.com is the most explicitly agent-native for public repositories; grep.app and livegrep are useful public code-search services but not full private-repo intelligence platforms in the reviewed materials. **Self-hosted engines** are the right answer when privacy, data residency, or cost control dominate, but their deployment and maintenance burden varies widely. citeturn16search1turn25search0turn22view1turn22view0turn26view0turn27view0turn31search14
++
++The most important hosted option is **Sourcegraph**. Its query language supports RE2 regex, repo/file/language filters, revision search, symbol selection, commit and diff search, and result-type selection such as `select:repo`, `select:file`, and `select:symbol`. Its product pages emphasize code search, symbol search, commit/diff search, search contexts, code insights, MCP server, GraphQL/REST APIs, and CLI access. Its current pricing page lists a single enterprise plan starting at **$16K**, with single-tenant cloud and self-hosted deployment options. For agent integration, that combination of regex search, revision-aware indexing, and official MCP/API access is unusually strong. citeturn15search0turn24search10turn16search1turn18search4turn17search7
++
++The most interesting newer agent-oriented service is **searchcode.com**. Its public materials position it as “code intelligence for LLMs,” with MCP and REST APIs, six structured tools, repository analysis, code search, file retrieval, findings retrieval, and public GitHub repository support. It explicitly advertises regex, boolean queries, and structural filters, and it is currently **free during beta** with enterprise deployment available for private code. For public-repo exploratory research, especially when you want structured outputs instead of raw HTML or raw file fetching, it is promising. The obvious limitation is that its public beta positioning means long-term pricing and enterprise maturity are not yet as settled as Sourcegraph’s. citeturn25search0
++
++**livegrep** and **grep.app** are valuable as public-code search surfaces, but their automation posture is much thinner in the reviewed materials. livegrep’s public UI supports `repo:`, `path:`, negative variants, `max_matches:`, and regex via RE2 syntax. grep.app positions itself as code, file, and path search across a million GitHub repositories. Both are useful for discovery. However, in the primary materials reviewed here, neither presents Sourcegraph-like private-code indexing, enterprise governance, or a documented authenticated code-search product for private GitHub estates. That makes them good **adjunct discovery tools**, not strong primary backends for serious autonomous agents over private repositories. citeturn22view0turn22view1turn23search1
++
++Several names the user mentioned are, in practice, more naturally classified as **self-hosted engines than hosted SaaS services**. Hound’s README centers on building binaries or running a Docker image, configuring repositories, and using its up-to-date per-repository indexes plus “minimal API.” OpenGrok’s official materials center on installation/setup and container deployment, and its repository contains an `openapi.yaml`, indicating an API surface, but the reviewed materials do not present a current managed SaaS offering. Zoekt similarly exposes command-based usage plus indexserver/webserver services, including code-host sync and an API/webserver for search. That means Hound/OpenGrok/Zoekt are compelling if you want control and can operate infrastructure, but they should not be mistaken for turnkey hosted services. citeturn21view1turn27view0turn28view0turn26view0
++
++A custom **Elasticsearch** stack belongs in a different category. Elasticsearch is a distributed search engine with REST APIs, Query DSL, and regex support via `regexp` and `query_string`, plus vector and hybrid search capabilities. That makes it the most flexible foundation for code search plus semantic retrieval, but unlike Zoekt or OpenGrok it does not inherently understand repositories, files, symbols, or TypeScript syntax. You have to define the code document model yourself—for example, repository, revision, path, language, symbol table, line offsets, chunk embeddings, owners, and commit metadata. That gives you tremendous latitude, but also substantially higher engineering cost and more ways to get ranking wrong. citeturn31search14turn30view3turn31search0turn31search2
++
++| Tool | Hosted or self-hosted | Regex support | TypeScript-aware | Repo metadata | API or CLI | Rate limits or pricing | Ease of integration | Notes |
++|---|---|---|---|---|---|---|---|---|
++| GitHub web code search | Hosted official | Yes on web UI citeturn39view0 | Yes, including `language:` and TypeScript symbol extraction citeturn39view0 | Strong in UI; weaker for automation unless paired with APIs citeturn39view0turn6view0 | Web UI only for full modern feature set citeturn39view0turn5view4 | Included with GitHub plans; login required for full code search on GitHub.com citeturn11search18turn40view0 | Medium | Best manual discovery surface; not an automation-grade API backend today. |
++| GitHub REST Search API | Hosted official | No modern regex parity via API citeturn5view4 | Yes via `language:` filtering, but legacy engine limits apply citeturn6view0 | `path`, `repository`, `sha`, `text_matches`, `url` citeturn6view0turn5view3 | REST, Octokit, `gh api` citeturn34search1turn34search0 | 1,000-result cap; code search docs conflict between 9 and 10 req/min authenticated citeturn6view0 | High | Good for repo-scoped automation; not enough for regex-heavy mining. |
++| GitHub GraphQL search + metadata | Hosted official | Generic search field, but not a replacement for web regex code search citeturn12search3turn5view4 | Indirectly yes for metadata joins, not primary TS code retrieval citeturn38view0 | Excellent for graph-shaped repo intelligence citeturn38view0turn12search3 | GraphQL, Octokit citeturn34search0turn34search4 | Points/hour model; 5,000+ points depending on auth context citeturn38view0 | Medium | Best used as metadata enrichment around some other code index. |
++| Sourcegraph | Hosted and self-hosted | Yes, RE2; rich query language citeturn15search0turn24search10 | Strong language and symbol support, revision-aware search citeturn15search0turn24search10 | Repo, revision, file, symbol, commit, diff contexts citeturn15search0turn24search10 | MCP, GraphQL/REST APIs, CLI citeturn16search1 | Enterprise plan starts at $16K citeturn16search1turn18search4 | High | Best overall enterprise/agent fit in the reviewed set. |
++| searchcode.com | Hosted public repos; enterprise deploy for private | Yes, plus boolean and structural filters citeturn25search0 | Good practical TS fit via repo analysis, file retrieval, structural search citeturn25search0 | Strong structured metadata and findings over public repos citeturn25search0 | MCP and REST citeturn25search0 | Free during beta; paid tiers planned; enterprise deployment offered citeturn25search0 | High | Excellent public-repo agent backend; maturity risk lower than Sourcegraph. |
++| livegrep | Hosted public search; self-hostable OSS | Yes, RE2 regex on public UI citeturn22view0 | Text-only, not TypeScript-semantic citeturn22view0 | Repo/path oriented, line-context UI citeturn22view0 | Public UI; source available citeturn22view0 | No public pricing in reviewed materials citeturn22view0 | Medium | Strong fast public regex search; limited enterprise/private posture in reviewed docs. |
++| grep.app | Hosted public search | Not clearly documented in reviewed materials, but code/file/path discovery is advertised citeturn22view1turn23search1 | Good for TS discovery by file/path and code text, not semantic analysis citeturn22view1 | Public repo/file/path discovery citeturn22view1 | Web UI; no official automation surface found in reviewed materials citeturn22view1 | No public pricing in reviewed materials citeturn22view1 | Medium | Useful discovery adjunct, not my first choice for agent backends. |
++| Zoekt | Self-hosted | Fast substring and regex, boolean query language citeturn26view0 | Good general code search; better with Universal ctags for symbols citeturn26view0 | Repo-aware; indexserver/webserver can sync code hosts and expose API/web UI citeturn26view0 | CLI plus services/API citeturn26view0 | OSS; no vendor fee from primary source citeturn26view0 | Medium | Best open-source search-first engine if you want speed without a giant platform. |
++| OpenGrok | Self-hosted | Search and cross-reference engine; exact regex semantics not emphasized in reviewed snippet citeturn27view0 | Broad language/source-tree support, but less TS-native than Sourcegraph-style symbol search citeturn27view0 | Strong source tree navigation and cross-reference model citeturn27view0 | Container deployment; in-repo OpenAPI spec citeturn28view0 | OSS; current releases continue, latest shown Jun 15 2026 citeturn27view0 | Medium | Mature and privacy-friendly; stronger as a code browser than as an agent platform. |
++| Hound | Self-hosted | Yes; trigram-based regex search, minimal API, up-to-date repo indexes citeturn21view1 | Text search, not strongly TS-semantic citeturn21view1 | Repository-level indexing with path/file results citeturn21view1 | Docker or binaries; minimal API citeturn21view1 | OSS citeturn21view1 | Medium | Simple and fast; good for smaller private estates. |
++| Elasticsearch + custom index | Hosted or self-hosted | Yes via `regexp` / `query_string` citeturn31search0turn31search2 | Only if you build TS-aware ingest/symbol pipelines yourself citeturn30view3turn31search14 | Whatever metadata you design into the index citeturn30view3turn31search14 | REST APIs and many clients citeturn30view3 | Elastic Cloud or self-managed; pricing varies, free trial offered citeturn30view3turn31search21 | Low to Medium | Most flexible, highest implementation burden. |
++| ripgrep clone cache | Self-hosted local | Yes, regex CLI over local clones citeturn29view0 | Practical TS filtering by glob/path conventions; not semantic citeturn29view0 | File-path and line-oriented search, but no central repo-intelligence model citeturn29view0 | CLI only citeturn29view0 | Free OSS citeturn29view0 | Very high at small scale | Great lowest-friction fallback; poor for many repos and many agents. |
++
++The strategic conclusion from the table is simple. If your main concern is **automation over many private repositories**, the strongest choices are Sourcegraph or a self-hosted engine like Zoekt. If your main concern is **public-repo exploration at near-zero setup**, GitHub web search plus searchcode.com is unusually effective. If your main concern is **maximum control over privacy and ranking**, Elasticsearch is the long-run “platform play,” but it should be chosen deliberately, because you are signing up to build a code-search product rather than merely deploy one. citeturn16search1turn25search0turn26view0turn31search14
++
++## TypeScript Search Patterns
++
++Good TypeScript repository research starts by distinguishing **repository discovery**, **dependency discovery**, **implementation discovery**, and **symbol discovery**. For the domains you care about—Semantic Web, ontologies, NLP, knowledge graphs, agent memory, and Legal AI—the highest-signal patterns are usually a mix of package imports, W3C namespace IRIs, query-language terms, data-model symbol names, and path/file conventions such as `src/`, `packages/*`, `ontology/`, `sparql/`, `graph/`, `memory/`, or `legal/`. GitHub web code search supports the needed qualifier and regex syntax for this style of work; Sourcegraph can express the same ideas with richer repo/revision controls; GitHub’s official API cannot yet match the web regex experience. citeturn39view0turn15search0turn5view4
++
++A practical starting pattern set for **Semantic Web and RDF/OWL/PROV-O** in TypeScript is shown below. These examples intentionally combine lexical and structural signals so that an agent can quickly separate “mentions in docs” from “actual code.” citeturn39view0turn15search0
++
++| Research target | High-signal search pattern |
++|---|---|
++| RDFJS ecosystem usage | `language:TypeScript /from\\s+['"](?:@rdfjs\\/types|n3|rdf-ext|rdf-parse|sparqljs)['"]/` |
++| W3C RDF/RDFS/OWL namespace handling | `language:TypeScript content:"http://www.w3.org/1999/02/22-rdf-syntax-ns#"` |
++| OWL or RDFS class/property modeling | `language:TypeScript /(subClassOf|ObjectProperty|DatatypeProperty|AnnotationProperty|equivalentClass)/` |
++| PROV-O support | `language:TypeScript /(prov:|PROV-O|wasDerivedFrom|wasGeneratedBy|used\\b)/` |
++| SPARQL implementation code | `language:TypeScript /(SELECT|CONSTRUCT|ASK|DESCRIBE)\\s+.*WHERE/ path:/src/**/*.ts` |
++| Quad/dataset factories | `language:TypeScript /(namedNode|blankNode|literal|quad|dataset)\\(/` |
++| ontology manifests | `path:/package\\.json$/ (rdf OR owl OR sparql OR ontology OR shacl)` |
++
++For **ontologies and knowledge graphs**, the best queries tend to pivot between graph-query vocabulary and schema vocabulary. In TypeScript repositories, imports of graph libraries or SPARQL/Cypher/Gremlin tooling are often more precise than generic words like “graph.” These patterns are good first passes: `language:TypeScript /from\\s+['"](?:graphology|neo4j|gremlin|sparqljs|n3)['"]/`, `language:TypeScript /(knowledge graph|entity linking|entity resolution|triple store|property graph)/`, `language:TypeScript /(cypher|gremlin|sparql)\\b/`, and `symbol:/^(?:Graph|KnowledgeGraph|TripleStore|EntityLinker|Ontology).*$/ language:TypeScript`. For GitHub web search specifically, `symbol:` is especially helpful for finding actual class/function definitions instead of references. citeturn39view0
++
++For **NLP** in TypeScript, imports and pipeline terminology are the highest-yield filters. Useful patterns include `language:TypeScript /from\\s+['"](?:compromise|wink-nlp|natural|node-nlp|langchain)['"]/`, `language:TypeScript /(tokeniz|lemmatiz|stemming|embedding|entity recogn|named entity|pos tag|vector store)/`, and `path:/src/**/*.ts /(PromptTemplate|Embeddings|Retriever|Rerank|Chunk|Splitter)/`. In practice, an agent should start with import-based queries, then widen to conceptual vocabulary only after it has repo candidates. That reduces false positives from README files and issue templates. This is an application of the qualifier and boolean/regex behavior documented by GitHub and Sourcegraph. citeturn39view0turn15search0
++
++For **agent memory**, the key is to search for both explicit memory terminology and the modern TypeScript agent-framework classes that embody it. Strong patterns are `language:TypeScript /(episodic memory|semantic memory|working memory|conversation memory|vector memory)/`, `language:TypeScript /(MemorySaver|BaseChatMessageHistory|VectorStoreRetrieverMemory|StateGraph|checkpoint)/`, and `language:TypeScript /from\\s+['"](?:langchain|@langchain\\/core|@langchain\\/community|chromadb|lancedb|pgvector)['"]/`. When you are mining many repos, add a path fence such as `path:/src/**/*.ts OR path:/packages/**/*.ts` to drop docs/tests. citeturn39view0
++
++For **Legal AI**, the challenge is that many repositories use generic LLM infrastructure rather than explicitly legal package names. The best first-pass filters therefore mix domain language and implementation signposts: `language:TypeScript /(contract|clause|provision|statute|case law|citation|brief|holding|privilege|discovery)/ path:/src/**/*.ts`, `language:TypeScript /(citation extractor|bluebook|legal reasoning|document review|matter intake)/`, and `path:/package\\.json$/ (openai OR anthropic OR langchain) AND (legal OR contract OR clause OR policy)`. In this domain, agents should also inspect repository topics, README terms, and `package.json` descriptions via GraphQL/REST metadata enrichment rather than relying on code search alone. citeturn39view0turn38view0
++
++One pattern I strongly recommend for all six domains is the **two-pass search**. Pass one uses high-precision imports, namespace IRIs, or symbol names to find candidate repos. Pass two uses broader conceptual regexes inside those repos only. This strategy aligns well with GitHub REST’s repository-scope limitations, GitHub web qualifiers, and Sourcegraph/Zoekt’s fast repo-scoped filtering. In agent pipelines, it substantially lowers token spend and rate-limit pressure because you stop dumping irrelevant files into the model context. citeturn6view0turn39view0turn26view0
++
++## Agent Integration Architectures
++
++For autonomous agents, the central design decision is whether the search backend is **event-driven** or **poll-driven**. GitHub’s own REST best-practices guide says to avoid polling where possible and subscribe to webhook events instead. GitHub’s webhook best-practices page adds important operational constraints: subscribe only to events you need, use a webhook secret, use HTTPS, respond within 10 seconds, check event type and action, redeliver missed deliveries, and use the `X-GitHub-Delivery` header as an idempotency key. For code-search/indexing systems, that translates into a standard pattern: webhooks enqueue work immediately, acknowledge quickly, and let asynchronous workers fetch deltas and update indexes. citeturn36view0turn36view1turn32search11
++
++Authentication choice is equally important. For durable organization-scale automation, **GitHub Apps** are usually preferable to PATs. GitHub Apps can authenticate as the app with a JWT, then mint installation access tokens that expire after **one hour**; GitHub’s docs also note that Octokit can manage token generation and refresh for you. GitHub’s app best-practices recommend choosing the right token type: installation tokens for app-attributed automation, user tokens for user-attributed actions. Fine-grained PATs are still useful for personal or narrow-scoped tooling, but GitHub documents them as permission-bound and organization policy-controlled, and enterprise/org admins can restrict or review them. For agent systems that act independently and need repo-webhook integration, GitHub Apps are the safer default. citeturn32search12turn32search10turn32search4turn32search1turn32search0turn34search13turn33search2turn33search0
++
++Caching and incremental updates should be designed around **repository revision identity**, not around raw search responses alone. A clean pattern is: store repo default branch, last indexed commit SHA, last successful webhook delivery ID, and index version; when a push arrives, compute the new head, fetch only changed trees/blobs, and reindex incrementally. For GitHub REST/GraphQL calls that are still part of your metadata plane, use conditional requests where possible and inspect rate-limit headers. For GraphQL, monitor `cost`, remaining points, and node counts; for REST, watch both `search` and `code_search` buckets at `/rate_limit`. For search backends such as Sourcegraph, Zoekt, or Hound, prefer their own repository-sync/index services rather than rebuilding full indexes on every event. citeturn36view0turn36view3turn38view0turn26view0turn21view1
++
++Error handling needs to be explicit because agent systems tend to amplify transient failures. GitHub’s REST troubleshooting and rate-limit docs recommend respecting `retry-after` and reset windows. For GraphQL, exceeding primary limits can still return HTTP 200 with an error payload, while secondary limits may surface as 200 or 403. GitHub also enforces secondary limits on concurrency, per-minute points, and CPU time, so indiscriminate fan-out is a common integration mistake. The safest pattern is a small per-installation work queue, exponential backoff, dead-letter handling, and idempotent replays keyed by repo + revision + delivery ID. citeturn38view0turn36view2turn36view0
++
++Cost and rate-limit mitigation come from four tactics: **narrow queries**, **cache aggressively**, **separate metadata retrieval from content retrieval**, and **pre-index the repos you care about**. Searchcode.com’s pitch is essentially an extreme version of this idea for public repos: return structured repository intelligence rather than making the model repeatedly fetch/parse raw files. Sourcegraph’s value proposition is similar at enterprise scale. Even if you build your own stack, the same principle applies: agents should ask the search backend for ranked candidate files, symbols, and diff-localized context before they ask for full-file content. citeturn25search0turn16search1turn24search10
++
++```mermaid
++flowchart LR
++    A[GitHub App] --> B[Webhook Receiver]
++    B --> C[Queue]
++    C --> D[Metadata Worker]
++    C --> E[Index Worker]
++    D --> F[(GitHub REST + GraphQL cache)]
++    E --> G[(Sourcegraph or Searchcode or GitHub search)]
++    F --> H[Agent Orchestrator]
++    G --> H
++    H --> I[Ranked file/symbol candidates]
++    I --> J[LLM or coding agent]
++    J --> K[Report, patch, or PR suggestion]
++```
++
++The diagram above is the best pattern for **quick discovery and scalable hosted retrieval**: GitHub remains the source of truth for permissions and events, while the search backend provides fast candidate generation and the agent only pulls full content for shortlisted files. That separation is the highest-leverage architecture choice in this whole report. citeturn36view0turn32search3turn16search1turn25search0
++
++```mermaid
++flowchart LR
++    A[GitHub Enterprise Cloud or Server] --> B[Webhook Receiver]
++    B --> C[Queue]
++    C --> D[Mirror/Fetcher]
++    D --> E[(Bare repo cache)]
++    E --> F[(Zoekt or OpenGrok)]
++    E --> G[(Elasticsearch custom index)]
++    F --> H[Search API]
++    G --> H
++    H --> I[Policy and auth layer]
++    I --> J[Agent runtime]
++    J --> K[Human review or CI gate]
++```
++
++This second pattern is the right fit for **privacy-sensitive or self-hosted environments**. Zoekt or OpenGrok can be the primary lexical code-search layer; Elasticsearch can sit beside them when you need custom ranking, vector retrieval, or semantic overlays. The downside is operational: you now own fetch orchestration, index refresh, auth propagation, and observability. citeturn26view0turn27view0turn31search14
++
++## Recommendations and Workflows
++
++If your constraint is **quick discovery with low setup**, the best stack is: **GitHub web code search for interactive regex/symbol searching, GitHub REST/GraphQL for metadata enrichment, and searchcode.com for agent-friendly public-repo drilling**. This gives you excellent TypeScript repo discovery across your Semantic Web / ontology / KG / NLP / agent-memory / Legal AI target spaces with almost no infrastructure. The tradeoff is that private-repo automation remains limited unless you add GitHub-native permissions plus some other private-code index. citeturn39view0turn25search0turn6view0turn38view0
++
++If your constraint is **scalable continuous indexing for many repositories**, my recommendation is **Sourcegraph + GitHub App + webhook queue**. Sourcegraph is the most complete reviewed platform for regex, symbol, commit/diff search, code insights, MCP/API access, and deployment flexibility. Use GitHub for auth/events, Sourcegraph for retrieval, and keep a small metadata cache keyed by repo and revision. Add GitHub code scanning/CodeQL when you need security or correctness evidence in JavaScript/TypeScript repositories. This is the highest-confidence general recommendation in the report. citeturn16search1turn15search0turn24search10turn14search13turn14search4
++
++If your constraint is **privacy-sensitive self-hosting**, the best decision tree is: choose **Zoekt** if you want a search-focused engine with repo sync and API/webserver support; choose **OpenGrok** if you want a mature source browser/cross-reference experience and can live with a heavier Java deployment; choose **Elasticsearch** only if you explicitly need custom ranking, hybrid semantic retrieval, or integration with an existing Elastic estate. For small teams or one-off research, a **ripgrep clone cache** may be all you need initially, but it is not the right long-term multi-agent architecture. citeturn26view0turn27view0turn31search14turn29view0
++
++The most valuable **next steps**, in priority order, are these. First, decide whether your real bottleneck is **search quality**, **private-repo access**, or **operating complexity**; that choice determines whether you should stay GitHub-native, buy a platform, or self-host. Second, stand up a **GitHub App** and webhook receiver before you do anything else, because event-driven indexing solves rate limits and freshness better than any polling design. Third, test your actual domain queries against a representative TypeScript repo set and measure false-positive rates, especially for Legal AI and agent-memory concepts. Fourth, add a metadata cache and a reranking stage before sending file content into an LLM. Fifth, if you expect more than a few dozen repos or frequent agent runs, adopt an indexer with incremental updates rather than shelling out to GitHub search on demand. citeturn32search0turn32search3turn36view0turn39view0turn26view0
++
++A strong **example workflow for candidate-repo discovery** looks like this: search GitHub web code search or searchcode.com for import-based TypeScript patterns; use GitHub GraphQL or REST to fetch repo metadata, topics, default branch, and visibility; store the candidates; then run repo-scoped deeper searches for symbols, namespaces, and implementation terms. This keeps the first pass cheap and the second pass precise. citeturn39view0turn25search0turn38view0turn6view0
++
++A strong **example workflow for continuous intelligence** looks like this: receive `push` and pull-request webhooks from a GitHub App; queue a repo update; fetch changed refs and metadata; update Sourcegraph or Zoekt indexes; optionally run CodeQL/code scanning or upload SARIF from a companion analyzer; then let the agent query the index for implementation candidates, impacted symbols, and related diffs before it proposes a patch or research summary. This integrates search, security, and change intelligence without making the LLM your primary retrieval engine. citeturn32search3turn36view1turn14search4turn14search13turn26view0turn16search1
++
++Below are sample commands I would treat as the most useful starting points.
++
++**GitHub REST code search** is still useful for repo-scoped discovery and metadata extraction, even though it lacks regex parity with the modern web UI. citeturn6view0turn5view4
++
++```bash
++curl -L \
++  -H "Accept: application/vnd.github+json" \
++  -H "Authorization: Bearer $GITHUB_TOKEN" \
++  -H "X-GitHub-Api-Version: 2026-03-10" \
++  "https://api.github.com/search/code?q=from%20language:typescript%20repo:owner/repo%20path:src"
++```
++
++**GitHub CLI** is convenient when you want JSON fields that can be piped into `jq`. GitHub’s own docs say this command uses the legacy code-search engine, so I would not use it as my only retrieval layer. citeturn5view3turn5view4
++
++```bash
++gh search code "namedNode quad" \
++  --repo owner/repo \
++  --language TypeScript \
++  --json path,repository,sha,textMatches,url \
++  --jq '.[] | {repo: .repository.nameWithOwner, path, sha}'
++```
++
++**GitHub GraphQL** is ideal for metadata enrichment and rate-limit-aware repository intelligence. citeturn38view0turn12search3
++
++```bash
++curl -L \
++  -H "Authorization: Bearer $GITHUB_TOKEN" \
++  -H "Content-Type: application/json" \
++  https://api.github.com/graphql \
++  -d @- <<'JSON'
++{
++  "query": "query($q:String!) { search(query:$q, type: REPOSITORY, first: 10) { repositoryCount edges { node { ... on Repository { nameWithOwner isPrivate defaultBranchRef { name } stargazerCount } } } } rateLimit { cost remaining resetAt } }",
++  "variables": {
++    "q": "semantic web language:typescript"
++  }
++}
++JSON
++```
++
++**searchcode.com** is a compelling public-repo REST option for structured agent retrieval. citeturn25search0
++
++```bash
++curl -X POST \
++  "https://api.searchcode.com/api/v1/code_search?client=my-agent" \
++  -H "Content-Type: application/json" \
++  -d '{
++    "repository":"https://github.com/rdfjs/types",
++    "query":"namedNode OR quad",
++    "language":"TypeScript"
++  }'
++```
++
++**Zoekt** is the cleanest command-line starting point for self-hosted open-source search. citeturn26view0
++
++```bash
++go install github.com/sourcegraph/zoekt/cmd/zoekt-git-index@latest
++go install github.com/sourcegraph/zoekt/cmd/zoekt@latest
++
++zoekt-git-index -index ~/.zoekt /path/to/local/repo
++zoekt 'namedNode file:\.ts$'
++```
++
++**ripgrep** remains the fastest low-friction fallback for local clone caches and scripted repo sweeps. citeturn29view0
++
++```bash
++rg -n --glob '**/*.ts' '(namedNode|blankNode|quad|dataset)\(' /repos
++rg -n --glob '**/*.ts' '(contract|clause|citation|statute|brief)' /repos
++rg -n --glob '**/*.ts' '(MemorySaver|BaseChatMessageHistory|VectorStoreRetrieverMemory)' /repos
++```
++
++Taken together, the evidence points to one practical conclusion: if your goal is a serious agent system over TypeScript GitHub repositories in the domains you listed, the winning pattern is **GitHub for auth/events/metadata, plus a secondary search index for retrieval quality**. The only times I would recommend staying entirely GitHub-native are when the repo set is small, regex parity is not important, or procurement and security constraints make every extra component harder than tolerating weaker search. citeturn5view4turn6view0turn39view0turn16search1turn26view0
+\ No newline at end of file
+diff --git a/packages/foundation/capability/file-processing/README.md b/packages/foundation/capability/file-processing/README.md
+index d95d627b05..ffa44096c9 100644
+--- a/packages/foundation/capability/file-processing/README.md
++++ b/packages/foundation/capability/file-processing/README.md
+@@ -17,6 +17,15 @@ Current real consumers proving this foundation/capability promotion are:
+ - `@beep/repo-cli` for the initial `beep files process` manifest proof surface.
+ - `@beep/documents-server` for containment-checked, symlink-resistant atomic
+   document materialization.
++- `@beep/ontology-server` for workspace-root-pinned Turtle reads and atomic
++  writes that reject post-startup root symlink swaps.
++
++`resolvePathWithinRoot` and `writeFileWithinRootAtomically` canonicalize their
++configured root on each invocation. Long-lived services that canonicalize an
++authority root during layer construction use `resolvePathWithinCanonicalRoot`
++and `writeFileWithinCanonicalRootAtomically` instead. Those variants never
++re-resolve the authority root, so replacing its lexical path with an escaping
++symlink fails candidate containment instead of transferring authority.
+ 
+ ## Installation
+ 
+diff --git a/packages/foundation/capability/file-processing/src/PathSafety/index.ts b/packages/foundation/capability/file-processing/src/PathSafety/index.ts
+index 42865e0c0f..a7eb8ba8aa 100644
+--- a/packages/foundation/capability/file-processing/src/PathSafety/index.ts
++++ b/packages/foundation/capability/file-processing/src/PathSafety/index.ts
+@@ -7,15 +7,18 @@
+  * absolute path outside the root, a `..` traversal, or a symlink that points
+  * outside the root.
+  *
+- * The Effect-returning guard ({@link resolvePathWithinRoot}) uses the
++ * The Effect-returning guards ({@link resolvePathWithinRoot} and
++ * {@link resolvePathWithinCanonicalRoot}) use the
+  * runtime-neutral `FileSystem` and `Path` services from the main `effect`
+  * package so callers supply the platform implementation (for example
+  * `@effect/platform-node`) through a layer. A pure validation
+  * ({@link validateResolvedPath} / {@link isPathWithinRoot}) is provided for
+  * already-resolved absolute strings where the filesystem is not consulted.
+  *
+- * {@link writeFileWithinRootAtomically} builds on the containment guard with a
+- * private, unpredictable temporary directory and exclusive payload creation.
++ * {@link writeFileWithinRootAtomically} and
++ * {@link writeFileWithinCanonicalRootAtomically} build on the containment
++ * guard with a private, unpredictable temporary directory and exclusive
++ * payload creation.
+  * Rejecting non-regular or device files is intentionally out of scope for
+  * reads; callers stat and reject those after the path is proven in-root.
+  *
+@@ -53,12 +56,13 @@ const $I = $FileProcessingId.create("PathSafety");
+  */
+ export const PathSafetyViolationReason = LiteralKit([
+   "escapes-root",
++  "canonical-root-not-absolute",
+   "root-not-resolvable",
+   "candidate-not-resolvable",
+ ]).pipe(
+   $I.annoteSchema("PathSafetyViolationReason", {
+     description:
+-      "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, or the root or candidate could not be canonicalized.",
++      "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, the pinned canonical root is not absolute, or the root or candidate could not be canonicalized.",
+   })
+ );
+ 
+@@ -154,6 +158,25 @@ export class PathSafetyError extends TaggedErrorClass<PathSafetyError>($I`PathSa
+       root: options.root,
+     });
+ 
++  /**
++   * Construct a `canonical-root-not-absolute` violation.
++   *
++   * @category constructors
++   * @since 0.0.0
++   */
++  static readonly canonicalRootNotAbsolute = (options: {
++    readonly root: string;
++    readonly candidate: string;
++  }): PathSafetyError =>
++    PathSafetyError.make({
++      candidate: options.candidate,
++      cause: O.none(),
++      message: `Pinned canonical root "${options.root}" must be an absolute path.`,
++      reason: "canonical-root-not-absolute",
++      resolved: O.none(),
++      root: options.root,
++    });
++
+   /**
+    * Construct a `candidate-not-resolvable` violation.
+    *
+@@ -176,13 +199,22 @@ export class PathSafetyError extends TaggedErrorClass<PathSafetyError>($I`PathSa
+ }
+ 
+ /**
+- * Normalize a path for comparison: collapse Windows-style separators to POSIX
+- * separators and drop a single trailing separator. Drive letters and casing
+- * are preserved so this stays a pure, lossless containment comparison.
++ * Detect roots that unambiguously use Windows drive or backslash syntax.
+  */
+-const normalizeForComparison: (value: string) => string = flow(Str.replaceAll("\\", "/"), (forward) =>
+-  Str.length(forward) > 1 && Str.endsWith("/")(forward) ? Str.slice(0, Str.length(forward) - 1)(forward) : forward
+-);
++const isWindowsStyleRoot = (root: string): boolean =>
++  Str.startsWith("\\")(root) || Eq.equals(Str.slice(1, 3)(root), ":\\") || Eq.equals(Str.slice(1, 3)(root), ":/");
++
++/**
++ * Normalize a pure path string according to its root's detected path style and
++ * drop a single trailing separator. POSIX roots deliberately preserve literal
++ * backslashes; Windows-style roots collapse them to forward slashes.
++ */
++const normalizeForComparison = (value: string, windowsStyle: boolean): string => {
++  const forward = windowsStyle ? Str.replaceAll("\\", "/")(value) : value;
++  return Str.length(forward) > 1 && Str.endsWith("/")(forward)
++    ? Str.slice(0, Str.length(forward) - 1)(forward)
++    : forward;
++};
+ 
+ /**
+  * Split a normalized path into non-empty segments.
+@@ -194,9 +226,12 @@ const segmentsOf: (normalized: string) => ReadonlyArray<string> = flow(Str.split
+  *
+  * Returns `true` when `candidate` is the root itself or a descendant of it.
+  * This consults no filesystem; it only compares canonicalized strings, so the
+- * caller must pass paths that have already been resolved (for example by
+- * {@link resolvePathWithinRoot}). A `..` segment surviving in `candidate`
+- * always fails containment.
++ * caller must pass paths that have already been resolved. Windows drive and
++ * backslash roots normalize Windows separators, while a root beginning with
++ * `/` uses POSIX semantics and treats a backslash as a literal filename
++ * character. A `..` segment surviving in `candidate` always fails
++ * containment. Filesystem operations use their platform `Path` service rather
++ * than this style-inference helper.
+  *
+  * @example
+  * ```ts
+@@ -214,8 +249,9 @@ export const isPathWithinRoot: {
+   (root: string, candidate: string): boolean;
+   (candidate: string): (root: string) => boolean;
+ } = dual(2, (root: string, candidate: string): boolean => {
+-  const normalizedRoot = normalizeForComparison(root);
+-  const normalizedCandidate = normalizeForComparison(candidate);
++  const windowsStyle = isWindowsStyleRoot(root);
++  const normalizedRoot = normalizeForComparison(root, windowsStyle);
++  const normalizedCandidate = normalizeForComparison(candidate, windowsStyle);
+ 
+   if (A.some(segmentsOf(normalizedCandidate), Eq.equals(".."))) {
+     return false;
+@@ -229,6 +265,17 @@ export const isPathWithinRoot: {
+   return Str.startsWith(rootPrefix)(normalizedCandidate);
+ });
+ 
++/**
++ * Platform-aware containment for canonical absolute filesystem paths.
++ */
++const isResolvedPathWithinRoot = (path: Path.Path, root: string, candidate: string): boolean => {
++  const relative = path.relative(root, candidate);
++  return (
++    Eq.equals(relative, "") ||
++    (!path.isAbsolute(relative) && !Eq.equals(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
++  );
++};
++
+ /**
+  * Pure, fail-closed validation for an already-resolved candidate path.
+  *
+@@ -369,6 +416,10 @@ const resolveCandidateWithinCanonicalRoot: (
+   canonicalRoot: string,
+   candidate: string
+ ) => Effect.Effect<string, PathSafetyError> = Effect.fnUntraced(function* (fs, path, canonicalRoot, candidate) {
++  if (!path.isAbsolute(canonicalRoot)) {
++    return yield* PathSafetyError.canonicalRootNotAbsolute({ root: canonicalRoot, candidate });
++  }
++
+   // Resolve the candidate against the canonical root so a relative candidate
+   // is anchored in-root and an absolute candidate stays absolute.
+   const anchored = path.resolve(canonicalRoot, candidate);
+@@ -380,7 +431,7 @@ const resolveCandidateWithinCanonicalRoot: (
+     Effect.mapError((cause) => PathSafetyError.candidateNotResolvable({ root: canonicalRoot, candidate, cause }))
+   );
+ 
+-  if (!isPathWithinRoot(canonicalRoot, canonicalCandidate)) {
++  if (!isResolvedPathWithinRoot(path, canonicalRoot, canonicalCandidate)) {
+     return yield* PathSafetyError.escapesRoot({
+       root: canonicalRoot,
+       candidate,
+@@ -391,6 +442,154 @@ const resolveCandidateWithinCanonicalRoot: (
+   return canonicalCandidate;
+ });
+ 
++/**
++ * Resolve a candidate beneath a root that the caller already canonicalized.
++ *
++ * Unlike {@link resolvePathWithinRoot}, this guard deliberately does not call
++ * `FileSystem.realPath` on `canonicalRoot`. This lets a long-lived service pin
++ * its authority boundary during layer construction: if the lexical root is
++ * later replaced by a symlink, the candidate canonicalizes outside the pinned
++ * root and is rejected instead of silently transferring authority.
++ *
++ * The caller must supply an absolute path previously returned by
++ * `FileSystem.realPath`. Candidate paths and their deepest existing ancestors
++ * are still canonicalized on every invocation.
++ *
++ * @example
++ * ```ts
++ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
++ * import * as BunPath from "@effect/platform-bun/BunPath"
++ * import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety"
++ * import { Effect, FileSystem, Layer } from "effect"
++ *
++ * const program = Effect.gen(function* () {
++ *   const fs = yield* FileSystem.FileSystem
++ *   const canonicalRoot = yield* fs.realPath(".")
++ *   return yield* resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "README.md" })
++ * }).pipe(Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)))
++ *
++ * Effect.runPromise(program).then(console.log)
++ * ```
++ *
++ * @effects Canonicalizes the candidate path through `FileSystem.realPath` and depends on the platform `Path` service for candidate resolution; never re-canonicalizes the authority root.
++ * @category guards
++ * @since 0.0.0
++ */
++export const resolvePathWithinCanonicalRoot: (options: {
++  readonly canonicalRoot: string;
++  readonly candidate: string;
++}) => Effect.Effect<string, PathSafetyError, FileSystem.FileSystem | Path.Path> = Effect.fn(
++  "PathSafety.resolvePathWithinCanonicalRoot"
++)(function* (options) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++
++  return yield* resolveCandidateWithinCanonicalRoot(fs, path, options.canonicalRoot, options.candidate);
++});
++
++/**
++ * Shared implementation for atomic writes beneath an already-canonical root.
++ */
++const writeWithinCanonicalRootAtomically: (
++  fs: FileSystem.FileSystem,
++  path: Path.Path,
++  canonicalRoot: string,
++  candidate: string,
++  bytes: Uint8Array
++) => Effect.Effect<string, PathSafetyError | PlatformError> = Effect.fnUntraced(
++  function* (fs, path, canonicalRoot, candidate, bytes) {
++    const initialTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
++    const initialTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
++      fs,
++      path,
++      canonicalRoot,
++      path.dirname(initialTarget)
++    );
++
++    yield* fs.makeDirectory(initialTargetDirectory, { recursive: true });
++
++    const checkedTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
++    const checkedTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
++      fs,
++      path,
++      canonicalRoot,
++      path.dirname(checkedTarget)
++    );
++
++    return yield* Effect.acquireUseRelease(
++      fs.makeTempDirectory({
++        directory: checkedTargetDirectory,
++        prefix: `.${path.basename(checkedTarget)}.tmp-`,
++      }),
++      Effect.fnUntraced(function* (temporaryDirectory) {
++        const checkedTemporaryDirectory = yield* resolveCandidateWithinCanonicalRoot(
++          fs,
++          path,
++          checkedTargetDirectory,
++          temporaryDirectory
++        );
++        const temporaryPath = path.join(checkedTemporaryDirectory, "payload");
++
++        yield* fs.writeFile(temporaryPath, bytes, { flag: "wx", mode: 0o600 });
++
++        const finalTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
++        yield* fs.rename(temporaryPath, finalTarget);
++        return finalTarget;
++      }),
++      (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
++    );
++  }
++);
++
++/**
++ * Write bytes atomically beneath a root that the caller already canonicalized.
++ *
++ * This is the mutation counterpart to
++ * {@link resolvePathWithinCanonicalRoot}: it never re-canonicalizes
++ * `canonicalRoot`, so a long-lived service does not transfer its authority if
++ * the configured root path is later replaced by a symlink. All candidate,
++ * parent, temporary-directory, and pre-rename containment checks still run.
++ *
++ * The caller must supply an absolute path previously returned by
++ * `FileSystem.realPath`.
++ *
++ * @example
++ * ```ts
++ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
++ * import * as BunPath from "@effect/platform-bun/BunPath"
++ * import { writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety"
++ * import { Effect, FileSystem, Layer } from "effect"
++ *
++ * const program = Effect.gen(function* () {
++ *   const fs = yield* FileSystem.FileSystem
++ *   const canonicalRoot = yield* fs.realPath(".")
++ *   return yield* writeFileWithinCanonicalRootAtomically({
++ *     canonicalRoot,
++ *     candidate: "artifacts/report.txt",
++ *     bytes: new TextEncoder().encode("ready")
++ *   })
++ * }).pipe(Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)))
++ *
++ * Effect.runPromise(program).then(console.log)
++ * ```
++ *
++ * @effects Canonicalizes candidate paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and removes temporary artifacts; never re-canonicalizes the authority root.
++ * @category mutations
++ * @since 0.0.0
++ */
++export const writeFileWithinCanonicalRootAtomically: (options: {
++  readonly canonicalRoot: string;
++  readonly candidate: string;
++  readonly bytes: Uint8Array;
++}) => Effect.Effect<string, PathSafetyError | PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fn(
++  "PathSafety.writeFileWithinCanonicalRootAtomically"
++)(function* (options) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++
++  return yield* writeWithinCanonicalRootAtomically(fs, path, options.canonicalRoot, options.candidate, options.bytes);
++});
++
+ /**
+  * Write bytes atomically to a root-contained destination.
+  *
+@@ -442,44 +641,5 @@ export const writeFileWithinRootAtomically: (options: {
+         PathSafetyError.rootNotResolvable({ root: options.root, candidate: options.candidate, cause })
+       )
+     );
+-  const initialTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
+-  const initialTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
+-    fs,
+-    path,
+-    canonicalRoot,
+-    path.dirname(initialTarget)
+-  );
+-
+-  yield* fs.makeDirectory(initialTargetDirectory, { recursive: true });
+-
+-  const checkedTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
+-  const checkedTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
+-    fs,
+-    path,
+-    canonicalRoot,
+-    path.dirname(checkedTarget)
+-  );
+-
+-  return yield* Effect.acquireUseRelease(
+-    fs.makeTempDirectory({
+-      directory: checkedTargetDirectory,
+-      prefix: `.${path.basename(checkedTarget)}.tmp-`,
+-    }),
+-    Effect.fnUntraced(function* (temporaryDirectory) {
+-      const checkedTemporaryDirectory = yield* resolveCandidateWithinCanonicalRoot(
+-        fs,
+-        path,
+-        checkedTargetDirectory,
+-        temporaryDirectory
+-      );
+-      const temporaryPath = path.join(checkedTemporaryDirectory, "payload");
+-
+-      yield* fs.writeFile(temporaryPath, options.bytes, { flag: "wx", mode: 0o600 });
+-
+-      const finalTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
+-      yield* fs.rename(temporaryPath, finalTarget);
+-      return finalTarget;
+-    }),
+-    (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
+-  );
++  return yield* writeWithinCanonicalRootAtomically(fs, path, canonicalRoot, options.candidate, options.bytes);
+ });
+diff --git a/packages/foundation/capability/file-processing/test/FileProcessing.test.ts b/packages/foundation/capability/file-processing/test/FileProcessing.test.ts
+index 201d1a679a..c4a9a169cd 100644
+--- a/packages/foundation/capability/file-processing/test/FileProcessing.test.ts
++++ b/packages/foundation/capability/file-processing/test/FileProcessing.test.ts
+@@ -225,10 +225,12 @@ describe("@beep/file-processing", () => {
+         const child = `${root}/${leafName}`;
+ 
+         expect(isPathWithinRoot(root, root)).toBe(true);
+-        expect(isPathWithinRoot(`${root}/`, `${root}\\${leafName}`)).toBe(true);
++        expect(isPathWithinRoot(`${root}/`, `${root}\\${leafName}`)).toBe(false);
+         expect(isPathWithinRoot(root, child)).toBe(true);
+         expect(isPathWithinRoot(root, `/srv/${rootName}-evil/${leafName}`)).toBe(false);
+         expect(isPathWithinRoot(root, `${root}/../${rootName}/${leafName}`)).toBe(false);
++        expect(isPathWithinRoot(`C:\\srv\\${rootName}`, `C:\\srv\\${rootName}\\${leafName}`)).toBe(true);
++        expect(isPathWithinRoot(`C:/srv/${rootName}`, `C:\\srv\\${rootName}\\${leafName}`)).toBe(true);
+       }),
+       fcRuns(50)
+     ));
+diff --git a/packages/foundation/capability/file-processing/test/PathSafety.test.ts b/packages/foundation/capability/file-processing/test/PathSafety.test.ts
+index 012e6851c7..0c0ccc7681 100644
+--- a/packages/foundation/capability/file-processing/test/PathSafety.test.ts
++++ b/packages/foundation/capability/file-processing/test/PathSafety.test.ts
+@@ -1,9 +1,14 @@
+-import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
++import {
++  resolvePathWithinCanonicalRoot,
++  writeFileWithinCanonicalRootAtomically,
++  writeFileWithinRootAtomically,
++} from "@beep/file-processing/PathSafety";
+ import { provideScopedLayer } from "@beep/test-utils";
+ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+ import * as BunPath from "@effect/platform-bun/BunPath";
+ import { describe, expect, it } from "@effect/vitest";
+ import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
++import * as Eq from "effect/Equal";
+ 
+ const PathSafetyTestLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+ const payload = new TextEncoder().encode("safe payload");
+@@ -95,4 +100,86 @@ describe("@beep/file-processing PathSafety", () => {
+       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
+     }).pipe(provideScopedLayer(PathSafetyTestLayer))
+   );
++
++  it.effect("keeps an already-canonical authority root pinned across a lexical root symlink swap", () =>
++    Effect.gen(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
++      const configuredRoot = path.join(sandbox, "workspace");
++      const movedRoot = path.join(sandbox, "workspace-moved");
++      const outsideRoot = path.join(sandbox, "outside");
++      const outsideVictim = path.join(outsideRoot, "victim.bin");
++      yield* fs.makeDirectory(configuredRoot);
++      yield* fs.makeDirectory(outsideRoot);
++      yield* fs.writeFileString(outsideVictim, "unchanged");
++      const canonicalRoot = yield* fs.realPath(configuredRoot);
++
++      yield* fs.rename(configuredRoot, movedRoot);
++      yield* fs.symlink(outsideRoot, configuredRoot);
++
++      const readResult = yield* Effect.result(
++        resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "victim.bin" })
++      );
++      const writeResult = yield* Effect.result(
++        writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "victim.bin", bytes: payload })
++      );
++
++      expect(Result.isFailure(readResult)).toBe(true);
++      expect(Result.isFailure(writeResult)).toBe(true);
++      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
++      expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
++    }).pipe(provideScopedLayer(PathSafetyTestLayer))
++  );
++
++  it.effect("rejects a non-absolute canonical authority root before resolving or writing a candidate", () =>
++    Effect.gen(function* () {
++      const resolveError = yield* resolvePathWithinCanonicalRoot({
++        canonicalRoot: "relative-root",
++        candidate: "victim.bin",
++      }).pipe(Effect.flip);
++      const writeError = yield* writeFileWithinCanonicalRootAtomically({
++        canonicalRoot: "relative-root",
++        candidate: "victim.bin",
++        bytes: payload,
++      }).pipe(Effect.flip);
++
++      expect(resolveError.reason).toBe("canonical-root-not-absolute");
++      expect(writeError).toMatchObject({ reason: "canonical-root-not-absolute" });
++    }).pipe(provideScopedLayer(PathSafetyTestLayer))
++  );
++
++  it.effect("rejects a POSIX symlink escape through an outside sibling containing a literal backslash", () =>
++    Effect.gen(function* () {
++      const fs = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++
++      if (!Eq.equals(path.sep, "/")) {
++        return;
++      }
++
++      const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
++      const root = path.join(sandbox, "workspace");
++      const outsideRoot = path.join(sandbox, "workspace\\evil");
++      const outsideVictim = path.join(outsideRoot, "victim.bin");
++      const link = path.join(root, "linked.bin");
++      yield* fs.makeDirectory(root);
++      yield* fs.makeDirectory(outsideRoot);
++      yield* fs.writeFileString(outsideVictim, "unchanged");
++      yield* fs.symlink(outsideVictim, link);
++      const canonicalRoot = yield* fs.realPath(root);
++
++      const resolveResult = yield* Effect.result(
++        resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "linked.bin" })
++      );
++      const writeResult = yield* Effect.result(
++        writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "linked.bin", bytes: payload })
++      );
++
++      expect(Result.isFailure(resolveResult)).toBe(true);
++      expect(Result.isFailure(writeResult)).toBe(true);
++      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
++      expect(yield* fs.readLink(link)).toBe(outsideVictim);
++    }).pipe(provideScopedLayer(PathSafetyTestLayer))
++  );
+ });
+diff --git a/packages/ontology/server/README.md b/packages/ontology/server/README.md
+index 269f6f3a1f..15a42f4ee7 100644
+--- a/packages/ontology/server/README.md
++++ b/packages/ontology/server/README.md
+@@ -11,8 +11,12 @@ bun add @beep/ontology-server
+ 
+ ## Usage
+ 
++`ONTOLOGY_WORKSPACE_ROOT` is required and must identify an existing directory.
++Ontology file-store requests use traversal-safe paths relative to that root and
++accept only files ending in lower-case `.ttl`.
++
+ ```ts
+-import { VERSION } from "@beep/ontology-server"
++import { OntologyServerLive } from "@beep/ontology-server/layer"
+ ```
+ 
+ ## Development
+diff --git a/packages/ontology/server/src/aggregates/Session/Session.file-store.ts b/packages/ontology/server/src/aggregates/Session/Session.file-store.ts
+index 5b90664461..6aa14cb214 100644
+--- a/packages/ontology/server/src/aggregates/Session/Session.file-store.ts
++++ b/packages/ontology/server/src/aggregates/Session/Session.file-store.ts
+@@ -5,16 +5,53 @@
+  * @since 0.0.0
+  */
+ 
+-import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
++import {
++  resolvePathWithinCanonicalRoot,
++  writeFileWithinCanonicalRootAtomically,
++} from "@beep/file-processing/PathSafety";
+ import {
+   OntologyFileStore,
+   OntologyFileStoreError,
+   ReadOntologyFileResult,
+ } from "@beep/ontology-use-cases/aggregates/Session";
+-import { Clock, Config, Effect, FileSystem, Path, Random } from "effect";
++import { Config, Effect, FileSystem, Path } from "effect";
++import * as A from "effect/Array";
++import * as Eq from "effect/Equal";
++import * as PlatformError from "effect/PlatformError";
++import * as P from "effect/Predicate";
++import * as S from "effect/Schema";
++import * as Str from "effect/String";
+ import type { ReadOntologyFileRequest, WriteOntologyFileRequest } from "@beep/ontology-use-cases/aggregates/Session";
+ 
+-const OntologyWorkspaceRoot = Config.string("ONTOLOGY_WORKSPACE_ROOT").pipe(Config.withDefault("."));
++const OntologyWorkspaceRoot = Config.nonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
++const utf8Encoder = new TextEncoder();
++
++const isSafePathSegment = P.every<string>([Str.isNonEmpty, P.not(Eq.equals(".")), P.not(Eq.equals(".."))]);
++
++const OntologyWorkspaceFilePathChecks = S.makeFilterGroup(
++  [
++    S.isPattern(/^(?![\\/])(?![A-Za-z]:)[^\\]+\.ttl$/u, {
++      identifier: "OntologyWorkspaceFilePathSyntaxCheck",
++      title: "Ontology Workspace File Path Syntax",
++      description: "Ontology workspace paths must be root-relative POSIX paths ending in lower-case .ttl.",
++      message: "Expected a root-relative POSIX path ending in lower-case .ttl.",
++    }),
++    S.makeFilter((value: string) => A.every(Str.split("/")(value), isSafePathSegment), {
++      identifier: "OntologyWorkspaceFilePathSegmentCheck",
++      title: "Ontology Workspace File Path Segments",
++      description: "Ontology workspace paths must not contain empty, current-directory, or parent-directory segments.",
++      message: "Ontology workspace paths must not contain empty, '.' or '..' segments.",
++    }),
++  ],
++  {
++    identifier: "OntologyWorkspaceFilePathChecks",
++    title: "Ontology Workspace File Path",
++    description: "A traversal-safe root-relative Turtle document path.",
++  }
++);
++
++const OntologyWorkspaceFilePath = S.String.check(OntologyWorkspaceFilePathChecks);
++const decodeOntologyWorkspaceFilePath = S.decodeUnknownEffect(OntologyWorkspaceFilePath);
+ 
+ const readFailure = (path: ReadOntologyFileRequest["path"]) => (): OntologyFileStoreError =>
+   OntologyFileStoreError.make({
+@@ -23,13 +60,6 @@ const readFailure = (path: ReadOntologyFileRequest["path"]) => (): OntologyFileS
+     message: `Failed to read ontology sidecar file: ${path}.`,
+   });
+ 
+-const writeFailure = (path: WriteOntologyFileRequest["path"]) => (): OntologyFileStoreError =>
+-  OntologyFileStoreError.make({
+-    reason: "writeFailed",
+-    path,
+-    message: `Failed to write ontology sidecar file: ${path}.`,
+-  });
+-
+ const readPathRejected = (path: ReadOntologyFileRequest["path"], message: string): OntologyFileStoreError =>
+   OntologyFileStoreError.make({
+     reason: "readFailed",
+@@ -44,51 +74,106 @@ const writePathRejected = (path: WriteOntologyFileRequest["path"], message: stri
+     message,
+   });
+ 
+-const resolveReadPath = (
+-  fileSystem: FileSystem.FileSystem,
++const invalidReadPath = (path: ReadOntologyFileRequest["path"]): OntologyFileStoreError =>
++  readPathRejected(path, "Ontology file path must be a traversal-safe root-relative path ending in lower-case .ttl.");
++
++const invalidWritePath = (path: WriteOntologyFileRequest["path"]): OntologyFileStoreError =>
++  writePathRejected(path, "Ontology file path must be a traversal-safe root-relative path ending in lower-case .ttl.");
++
++const invalidResolvedReadPath = (path: ReadOntologyFileRequest["path"]): OntologyFileStoreError =>
++  readPathRejected(
++    path,
++    "Ontology file path must resolve to a traversal-safe root-relative path ending in lower-case .ttl."
++  );
++
++const invalidResolvedWritePath = (path: WriteOntologyFileRequest["path"]): OntologyFileStoreError =>
++  writePathRejected(
++    path,
++    "Ontology file path must resolve to a traversal-safe root-relative path ending in lower-case .ttl."
++  );
++
++const resolveOntologyWorkspaceRoot = Effect.fn("Ontology.FileStore.resolveWorkspaceRoot")(function* (
++  fileSystem: FileSystem.FileSystem
++) {
++  const configuredRoot = yield* OntologyWorkspaceRoot;
++  const canonicalRoot = yield* fileSystem.realPath(configuredRoot);
++  const info = yield* fileSystem.stat(canonicalRoot);
++
++  if (!Eq.equals(info.type, "Directory")) {
++    return yield* PlatformError.badArgument({
++      module: "FileSystem",
++      method: "stat",
++      description: `Ontology workspace root is not a directory: ${configuredRoot}`,
++    });
++  }
++
++  return canonicalRoot;
++});
++
++const validateReadPath = (requestPath: ReadOntologyFileRequest["path"]) =>
++  decodeOntologyWorkspaceFilePath(requestPath).pipe(Effect.mapError(() => invalidReadPath(requestPath)));
++
++const validateWritePath = (requestPath: WriteOntologyFileRequest["path"]) =>
++  decodeOntologyWorkspaceFilePath(requestPath).pipe(Effect.mapError(() => invalidWritePath(requestPath)));
++
++const canonicalRelativePath = (path: Path.Path, canonicalRoot: string, target: string): string =>
++  Str.replaceAll(path.sep, "/")(path.relative(canonicalRoot, target));
++
++const validateResolvedReadPath = (
+   path: Path.Path,
+-  root: string,
++  canonicalRoot: string,
++  target: string,
+   requestPath: ReadOntologyFileRequest["path"]
+ ) =>
+-  resolvePathWithinRoot({ root, candidate: requestPath }).pipe(
+-    Effect.provideService(FileSystem.FileSystem, fileSystem),
+-    Effect.provideService(Path.Path, path),
+-    Effect.mapError((error) => readPathRejected(requestPath, error.message))
++  decodeOntologyWorkspaceFilePath(canonicalRelativePath(path, canonicalRoot, target)).pipe(
++    Effect.as(target),
++    Effect.mapError(() => invalidResolvedReadPath(requestPath))
+   );
+ 
+-const resolveWritePath = (
+-  fileSystem: FileSystem.FileSystem,
++const validateResolvedWritePath = (
+   path: Path.Path,
+-  root: string,
++  canonicalRoot: string,
++  target: string,
+   requestPath: WriteOntologyFileRequest["path"]
+ ) =>
+-  resolvePathWithinRoot({ root, candidate: requestPath }).pipe(
+-    Effect.provideService(FileSystem.FileSystem, fileSystem),
+-    Effect.provideService(Path.Path, path),
+-    Effect.mapError((error) => writePathRejected(requestPath, error.message))
++  decodeOntologyWorkspaceFilePath(canonicalRelativePath(path, canonicalRoot, target)).pipe(
++    Effect.as(target),
++    Effect.mapError(() => invalidResolvedWritePath(requestPath))
+   );
+ 
+-const writeAtomically = (
++const resolveReadPath = (
+   fileSystem: FileSystem.FileSystem,
+   path: Path.Path,
+-  targetPath: string,
+-  source: WriteOntologyFileRequest["source"],
++  canonicalRoot: string,
++  requestPath: ReadOntologyFileRequest["path"]
++) =>
++  validateReadPath(requestPath).pipe(
++    Effect.flatMap((candidate) =>
++      resolvePathWithinCanonicalRoot({ canonicalRoot, candidate }).pipe(
++        Effect.provideService(FileSystem.FileSystem, fileSystem),
++        Effect.provideService(Path.Path, path),
++        Effect.mapError((error) => readPathRejected(requestPath, error.message)),
++        Effect.flatMap((target) => validateResolvedReadPath(path, canonicalRoot, target, requestPath))
++      )
++    )
++  );
++
++const resolveWritePath = (
++  fileSystem: FileSystem.FileSystem,
++  path: Path.Path,
++  canonicalRoot: string,
+   requestPath: WriteOntologyFileRequest["path"]
+-): Effect.Effect<void, OntologyFileStoreError> =>
+-  Effect.gen(function* () {
+-    const targetDir = path.dirname(targetPath);
+-    const now = yield* Clock.currentTimeMillis;
+-    const random = yield* Random.nextInt;
+-    const tempPath = path.join(targetDir, `.${path.basename(targetPath)}.tmp-${now}-${random}`);
+-    yield* fileSystem.writeFileString(tempPath, source);
+-    yield* fileSystem
+-      .rename(tempPath, targetPath)
+-      .pipe(
+-        Effect.catch((error) =>
+-          fileSystem.remove(tempPath, { force: true }).pipe(Effect.ignore, Effect.andThen(Effect.fail(error)))
+-        )
+-      );
+-  }).pipe(Effect.mapError(writeFailure(requestPath)));
++) =>
++  validateWritePath(requestPath).pipe(
++    Effect.flatMap((candidate) =>
++      resolvePathWithinCanonicalRoot({ canonicalRoot, candidate }).pipe(
++        Effect.provideService(FileSystem.FileSystem, fileSystem),
++        Effect.provideService(Path.Path, path),
++        Effect.mapError((error) => writePathRejected(requestPath, error.message)),
++        Effect.flatMap((target) => validateResolvedWritePath(path, canonicalRoot, target, requestPath))
++      )
++    )
++  );
+ 
+ /**
+  * Build the FileSystem-backed ontology file-store port implementation.
+@@ -102,17 +187,19 @@ const writeAtomically = (
+  * console.log(fileStore)
+  * ```
+  *
++ * @remarks `ONTOLOGY_WORKSPACE_ROOT` is required and must resolve to an existing directory. Requests accept only traversal-safe root-relative paths ending in lower-case `.ttl`.
++ * @effects Reads and validates `ONTOLOGY_WORKSPACE_ROOT`, canonicalizes read targets, and atomically writes Turtle documents within the configured root.
+  * @since 0.0.0
+  * @category services
+  */
+ export const makeFileSystemOntologyFileStore = Effect.fn("Ontology.FileStore.makeFileSystem")(function* () {
+   const fileSystem = yield* FileSystem.FileSystem;
+   const path = yield* Path.Path;
+-  const root = yield* Effect.orDie(OntologyWorkspaceRoot);
++  const canonicalRoot = yield* resolveOntologyWorkspaceRoot(fileSystem).pipe(Effect.orDie);
+ 
+   return OntologyFileStore.of({
+     read: Effect.fn("Ontology.FileStore.read")(function* (request: ReadOntologyFileRequest) {
+-      const safePath = yield* resolveReadPath(fileSystem, path, root, request.path);
++      const safePath = yield* resolveReadPath(fileSystem, path, canonicalRoot, request.path);
+       const source = yield* fileSystem.readFileString(safePath).pipe(Effect.mapError(readFailure(request.path)));
+ 
+       return ReadOntologyFileResult.make({
+@@ -121,12 +208,16 @@ export const makeFileSystemOntologyFileStore = Effect.fn("Ontology.FileStore.mak
+       });
+     }),
+     write: Effect.fn("Ontology.FileStore.write")(function* (request: WriteOntologyFileRequest) {
+-      const safePath = yield* resolveWritePath(fileSystem, path, root, request.path);
+-      yield* fileSystem
+-        .makeDirectory(path.dirname(safePath), { recursive: true })
+-        .pipe(Effect.mapError(writeFailure(request.path)));
+-      const checkedPath = yield* resolveWritePath(fileSystem, path, root, request.path);
+-      yield* writeAtomically(fileSystem, path, checkedPath, request.source, request.path);
++      const target = yield* resolveWritePath(fileSystem, path, canonicalRoot, request.path);
++      yield* writeFileWithinCanonicalRootAtomically({
++        canonicalRoot,
++        candidate: target,
++        bytes: utf8Encoder.encode(request.source),
++      }).pipe(
++        Effect.provideService(FileSystem.FileSystem, fileSystem),
++        Effect.provideService(Path.Path, path),
++        Effect.mapError((error) => writePathRejected(request.path, error.message))
++      );
+     }),
+   });
+ });
+diff --git a/packages/ontology/server/test/OntoauthorMatCompetency.test.ts b/packages/ontology/server/test/OntoauthorMatCompetency.test.ts
+index 4810fa25fd..2a332675a2 100644
+--- a/packages/ontology/server/test/OntoauthorMatCompetency.test.ts
++++ b/packages/ontology/server/test/OntoauthorMatCompetency.test.ts
+@@ -24,7 +24,7 @@ import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/servi
+ import { A, O } from "@beep/utils";
+ import { NodeServices } from "@effect/platform-node";
+ import { describe, expect, it } from "@effect/vitest";
+-import { Effect, Layer } from "effect";
++import { ConfigProvider, Effect, FileSystem, Layer } from "effect";
+ import * as S from "effect/Schema";
+ import type { Dataset } from "@beep/rdf/Rdf";
+ 
+@@ -36,9 +36,15 @@ type TaskFixture = {
+   readonly reason: string;
+ };
+ 
++const fixturesRoot = fileURLToPath(new URL("./fixtures/ontoauthor-mat/", import.meta.url));
++
+ const TestLayer = Layer.mergeAll(
+-  OntologyServerTest.pipe(Layer.provide(NodeServices.layer)),
+-  OxigraphSparqlQueryServiceLive
++  OntologyServerTest.pipe(
++    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: fixturesRoot }))),
++    Layer.provide(NodeServices.layer)
++  ),
++  OxigraphSparqlQueryServiceLive,
++  NodeServices.layer
+ );
+ 
+ const provideScopedLayer =
+@@ -91,10 +97,15 @@ const taskFixtures: ReadonlyArray<TaskFixture> = [
+   },
+ ];
+ 
+-const fixturePath = (relativePath: string): OntologyFilePath =>
+-  S.decodeUnknownSync(OntologyFilePath)(
+-    fileURLToPath(new URL(`./fixtures/ontoauthor-mat/${relativePath}`, import.meta.url))
+-  );
++const fixturePath = (relativePath: string): OntologyFilePath => S.decodeUnknownSync(OntologyFilePath)(relativePath);
++
++const fixtureFilePath = (relativePath: string): string =>
++  fileURLToPath(new URL(`./fixtures/ontoauthor-mat/${relativePath}`, import.meta.url));
++
++const readTextFixture = Effect.fn("OntoauthorMat.readTextFixture")(function* (relativePath: string) {
++  const fileSystem = yield* FileSystem.FileSystem;
++  return yield* fileSystem.readFileString(fixtureFilePath(relativePath));
++});
+ 
+ const readFixture = Effect.fn("OntoauthorMat.readFixture")(function* (path: OntologyFilePath) {
+   const fileStore = yield* OntologyFileStore;
+@@ -133,8 +144,8 @@ const executeAsk = Effect.fn("OntoauthorMat.executeAsk")(function* (query: strin
+ });
+ 
+ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixture) {
+-  const task = yield* readFixture(fixturePath(`${fixture.id}/task.md`));
+-  const cq = yield* readFixture(fixturePath(`${fixture.id}/cq.sparql`));
++  const task = yield* readTextFixture(`${fixture.id}/task.md`);
++  const cq = yield* readTextFixture(`${fixture.id}/cq.sparql`);
+   const reference = yield* parseFixture(fixturePath(`${fixture.id}/reference.ttl`));
+   const shapes = yield* parseFixture(fixturePath(`${fixture.id}/shapes.ttl`));
+   const sessionId = yield* S.decodeUnknownEffect(SessionId)(`ontoauthor-${fixture.id}`);
+@@ -156,7 +167,7 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
+     })
+   );
+   const sparqlDataset = makeDataset([...reference.dataset.quads, ...inference.inferredDataset.quads]);
+-  const actualAskValues = yield* Effect.forEach(askQueries(cq.source), (query) => executeAsk(query, sparqlDataset));
++  const actualAskValues = yield* Effect.forEach(askQueries(cq), (query) => executeAsk(query, sparqlDataset));
+   const competencyPass =
+     validation.validation.conforms &&
+     actualAskValues.length === fixture.expectedAskValues.length &&
+@@ -165,7 +176,7 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
+ 
+   return {
+     id: fixture.id,
+-    taskTitle: task.source.split("\n")[0] ?? fixture.id,
++    taskTitle: task.split("\n")[0] ?? fixture.id,
+     shaclConforms: validation.validation.conforms,
+     shapeCount: validation.shapeCount,
+     askValues: actualAskValues,
+diff --git a/packages/ontology/server/test/SessionServer.test.ts b/packages/ontology/server/test/SessionServer.test.ts
+index 375f92248d..95252ed1d4 100644
+--- a/packages/ontology/server/test/SessionServer.test.ts
++++ b/packages/ontology/server/test/SessionServer.test.ts
+@@ -5,6 +5,7 @@ import {
+   graphPartitionIri,
+   SessionId,
+ } from "@beep/ontology-domain/aggregates/Session";
++import { OntologyFileStoreLayer } from "@beep/ontology-server/aggregates/Session";
+ import { OntologyServerTest } from "@beep/ontology-server/test";
+ import {
+   OntologyFilePath,
+@@ -28,7 +29,8 @@ import { fcRuns } from "@beep/test-utils";
+ import { NodeServices } from "@effect/platform-node";
+ import * as NodePath from "@effect/platform-node/NodePath";
+ import { describe, expect, it } from "@effect/vitest";
+-import { ConfigProvider, Effect, FileSystem, Layer, Path, Result } from "effect";
++import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
++import * as Eq from "effect/Equal";
+ import * as PlatformError from "effect/PlatformError";
+ import * as S from "effect/Schema";
+ import { FastCheck as fc } from "effect/testing";
+@@ -39,8 +41,13 @@ const provideScopedLayer =
+   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+ 
++const fixturesRoot = fileURLToPath(new URL("./fixtures/", import.meta.url));
++
+ const TestLayer = Layer.mergeAll(
+-  OntologyServerTest.pipe(Layer.provide(NodeServices.layer)),
++  OntologyServerTest.pipe(
++    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: fixturesRoot }))),
++    Layer.provide(NodeServices.layer)
++  ),
+   CanonicalizationServiceLive
+ );
+ 
+@@ -59,8 +66,13 @@ const ontologyServerTestLayerForRootWithFileSystem = (
+     Layer.provide(Layer.mergeAll(fileSystemLayer, NodePath.layer))
+   );
+ 
+-const fixturePath = (relativePath: string): OntologyFilePath =>
+-  S.decodeUnknownSync(OntologyFilePath)(fileURLToPath(new URL(`./fixtures/${relativePath}`, import.meta.url)));
++const ontologyFileStoreLayerForConfiguration = (configuration: Readonly<Record<string, string>>) =>
++  OntologyFileStoreLayer.pipe(
++    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))),
++    Layer.provide(NodeServices.layer)
++  );
++
++const fixturePath = (relativePath: string): OntologyFilePath => S.decodeUnknownSync(OntologyFilePath)(relativePath);
+ 
+ const turtleFixtures = [
+   "foaf-social-network/graph.ttl",
+@@ -175,7 +187,7 @@ describe("Ontology server Turtle round-trip", () => {
+   );
+ 
+   it.effect(
+-    "rejects ontology file paths that escape the configured workspace root",
++    "rejects traversal paths before resolving them against the configured workspace root",
+     Effect.fnUntraced(function* () {
+       const fileSystem = yield* FileSystem.FileSystem;
+       const path = yield* Path.Path;
+@@ -190,7 +202,7 @@ describe("Ontology server Turtle round-trip", () => {
+       }).pipe(provideScopedLayer(ontologyServerTestLayerForRoot(root)));
+ 
+       expect(error.reason).toBe("readFailed");
+-      expect(error.message).toContain("escapes the allowed root");
++      expect(error.message).toContain("root-relative");
+     }, provideScopedLayer(NodeServices.layer))
+   );
+ 
+@@ -236,6 +248,231 @@ describe("Ontology server Turtle round-trip", () => {
+   );
+ });
+ 
++describe("Ontology file-store security boundary", () => {
++  it.effect(
++    "reads and atomically writes root-relative Turtle documents",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
++      yield* fileSystem.writeFileString(path.join(root, "source.ttl"), "original turtle");
++
++      const result = yield* Effect.gen(function* () {
++        const fileStore = yield* OntologyFileStore;
++        const sourcePath = yield* S.decodeUnknownEffect(OntologyFilePath)("source.ttl");
++        const nestedPath = yield* S.decodeUnknownEffect(OntologyFilePath)("nested/result.ttl");
++        const read = yield* fileStore.read(ReadOntologyFileRequest.make({ path: sourcePath }));
++        yield* fileStore.write(WriteOntologyFileRequest.make({ path: nestedPath, source: read.source }));
++        return read;
++      }).pipe(provideScopedLayer(ontologyFileStoreLayerForConfiguration({ ONTOLOGY_WORKSPACE_ROOT: root })));
++
++      expect(result.source).toBe("original turtle");
++      expect(yield* fileSystem.readFileString(path.join(root, "nested/result.ttl"))).toBe("original turtle");
++      expect(yield* fileSystem.readDirectory(path.join(root, "nested"))).toEqual(["result.ttl"]);
++    }, provideScopedLayer(NodeServices.layer))
++  );
++
++  it.effect(
++    "fails layer construction when workspace-root configuration is missing or invalid",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const temporaryRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
++      const nonDirectoryRoot = path.join(temporaryRoot, "root.ttl");
++      const missingRoot = path.join(temporaryRoot, "missing");
++      yield* fileSystem.writeFileString(nonDirectoryRoot, "not a directory");
++
++      const configurations: ReadonlyArray<Readonly<Record<string, string>>> = [
++        {},
++        { ONTOLOGY_WORKSPACE_ROOT: "" },
++        { ONTOLOGY_WORKSPACE_ROOT: missingRoot },
++        { ONTOLOGY_WORKSPACE_ROOT: nonDirectoryRoot },
++      ];
++
++      for (const configuration of configurations) {
++        const exit = yield* Effect.exit(
++          Effect.scoped(Layer.build(ontologyFileStoreLayerForConfiguration(configuration)))
++        );
++        expect(Exit.isFailure(exit)).toBe(true);
++      }
++    }, provideScopedLayer(NodeServices.layer))
++  );
++
++  it.effect(
++    "rejects absolute, traversal, and non-Turtle paths before read or write",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
++      const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-outside-" });
++      const absoluteTarget = path.join(outside, "absolute.ttl");
++      const outsideCreation = path.join(outside, "created");
++      const candidates = [
++        absoluteTarget,
++        path.join("..", path.basename(outside), "created/nested.ttl"),
++        "ontology.TTL",
++        "ontology.txt",
++        "nested\\ontology.ttl",
++      ];
++
++      yield* Effect.gen(function* () {
++        const fileStore = yield* OntologyFileStore;
++
++        for (const candidate of candidates) {
++          const candidatePath = yield* S.decodeUnknownEffect(OntologyFilePath)(candidate);
++          const readError = yield* fileStore
++            .read(ReadOntologyFileRequest.make({ path: candidatePath }))
++            .pipe(Effect.flip);
++          const writeError = yield* fileStore
++            .write(WriteOntologyFileRequest.make({ path: candidatePath, source: "outside write" }))
++            .pipe(Effect.flip);
++
++          expect(readError.reason).toBe("readFailed");
++          expect(writeError.reason).toBe("writeFailed");
++          expect(readError.message).toContain("root-relative");
++          expect(writeError.message).toContain("root-relative");
++        }
++      }).pipe(provideScopedLayer(ontologyFileStoreLayerForConfiguration({ ONTOLOGY_WORKSPACE_ROOT: root })));
++
++      expect(yield* fileSystem.exists(absoluteTarget)).toBe(false);
++      expect(yield* fileSystem.exists(outsideCreation)).toBe(false);
++    }, provideScopedLayer(NodeServices.layer))
++  );
++
++  it.effect(
++    "rejects read and write symlink escapes without changing the outside victim",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
++      const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-outside-" });
++      const outsideVictim = path.join(outside, "victim.ttl");
++      const linkPath = path.join(root, "linked.ttl");
++      yield* fileSystem.writeFileString(outsideVictim, "outside remains unchanged");
++      yield* fileSystem.symlink(outsideVictim, linkPath);
++
++      yield* Effect.gen(function* () {
++        const fileStore = yield* OntologyFileStore;
++        const candidate = yield* S.decodeUnknownEffect(OntologyFilePath)("linked.ttl");
++        const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
++        const writeError = yield* fileStore
++          .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
++          .pipe(Effect.flip);
++
++        expect(readError.reason).toBe("readFailed");
++        expect(writeError.reason).toBe("writeFailed");
++        expect(readError.message).toContain("escapes the allowed root");
++        expect(writeError.message).toContain("escapes the allowed root");
++      }).pipe(provideScopedLayer(ontologyFileStoreLayerForConfiguration({ ONTOLOGY_WORKSPACE_ROOT: root })));
++
++      expect(yield* fileSystem.readFileString(outsideVictim)).toBe("outside remains unchanged");
++      expect(yield* fileSystem.readLink(linkPath)).toBe(outsideVictim);
++    }, provideScopedLayer(NodeServices.layer))
++  );
++
++  it.effect(
++    "rejects a Turtle-named symlink to an in-root non-Turtle file without changing the victim",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
++      const victim = path.join(root, "secret.txt");
++      const alias = path.join(root, "alias.ttl");
++      yield* fileSystem.writeFileString(victim, "non-Turtle victim remains unchanged");
++      yield* fileSystem.symlink(victim, alias);
++
++      yield* Effect.gen(function* () {
++        const fileStore = yield* OntologyFileStore;
++        const candidate = yield* S.decodeUnknownEffect(OntologyFilePath)("alias.ttl");
++        const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
++        const writeError = yield* fileStore
++          .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
++          .pipe(Effect.flip);
++
++        expect(readError.reason).toBe("readFailed");
++        expect(writeError.reason).toBe("writeFailed");
++        expect(readError.message).toContain("must resolve");
++        expect(writeError.message).toContain("must resolve");
++      }).pipe(provideScopedLayer(ontologyFileStoreLayerForConfiguration({ ONTOLOGY_WORKSPACE_ROOT: root })));
++
++      expect(yield* fileSystem.readFileString(victim)).toBe("non-Turtle victim remains unchanged");
++      expect(yield* fileSystem.readLink(alias)).toBe(victim);
++    }, provideScopedLayer(NodeServices.layer))
++  );
++
++  it.effect(
++    "rejects a POSIX literal-backslash canonical target without changing the victim",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++
++      if (!Eq.equals(path.sep, "/")) {
++        return;
++      }
++
++      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
++      const victim = path.join(root, "secret\\name.ttl");
++      const alias = path.join(root, "alias.ttl");
++      yield* fileSystem.writeFileString(victim, "literal-backslash victim remains unchanged");
++      yield* fileSystem.symlink(victim, alias);
++
++      yield* Effect.gen(function* () {
++        const fileStore = yield* OntologyFileStore;
++        const candidate = yield* S.decodeUnknownEffect(OntologyFilePath)("alias.ttl");
++        const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
++        const writeError = yield* fileStore
++          .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
++          .pipe(Effect.flip);
++
++        expect(readError.reason).toBe("readFailed");
++        expect(writeError.reason).toBe("writeFailed");
++        expect(readError.message).toContain("must resolve");
++        expect(writeError.message).toContain("must resolve");
++      }).pipe(provideScopedLayer(ontologyFileStoreLayerForConfiguration({ ONTOLOGY_WORKSPACE_ROOT: root })));
++
++      expect(yield* fileSystem.readFileString(victim)).toBe("literal-backslash victim remains unchanged");
++      expect(yield* fileSystem.readLink(alias)).toBe(victim);
++    }, provideScopedLayer(NodeServices.layer))
++  );
++
++  it.effect(
++    "keeps the startup-canonicalized workspace root pinned after its configured path is swapped",
++    Effect.fnUntraced(function* () {
++      const fileSystem = yield* FileSystem.FileSystem;
++      const path = yield* Path.Path;
++      const sandbox = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-swap-" });
++      const configuredRoot = path.join(sandbox, "workspace");
++      const movedRoot = path.join(sandbox, "workspace-moved");
++      const outside = path.join(sandbox, "outside");
++      const outsideVictim = path.join(outside, "victim.ttl");
++      yield* fileSystem.makeDirectory(configuredRoot);
++      yield* fileSystem.makeDirectory(outside);
++      yield* fileSystem.writeFileString(outsideVictim, "outside remains unchanged");
++
++      yield* Effect.gen(function* () {
++        const fileStore = yield* OntologyFileStore;
++        const candidate = yield* S.decodeUnknownEffect(OntologyFilePath)("victim.ttl");
++
++        yield* fileSystem.rename(configuredRoot, movedRoot);
++        yield* fileSystem.symlink(outside, configuredRoot);
++
++        const readError = yield* fileStore.read(ReadOntologyFileRequest.make({ path: candidate })).pipe(Effect.flip);
++        const writeError = yield* fileStore
++          .write(WriteOntologyFileRequest.make({ path: candidate, source: "attacker-controlled turtle" }))
++          .pipe(Effect.flip);
++
++        expect(readError.reason).toBe("readFailed");
++        expect(writeError.reason).toBe("writeFailed");
++        expect(readError.message).toContain("escapes the allowed root");
++        expect(writeError.message).toContain("escapes the allowed root");
++      }).pipe(provideScopedLayer(ontologyFileStoreLayerForConfiguration({ ONTOLOGY_WORKSPACE_ROOT: configuredRoot })));
++
++      expect(yield* fileSystem.readFileString(outsideVictim)).toBe("outside remains unchanged");
++      expect(yield* fileSystem.readLink(configuredRoot)).toBe(outside);
++    }, provideScopedLayer(NodeServices.layer))
++  );
++});
++
+ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+   const decode = S.decodeUnknownResult(schema);
+   const encode = S.encodeResult(schema);
+diff --git a/packages/workspace/server/docgen.json b/packages/workspace/server/docgen.json
+index ad1cd1b825..0031423597 100644
+--- a/packages/workspace/server/docgen.json
++++ b/packages/workspace/server/docgen.json
+@@ -77,6 +77,405 @@
+       "@beep/postgres/sqlstate": [
+         "../../../packages/drivers/postgres/src/PostgresSqlState.models.ts"
+       ],
++      "@beep/schema": [
++        "../../../packages/foundation/modeling/schema/src/index.ts"
++      ],
++      "@beep/schema/AbortSignal": [
++        "../../../packages/foundation/modeling/schema/src/AbortSignal.ts"
++      ],
++      "@beep/schema/Age": [
++        "../../../packages/foundation/modeling/schema/src/Age/index.ts"
++      ],
++      "@beep/schema/ArrayOf": [
++        "../../../packages/foundation/modeling/schema/src/ArrayOf.ts"
++      ],
++      "@beep/schema/AtURI": [
++        "../../../packages/foundation/modeling/schema/src/AtURI.ts"
++      ],
++      "@beep/schema/BigDecimal": [
++        "../../../packages/foundation/modeling/schema/src/BigDecimal.ts"
++      ],
++      "@beep/schema/BinaryFileExtension": [
++        "../../../packages/foundation/modeling/schema/src/BinaryFileExtension.ts"
++      ],
++      "@beep/schema/BufferEncoding": [
++        "../../../packages/foundation/modeling/schema/src/BufferEncoding.ts"
++      ],
++      "@beep/schema/Bytes": [
++        "../../../packages/foundation/modeling/schema/src/Bytes.ts"
++      ],
++      "@beep/schema/CardinalDirection": [
++        "../../../packages/foundation/modeling/schema/src/CardinalDirection/index.ts"
++      ],
++      "@beep/schema/CauseTaggedError": [
++        "../../../packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
++      ],
++      "@beep/schema/Color": [
++        "../../../packages/foundation/modeling/schema/src/Color/index.ts"
++      ],
++      "@beep/schema/CommonTextSchemas": [
++        "../../../packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
++      ],
++      "@beep/schema/CrossOriginEmbedderPolicy": [
++        "../../../packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/index.ts"
++      ],
++      "@beep/schema/CrossOriginOpenerPolicy": [
++        "../../../packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/index.ts"
++      ],
++      "@beep/schema/CrossOriginResourcePolicy": [
++        "../../../packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/index.ts"
++      ],
++      "@beep/schema/CryptoTxnHash": [
++        "../../../packages/foundation/modeling/schema/src/CryptoTxnHash/index.ts"
++      ],
++      "@beep/schema/CryptoWalletAddress": [
++        "../../../packages/foundation/modeling/schema/src/CryptoWalletAddress/index.ts"
++      ],
++      "@beep/schema/Csp": [
++        "../../../packages/foundation/modeling/schema/src/Csp/index.ts"
++      ],
++      "@beep/schema/Csv": [
++        "../../../packages/foundation/modeling/schema/src/Csv/index.ts"
++      ],
++      "@beep/schema/CsvCodecOptions": [
++        "../../../packages/foundation/modeling/schema/src/CsvCodecOptions/index.ts"
++      ],
++      "@beep/schema/CsvError": [
++        "../../../packages/foundation/modeling/schema/src/CsvError/index.ts"
++      ],
++      "@beep/schema/CsvFormatter": [
++        "../../../packages/foundation/modeling/schema/src/CsvFormatter/index.ts"
++      ],
++      "@beep/schema/CsvParser": [
++        "../../../packages/foundation/modeling/schema/src/CsvParser/index.ts"
++      ],
++      "@beep/schema/Cuid": [
++        "../../../packages/foundation/modeling/schema/src/Cuid.ts"
++      ],
++      "@beep/schema/ContinentCode": [
++        "../../../packages/foundation/modeling/schema/src/ContinentCode.ts"
++      ],
++      "@beep/schema/ContinentName": [
++        "../../../packages/foundation/modeling/schema/src/ContinentName.ts"
++      ],
++      "@beep/schema/CountryCode": [
++        "../../../packages/foundation/modeling/schema/src/CountryCode.ts"
++      ],
++      "@beep/schema/CountryName": [
++        "../../../packages/foundation/modeling/schema/src/CountryName.ts"
++      ],
++      "@beep/schema/CurrencyCode": [
++        "../../../packages/foundation/modeling/schema/src/CurrencyCode.ts"
++      ],
++      "@beep/schema/DateTimeUtcFromValid": [
++        "../../../packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
++      ],
++      "@beep/schema/Did": [
++        "../../../packages/foundation/modeling/schema/src/Did.ts"
++      ],
++      "@beep/schema/Double": [
++        "../../../packages/foundation/modeling/schema/src/Double.ts"
++      ],
++      "@beep/schema/DomCssProperties": [
++        "../../../packages/foundation/modeling/schema/src/DomCssProperties/index.ts"
++      ],
++      "@beep/schema/DomDragEvent": [
++        "../../../packages/foundation/modeling/schema/src/DomDragEvent/index.ts"
++      ],
++      "@beep/schema/DomEvent": [
++        "../../../packages/foundation/modeling/schema/src/DomEvent/index.ts"
++      ],
++      "@beep/schema/DomHtmlElement": [
++        "../../../packages/foundation/modeling/schema/src/DomHtmlElement/index.ts"
++      ],
++      "@beep/schema/DomMouseEvent": [
++        "../../../packages/foundation/modeling/schema/src/DomMouseEvent/index.ts"
++      ],
++      "@beep/schema/DomReactNode": [
++        "../../../packages/foundation/modeling/schema/src/DomReactNode/index.ts"
++      ],
++      "@beep/schema/DomainModel": [
++        "../../../packages/foundation/modeling/schema/src/DomainModel.ts"
++      ],
++      "@beep/schema/Duration": [
++        "../../../packages/foundation/modeling/schema/src/Duration/index.ts"
++      ],
++      "@beep/schema/EffectSchema": [
++        "../../../packages/foundation/modeling/schema/src/EffectSchema.ts"
++      ],
++      "@beep/schema/Email": [
++        "../../../packages/foundation/modeling/schema/src/Email.ts"
++      ],
++      "@beep/schema/EntitySchema": [
++        "../../../packages/foundation/modeling/schema/src/EntitySchema/index.ts"
++      ],
++      "@beep/schema/EthAmount": [
++        "../../../packages/foundation/modeling/schema/src/EthAmount/index.ts"
++      ],
++      "@beep/schema/EthereumValidatorPublicKey": [
++        "../../../packages/foundation/modeling/schema/src/EthereumValidatorPublicKey/index.ts"
++      ],
++      "@beep/schema/EvmAddress": [
++        "../../../packages/foundation/modeling/schema/src/EvmAddress/index.ts"
++      ],
++      "@beep/schema/ExpectCt": [
++        "../../../packages/foundation/modeling/schema/src/ExpectCt/index.ts"
++      ],
++      "@beep/schema/FileExtension": [
++        "../../../packages/foundation/modeling/schema/src/FileExtension.ts"
++      ],
++      "@beep/schema/FileName": [
++        "../../../packages/foundation/modeling/schema/src/FileName.ts"
++      ],
++      "@beep/schema/FilePath": [
++        "../../../packages/foundation/modeling/schema/src/FilePath/index.ts"
++      ],
++      "@beep/schema/Fixed32": [
++        "../../../packages/foundation/modeling/schema/src/Fixed32.ts"
++      ],
++      "@beep/schema/Fixed64": [
++        "../../../packages/foundation/modeling/schema/src/Fixed64.ts"
++      ],
++      "@beep/schema/Float": [
++        "../../../packages/foundation/modeling/schema/src/Float.ts"
++      ],
++      "@beep/schema/Float16Array": [
++        "../../../packages/foundation/modeling/schema/src/Float16Array.ts"
++      ],
++      "@beep/schema/Float32Array": [
++        "../../../packages/foundation/modeling/schema/src/Float32Array.ts"
++      ],
++      "@beep/schema/Float64Array": [
++        "../../../packages/foundation/modeling/schema/src/Float64Array.ts"
++      ],
++      "@beep/schema/Fn": [
++        "../../../packages/foundation/modeling/schema/src/Fn/index.ts"
++      ],
++      "@beep/schema/ForceHttpsRedirect": [
++        "../../../packages/foundation/modeling/schema/src/ForceHttpsRedirect/index.ts"
++      ],
++      "@beep/schema/FrameGuard": [
++        "../../../packages/foundation/modeling/schema/src/FrameGuard/index.ts"
++      ],
++      "@beep/schema/Glob": [
++        "../../../packages/foundation/modeling/schema/src/Glob/index.ts"
++      ],
++      "@beep/schema/Graph": [
++        "../../../packages/foundation/modeling/schema/src/Graph/index.ts"
++      ],
++      "@beep/schema/Html": [
++        "../../../packages/foundation/modeling/schema/src/Html.ts"
++      ],
++      "@beep/schema/HttpHeaders": [
++        "../../../packages/foundation/modeling/schema/src/HttpHeaders/index.ts"
++      ],
++      "@beep/schema/HttpMethod": [
++        "../../../packages/foundation/modeling/schema/src/HttpMethod/index.ts"
++      ],
++      "@beep/schema/HttpProtocol": [
++        "../../../packages/foundation/modeling/schema/src/HttpProtocol/index.ts"
++      ],
++      "@beep/schema/HttpStatus": [
++        "../../../packages/foundation/modeling/schema/src/HttpStatus/index.ts"
++      ],
++      "@beep/schema/Int": [
++        "../../../packages/foundation/modeling/schema/src/Int.ts"
++      ],
++      "@beep/schema/Json": [
++        "../../../packages/foundation/modeling/schema/src/Json.ts"
++      ],
++      "@beep/schema/Jsonc": [
++        "../../../packages/foundation/modeling/schema/src/Jsonc.ts"
++      ],
++      "@beep/schema/Jsonl": [
++        "../../../packages/foundation/modeling/schema/src/Jsonl.ts"
++      ],
++      "@beep/schema/KebabStr": [
++        "../../../packages/foundation/modeling/schema/src/KebabStr.ts"
++      ],
++      "@beep/schema/LiteralKit": [
++        "../../../packages/foundation/modeling/schema/src/LiteralKit/index.ts"
++      ],
++      "@beep/schema/LocalDate": [
++        "../../../packages/foundation/modeling/schema/src/LocalDate/index.ts"
++      ],
++      "@beep/schema/Logs": [
++        "../../../packages/foundation/modeling/schema/src/Logs.ts"
++      ],
++      "@beep/schema/MappedLiteralKit": [
++        "../../../packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts"
++      ],
++      "@beep/schema/Markdown": [
++        "../../../packages/foundation/modeling/schema/src/Markdown.ts"
++      ],
++      "@beep/schema/MimeType": [
++        "../../../packages/foundation/modeling/schema/src/MimeType.ts"
++      ],
++      "@beep/schema/Model": [
++        "../../../packages/foundation/modeling/schema/src/Model/index.ts"
++      ],
++      "@beep/schema/MutableHashMap": [
++        "../../../packages/foundation/modeling/schema/src/MutableHashMap.ts"
++      ],
++      "@beep/schema/MutableHashSet": [
++        "../../../packages/foundation/modeling/schema/src/MutableHashSet.ts"
++      ],
++      "@beep/schema/NoOpen": [
++        "../../../packages/foundation/modeling/schema/src/NoOpen/index.ts"
++      ],
++      "@beep/schema/NoSniff": [
++        "../../../packages/foundation/modeling/schema/src/NoSniff/index.ts"
++      ],
++      "@beep/schema/Number": [
++        "../../../packages/foundation/modeling/schema/src/Number.ts"
++      ],
++      "@beep/schema/Options": [
++        "../../../packages/foundation/modeling/schema/src/Options.ts"
++      ],
++      "@beep/schema/ParserOptions": [
++        "../../../packages/foundation/modeling/schema/src/ParserOptions/index.ts"
++      ],
++      "@beep/schema/PascalStr": [
++        "../../../packages/foundation/modeling/schema/src/PascalStr.ts"
++      ],
++      "@beep/schema/Percentage": [
++        "../../../packages/foundation/modeling/schema/src/Percentage.ts"
++      ],
++      "@beep/schema/PermissionsPolicy": [
++        "../../../packages/foundation/modeling/schema/src/PermissionsPolicy/index.ts"
++      ],
++      "@beep/schema/PermittedCrossDomainPolicies": [
++        "../../../packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/index.ts"
++      ],
++      "@beep/schema/Port": [
++        "../../../packages/foundation/modeling/schema/src/Port.ts"
++      ],
++      "@beep/schema/PosixPath": [
++        "../../../packages/foundation/modeling/schema/src/PosixPath.ts"
++      ],
++      "@beep/schema/Primitive": [
++        "../../../packages/foundation/modeling/schema/src/Primitive.ts"
++      ],
++      "@beep/schema/PromiseSchema": [
++        "../../../packages/foundation/modeling/schema/src/PromiseSchema.ts"
++      ],
++      "@beep/schema/Record": [
++        "../../../packages/foundation/modeling/schema/src/Record/index.ts"
++      ],
++      "@beep/schema/ReferrerPolicy": [
++        "../../../packages/foundation/modeling/schema/src/ReferrerPolicy/index.ts"
++      ],
++      "@beep/schema/RegExp": [
++        "../../../packages/foundation/modeling/schema/src/RegExp.ts"
++      ],
++      "@beep/schema/SchemaUtils": [
++        "../../../packages/foundation/modeling/schema/src/SchemaUtils/index.ts"
++      ],
++      "@beep/schema/SecureHeader": [
++        "../../../packages/foundation/modeling/schema/src/SecureHeader/index.ts"
++      ],
++      "@beep/schema/SecureHeaderError": [
++        "../../../packages/foundation/modeling/schema/src/SecureHeaderError/index.ts"
++      ],
++      "@beep/schema/SecureHeaderOptions": [
++        "../../../packages/foundation/modeling/schema/src/SecureHeaderOptions/index.ts"
++      ],
++      "@beep/schema/SemanticVersion": [
++        "../../../packages/foundation/modeling/schema/src/SemanticVersion.ts"
++      ],
++      "@beep/schema/Semver": [
++        "../../../packages/foundation/modeling/schema/src/Semver.ts"
++      ],
++      "@beep/schema/SeverityLevel": [
++        "../../../packages/foundation/modeling/schema/src/SeverityLevel.ts"
++      ],
++      "@beep/schema/Sex": [
++        "../../../packages/foundation/modeling/schema/src/Sex/index.ts"
++      ],
++      "@beep/schema/Sha256": [
++        "../../../packages/foundation/modeling/schema/src/Sha256.ts"
++      ],
++      "@beep/schema/Sfixed32": [
++        "../../../packages/foundation/modeling/schema/src/Sfixed32.ts"
++      ],
++      "@beep/schema/Sfixed64": [
++        "../../../packages/foundation/modeling/schema/src/Sfixed64.ts"
++      ],
++      "@beep/schema/Sint32": [
++        "../../../packages/foundation/modeling/schema/src/Sint32.ts"
++      ],
++      "@beep/schema/Sint64": [
++        "../../../packages/foundation/modeling/schema/src/Sint64.ts"
++      ],
++      "@beep/schema/Slug": [
++        "../../../packages/foundation/modeling/schema/src/Slug.ts"
++      ],
++      "@beep/schema/SnakeStr": [
++        "../../../packages/foundation/modeling/schema/src/SnakeStr.ts"
++      ],
++      "@beep/schema/StatusCauseError": [
++        "../../../packages/foundation/modeling/schema/src/StatusCauseError.ts"
++      ],
++      "@beep/schema/StatusCauseTaggedErrorClass": [
++        "../../../packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/index.ts"
++      ],
++      "@beep/schema/String": [
++        "../../../packages/foundation/modeling/schema/src/String.ts"
++      ],
++      "@beep/schema/TaggedErrorClass": [
++        "../../../packages/foundation/modeling/schema/src/TaggedErrorClass/index.ts"
++      ],
++      "@beep/schema/Thunk": [
++        "../../../packages/foundation/modeling/schema/src/Thunk.ts"
++      ],
++      "@beep/schema/TerritoryCode": [
++        "../../../packages/foundation/modeling/schema/src/TerritoryCode.ts"
++      ],
++      "@beep/schema/TerritoryName": [
++        "../../../packages/foundation/modeling/schema/src/TerritoryName.ts"
++      ],
++      "@beep/schema/Timestamp": [
++        "../../../packages/foundation/modeling/schema/src/Timestamp/index.ts"
++      ],
++      "@beep/schema/Timezone": [
++        "../../../packages/foundation/modeling/schema/src/Timezone.ts"
++      ],
++      "@beep/schema/Toml": [
++        "../../../packages/foundation/modeling/schema/src/Toml.ts"
++      ],
++      "@beep/schema/Transformations": [
++        "../../../packages/foundation/modeling/schema/src/Transformations.ts"
++      ],
++      "@beep/schema/URL": [
++        "../../../packages/foundation/modeling/schema/src/URL.ts"
++      ],
++      "@beep/schema/UnitInterval": [
++        "../../../packages/foundation/modeling/schema/src/UnitInterval.ts"
++      ],
++      "@beep/schema/Uint32": [
++        "../../../packages/foundation/modeling/schema/src/Uint32.ts"
++      ],
++      "@beep/schema/Uint64": [
++        "../../../packages/foundation/modeling/schema/src/Uint64.ts"
++      ],
++      "@beep/schema/VariantSchema": [
++        "../../../packages/foundation/modeling/schema/src/VariantSchema/index.ts"
++      ],
++      "@beep/schema/Xml": [
++        "../../../packages/foundation/modeling/schema/src/Xml.ts"
++      ],
++      "@beep/schema/XssProtection": [
++        "../../../packages/foundation/modeling/schema/src/XssProtection/index.ts"
++      ],
++      "@beep/schema/Yaml": [
++        "../../../packages/foundation/modeling/schema/src/Yaml.ts"
++      ],
++      "@beep/schema/test/Markdown": [
++        "../../../packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts"
++      ],
++      "@beep/schema/test/Yaml": [
++        "../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
++      ],
+       "@beep/shared-domain": ["../../../packages/shared/domain/src/index.ts"],
+       "@beep/shared-domain/*": ["../../../packages/shared/domain/src/*.ts"],
+       "@beep/shared-domain/aggregates": [
+diff --git a/packages/workspace/server/package.json b/packages/workspace/server/package.json
+index cdc0aa0e2a..2221e01498 100644
+--- a/packages/workspace/server/package.json
++++ b/packages/workspace/server/package.json
+@@ -64,6 +64,7 @@
+   "dependencies": {
+     "@beep/md": "workspace:^",
+     "@beep/postgres": "workspace:^",
++    "@beep/schema": "workspace:^",
+     "@beep/shared-domain": "workspace:^",
+     "@beep/utils": "workspace:^",
+     "@beep/workspace-domain": "workspace:^",
+diff --git a/packages/workspace/server/src/aggregates/Thread/Thread.layer.ts b/packages/workspace/server/src/aggregates/Thread/Thread.layer.ts
+index fe1ad58533..48a776de4e 100644
+--- a/packages/workspace/server/src/aggregates/Thread/Thread.layer.ts
++++ b/packages/workspace/server/src/aggregates/Thread/Thread.layer.ts
+@@ -6,14 +6,17 @@
+  * @since 0.0.0
+  */
+ 
++import { CuidState } from "@beep/schema/Cuid";
+ import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
+ import { Layer } from "effect";
+ import { makeDrizzleThreadStore, makeInMemoryThreadStore } from "./ThreadStore.repo.ts";
+ 
+ const ThreadStore = ThreadStoreServer.Thread.ThreadStore;
++const CuidStateLive = CuidState.Default.pipe(Layer.orDie);
+ 
+ /**
+- * In-memory ThreadStore layer for fast workspace proofs.
++ * In-memory ThreadStore layer for fast workspace proofs, requiring host crypto
++ * while providing the canonical CUID state internally.
+  *
+  * @example
+  * ```ts
+@@ -25,10 +28,13 @@ const ThreadStore = ThreadStoreServer.Thread.ThreadStore;
+  * @category layers
+  * @since 0.0.0
+  */
+-export const ThreadStoreInMemoryLayer = Layer.effect(ThreadStore, makeInMemoryThreadStore());
++export const ThreadStoreInMemoryLayer = Layer.effect(ThreadStore, makeInMemoryThreadStore()).pipe(
++  Layer.provide(CuidStateLive)
++);
+ 
+ /**
+- * Drizzle-backed ThreadStore layer requiring a {@link @beep/postgres#PostgresDrizzle} database.
++ * Drizzle-backed ThreadStore layer requiring a {@link @beep/postgres#PostgresDrizzle}
++ * database and host crypto while providing the canonical CUID state internally.
+  *
+  * @example
+  * ```ts
+@@ -40,7 +46,9 @@ export const ThreadStoreInMemoryLayer = Layer.effect(ThreadStore, makeInMemoryTh
+  * @category layers
+  * @since 0.0.0
+  */
+-export const ThreadStoreDrizzleLayer = Layer.effect(ThreadStore, makeDrizzleThreadStore());
++export const ThreadStoreDrizzleLayer = Layer.effect(ThreadStore, makeDrizzleThreadStore()).pipe(
++  Layer.provide(CuidStateLive)
++);
+ 
+ /**
+  * Default ThreadStore layer (in-memory) for normal slice tests.
+diff --git a/packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts b/packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts
+index e85d6ceb09..944b0a9f29 100644
+--- a/packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts
++++ b/packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts
+@@ -9,6 +9,7 @@
+ import { Document } from "@beep/md/Md.model";
+ import { PostgresDrizzle } from "@beep/postgres";
+ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
++import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+ import { A, N } from "@beep/utils";
+ import { Message } from "@beep/workspace-domain/entities/Message";
+@@ -24,7 +25,9 @@ import { Effect, HashMap, Match, Order, pipe, Ref } from "effect";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
+ import { InMemoryState } from "./ThreadStore.repo.internal.ts";
++import type { CuidState } from "@beep/schema/Cuid";
+ import type { MessageInsert } from "@beep/workspace-tables/entities/Message";
++import type * as Crypto from "effect/Crypto";
+ import type { MessageEntityInput, ThreadEntityInput, TurnEntityInput } from "./ThreadStore.repo.internal.ts";
+ 
+ const THREAD_TABLE_NAME = "workspace_thread" as const;
+@@ -38,8 +41,6 @@ const encodeMessageId = S.encodeSync(WorkspaceIdentity.MessageId);
+ const encodeDocument = S.encodeSync(Document);
+ 
+ const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
+-const publicIdFor = (entityType: string, id: PosInt): string =>
+-  `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
+ 
+ const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
+   PosInt.make(A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1);
+@@ -51,13 +52,13 @@ const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
+  * every audit field is supplied here. The conversation-persistence increment
+  * does not yet wire a request principal, so a system principal stands in.
+  */
+-const baseEntityRecord = (entityType: string, id: PosInt) => ({
++const baseEntityRecord = (entityType: string, id: PosInt, publicId: string) => ({
+   createdAt: id,
+   createdByPrincipal: SYSTEM_PRINCIPAL,
+   entityType,
+   id,
+   orgId: 1,
+-  publicId: publicIdFor(entityType, id),
++  publicId,
+   rowVersion: 1,
+   schemaVersion: "0.0.0",
+   source: "System",
+@@ -65,25 +66,34 @@ const baseEntityRecord = (entityType: string, id: PosInt) => ({
+   updatedByPrincipal: SYSTEM_PRINCIPAL,
+ });
+ 
+-const makeThreadEntity = (input: ThreadEntityInput): Thread =>
++const makeThreadEntity = (
++  input: ThreadEntityInput,
++  publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.ThreadId>
++): Thread =>
+   S.decodeUnknownSync(Thread)({
+-    ...baseEntityRecord("WorkspaceThread", input.id),
++    ...baseEntityRecord("WorkspaceThread", input.id, publicId),
+     title: input.title,
+     workspaceId: input.workspaceId,
+   });
+ 
+-const makeTurnEntity = (input: TurnEntityInput): Turn =>
++const makeTurnEntity = (
++  input: TurnEntityInput,
++  publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.TurnId>
++): Turn =>
+   S.decodeUnknownSync(Turn)({
+-    ...baseEntityRecord("WorkspaceTurn", input.id),
++    ...baseEntityRecord("WorkspaceTurn", input.id, publicId),
+     items: [{ itemType: "message", messageId: input.messageId }],
+     parentTurnId: input.parentTurnId,
+     threadId: input.threadId,
+     turnIndex: input.turnIndex,
+   });
+ 
+-const makeMessageEntity = (input: MessageEntityInput): Message =>
++const makeMessageEntity = (
++  input: MessageEntityInput,
++  publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.MessageId>
++): Message =>
+   S.decodeUnknownSync(Message)({
+-    ...baseEntityRecord("WorkspaceMessage", input.id),
++    ...baseEntityRecord("WorkspaceMessage", input.id, publicId),
+     content: encodeDocument(input.content),
+     role: input.role,
+     threadId: input.threadId,
+@@ -96,6 +106,38 @@ const turnIndexOrder = Order.mapInput(Order.Number, (turn: Turn) => turn.turnInd
+ 
+ const emptyState = InMemoryState.make({});
+ 
++const publicIdUnavailable =
++  (entityType: string) =>
++  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, ThreadStoreServer.Thread.ThreadStoreUnavailable, R> =>
++    effect.pipe(
++      Effect.tapError((cause) =>
++        Effect.logDebug("Workspace ThreadStore adapter failed to generate a public id").pipe(
++          Effect.annotateLogs({ entityType, cause })
++        )
++      ),
++      Effect.mapError(() =>
++        ThreadStoreServer.Thread.ThreadStoreUnavailable.make({
++          reason: `generate ${entityType} public id failed`,
++        })
++      )
++    );
++
++const makePublicIdGenerators = Effect.fn("Workspace.ThreadStore.makePublicIdGenerators")(function* () {
++  const context = yield* Effect.context<CuidState | Crypto.Crypto>();
++
++  return {
++    message: PublicEntityId.generate(WorkspaceIdentity.MessageId).pipe(
++      Effect.provide(context),
++      publicIdUnavailable("Message")
++    ),
++    thread: PublicEntityId.generate(WorkspaceIdentity.ThreadId).pipe(
++      Effect.provide(context),
++      publicIdUnavailable("Thread")
++    ),
++    turn: PublicEntityId.generate(WorkspaceIdentity.TurnId).pipe(Effect.provide(context), publicIdUnavailable("Turn")),
++  };
++});
++
+ const projectTimeline = (
+   threadId: WorkspaceIdentity.ThreadId,
+   turns: ReadonlyArray<Turn>,
+@@ -163,20 +205,25 @@ const projectTimeline = (
+  * @since 0.0.0
+  */
+ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMemory")(function* () {
++  const publicIds = yield* makePublicIdGenerators();
+   const store = yield* Ref.make(emptyState);
+ 
+   return ThreadStoreServer.Thread.ThreadStore.of({
+     createThread: Effect.fn("Workspace.ThreadStore.createThread")(function* (input) {
+       const workspaceId = PosInt.make(Number(encodeWorkspaceId(input.workspaceId)));
+-      const state = yield* Ref.get(store);
+-      const id = state.nextId;
+-      const thread = makeThreadEntity({ id, title: input.title, workspaceId });
+-      yield* Ref.set(store, {
+-        ...state,
+-        threads: HashMap.set(state.threads, id, thread),
+-        nextId: PosInt.make(id + 1),
++      const publicId = yield* publicIds.thread;
++      return yield* Ref.modify(store, (state) => {
++        const id = state.nextId;
++        const thread = makeThreadEntity({ id, title: input.title, workspaceId }, publicId);
++        return [
++          thread,
++          {
++            ...state,
++            threads: HashMap.set(state.threads, id, thread),
++            nextId: PosInt.make(id + 1),
++          },
++        ];
+       });
+-      return thread;
+     }),
+     listThreads: Effect.fn("Workspace.ThreadStore.listThreads")(function* (workspaceId) {
+       const encoded = PosInt.make(Number(encodeWorkspaceId(workspaceId)));
+@@ -196,11 +243,14 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
+         if (current.value.title !== input.emptyTitle) {
+           return ["unchanged", state] as const;
+         }
+-        const thread = makeThreadEntity({
+-          id: threadId,
+-          title: input.title,
+-          workspaceId: PosInt.make(Number(encodeWorkspaceId(current.value.workspaceId))),
+-        });
++        const thread = makeThreadEntity(
++          {
++            id: threadId,
++            title: input.title,
++            workspaceId: PosInt.make(Number(encodeWorkspaceId(current.value.workspaceId))),
++          },
++          current.value.publicId
++        );
+         return [
+           "updated",
+           {
+@@ -219,33 +269,42 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
+       if (O.isNone(HashMap.get(state.threads, threadId))) {
+         return yield* ThreadStoreServer.Thread.ThreadStoreNotFound.make({ threadId: input.threadId });
+       }
+-      const existingTurns = pipe(
+-        A.fromIterable(HashMap.values(state.turns)),
+-        A.filter((turn) => threadIdToNumber(turn.threadId) === threadId)
+-      );
+-      const turnIndex = NonNegativeInt.make(existingTurns.length);
+-      const turnId = state.nextId;
+-      const messageId = PosInt.make(state.nextId + 1);
+       const parentTurnId = pipe(
+         input.parentTurnId,
+         O.map((id) => PosInt.make(Number(encodeTurnId(id)))),
+         O.getOrNull
+       );
+-      const message = makeMessageEntity({
+-        id: messageId,
+-        threadId,
+-        turnId,
+-        role: input.role,
+-        content: input.content,
+-      });
+-      const turn = makeTurnEntity({ id: turnId, threadId, parentTurnId, turnIndex, messageId });
+-      yield* Ref.set(store, {
+-        ...state,
+-        turns: HashMap.set(state.turns, turnId, turn),
+-        messages: HashMap.set(state.messages, messageId, message),
+-        nextId: PosInt.make(messageId + 1),
++      const messagePublicId = yield* publicIds.message;
++      const turnPublicId = yield* publicIds.turn;
++      return yield* Ref.modify(store, (current) => {
++        const existingTurns = pipe(
++          A.fromIterable(HashMap.values(current.turns)),
++          A.filter((turn) => threadIdToNumber(turn.threadId) === threadId)
++        );
++        const turnIndex = NonNegativeInt.make(existingTurns.length);
++        const turnId = current.nextId;
++        const messageId = PosInt.make(current.nextId + 1);
++        const message = makeMessageEntity(
++          {
++            id: messageId,
++            threadId,
++            turnId,
++            role: input.role,
++            content: input.content,
++          },
++          messagePublicId
++        );
++        const turn = makeTurnEntity({ id: turnId, threadId, parentTurnId, turnIndex, messageId }, turnPublicId);
++        return [
++          { turn, message },
++          {
++            ...current,
++            turns: HashMap.set(current.turns, turnId, turn),
++            messages: HashMap.set(current.messages, messageId, message),
++            nextId: PosInt.make(messageId + 1),
++          },
++        ];
+       });
+-      return { turn, message };
+     }),
+     timeline: Effect.fn("Workspace.ThreadStore.timeline")(function* (threadId) {
+       const numericId = threadIdToNumber(threadId);
+@@ -299,6 +358,7 @@ const messageTable = DbSchema.message;
+  */
+ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizzle")(function* () {
+   const db = yield* PostgresDrizzle;
++  const publicIds = yield* makePublicIdGenerators();
+ 
+   return ThreadStoreServer.Thread.ThreadStore.of({
+     createThread: Effect.fn("Workspace.ThreadStore.drizzleCreateThread")(function* (input) {
+@@ -307,7 +367,8 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
+         .select()
+         .from(threadTable)
+         .pipe(repositoryUnavailable("list Thread", THREAD_TABLE_NAME));
+-      const seed = makeThreadEntity({ id: nextEntityId(existingThreads), title: input.title, workspaceId });
++      const publicId = yield* publicIds.thread;
++      const seed = makeThreadEntity({ id: nextEntityId(existingThreads), title: input.title, workspaceId }, publicId);
+       const rows = yield* db
+         .insert(threadTable)
+         .values(toThreadInsert(seed))
+@@ -366,6 +427,8 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
+         O.map((id) => PosInt.make(Number(encodeTurnId(id)))),
+         O.getOrNull
+       );
++      const messagePublicId = yield* publicIds.message;
++      const turnPublicId = yield* publicIds.turn;
+       return yield* db
+         .transaction(
+           Effect.fnUntraced(function* (tx) {
+@@ -376,20 +439,26 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
+             const nextTurnId = nextEntityId(existingTurnRows);
+             const nextMessageId = nextEntityId(existingMessages);
+ 
+-            const messageSeed = makeMessageEntity({
+-              id: nextMessageId,
+-              threadId,
+-              turnId: nextTurnId,
+-              role: input.role,
+-              content: input.content,
+-            });
+-            const turnSeed = makeTurnEntity({
+-              id: nextTurnId,
+-              threadId,
+-              parentTurnId,
+-              turnIndex,
+-              messageId: nextMessageId,
+-            });
++            const messageSeed = makeMessageEntity(
++              {
++                id: nextMessageId,
++                threadId,
++                turnId: nextTurnId,
++                role: input.role,
++                content: input.content,
++              },
++              messagePublicId
++            );
++            const turnSeed = makeTurnEntity(
++              {
++                id: nextTurnId,
++                threadId,
++                parentTurnId,
++                turnIndex,
++                messageId: nextMessageId,
++              },
++              turnPublicId
++            );
+ 
+             const turnRows = yield* tx.insert(turnTable).values(toTurnInsert(turnSeed)).returning();
+             const persistedTurn = pipe(
+@@ -413,13 +482,16 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
+             );
+             const persistedMessageId = PosInt.make(Number(encodeMessageId(persistedMessage.id)));
+ 
+-            const reconciledTurn = makeTurnEntity({
+-              id: PosInt.make(Number(encodeTurnId(persistedTurn.id))),
+-              threadId,
+-              parentTurnId,
+-              turnIndex,
+-              messageId: persistedMessageId,
+-            });
++            const reconciledTurn = makeTurnEntity(
++              {
++                id: PosInt.make(Number(encodeTurnId(persistedTurn.id))),
++                threadId,
++                parentTurnId,
++                turnIndex,
++                messageId: persistedMessageId,
++              },
++              persistedTurn.publicId
++            );
+             const reconciledRows = yield* tx
+               .update(turnTable)
+               .set({ items: toTurnInsert(reconciledTurn).items })
+diff --git a/packages/workspace/server/test/ThreadStore.test.ts b/packages/workspace/server/test/ThreadStore.test.ts
+index 27e885dfdf..84a210d732 100644
+--- a/packages/workspace/server/test/ThreadStore.test.ts
++++ b/packages/workspace/server/test/ThreadStore.test.ts
+@@ -1,15 +1,19 @@
+ import { Document, P, Text } from "@beep/md";
++import { CuidState } from "@beep/schema/Cuid";
+ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+ import { fcRuns } from "@beep/test-utils";
+ import { makeInMemoryThreadStore } from "@beep/workspace-server/aggregates/Thread";
+ import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test";
+ import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server";
++import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+ import { describe, expect, it } from "@effect/vitest";
+-import { Effect, HashMap } from "effect";
++import { Effect, HashMap, Layer } from "effect";
+ import * as A from "effect/Array";
++import * as Crypto from "effect/Crypto";
+ import * as Eq from "effect/Equal";
+ import * as O from "effect/Option";
++import * as PlatformError from "effect/PlatformError";
+ import * as S from "effect/Schema";
+ import { FastCheck as fc } from "effect/testing";
+ 
+@@ -21,6 +25,28 @@ const MessageEntityInputArbitrary = S.toArbitrary(MessageEntityInput);
+ const ThreadEntityInputArbitrary = S.toArbitrary(ThreadEntityInput);
+ const TurnEntityInputArbitrary = S.toArbitrary(TurnEntityInput);
+ const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
++const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
++const makeTestThreadStore = makeInMemoryThreadStore().pipe(Effect.provide(CuidTestLayer));
++
++const makeYieldingCuidLayer = () => {
++  let randomCall = 0;
++  const YieldingCryptoLayer = Layer.succeed(
++    Crypto.Crypto,
++    Crypto.make({
++      digest: (_algorithm, data) =>
++        Effect.gen(function* () {
++          yield* Effect.yieldNow;
++          const digest = new Uint8Array(64);
++          for (let index = 0; index < digest.length; index++) {
++            digest[index] = ((data[index % data.length] ?? 0) + index) % 256;
++          }
++          return digest;
++        }),
++      randomBytes: (size) => new Uint8Array(size).fill(++randomCall),
++    })
++  );
++  return CuidState.Default.pipe(Layer.provideMerge(YieldingCryptoLayer));
++};
+ 
+ const schemaRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): boolean => {
+   const encoded = S.encodeSync(schema)(value);
+@@ -32,7 +58,7 @@ describe("ThreadStore in-memory", () => {
+   it.effect(
+     "creates a thread, appends ordered turns, and projects a timeline",
+     Effect.fnUntraced(function* () {
+-      const store = yield* makeInMemoryThreadStore();
++      const store = yield* makeTestThreadStore;
+       const workspaceId = yield* decodeWorkspaceId(2);
+ 
+       const thread = yield* store.createThread({ title: "Matter intake", workspaceId });
+@@ -77,10 +103,52 @@ describe("ThreadStore in-memory", () => {
+     })
+   );
+ 
++  it.effect(
++    "atomically persists concurrent threads and turns while public-id generation yields",
++    Effect.fnUntraced(function* () {
++      const concurrency = 8;
++      const store = yield* makeInMemoryThreadStore().pipe(Effect.provide(makeYieldingCuidLayer()));
++      const workspaceId = yield* decodeWorkspaceId(2);
++
++      const created = yield* Effect.all(
++        A.makeBy(concurrency, (index) => store.createThread({ title: `Concurrent ${index}`, workspaceId })),
++        { concurrency }
++      );
++      const persisted = yield* store.listThreads(workspaceId);
++
++      expect(persisted).toHaveLength(concurrency);
++      expect(new Set(A.map(persisted, (thread) => thread.id)).size).toBe(concurrency);
++
++      const thread = created[0];
++      expect(thread).toBeDefined();
++      if (thread === undefined) {
++        return;
++      }
++
++      const appended = yield* Effect.all(
++        A.makeBy(concurrency, (index) =>
++          store.appendTurn({
++            threadId: thread.id,
++            parentTurnId: O.none(),
++            role: "user",
++            content: docOf(`Concurrent ${index}`),
++          })
++        ),
++        { concurrency }
++      );
++      const timeline = yield* store.timeline(thread.id);
++
++      expect(timeline.turns).toHaveLength(concurrency);
++      expect(A.map(timeline.turns, (turn) => turn.turnIndex)).toEqual(A.makeBy(concurrency, (index) => index));
++      expect(new Set(A.map(appended, ({ turn }) => turn.id)).size).toBe(concurrency);
++      expect(new Set(A.map(appended, ({ message }) => message.id)).size).toBe(concurrency);
++    })
++  );
++
+   it.effect(
+     "fails with ThreadStoreNotFound when appending to an unknown thread",
+     Effect.fnUntraced(function* () {
+-      const store = yield* makeInMemoryThreadStore();
++      const store = yield* makeTestThreadStore;
+       const missing = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(999);
+       const error = yield* store
+         .appendTurn({ threadId: missing, parentTurnId: O.none(), role: "user", content: docOf("x") })
+@@ -89,10 +157,40 @@ describe("ThreadStore in-memory", () => {
+     })
+   );
+ 
++  it.effect(
++    "maps public-id generation failures to ThreadStoreUnavailable",
++    Effect.fnUntraced(function* () {
++      let digestCalls = 0;
++      const FailingCryptoLayer = Layer.succeed(
++        Crypto.Crypto,
++        Crypto.make({
++          digest: (_algorithm, data) =>
++            digestCalls++ === 0
++              ? Effect.succeed(data)
++              : Effect.fail(
++                  PlatformError.systemError({
++                    _tag: "Unknown",
++                    module: "ThreadStoreTest",
++                    method: "digest",
++                  })
++                ),
++          randomBytes: (size) => new Uint8Array(size).fill(1),
++        })
++      );
++      const FailingCuidLayer = CuidState.Default.pipe(Layer.provideMerge(FailingCryptoLayer));
++      const store = yield* makeInMemoryThreadStore().pipe(Effect.provide(FailingCuidLayer));
++      const workspaceId = yield* decodeWorkspaceId(2);
++      const error = yield* store.createThread({ title: "Unavailable", workspaceId }).pipe(Effect.flip);
++
++      expect(error._tag).toBe("ThreadStoreUnavailable");
++      expect(error.reason).toBe("generate Thread public id failed");
++    })
++  );
++
+   it.effect(
+     "sets an empty thread title once",
+     Effect.fnUntraced(function* () {
+-      const store = yield* makeInMemoryThreadStore();
++      const store = yield* makeTestThreadStore;
+       const workspaceId = yield* decodeWorkspaceId(2);
+ 
+       const thread = yield* store.createThread({ title: "New thread", workspaceId });
+@@ -195,7 +293,7 @@ describe("ThreadStore in-memory", () => {
+   it.effect(
+     "fails with ThreadStoreNotFound when setting the title for an unknown thread",
+     Effect.fnUntraced(function* () {
+-      const store = yield* makeInMemoryThreadStore();
++      const store = yield* makeTestThreadStore;
+       const missing = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(999);
+       const error = yield* store
+         .setTitleIfEmpty({ threadId: missing, emptyTitle: "New thread", title: "Missing" })
+diff --git a/packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts b/packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts
+index 2083a7d6da..252a3175bd 100644
+--- a/packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts
++++ b/packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts
+@@ -1,20 +1,31 @@
+ import { fileURLToPath } from "node:url";
+ import { Document, P, Text } from "@beep/md";
+ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
++import { CuidState } from "@beep/schema/Cuid";
++import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+ import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
++import { Thread } from "@beep/workspace-domain/entities/Thread";
+ import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread";
++import { DbSchema } from "@beep/workspace-tables";
++import { toThreadInsert } from "@beep/workspace-tables/entities/Thread";
++import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+ import { describe, expect, layer } from "@effect/vitest";
+ import { Effect, Layer, pipe } from "effect";
+ import * as A from "effect/Array";
+ import * as O from "effect/Option";
+ import * as S from "effect/Schema";
++import * as Str from "effect/String";
+ 
+ const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
+ const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis, makePgliteLayer } = makePgliteIntegrationGate();
+ 
+ const decodeWorkspaceId = S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);
+ const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
++const MessagePublicId = PublicEntityId.factory(WorkspaceIdentity.MessageId);
++const ThreadPublicId = PublicEntityId.factory(WorkspaceIdentity.ThreadId);
++const TurnPublicId = PublicEntityId.factory(WorkspaceIdentity.TurnId);
++const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
+ 
+ const migrateWorkspaceThread = Effect.fnUntraced(function* () {
+   const info = yield* TestDatabaseInfo;
+@@ -27,7 +38,10 @@ const migrateWorkspaceThread = Effect.fnUntraced(function* () {
+   yield* migrate(db, { migrationsFolder, migrationsSchema });
+ });
+ 
+-const ThreadStoreDrizzleRepositoryLayer = makeDrizzleLayer().pipe(Layer.provideMerge(makePgliteLayer()));
++const ThreadStoreDrizzleRepositoryLayer = makeDrizzleLayer().pipe(
++  Layer.provideMerge(makePgliteLayer()),
++  Layer.provideMerge(CuidTestLayer)
++);
+ 
+ if (!shouldRunPgliteIntegration) {
+   describe.skip("Workspace ThreadStore Drizzle repository PgLite integration", () => {});
+@@ -66,6 +80,8 @@ if (!shouldRunPgliteIntegration) {
+             content: docOf("Hello"),
+           });
+           expect(first.turn.turnIndex).toBe(0);
++          expect(TurnPublicId.is(first.turn.publicId)).toBe(true);
++          expect(MessagePublicId.is(first.message.publicId)).toBe(true);
+ 
+           const second = yield* store.appendTurn({
+             threadId: thread.id,
+@@ -75,6 +91,10 @@ if (!shouldRunPgliteIntegration) {
+           });
+           expect(second.turn.turnIndex).toBe(1);
+           expect(O.getOrNull(second.turn.parentTurnId)).toStrictEqual(first.turn.id);
++          expect(TurnPublicId.is(second.turn.publicId)).toBe(true);
++          expect(MessagePublicId.is(second.message.publicId)).toBe(true);
++          expect(second.turn.publicId).not.toBe(first.turn.publicId);
++          expect(second.message.publicId).not.toBe(first.message.publicId);
+ 
+           const timeline = yield* store.timeline(thread.id);
+           expect(timeline.threadId).toStrictEqual(thread.id);
+@@ -93,6 +113,83 @@ if (!shouldRunPgliteIntegration) {
+         }),
+         pgliteIntegrationTimeoutMillis
+       );
++
++      it.effect(
++        "creates concurrent threads and appends with distinct canonical public ids",
++        Effect.fnUntraced(function* () {
++          yield* migrateWorkspaceThread();
++          const store = yield* makeDrizzleThreadStore();
++          const workspaceId = yield* decodeWorkspaceId(3);
++
++          const threads = yield* Effect.all(
++            A.makeBy(8, (index) => store.createThread({ title: `Concurrent thread ${index + 1}`, workspaceId })),
++            { concurrency: 8 }
++          );
++          const publicIds = A.map(threads, (thread) => thread.publicId);
++          const generatedPublicIdLength = Str.length(WorkspaceIdentity.ThreadId.tableName) + 25;
++
++          expect(A.every(publicIds, ThreadPublicId.is)).toBe(true);
++          expect(A.every(publicIds, (publicId) => Str.length(publicId) === generatedPublicIdLength)).toBe(true);
++          expect(A.length(A.dedupe(publicIds))).toBe(8);
++
++          const appended = yield* Effect.forEach(
++            threads,
++            (thread, index) =>
++              store.appendTurn({
++                threadId: thread.id,
++                parentTurnId: O.none(),
++                role: "user",
++                content: docOf(`Concurrent message ${index + 1}`),
++              }),
++            { concurrency: 8 }
++          );
++          const turnPublicIds = A.map(appended, ({ turn }) => turn.publicId);
++          const messagePublicIds = A.map(appended, ({ message }) => message.publicId);
++          const generatedTurnPublicIdLength = Str.length(WorkspaceIdentity.TurnId.tableName) + 25;
++          const generatedMessagePublicIdLength = Str.length(WorkspaceIdentity.MessageId.tableName) + 25;
++
++          expect(A.every(turnPublicIds, TurnPublicId.is)).toBe(true);
++          expect(A.every(turnPublicIds, (publicId) => Str.length(publicId) === generatedTurnPublicIdLength)).toBe(true);
++          expect(A.length(A.dedupe(turnPublicIds))).toBe(8);
++          expect(A.every(messagePublicIds, MessagePublicId.is)).toBe(true);
++          expect(A.every(messagePublicIds, (publicId) => Str.length(publicId) === generatedMessagePublicIdLength)).toBe(
++            true
++          );
++          expect(A.length(A.dedupe(messagePublicIds))).toBe(8);
++        }),
++        pgliteIntegrationTimeoutMillis
++      );
++
++      it.effect(
++        "reads legacy sequence-shaped public ids without a migration",
++        Effect.fnUntraced(function* () {
++          yield* migrateWorkspaceThread();
++          const db = yield* makeDrizzle();
++          const store = yield* makeDrizzleThreadStore();
++          const workspaceId = yield* decodeWorkspaceId(4);
++          const legacy = yield* S.decodeUnknownEffect(Thread)({
++            createdAt: 1,
++            createdByPrincipal: { component: "Runtime", kind: "System" },
++            entityType: "WorkspaceThread",
++            id: 1,
++            orgId: 1,
++            publicId: "workspace_thread_a999999",
++            rowVersion: 1,
++            schemaVersion: "0.0.0",
++            source: "System",
++            title: "Legacy thread",
++            updatedAt: 1,
++            updatedByPrincipal: { component: "Runtime", kind: "System" },
++            workspaceId,
++          });
++
++          yield* db.insert(DbSchema.thread).values(toThreadInsert(legacy));
++
++          const threads = yield* store.listThreads(workspaceId);
++          expect(A.some(threads, (thread) => ThreadPublicId.equivalence(thread.publicId, legacy.publicId))).toBe(true);
++        }),
++        pgliteIntegrationTimeoutMillis
++      );
+     });
+   });
+ }
+diff --git a/packages/workspace/server/tsconfig.json b/packages/workspace/server/tsconfig.json
+index fa3f51235e..e5458c3ef2 100644
+--- a/packages/workspace/server/tsconfig.json
++++ b/packages/workspace/server/tsconfig.json
+@@ -14,6 +14,9 @@
+     {
+       "path": "../../foundation/modeling/md/tsconfig.json"
+     },
++    {
++      "path": "../../foundation/modeling/schema/tsconfig.json"
++    },
+     {
+       "path": "../../foundation/modeling/utils/tsconfig.json"
+     },
+@@ -34,9 +37,6 @@
+     },
+     {
+       "path": "../../foundation/modeling/identity/tsconfig.json"
+-    },
+-    {
+-      "path": "../../foundation/modeling/schema/tsconfig.json"
+     }
+   ]
+ }
+diff --git a/turbo.json b/turbo.json
+index 2f9fad7cff..d222c760d6 100644
+--- a/turbo.json
++++ b/turbo.json
+@@ -21,6 +21,7 @@
+       "TURBO_TEAM",
+       "NODE_TLS_REJECT_UNAUTHORIZED",
+       "CHAT_TRANSPORT",
++      "ONTOLOGY_WORKSPACE_ROOT",
+       "PORTLESS_*",
+       "AWS_*",
+       "SST_*"
