@@ -1,0 +1,26 @@
+diff --git a/packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts b/packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts
+index f254f9d3a5..c5889aeb9d 100644
+--- a/packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts
++++ b/packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts
+@@ -6,7 +6,7 @@
+  */
+ 
+ import { $PandocAstId } from "@beep/identity";
+-import { A } from "@beep/utils";
++import { A, thunkEmptyArray } from "@beep/utils";
+ import { Effect, Match } from "effect";
+ import * as S from "effect/Schema";
+ import {
+@@ -268,10 +268,10 @@ const captionInlinesFromBlock: (block: PandocBlock.Type) => ReadonlyArray<Pandoc
+       codeblock: (block) => [Str.make({ text: block.text })],
+       bulletlist: (block) => A.flatMap(A.flatten(block.items), captionInlinesFromBlock),
+       orderedlist: (block) => A.flatMap(A.flatten(block.items), captionInlinesFromBlock),
+-      horizontalrule: () => [],
++      horizontalrule: thunkEmptyArray<never>,
+       div: (block) => A.flatMap(block.children, captionInlinesFromBlock),
+       table: (block) => block.caption,
+-      unknownBlock: () => [],
++      unknownBlock: thunkEmptyArray<never>,
+     })
+   );
+ 
