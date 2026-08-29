@@ -1,0 +1,13 @@
+diff --git a/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts b/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts
+index 9e7e0c391a..b1e9ff045b 100644
+--- a/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts
++++ b/packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts
+@@ -35,7 +35,7 @@ describe("MappedLiteralKit", () => {
+     );
+   });
+ 
+-  it("exposes directional enum maps", () => {
++  it("exposes side-local literal enum maps", () => {
+     expect(SqlState.From.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
+     expect(SqlState.From.Enum.WARNING).toBe("01000");
+     expect(SqlState.To.Enum["00000"]).toBe("SUCCESSFUL_COMPLETION");
