@@ -297,7 +297,7 @@ const analyzeSchemaPackageQuality = Effect.fn("DocgenTest.analyzeSchemaPackageQu
   return yield* pipe(
     A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"),
     O.match({
-      onNone: () => Effect.dieMessage("Expected the seeded @beep/schema package to be discoverable"),
+      onNone: () => Effect.die(new Error("Expected the seeded @beep/schema package to be discoverable")),
       onSome: analyzePackageQuality,
     })
   );
@@ -1705,11 +1705,14 @@ export const parseValue = (value: string): string => value.trim();
           );
 
           const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
-          const target = O.getOrUndefined(A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"));
-
-          expect(target).toBeDefined();
-
-          const report = yield* analyzePackageQuality(target!);
+          const target = yield* pipe(
+            A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"),
+            O.match({
+              onNone: () => Effect.die(new Error("Expected the seeded @beep/schema package to be discoverable")),
+              onSome: Effect.succeed,
+            })
+          );
+          const report = yield* analyzePackageQuality(target);
           const subject = O.getOrUndefined(A.findFirst(report.subjects, (entry) => entry.exportName === "parseValue"));
           const review = O.getOrUndefined(
             A.findFirst(report.reviews, (entry) => entry.subjectId === subject?.stableIdentity)
