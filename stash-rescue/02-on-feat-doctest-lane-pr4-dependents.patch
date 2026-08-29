@@ -1,0 +1,385 @@
+diff --git a/.github/workflows/heavy.yml b/.github/workflows/heavy.yml
+index 17470c15e1..ab3b3669b8 100644
+--- a/.github/workflows/heavy.yml
++++ b/.github/workflows/heavy.yml
+@@ -121,22 +121,31 @@ jobs:
+             if grep -Eq '(^vitest\.docs\.ts$|^vitest\.shared\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/heavy\.yml$|^packages/tooling/tool/cli/src/commands/Docgen/|^packages/tooling/tool/cli/src/internal/jsdoc/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+               doctest_mode=full
+             else
+-              mapfile -t changed_sources < <(
++              # Any existing package/app source or package-level config can
++              # affect marked examples in that workspace or its dependents.
++              # The CLI owns package-graph expansion and marker discovery.
++              mapfile -t affected_inputs < <(
+                 git diff --name-only "${base_ref}...HEAD" -- \
+                   ':(glob)packages/**/src/**/*.ts' \
+                   ':(glob)packages/**/src/**/*.tsx' \
+                   ':(glob)apps/**/src/**/*.ts' \
+-                  ':(glob)apps/**/src/**/*.tsx'
++                  ':(glob)apps/**/src/**/*.tsx' \
++                  ':(glob)packages/**/package.json' \
++                  ':(glob)packages/**/docgen.json' \
++                  ':(glob)packages/**/tsconfig*.json' \
++                  ':(glob)apps/**/package.json' \
++                  ':(glob)apps/**/docgen.json' \
++                  ':(glob)apps/**/tsconfig*.json'
+               )
+ 
+-              marked_sources=()
+-              for file in "${changed_sources[@]}"; do
+-                if [[ -f "$file" ]] && grep -l -F 'import.meta.vitest' -- "$file" >/dev/null; then
+-                  marked_sources+=("$file")
++              existing_inputs=()
++              for file in "${affected_inputs[@]}"; do
++                if [[ -f "$file" ]]; then
++                  existing_inputs+=("$file")
+                 fi
+               done
+ 
+-              if (( ${#marked_sources[@]} == 0 )); then
++              if (( ${#existing_inputs[@]} == 0 )); then
+                 should_run=false
+               fi
+             fi
+diff --git a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+index 4b87170dcd..de6acd8c97 100644
+--- a/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
++++ b/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+@@ -12,12 +12,13 @@
+  */
+ 
+ import { $RepoCliId } from "@beep/identity/packages";
+-import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
++import { findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
+ import { LiteralKit } from "@beep/schema";
+ import { A, Str, thunkFalse } from "@beep/utils";
+ import * as O from "@beep/utils/Option";
+-import { Console, Duration, Effect, FileSystem, Match, Order, Path, pipe } from "effect";
++import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
+ import { dual } from "effect/Function";
++import * as R from "effect/Record";
+ import * as S from "effect/Schema";
+ import { Argument, Command, Flag } from "effect/unstable/cli";
+ import { turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
+@@ -1172,6 +1173,54 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
+   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
+ });
+ 
++const DOCTEST_WORKSPACE_PATHS = [
++  ":(glob)packages/**/package.json",
++  ":(glob)apps/**/package.json",
++  ":(glob)packages/**/src/**/*.ts",
++  ":(glob)packages/**/src/**/*.tsx",
++  ":(glob)apps/**/src/**/*.ts",
++  ":(glob)apps/**/src/**/*.tsx",
++] as const;
++
++const isDoctestPackageInput = (packageDir: string, file: string): boolean => {
++  const prefix = `${packageDir}/`;
++  if (!Str.startsWith(prefix)(file)) return false;
++  const relativePath = Str.slice(Str.length(prefix))(file);
++  return (
++    Str.startsWith("src/")(relativePath) ||
++    relativePath === "package.json" ||
++    relativePath === "docgen.json" ||
++    O.isSome(Str.match(/^tsconfig(?:\..*)?\.json$/u)(relativePath))
++  );
++};
++
++const packageDependencies = (manifest: {
++  readonly dependencies: O.Option<Readonly<Record<string, string>>>;
++  readonly devDependencies: O.Option<Readonly<Record<string, string>>>;
++  readonly peerDependencies: O.Option<Readonly<Record<string, string>>>;
++}): ReadonlyArray<string> =>
++  pipe(
++    [manifest.dependencies, manifest.devDependencies, manifest.peerDependencies],
++    A.flatMap(O.match({ onNone: A.empty<string>, onSome: R.keys })),
++    A.filter(Str.startsWith("@beep/")),
++    A.dedupe
++  );
++
++const expandDoctestDependents = (
++  changedPackageNames: HashSet.HashSet<string>,
++  workspaces: ReadonlyArray<readonly [name: string, dir: string, dependencies: ReadonlyArray<string>]>
++): HashSet.HashSet<string> => {
++  let affected = changedPackageNames;
++  let priorSize = -1;
++  while (HashSet.size(affected) !== priorSize) {
++    priorSize = HashSet.size(affected);
++    affected = A.reduce(workspaces, affected, (selected, [name, , dependencies]) =>
++      A.some(dependencies, (dependency) => HashSet.has(selected, dependency)) ? HashSet.add(selected, name) : selected
++    );
++  }
++  return affected;
++};
++
+ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFiles")(function* (
+   repoRoot: string,
+   base: string,
+@@ -1188,13 +1237,70 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
+   }
+   const fs = yield* FileSystem.FileSystem;
+   const path = yield* Path.Path;
+-  const candidates = pipe(
++  const changedPaths = pipe(
+     Str.split(/\r?\n/)(result.output),
+     A.map(normalizeSlashes),
+-    A.filter(isDoctestSourcePath),
++    A.filter(Str.isNonEmpty),
+     A.dedupe,
+     A.sort(Order.String)
+   );
++  const existingChangedPaths = yield* Effect.filter(changedPaths, (file) =>
++    fs
++      .exists(path.join(repoRoot, file))
++      .pipe(CiCommandError.mapError(`Failed to inspect changed Doctest path ${file}.`))
++  );
++  if (A.isReadonlyArrayEmpty(existingChangedPaths)) return A.empty<string>();
++
++  const trackedResult = yield* runCaptured({
++    command: "git",
++    args: ["ls-files", "--", ...DOCTEST_WORKSPACE_PATHS],
++    cwd: repoRoot,
++    source: "stdout",
++  }).pipe(CiCommandError.mapError("Failed to resolve Doctest workspace files."));
++  if (trackedResult.exitCode !== 0) {
++    return yield* CiCommandError.make({
++      message: `git ls-files for Doctest failed with exit code ${trackedResult.exitCode}.`,
++    });
++  }
++  const trackedPaths = pipe(
++    Str.split(/\r?\n/)(trackedResult.output),
++    A.map(normalizeSlashes),
++    A.filter(Str.isNonEmpty),
++    A.dedupe,
++    A.sort(Order.String)
++  );
++  const manifestPaths = A.filter(trackedPaths, Str.endsWith("/package.json"));
++  const workspaces = yield* Effect.forEach(manifestPaths, (manifestPath) =>
++    readPackageJsonFile(path.join(repoRoot, manifestPath)).pipe(
++      Effect.map(
++        (manifest) =>
++          [manifest.name, normalizeSlashes(path.dirname(manifestPath)), packageDependencies(manifest)] as const
++      ),
++      CiCommandError.mapError(`Failed to read Doctest workspace manifest ${manifestPath}.`)
++    )
++  );
++  const changedPackageNames = HashSet.fromIterable(
++    A.flatMap(existingChangedPaths, (file) =>
++      pipe(
++        workspaces,
++        A.filter(([, packageDir]) => isDoctestPackageInput(packageDir, file)),
++        A.map(([name]) => name)
++      )
++    )
++  );
++  const affectedPackageNames = expandDoctestDependents(changedPackageNames, workspaces);
++  const affectedPackageDirs = pipe(
++    workspaces,
++    A.filter(([name]) => HashSet.has(affectedPackageNames, name)),
++    A.map(([, packageDir]) => packageDir)
++  );
++  const directlyChangedSources = A.filter(existingChangedPaths, isDoctestSourcePath);
++  const packageSources = pipe(
++    trackedPaths,
++    A.filter(isDoctestSourcePath),
++    A.filter((file) => A.some(affectedPackageDirs, (packageDir) => Str.startsWith(`${packageDir}/src/`)(file)))
++  );
++  const candidates = pipe(A.appendAll(directlyChangedSources, packageSources), A.dedupe, A.sort(Order.String));
+   return yield* Effect.filter(candidates, (file) =>
+     fs
+       .readFileString(path.join(repoRoot, file))
+diff --git a/packages/tooling/tool/cli/test/ci-lane.test.ts b/packages/tooling/tool/cli/test/ci-lane.test.ts
+index ceed630275..54e0ba8c59 100644
+--- a/packages/tooling/tool/cli/test/ci-lane.test.ts
++++ b/packages/tooling/tool/cli/test/ci-lane.test.ts
+@@ -42,7 +42,8 @@ const doctestCiLayer = (
+   spawned: Array<string>
+ ) => {
+   const fileSystemLayer = FileSystem.layerNoop({
+-    exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
++    exists: (file) =>
++      Effect.succeed(Str.endsWith("/.git")(file) || A.some(sources, ([suffix]) => Str.endsWith(suffix)(file))),
+     makeDirectory: () => Effect.void,
+     readFileString: (file) => {
+       const source = A.findFirst(sources, ([suffix]) => Str.endsWith(suffix)(file));
+@@ -69,7 +70,16 @@ const doctestCiLayer = (
+       }
+       const rendered = A.join([command.command, ...command.args], " ");
+       spawned.push(rendered);
+-      return Effect.succeed(commandHandle(command.command === "git" ? A.join(changedFiles, "\n") : ""));
++      const output =
++        command.command === "git"
++          ? command.args[0] === "diff"
++            ? A.join(changedFiles, "\n")
++            : A.join(
++                A.map(sources, ([file]) => file),
++                "\n"
++              )
++          : "";
++      return Effect.succeed(commandHandle(output));
+     })
+   );
+   return Layer.mergeAll(fileSystemLayer, Path.layer, processLayer, TestConsole.layer);
+@@ -540,37 +550,54 @@ describe("ciLocalStepsForTesting", () => {
+   });
+ });
+ 
+-const affectedDoctestCommands = A.empty<string>();
+-const affectedDoctestFiles = [
+-  "packages/example/src/unmarked.ts",
+-  "packages/example/src/marked.ts",
+-  "packages/example/src/deleted.ts",
+-  "packages/example/src/view.tsx",
+-  "packages/example/src/value.d.ts",
+-  "packages/example/src/test/fixtures/fixture.ts",
+-  "packages/example/src/node_modules/generated.ts",
+-  "apps\\demo\\src\\marked.ts",
+-  "packages/example/src/marked.ts",
+-];
+-const affectedDoctestSources: ReadonlyArray<readonly [string, string]> = [
+-  ["packages/example/src/marked.ts", "const marked = import.meta.vitest;"],
+-  ["packages/example/src/unmarked.ts", "export const unmarked = true;"],
+-  ["packages/example/src/view.tsx", "const markedTsx = import.meta.vitest;"],
+-  ["apps/demo/src/marked.ts", "if (import.meta.vitest) {}"],
++const dependentDoctestCommands = A.empty<string>();
++const dependentDoctestSources: ReadonlyArray<readonly [string, string]> = [
++  ["packages/a/package.json", '{"name":"@beep/a"}'],
++  ["packages/a/src/marked.ts", "const markedA = import.meta.vitest;"],
++  ["packages/a/src/unmarked.ts", "export const unmarked = true;"],
++  ["packages/b/package.json", '{"name":"@beep/b","dependencies":{"@beep/a":"workspace:*"}}'],
++  ["packages/b/src/marked.tsx", "const markedB = import.meta.vitest;"],
++  ["packages/c/package.json", '{"name":"@beep/c"}'],
++  ["packages/c/src/marked.ts", "const markedC = import.meta.vitest;"],
++  ["apps/demo/src/marked.ts", "const markedApp = import.meta.vitest;"],
+ ];
+ 
+-layer(doctestCiLayer(affectedDoctestFiles, affectedDoctestSources, affectedDoctestCommands))(
+-  "affected Doctest CI lane",
++layer(
++  doctestCiLayer(
++    ["packages/a/src/unmarked.ts", "apps\\demo\\src\\marked.ts"],
++    dependentDoctestSources,
++    dependentDoctestCommands
++  )
++)("dependent-aware affected Doctest CI lane", (it) => {
++  it.effect("selects marked files in a changed package and its transitive dependents plus direct app changes", () =>
++    Effect.gen(function* () {
++      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
++
++      expect(dependentDoctestCommands).toHaveLength(3);
++      expect(dependentDoctestCommands[0]).toBe("git diff --name-only origin/main...HEAD -- packages apps");
++      expect(dependentDoctestCommands[1]).toContain("git ls-files -- :(glob)packages/**/package.json");
++      expect(dependentDoctestCommands[2]).toContain(
++        "bunx vitest run --config vitest.docs.ts apps/demo/src/marked.ts packages/a/src/marked.ts packages/b/src/marked.tsx"
++      );
++      expect(dependentDoctestCommands[2]).not.toContain("packages/c/src/marked.ts");
++    })
++  );
++});
++
++const manifestDoctestCommands = A.empty<string>();
++
++layer(doctestCiLayer(["packages/c/package.json"], dependentDoctestSources, manifestDoctestCommands))(
++  "manifest-affected Doctest CI lane",
+   (it) => {
+-    it.effect("resolves only existing marked TypeScript source files and runs their exact argv", () =>
++    it.effect("selects only the changed unrelated package for a manifest change", () =>
+       Effect.gen(function* () {
+         yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+ 
+-        expect(affectedDoctestCommands).toHaveLength(2);
+-        expect(affectedDoctestCommands[0]).toBe("git diff --name-only origin/main...HEAD -- packages apps");
+-        expect(affectedDoctestCommands[1]).toContain(
+-          "bunx vitest run --config vitest.docs.ts apps/demo/src/marked.ts packages/example/src/marked.ts packages/example/src/view.tsx"
++        expect(lastOf(manifestDoctestCommands)).toContain(
++          "bunx vitest run --config vitest.docs.ts packages/c/src/marked.ts"
+         );
++        expect(lastOf(manifestDoctestCommands)).not.toContain("packages/a/src/marked.ts");
++        expect(lastOf(manifestDoctestCommands)).not.toContain("packages/b/src/marked.tsx");
+       })
+     );
+   }
+@@ -578,24 +605,39 @@ layer(doctestCiLayer(affectedDoctestFiles, affectedDoctestSources, affectedDocte
+ 
+ const emptyAffectedDoctestCommands = A.empty<string>();
+ 
+-layer(
+-  doctestCiLayer(
+-    ["packages/example/src/unmarked.ts", "packages/example/src/deleted.ts", "packages/example/src/view.tsx"],
+-    [["packages/example/src/unmarked.ts", "export const unmarked = true;"]],
+-    emptyAffectedDoctestCommands
+-  )
+-)("empty affected Doctest CI lane", (it) => {
+-  it.effect("logs the early exit without spawning Vitest", () =>
+-    Effect.gen(function* () {
+-      yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
++layer(doctestCiLayer([], dependentDoctestSources, emptyAffectedDoctestCommands))(
++  "empty affected Doctest CI lane",
++  (it) => {
++    it.effect("logs the early exit for an empty diff without workspace discovery or Vitest", () =>
++      Effect.gen(function* () {
++        yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
+ 
+-      expect(emptyAffectedDoctestCommands).toEqual(["git diff --name-only origin/main...HEAD -- packages apps"]);
+-      expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
+-        "[ci] doctest: no marked affected source files (skipped)"
+-      );
+-    })
+-  );
+-});
++        expect(emptyAffectedDoctestCommands).toEqual(["git diff --name-only origin/main...HEAD -- packages apps"]);
++        expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
++          "[ci] doctest: no marked affected source files (skipped)"
++        );
++      })
++    );
++  }
++);
++
++const deletedAffectedDoctestCommands = A.empty<string>();
++
++layer(doctestCiLayer(["packages/a/src/deleted.ts"], dependentDoctestSources, deletedAffectedDoctestCommands))(
++  "deleted affected Doctest path",
++  (it) => {
++    it.effect("ignores deleted paths before package expansion", () =>
++      Effect.gen(function* () {
++        yield* runCiLane("doctest", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }));
++
++        expect(deletedAffectedDoctestCommands).toEqual(["git diff --name-only origin/main...HEAD -- packages apps"]);
++        expect(A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n")).toContain(
++          "[ci] doctest: no marked affected source files (skipped)"
++        );
++      })
++    );
++  }
++);
+ 
+ const fullDoctestCommands = A.empty<string>();
+ 
+diff --git a/packages/tooling/tool/cli/test/ci-runner-security.test.ts b/packages/tooling/tool/cli/test/ci-runner-security.test.ts
+index cf3ccc7e45..e91ff48287 100644
+--- a/packages/tooling/tool/cli/test/ci-runner-security.test.ts
++++ b/packages/tooling/tool/cli/test/ci-runner-security.test.ts
+@@ -133,7 +133,7 @@ describe("CI runner security", () => {
+   );
+ 
+   it.effect(
+-    "forces full Doctest runs for lane tooling changes and scans TypeScript React hosts",
++    "forces full Doctest runs for lane tooling changes and gates affected package inputs",
+     Effect.fnUntraced(function* () {
+       const fs = yield* FileSystem.FileSystem;
+       const path = yield* Path.Path;
+@@ -151,6 +151,12 @@ describe("CI runner security", () => {
+       assert.include(workflowText, "^packages/tooling/tool/cli/src/commands/Ci/CiLane\\.ts$");
+       assert.include(workflowText, "packages/**/src/**/*.tsx");
+       assert.include(workflowText, "apps/**/src/**/*.tsx");
++      assert.include(workflowText, "packages/**/package.json");
++      assert.include(workflowText, "packages/**/docgen.json");
++      assert.include(workflowText, "packages/**/tsconfig*.json");
++      assert.include(workflowText, "apps/**/package.json");
++      assert.notInclude(workflowText, "grep -l -F 'import.meta.vitest'");
++      assert.include(workflowText, "The CLI owns package-graph expansion and marker discovery.");
+     }, provideScopedLayer(NodeServices.layer))
+   );
+ 
