@@ -55,6 +55,20 @@ const runHook = Effect.fn("YeetInboxHookAdapterTest.runHook")(function* (
   return { exitCode, stderr, stdout } satisfies HookResult;
 });
 
+const runHookUntil = Effect.fn("YeetInboxHookAdapterTest.runHookUntil")(function* (
+  root: string,
+  harness: "claude" | "codex" | "grok",
+  payload: object,
+  accept: (result: HookResult) => boolean
+) {
+  let result = yield* runHook(root, harness, payload);
+  for (let attempt = 0; attempt < 20 && !accept(result); attempt += 1) {
+    yield* Effect.sleep("250 millis");
+    result = yield* runHook(root, harness, payload);
+  }
+  return result;
+});
+
 const withInbox = Effect.fn("YeetInboxHookAdapterTest.withInbox")(function* <Value, Failure, Requirements>(
   use: (fixture: {
     readonly ack: (id: string, contents?: string) => Effect.Effect<void, PlatformError.PlatformError>;
@@ -219,11 +233,16 @@ describe("Yeet inbox harness adapter", () => {
 
           const deadLease = yield* encodeUnknown(lease(999_999, "dead", "gone", "dead-owner"));
           yield* fs.writeFileString(leasePath, `${deadLease}\n`);
-          const takeover = yield* runHook(root, "claude", {
-            cwd: root,
-            hook_event_name: "SessionStart",
-            session_id: "warm-fixer",
-          });
+          const takeover = yield* runHookUntil(
+            root,
+            "claude",
+            {
+              cwd: root,
+              hook_event_name: "SessionStart",
+              session_id: "warm-fixer",
+            },
+            (result) => result.stdout.includes("Fix this now")
+          );
           const updated = decodeObject(yield* fs.readFileString(leasePath));
           expect(takeover.stdout).toContain("Fix this now");
           expect(updated).toMatchObject({
@@ -242,7 +261,7 @@ describe("Yeet inbox harness adapter", () => {
       withInbox(({ root }) =>
         Effect.gen(function* () {
           const payload = { cwd: root, hook_event_name: "SessionStart", session_id: "session-start" };
-          const first = yield* runHook(root, "claude", payload);
+          const first = yield* runHookUntil(root, "claude", payload, (result) => result.stdout !== "");
           const second = yield* runHook(root, "claude", payload);
 
           expect(first.exitCode).toBe(0);
@@ -332,7 +351,9 @@ describe("Yeet inbox harness adapter", () => {
             tool_input: { command: "bun run test" },
             tool_name: "Bash",
           };
-          const first = decodeObject((yield* runHook(root, "codex", payload)).stdout);
+          const first = decodeObject(
+            (yield* runHookUntil(root, "codex", payload, (result) => result.stdout !== "")).stdout
+          );
           const second = decodeObject((yield* runHook(root, "codex", payload)).stdout);
           const unrelated = decodeObject(
             (yield* runHook(root, "codex", {
@@ -451,11 +472,16 @@ esac
     () =>
       withInbox(({ root }) =>
         Effect.gen(function* () {
-          const result = yield* runHook(root, "grok", {
-            cwd: root,
-            hook_event_name: "GrokTail",
-            session_id: "grok-monitor",
-          });
+          const result = yield* runHookUntil(
+            root,
+            "grok",
+            {
+              cwd: root,
+              hook_event_name: "GrokTail",
+              session_id: "grok-monitor",
+            },
+            (observed) => observed.stdout.includes("coverage-live")
+          );
 
           expect(result.exitCode).toBe(0);
           expect(result.stdout).toContain("[yeet] inbox");

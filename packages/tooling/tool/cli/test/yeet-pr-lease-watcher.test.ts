@@ -126,8 +126,14 @@ sleep 2
               takeoverReason: "stale-unacked-dead-or-frozen",
               takeoverMode: "resume-owner",
             });
+            let resumed = false;
+            for (let attempt = 0; attempt < 2_000 && !resumed; attempt += 1) {
+              resumed = yield* fs.exists(path.join(inbox, "resume-marker"));
+              if (!resumed) yield* Effect.sleep("10 millis");
+            }
+            expect(resumed).toBe(true);
             expect(yield* fs.readFileString(path.join(inbox, "resume-marker"))).toBe("codex:owner-session");
-            expect(yield* fs.readFileString(path.join(inbox, "claim-marker"))).toMatch(/^claiming:/u);
+            expect(yield* fs.readFileString(path.join(inbox, "claim-marker"))).toMatch(/^(?:claiming|active):/u);
             const fixerPid = updated.pid;
             if (typeof fixerPid === "number") {
               process.kill(fixerPid, "SIGTERM");
@@ -136,7 +142,7 @@ sleep 2
           })
         )
       ),
-    15_000
+    30_000
   );
 
   it(

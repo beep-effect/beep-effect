@@ -19,7 +19,6 @@ import { parseProcStatStartTime } from "../../Worktree/Fleet.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { currentCommitSha } from "./GitExec.ts";
 import { runGhPullRequestView, runGhPullRequestViewForNumber } from "./PullRequest.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/PrLease");
@@ -61,6 +60,17 @@ class YeetPrLease extends S.Class<YeetPrLease>($I`YeetPrLease`)(
 ) {}
 
 const YeetPrLeaseJson = JsonStringCodec(YeetPrLease);
+
+class PublishedPrLeaseReceipt extends S.Class<PublishedPrLeaseReceipt>($I`PublishedPrLeaseReceipt`)(
+  {
+    generationId: S.String,
+    headSha: S.String,
+    prNumber: PosInt,
+  },
+  $I.annote("PublishedPrLeaseReceipt", {
+    description: "Exact ownership generation established by a published-PR lease write.",
+  })
+) {}
 
 class PrLeaseTransitionContendedError extends S.TaggedError<PrLeaseTransitionContendedError>(
   $I`PrLeaseTransitionContendedError`
@@ -118,8 +128,10 @@ temporary="$4"
 lease="$5"
 checkout_root="$6"
 expected_head="$7"
-observed_head="$(git -C "$checkout_root" rev-parse HEAD 2>/dev/null)" || exit 74
-[ "$observed_head" = "$expected_head" ] || exit 75
+if [ -n "$expected_head" ]; then
+  observed_head="$(git -C "$checkout_root" rev-parse HEAD 2>/dev/null)" || exit 74
+  [ "$observed_head" = "$expected_head" ] || exit 75
+fi
 if [ "$expected_kind" = "absent" ]; then
   [ ! -e "$lease" ] || exit 73
 else
@@ -375,6 +387,11 @@ export const writePublishedPrLease = Effect.fn("PrLease.writePublished")(functio
       })
     )
   );
+  return PublishedPrLeaseReceipt.make({
+    generationId: lease.generationId,
+    headSha: lease.headSha,
+    prNumber: lease.prNumber,
+  });
 });
 
 const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function* (
@@ -383,7 +400,9 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
   leasePath: string,
   targetPrNumber: PosInt,
   targetHeadSha: string,
-  reason: string
+  reason: string,
+  expectedGeneration: O.Option<string> = O.none(),
+  verifyCheckoutHead = true
 ) {
   const result = yield* Effect.gen(function* () {
     const current = yield* readLease(leasePath);
@@ -392,6 +411,9 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
         message: `Published-PR lease disappeared while retiring PR #${targetPrNumber} at ${targetHeadSha}.`,
       });
     }
+    if (O.isSome(expectedGeneration) && !Str.Equivalence(current.value.generationId, expectedGeneration.value)) {
+      return { changed: false, generationId: expectedGeneration.value, preservedNewer: true } as const;
+    }
     if (current.value.prNumber !== targetPrNumber || !Str.Equivalence(current.value.headSha, targetHeadSha)) {
       return yield* YeetCommandError.make({
         message: `Refusing to retire generation ${current.value.generationId}: it belongs to a newer PR or head.`,
@@ -399,7 +421,7 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
     }
     const currentStatus = leaseStatus(current.value);
     if (currentStatus === "retired") {
-      return { changed: false, generationId: current.value.generationId } as const;
+      return { changed: false, generationId: current.value.generationId, preservedNewer: false } as const;
     }
     if (currentStatus === "claiming") {
       return yield* YeetCommandError.make({
@@ -422,9 +444,9 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
       ["active"],
       "pr-lease-retired",
       checkoutRoot,
-      targetHeadSha
+      verifyCheckoutHead === true ? targetHeadSha : ""
     );
-    return { changed: true, generationId: current.value.generationId } as const;
+    return { changed: true, generationId: current.value.generationId, preservedNewer: false } as const;
   }).pipe(
     Effect.retry({ times: 3, while: P.isTagged("PrLeaseTransitionContendedError") }),
     Effect.catchTag("PrLeaseTransitionContendedError", (error) =>
@@ -434,9 +456,11 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
     )
   );
   yield* Console.log(
-    result.changed
-      ? `[yeet] retired published-PR lease generation ${result.generationId}: ${reason}`
-      : `[yeet] published-PR lease generation ${result.generationId} was already retired: ${reason}`
+    result.preservedNewer
+      ? `[yeet] preserved newer published-PR lease while retiring generation ${result.generationId}: ${reason}`
+      : result.changed
+        ? `[yeet] retired published-PR lease generation ${result.generationId}: ${reason}`
+        : `[yeet] published-PR lease generation ${result.generationId} was already retired: ${reason}`
   );
 });
 
@@ -448,6 +472,28 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
  */
 export const retirePublishedPrLeaseAtPathForTesting = retirePublishedPrLeaseAtPath;
 
+const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(function* (
+  context: RepoRunContext,
+  prNumber: PosInt,
+  headSha: string,
+  reason: string,
+  expectedGeneration: O.Option<string>,
+  verifyCheckoutHead: boolean
+) {
+  const path = yield* Path.Path;
+  const inbox = path.join(context.repoRoot, ".beep", "inbox");
+  yield* retirePublishedPrLeaseAtPath(
+    context.repoRoot,
+    inbox,
+    path.join(inbox, "pr-lease.json"),
+    prNumber,
+    headSha,
+    reason,
+    expectedGeneration,
+    verifyCheckoutHead
+  );
+});
+
 /**
  * Retire the currently observed published-PR lease without touching a newer generation.
  *
@@ -458,13 +504,30 @@ export const retirePublishedPrLease = Effect.fn("PrLease.retirePublished")(funct
   prNumber: number,
   headSha: string,
   reason: string
-): Effect.fn.Return<
-  void,
-  YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const path = yield* Path.Path;
-  const inbox = path.join(context.repoRoot, ".beep", "inbox");
-  const leasePath = path.join(inbox, "pr-lease.json");
-  yield* retirePublishedPrLeaseAtPath(context.repoRoot, inbox, leasePath, PosInt.make(prNumber), headSha, reason);
+) {
+  yield* retirePublishedPrLeaseForContext(context, PosInt.make(prNumber), headSha, reason, O.none(), true);
+});
+
+/**
+ * Retire the exact lease generation established by an earlier write.
+ *
+ * The generation receipt is the compare-and-swap fence, so this failure path
+ * needs neither a fresh GitHub lookup nor a checkout HEAD lookup and preserves
+ * any concurrent replacement generation.
+ *
+ * @category persistence
+ */
+export const retirePublishedPrLeaseReceipt = Effect.fn("PrLease.retirePublishedReceipt")(function* (
+  context: RepoRunContext,
+  receipt: PublishedPrLeaseReceipt,
+  reason: string
+) {
+  yield* retirePublishedPrLeaseForContext(
+    context,
+    receipt.prNumber,
+    receipt.headSha,
+    reason,
+    O.some(receipt.generationId),
+    false
+  );
 });

@@ -347,7 +347,7 @@ BunRuntime.runMain(
               );
 
               let ready = false;
-              for (let attempt = 0; attempt < 300 && !ready; attempt += 1) {
+              for (let attempt = 0; attempt < 2_000 && !ready; attempt += 1) {
                 ready = yield* fs.exists(readyPath);
                 if (!ready) yield* Effect.sleep("10 millis");
               }

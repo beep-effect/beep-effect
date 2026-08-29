@@ -64,6 +64,7 @@ import {
   repoProofStepDefinition,
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
+  retirePublishedPrLeaseReceipt,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
@@ -121,7 +122,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 );
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeLeaseSummary = S.decodeUnknownSync(
-  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Finite }))
+  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Finite, status: S.optionalKey(S.String) }))
 );
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
@@ -492,7 +493,7 @@ esac
           });
           const publish = withEnvVarEffect("PATH", `${bin}:${Bun.env.PATH ?? ""}`, writePublishedPrLease(tempContext));
 
-          yield* publish;
+          const receipt = yield* publish;
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
 
           yield* writeExistingLease("terminal-pr", 700);
@@ -518,9 +519,24 @@ esac
           });
 
           yield* writeExistingLease("abandoned-current-pr", 874);
-          yield* publish;
+          const finalReceipt = yield* publish;
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath)).generationId).not.toBe("abandoned-current-pr");
+
+          const gitPath = path.join(bin, "git");
+          yield* fs.writeFileString(gitPath, "#!/bin/sh\nexit 99\n");
+          yield* fs.writeFileString(ghPath, "#!/bin/sh\nexit 98\n");
+          yield* fs.chmod(gitPath, 0o755);
+          yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            retirePublishedPrLeaseReceipt(tempContext, finalReceipt, "start-pr-early-failed")
+          );
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: finalReceipt.generationId,
+            status: "retired",
+          });
+          expect(receipt.generationId).not.toBe(finalReceipt.generationId);
         })
       )
     ));

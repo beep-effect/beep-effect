@@ -84,7 +84,7 @@ import {
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
-import { retirePublishedPrLease, writePublishedPrLease } from "./PrLease.ts";
+import { retirePublishedPrLease, retirePublishedPrLeaseReceipt, writePublishedPrLease } from "./PrLease.ts";
 import {
   acquireFullProofLock,
   acquireFullProofLockOrObserveAtPath,
@@ -109,7 +109,7 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import { ensurePullRequest, runGhPullRequestView } from "./PullRequest.ts";
+import { ensurePullRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
@@ -574,17 +574,9 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
     recorder,
     A.findFirst(steps, (step) => step.id === "publish:02-pr-create")
   );
-  yield* writePublishedPrLease(context).pipe(
+  return yield* writePublishedPrLease(context).pipe(
     Effect.mapError(YeetCommandError.new("Failed to persist the published-PR ownership lease."))
   );
-});
-
-const retireFailedStartPrEarlyLease = Effect.fn("Yeet.retireFailedStartPrEarlyLease")(function* (
-  context: RepoRunContext
-) {
-  const pullRequest = yield* runGhPullRequestView(context);
-  const headSha = yield* currentCommitSha(context);
-  yield* retirePublishedPrLease(context, pullRequest.number, headSha, "start-pr-early-failed");
 });
 
 const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForReusablePublish")(function* (
@@ -763,9 +755,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         );
       }
 
-      if (options.pr) {
-        yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
-      }
+      const publishedLease = yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
 
       return yield* Effect.gen(function* () {
         yield* runWithFullProofCoordinator(
@@ -788,7 +778,11 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
 
         return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
       }).pipe(
-        Effect.onExit((exit) => (Exit.isFailure(exit) ? retireFailedStartPrEarlyLease(plan.context) : Effect.void))
+        Effect.onExit((exit) =>
+          Exit.isFailure(exit)
+            ? retirePublishedPrLeaseReceipt(plan.context, publishedLease, "start-pr-early-failed")
+            : Effect.void
+        )
       );
     }
 
