@@ -1,0 +1,3981 @@
+diff --git a/apps/marketing/package.json b/apps/marketing/package.json
+index 6e3907c0c0..d5b1e91dc7 100644
+--- a/apps/marketing/package.json
++++ b/apps/marketing/package.json
+@@ -21,7 +21,7 @@
+     "@beep/calendar-ui": "workspace:^",
+     "@beep/comms-client": "workspace:^",
+     "@beep/comms-ui": "workspace:^",
+-    "@beep/customization-client": "workspace:^",
++    "@beep/settings-client": "workspace:^",
+     "@beep/identity": "workspace:^",
+     "@beep/knowledge-client": "workspace:^",
+     "@beep/knowledge-ui": "workspace:^",
+@@ -34,16 +34,16 @@
+     "@beep/shared-domain": "workspace:^",
+     "@beep/calendar-domain": "workspace:^",
+     "@beep/comms-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/knowledge-domain": "workspace:^",
+     "@beep/shared-env": "workspace:^",
+     "@beep/shared-tables": "workspace:^",
+     "@beep/workspaces-domain": "workspace:^",
+-    "@beep/customization-ui": "workspace:^",
++    "@beep/settings-ui": "workspace:^",
+     "@beep/runtime-client": "workspace:^",
+     "@beep/calendar-tables": "workspace:^",
+     "@beep/comms-tables": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@beep/knowledge-tables": "workspace:^",
+     "@beep/workspaces-tables": "workspace:^",
+     "@beep/shared-client": "workspace:^",
+diff --git a/apps/marketing/tsconfig.build.json b/apps/marketing/tsconfig.build.json
+index 32939de521..c0f7699a75 100644
+--- a/apps/marketing/tsconfig.build.json
++++ b/apps/marketing/tsconfig.build.json
+@@ -18,7 +18,7 @@
+       "path": "../../packages/comms/ui/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/client/tsconfig.build.json"
++      "path": "../../packages/settings/client/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/common/invariant/tsconfig.build.json"
+@@ -84,7 +84,7 @@
+       "path": "../../packages/comms/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../packages/settings/domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server/tsconfig.build.json"
+@@ -108,7 +108,7 @@
+       "path": "../../packages/workspaces/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/ui/tsconfig.build.json"
++      "path": "../../packages/settings/ui/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/runtime/client/tsconfig.build.json"
+@@ -120,7 +120,7 @@
+       "path": "../../packages/comms/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../packages/settings/tables/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/tables/tsconfig.build.json"
+@@ -144,7 +144,7 @@
+       "path": "../../packages/comms/server/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/server/tsconfig.build.json"
++      "path": "../../packages/settings/server/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/server/tsconfig.build.json"
+diff --git a/apps/marketing/tsconfig.json b/apps/marketing/tsconfig.json
+index 0ab6044aaa..eae3f3f366 100644
+--- a/apps/marketing/tsconfig.json
++++ b/apps/marketing/tsconfig.json
+@@ -66,32 +66,32 @@
+       "@beep/comms-ui/*": ["../../packages/comms/ui/src/*"],
+       "@beep/constants": ["../../packages/common/constants/src/index"],
+       "@beep/constants/*": ["../../packages/common/constants/src/*"],
+-      "@beep/customization-client": [
+-        "../../packages/customization/client/src/index"
++      "@beep/settings-client": [
++        "../../packages/settings/client/src/index"
+       ],
+-      "@beep/customization-client/*": [
+-        "../../packages/customization/client/src/*"
++      "@beep/settings-client/*": [
++        "../../packages/settings/client/src/*"
+       ],
+-      "@beep/customization-domain": [
+-        "../../packages/customization/domain/src/index"
++      "@beep/settings-domain": [
++        "../../packages/settings/domain/src/index"
+       ],
+-      "@beep/customization-domain/*": [
+-        "../../packages/customization/domain/src/*"
++      "@beep/settings-domain/*": [
++        "../../packages/settings/domain/src/*"
+       ],
+-      "@beep/customization-server": [
+-        "../../packages/customization/server/src/index"
++      "@beep/settings-server": [
++        "../../packages/settings/server/src/index"
+       ],
+-      "@beep/customization-server/*": [
+-        "../../packages/customization/server/src/*"
++      "@beep/settings-server/*": [
++        "../../packages/settings/server/src/*"
+       ],
+-      "@beep/customization-tables": [
+-        "../../packages/customization/tables/src/index"
++      "@beep/settings-tables": [
++        "../../packages/settings/tables/src/index"
+       ],
+-      "@beep/customization-tables/*": [
+-        "../../packages/customization/tables/src/*"
++      "@beep/settings-tables/*": [
++        "../../packages/settings/tables/src/*"
+       ],
+-      "@beep/customization-ui": ["../../packages/customization/ui/src/index"],
+-      "@beep/customization-ui/*": ["../../packages/customization/ui/src/*"],
++      "@beep/settings-ui": ["../../packages/settings/ui/src/index"],
++      "@beep/settings-ui/*": ["../../packages/settings/ui/src/*"],
+       "@beep/errors/client": ["../../packages/common/errors/src/client"],
+       "@beep/errors/server": ["../../packages/common/errors/src/server"],
+       "@beep/errors/shared": ["../../packages/common/errors/src/shared"],
+@@ -237,19 +237,19 @@
+       "path": "../../packages/comms/ui/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/client/tsconfig.build.json"
++      "path": "../../packages/settings/client/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../packages/settings/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/server/tsconfig.build.json"
++      "path": "../../packages/settings/server/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../packages/settings/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/ui/tsconfig.build.json"
++      "path": "../../packages/settings/ui/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/client/tsconfig.build.json"
+diff --git a/apps/marketing/tsconfig.test.json b/apps/marketing/tsconfig.test.json
+index ddbf90408e..921d13ae99 100644
+--- a/apps/marketing/tsconfig.test.json
++++ b/apps/marketing/tsconfig.test.json
+@@ -18,7 +18,7 @@
+       "path": "../../packages/comms/ui"
+     },
+     {
+-      "path": "../../packages/customization/client"
++      "path": "../../packages/settings/client"
+     },
+     {
+       "path": "../../packages/common/invariant"
+@@ -84,7 +84,7 @@
+       "path": "../../packages/comms/domain"
+     },
+     {
+-      "path": "../../packages/customization/domain"
++      "path": "../../packages/settings/domain"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server"
+@@ -108,7 +108,7 @@
+       "path": "../../packages/workspaces/domain"
+     },
+     {
+-      "path": "../../packages/customization/ui"
++      "path": "../../packages/settings/ui"
+     },
+     {
+       "path": "../../packages/runtime/client"
+@@ -120,7 +120,7 @@
+       "path": "../../packages/comms/tables"
+     },
+     {
+-      "path": "../../packages/customization/tables"
++      "path": "../../packages/settings/tables"
+     },
+     {
+       "path": "../../packages/iam/tables"
+@@ -144,7 +144,7 @@
+       "path": "../../packages/comms/server"
+     },
+     {
+-      "path": "../../packages/customization/server"
++      "path": "../../packages/settings/server"
+     },
+     {
+       "path": "../../packages/iam/server"
+diff --git a/apps/server/tsconfig.build.json b/apps/server/tsconfig.build.json
+index 45a10ad2a7..e3624835cf 100644
+--- a/apps/server/tsconfig.build.json
++++ b/apps/server/tsconfig.build.json
+@@ -44,7 +44,7 @@
+       "path": "../../packages/comms/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../packages/settings/domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server/tsconfig.build.json"
+@@ -71,7 +71,7 @@
+       "path": "../../packages/comms/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../packages/settings/tables/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/tables/tsconfig.build.json"
+@@ -86,7 +86,7 @@
+       "path": "../../packages/comms/server/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/server/tsconfig.build.json"
++      "path": "../../packages/settings/server/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/server/tsconfig.build.json"
+diff --git a/apps/server/tsconfig.src.json b/apps/server/tsconfig.src.json
+index b3d16db0e4..aa970bcae7 100644
+--- a/apps/server/tsconfig.src.json
++++ b/apps/server/tsconfig.src.json
+@@ -46,7 +46,7 @@
+       "path": "../../packages/comms/domain"
+     },
+     {
+-      "path": "../../packages/customization/domain"
++      "path": "../../packages/settings/domain"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server"
+@@ -73,7 +73,7 @@
+       "path": "../../packages/comms/tables"
+     },
+     {
+-      "path": "../../packages/customization/tables"
++      "path": "../../packages/settings/tables"
+     },
+     {
+       "path": "../../packages/iam/tables"
+@@ -88,7 +88,7 @@
+       "path": "../../packages/comms/server"
+     },
+     {
+-      "path": "../../packages/customization/server"
++      "path": "../../packages/settings/server"
+     },
+     {
+       "path": "../../packages/iam/server"
+diff --git a/apps/server/tsconfig.test.json b/apps/server/tsconfig.test.json
+index 614578c5a5..4fcfbfce05 100644
+--- a/apps/server/tsconfig.test.json
++++ b/apps/server/tsconfig.test.json
+@@ -48,7 +48,7 @@
+       "path": "../../packages/comms/domain"
+     },
+     {
+-      "path": "../../packages/customization/domain"
++      "path": "../../packages/settings/domain"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server"
+@@ -75,7 +75,7 @@
+       "path": "../../packages/comms/tables"
+     },
+     {
+-      "path": "../../packages/customization/tables"
++      "path": "../../packages/settings/tables"
+     },
+     {
+       "path": "../../packages/iam/tables"
+@@ -90,7 +90,7 @@
+       "path": "../../packages/comms/server"
+     },
+     {
+-      "path": "../../packages/customization/server"
++      "path": "../../packages/settings/server"
+     },
+     {
+       "path": "../../packages/iam/server"
+diff --git a/apps/todox/README.md b/apps/todox/README.md
+index 3b3fc3ac2b..6a7c24fa86 100644
+--- a/apps/todox/README.md
++++ b/apps/todox/README.md
+@@ -5,7 +5,7 @@ Full-featured Next.js 16 application demonstrating Material UI theming, shadcn/u
+ ## Purpose
+ 
+ TodoX is a comprehensive showcase application built with Next.js 16 App Router, featuring:
+-- **Material UI** design system with extensive theme customization and component overrides
++- **Material UI** design system with extensive theme settings and component overrides
+ - **shadcn/ui** component library (49+ components) for accessible UI primitives
+ - **Email Client** feature with inbox, compose, navigation, and mail provider
+ - **Rich Text Editor** powered by TipTap with toolbar, bubble menu, and code highlighting
+@@ -285,7 +285,7 @@ export const themeOverrides = createTheme({
+   colorSchemes: colors,
+   shape: { borderRadius: 8 },
+   components: {
+-    // 18+ component theme customizations:
++    // 18+ component theme settingss:
+     // Button, TextField, Select, Menu, Autocomplete, Chip,
+     // Avatar, Table, Card, Dialog, DatePicker, DataGrid,
+     // Alert, TreeView, Layout, Link, Controls, List
+diff --git a/apps/todox/ai-context.md b/apps/todox/ai-context.md
+index f5a3a51912..096b8776ec 100644
+--- a/apps/todox/ai-context.md
++++ b/apps/todox/ai-context.md
+@@ -109,5 +109,5 @@ features/[feature-name]/
+ ## Related
+ 
+ - **AGENTS.md** - Detailed contributor guidance (comprehensive)
+-- **src/theme/** - MUI theme customization
++- **src/theme/** - MUI theme settings
+ - **src/components/ui/** - shadcn/ui component library
+diff --git a/apps/todox/package.json b/apps/todox/package.json
+index e52d6f22b9..8a04b05c18 100644
+--- a/apps/todox/package.json
++++ b/apps/todox/package.json
+@@ -21,7 +21,7 @@
+     "@beep/calendar-ui": "workspace:^",
+     "@beep/comms-client": "workspace:^",
+     "@beep/comms-ui": "workspace:^",
+-    "@beep/customization-client": "workspace:^",
++    "@beep/settings-client": "workspace:^",
+     "@beep/identity": "workspace:^",
+     "@beep/knowledge-client": "workspace:^",
+     "@beep/knowledge-ui": "workspace:^",
+@@ -34,16 +34,16 @@
+     "@beep/shared-domain": "workspace:^",
+     "@beep/calendar-domain": "workspace:^",
+     "@beep/comms-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/knowledge-domain": "workspace:^",
+     "@beep/shared-env": "workspace:^",
+     "@beep/shared-tables": "workspace:^",
+     "@beep/workspaces-domain": "workspace:^",
+-    "@beep/customization-ui": "workspace:^",
++    "@beep/settings-ui": "workspace:^",
+     "@beep/runtime-client": "workspace:^",
+     "@beep/calendar-tables": "workspace:^",
+     "@beep/comms-tables": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@beep/knowledge-tables": "workspace:^",
+     "@beep/workspaces-tables": "workspace:^",
+     "@beep/shared-client": "workspace:^",
+diff --git a/apps/todox/src/types/extended-theme-types.ts b/apps/todox/src/types/extended-theme-types.ts
+index 3475ec7005..b05e9f7158 100644
+--- a/apps/todox/src/types/extended-theme-types.ts
++++ b/apps/todox/src/types/extended-theme-types.ts
+@@ -39,7 +39,7 @@ import type {} from "@mui/x-tree-view/themeAugmentation";
+  * **********************************************************************/
+ declare module "@mui/material/styles" {
+   /**
+-   * ➤➤ Palette (https://mui.com/customization/palette/)
++   * ➤➤ Palette (https://mui.com/settings/palette/)
+    * @from {@link file://./core/palette.ts}
+    */
+   // primary, secondary, info, success, warning, error
+@@ -69,7 +69,7 @@ declare module "@mui/material/styles" {
+   interface PaletteOptions extends Partial<PaletteExtend> {}
+ 
+   /**
+-   * ➤➤ Typography (https://mui.com/customization/typography/)
++   * ➤➤ Typography (https://mui.com/settings/typography/)
+    * @from {@link file://./core/typography.ts}
+    */
+   interface TypographyVariants extends TypographyVariantsExtend {}
+diff --git a/apps/todox/tsconfig.build.json b/apps/todox/tsconfig.build.json
+index 32939de521..c0f7699a75 100644
+--- a/apps/todox/tsconfig.build.json
++++ b/apps/todox/tsconfig.build.json
+@@ -18,7 +18,7 @@
+       "path": "../../packages/comms/ui/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/client/tsconfig.build.json"
++      "path": "../../packages/settings/client/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/common/invariant/tsconfig.build.json"
+@@ -84,7 +84,7 @@
+       "path": "../../packages/comms/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../packages/settings/domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server/tsconfig.build.json"
+@@ -108,7 +108,7 @@
+       "path": "../../packages/workspaces/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/ui/tsconfig.build.json"
++      "path": "../../packages/settings/ui/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/runtime/client/tsconfig.build.json"
+@@ -120,7 +120,7 @@
+       "path": "../../packages/comms/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../packages/settings/tables/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/tables/tsconfig.build.json"
+@@ -144,7 +144,7 @@
+       "path": "../../packages/comms/server/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/server/tsconfig.build.json"
++      "path": "../../packages/settings/server/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/server/tsconfig.build.json"
+diff --git a/apps/todox/tsconfig.json b/apps/todox/tsconfig.json
+index 872f728249..3550ac5e04 100644
+--- a/apps/todox/tsconfig.json
++++ b/apps/todox/tsconfig.json
+@@ -66,32 +66,32 @@
+       "@beep/comms-ui/*": ["../../packages/comms/ui/src/*"],
+       "@beep/constants": ["../../packages/common/constants/src/index"],
+       "@beep/constants/*": ["../../packages/common/constants/src/*"],
+-      "@beep/customization-client": [
+-        "../../packages/customization/client/src/index"
++      "@beep/settings-client": [
++        "../../packages/settings/client/src/index"
+       ],
+-      "@beep/customization-client/*": [
+-        "../../packages/customization/client/src/*"
++      "@beep/settings-client/*": [
++        "../../packages/settings/client/src/*"
+       ],
+-      "@beep/customization-domain": [
+-        "../../packages/customization/domain/src/index"
++      "@beep/settings-domain": [
++        "../../packages/settings/domain/src/index"
+       ],
+-      "@beep/customization-domain/*": [
+-        "../../packages/customization/domain/src/*"
++      "@beep/settings-domain/*": [
++        "../../packages/settings/domain/src/*"
+       ],
+-      "@beep/customization-server": [
+-        "../../packages/customization/server/src/index"
++      "@beep/settings-server": [
++        "../../packages/settings/server/src/index"
+       ],
+-      "@beep/customization-server/*": [
+-        "../../packages/customization/server/src/*"
++      "@beep/settings-server/*": [
++        "../../packages/settings/server/src/*"
+       ],
+-      "@beep/customization-tables": [
+-        "../../packages/customization/tables/src/index"
++      "@beep/settings-tables": [
++        "../../packages/settings/tables/src/index"
+       ],
+-      "@beep/customization-tables/*": [
+-        "../../packages/customization/tables/src/*"
++      "@beep/settings-tables/*": [
++        "../../packages/settings/tables/src/*"
+       ],
+-      "@beep/customization-ui": ["../../packages/customization/ui/src/index"],
+-      "@beep/customization-ui/*": ["../../packages/customization/ui/src/*"],
++      "@beep/settings-ui": ["../../packages/settings/ui/src/index"],
++      "@beep/settings-ui/*": ["../../packages/settings/ui/src/*"],
+       "@beep/errors/client": ["../../packages/common/errors/src/client"],
+       "@beep/errors/server": ["../../packages/common/errors/src/server"],
+       "@beep/errors/shared": ["../../packages/common/errors/src/shared"],
+@@ -237,19 +237,19 @@
+       "path": "../../packages/comms/ui/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/client/tsconfig.build.json"
++      "path": "../../packages/settings/client/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../packages/settings/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/server/tsconfig.build.json"
++      "path": "../../packages/settings/server/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../packages/settings/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../packages/customization/ui/tsconfig.build.json"
++      "path": "../../packages/settings/ui/tsconfig.build.json"
+     },
+     {
+       "path": "../../packages/iam/client/tsconfig.build.json"
+diff --git a/apps/todox/tsconfig.test.json b/apps/todox/tsconfig.test.json
+index ddbf90408e..921d13ae99 100644
+--- a/apps/todox/tsconfig.test.json
++++ b/apps/todox/tsconfig.test.json
+@@ -18,7 +18,7 @@
+       "path": "../../packages/comms/ui"
+     },
+     {
+-      "path": "../../packages/customization/client"
++      "path": "../../packages/settings/client"
+     },
+     {
+       "path": "../../packages/common/invariant"
+@@ -84,7 +84,7 @@
+       "path": "../../packages/comms/domain"
+     },
+     {
+-      "path": "../../packages/customization/domain"
++      "path": "../../packages/settings/domain"
+     },
+     {
+       "path": "../../packages/integrations/google-workspace/server"
+@@ -108,7 +108,7 @@
+       "path": "../../packages/workspaces/domain"
+     },
+     {
+-      "path": "../../packages/customization/ui"
++      "path": "../../packages/settings/ui"
+     },
+     {
+       "path": "../../packages/runtime/client"
+@@ -120,7 +120,7 @@
+       "path": "../../packages/comms/tables"
+     },
+     {
+-      "path": "../../packages/customization/tables"
++      "path": "../../packages/settings/tables"
+     },
+     {
+       "path": "../../packages/iam/tables"
+@@ -144,7 +144,7 @@
+       "path": "../../packages/comms/server"
+     },
+     {
+-      "path": "../../packages/customization/server"
++      "path": "../../packages/settings/server"
+     },
+     {
+       "path": "../../packages/iam/server"
+diff --git a/bun.lock b/bun.lock
+index f805c587da..e8fe699e11 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -63,10 +63,10 @@
+         "@beep/comms-tables": "workspace:^",
+         "@beep/comms-ui": "workspace:^",
+         "@beep/constants": "workspace:^",
+-        "@beep/customization-client": "workspace:^",
+-        "@beep/customization-domain": "workspace:^",
+-        "@beep/customization-tables": "workspace:^",
+-        "@beep/customization-ui": "workspace:^",
++        "@beep/settings-client": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
++        "@beep/settings-ui": "workspace:^",
+         "@beep/iam-client": "workspace:^",
+         "@beep/iam-ui": "workspace:^",
+         "@beep/identity": "workspace:^",
+@@ -341,10 +341,10 @@
+         "@beep/comms-tables": "workspace:^",
+         "@beep/comms-ui": "workspace:^",
+         "@beep/constants": "workspace:^",
+-        "@beep/customization-client": "workspace:^",
+-        "@beep/customization-domain": "workspace:^",
+-        "@beep/customization-tables": "workspace:^",
+-        "@beep/customization-ui": "workspace:^",
++        "@beep/settings-client": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
++        "@beep/settings-ui": "workspace:^",
+         "@beep/iam-client": "workspace:^",
+         "@beep/iam-ui": "workspace:^",
+         "@beep/identity": "workspace:^",
+@@ -562,7 +562,7 @@
+       "name": "@beep/db-admin",
+       "version": "0.0.0",
+       "dependencies": {
+-        "@beep/customization-tables": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
+         "@beep/iam-domain": "workspace:^",
+         "@beep/iam-server": "workspace:^",
+         "@beep/iam-tables": "workspace:^",
+@@ -983,7 +983,7 @@
+       },
+     },
+     "packages/customization/client": {
+-      "name": "@beep/customization-client",
++      "name": "@beep/settings-client",
+       "version": "0.0.0",
+       "devDependencies": {
+         "@babel/preset-react": "catalog:",
+@@ -997,7 +997,7 @@
+       },
+     },
+     "packages/customization/domain": {
+-      "name": "@beep/customization-domain",
++      "name": "@beep/settings-domain",
+       "version": "0.0.0",
+       "devDependencies": {
+         "@beep/shared-domain": "workspace:^",
+@@ -1013,11 +1013,11 @@
+       },
+     },
+     "packages/customization/server": {
+-      "name": "@beep/customization-server",
++      "name": "@beep/settings-server",
+       "version": "0.0.0",
+       "devDependencies": {
+-        "@beep/customization-domain": "workspace:^",
+-        "@beep/customization-tables": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
+         "@beep/shared-domain": "workspace:^",
+         "@beep/shared-server": "workspace:^",
+         "@effect-aws/client-s3": "catalog:",
+@@ -1038,8 +1038,8 @@
+         "pdf-lib": "catalog:",
+       },
+       "peerDependencies": {
+-        "@beep/customization-domain": "workspace:^",
+-        "@beep/customization-tables": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
+         "@beep/shared-domain": "workspace:^",
+         "@beep/shared-server": "workspace:^",
+         "@effect-aws/client-s3": "catalog:",
+@@ -1059,10 +1059,10 @@
+       },
+     },
+     "packages/customization/tables": {
+-      "name": "@beep/customization-tables",
++      "name": "@beep/settings-tables",
+       "version": "0.0.0",
+       "devDependencies": {
+-        "@beep/customization-domain": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
+         "@beep/shared-domain": "workspace:^",
+         "@beep/shared-tables": "workspace:^",
+         "@effect/docgen": "catalog:",
+@@ -1070,27 +1070,27 @@
+         "drizzle-orm": "catalog:",
+       },
+       "peerDependencies": {
+-        "@beep/customization-domain": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
+         "@beep/shared-domain": "workspace:^",
+         "@beep/shared-tables": "workspace:^",
+         "drizzle-orm": "catalog:",
+       },
+     },
+     "packages/customization/ui": {
+-      "name": "@beep/customization-ui",
++      "name": "@beep/settings-ui",
+       "version": "0.0.0",
+       "devDependencies": {
+         "@babel/preset-react": "catalog:",
+-        "@beep/customization-client": "workspace:^",
+-        "@beep/customization-domain": "workspace:^",
++        "@beep/settings-client": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
+         "@effect/docgen": "catalog:",
+         "@total-typescript/ts-reset": "catalog:",
+         "babel-plugin-transform-next-use-client": "catalog:",
+         "effect": "catalog:",
+       },
+       "peerDependencies": {
+-        "@beep/customization-client": "workspace:^",
+-        "@beep/customization-domain": "workspace:^",
++        "@beep/settings-client": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
+         "effect": "catalog:",
+       },
+     },
+@@ -1664,9 +1664,9 @@
+         "@beep/comms-server": "workspace:^",
+         "@beep/comms-tables": "workspace:^",
+         "@beep/constants": "workspace:^",
+-        "@beep/customization-domain": "workspace:^",
+-        "@beep/customization-server": "workspace:^",
+-        "@beep/customization-tables": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
++        "@beep/settings-server": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
+         "@beep/errors": "workspace:^",
+         "@beep/google-workspace-client": "workspace:^",
+         "@beep/google-workspace-domain": "workspace:^",
+@@ -1731,9 +1731,9 @@
+         "@beep/comms-server": "workspace:^",
+         "@beep/comms-tables": "workspace:^",
+         "@beep/constants": "workspace:^",
+-        "@beep/customization-domain": "workspace:^",
+-        "@beep/customization-server": "workspace:^",
+-        "@beep/customization-tables": "workspace:^",
++        "@beep/settings-domain": "workspace:^",
++        "@beep/settings-server": "workspace:^",
++        "@beep/settings-tables": "workspace:^",
+         "@beep/errors": "workspace:^",
+         "@beep/google-workspace-client": "workspace:^",
+         "@beep/google-workspace-domain": "workspace:^",
+@@ -3511,15 +3511,15 @@
+ 
+     "@beep/constants": ["@beep/constants@workspace:packages/common/constants"],
+ 
+-    "@beep/customization-client": ["@beep/customization-client@workspace:packages/customization/client"],
++    "@beep/settings-client": ["@beep/settings-client@workspace:packages/customization/client"],
+ 
+-    "@beep/customization-domain": ["@beep/customization-domain@workspace:packages/customization/domain"],
++    "@beep/settings-domain": ["@beep/settings-domain@workspace:packages/customization/domain"],
+ 
+-    "@beep/customization-server": ["@beep/customization-server@workspace:packages/customization/server"],
++    "@beep/settings-server": ["@beep/settings-server@workspace:packages/customization/server"],
+ 
+-    "@beep/customization-tables": ["@beep/customization-tables@workspace:packages/customization/tables"],
++    "@beep/settings-tables": ["@beep/settings-tables@workspace:packages/customization/tables"],
+ 
+-    "@beep/customization-ui": ["@beep/customization-ui@workspace:packages/customization/ui"],
++    "@beep/settings-ui": ["@beep/settings-ui@workspace:packages/customization/ui"],
+ 
+     "@beep/db-admin": ["@beep/db-admin@workspace:packages/_internal/db-admin"],
+ 
+diff --git a/package.json b/package.json
+index 2815a56815..2876842a72 100644
+--- a/package.json
++++ b/package.json
+@@ -10,7 +10,7 @@
+     "packages/_internal/*",
+     "packages/runtime/*",
+     "packages/shared/*",
+-    "packages/customization/*",
++    "packages/settings/*",
+     "packages/ui/*",
+     "apps/*",
+     "tooling/*",
+diff --git a/packages/_internal/db-admin/README.md b/packages/_internal/db-admin/README.md
+index b837c7f8eb..bcbc712dad 100644
+--- a/packages/_internal/db-admin/README.md
++++ b/packages/_internal/db-admin/README.md
+@@ -116,7 +116,7 @@ The schema barrel (`src/schema.ts`) re-exports tables and relations in this orde
+ 
+ **Tables exported:**
+ 1. All tables from `@beep/comms-tables/tables`
+-2. All tables from `@beep/customization-tables/tables`
++2. All tables from `@beep/settings-tables/tables`
+ 3. All tables from `@beep/documents-tables/tables`
+ 4. All tables from `@beep/iam-tables/tables`
+ 5. All tables from `@beep/shared-tables/tables`
+@@ -124,7 +124,7 @@ The schema barrel (`src/schema.ts`) re-exports tables and relations in this orde
+ **Relations exported:**
+ 1. Unified relations from `./relations.ts` (user, organization, team)
+ 2. Slice-specific relations from `@beep/comms-tables/relations` (currently empty export)
+-3. Slice-specific relations from `@beep/customization-tables/relations`: `userHotkeyRelations`
++3. Slice-specific relations from `@beep/settings-tables/relations`: `userHotkeyRelations`
+ 4. Slice-specific relations from `@beep/documents-tables/relations`: `commentRelations`, `discussionRelations`, `documentFileRelations`, `documentRelations`, `documentVersionRelations`
+ 5. Slice-specific relations from `@beep/iam-tables/relations`: `accountRelations`, `apiKeyRelations`, `deviceCodeRelations`, `invitationRelations`, `memberRelations`, `oauthAccessTokenRelations`, `oauthApplicationRelations`, `oauthConsentRelations`, `organizationRoleRelations`, `passkeyRelations`, `scimProviderRelations`, `sessionRelations`, `ssoProviderRelations`, `subscriptionRelations`, `teamMemberRelations`, `twoFactorRelations`, `walletAddressRelations`
+ 
+@@ -269,7 +269,7 @@ email.toLowerCase();
+ | `@beep/iam-tables` | Imports IAM slice Drizzle schemas and relations |
+ | `@beep/documents-tables` | Imports Documents slice Drizzle schemas and relations |
+ | `@beep/comms-tables` | Imports Comms slice Drizzle schemas and relations |
+-| `@beep/customization-tables` | Imports Customization slice Drizzle schemas and relations |
++| `@beep/settings-tables` | Imports Customization slice Drizzle schemas and relations |
+ | `@beep/shared-server` | Uses `DbClient.make` factory to create AdminDb service |
+ | `@beep/iam-server` | Test layer composes IamDb and IamRepos |
+ | `@beep/documents-server` | Test layer composes DocumentsDb and DocumentsRepos |
+diff --git a/packages/_internal/db-admin/ai-context.md b/packages/_internal/db-admin/ai-context.md
+index 19bf72709b..39fa458ac2 100644
+--- a/packages/_internal/db-admin/ai-context.md
++++ b/packages/_internal/db-admin/ai-context.md
+@@ -96,7 +96,7 @@ layer(PgTest.Live, { timeout: Duration.seconds(60) })("repo tests", (it) => {
+ 
+ ## Dependencies
+ 
+-**Internal**: `@beep/shared-server`, `@beep/shared-tables`, `@beep/iam-tables`, `@beep/documents-tables`, `@beep/calendar-tables`, `@beep/comms-tables`, `@beep/customization-tables`, `@beep/knowledge-tables`, `@beep/iam-server`, `@beep/documents-server`
++**Internal**: `@beep/shared-server`, `@beep/shared-tables`, `@beep/iam-tables`, `@beep/documents-tables`, `@beep/calendar-tables`, `@beep/comms-tables`, `@beep/settings-tables`, `@beep/knowledge-tables`, `@beep/iam-server`, `@beep/documents-server`
+ 
+ **External**: `drizzle-orm`, `drizzle-kit`, `@effect/sql-pg`, `@effect/sql-drizzle`, `@testcontainers/postgresql`
+ 
+diff --git a/packages/_internal/db-admin/package.json b/packages/_internal/db-admin/package.json
+index 56ec83858b..b61afdfae4 100644
+--- a/packages/_internal/db-admin/package.json
++++ b/packages/_internal/db-admin/package.json
+@@ -45,7 +45,7 @@
+     "@beep/shared-server": "workspace:^",
+     "@beep/shared-tables": "workspace:^",
+     "@beep/workspaces-domain": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@beep/iam-tables": "workspace:^",
+     "@beep/workspaces-tables": "workspace:^",
+     "@beep/iam-server": "workspace:^",
+diff --git a/packages/_internal/db-admin/src/slice-relations.ts b/packages/_internal/db-admin/src/slice-relations.ts
+index 258dba4f1d..3f7b927210 100644
+--- a/packages/_internal/db-admin/src/slice-relations.ts
++++ b/packages/_internal/db-admin/src/slice-relations.ts
+@@ -1,7 +1,7 @@
+ /* Calendar */
+ export { calendarEventRelations } from "@beep/calendar-tables/relations";
+ export {} from "@beep/comms-tables/relations";
+-export { userHotkeyRelations } from "@beep/customization-tables/relations";
++export { userHotkeyRelations } from "@beep/settings-tables/relations";
+ /* Iam */
+ export {
+   accountRelations,
+diff --git a/packages/_internal/db-admin/src/tables.ts b/packages/_internal/db-admin/src/tables.ts
+index d6696520c9..eeed10fc0b 100644
+--- a/packages/_internal/db-admin/src/tables.ts
++++ b/packages/_internal/db-admin/src/tables.ts
+@@ -1,6 +1,6 @@
+ export * from "@beep/calendar-tables/tables";
+ export * from "@beep/comms-tables/tables";
+-export * from "@beep/customization-tables/tables";
++export * from "@beep/settings-tables/tables";
+ export * from "@beep/iam-tables/tables";
+ export * from "@beep/knowledge-tables/tables";
+ export * from "@beep/shared-tables/tables";
+diff --git a/packages/_internal/db-admin/tsconfig.build.json b/packages/_internal/db-admin/tsconfig.build.json
+index b612ea70a4..9ddeb5a99d 100644
+--- a/packages/_internal/db-admin/tsconfig.build.json
++++ b/packages/_internal/db-admin/tsconfig.build.json
+@@ -41,7 +41,7 @@
+       "path": "../../../packages/shared/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../settings/domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/iam/domain/tsconfig.build.json"
+@@ -59,7 +59,7 @@
+       "path": "../../../packages/workspaces/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../settings/tables/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/iam/tables/tsconfig.build.json"
+diff --git a/packages/_internal/db-admin/tsconfig.drizzle.json b/packages/_internal/db-admin/tsconfig.drizzle.json
+index a8b5598772..22667f9ffe 100644
+--- a/packages/_internal/db-admin/tsconfig.drizzle.json
++++ b/packages/_internal/db-admin/tsconfig.drizzle.json
+@@ -33,7 +33,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../../settings/domain"
+     },
+     {
+       "path": "../../../packages/workspaces/domain"
+@@ -51,7 +51,7 @@
+       "path": "../../../packages/shared/tables"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../../settings/tables"
+     },
+     {
+       "path": "../../../packages/workspaces/tables"
+diff --git a/packages/_internal/db-admin/tsconfig.src.json b/packages/_internal/db-admin/tsconfig.src.json
+index 15f504cc02..2ef8366ceb 100644
+--- a/packages/_internal/db-admin/tsconfig.src.json
++++ b/packages/_internal/db-admin/tsconfig.src.json
+@@ -34,7 +34,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../../settings/domain"
+     },
+     {
+       "path": "../../../packages/iam/domain"
+@@ -52,7 +52,7 @@
+       "path": "../../../packages/workspaces/domain"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../../settings/tables"
+     },
+     {
+       "path": "../../../packages/iam/tables"
+diff --git a/packages/_internal/db-admin/tsconfig.test.json b/packages/_internal/db-admin/tsconfig.test.json
+index 3f7c83ea7e..2d46786294 100644
+--- a/packages/_internal/db-admin/tsconfig.test.json
++++ b/packages/_internal/db-admin/tsconfig.test.json
+@@ -36,7 +36,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../../settings/domain"
+     },
+     {
+       "path": "../../../packages/iam/domain"
+@@ -54,7 +54,7 @@
+       "path": "../../../packages/workspaces/domain"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../../settings/tables"
+     },
+     {
+       "path": "../../../packages/iam/tables"
+diff --git a/packages/common/identity/src/packages.ts b/packages/common/identity/src/packages.ts
+index fde6b57f91..746a211ee9 100644
+--- a/packages/common/identity/src/packages.ts
++++ b/packages/common/identity/src/packages.ts
+@@ -60,11 +60,11 @@ const composers = $I.compose(
+   "shared-domain",
+   "db-admin",
+   "iam-tables",
+-  "customization-domain",
+-  "customization-tables",
+-  "customization-server",
+-  "customization-client",
+-  "customization-ui",
++  "settings-domain",
++  "settings-tables",
++  "settings-server",
++  "settings-client",
++  "settings-ui",
+   "comms-domain",
+   "comms-tables",
+   "comms-server",
+@@ -581,7 +581,7 @@ export const $ServerId = composers.$ServerId;
+ export const $IamTablesId = composers.$IamTablesId;
+ 
+ /**
+- * Identity composer for the `@beep/customization-domain` namespace.
++ * Identity composer for the `@beep/settings-domain` namespace.
+  *
+  * @example
+  * ```typescript
+@@ -596,7 +596,7 @@ export const $IamTablesId = composers.$IamTablesId;
+ export const $CustomizationDomainId = composers.$CustomizationDomainId;
+ 
+ /**
+- * Identity composer for the `@beep/customization-client` namespace.
++ * Identity composer for the `@beep/settings-client` namespace.
+  *
+  * @example
+  * ```typescript
+@@ -611,7 +611,7 @@ export const $CustomizationDomainId = composers.$CustomizationDomainId;
+ export const $CustomizationClientId = composers.$CustomizationClientId;
+ 
+ /**
+- * Identity composer for the `@beep/customization-server` namespace.
++ * Identity composer for the `@beep/settings-server` namespace.
+  *
+  * @example
+  * ```typescript
+@@ -626,7 +626,7 @@ export const $CustomizationClientId = composers.$CustomizationClientId;
+ export const $CustomizationServerId = composers.$CustomizationServerId;
+ 
+ /**
+- * Identity composer for the `@beep/customization-tables` namespace.
++ * Identity composer for the `@beep/settings-tables` namespace.
+  *
+  * @example
+  * ```typescript
+@@ -641,7 +641,7 @@ export const $CustomizationServerId = composers.$CustomizationServerId;
+ export const $CustomizationTablesId = composers.$CustomizationTablesId;
+ 
+ /**
+- * Identity composer for the `@beep/customization-ui` namespace.
++ * Identity composer for the `@beep/settings-ui` namespace.
+  *
+  * @example
+  * ```typescript
+diff --git a/packages/customization/server/src/db/Db/index.ts b/packages/customization/server/src/db/Db/index.ts
+deleted file mode 100644
+index 10852f1ffe..0000000000
+--- a/packages/customization/server/src/db/Db/index.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-export * as CustomizationDb from "./Db";
+diff --git a/packages/customization/server/src/db/index.ts b/packages/customization/server/src/db/index.ts
+deleted file mode 100644
+index cc1f2c2b8f..0000000000
+--- a/packages/customization/server/src/db/index.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-export * from "./Db";
+-export * as CustomizationRepos from "./repositories";
+diff --git a/packages/iam/ui/src/types/extended-theme-types.ts b/packages/iam/ui/src/types/extended-theme-types.ts
+index 3475ec7005..b05e9f7158 100644
+--- a/packages/iam/ui/src/types/extended-theme-types.ts
++++ b/packages/iam/ui/src/types/extended-theme-types.ts
+@@ -39,7 +39,7 @@ import type {} from "@mui/x-tree-view/themeAugmentation";
+  * **********************************************************************/
+ declare module "@mui/material/styles" {
+   /**
+-   * ➤➤ Palette (https://mui.com/customization/palette/)
++   * ➤➤ Palette (https://mui.com/settings/palette/)
+    * @from {@link file://./core/palette.ts}
+    */
+   // primary, secondary, info, success, warning, error
+@@ -69,7 +69,7 @@ declare module "@mui/material/styles" {
+   interface PaletteOptions extends Partial<PaletteExtend> {}
+ 
+   /**
+-   * ➤➤ Typography (https://mui.com/customization/typography/)
++   * ➤➤ Typography (https://mui.com/settings/typography/)
+    * @from {@link file://./core/typography.ts}
+    */
+   interface TypographyVariants extends TypographyVariantsExtend {}
+diff --git a/packages/runtime/server/AGENTS.md b/packages/runtime/server/AGENTS.md
+index 9e0d1e0145..028c1dafea 100644
+--- a/packages/runtime/server/AGENTS.md
++++ b/packages/runtime/server/AGENTS.md
+@@ -37,7 +37,7 @@ The runtime acts as the shared foundation for server-side hosts (Next.js API rou
+ | `@beep/shared-env` | Typed environment variable access (serverEnv) |
+ | `@beep/iam-server` | IAM authentication, authorization, and user management |
+ | `@beep/documents-server` | Document repositories and services |
+-| `@beep/customization-server` | Customization slice repositories |
++| `@beep/settings-server` | Customization slice repositories |
+ | `@beep/comms-server` | Communications slice repositories |
+ | `@effect/platform` | HTTP server abstractions |
+ | `@effect/platform-bun` | Bun-specific HTTP server runtime |
+diff --git a/packages/runtime/server/ai-context.md b/packages/runtime/server/ai-context.md
+index 6c9b684a6e..dc9a3ebdfd 100644
+--- a/packages/runtime/server/ai-context.md
++++ b/packages/runtime/server/ai-context.md
+@@ -135,7 +135,7 @@ BunRuntime.runMain(Layer.launch(Server.layer));
+ 
+ ## Dependencies
+ 
+-**Internal**: `@beep/shared-server`, `@beep/shared-env`, `@beep/iam-server`, `@beep/documents-server`, `@beep/customization-server`, `@beep/comms-server`, `@beep/calendar-server`, `@beep/knowledge-server`
++**Internal**: `@beep/shared-server`, `@beep/shared-env`, `@beep/iam-server`, `@beep/documents-server`, `@beep/settings-server`, `@beep/comms-server`, `@beep/calendar-server`, `@beep/knowledge-server`
+ 
+ **External**: `effect`, `@effect/platform`, `@effect/platform-bun`, `@effect/opentelemetry`, `@effect/sql-pg`, `better-auth`
+ 
+diff --git a/packages/runtime/server/docgen.json b/packages/runtime/server/docgen.json
+index caa83d8af8..733f61255a 100644
+--- a/packages/runtime/server/docgen.json
++++ b/packages/runtime/server/docgen.json
+@@ -36,8 +36,8 @@
+       "@beep/iam-server/*": ["../../iam/server/src/*.js"],
+       "@beep/workspaces-server": ["../../workspaces/server/src/index.js"],
+       "@beep/workspaces-server/*": ["../../workspaces/server/src/*.js"],
+-      "@beep/customization-server": ["../../customization/server/src/index.js"],
+-      "@beep/customization-server/*": ["../../customization/server/src/*.js"]
++      "@beep/settings-server": ["../../customization/server/src/index.js"],
++      "@beep/settings-server/*": ["../../customization/server/src/*.js"]
+     }
+   }
+ }
+diff --git a/packages/runtime/server/package.json b/packages/runtime/server/package.json
+index 5fbbc4b226..b347c740ee 100644
+--- a/packages/runtime/server/package.json
++++ b/packages/runtime/server/package.json
+@@ -47,7 +47,7 @@
+     "@beep/shared-domain": "workspace:^",
+     "@beep/calendar-domain": "workspace:^",
+     "@beep/comms-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/google-workspace-server": "workspace:^",
+     "@beep/iam-domain": "workspace:^",
+     "@beep/knowledge-domain": "workspace:^",
+@@ -56,12 +56,12 @@
+     "@beep/shared-tables": "workspace:^",
+     "@beep/calendar-tables": "workspace:^",
+     "@beep/comms-tables": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@beep/iam-tables": "workspace:^",
+     "@beep/knowledge-tables": "workspace:^",
+     "@beep/calendar-server": "workspace:^",
+     "@beep/comms-server": "workspace:^",
+-    "@beep/customization-server": "workspace:^",
++    "@beep/settings-server": "workspace:^",
+     "@beep/iam-server": "workspace:^",
+     "@beep/knowledge-server": "workspace:^",
+     "@better-auth/core": "catalog:",
+@@ -112,7 +112,7 @@
+     "@beep/shared-domain": "workspace:^",
+     "@beep/calendar-domain": "workspace:^",
+     "@beep/comms-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/google-workspace-server": "workspace:^",
+     "@beep/iam-domain": "workspace:^",
+     "@beep/knowledge-domain": "workspace:^",
+@@ -121,12 +121,12 @@
+     "@beep/shared-tables": "workspace:^",
+     "@beep/calendar-tables": "workspace:^",
+     "@beep/comms-tables": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@beep/iam-tables": "workspace:^",
+     "@beep/knowledge-tables": "workspace:^",
+     "@beep/calendar-server": "workspace:^",
+     "@beep/comms-server": "workspace:^",
+-    "@beep/customization-server": "workspace:^",
++    "@beep/settings-server": "workspace:^",
+     "@beep/iam-server": "workspace:^",
+     "@beep/knowledge-server": "workspace:^",
+     "@better-auth/core": "catalog:",
+diff --git a/packages/runtime/server/src/DataAccess.layer.ts b/packages/runtime/server/src/DataAccess.layer.ts
+index eaeab1581c..d40bf34d18 100644
+--- a/packages/runtime/server/src/DataAccess.layer.ts
++++ b/packages/runtime/server/src/DataAccess.layer.ts
+@@ -1,6 +1,6 @@
+ import { CalendarRepos } from "@beep/calendar-server";
+ import { CommsRepos } from "@beep/comms-server";
+-import { CustomizationRepos } from "@beep/customization-server";
++import { CustomizationRepos } from "@beep/settings-server";
+ import { IamRepos } from "@beep/iam-server";
+ import { KnowledgeRepos } from "@beep/knowledge-server/db";
+ import { SharedRepos } from "@beep/shared-server";
+diff --git a/packages/runtime/server/src/Persistence.layer.ts b/packages/runtime/server/src/Persistence.layer.ts
+index 25c31c9b1f..af5b4dd0ea 100644
+--- a/packages/runtime/server/src/Persistence.layer.ts
++++ b/packages/runtime/server/src/Persistence.layer.ts
+@@ -1,6 +1,6 @@
+ import { CalendarDb } from "@beep/calendar-server/db";
+ import { CommsDb } from "@beep/comms-server/db";
+-import { CustomizationDb } from "@beep/customization-server/db";
++import { CustomizationDb } from "@beep/settings-server/db";
+ import { IamDb } from "@beep/iam-server/db";
+ import { KnowledgeDb } from "@beep/knowledge-server/db";
+ import { DbClient } from "@beep/shared-server";
+diff --git a/packages/runtime/server/tsconfig.build.json b/packages/runtime/server/tsconfig.build.json
+index 286d43103d..1dde4e9285 100644
+--- a/packages/runtime/server/tsconfig.build.json
++++ b/packages/runtime/server/tsconfig.build.json
+@@ -54,7 +54,7 @@
+       "path": "../../../packages/comms/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/domain/tsconfig.build.json"
++      "path": "../../settings/domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/integrations/google-workspace/server/tsconfig.build.json"
+@@ -81,7 +81,7 @@
+       "path": "../../../packages/comms/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/tables/tsconfig.build.json"
++      "path": "../../settings/tables/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/iam/tables/tsconfig.build.json"
+@@ -96,7 +96,7 @@
+       "path": "../../../packages/comms/server/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/server/tsconfig.build.json"
++      "path": "../../settings/server/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/iam/server/tsconfig.build.json"
+diff --git a/packages/runtime/server/tsconfig.src.json b/packages/runtime/server/tsconfig.src.json
+index 19f47b469f..6487e62901 100644
+--- a/packages/runtime/server/tsconfig.src.json
++++ b/packages/runtime/server/tsconfig.src.json
+@@ -46,7 +46,7 @@
+       "path": "../../../packages/comms/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../../settings/domain"
+     },
+     {
+       "path": "../../../packages/integrations/google-workspace/server"
+@@ -73,7 +73,7 @@
+       "path": "../../../packages/comms/tables"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../../settings/tables"
+     },
+     {
+       "path": "../../../packages/iam/tables"
+@@ -88,7 +88,7 @@
+       "path": "../../../packages/comms/server"
+     },
+     {
+-      "path": "../../../packages/customization/server"
++      "path": "../../settings/server"
+     },
+     {
+       "path": "../../../packages/iam/server"
+diff --git a/packages/runtime/server/tsconfig.test.json b/packages/runtime/server/tsconfig.test.json
+index 48f653f7b5..0a5ccd78bf 100644
+--- a/packages/runtime/server/tsconfig.test.json
++++ b/packages/runtime/server/tsconfig.test.json
+@@ -48,7 +48,7 @@
+       "path": "../../../packages/comms/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../../settings/domain"
+     },
+     {
+       "path": "../../../packages/integrations/google-workspace/server"
+@@ -75,7 +75,7 @@
+       "path": "../../../packages/comms/tables"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../../settings/tables"
+     },
+     {
+       "path": "../../../packages/iam/tables"
+@@ -90,7 +90,7 @@
+       "path": "../../../packages/comms/server"
+     },
+     {
+-      "path": "../../../packages/customization/server"
++      "path": "../../settings/server"
+     },
+     {
+       "path": "../../../packages/iam/server"
+diff --git a/packages/customization/client/AGENTS.md b/packages/settings/client/AGENTS.md
+similarity index 62%
+rename from packages/customization/client/AGENTS.md
+rename to packages/settings/client/AGENTS.md
+index b15484d4dc..ca7fadfd94 100644
+--- a/packages/customization/client/AGENTS.md
++++ b/packages/settings/client/AGENTS.md
+@@ -1,22 +1,22 @@
+-# @beep/customization-client
++# @beep/settings-client
+ 
+-Effect-based client contracts for the Customization slice.
++Effect-based client contracts for the Settings slice.
+ 
+ ## Overview
+ 
+-Provides the client-side API surface for customization operations. This package:
+-- Defines RPC contracts for user preferences, themes, and hotkey customization
++Provides the client-side API surface for settings operations. This package:
++- Defines RPC contracts for user preferences, themes, and hotkey settings
+ - Exports typed client handlers consumed by product Next.js apps (e.g. `@beep/todox`) and other frontend apps
+-- Sits in the `customization/client` layer of the vertical slice architecture
+-- Currently a minimal scaffold awaiting contract definitions as the customization feature matures
++- Sits in the `settings/client` layer of the vertical slice architecture
++- Currently a minimal scaffold awaiting contract definitions as the settings feature matures
+ 
+-**Location**: `packages/customization/client/`
++**Location**: `packages/settings/client/`
+ 
+ ## Package Metadata
+ 
+ | Property | Value |
+ |----------|-------|
+-| Package Name | `@beep/customization-client` |
++| Package Name | `@beep/settings-client` |
+ | Type | `module` (ESM) |
+ | Status | Awaiting Implementation |
+ | Exports | `src/index.ts`, `src/*.ts` |
+@@ -26,8 +26,8 @@ Provides the client-side API surface for customization operations. This package:
+ > **Status**: Implementation pending
+ 
+ **Planned Exports:**
+-- `CustomizationContracts` — RPC contract definitions for customization operations
+-- `CustomizationHandlers` — Client-side handlers for theme/preference updates
++- `SettingsContracts` — RPC contract definitions for settings operations
++- `SettingsHandlers` — Client-side handlers for theme/preference updates
+ - `HotkeyContracts` — Contracts for user hotkey management
+ 
+ ## Dependencies
+@@ -35,17 +35,17 @@ Provides the client-side API surface for customization operations. This package:
+ | Package | Purpose | Location |
+ |---------|---------|----------|
+ | `effect` | Core Effect runtime | Peer dependency |
+-| `@beep/customization-domain` | Domain entities and value objects | `packages/customization/domain/` |
++| `@beep/settings-domain` | Domain entities and value objects | `packages/settings/domain/` |
+ 
+ **Note**:
+-- This package does NOT have direct runtime dependencies on `@beep/customization-server` — communication happens via RPC contracts.
++- This package does NOT have direct runtime dependencies on `@beep/settings-server` — communication happens via RPC contracts.
+ - Runtime dependencies like `@beep/shared-client` will be added as the implementation progresses.
+ 
+ ## Architecture Context
+ 
+ ### Slice Structure
+ 
+-The customization slice follows this dependency order:
++The settings slice follows this dependency order:
+ ```
+ domain -> tables -> server -> client -> ui
+                        ↓
+@@ -54,8 +54,8 @@ domain -> tables -> server -> client -> ui
+ 
+ ### Cross-Package Relationships
+ 
+-- **Consumed by**: `@beep/customization-ui`
+-- **Communicates with**: `@beep/customization-server` (via RPC contracts)
++- **Consumed by**: `@beep/settings-ui`
++- **Communicates with**: `@beep/settings-server` (via RPC contracts)
+ 
+ ## Usage Patterns
+ 
+@@ -64,10 +64,10 @@ domain -> tables -> server -> client -> ui
+ 
+ ```typescript
+ import * as Layer from "effect/Layer";
+-import { CustomizationClientLive } from "@beep/customization-client";
++import { SettingsClientLive } from "@beep/settings-client";
+ import { HttpClientLive } from "@beep/shared-client";
+ 
+-const AppLayer = Layer.provide(CustomizationClientLive, HttpClientLive);
++const AppLayer = Layer.provide(SettingsClientLive, HttpClientLive);
+ ```
+ 
+ ## Authoring Guardrails
+@@ -82,17 +82,17 @@ const AppLayer = Layer.provide(CustomizationClientLive, HttpClientLive);
+ 
+ ```bash
+ # Run all tests
+-bun run test --filter=@beep/customization-client
++bun run test --filter=@beep/settings-client
+ 
+ # Run with coverage
+-bun run coverage --filter=@beep/customization-client
++bun run coverage --filter=@beep/settings-client
+ 
+ # Type checking
+-bun run check --filter @beep/customization-client
++bun run check --filter @beep/settings-client
+ 
+ # Linting
+-bun run lint --filter @beep/customization-client
+-bun run lint:fix --filter @beep/customization-client
++bun run lint --filter @beep/settings-client
++bun run lint:fix --filter @beep/settings-client
+ ```
+ 
+ **Testing Guidelines:**
+@@ -104,44 +104,44 @@ bun run lint:fix --filter @beep/customization-client
+ ## Common Patterns & Gotchas
+ 
+ ### Settings Schema Must Match UI-Core
+-**Symptom**: Customization changes don't apply; theme resets to defaults; console errors about unknown settings fields.
++**Symptom**: Settings changes don't apply; theme resets to defaults; console errors about unknown settings fields.
+ 
+ **Root Cause**: Customization contracts define settings fields that don't align with `@beep/ui-core` SettingsState schema.
+ 
+-**Solution**: Customization schemas MUST import settings types from `@beep/ui-core` directly. When adding new customization options, update BOTH the contract schema AND the ui-core settings schema simultaneously.
++**Solution**: Customization schemas MUST import settings types from `@beep/ui-core` directly. When adding new settings options, update BOTH the contract schema AND the ui-core settings schema simultaneously.
+ 
+ ### Server-Side vs Client-Side Customization Application
+ **Symptom**: Customizations apply on page reload but not immediately; SSR shows default theme.
+ 
+ **Root Cause**: Customization data fetched client-side arrives after initial render.
+ 
+-**Solution**: For SSR-compatible customization, fetch settings server-side and pass through initial props. Use `@beep/ui-core` settings provider that accepts initial state. Document which customizations are SSR-safe.
++**Solution**: For SSR-compatible settings, fetch settings server-side and pass through initial props. Use `@beep/ui-core` settings provider that accepts initial state. Document which settingss are SSR-safe.
+ 
+ ### Contract Response Caching and Stale Settings
+-**Symptom**: User changes customization but sees old settings after navigating away and back.
++**Symptom**: User changes settings but sees old settings after navigating away and back.
+ 
+-**Root Cause**: TanStack Query caches contract responses; stale cache serves old customization data.
++**Root Cause**: TanStack Query caches contract responses; stale cache serves old settings data.
+ 
+ **Solution**: Customization mutation contracts MUST invalidate relevant query caches on success. Use `queryClient.invalidateQueries` with appropriate keys. Consider optimistic updates for immediate feedback.
+ 
+ ### Tenant-Scoped vs User-Scoped Customization
+-**Symptom**: User's personal customizations override org-wide branding; or vice versa.
++**Symptom**: User's personal settingss override org-wide branding; or vice versa.
+ 
+ **Root Cause**: Customization contracts don't clearly separate tenant-level and user-level settings.
+ 
+-**Solution**: Define separate contracts for tenant customization and user preferences. Document merge precedence (typically: tenant defaults < user overrides). Contracts should explicitly include scope identifiers.
++**Solution**: Define separate contracts for tenant settings and user preferences. Document merge precedence (typically: tenant defaults < user overrides). Contracts should explicitly include scope identifiers.
+ 
+ ### Color Preset Validation
+ **Symptom**: Custom theme colors cause accessibility issues or render as invalid CSS.
+ 
+ **Root Cause**: Contract accepts arbitrary color strings without validation.
+ 
+-**Solution**: Color customization schemas MUST validate hex/rgb format AND contrast ratios. Use `@beep/ui-core` preset validation utilities. Consider restricting to predefined palettes for brand consistency.
++**Solution**: Color settings schemas MUST validate hex/rgb format AND contrast ratios. Use `@beep/ui-core` preset validation utilities. Consider restricting to predefined palettes for brand consistency.
+ 
+ ### Customization Contract Versioning
+-**Symptom**: Old clients crash when server returns new customization fields; new clients fail with old servers.
++**Symptom**: Old clients crash when server returns new settings fields; new clients fail with old servers.
+ 
+-**Root Cause**: Breaking changes to customization response schema without version migration.
++**Root Cause**: Breaking changes to settings response schema without version migration.
+ 
+ **Solution**: Customization contracts MUST include schema version field. Client should handle unknown fields gracefully (strip via schema). When adding required fields, provide defaults for backward compatibility.
+ 
+diff --git a/packages/customization/client/CLAUDE.md b/packages/settings/client/CLAUDE.md
+similarity index 100%
+rename from packages/customization/client/CLAUDE.md
+rename to packages/settings/client/CLAUDE.md
+diff --git a/packages/customization/client/README.md b/packages/settings/client/README.md
+similarity index 67%
+rename from packages/customization/client/README.md
+rename to packages/settings/client/README.md
+index 1bc5dcecbf..deee1124b2 100644
+--- a/packages/customization/client/README.md
++++ b/packages/settings/client/README.md
+@@ -1,19 +1,19 @@
+-# @beep/customization-client
++# @beep/settings-client
+ 
+-Client SDK layer for the customization slice, providing contracts for user preferences and personalization features.
++Client SDK layer for the settings slice, providing contracts for user preferences and personalization features.
+ 
+ ## Purpose
+ 
+-The customization client package provides the SDK layer for all user preference and personalization features in the beep-effect application. It serves as the bridge between the customization domain logic and UI components, exposing typed RPC contracts for frontend applications to interact with theme settings, keyboard shortcuts, layout preferences, and other personalization options. The package uses Effect's contract-based architecture to ensure type-safe client-server communication with structured error handling.
++The settings client package provides the SDK layer for all user preference and personalization features in the beep-effect application. It serves as the bridge between the settings domain logic and UI components, exposing typed RPC contracts for frontend applications to interact with theme settings, keyboard shortcuts, layout preferences, and other personalization options. The package uses Effect's contract-based architecture to ensure type-safe client-server communication with structured error handling.
+ 
+-This package is currently a minimal scaffold awaiting contract implementations as the customization feature set expands. Future implementations will include theme preference contracts, hotkey configuration contracts, and layout customization contracts.
++This package is currently a minimal scaffold awaiting contract implementations as the settings feature set expands. Future implementations will include theme preference contracts, hotkey configuration contracts, and layout settings contracts.
+ 
+ ## Installation
+ 
+ ```bash
+ # This package is internal to the monorepo
+ # Add as a dependency in your package.json:
+-"@beep/customization-client": "workspace:*"
++"@beep/settings-client": "workspace:*"
+ ```
+ 
+ ## Key Exports
+@@ -24,7 +24,7 @@ This package is currently in scaffold state with a placeholder `beep` export. Fu
+ |--------|-------------|
+ | `ThemeContracts` | Contract kit for theme and appearance preferences |
+ | `HotkeyContracts` | Contract kit for keyboard shortcut configuration |
+-| `LayoutContracts` | Contract kit for layout and UI customization |
++| `LayoutContracts` | Contract kit for layout and UI settings |
+ | `PreferenceContracts` | Contract kit for general user preferences |
+ 
+ ## Usage
+@@ -34,7 +34,7 @@ This package is currently in scaffold state with a placeholder `beep` export. Fu
+ Once contracts are implemented, they will follow this pattern:
+ 
+ ```typescript
+-import * as ThemeContracts from "@beep/customization-client";
++import * as ThemeContracts from "@beep/settings-client";
+ import * as Effect from "effect/Effect";
+ import * as F from "effect/Function";
+ 
+@@ -54,7 +54,7 @@ const updateTheme = F.pipe(
+ 
+ ```typescript
+ import { useQuery, useMutation } from "@tanstack/react-query";
+-import * as HotkeyContracts from "@beep/customization-client";
++import * as HotkeyContracts from "@beep/settings-client";
+ import { clientRuntimeLayer } from "@beep/runtime-client";
+ import { Atom } from "@effect-atom/atom-react";
+ import * as F from "effect/Function";
+@@ -85,40 +85,40 @@ function HotkeySettings({ userId }: { userId: string }) {
+ | Package | Purpose |
+ |---------|---------|
+ | `effect` | Core Effect runtime and Schema system |
+-| `@beep/customization-domain` | Domain models for customization slice |
++| `@beep/settings-domain` | Domain models for settings slice |
+ | `@beep/schema` | Reusable Effect schemas for validation |
+ | `@beep/errors` | Error handling and telemetry |
+ 
+ ## Integration
+ 
+-- **Domain Layer**: Consumes entity models and business logic from `@beep/customization-domain`
+-- **Server Layer**: Contracts implemented here must have corresponding handlers in `@beep/customization-server`
+-- **UI Layer**: Components in `@beep/customization-ui` consume these contracts via TanStack Query hooks
++- **Domain Layer**: Consumes entity models and business logic from `@beep/settings-domain`
++- **Server Layer**: Contracts implemented here must have corresponding handlers in `@beep/settings-server`
++- **UI Layer**: Components in `@beep/settings-ui` consume these contracts via TanStack Query hooks
+ - **Shared Client**: Follows patterns established in `@beep/shared-client` for contract structure
+ 
+ ## Development
+ 
+ ```bash
+ # Type check
+-bun run --filter @beep/customization-client check
++bun run --filter @beep/settings-client check
+ 
+ # Lint
+-bun run --filter @beep/customization-client lint
++bun run --filter @beep/settings-client lint
+ 
+ # Lint and auto-fix
+-bun run --filter @beep/customization-client lint:fix
++bun run --filter @beep/settings-client lint:fix
+ 
+ # Build
+-bun run --filter @beep/customization-client build
++bun run --filter @beep/settings-client build
+ 
+ # Run tests
+-bun run --filter @beep/customization-client test
++bun run --filter @beep/settings-client test
+ 
+ # Test with coverage
+-bun run --filter @beep/customization-client coverage
++bun run --filter @beep/settings-client coverage
+ 
+ # Watch mode for development
+-bun run --filter @beep/customization-client dev
++bun run --filter @beep/settings-client dev
+ ```
+ 
+ ## Notes
+@@ -129,7 +129,7 @@ When implementing contracts, follow these patterns:
+ 
+ - Use `S.TaggedError` for structured error types (e.g., `CustomizationError`)
+ - Include metadata annotations for domain/method tracking
+-- Keep contracts thin - business logic belongs in `@beep/customization-domain` and `@beep/customization-server`
++- Keep contracts thin - business logic belongs in `@beep/settings-domain` and `@beep/settings-server`
+ - Use `"use client"` directive for React-specific exports that need client-side bundling
+ 
+ ### Preference Storage
+diff --git a/packages/customization/client/ai-context.md b/packages/settings/client/ai-context.md
+similarity index 60%
+rename from packages/customization/client/ai-context.md
+rename to packages/settings/client/ai-context.md
+index 9c3d942db8..eec87a791e 100644
+--- a/packages/customization/client/ai-context.md
++++ b/packages/settings/client/ai-context.md
+@@ -1,20 +1,20 @@
+ ---
+-path: packages/customization/client
+-summary: RPC contracts and client handlers for customization operations - themes, hotkeys, preferences
+-tags: [customization, client, rpc, contracts, effect, tanstack-query]
++path: packages/settings/client
++summary: RPC contracts and client handlers for settings operations - themes, hotkeys, preferences
++tags: [settings, client, rpc, contracts, effect, tanstack-query]
+ ---
+ 
+-# @beep/customization-client
++# @beep/settings-client
+ 
+-Client-side API surface for customization operations. Defines RPC contracts for user preferences, themes, and hotkey management. Consumed by `@beep/customization-ui` and frontend applications via TanStack Query integration.
++Client-side API surface for settings operations. Defines RPC contracts for user preferences, themes, and hotkey management. Consumed by `@beep/settings-ui` and frontend applications via TanStack Query integration.
+ 
+-**Status**: Minimal scaffold - awaiting contract implementations as customization features mature.
++**Status**: Minimal scaffold - awaiting contract implementations as settings features mature.
+ 
+ ## Architecture
+ 
+ ```
+ |---------------------|     |---------------------|
+-| @beep/customization | --> |  RPC Contracts      |
++| @beep/settings | --> |  RPC Contracts      |
+ |       -domain       |     | (Payload/Response)  |
+ |---------------------|     |---------------------|
+                                      |
+@@ -22,13 +22,13 @@ Client-side API surface for customization operations. Defines RPC contracts for
+                                      |
+                                      v
+ |---------------------|     |---------------------|
+-|   TanStack Query    | <-- | CustomizationClient |
++|   TanStack Query    | <-- | SettingsClient |
+ |       hooks         |     |     Handlers        |
+ |---------------------|     |---------------------|
+           |
+           v
+ |---------------------|
+-| @beep/customization |
++| @beep/settings |
+ |        -ui          |
+ |---------------------|
+ ```
+@@ -37,9 +37,9 @@ Client-side API surface for customization operations. Defines RPC contracts for
+ 
+ | Module | Purpose |
+ |--------|---------|
+-| `CustomizationContracts` | RPC contract definitions for preference CRUD |
++| `SettingsContracts` | RPC contract definitions for preference CRUD |
+ | `HotkeyContracts` | Contracts for user hotkey get/update operations |
+-| `CustomizationHandlers` | Client handlers wrapping contracts for TanStack Query |
++| `SettingsHandlers` | Client handlers wrapping contracts for TanStack Query |
+ 
+ ## Usage Patterns
+ 
+@@ -47,17 +47,17 @@ Client-side API surface for customization operations. Defines RPC contracts for
+ 
+ ```typescript
+ import * as Layer from "effect/Layer";
+-import { CustomizationClientLive } from "@beep/customization-client";
++import { SettingsClientLive } from "@beep/settings-client";
+ import { HttpClientLive } from "@beep/shared-client";
+ 
+-const AppLayer = Layer.provide(CustomizationClientLive, HttpClientLive);
++const AppLayer = Layer.provide(SettingsClientLive, HttpClientLive);
+ ```
+ 
+ ### Contract with TanStack Query (Planned)
+ 
+ ```typescript
+ import { useQuery, useMutation } from "@tanstack/react-query";
+-import { hotkeyContract } from "@beep/customization-client";
++import { hotkeyContract } from "@beep/settings-client";
+ 
+ // Query
+ const { data } = useQuery({
+@@ -83,13 +83,13 @@ const mutation = useMutation({
+ 
+ ## Dependencies
+ 
+-**Internal**: `@beep/customization-domain` (planned - for shared types)
++**Internal**: `@beep/settings-domain` (planned - for shared types)
+ 
+ **External**: `effect`
+ 
+ ## Related
+ 
+ - **AGENTS.md** - Settings schema alignment, caching gotchas, contract versioning
+-- **@beep/customization-server** - Server-side handlers implementing these contracts
+-- **@beep/customization-ui** - React components consuming these contracts
+-- **@beep/ui-core** - Settings schema that customization contracts must align with
++- **@beep/settings-server** - Server-side handlers implementing these contracts
++- **@beep/settings-ui** - React components consuming these contracts
++- **@beep/ui-core** - Settings schema that settings contracts must align with
+diff --git a/packages/customization/ui/docgen.json b/packages/settings/client/docgen.json
+similarity index 77%
+rename from packages/customization/ui/docgen.json
+rename to packages/settings/client/docgen.json
+index 33e4636967..b4d1eb9772 100644
+--- a/packages/customization/ui/docgen.json
++++ b/packages/settings/client/docgen.json
+@@ -2,7 +2,7 @@
+   "$schema": "../../../node_modules/@effect/docgen/schema.json",
+   "srcDir": "src",
+   "outDir": "docs",
+-  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/customization/ui/src/",
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/settings/client/src/",
+   "exclude": ["src/internal/**/*.ts"],
+   "examplesCompilerOptions": {
+     "noEmit": true,
+@@ -13,8 +13,8 @@
+     "target": "ES2024",
+     "lib": ["ES2024", "DOM", "DOM.Iterable"],
+     "paths": {
+-      "@beep/customization-ui": ["./src/index.ts"],
+-      "@beep/customization-ui/*": ["./src/*"]
++      "@beep/settings-client": ["./src/index.ts"],
++      "@beep/settings-client/*": ["./src/*"]
+     }
+   }
+ }
+diff --git a/packages/customization/client/package.json b/packages/settings/client/package.json
+similarity index 91%
+rename from packages/customization/client/package.json
+rename to packages/settings/client/package.json
+index d8d3ab5023..05ed752247 100644
+--- a/packages/customization/client/package.json
++++ b/packages/settings/client/package.json
+@@ -1,9 +1,9 @@
+ {
+-  "name": "@beep/customization-client",
++  "name": "@beep/settings-client",
+   "version": "0.0.0",
+   "type": "module",
+   "license": "MIT",
+-  "description": "The sdk layer for the customization slice",
++  "description": "The sdk layer for the settings slice",
+   "publishConfig": {
+     "access": "public",
+     "provenance": true,
+@@ -18,7 +18,7 @@
+   "repository": {
+     "type": "git",
+     "url": "git@github.com:kriegcloud/beep-effect.git",
+-    "directory": "packages/customization/client"
++    "directory": "packages/settings/client"
+   },
+   "scripts": {
+     "dev": "bun run dotenvx -- bunx tsc -b tsconfig.build.json --watch",
+diff --git a/packages/customization/client/reset.d.ts b/packages/settings/client/reset.d.ts
+similarity index 100%
+rename from packages/customization/client/reset.d.ts
+rename to packages/settings/client/reset.d.ts
+diff --git a/packages/customization/client/src/client.ts b/packages/settings/client/src/client.ts
+similarity index 100%
+rename from packages/customization/client/src/client.ts
+rename to packages/settings/client/src/client.ts
+diff --git a/packages/customization/client/src/index.ts b/packages/settings/client/src/index.ts
+similarity index 100%
+rename from packages/customization/client/src/index.ts
+rename to packages/settings/client/src/index.ts
+diff --git a/packages/customization/client/test/Dummy.test.ts b/packages/settings/client/test/Dummy.test.ts
+similarity index 100%
+rename from packages/customization/client/test/Dummy.test.ts
+rename to packages/settings/client/test/Dummy.test.ts
+diff --git a/packages/customization/client/tsconfig.build.json b/packages/settings/client/tsconfig.build.json
+similarity index 100%
+rename from packages/customization/client/tsconfig.build.json
+rename to packages/settings/client/tsconfig.build.json
+diff --git a/packages/customization/client/tsconfig.json b/packages/settings/client/tsconfig.json
+similarity index 100%
+rename from packages/customization/client/tsconfig.json
+rename to packages/settings/client/tsconfig.json
+diff --git a/packages/customization/client/tsconfig.src.json b/packages/settings/client/tsconfig.src.json
+similarity index 100%
+rename from packages/customization/client/tsconfig.src.json
+rename to packages/settings/client/tsconfig.src.json
+diff --git a/packages/customization/client/tsconfig.test.json b/packages/settings/client/tsconfig.test.json
+similarity index 100%
+rename from packages/customization/client/tsconfig.test.json
+rename to packages/settings/client/tsconfig.test.json
+diff --git a/packages/customization/domain/AGENTS.md b/packages/settings/domain/AGENTS.md
+similarity index 61%
+rename from packages/customization/domain/AGENTS.md
+rename to packages/settings/domain/AGENTS.md
+index 2b4f1d4a24..ed8f2caa90 100644
+--- a/packages/customization/domain/AGENTS.md
++++ b/packages/settings/domain/AGENTS.md
+@@ -1,10 +1,10 @@
+-# @beep/customization-domain — Agent Guide
++# @beep/settings-domain — Agent Guide
+ 
+ ## Purpose & Fit
+-- Centralizes customization domain models via `M.Class` definitions that merge shared audit fields through `makeFields`, giving server and tables a single source of truth for schema variants.
+-- Re-exports the customization entity inventory to consumers through the package root so repos, tables, and runtimes can import `Entities.*` without piercing folder structure.
+-- Provides customization-specific entities for user preferences, hotkeys, and personalization settings.
+-- Bridges shared-kernel entities into the customization slice so cross-slice consumers can stay on the customization namespace without re-import juggling.
++- Centralizes settings domain models via `M.Class` definitions that merge shared audit fields through `makeFields`, giving server and tables a single source of truth for schema variants.
++- Re-exports the settings entity inventory to consumers through the package root so repos, tables, and runtimes can import `Entities.*` without piercing folder structure.
++- Provides settings-specific entities for user preferences, hotkeys, and personalization settings.
++- Bridges shared-kernel entities into the settings slice so cross-slice consumers can stay on the settings namespace without re-import juggling.
+ 
+ ## Surface Map
+ - **Entities.UserHotkey** — User-configurable keyboard shortcuts model with `userId` reference and `shortcuts` JSON record mapping key bindings to actions.
+@@ -13,28 +13,28 @@
+ - Repositories import `Entities` to seed `Repo.make` factories that enforce typed persistence.
+ - PG tables reference entity ID factories to maintain typed primary keys.
+ - Integration tests build insert payloads with `Entities.UserHotkey.Model.insert.make` to validate repo flows end-to-end.
+-- Test harness seeds customization fixtures directly from `Entities.*` model variants when spinning Postgres containers.
++- Test harness seeds settings fixtures directly from `Entities.*` model variants when spinning Postgres containers.
+ 
+ ## Authoring Guardrails
+ - ALWAYS import Effect modules with namespaces (`Effect`, `A`, `F`, `O`, `Str`, `S`, `M`) and rely on Effect collections/utilities instead of native helpers (see global repo guardrails).
+ - Use `makeFields` so every entity inherits the audit + tracking columns and typed IDs; NEVER redefine `id`, `_rowId`, `version`, or timestamps manually.
+-- Maintain `Symbol.for("@beep/customization-domain/<Entity>Model")` naming to keep schema metadata stable across database migrations and clients.
++- Maintain `Symbol.for("@beep/settings-domain/<Entity>Model")` naming to keep schema metadata stable across database migrations and clients.
+ - Prefer shared schema helpers (`FieldOptionOmittable`, `FieldSensitiveOptionOmittable`, `BoolWithDefault`) to describe optionality and defaults.
+-- When adding new entities, extend entity ID factories in `@beep/shared-domain` and propagate matching enums via table definitions in `@beep/customization-tables`.
++- When adding new entities, extend entity ID factories in `@beep/shared-domain` and propagate matching enums via table definitions in `@beep/settings-tables`.
+ - Apply `modelKit(Model)` to expose standardized utilities (`.utils`) on each model class.
+ 
+ ## Quick Recipes
+ - **Create a UserHotkey insert payload**
+   ```ts
+-  import { Entities } from "@beep/customization-domain";
+-  import { CustomizationEntityIds, SharedEntityIds } from "@beep/shared-domain";
++  import { Entities } from "@beep/settings-domain";
++  import { SettingsEntityIds, SharedEntityIds } from "@beep/shared-domain";
+   import * as DateTime from "effect/DateTime";
+   import * as Effect from "effect/Effect";
+ 
+   export const makeUserHotkeyInsert = Effect.gen(function* () {
+     const now = yield* DateTime.now;
+     const nowDate = DateTime.toDate(now);
+-    const hotkeyId = CustomizationEntityIds.UserHotkeyId.create();
++    const hotkeyId = SettingsEntityIds.UserHotkeyId.create();
+ 
+     return Entities.UserHotkey.Model.insert.make({
+       id: hotkeyId,
+@@ -47,19 +47,19 @@
+   ```
+ 
+ ## Verifications
+-- `bun run check --filter @beep/customization-domain`
+-- `bun run lint --filter @beep/customization-domain`
+-- `bun run test --filter @beep/customization-domain`
++- `bun run check --filter @beep/settings-domain`
++- `bun run lint --filter @beep/settings-domain`
++- `bun run test --filter @beep/settings-domain`
+ 
+ ## Testing
+ 
+-- Run tests: `bun run test --filter=@beep/customization-domain`
++- Run tests: `bun run test --filter=@beep/settings-domain`
+ - Test file location: Adjacent to source files as `*.test.ts` or in `test/` directory
+ - Uses Bun's built-in test framework (`bun:test`)
+ - ALWAYS test schema encode/decode roundtrips for entity models
+ 
+ ## Contributor Checklist
+-- [ ] Align entity changes with `@beep/customization-tables` columns and regenerate migrations (`bun run db:generate`, `bun run db:migrate`).
++- [ ] Align entity changes with `@beep/settings-tables` columns and regenerate migrations (`bun run db:generate`, `bun run db:migrate`).
+ - [ ] Update `packages/_internal/db-admin` fixtures/tests when adding or removing fields to keep container smoke tests honest.
+ - [ ] Maintain `Symbol.for` identifiers and audit field structure via `makeFields`.
+ - [ ] Prefer `Model.insert/update/json` helpers for transformations—avoid handcrafting payloads in repos or services.
+diff --git a/packages/customization/domain/CLAUDE.md b/packages/settings/domain/CLAUDE.md
+similarity index 100%
+rename from packages/customization/domain/CLAUDE.md
+rename to packages/settings/domain/CLAUDE.md
+diff --git a/packages/customization/domain/README.md b/packages/settings/domain/README.md
+similarity index 60%
+rename from packages/customization/domain/README.md
+rename to packages/settings/domain/README.md
+index e477a0a1f9..ea8371ff10 100644
+--- a/packages/customization/domain/README.md
++++ b/packages/settings/domain/README.md
+@@ -1,17 +1,17 @@
+-# @beep/customization-domain
++# @beep/settings-domain
+ 
+-The domain layer for the Customization vertical slice, providing pure entity models, value objects, and domain contracts for user preferences, themes, and application customization.
++The domain layer for the Settings vertical slice, providing pure entity models, value objects, and domain contracts for user preferences, themes, and application settings.
+ 
+ ## Purpose
+ 
+-Centralizes Customization domain models via `M.Class` definitions that provide schema variants for user preferences, theme configurations, and customization settings. This package exports Effect-first entity models and type-safe error channels that integrate seamlessly with Drizzle ORM and Effect SQL while maintaining type safety and compile-time guarantees.
++Centralizes Settings domain models via `M.Class` definitions that provide schema variants for user preferences, theme configurations, and settings settings. This package exports Effect-first entity models and type-safe error channels that integrate seamlessly with Drizzle ORM and Effect SQL while maintaining type safety and compile-time guarantees.
+ 
+ ## Installation
+ 
+ ```bash
+ # This package is internal to the monorepo
+ # Add as a dependency in your package.json:
+-"@beep/customization-domain": "workspace:*"
++"@beep/settings-domain": "workspace:*"
+ ```
+ 
+ ## Key Exports
+@@ -26,7 +26,7 @@ Centralizes Customization domain models via `M.Class` definitions that provide s
+ - **Hexagonal**: Entity models serve as the core, consumed by repositories and application services
+ - **Effect-First**: All entities built on `@effect/sql/Model` with Effect Schema validation
+ - **Shared Kernel**: Re-exports cross-slice entities where needed for unified imports
+-- **Path Alias**: Import as `@beep/customization-domain`. All exports available from `src/index.ts`
++- **Path Alias**: Import as `@beep/settings-domain`. All exports available from `src/index.ts`
+ 
+ ## Usage
+ 
+@@ -35,7 +35,7 @@ Centralizes Customization domain models via `M.Class` definitions that provide s
+ Prefer the namespace import pattern for entities:
+ 
+ ```typescript
+-import { Entities } from "@beep/customization-domain";
++import { Entities } from "@beep/settings-domain";
+ import * as Effect from "effect/Effect";
+ import * as S from "effect/Schema";
+ import * as F from "effect/Function";
+@@ -49,15 +49,15 @@ const UserHotkeyModel = Entities.UserHotkey.Model;
+ Use `Model.insert.make` for type-safe insert operations:
+ 
+ ```typescript
+-import { Entities } from "@beep/customization-domain";
+-import { CustomizationEntityIds, SharedEntityIds } from "@beep/shared-domain";
++import { Entities } from "@beep/settings-domain";
++import { SettingsEntityIds, SharedEntityIds } from "@beep/shared-domain";
+ import * as DateTime from "effect/DateTime";
+ import * as Effect from "effect/Effect";
+ 
+ export const makeUserHotkeyInsert = Effect.gen(function* () {
+   const now = yield* DateTime.now;
+   const nowDate = DateTime.toDate(now);
+-  const hotkeyId = CustomizationEntityIds.UserHotkeyId.create();
++  const hotkeyId = SettingsEntityIds.UserHotkeyId.create();
+ 
+   return Entities.UserHotkey.Model.insert.make({
+     id: hotkeyId,
+@@ -72,7 +72,7 @@ export const makeUserHotkeyInsert = Effect.gen(function* () {
+ ## What Belongs Here
+ 
+ - **Pure entity models** built on `@effect/sql/Model` with Effect Schema
+-- **Value objects** like entity IDs, enums, and customization types
++- **Value objects** like entity IDs, enums, and settings types
+ - **Schema kits** for literals with Postgres enum helpers
+ - **Domain utilities** that are pure and stateless
+ 
+@@ -80,7 +80,7 @@ export const makeUserHotkeyInsert = Effect.gen(function* () {
+ 
+ - **No I/O or side effects**: no database queries, network calls, or file system operations
+ - **No infrastructure**: no Drizzle clients, repositories, or external service adapters
+-- **No application logic**: keep orchestration in `@beep/customization-server`
++- **No application logic**: keep orchestration in `@beep/settings-server`
+ - **No framework dependencies**: avoid Next.js, React, or platform-specific code
+ - **No cross-slice domain imports**: only depend on `@beep/shared-domain` and `@beep//*`
+ 
+@@ -99,32 +99,32 @@ Domain models should be pure, testable, and reusable across all infrastructure i
+ 
+ ```bash
+ # Type check
+-bun run --filter @beep/customization-domain check
++bun run --filter @beep/settings-domain check
+ 
+ # Lint
+-bun run --filter @beep/customization-domain lint
++bun run --filter @beep/settings-domain lint
+ 
+ # Lint and auto-fix
+-bun run --filter @beep/customization-domain lint:fix
++bun run --filter @beep/settings-domain lint:fix
+ 
+ # Build
+-bun run --filter @beep/customization-domain build
++bun run --filter @beep/settings-domain build
+ 
+ # Run tests
+-bun run --filter @beep/customization-domain test
++bun run --filter @beep/settings-domain test
+ 
+ # Test with coverage
+-bun run --filter @beep/customization-domain coverage
++bun run --filter @beep/settings-domain coverage
+ 
+ # Check for circular dependencies
+-bun run --filter @beep/customization-domain lint:circular
++bun run --filter @beep/settings-domain lint:circular
+ ```
+ 
+ ## Relationship to Other Packages
+ 
+-- `@beep/customization-server` — Infrastructure layer implementing domain models as repositories and services
+-- `@beep/customization-tables` — Drizzle table definitions that consume these entity models
+-- `@beep/customization-client` — Client-side contracts (may consume domain types)
+-- `@beep/customization-ui` — React components for customization flows
++- `@beep/settings-server` — Infrastructure layer implementing domain models as repositories and services
++- `@beep/settings-tables` — Drizzle table definitions that consume these entity models
++- `@beep/settings-client` — Client-side contracts (may consume domain types)
++- `@beep/settings-ui` — React components for settings flows
+ - `@beep/shared-domain` — Shared kernel entities (User, Organization, Team, Session)
+-- `@beep/shared-tables` — Table factories (`Table.make`, `OrgTable.make`) used by Customization tables
++- `@beep/shared-tables` — Table factories (`Table.make`, `OrgTable.make`) used by Settings tables
+diff --git a/packages/customization/domain/ai-context.md b/packages/settings/domain/ai-context.md
+similarity index 72%
+rename from packages/customization/domain/ai-context.md
+rename to packages/settings/domain/ai-context.md
+index 12b1feabd6..40b47e84cd 100644
+--- a/packages/customization/domain/ai-context.md
++++ b/packages/settings/domain/ai-context.md
+@@ -1,12 +1,12 @@
+ ---
+-path: packages/customization/domain
++path: packages/settings/domain
+ summary: Effect SQL domain models for user preferences - hotkeys, personalization settings with typed IDs
+-tags: [customization, domain, effect-sql, model, user-preferences, hotkeys]
++tags: [settings, domain, effect-sql, model, user-preferences, hotkeys]
+ ---
+ 
+-# @beep/customization-domain
++# @beep/settings-domain
+ 
+-Domain layer providing Effect SQL model definitions for user customization entities. Centralizes schema definitions using `M.Class` with `makeFields` for consistent audit columns, serving as the single source of truth for repositories and tables.
++Domain layer providing Effect SQL model definitions for user settings entities. Centralizes schema definitions using `M.Class` with `makeFields` for consistent audit columns, serving as the single source of truth for repositories and tables.
+ 
+ ## Architecture
+ 
+@@ -17,7 +17,7 @@ Domain layer providing Effect SQL model definitions for user customization entit
+                                       |
+                                       v
+ |----------------------|     |---------------------|
+-| CustomizationEntityIds| --> |  Entities.UserHotkey|
++| SettingsEntityIds| --> |  Entities.UserHotkey|
+ |----------------------|     |---------------------|
+                                       |
+               +---------------+-------+-------+
+@@ -33,7 +33,7 @@ Domain layer providing Effect SQL model definitions for user customization entit
+ 
+ | Module | Purpose |
+ |--------|---------|
+-| `Entities` | Namespace re-exporting all customization entity models |
++| `Entities` | Namespace re-exporting all settings entity models |
+ | `Entities.UserHotkey.Model` | User keyboard shortcuts with `userId` and `shortcuts` JSON record |
+ 
+ ## Usage Patterns
+@@ -43,15 +43,15 @@ Domain layer providing Effect SQL model definitions for user customization entit
+ ```typescript
+ import * as Effect from "effect/Effect";
+ import * as DateTime from "effect/DateTime";
+-import { Entities } from "@beep/customization-domain";
+-import { CustomizationEntityIds, SharedEntityIds } from "@beep/shared-domain";
++import { Entities } from "@beep/settings-domain";
++import { SettingsEntityIds, SharedEntityIds } from "@beep/shared-domain";
+ 
+ const createHotkey = Effect.gen(function* () {
+   const now = yield* DateTime.now;
+   const nowDate = DateTime.toDate(now);
+ 
+   return Entities.UserHotkey.Model.insert.make({
+-    id: CustomizationEntityIds.UserHotkeyId.create(),
++    id: SettingsEntityIds.UserHotkeyId.create(),
+     userId: SharedEntityIds.UserId.make("user_abc123"),
+     shortcuts: { "ctrl+s": "save", "ctrl+z": "undo" },
+     createdAt: nowDate,
+@@ -63,7 +63,7 @@ const createHotkey = Effect.gen(function* () {
+ ### Access Model Utilities
+ 
+ ```typescript
+-import { Entities } from "@beep/customization-domain";
++import { Entities } from "@beep/settings-domain";
+ 
+ // Static utilities via modelKit
+ const { decode, encode } = Entities.UserHotkey.Model.utils;
+@@ -87,5 +87,5 @@ const { decode, encode } = Entities.UserHotkey.Model.utils;
+ ## Related
+ 
+ - **AGENTS.md** - Detailed contributor guidance and testing patterns
+-- **@beep/customization-tables** - Drizzle table definitions derived from these models
+-- **@beep/customization-server** - Repository implementations using these entities
++- **@beep/settings-tables** - Drizzle table definitions derived from these models
++- **@beep/settings-server** - Repository implementations using these entities
+diff --git a/packages/customization/domain/docgen.json b/packages/settings/domain/docgen.json
+similarity index 82%
+rename from packages/customization/domain/docgen.json
+rename to packages/settings/domain/docgen.json
+index 23e0d8f7e5..72ae827278 100644
+--- a/packages/customization/domain/docgen.json
++++ b/packages/settings/domain/docgen.json
+@@ -2,7 +2,7 @@
+   "$schema": "../../../node_modules/@effect/docgen/schema.json",
+   "srcDir": "src",
+   "outDir": "docs",
+-  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/customization/domain/src/",
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/settings/domain/src/",
+   "exclude": ["src/internal/**/*.ts"],
+   "examplesCompilerOptions": {
+     "noEmit": true,
+@@ -13,8 +13,8 @@
+     "target": "ES2024",
+     "lib": ["ES2024", "DOM", "DOM.Iterable"],
+     "paths": {
+-      "@beep/customization-domain": ["./src/index.ts"],
+-      "@beep/customization-domain/*": ["./src/*"],
++      "@beep/settings-domain": ["./src/index.ts"],
++      "@beep/settings-domain/*": ["./src/*"],
+       "@beep/shared-domain": ["../../shared/domain/src/index.js"],
+       "@beep/shared-domain/*": ["../../shared/domain/src/*.js"],
+       "@beep/schema": ["../../common/schema/src/index.js"],
+diff --git a/packages/customization/domain/package.json b/packages/settings/domain/package.json
+similarity index 91%
+rename from packages/customization/domain/package.json
+rename to packages/settings/domain/package.json
+index 4cf42a27f4..e29942748b 100644
+--- a/packages/customization/domain/package.json
++++ b/packages/settings/domain/package.json
+@@ -1,9 +1,9 @@
+ {
+-  "name": "@beep/customization-domain",
++  "name": "@beep/settings-domain",
+   "version": "0.0.0",
+   "type": "module",
+   "license": "MIT",
+-  "description": "The domain layer for the customization context",
++  "description": "The domain layer for the settings context",
+   "publishConfig": {
+     "access": "public",
+     "provenance": true,
+@@ -18,7 +18,7 @@
+   "repository": {
+     "type": "git",
+     "url": "git@github.com:kriegcloud/beep-effect.git",
+-    "directory": "packages/customization/domain"
++    "directory": "packages/settings/domain"
+   },
+   "scripts": {
+     "build": "bun run build-esm && bun run build-cjs && bun run build-annotate",
+diff --git a/packages/customization/domain/reset.d.ts b/packages/settings/domain/reset.d.ts
+similarity index 100%
+rename from packages/customization/domain/reset.d.ts
+rename to packages/settings/domain/reset.d.ts
+diff --git a/packages/customization/domain/src/entities.ts b/packages/settings/domain/src/entities.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities.ts
+rename to packages/settings/domain/src/entities.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.entity.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.entity.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.entity.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.entity.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.errors.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.errors.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.errors.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.errors.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.http.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.http.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.http.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.http.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.model.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.model.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.model.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.model.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.repo.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.repo.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.repo.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.repo.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.rpc.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.rpc.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.rpc.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.rpc.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.tool.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.tool.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.tool.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.tool.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/UserHotkey.values.ts b/packages/settings/domain/src/entities/UserHotkey/UserHotkey.values.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/UserHotkey.values.ts
+rename to packages/settings/domain/src/entities/UserHotkey/UserHotkey.values.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/contracts/Create.contract.ts b/packages/settings/domain/src/entities/UserHotkey/contracts/Create.contract.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/contracts/Create.contract.ts
+rename to packages/settings/domain/src/entities/UserHotkey/contracts/Create.contract.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/contracts/Delete.contract.ts b/packages/settings/domain/src/entities/UserHotkey/contracts/Delete.contract.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/contracts/Delete.contract.ts
+rename to packages/settings/domain/src/entities/UserHotkey/contracts/Delete.contract.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/contracts/Get.contract.ts b/packages/settings/domain/src/entities/UserHotkey/contracts/Get.contract.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/contracts/Get.contract.ts
+rename to packages/settings/domain/src/entities/UserHotkey/contracts/Get.contract.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/contracts/Update.contract.ts b/packages/settings/domain/src/entities/UserHotkey/contracts/Update.contract.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/contracts/Update.contract.ts
+rename to packages/settings/domain/src/entities/UserHotkey/contracts/Update.contract.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/contracts/index.ts b/packages/settings/domain/src/entities/UserHotkey/contracts/index.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/contracts/index.ts
+rename to packages/settings/domain/src/entities/UserHotkey/contracts/index.ts
+diff --git a/packages/customization/domain/src/entities/UserHotkey/index.ts b/packages/settings/domain/src/entities/UserHotkey/index.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/UserHotkey/index.ts
+rename to packages/settings/domain/src/entities/UserHotkey/index.ts
+diff --git a/packages/customization/domain/src/entities/index.ts b/packages/settings/domain/src/entities/index.ts
+similarity index 100%
+rename from packages/customization/domain/src/entities/index.ts
+rename to packages/settings/domain/src/entities/index.ts
+diff --git a/packages/customization/domain/src/index.ts b/packages/settings/domain/src/index.ts
+similarity index 100%
+rename from packages/customization/domain/src/index.ts
+rename to packages/settings/domain/src/index.ts
+diff --git a/packages/customization/domain/src/value-objects/index.ts b/packages/settings/domain/src/value-objects/index.ts
+similarity index 100%
+rename from packages/customization/domain/src/value-objects/index.ts
+rename to packages/settings/domain/src/value-objects/index.ts
+diff --git a/packages/customization/domain/test/Dummy.test.ts b/packages/settings/domain/test/Dummy.test.ts
+similarity index 100%
+rename from packages/customization/domain/test/Dummy.test.ts
+rename to packages/settings/domain/test/Dummy.test.ts
+diff --git a/packages/customization/domain/tsconfig.build.json b/packages/settings/domain/tsconfig.build.json
+similarity index 100%
+rename from packages/customization/domain/tsconfig.build.json
+rename to packages/settings/domain/tsconfig.build.json
+diff --git a/packages/customization/domain/tsconfig.json b/packages/settings/domain/tsconfig.json
+similarity index 100%
+rename from packages/customization/domain/tsconfig.json
+rename to packages/settings/domain/tsconfig.json
+diff --git a/packages/customization/domain/tsconfig.src.json b/packages/settings/domain/tsconfig.src.json
+similarity index 100%
+rename from packages/customization/domain/tsconfig.src.json
+rename to packages/settings/domain/tsconfig.src.json
+diff --git a/packages/customization/domain/tsconfig.test.json b/packages/settings/domain/tsconfig.test.json
+similarity index 100%
+rename from packages/customization/domain/tsconfig.test.json
+rename to packages/settings/domain/tsconfig.test.json
+diff --git a/packages/customization/server/AGENTS.md b/packages/settings/server/AGENTS.md
+similarity index 60%
+rename from packages/customization/server/AGENTS.md
+rename to packages/settings/server/AGENTS.md
+index 6e7b018943..acbdfaada9 100644
+--- a/packages/customization/server/AGENTS.md
++++ b/packages/settings/server/AGENTS.md
+@@ -1,17 +1,17 @@
+-# @beep/customization-server — Agent Guide
++# @beep/settings-server — Agent Guide
+ 
+ ## Purpose & Fit
+-- Contains the server-side infrastructure layer for the customization slice, including database client, repositories, and server-side services.
+-- Provides `CustomizationDb` for Drizzle ORM integration with PostgreSQL via `@effect/sql-pg`.
++- Contains the server-side infrastructure layer for the settings slice, including database client, repositories, and server-side services.
++- Provides `SettingsDb` for Drizzle ORM integration with PostgreSQL via `@effect/sql-pg`.
+ - Bundles repositories into a composable Layer that can be merged into the server runtime.
+-- Manages customization-specific data persistence and business logic execution.
++- Manages settings-specific data persistence and business logic execution.
+ 
+ ## Dependencies
+ 
+ | Package | Purpose |
+ |---------|---------|
+-| `@beep/customization-domain` | Domain entities, schemas, and business logic |
+-| `@beep/customization-tables` | Drizzle table definitions and database schema |
++| `@beep/settings-domain` | Domain entities, schemas, and business logic |
++| `@beep/settings-tables` | Drizzle table definitions and database schema |
+ | `@beep/shared-server` | Shared server infrastructure, `Repo.make` factories, and database client utilities |
+ | `@beep/shared-domain` | Cross-slice entity IDs and shared domain types |
+ | `@effect/sql-pg` | PostgreSQL integration for Effect SQL |
+@@ -19,40 +19,40 @@
+ | `effect` | Core Effect runtime and data types |
+ 
+ ## Surface Map
+-- **CustomizationDb** — Effect-based database client for the customization slice, wrapping Drizzle ORM with `@effect/sql-pg`.
+-- **CustomizationRepos** — Namespace containing all customization repositories bundled as Effect Layers.
+-- **CustomizationRepos.layer** — Merged Layer providing all repository services.
++- **SettingsDb** — Effect-based database client for the settings slice, wrapping Drizzle ORM with `@effect/sql-pg`.
++- **SettingsRepos** — Namespace containing all settings repositories bundled as Effect Layers.
++- **SettingsRepos.layer** — Merged Layer providing all repository services.
+ - **UserHotkeyRepo** — Repository service for persisting and querying user hotkey configurations.
+ 
+ ## Usage Snapshots
+-- Server runtime composes `CustomizationRepos.layer` to provide repository services to RPC handlers.
++- Server runtime composes `SettingsRepos.layer` to provide repository services to RPC handlers.
+ - RPC handlers inject `UserHotkeyRepo` to persist user preference changes.
+-- Integration tests use `CustomizationDb` with Testcontainers for isolated database testing.
+-- Server startup layers the `CustomizationDb` over `SliceDbRequirements` from shared server.
++- Integration tests use `SettingsDb` with Testcontainers for isolated database testing.
++- Server startup layers the `SettingsDb` over `SliceDbRequirements` from shared server.
+ 
+ ## Authoring Guardrails
+ - ALWAYS import Effect modules with namespaces (`Effect`, `A`, `F`, `O`, `Str`, `S`, `Layer`) and rely on Effect collections/utilities instead of native helpers (see global repo guardrails).
+-- Repositories MUST use `Repo.make` factories from `@beep/shared-server` with domain entities from `@beep/customization-domain`.
++- Repositories MUST use `Repo.make` factories from `@beep/shared-server` with domain entities from `@beep/settings-domain`.
+ - Keep repository methods focused on data access — business logic belongs in services or domain layer.
+ - Use Effect for all async operations — no bare Promises or async/await.
+ - Wrap external service calls (S3, email) with Effect adapters and proper error channels.
+ - Layer composition MUST follow: `Db -> Repos -> Services` dependency order.
+ 
+ ## Quick Recipes
+-- **Provide customization repositories to server runtime**
++- **Provide settings repositories to server runtime**
+   ```ts
+-  import { CustomizationRepos } from "@beep/customization-server";
++  import { SettingsRepos } from "@beep/settings-server";
+   import * as Layer from "effect/Layer";
+ 
+-  const CustomizationLayer = Layer.provide(
+-    CustomizationRepos.layer,
+-    CustomizationDb.layer
++  const SettingsLayer = Layer.provide(
++    SettingsRepos.layer,
++    SettingsDb.layer
+   );
+   ```
+ 
+ - **Query user hotkeys in an RPC handler**
+   ```ts
+-  import { UserHotkeyRepo } from "@beep/customization-server";
++  import { UserHotkeyRepo } from "@beep/settings-server";
+   import * as Effect from "effect/Effect";
+ 
+   const getUserHotkeys = (userId: string) =>
+@@ -63,13 +63,13 @@
+   ```
+ 
+ ## Verifications
+-- `bun run check --filter @beep/customization-server`
+-- `bun run lint --filter @beep/customization-server`
+-- `bun run test --filter @beep/customization-server`
++- `bun run check --filter @beep/settings-server`
++- `bun run lint --filter @beep/settings-server`
++- `bun run test --filter @beep/settings-server`
+ 
+ ## Testing
+ 
+-- **Run tests**: `bun run test --filter=@beep/customization-server`
++- **Run tests**: `bun run test --filter=@beep/settings-server`
+ - **Testing utilities**: Use `@beep/testkit` for Effect-based test helpers and assertions
+ - **External services**: ALWAYS mock S3, email, and other external services using Effect test layers
+ - **Layer composition**: Test repository layers with `Layer.provide` and validate dependency injection
+@@ -80,8 +80,8 @@
+ - **Stale package.json export**: The `package.json` declares a `"./files": "./src/files/index.ts"` export, but the `src/files/` directory does not exist. This export should be removed if not planned for future use.
+ 
+ ## Contributor Checklist
+-- [ ] Ensure repository methods align with domain entity schemas from `@beep/customization-domain`.
++- [ ] Ensure repository methods align with domain entity schemas from `@beep/settings-domain`.
+ - [ ] Maintain typed error channels — wrap database errors in tagged error types.
+ - [ ] Add integration tests using Testcontainers for new repository methods.
+-- [ ] Update `CustomizationRepos.layer` when adding new repositories.
++- [ ] Update `SettingsRepos.layer` when adding new repositories.
+ - [ ] Re-run verification commands above before handing work off.
+diff --git a/packages/customization/server/CLAUDE.md b/packages/settings/server/CLAUDE.md
+similarity index 100%
+rename from packages/customization/server/CLAUDE.md
+rename to packages/settings/server/CLAUDE.md
+diff --git a/packages/customization/server/README.md b/packages/settings/server/README.md
+similarity index 56%
+rename from packages/customization/server/README.md
+rename to packages/settings/server/README.md
+index e861c63df8..ce953baaeb 100644
+--- a/packages/customization/server/README.md
++++ b/packages/settings/server/README.md
+@@ -1,48 +1,48 @@
+-# @beep/customization-server
++# @beep/settings-server
+ 
+-Infrastructure layer for the Customization vertical slice, providing Effect-first database access, repositories, and service implementations for user preferences and theme management.
++Infrastructure layer for the Settings vertical slice, providing Effect-first database access, repositories, and service implementations for user preferences and theme management.
+ 
+ ## Purpose
+ 
+-`@beep/customization-server` implements the infrastructure concerns for the Customization slice. It provides:
+-- **Database Client**: PostgreSQL client with Drizzle ORM for Customization schema via `@effect/sql-pg`
+-- **Repository Implementations**: CRUD operations for customization entities using `DbRepo.make`
++`@beep/settings-server` implements the infrastructure concerns for the Settings slice. It provides:
++- **Database Client**: PostgreSQL client with Drizzle ORM for Settings schema via `@effect/sql-pg`
++- **Repository Implementations**: CRUD operations for settings entities using `DbRepo.make`
+ - **Layer Composition**: Composable Effect Layers for database and repository services
+-- **Type-Safe Data Access**: Branded identifiers and domain models from `@beep/customization-domain`
++- **Type-Safe Data Access**: Branded identifiers and domain models from `@beep/settings-domain`
+ 
+-This package sits in the infrastructure layer and is consumed by server applications (apps/server). It depends on domain entities from `@beep/customization-domain` and database schemas from `@beep/customization-tables`.
++This package sits in the infrastructure layer and is consumed by server applications (apps/server). It depends on domain entities from `@beep/settings-domain` and database schemas from `@beep/settings-tables`.
+ 
+ ## Installation
+ 
+ ```bash
+ # This package is internal to the monorepo
+ # Add as a dependency in your package.json:
+-"@beep/customization-server": "workspace:*"
++"@beep/settings-server": "workspace:*"
+ ```
+ 
+ ## Key Exports
+ 
+ | Export | Type | Description |
+ |--------|------|-------------|
+-| `CustomizationDb` | Namespace | Database client exports for Customization slice |
+-| `CustomizationDb.Db` | Context.Tag | Database service tag for dependency injection |
+-| `CustomizationDb.layer` | Layer | Layer providing `Db` service, requires `DbClient.SliceDbRequirements` |
+-| `CustomizationRepos` | Namespace | Contains all repository services bundled as Effect Layers |
+-| `CustomizationRepos.layer` | Layer | Merged Layer providing all repository services |
++| `SettingsDb` | Namespace | Database client exports for Settings slice |
++| `SettingsDb.Db` | Context.Tag | Database service tag for dependency injection |
++| `SettingsDb.layer` | Layer | Layer providing `Db` service, requires `DbClient.SliceDbRequirements` |
++| `SettingsRepos` | Namespace | Contains all repository services bundled as Effect Layers |
++| `SettingsRepos.layer` | Layer | Merged Layer providing all repository services |
+ | `UserHotkeyRepo` | Effect.Service | Repository for user hotkey configuration persistence |
+ 
+ ## Usage
+ 
+ ### Database Client
+ 
+-The `CustomizationDb` namespace provides typed database access with Drizzle ORM:
++The `SettingsDb` namespace provides typed database access with Drizzle ORM:
+ 
+ ```typescript
+-import { CustomizationDb } from "@beep/customization-server";
++import { SettingsDb } from "@beep/settings-server";
+ import * as Effect from "effect/Effect";
+ 
+ const program = Effect.gen(function* () {
+-  const db = yield* CustomizationDb.Db;
++  const db = yield* SettingsDb.Db;
+ 
+   // Query using Drizzle query builder
+   const result = yield* db.makeQuery((execute) =>
+@@ -55,15 +55,15 @@ const program = Effect.gen(function* () {
+ 
+ ### Repository Services
+ 
+-Access repositories through the `CustomizationRepos` namespace:
++Access repositories through the `SettingsRepos` namespace:
+ 
+ ```typescript
+-import { CustomizationRepos } from "@beep/customization-server";
++import { SettingsRepos } from "@beep/settings-server";
+ import * as Effect from "effect/Effect";
+ 
+ const getUserHotkeys = (userId: string) =>
+   Effect.gen(function* () {
+-    const repo = yield* CustomizationRepos.UserHotkeyRepo;
++    const repo = yield* SettingsRepos.UserHotkeyRepo;
+     return yield* repo.findByUserId(userId);
+   });
+ ```
+@@ -73,23 +73,23 @@ const getUserHotkeys = (userId: string) =>
+ Compose infrastructure layers for server runtime:
+ 
+ ```typescript
+-import { CustomizationDb, CustomizationRepos } from "@beep/customization-server";
++import { SettingsDb, SettingsRepos } from "@beep/settings-server";
+ import { DbClient } from "@beep/shared-server";
+ import * as Layer from "effect/Layer";
+ 
+ // Database layer (requires SliceDbRequirements)
+-const CustomizationDbLayer = CustomizationDb.layer;
++const SettingsDbLayer = SettingsDb.layer;
+ 
+ // All repositories (requires Db + SliceDbRequirements)
+-const CustomizationReposLayer = Layer.provide(
+-  CustomizationRepos.layer,
+-  CustomizationDbLayer
++const SettingsReposLayer = Layer.provide(
++  SettingsRepos.layer,
++  SettingsDbLayer
+ );
+ 
+-// Full customization infrastructure
+-export const CustomizationInfraLayer = Layer.mergeAll(
+-  CustomizationDbLayer,
+-  CustomizationReposLayer
++// Full settings infrastructure
++export const SettingsInfraLayer = Layer.mergeAll(
++  SettingsDbLayer,
++  SettingsReposLayer
+ );
+ ```
+ 
+@@ -112,17 +112,17 @@ import * as Str from "effect/String";
+ 
+ ```bash
+ # Type check
+-bun run --filter @beep/customization-server check
++bun run --filter @beep/settings-server check
+ 
+ # Lint
+-bun run --filter @beep/customization-server lint
+-bun run --filter @beep/customization-server lint:fix
++bun run --filter @beep/settings-server lint
++bun run --filter @beep/settings-server lint:fix
+ 
+ # Test
+-bun run --filter @beep/customization-server test
++bun run --filter @beep/settings-server test
+ 
+ # Circular dependency check
+-bun run --filter @beep/customization-server lint:circular
++bun run --filter @beep/settings-server lint:circular
+ ```
+ 
+ ## Dependencies
+@@ -138,8 +138,8 @@ bun run --filter @beep/customization-server lint:circular
+ | `@effect/workflow` | Workflow orchestration for long-running processes |
+ | `@uswriting/exiftool` | EXIF metadata extraction from images |
+ | `pdf-lib` | PDF manipulation utilities |
+-| `@beep/customization-domain` | Domain entities and business logic |
+-| `@beep/customization-tables` | Drizzle table schemas |
++| `@beep/settings-domain` | Domain entities and business logic |
++| `@beep/settings-tables` | Drizzle table schemas |
+ | `@beep/shared-domain` | Shared domain utilities and entity IDs |
+ | `@beep/shared-server` | Shared infrastructure services (`DbClient`, `DbRepo`) |
+ 
+@@ -147,15 +147,15 @@ bun run --filter @beep/customization-server lint:circular
+ 
+ ### Applications
+ 
+-**`apps/server`**: Composes Customization infrastructure layers with other vertical slices in the server runtime. Provides database and repository services to RPC handlers.
++**`apps/server`**: Composes Settings infrastructure layers with other vertical slices in the server runtime. Provides database and repository services to RPC handlers.
+ 
+ ### Feature Slices
+ 
+-**Customization Slice** (`packages/customization/*`):
+-- `@beep/customization-domain` — Provides entity models (`UserHotkey.Model`) for repository construction
+-- `@beep/customization-tables` — Provides Drizzle schemas for database client instantiation
+-- `@beep/customization-client` — Consumes repository services through RPC layer
+-- `@beep/customization-ui` — Displays data retrieved through client services
++**Settings Slice** (`packages/settings/*`):
++- `@beep/settings-domain` — Provides entity models (`UserHotkey.Model`) for repository construction
++- `@beep/settings-tables` — Provides Drizzle schemas for database client instantiation
++- `@beep/settings-client` — Consumes repository services through RPC layer
++- `@beep/settings-ui` — Displays data retrieved through client services
+ 
+ ### Shared Infrastructure
+ 
+@@ -168,10 +168,10 @@ bun run --filter @beep/customization-server lint:circular
+ 
+ | Package | Relationship |
+ |---------|--------------|
+-| `@beep/customization-domain` | Consumed (entity models, business logic) |
+-| `@beep/customization-tables` | Consumed (Drizzle schemas) |
+-| `@beep/customization-client` | Consumer (through RPC) |
+-| `@beep/customization-ui` | Indirect consumer (through client) |
++| `@beep/settings-domain` | Consumed (entity models, business logic) |
++| `@beep/settings-tables` | Consumed (Drizzle schemas) |
++| `@beep/settings-client` | Consumer (through RPC) |
++| `@beep/settings-ui` | Indirect consumer (through client) |
+ | `@beep/shared-server` | Dependency (infrastructure utilities) |
+ | `@beep/shared-domain` | Dependency (entity IDs, shared types) |
+ 
+@@ -183,7 +183,7 @@ bun run --filter @beep/customization-server lint:circular
+ - Use branded entity IDs from `@beep/shared-domain` for type safety
+ 
+ ### Layer Composition
+-- Layer dependency order: `DbClient.SliceDbRequirements` → `CustomizationDb` → `CustomizationRepos`
++- Layer dependency order: `DbClient.SliceDbRequirements` → `SettingsDb` → `CustomizationRepos`
+ - The `CustomizationDb.layer` requires `DbClient.SliceDbRequirements` (PostgreSQL connection pool)
+ - Repository layers automatically compose with database layer
+ 
+diff --git a/packages/customization/server/ai-context.md b/packages/settings/server/ai-context.md
+similarity index 61%
+rename from packages/customization/server/ai-context.md
+rename to packages/settings/server/ai-context.md
+index e62f8ebedc..4faf7bbc03 100644
+--- a/packages/customization/server/ai-context.md
++++ b/packages/settings/server/ai-context.md
+@@ -1,18 +1,18 @@
+ ---
+-path: packages/customization/server
+-summary: Server infrastructure for customization slice - Drizzle client, repositories, Effect Layers
+-tags: [customization, server, repository, effect, drizzle, postgresql, layer]
++path: packages/settings/server
++summary: Server infrastructure for settings slice - Drizzle client, repositories, Effect Layers
++tags: [settings, server, repository, effect, drizzle, postgresql, layer]
+ ---
+ 
+-# @beep/customization-server
++# @beep/settings-server
+ 
+-Server-side infrastructure layer for the customization slice. Provides database client (`CustomizationDb`), repositories, and composable Effect Layers for server runtime integration. All data access flows through typed repository services.
++Server-side infrastructure layer for the settings slice. Provides database client (`SettingsDb`), repositories, and composable Effect Layers for server runtime integration. All data access flows through typed repository services.
+ 
+ ## Architecture
+ 
+ ```
+ |---------------------|     |---------------------|
+-| SliceDbRequirements | --> |   CustomizationDb   |
++| SliceDbRequirements | --> |   SettingsDb   |
+ |---------------------|     |---------------------|
+                                      |
+                                      v
+@@ -22,7 +22,7 @@ Server-side infrastructure layer for the customization slice. Provides database
+                                      |
+                                      v
+ |---------------------|     |---------------------|
+-| CustomizationRepos  | --> |   Server Runtime    |
++| SettingsRepos  | --> |   Server Runtime    |
+ |      .layer         |     |   (RPC handlers)    |
+ |---------------------|     |---------------------|
+ ```
+@@ -31,10 +31,10 @@ Server-side infrastructure layer for the customization slice. Provides database
+ 
+ | Module | Purpose |
+ |--------|---------|
+-| `CustomizationDb.Db` | Effect Context tag for Drizzle client scoped to customization schema |
+-| `CustomizationDb.layer` | Layer providing Db service from SliceDbRequirements |
++| `SettingsDb.Db` | Effect Context tag for Drizzle client scoped to settings schema |
++| `SettingsDb.layer` | Layer providing Db service from SliceDbRequirements |
+ | `UserHotkeyRepo` | Repository service for user hotkey CRUD operations |
+-| `CustomizationRepos.layer` | Merged Layer providing all repository services |
++| `SettingsRepos.layer` | Merged Layer providing all repository services |
+ 
+ ## Usage Patterns
+ 
+@@ -42,7 +42,7 @@ Server-side infrastructure layer for the customization slice. Provides database
+ 
+ ```typescript
+ import * as Layer from "effect/Layer";
+-import { CustomizationDb, CustomizationRepos } from "@beep/customization-server";
++import { SettingsDb, CustomizationRepos } from "@beep/settings-server";
+ 
+ const CustomizationLayer = Layer.provide(
+   CustomizationRepos.layer,
+@@ -54,7 +54,7 @@ const CustomizationLayer = Layer.provide(
+ 
+ ```typescript
+ import * as Effect from "effect/Effect";
+-import { UserHotkeyRepo } from "@beep/customization-server";
++import { UserHotkeyRepo } from "@beep/settings-server";
+ 
+ const getUserHotkeys = (userId: string) =>
+   Effect.gen(function* () {
+@@ -69,8 +69,8 @@ const getUserHotkeys = (userId: string) =>
+ import * as Effect from "effect/Effect";
+ import { DbRepo } from "@beep/shared-server/factories";
+ import { CustomizationEntityIds } from "@beep/shared-domain";
+-import { Entities } from "@beep/customization-domain";
+-import { CustomizationDb } from "@beep/customization-server/db";
++import { Entities } from "@beep/settings-domain";
++import { CustomizationDb } from "@beep/settings-server/db";
+ 
+ const makeRepo = Effect.gen(function* () {
+   yield* CustomizationDb.Db;
+@@ -93,12 +93,12 @@ const makeRepo = Effect.gen(function* () {
+ 
+ ## Dependencies
+ 
+-**Internal**: `@beep/customization-domain` (Entities), `@beep/customization-tables` (schema), `@beep/shared-server` (DbClient, Repo factories), `@beep/shared-domain` (EntityIds)
++**Internal**: `@beep/settings-domain` (Entities), `@beep/settings-tables` (schema), `@beep/shared-server` (DbClient, Repo factories), `@beep/shared-domain` (EntityIds)
+ 
+ **External**: `effect`, `@effect/sql-pg`, `@effect/sql-drizzle`, `drizzle-orm`
+ 
+ ## Related
+ 
+ - **AGENTS.md** - Integration testing with Testcontainers, Layer composition patterns
+-- **@beep/customization-tables** - Schema definitions queried by repositories
+-- **@beep/customization-domain** - Entity models persisted by repositories
++- **@beep/settings-tables** - Schema definitions queried by repositories
++- **@beep/settings-domain** - Entity models persisted by repositories
+diff --git a/packages/customization/server/docgen.json b/packages/settings/server/docgen.json
+similarity index 70%
+rename from packages/customization/server/docgen.json
+rename to packages/settings/server/docgen.json
+index 112423b0b9..238493dc6f 100644
+--- a/packages/customization/server/docgen.json
++++ b/packages/settings/server/docgen.json
+@@ -2,7 +2,7 @@
+   "$schema": "../../../node_modules/@effect/docgen/schema.json",
+   "srcDir": "src",
+   "outDir": "docs",
+-  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/customization/server/src/",
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/settings/server/src/",
+   "exclude": ["src/internal/**/*.ts"],
+   "examplesCompilerOptions": {
+     "noEmit": true,
+@@ -13,12 +13,12 @@
+     "target": "ES2024",
+     "lib": ["ES2024", "DOM", "DOM.Iterable"],
+     "paths": {
+-      "@beep/customization-server": ["./src/index.ts"],
+-      "@beep/customization-server/*": ["./src/*"],
+-      "@beep/customization-domain": ["../domain/src/index.js"],
+-      "@beep/customization-domain/*": ["../domain/src/*.js"],
+-      "@beep/customization-tables": ["../tables/src/index.js"],
+-      "@beep/customization-tables/*": ["../tables/src/*.js"],
++      "@beep/settings-server": ["./src/index.ts"],
++      "@beep/settings-server/*": ["./src/*"],
++      "@beep/settings-domain": ["../domain/src/index.js"],
++      "@beep/settings-domain/*": ["../domain/src/*.js"],
++      "@beep/settings-tables": ["../tables/src/index.js"],
++      "@beep/settings-tables/*": ["../tables/src/*.js"],
+       "@beep/schema": ["../../common/schema/src/index.js"],
+       "@beep/schema/*": ["../../common/schema/src/*.js"],
+       "@beep/shared-server": ["../../shared/server/src/index.js"],
+diff --git a/packages/customization/server/index.ts b/packages/settings/server/index.ts
+similarity index 100%
+rename from packages/customization/server/index.ts
+rename to packages/settings/server/index.ts
+diff --git a/packages/customization/server/package.json b/packages/settings/server/package.json
+similarity index 89%
+rename from packages/customization/server/package.json
+rename to packages/settings/server/package.json
+index 30aeabab46..32f7694c2c 100644
+--- a/packages/customization/server/package.json
++++ b/packages/settings/server/package.json
+@@ -1,9 +1,9 @@
+ {
+-  "name": "@beep/customization-server",
++  "name": "@beep/settings-server",
+   "version": "0.0.0",
+   "type": "module",
+   "license": "MIT",
+-  "description": "The package which contains the server layer for the customization slice",
++  "description": "The package which contains the server layer for the settings slice",
+   "publishConfig": {
+     "access": "public",
+     "provenance": true,
+@@ -19,7 +19,7 @@
+   "repository": {
+     "type": "git",
+     "url": "git@github.com:kriegcloud/beep-effect.git",
+-    "directory": "packages/customization/server"
++    "directory": "packages/settings/server"
+   },
+   "scripts": {
+     "build": "bun run build-esm && bun run build-cjs && bun run build-annotate",
+@@ -36,9 +36,9 @@
+   },
+   "peerDependencies": {
+     "@beep/shared-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/shared-server": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@effect-aws/client-s3": "catalog:",
+     "@effect-aws/s3": "catalog:",
+     "@effect/cluster": "catalog:",
+@@ -56,9 +56,9 @@
+   },
+   "devDependencies": {
+     "@beep/shared-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/shared-server": "workspace:^",
+-    "@beep/customization-tables": "workspace:^",
++    "@beep/settings-tables": "workspace:^",
+     "@effect-aws/client-s3": "catalog:",
+     "@effect-aws/s3": "catalog:",
+     "@effect/cluster": "catalog:",
+diff --git a/packages/customization/server/reset.d.ts b/packages/settings/server/reset.d.ts
+similarity index 100%
+rename from packages/customization/server/reset.d.ts
+rename to packages/settings/server/reset.d.ts
+diff --git a/packages/customization/server/src/db.ts b/packages/settings/server/src/db.ts
+similarity index 100%
+rename from packages/customization/server/src/db.ts
+rename to packages/settings/server/src/db.ts
+diff --git a/packages/customization/server/src/db/Db/Db.ts b/packages/settings/server/src/db/Db/Db.ts
+similarity index 72%
+rename from packages/customization/server/src/db/Db/Db.ts
+rename to packages/settings/server/src/db/Db/Db.ts
+index c67b615a0b..33e3bedb9f 100644
+--- a/packages/customization/server/src/db/Db/Db.ts
++++ b/packages/settings/server/src/db/Db/Db.ts
+@@ -1,10 +1,10 @@
+-import * as DbSchema from "@beep/customization-tables/schema";
+-import { $CustomizationServerId } from "@beep/identity/packages";
++import * as DbSchema from "@beep/settings-tables/schema";
++import { $SettingsServerId } from "@beep/identity/packages";
+ import { DbClient } from "@beep/shared-server";
+ import * as Context from "effect/Context";
+ import * as Layer from "effect/Layer";
+ 
+-const $I = $CustomizationServerId.create("db/Db");
++const $I = $SettingsServerId.create("db/Db");
+ 
+ const serviceEffect: DbClient.PgClientServiceEffect<typeof DbSchema> = DbClient.make({
+   schema: DbSchema,
+diff --git a/packages/settings/server/src/db/Db/index.ts b/packages/settings/server/src/db/Db/index.ts
+new file mode 100644
+index 0000000000..30c42a26cc
+--- /dev/null
++++ b/packages/settings/server/src/db/Db/index.ts
+@@ -0,0 +1 @@
++export * as SettingsDb from "./Db";
+diff --git a/packages/settings/server/src/db/index.ts b/packages/settings/server/src/db/index.ts
+new file mode 100644
+index 0000000000..14310d0973
+--- /dev/null
++++ b/packages/settings/server/src/db/index.ts
+@@ -0,0 +1,2 @@
++export * from "./Db";
++export * as SettingsRepos from "./repositories";
+diff --git a/packages/customization/server/src/db/repositories.ts b/packages/settings/server/src/db/repositories.ts
+similarity index 84%
+rename from packages/customization/server/src/db/repositories.ts
+rename to packages/settings/server/src/db/repositories.ts
+index 0d96e997a9..3df0bb2a63 100644
+--- a/packages/customization/server/src/db/repositories.ts
++++ b/packages/settings/server/src/db/repositories.ts
+@@ -1,4 +1,4 @@
+-import type { Entities } from "@beep/customization-domain";
++import type { Entities } from "@beep/settings-domain";
+ import type { DbClient } from "@beep/shared-server";
+ import * as Layer from "effect/Layer";
+ import * as Live from "../entities";
+diff --git a/packages/customization/server/src/entities/UserHotkey/UserHotkey.repo.ts b/packages/settings/server/src/entities/UserHotkey/UserHotkey.repo.ts
+similarity index 81%
+rename from packages/customization/server/src/entities/UserHotkey/UserHotkey.repo.ts
+rename to packages/settings/server/src/entities/UserHotkey/UserHotkey.repo.ts
+index fa2eebe317..d5a21f75c6 100644
+--- a/packages/customization/server/src/entities/UserHotkey/UserHotkey.repo.ts
++++ b/packages/settings/server/src/entities/UserHotkey/UserHotkey.repo.ts
+@@ -1,5 +1,5 @@
+-import { Entities } from "@beep/customization-domain";
+-import { CustomizationDb } from "@beep/customization-server/db";
++import { Entities } from "@beep/settings-domain";
++import { CustomizationDb } from "@beep/settings-server/db";
+ import { CustomizationEntityIds } from "@beep/shared-domain";
+ import type { DbClient } from "@beep/shared-server";
+ import { DbRepo } from "@beep/shared-server/factories";
+diff --git a/packages/customization/server/src/entities/UserHotkey/index.ts b/packages/settings/server/src/entities/UserHotkey/index.ts
+similarity index 100%
+rename from packages/customization/server/src/entities/UserHotkey/index.ts
+rename to packages/settings/server/src/entities/UserHotkey/index.ts
+diff --git a/packages/customization/server/src/entities/index.ts b/packages/settings/server/src/entities/index.ts
+similarity index 100%
+rename from packages/customization/server/src/entities/index.ts
+rename to packages/settings/server/src/entities/index.ts
+diff --git a/packages/customization/server/src/index.ts b/packages/settings/server/src/index.ts
+similarity index 100%
+rename from packages/customization/server/src/index.ts
+rename to packages/settings/server/src/index.ts
+diff --git a/packages/customization/server/test/Dummy.test.ts b/packages/settings/server/test/Dummy.test.ts
+similarity index 100%
+rename from packages/customization/server/test/Dummy.test.ts
+rename to packages/settings/server/test/Dummy.test.ts
+diff --git a/packages/customization/server/tsconfig.build.json b/packages/settings/server/tsconfig.build.json
+similarity index 88%
+rename from packages/customization/server/tsconfig.build.json
+rename to packages/settings/server/tsconfig.build.json
+index a39cdf4ad0..013fa7843f 100644
+--- a/packages/customization/server/tsconfig.build.json
++++ b/packages/settings/server/tsconfig.build.json
+@@ -38,7 +38,7 @@
+       "path": "../../../packages/shared/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/domain/tsconfig.build.json"
++      "path": "../domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/shared/server/tsconfig.build.json"
+@@ -47,7 +47,7 @@
+       "path": "../../../packages/shared/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/tables/tsconfig.build.json"
++      "path": "../tables/tsconfig.build.json"
+     }
+   ]
+ }
+diff --git a/packages/customization/server/tsconfig.json b/packages/settings/server/tsconfig.json
+similarity index 100%
+rename from packages/customization/server/tsconfig.json
+rename to packages/settings/server/tsconfig.json
+diff --git a/packages/customization/server/tsconfig.src.json b/packages/settings/server/tsconfig.src.json
+similarity index 90%
+rename from packages/customization/server/tsconfig.src.json
+rename to packages/settings/server/tsconfig.src.json
+index b181929711..6364264623 100644
+--- a/packages/customization/server/tsconfig.src.json
++++ b/packages/settings/server/tsconfig.src.json
+@@ -30,7 +30,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../domain"
+     },
+     {
+       "path": "../../../packages/shared/server"
+@@ -39,7 +39,7 @@
+       "path": "../../../packages/shared/tables"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../tables"
+     }
+   ],
+   "compilerOptions": {
+diff --git a/packages/customization/server/tsconfig.test.json b/packages/settings/server/tsconfig.test.json
+similarity index 90%
+rename from packages/customization/server/tsconfig.test.json
+rename to packages/settings/server/tsconfig.test.json
+index d3d026e19c..7e3dca2fef 100644
+--- a/packages/customization/server/tsconfig.test.json
++++ b/packages/settings/server/tsconfig.test.json
+@@ -33,7 +33,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../domain"
+     },
+     {
+       "path": "../../../packages/shared/server"
+@@ -42,7 +42,7 @@
+       "path": "../../../packages/shared/tables"
+     },
+     {
+-      "path": "../../../packages/customization/tables"
++      "path": "../tables"
+     }
+   ],
+   "compilerOptions": {
+diff --git a/packages/customization/tables/AGENTS.md b/packages/settings/tables/AGENTS.md
+similarity index 78%
+rename from packages/customization/tables/AGENTS.md
+rename to packages/settings/tables/AGENTS.md
+index b1fa81e878..1ade4029c6 100644
+--- a/packages/customization/tables/AGENTS.md
++++ b/packages/settings/tables/AGENTS.md
+@@ -1,10 +1,10 @@
+-# @beep/customization-tables — Agent Guide
++# @beep/settings-tables — Agent Guide
+ 
+ ## Purpose & Fit
+-- Defines Drizzle ORM table schemas for the customization slice, providing the database structure for user preferences and personalization features.
++- Defines Drizzle ORM table schemas for the settings slice, providing the database structure for user preferences and personalization features.
+ - Uses `Table.make` factory from `@beep/shared-tables` to include standard audit columns (id, createdAt, updatedAt) automatically.
+ - Exports both table definitions and Drizzle relations for type-safe query building.
+-- Serves as the single source of truth for customization database schema that migrations are generated from.
++- Serves as the single source of truth for settings database schema that migrations are generated from.
+ 
+ ## Surface Map
+ - **CustomizationDbSchema** — Namespace re-exporting all table and relation definitions.
+@@ -13,7 +13,7 @@
+ - **Re-exports from @beep/shared-tables** — `organization`, `team`, `user` tables for cross-table references.
+ 
+ ## Usage Snapshots
+-- `@beep/customization-server` imports schemas to configure Drizzle client and build queries.
++- `@beep/settings-server` imports schemas to configure Drizzle client and build queries.
+ - Drizzle Kit uses these schemas to generate SQL migrations via `bun run db:generate`.
+ - Repository implementations reference table columns for type-safe insert/update operations.
+ - Integration tests validate schema alignment with domain models.
+@@ -48,14 +48,14 @@
+   ```
+ 
+ ## Verifications
+-- `bun run check --filter @beep/customization-tables`
+-- `bun run lint --filter @beep/customization-tables`
++- `bun run check --filter @beep/settings-tables`
++- `bun run lint --filter @beep/settings-tables`
+ - `bun run db:generate` — Regenerate migrations after schema changes
+ - `bun run db:migrate` — Apply migrations to database
+ 
+ ## Testing
+ 
+-- Run tests: `bun run test --filter=@beep/customization-tables`
++- Run tests: `bun run test --filter=@beep/settings-tables`
+ - Test file location: Adjacent to source files as `*.test.ts`
+ - Use `@beep/testkit` for Effect testing utilities
+ - ALWAYS test schema encode/decode roundtrips
+@@ -69,23 +69,23 @@
+ 
+ ### Migration Ordering
+ - **User table dependency**: `userHotkey.userId` references the shared `user` table. Ensure shared table migrations run first—this is automatic via `db-admin`, but custom migration scripts may break ordering.
+-- **Adding new preference tables**: New customization tables should follow the `userHotkey` pattern with a `userId` foreign key. Coordinate migration numbering with `db-admin` to avoid sequence gaps.
++- **Adding new preference tables**: New settings tables should follow the `userHotkey` pattern with a `userId` foreign key. Coordinate migration numbering with `db-admin` to avoid sequence gaps.
+ - **Nullable vs required columns**: Changing a column from nullable to required requires a data migration to populate existing rows. Plan the migration in two phases: add default, then add constraint.
+ 
+ ### Relation Definition Gotchas
+-- **One-to-one user preferences**: Most customization tables have a one-to-one relationship with `user`. Use `uniqueIndex` on the `userId` column to enforce this at the database level—Drizzle `one()` relations do not enforce uniqueness.
+-- **Cascade delete behavior**: User preference data should cascade when the user is deleted. Always use `onDelete: 'cascade'` for `userId` foreign keys to prevent orphaned customization rows.
++- **One-to-one user preferences**: Most settings tables have a one-to-one relationship with `user`. Use `uniqueIndex` on the `userId` column to enforce this at the database level—Drizzle `one()` relations do not enforce uniqueness.
++- **Cascade delete behavior**: User preference data should cascade when the user is deleted. Always use `onDelete: 'cascade'` for `userId` foreign keys to prevent orphaned settings rows.
+ - **No cross-organization preferences**: Customization tables should not reference `organizationId` unless preferences are organization-scoped. The `userHotkey` table correctly uses `Table.make`, not `OrgTable.make`.
+ 
+ ### Integration with Domain Entities
+ - **Schema validation for JSONB**: The `shortcuts` column stores structured data, but PostgreSQL does not validate the JSON structure. Use Effect Schema in the domain layer to validate and decode JSONB content on read.
+-- **Default preference generation**: When a user has no customization row, the domain layer should return defaults—do not insert empty rows on user creation. This pattern keeps the table sparse.
++- **Default preference generation**: When a user has no settings row, the domain layer should return defaults—do not insert empty rows on user creation. This pattern keeps the table sparse.
+ - **Preference versioning**: Consider adding a `schemaVersion` column if the JSONB structure may evolve. This allows domain code to migrate old preference formats without database migrations.
+ 
+ ## Contributor Checklist
+-- [ ] Align table columns with domain entity fields from `@beep/customization-domain`.
++- [ ] Align table columns with domain entity fields from `@beep/settings-domain`.
+ - [ ] Use `Table.make` factory for consistent audit columns.
+ - [ ] Define appropriate indexes for query performance.
+ - [ ] Specify `onDelete` behavior for all foreign keys.
+ - [ ] Run `bun run db:generate` and commit migration files after schema changes.
+-- [ ] Update `@beep/customization-server` repositories if column types change.
++- [ ] Update `@beep/settings-server` repositories if column types change.
+diff --git a/packages/customization/tables/CLAUDE.md b/packages/settings/tables/CLAUDE.md
+similarity index 100%
+rename from packages/customization/tables/CLAUDE.md
+rename to packages/settings/tables/CLAUDE.md
+diff --git a/packages/customization/tables/README.md b/packages/settings/tables/README.md
+similarity index 64%
+rename from packages/customization/tables/README.md
+rename to packages/settings/tables/README.md
+index 74af026c10..fcb896286b 100644
+--- a/packages/customization/tables/README.md
++++ b/packages/settings/tables/README.md
+@@ -1,24 +1,24 @@
+-# @beep/customization-tables
++# @beep/settings-tables
+ 
+-Drizzle table definitions for the Customization vertical slice, providing type-safe PostgreSQL schema definitions for user preferences, themes, and customization settings.
++Drizzle table definitions for the Settings vertical slice, providing type-safe PostgreSQL schema definitions for user preferences, themes, and settings settings.
+ 
+ ## Purpose
+ 
+-Defines multi-tenant Drizzle tables for the Customization slice using factory patterns from `@beep/shared-tables`. Tables integrate with Customization domain entities via Effect SQL Model annotations while maintaining full type safety for database operations.
++Defines multi-tenant Drizzle tables for the Settings slice using factory patterns from `@beep/shared-tables`. Tables integrate with Settings domain entities via Effect SQL Model annotations while maintaining full type safety for database operations.
+ 
+ ## Installation
+ 
+ ```bash
+ # This package is internal to the monorepo
+ # Add as a dependency in your package.json:
+-"@beep/customization-tables": "workspace:*"
++"@beep/settings-tables": "workspace:*"
+ ```
+ 
+ ## Key Exports
+ 
+ | Export | Description |
+ |--------|-------------|
+-| `CustomizationDbSchema` | Namespace containing all tables and relations |
++| `SettingsDbSchema` | Namespace containing all tables and relations |
+ | `userHotkey` | Drizzle table for user keyboard shortcut configurations |
+ | `userHotkeyRelations` | Drizzle relations for userHotkey table |
+ | `userRelations` | Extended user relations including hotkeys |
+@@ -29,7 +29,7 @@ Defines multi-tenant Drizzle tables for the Customization slice using factory pa
+ ### Import Schema into Database Client
+ 
+ ```typescript
+-import * as DbSchema from "@beep/customization-tables/schema";
++import * as DbSchema from "@beep/settings-tables/schema";
+ import { DbClient } from "@beep/shared-server";
+ import * as Context from "effect/Context";
+ import * as Layer from "effect/Layer";
+@@ -38,15 +38,15 @@ const serviceEffect = DbClient.make({
+   schema: DbSchema,
+ });
+ 
+-export type CustomizationDbShape = DbClient.Shape<typeof DbSchema>;
++export type SettingsDbShape = DbClient.Shape<typeof DbSchema>;
+ 
+-export class CustomizationDb extends Context.Tag("CustomizationDb")<
+-  CustomizationDb,
+-  CustomizationDbShape
++export class SettingsDb extends Context.Tag("SettingsDb")<
++  SettingsDb,
++  SettingsDbShape
+ >() {}
+ 
+-export const CustomizationDbLive: Layer.Layer<
+-  CustomizationDb,
++export const SettingsDbLive: Layer.Layer<
++  SettingsDb,
+   never,
+   DbClient.SliceDbRequirements
+ > = Layer.scoped(CustomizationDb, serviceEffect);
+@@ -55,7 +55,7 @@ export const CustomizationDbLive: Layer.Layer<
+ ### Import Tables Directly
+ 
+ ```typescript
+-import { userHotkey } from "@beep/customization-tables";
++import { userHotkey } from "@beep/settings-tables";
+ import * as Effect from "effect/Effect";
+ 
+ // Access table columns
+@@ -71,7 +71,7 @@ const columns = {
+ ### Query with Relations
+ 
+ ```typescript
+-import { CustomizationDb } from "@beep/customization-server/db";
++import { CustomizationDb } from "@beep/settings-server/db";
+ import type { SharedEntityIds } from "@beep/shared-domain";
+ import * as Effect from "effect/Effect";
+ 
+@@ -96,20 +96,20 @@ const findUserHotkeys = (userId: SharedEntityIds.UserId.Type) =>
+ 
+ ```bash
+ # Type check
+-bun run --filter @beep/customization-tables check
++bun run --filter @beep/settings-tables check
+ 
+ # Lint
+-bun run --filter @beep/customization-tables lint
+-bun run --filter @beep/customization-tables lint:fix
++bun run --filter @beep/settings-tables lint
++bun run --filter @beep/settings-tables lint:fix
+ 
+ # Build
+-bun run --filter @beep/customization-tables build
++bun run --filter @beep/settings-tables build
+ 
+ # Run tests
+-bun run --filter @beep/customization-tables test
++bun run --filter @beep/settings-tables test
+ 
+ # Check for circular dependencies
+-bun run --filter @beep/customization-tables lint:circular
++bun run --filter @beep/settings-tables lint:circular
+ 
+ # Generate migrations
+ bun run db:generate
+@@ -125,7 +125,7 @@ bun run db:migrate
+ | `drizzle-orm` | ORM toolkit and table definitions |
+ | `@beep/shared-tables` | Table factory patterns (`Table.make`, `OrgTable.make`) |
+ | `@beep/shared-domain` | Shared entity ID types |
+-| `@beep/customization-domain` | Customization entity models |
++| `@beep/settings-domain` | Customization entity models |
+ 
+ ## Integration
+ 
+@@ -140,8 +140,8 @@ When adding or modifying tables:
+ 
+ ### Relationship to Other Packages
+ 
+-- `@beep/customization-domain` — Entity models that inform table structure
+-- `@beep/customization-server` — Consumes schema for database operations
++- `@beep/settings-domain` — Entity models that inform table structure
++- `@beep/settings-server` — Consumes schema for database operations
+ - `@beep/shared-tables` — Provides table factory utilities
+ - `@beep/db-admin` — Uses schema for migration validation
+ 
+diff --git a/packages/customization/tables/ai-context.md b/packages/settings/tables/ai-context.md
+similarity index 78%
+rename from packages/customization/tables/ai-context.md
+rename to packages/settings/tables/ai-context.md
+index a2efc67fac..8ab1cb375d 100644
+--- a/packages/customization/tables/ai-context.md
++++ b/packages/settings/tables/ai-context.md
+@@ -1,12 +1,12 @@
+ ---
+-path: packages/customization/tables
+-summary: Drizzle ORM table schemas for customization slice - user hotkeys with typed foreign keys
+-tags: [customization, tables, drizzle, postgresql, database, schema]
++path: packages/settings/tables
++summary: Drizzle ORM table schemas for settings slice - user hotkeys with typed foreign keys
++tags: [settings, tables, drizzle, postgresql, database, schema]
+ ---
+ 
+-# @beep/customization-tables
++# @beep/settings-tables
+ 
+-Drizzle ORM table definitions for the customization slice. Provides database schema for user preferences and personalization features, using `Table.make` factory for consistent audit columns and typed primary keys.
++Drizzle ORM table definitions for the settings slice. Provides database schema for user preferences and personalization features, using `Table.make` factory for consistent audit columns and typed primary keys.
+ 
+ ## Architecture
+ 
+@@ -61,7 +61,7 @@ export const userTheme = Table.make(CustomizationEntityIds.UserThemeId)(
+ ### Import Schema in Server
+ 
+ ```typescript
+-import * as DbSchema from "@beep/customization-tables/schema";
++import * as DbSchema from "@beep/settings-tables/schema";
+ import { DbClient } from "@beep/shared-server";
+ 
+ const client = DbClient.make({ schema: DbSchema });
+@@ -79,12 +79,12 @@ const client = DbClient.make({ schema: DbSchema });
+ 
+ ## Dependencies
+ 
+-**Internal**: `@beep/shared-domain` (EntityIds), `@beep/shared-tables` (Table.make, user), `@beep/customization-domain` (type references)
++**Internal**: `@beep/shared-domain` (EntityIds), `@beep/shared-tables` (Table.make, user), `@beep/settings-domain` (type references)
+ 
+ **External**: `drizzle-orm`
+ 
+ ## Related
+ 
+ - **AGENTS.md** - Migration ordering, JSONB gotchas, relation definitions
+-- **@beep/customization-domain** - Domain entities these tables persist
+-- **@beep/customization-server** - Repositories querying these tables
++- **@beep/settings-domain** - Domain entities these tables persist
++- **@beep/settings-server** - Repositories querying these tables
+diff --git a/packages/customization/tables/docgen.json b/packages/settings/tables/docgen.json
+similarity index 75%
+rename from packages/customization/tables/docgen.json
+rename to packages/settings/tables/docgen.json
+index 282a13e499..a44696a8e1 100644
+--- a/packages/customization/tables/docgen.json
++++ b/packages/settings/tables/docgen.json
+@@ -2,7 +2,7 @@
+   "$schema": "../../../node_modules/@effect/docgen/schema.json",
+   "srcDir": "src",
+   "outDir": "docs",
+-  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/customization/tables/src/",
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/settings/tables/src/",
+   "exclude": ["src/internal/**/*.ts"],
+   "examplesCompilerOptions": {
+     "noEmit": true,
+@@ -13,16 +13,16 @@
+     "target": "ES2024",
+     "lib": ["ES2024", "DOM", "DOM.Iterable"],
+     "paths": {
+-      "@beep/customization-tables": ["./src/index.ts"],
+-      "@beep/customization-tables/*": ["./src/*"],
++      "@beep/settings-tables": ["./src/index.ts"],
++      "@beep/settings-tables/*": ["./src/*"],
+       "@beep/shared-tables": ["../../shared/tables/src/index.js"],
+       "@beep/shared-tables/*": ["../../shared/tables/src/*.js"],
+       "@beep/schema": ["../../common/schema/src/index.js"],
+       "@beep/schema/*": ["../../common/schema/src/*.js"],
+       "@beep/shared-domain": ["../../shared/domain/src/index.js"],
+       "@beep/shared-domain/*": ["../../shared/domain/src/*.js"],
+-      "@beep/customization-domain": ["../domain/src/index.js"],
+-      "@beep/customization-domain/*": ["../domain/src/*.js"]
++      "@beep/settings-domain": ["../domain/src/index.js"],
++      "@beep/settings-domain/*": ["../domain/src/*.js"]
+     }
+   }
+ }
+diff --git a/packages/customization/tables/package.json b/packages/settings/tables/package.json
+similarity index 88%
+rename from packages/customization/tables/package.json
+rename to packages/settings/tables/package.json
+index 4f7e33fdd7..f36c1f56f7 100644
+--- a/packages/customization/tables/package.json
++++ b/packages/settings/tables/package.json
+@@ -1,9 +1,9 @@
+ {
+-  "name": "@beep/customization-tables",
++  "name": "@beep/settings-tables",
+   "version": "0.0.0",
+   "type": "module",
+   "license": "MIT",
+-  "description": "The package which contains table definitions for the customization context",
++  "description": "The package which contains table definitions for the settings context",
+   "publishConfig": {
+     "access": "public",
+     "provenance": true,
+@@ -18,7 +18,7 @@
+   "repository": {
+     "type": "git",
+     "url": "git@github.com:kriegcloud/beep-effect.git",
+-    "directory": "packages/customization/tables"
++    "directory": "packages/settings/tables"
+   },
+   "scripts": {
+     "build": "bun run build-esm && bun run build-cjs && bun run build-annotate",
+@@ -35,13 +35,13 @@
+   },
+   "peerDependencies": {
+     "@beep/shared-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/shared-tables": "workspace:^",
+     "drizzle-orm": "catalog:"
+   },
+   "devDependencies": {
+     "@beep/shared-domain": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@beep/shared-tables": "workspace:^",
+     "@effect/docgen": "catalog:",
+     "@total-typescript/ts-reset": "catalog:",
+diff --git a/packages/customization/tables/reset.d.ts b/packages/settings/tables/reset.d.ts
+similarity index 100%
+rename from packages/customization/tables/reset.d.ts
+rename to packages/settings/tables/reset.d.ts
+diff --git a/packages/customization/tables/src/_check.ts b/packages/settings/tables/src/_check.ts
+similarity index 84%
+rename from packages/customization/tables/src/_check.ts
+rename to packages/settings/tables/src/_check.ts
+index 8d5fb8f5d7..fc2ce2e709 100644
+--- a/packages/customization/tables/src/_check.ts
++++ b/packages/settings/tables/src/_check.ts
+@@ -1,4 +1,4 @@
+-import type { UserHotkey } from "@beep/customization-domain/entities";
++import type { UserHotkey } from "@beep/settings-domain/entities";
+ import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+ 
+ import type * as tables from "./schema";
+diff --git a/packages/customization/tables/src/index.ts b/packages/settings/tables/src/index.ts
+similarity index 100%
+rename from packages/customization/tables/src/index.ts
+rename to packages/settings/tables/src/index.ts
+diff --git a/packages/customization/tables/src/relations.ts b/packages/settings/tables/src/relations.ts
+similarity index 100%
+rename from packages/customization/tables/src/relations.ts
+rename to packages/settings/tables/src/relations.ts
+diff --git a/packages/customization/tables/src/schema.ts b/packages/settings/tables/src/schema.ts
+similarity index 100%
+rename from packages/customization/tables/src/schema.ts
+rename to packages/settings/tables/src/schema.ts
+diff --git a/packages/customization/tables/src/tables/index.ts b/packages/settings/tables/src/tables/index.ts
+similarity index 100%
+rename from packages/customization/tables/src/tables/index.ts
+rename to packages/settings/tables/src/tables/index.ts
+diff --git a/packages/customization/tables/src/tables/user-hotkey.table.ts b/packages/settings/tables/src/tables/user-hotkey.table.ts
+similarity index 90%
+rename from packages/customization/tables/src/tables/user-hotkey.table.ts
+rename to packages/settings/tables/src/tables/user-hotkey.table.ts
+index 24f988030a..6f51cf7e61 100644
+--- a/packages/customization/tables/src/tables/user-hotkey.table.ts
++++ b/packages/settings/tables/src/tables/user-hotkey.table.ts
+@@ -1,4 +1,4 @@
+-import type { UserHotkey } from "@beep/customization-domain/entities";
++import type { UserHotkey } from "@beep/settings-domain/entities";
+ import type { SharedEntityIds } from "@beep/shared-domain";
+ import { CustomizationEntityIds } from "@beep/shared-domain";
+ import { Table, user } from "@beep/shared-tables";
+diff --git a/packages/customization/tables/test/Dummy.test.ts b/packages/settings/tables/test/Dummy.test.ts
+similarity index 100%
+rename from packages/customization/tables/test/Dummy.test.ts
+rename to packages/settings/tables/test/Dummy.test.ts
+diff --git a/packages/customization/tables/tsconfig.build.json b/packages/settings/tables/tsconfig.build.json
+similarity index 93%
+rename from packages/customization/tables/tsconfig.build.json
+rename to packages/settings/tables/tsconfig.build.json
+index 9aaf8d1f3a..985f8bf1af 100644
+--- a/packages/customization/tables/tsconfig.build.json
++++ b/packages/settings/tables/tsconfig.build.json
+@@ -38,7 +38,7 @@
+       "path": "../../../packages/shared/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/domain/tsconfig.build.json"
++      "path": "../domain/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/shared/tables/tsconfig.build.json"
+diff --git a/packages/customization/tables/tsconfig.json b/packages/settings/tables/tsconfig.json
+similarity index 100%
+rename from packages/customization/tables/tsconfig.json
+rename to packages/settings/tables/tsconfig.json
+diff --git a/packages/customization/tables/tsconfig.src.json b/packages/settings/tables/tsconfig.src.json
+similarity index 94%
+rename from packages/customization/tables/tsconfig.src.json
+rename to packages/settings/tables/tsconfig.src.json
+index 154757b11c..9876225832 100644
+--- a/packages/customization/tables/tsconfig.src.json
++++ b/packages/settings/tables/tsconfig.src.json
+@@ -30,7 +30,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../domain"
+     },
+     {
+       "path": "../../../packages/shared/tables"
+diff --git a/packages/customization/tables/tsconfig.test.json b/packages/settings/tables/tsconfig.test.json
+similarity index 94%
+rename from packages/customization/tables/tsconfig.test.json
+rename to packages/settings/tables/tsconfig.test.json
+index 98220f1324..0af2faf14d 100644
+--- a/packages/customization/tables/tsconfig.test.json
++++ b/packages/settings/tables/tsconfig.test.json
+@@ -33,7 +33,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../domain"
+     },
+     {
+       "path": "../../../packages/shared/tables"
+diff --git a/packages/customization/ui/AGENTS.md b/packages/settings/ui/AGENTS.md
+similarity index 85%
+rename from packages/customization/ui/AGENTS.md
+rename to packages/settings/ui/AGENTS.md
+index f66f6b3008..dbffcfa60d 100644
+--- a/packages/customization/ui/AGENTS.md
++++ b/packages/settings/ui/AGENTS.md
+@@ -1,20 +1,20 @@
+-# @beep/customization-ui — Agent Guide
++# @beep/settings-ui — Agent Guide
+ 
+ ## Purpose & Fit
+-- Provides React UI components for the customization slice, enabling user preference management in the frontend.
++- Provides React UI components for the settings slice, enabling user preference management in the frontend.
+ - Contains components for hotkey configuration, theme selection, and other personalization features.
+-- Integrates with `@beep/customization-client` contracts via TanStack Query hooks.
+-- Currently a minimal scaffold awaiting component implementations as the customization feature matures.
++- Integrates with `@beep/settings-client` contracts via TanStack Query hooks.
++- Currently a minimal scaffold awaiting component implementations as the settings feature matures.
+ 
+ ## Surface Map (Exports)
+ 
+ > **Status**: Awaiting implementation - no exports yet
+ 
+-Planned components will include theme customization UI.
++Planned components will include theme settings UI.
+ 
+ ## Usage Snapshots
+ - Next.js app imports components from this package for settings pages.
+-- Components use TanStack Query hooks wrapping customization contracts for data fetching.
++- Components use TanStack Query hooks wrapping settings contracts for data fetching.
+ - Theme and preference components integrate with client-side ManagedRuntime for Effect-based state.
+ - Storybook stories showcase component variants and interactions.
+ 
+@@ -39,7 +39,7 @@ Planned components will include theme customization UI.
+   "use client";
+   import { useQuery } from "@tanstack/react-query";
+   import { Box, Typography } from "@mui/material";
+-  // import { hotkeyContract } from "@beep/customization-client";
++  // import { hotkeyContract } from "@beep/settings-client";
+ 
+   export function HotkeySettings({ userId }: { userId: string }) {
+     // const { data: hotkeys, isLoading } = useQuery({
+@@ -57,13 +57,13 @@ Planned components will include theme customization UI.
+   ```
+ 
+ ## Verifications
+-- `bun run check --filter @beep/customization-ui`
+-- `bun run lint --filter @beep/customization-ui`
+-- `bun run test --filter @beep/customization-ui`
++- `bun run check --filter @beep/settings-ui`
++- `bun run lint --filter @beep/settings-ui`
++- `bun run test --filter @beep/settings-ui`
+ 
+ ## Testing
+ 
+-- Type check: `bun run check --filter=@beep/customization-ui`
++- Type check: `bun run check --filter=@beep/settings-ui`
+ - Visual testing via Storybook (if available)
+ - ALWAYS verify component accessibility
+ 
+@@ -89,7 +89,7 @@ Planned components will include theme customization UI.
+ - Effect schemas validate preference values. Use `S.decodeUnknownSync` for immediate form validation feedback.
+ - NEVER construct Effects during render. Create them in event handlers or `useEffect`.
+ 
+-### Customization-Specific Pitfalls
++### Settings-Specific Pitfalls
+ - Theme changes may cause full-page re-renders. Ensure `ThemeProvider` is high in the component tree to minimize re-render scope.
+ - Hotkey conflicts between application shortcuts and browser shortcuts (e.g., Ctrl+S) require careful handling.
+ - Preference persistence timing matters. Save preferences on blur or with debouncing, not on every keystroke.
+@@ -99,7 +99,7 @@ Planned components will include theme customization UI.
+ ## Contributor Checklist
+ - [ ] Add `"use client"` directive for interactive components.
+ - [ ] Follow MUI/Tailwind styling patterns from `@beep/ui-core`.
+-- [ ] Integrate with TanStack Query for data fetching via customization contracts.
++- [ ] Integrate with TanStack Query for data fetching via settings contracts.
+ - [ ] Add TypeScript doc comments for exported components.
+ - [ ] Create Storybook stories for visual component testing.
+ - [ ] Re-run verification commands above before handing work off.
+diff --git a/packages/customization/ui/CLAUDE.md b/packages/settings/ui/CLAUDE.md
+similarity index 100%
+rename from packages/customization/ui/CLAUDE.md
+rename to packages/settings/ui/CLAUDE.md
+diff --git a/packages/customization/ui/README.md b/packages/settings/ui/README.md
+similarity index 75%
+rename from packages/customization/ui/README.md
+rename to packages/settings/ui/README.md
+index 90750801b4..4a16ecc080 100644
+--- a/packages/customization/ui/README.md
++++ b/packages/settings/ui/README.md
+@@ -1,19 +1,19 @@
+-# @beep/customization-ui
++# @beep/settings-ui
+ 
+-React UI components for the customization slice, providing user preference management interfaces.
++React UI components for the settings slice, providing user preference management interfaces.
+ 
+ ## Purpose
+ 
+-The customization UI package provides React components for all user preference and personalization features in the beep-effect application. It includes theme selectors, hotkey configuration panels, layout customization controls, and other preference management interfaces. Components integrate with `@beep/customization-client` contracts via TanStack Query hooks for data fetching and use Effect's client runtime for type-safe operations. The package follows MUI and Tailwind patterns from `@beep/ui-core` for consistent styling across the application.
++The settings UI package provides React components for all user preference and personalization features in the beep-effect application. It includes theme selectors, hotkey configuration panels, layout settings controls, and other preference management interfaces. Components integrate with `@beep/settings-client` contracts via TanStack Query hooks for data fetching and use Effect's client runtime for type-safe operations. The package follows MUI and Tailwind patterns from `@beep/ui-core` for consistent styling across the application.
+ 
+-This package is currently a minimal scaffold awaiting component implementations as the customization feature set expands.
++This package is currently a minimal scaffold awaiting component implementations as the settings feature set expands.
+ 
+ ## Installation
+ 
+ ```bash
+ # This package is internal to the monorepo
+ # Add as a dependency in your package.json:
+-"@beep/customization-ui": "workspace:*"
++"@beep/settings-ui": "workspace:*"
+ ```
+ 
+ ## Key Exports
+@@ -24,9 +24,9 @@ This package is currently in scaffold state with a placeholder `beep` export. Fu
+ |--------|-------------|
+ | `ThemeSelector` | Theme and color scheme picker component |
+ | `HotkeySettings` | Keyboard shortcut configuration panel |
+-| `LayoutPreferences` | Layout and UI density customization |
++| `LayoutPreferences` | Layout and UI density settings |
+ | `PreferencePanel` | General preference management interface |
+-| `AppearanceSettings` | Appearance customization (fonts, spacing, etc.) |
++| `AppearanceSettings` | Appearance settings (fonts, spacing, etc.) |
+ 
+ ## Usage
+ 
+@@ -34,7 +34,7 @@ This package is currently in scaffold state with a placeholder `beep` export. Fu
+ 
+ ```typescript
+ "use client";
+-import { ThemeSelector } from "@beep/customization-ui";
++import { ThemeSelector } from "@beep/settings-ui";
+ import * as Effect from "effect/Effect";
+ 
+ export function SettingsPage({ userId }: { userId: string }) {
+@@ -51,7 +51,7 @@ export function SettingsPage({ userId }: { userId: string }) {
+ 
+ ```typescript
+ "use client";
+-import { HotkeySettings } from "@beep/customization-ui";
++import { HotkeySettings } from "@beep/settings-ui";
+ import * as Effect from "effect/Effect";
+ import * as F from "effect/Function";
+ 
+@@ -74,9 +74,9 @@ export function KeyboardShortcutsPage({ userId }: { userId: string }) {
+ 
+ ```typescript
+ "use client";
+-import { PreferencePanel } from "@beep/customization-ui";
++import { PreferencePanel } from "@beep/settings-ui";
+ import { useQuery, useMutation } from "@tanstack/react-query";
+-import * as PreferenceContracts from "@beep/customization-client";
++import * as PreferenceContracts from "@beep/settings-client";
+ import { clientRuntimeLayer } from "@beep/runtime-client";
+ import { Atom } from "@effect-atom/atom-react";
+ import * as F from "effect/Function";
+@@ -115,7 +115,7 @@ export function PreferencesPage({ userId }: { userId: string }) {
+ |---------|---------|
+ | `react` | React library for UI components |
+ | `react-dom` | React DOM rendering |
+-| `@beep/customization-client` | Customization contracts for data fetching |
++| `@beep/settings-client` | Settings contracts for data fetching |
+ | `@beep/ui-core` | Design tokens, MUI theme, settings types, and utilities |
+ | `@beep/runtime-client` | Client-side Effect runtime |
+ | `@tanstack/react-query` | Data fetching and caching |
+@@ -125,7 +125,7 @@ export function PreferencesPage({ userId }: { userId: string }) {
+ 
+ ## Integration
+ 
+-- **Client Layer**: Consumes contracts from `@beep/customization-client` for data operations
++- **Client Layer**: Consumes contracts from `@beep/settings-client` for data operations
+ - **UI System**: Uses MUI components, design tokens, theme system, and settings types from `@beep/ui-core` (accessed via `@beep/ui-core/theme/*`, `@beep/ui-core/settings/*`, `@beep/ui-core/utils/*`)
+ - **Runtime**: Integrates with `@beep/runtime-client` for Effect-based operations
+ - **Query Layer**: Uses TanStack Query for data fetching, caching, and optimistic updates
+@@ -134,25 +134,25 @@ export function PreferencesPage({ userId }: { userId: string }) {
+ 
+ ```bash
+ # Type check
+-bun run --filter @beep/customization-ui check
++bun run --filter @beep/settings-ui check
+ 
+ # Lint
+-bun run --filter @beep/customization-ui lint
++bun run --filter @beep/settings-ui lint
+ 
+ # Lint and auto-fix
+-bun run --filter @beep/customization-ui lint:fix
++bun run --filter @beep/settings-ui lint:fix
+ 
+ # Build
+-bun run --filter @beep/customization-ui build
++bun run --filter @beep/settings-ui build
+ 
+ # Run tests
+-bun run --filter @beep/customization-ui test
++bun run --filter @beep/settings-ui test
+ 
+ # Test with coverage
+-bun run --filter @beep/customization-ui coverage
++bun run --filter @beep/settings-ui coverage
+ 
+ # Watch mode for development
+-bun run --filter @beep/customization-ui dev
++bun run --filter @beep/settings-ui dev
+ ```
+ 
+ ## Notes
+@@ -210,6 +210,6 @@ For preference state management:
+ - Test component rendering with different preference states
+ - Verify accessibility with automated a11y testing tools
+ - Test integration with TanStack Query hooks
+-- Mock customization contracts for isolated component testing
++- Mock settings contracts for isolated component testing
+ - Test preference persistence and synchronization
+ - Use `@beep/testkit` for Effect-based test utilities
+diff --git a/packages/customization/ui/ai-context.md b/packages/settings/ui/ai-context.md
+similarity index 82%
+rename from packages/customization/ui/ai-context.md
+rename to packages/settings/ui/ai-context.md
+index f7c0c37422..536fe2a39c 100644
+--- a/packages/customization/ui/ai-context.md
++++ b/packages/settings/ui/ai-context.md
+@@ -1,20 +1,20 @@
+ ---
+-path: packages/customization/ui
++path: packages/settings/ui
+ summary: React components for user preferences - hotkey config, theme selection, personalization UI
+-tags: [customization, ui, react, mui, tanstack-query, settings, accessibility]
++tags: [settings, ui, react, mui, tanstack-query, settings, accessibility]
+ ---
+ 
+-# @beep/customization-ui
++# @beep/settings-ui
+ 
+-React UI components for the customization slice. Provides user-facing interfaces for hotkey configuration, theme selection, and personalization features. Integrates with `@beep/customization-client` contracts via TanStack Query hooks.
++React UI components for the settings slice. Provides user-facing interfaces for hotkey configuration, theme selection, and personalization features. Integrates with `@beep/settings-client` contracts via TanStack Query hooks.
+ 
+-**Status**: Minimal scaffold - awaiting component implementations as customization features mature.
++**Status**: Minimal scaffold - awaiting component implementations as settings features mature.
+ 
+ ## Architecture
+ 
+ ```
+ |---------------------|     |---------------------|
+-| @beep/customization | --> |   TanStack Query    |
++| @beep/settings | --> |   TanStack Query    |
+ |       -client       |     |       hooks         |
+ |---------------------|     |---------------------|
+                                      |
+@@ -49,7 +49,7 @@ React UI components for the customization slice. Provides user-facing interfaces
+ import * as React from "react";
+ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+ import { Box, Typography, TextField } from "@mui/material";
+-// import { hotkeyContract } from "@beep/customization-client";
++// import { hotkeyContract } from "@beep/settings-client";
+ 
+ export function HotkeySettings({ userId }: { userId: string }) {
+   const queryClient = useQueryClient();
+@@ -114,12 +114,12 @@ export function ThemeSelector() {
+ 
+ ## Dependencies
+ 
+-**Internal**: `@beep/customization-client` (contracts), `@beep/ui-core` (MUI theme, components), `@beep/runtime-client` (Effect hooks)
++**Internal**: `@beep/settings-client` (contracts), `@beep/ui-core` (MUI theme, components), `@beep/runtime-client` (Effect hooks)
+ 
+ **External**: `effect`, `@tanstack/react-query`, `@mui/material`, `react`
+ 
+ ## Related
+ 
+ - **AGENTS.md** - React 19 patterns, query invalidation, Effect integration in React
+-- **@beep/customization-client** - RPC contracts consumed by these components
++- **@beep/settings-client** - RPC contracts consumed by these components
+ - **@beep/ui-core** - Theme system and settings provider
+diff --git a/packages/customization/client/docgen.json b/packages/settings/ui/docgen.json
+similarity index 76%
+rename from packages/customization/client/docgen.json
+rename to packages/settings/ui/docgen.json
+index 2ccd7be030..8d404c60d1 100644
+--- a/packages/customization/client/docgen.json
++++ b/packages/settings/ui/docgen.json
+@@ -2,7 +2,7 @@
+   "$schema": "../../../node_modules/@effect/docgen/schema.json",
+   "srcDir": "src",
+   "outDir": "docs",
+-  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/customization/client/src/",
++  "srcLink": "https://github.com/kriegcloud/beep-effect/tree/main/packages/settings/ui/src/",
+   "exclude": ["src/internal/**/*.ts"],
+   "examplesCompilerOptions": {
+     "noEmit": true,
+@@ -13,8 +13,8 @@
+     "target": "ES2024",
+     "lib": ["ES2024", "DOM", "DOM.Iterable"],
+     "paths": {
+-      "@beep/customization-client": ["./src/index.ts"],
+-      "@beep/customization-client/*": ["./src/*"]
++      "@beep/settings-ui": ["./src/index.ts"],
++      "@beep/settings-ui/*": ["./src/*"]
+     }
+   }
+ }
+diff --git a/packages/customization/ui/package.json b/packages/settings/ui/package.json
+similarity index 83%
+rename from packages/customization/ui/package.json
+rename to packages/settings/ui/package.json
+index be1ef1704a..1d345b7ea3 100644
+--- a/packages/customization/ui/package.json
++++ b/packages/settings/ui/package.json
+@@ -1,9 +1,9 @@
+ {
+-  "name": "@beep/customization-ui",
++  "name": "@beep/settings-ui",
+   "version": "0.0.0",
+   "type": "module",
+   "license": "MIT",
+-  "description": "The ui layer for the customization context",
++  "description": "The ui layer for the settings context",
+   "publishConfig": {
+     "access": "public",
+     "provenance": true,
+@@ -18,7 +18,7 @@
+   "repository": {
+     "type": "git",
+     "url": "git@github.com:kriegcloud/beep-effect.git",
+-    "directory": "packages/customization/ui"
++    "directory": "packages/settings/ui"
+   },
+   "scripts": {
+     "dev": "bun run dotenvx -- bunx tsc -b tsconfig.build.json --watch",
+@@ -34,13 +34,13 @@
+     "lint:circular": "bunx madge -c ."
+   },
+   "peerDependencies": {
+-    "@beep/customization-client": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-client": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "effect": "catalog:"
+   },
+   "devDependencies": {
+-    "@beep/customization-client": "workspace:^",
+-    "@beep/customization-domain": "workspace:^",
++    "@beep/settings-client": "workspace:^",
++    "@beep/settings-domain": "workspace:^",
+     "@babel/preset-react": "catalog:",
+     "@effect/docgen": "catalog:",
+     "@total-typescript/ts-reset": "catalog:",
+diff --git a/packages/customization/ui/src/atom/Hotkeys/Hotkeys.atoms.ts b/packages/settings/ui/src/atom/Hotkeys/Hotkeys.atoms.ts
+similarity index 97%
+rename from packages/customization/ui/src/atom/Hotkeys/Hotkeys.atoms.ts
+rename to packages/settings/ui/src/atom/Hotkeys/Hotkeys.atoms.ts
+index dc92b618cf..068c2eea8e 100644
+--- a/packages/customization/ui/src/atom/Hotkeys/Hotkeys.atoms.ts
++++ b/packages/settings/ui/src/atom/Hotkeys/Hotkeys.atoms.ts
+@@ -1,4 +1,4 @@
+-import { UserHotkey } from "@beep/customization-domain/entities";
++import { UserHotkey } from "@beep/settings-domain/entities";
+ import { $CustomizationUiId } from "@beep/identity/packages";
+ import { deepEqual } from "@beep/utils/equality";
+ import { Atom, Registry } from "@effect-atom/atom-react";
+diff --git a/packages/customization/ui/src/index.ts b/packages/settings/ui/src/index.ts
+similarity index 100%
+rename from packages/customization/ui/src/index.ts
+rename to packages/settings/ui/src/index.ts
+diff --git a/packages/customization/ui/test/Dummy.test.ts b/packages/settings/ui/test/Dummy.test.ts
+similarity index 100%
+rename from packages/customization/ui/test/Dummy.test.ts
+rename to packages/settings/ui/test/Dummy.test.ts
+diff --git a/packages/customization/ui/tsconfig.build.json b/packages/settings/ui/tsconfig.build.json
+similarity index 89%
+rename from packages/customization/ui/tsconfig.build.json
+rename to packages/settings/ui/tsconfig.build.json
+index d5f770c650..61c62ec9f2 100644
+--- a/packages/customization/ui/tsconfig.build.json
++++ b/packages/settings/ui/tsconfig.build.json
+@@ -17,7 +17,7 @@
+   },
+   "references": [
+     {
+-      "path": "../../../packages/customization/client/tsconfig.build.json"
++      "path": "../client/tsconfig.build.json"
+     },
+     {
+       "path": "../../../packages/common/invariant/tsconfig.build.json"
+@@ -47,7 +47,7 @@
+       "path": "../../../packages/shared/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "../../../packages/customization/domain/tsconfig.build.json"
++      "path": "../domain/tsconfig.build.json"
+     }
+   ],
+   "include": ["src"]
+diff --git a/packages/customization/ui/tsconfig.json b/packages/settings/ui/tsconfig.json
+similarity index 100%
+rename from packages/customization/ui/tsconfig.json
+rename to packages/settings/ui/tsconfig.json
+diff --git a/packages/customization/ui/tsconfig.src.json b/packages/settings/ui/tsconfig.src.json
+similarity index 90%
+rename from packages/customization/ui/tsconfig.src.json
+rename to packages/settings/ui/tsconfig.src.json
+index 7837788335..4dd7145294 100644
+--- a/packages/customization/ui/tsconfig.src.json
++++ b/packages/settings/ui/tsconfig.src.json
+@@ -4,7 +4,7 @@
+   "exclude": [],
+   "references": [
+     {
+-      "path": "../../../packages/customization/client"
++      "path": "../client"
+     },
+     {
+       "path": "../../../packages/common/invariant"
+@@ -34,7 +34,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../domain"
+     }
+   ],
+   "compilerOptions": {
+diff --git a/packages/customization/ui/tsconfig.test.json b/packages/settings/ui/tsconfig.test.json
+similarity index 89%
+rename from packages/customization/ui/tsconfig.test.json
+rename to packages/settings/ui/tsconfig.test.json
+index 93ac7c6d6f..681ff09da1 100644
+--- a/packages/customization/ui/tsconfig.test.json
++++ b/packages/settings/ui/tsconfig.test.json
+@@ -6,7 +6,7 @@
+       "path": "tsconfig.src.json"
+     },
+     {
+-      "path": "../../../packages/customization/client"
++      "path": "../client"
+     },
+     {
+       "path": "../../../packages/common/invariant"
+@@ -36,7 +36,7 @@
+       "path": "../../../packages/shared/domain"
+     },
+     {
+-      "path": "../../../packages/customization/domain"
++      "path": "../domain"
+     }
+   ],
+   "compilerOptions": {
+diff --git a/packages/shared/domain/AGENTS.md b/packages/shared/domain/AGENTS.md
+index 57abc382af..57ab89b05b 100644
+--- a/packages/shared/domain/AGENTS.md
++++ b/packages/shared/domain/AGENTS.md
+@@ -1,14 +1,14 @@
+ # @beep/shared-domain — AGENTS Guide
+ 
+ ## Purpose & Fit
+-- Defines the shared kernel for all vertical slices (IAM, Documents, Calendar, Knowledge, Comms, Customization): branded entity ids, relational models, path/value objects, cache/policy primitives, retry utilities, encryption services, and cross-slice constants consumed by `apps/*` and `packages/{iam,documents,calendar,knowledge,comms,customization}/*`.
++- Defines the shared kernel for all vertical slices (IAM, Documents, Calendar, Knowledge, Comms, Customization): branded entity ids, relational models, path/value objects, cache/policy primitives, retry utilities, encryption services, and cross-slice constants consumed by `apps/*` and `packages/{iam,documents,calendar,knowledge,comms,settings}/*`.
+ - Builds on the schema utilities in `@beep/schema` (`BS` helpers, `EntityId.make`) and provides reusable domain infrastructure. Consumers should import from this package instead of duplicating schema logic.
+ - Provides a central contract other slices rely on for data access (Effect models via `@effect/sql/Model`), routing (`paths` collection), authorization (`Policy`), caching (`ManualCache`), retry strategies (`Retry`), and encryption (`EncryptionService`). Keep exports stable and align changes with downstream expectations.
+ 
+ ## Surface Map
+ - **`src/common.ts`** — Audit/user tracking column sets (`auditColumns`, `userTrackingColumns`, `globalColumns`) and `makeFields` helper that merges id, audit metadata, and custom columns when creating `M.Class` entity models.
+ - **`src/entity-ids/*`**
+-  - `shared/ids.ts`, `iam/ids.ts`, `documents/ids.ts`, `customization/ids.ts`, `comms/ids.ts` house branded id schemas built with `EntityId.make`.
++  - `shared/ids.ts`, `iam/ids.ts`, `documents/ids.ts`, `settings/ids.ts`, `comms/ids.ts` house branded id schemas built with `EntityId.make`.
+   - `*/table-name.ts` provides literal kits (`SharedTableNames`, `IamTableNames`, `DocumentsTableNames`, etc.).
+   - `entity-kind.ts` emits `EntityKind` union aligned with table names.
+   - `any-entity-id.ts` aggregates every id. **Known Issue**: `SubscriptionId` is duplicated (included from both `SharedEntityIds` and `IamEntityIds`); exhaustive pattern matching will have redundant cases until deduplicated.
+diff --git a/packages/shared/domain/src/entity-ids/Action.ts b/packages/shared/domain/src/entity-ids/Action.ts
+index 0bc81e4b4c..ff18a229ec 100644
+--- a/packages/shared/domain/src/entity-ids/Action.ts
++++ b/packages/shared/domain/src/entity-ids/Action.ts
+@@ -1,7 +1,7 @@
+ import { BS } from "@beep/schema";
+ import * as Calendar from "./calendar";
+ import * as Comms from "./comms";
+-import * as Customization from "./customization";
++import * as Customization from "./settings";
+ import * as Documents from "./documents";
+ import * as Iam from "./iam";
+ import * as Knowledge from "./knowledge";
+diff --git a/packages/shared/domain/src/entity-ids/any-entity-id.ts b/packages/shared/domain/src/entity-ids/any-entity-id.ts
+index 6be40ddb78..c81a0044fc 100644
+--- a/packages/shared/domain/src/entity-ids/any-entity-id.ts
++++ b/packages/shared/domain/src/entity-ids/any-entity-id.ts
+@@ -2,7 +2,7 @@ import { $SharedDomainId } from "@beep/identity/packages";
+ import * as S from "effect/Schema";
+ import * as Calendar from "./calendar";
+ import * as Comms from "./comms";
+-import * as Customization from "./customization";
++import * as Customization from "./settings";
+ import * as Documents from "./documents";
+ import * as Iam from "./iam";
+ import * as Knowledge from "./knowledge";
+diff --git a/packages/shared/domain/src/entity-ids/entity-ids.ts b/packages/shared/domain/src/entity-ids/entity-ids.ts
+index 4ea4e56b1c..1fc77f6bdc 100644
+--- a/packages/shared/domain/src/entity-ids/entity-ids.ts
++++ b/packages/shared/domain/src/entity-ids/entity-ids.ts
+@@ -1,6 +1,6 @@
+ export * as CalendarEntityIds from "./calendar";
+ export * as CommsEntityIds from "./comms";
+-export * as CustomizationEntityIds from "./customization";
++export * as CustomizationEntityIds from "./settings";
+ export * as WorkspacesEntityIds from "./documents";
+ export * as IamEntityIds from "./iam";
+ export * as KnowledgeEntityIds from "./knowledge";
+diff --git a/packages/shared/domain/src/entity-ids/entity-kind.ts b/packages/shared/domain/src/entity-ids/entity-kind.ts
+index b550e8de44..b664ee654a 100644
+--- a/packages/shared/domain/src/entity-ids/entity-kind.ts
++++ b/packages/shared/domain/src/entity-ids/entity-kind.ts
+@@ -3,7 +3,7 @@ import { BS } from "@beep/schema";
+ import type * as S from "effect/Schema";
+ import * as Calendar from "./calendar";
+ import * as Comms from "./comms";
+-import * as Customization from "./customization";
++import * as Customization from "./settings";
+ import * as Documents from "./documents";
+ import * as Iam from "./iam";
+ import * as Knowledge from "./knowledge";
+diff --git a/packages/shared/domain/src/entity-ids/customization/action.ts b/packages/shared/domain/src/entity-ids/settings/action.ts
+similarity index 100%
+rename from packages/shared/domain/src/entity-ids/customization/action.ts
+rename to packages/shared/domain/src/entity-ids/settings/action.ts
+diff --git a/packages/shared/domain/src/entity-ids/customization/any-id.ts b/packages/shared/domain/src/entity-ids/settings/any-id.ts
+similarity index 100%
+rename from packages/shared/domain/src/entity-ids/customization/any-id.ts
+rename to packages/shared/domain/src/entity-ids/settings/any-id.ts
+diff --git a/packages/shared/domain/src/entity-ids/customization/ids.ts b/packages/shared/domain/src/entity-ids/settings/ids.ts
+similarity index 100%
+rename from packages/shared/domain/src/entity-ids/customization/ids.ts
+rename to packages/shared/domain/src/entity-ids/settings/ids.ts
+diff --git a/packages/shared/domain/src/entity-ids/customization/index.ts b/packages/shared/domain/src/entity-ids/settings/index.ts
+similarity index 100%
+rename from packages/shared/domain/src/entity-ids/customization/index.ts
+rename to packages/shared/domain/src/entity-ids/settings/index.ts
+diff --git a/packages/shared/domain/src/entity-ids/customization/table-name.ts b/packages/shared/domain/src/entity-ids/settings/table-name.ts
+similarity index 100%
+rename from packages/shared/domain/src/entity-ids/customization/table-name.ts
+rename to packages/shared/domain/src/entity-ids/settings/table-name.ts
+diff --git a/packages/ui/core/AGENTS.md b/packages/ui/core/AGENTS.md
+index 08a9d5ff5f..915ab498cd 100644
+--- a/packages/ui/core/AGENTS.md
++++ b/packages/ui/core/AGENTS.md
+@@ -150,9 +150,9 @@ The package exposes the following entry points:
+ 
+ ## Reference Library
+ - MUI documentation resources:
+-  - Theming: `https://llms.mui.com/material-ui/7.2.0/customization/theming.md`
+-  - CSS Theme Variables: `https://llms.mui.com/material-ui/7.2.0/customization/css-theme-variables/overview.md`
+-  - Theme Components: `https://llms.mui.com/material-ui/7.2.0/customization/theme-components.md`
++  - Theming: `https://llms.mui.com/material-ui/7.2.0/settings/theming.md`
++  - CSS Theme Variables: `https://llms.mui.com/material-ui/7.2.0/settings/css-theme-variables/overview.md`
++  - Theme Components: `https://llms.mui.com/material-ui/7.2.0/settings/theme-components.md`
+   - RTL Support: `https://llms.mui.com/material-ui/7.2.0/customization/right-to-left.md`
+   - Palette: `https://llms.mui.com/material-ui/7.2.0/customization/palette.md`
+   - MUI X Data Grid Styling: `https://llms.mui.com/x-data-grid/8.8.0/style.md`
+diff --git a/packages/ui/core/README.md b/packages/ui/core/README.md
+index 92644ca4e7..acc9079f2e 100644
+--- a/packages/ui/core/README.md
++++ b/packages/ui/core/README.md
+@@ -5,7 +5,7 @@ Design system foundation for the beep-effect monorepo combining Material-UI them
+ ## Purpose
+ 
+ `@beep/ui-core` serves as the source of truth for design tokens, palette mathematics, typography scales, and MUI component overrides in the beep-effect monorepo. It provides:
+-- Effect-first theme system with runtime settings customization
++- Effect-first theme system with runtime settings settings
+ - Channel-based color management for CSS variable support
+ - Comprehensive MUI component override catalog
+ - Internationalization infrastructure with MUI locale bundles
+@@ -393,7 +393,7 @@ The theme system is structured in layers:
+    - `applySettingsToTheme()` - Applies runtime settings to theme core
+    - `applySettingsToComponents()` - Applies settings-specific component overrides
+    - `Rtl` - RTL wrapper component with stylis plugin
+-   - Color presets and theme customization utilities
++   - Color presets and theme settings utilities
+ 
+ 4. **Locale Integration** (`i18n/constants.ts`):
+    - MUI component locale bundles for Data Grid and Date Pickers
+diff --git a/tsconfig.base.jsonc b/tsconfig.base.jsonc
+index e78b694536..8424307e2d 100644
+--- a/tsconfig.base.jsonc
++++ b/tsconfig.base.jsonc
+@@ -394,49 +394,49 @@
+       "@beep/testkit/test/*": [
+         "./tooling/testkit/test/*"
+       ],
+-      "@beep/customization-domain": [
++      "@beep/settings-domain": [
+         "./packages/customization/domain/src/index"
+       ],
+-      "@beep/customization-domain/*": [
++      "@beep/settings-domain/*": [
+         "./packages/customization/domain/src/*"
+       ],
+-      "@beep/customization-domain/test/*": [
++      "@beep/settings-domain/test/*": [
+         "./packages/customization/domain/test/*"
+       ],
+-      "@beep/customization-tables": [
++      "@beep/settings-tables": [
+         "./packages/customization/tables/src/index"
+       ],
+-      "@beep/customization-tables/*": [
++      "@beep/settings-tables/*": [
+         "./packages/customization/tables/src/*"
+       ],
+-      "@beep/customization-tables/test/*": [
++      "@beep/settings-tables/test/*": [
+         "./packages/customization/tables/test/*"
+       ],
+-      "@beep/customization-server": [
++      "@beep/settings-server": [
+         "./packages/customization/server/src/index"
+       ],
+-      "@beep/customization-server/*": [
++      "@beep/settings-server/*": [
+         "./packages/customization/server/src/*"
+       ],
+-      "@beep/customization-server/test/*": [
++      "@beep/settings-server/test/*": [
+         "./packages/customization/server/test/*"
+       ],
+-      "@beep/customization-client": [
++      "@beep/settings-client": [
+         "./packages/customization/client/src/index"
+       ],
+-      "@beep/customization-client/*": [
++      "@beep/settings-client/*": [
+         "./packages/customization/client/src/*"
+       ],
+-      "@beep/customization-client/test/*": [
++      "@beep/settings-client/test/*": [
+         "./packages/customization/client/test/*"
+       ],
+-      "@beep/customization-ui": [
++      "@beep/settings-ui": [
+         "./packages/customization/ui/src/index"
+       ],
+-      "@beep/customization-ui/*": [
++      "@beep/settings-ui/*": [
+         "./packages/customization/ui/src/*"
+       ],
+-      "@beep/customization-ui/test/*": [
++      "@beep/settings-ui/test/*": [
+         "./packages/customization/ui/test/*"
+       ],
+       "@beep/comms-domain": [
+diff --git a/tsconfig.build.json b/tsconfig.build.json
+index 953d30566f..c54acba5b1 100644
+--- a/tsconfig.build.json
++++ b/tsconfig.build.json
+@@ -129,19 +129,19 @@
+       "path": "tooling/testkit/tsconfig.build.json"
+     },
+     {
+-      "path": "packages/customization/client/tsconfig.build.json"
++      "path": "packages/settings/client/tsconfig.build.json"
+     },
+     {
+-      "path": "packages/customization/ui/tsconfig.build.json"
++      "path": "packages/settings/ui/tsconfig.build.json"
+     },
+     {
+-      "path": "packages/customization/domain/tsconfig.build.json"
++      "path": "packages/settings/domain/tsconfig.build.json"
+     },
+     {
+-      "path": "packages/customization/tables/tsconfig.build.json"
++      "path": "packages/settings/tables/tsconfig.build.json"
+     },
+     {
+-      "path": "packages/customization/server/tsconfig.build.json"
++      "path": "packages/settings/server/tsconfig.build.json"
+     },
+     {
+       "path": "packages/calendar/client/tsconfig.build.json"
