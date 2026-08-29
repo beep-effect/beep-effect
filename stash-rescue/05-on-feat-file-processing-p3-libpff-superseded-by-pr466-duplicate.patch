@@ -1,0 +1,1274 @@
+diff --git a/.changeset/libpff-pffexport-p3.md b/.changeset/libpff-pffexport-p3.md
+new file mode 100644
+index 0000000000..3b236bc5fe
+--- /dev/null
++++ b/.changeset/libpff-pffexport-p3.md
+@@ -0,0 +1,5 @@
++---
++"@beep/libpff": patch
++---
++
++Deepen the pffexport engine into the real PST export driver (file-processing-capability P3): probe `pffexport -V` once (bounded) at construction onto `descriptor.version`, derive per-message `message.eml` children (`message/rfc822`) via a byte-preserving splice that rewrites the MIME-structural headers to describe the decoded body, write per-tree `messages.jsonl` relationship manifests of `LibpffMessageRecord` rows preserving folder/message/attachment links (including nested attached messages), apply the new `existingExportPolicy` (`fail`/`replace`) across all pffexport target trees (`.export`/`.orphans`/`.recovered`) and collect children from every produced tree, and add an opt-in `BEEP_TEST_PST_PATH` live integration lane with the EDRM Enron public PST sample documented as the fixture fallback.
+diff --git a/goals/file-processing-capability/PLAN.md b/goals/file-processing-capability/PLAN.md
+index 9d5bf411c8..e8301e7b21 100644
+--- a/goals/file-processing-capability/PLAN.md
++++ b/goals/file-processing-capability/PLAN.md
+@@ -153,7 +153,17 @@ Required Checks:
+ 
+ ## P3: libpff Driver
+ 
+-Status: pending
++Status: complete (2026-07-26) — pffexport engine deepened with a bounded `-V`
++version probe onto `descriptor.version`, derived per-message `message.eml`
++children (`message/rfc822`; byte-preserving splice with MIME-structural
++headers rewritten to describe the decoded body pffexport exported), a
++per-tree `messages.jsonl` relationship manifest (`LibpffMessageRecord` rows
++preserving folder/message/attachment links, including nested attached
++messages), an `existingExportPolicy` (`fail`/`replace`) applied across all
++pffexport target trees (`.export`/`.orphans`/`.recovered`), and an opt-in
++`BEEP_TEST_PST_PATH` live lane. Fixture decision: synthetic pffexport-tree
++stub coverage plus the documented public EDRM Enron sample fallback, because
++PST containers cannot be synthesized without proprietary tooling.
+ 
+ Goal: Implement `@beep/libpff` as the PST export driver.
+ 
+@@ -171,11 +181,11 @@ Implementation Steps:
+ 
+ Exit Criteria:
+ 
+-- [ ] libpff driver reports engine name and version.
+-- [ ] PST export writes child EML artifacts and JSONL metadata records.
+-- [ ] Exported children are represented through `@beep/file-processing`
++- [x] libpff driver reports engine name and version.
++- [x] PST export writes child EML artifacts and JSONL metadata records.
++- [x] Exported children are represented through `@beep/file-processing`
+   artifact schemas.
+-- [ ] Driver failures do not escape the operation contract as process errors.
++- [x] Driver failures do not escape the operation contract as process errors.
+ 
+ Required Checks:
+ 
+diff --git a/goals/file-processing-capability/README.md b/goals/file-processing-capability/README.md
+index 94dfa57309..19a68b56cf 100644
+--- a/goals/file-processing-capability/README.md
++++ b/goals/file-processing-capability/README.md
+@@ -2,8 +2,9 @@
+ 
+ ## Status
+ 
+-Active — P1 minimum vertical proof and P2 Tika Server driver complete;
+-P3/P4/P5 libpff, CLI-calibration, and handoff phases remain pending.
++Active — P1 minimum vertical proof, P2 Tika Server driver, and P3 libpff
++pffexport driver complete; P4/P5 CLI-calibration and handoff phases remain
++pending.
+ 
+ Packet hardening completed on 2026-06-02. The P1 implementation landed through
+ the law-practice office-action branch and merged to `main` in PR #262 on
+@@ -58,6 +59,17 @@ format-specific engines. Drivers implement declared operation capabilities.
+ 
+ ## Latest Evidence
+ 
++- 2026-07-26: P3 complete — `@beep/libpff` deepened into the real PST export
++  driver: bounded `pffexport -V` version probe onto `descriptor.version`,
++  derived per-message `message.eml` children (`message/rfc822`,
++  byte-preserving with MIME-structural headers rewritten to match the decoded
++  body), a per-tree `messages.jsonl` relationship manifest
++  (`LibpffMessageRecord` rows preserving folder/message/attachment links,
++  including nested attached messages), an `existingExportPolicy`
++  (`fail`/`replace`) covering all pffexport target trees
++  (`.export`/`.orphans`/`.recovered`), and an opt-in `BEEP_TEST_PST_PATH`
++  live lane with the EDRM Enron public PST sample documented as the fixture
++  fallback.
+ - 2026-07-26: P2 complete — `@beep/tika` gained the default Tika Server HTTP
+   engine (`makeTikaServerFileProcessingEngine`), typed `TikaServerEngineConfig`
+   (`BEEP_TIKA_BASE_URL` / `BEEP_TIKA_TIMEOUT_MILLIS` / `BEEP_TIKA_MAX_OUTPUT_BYTES`),
+@@ -127,6 +139,6 @@ Out of scope:
+ P1 is complete when the foundation capability has at least two real consumers,
+ driver-backed proof paths, and CLI manifest output. That proof is now present.
+ 
+-The remaining completion standard is P2/P3/P4/P5: finish broad non-PST Tika
+-coverage, deepen libpff PST export, calibrate CLI output against generated and
+-operator-local corpus inputs, and record final handoff evidence.
++The remaining completion standard is P4/P5: calibrate CLI output against
++generated and operator-local corpus inputs, and record final handoff evidence
++(including the P2-deferred live doc/docx Tika calibration).
+diff --git a/goals/file-processing-capability/SPEC.md b/goals/file-processing-capability/SPEC.md
+index 66768811e3..e5b5c85c20 100644
+--- a/goals/file-processing-capability/SPEC.md
++++ b/goals/file-processing-capability/SPEC.md
+@@ -2,15 +2,16 @@
+ 
+ ## Status
+ 
+-**P1 MINIMUM VERTICAL PROOF COMPLETE**
++**P1-P3 COMPLETE (VERTICAL PROOF, TIKA DRIVER, LIBPFF DRIVER)**
+ 
+ Packet hardening completed on 2026-06-02. The minimum vertical implementation
+-landed through the law-practice office-action branch and merged to `main` in
+-PR #262 on 2026-06-18.
++landed in PR #262 on 2026-06-18; the Tika Server driver (P2) and the deepened
++libpff pffexport driver (P3) both landed on 2026-07-26.
+ 
+-The remaining phases are breadth and hardening work: complete broad Tika
+-coverage, deepen libpff PST export, calibrate `beep files process` against
+-generated and operator-local corpus inputs, and record final handoff evidence.
++The remaining phases are calibration and closeout work: calibrate
++`beep files process` against generated and operator-local corpus inputs (P4),
++and record final verification and handoff evidence (P5), including the
++P2-deferred live doc/docx Tika calibration.
+ 
+ ## Owner
+ 
+diff --git a/goals/file-processing-capability/ops/manifest.json b/goals/file-processing-capability/ops/manifest.json
+index b447fe66ee..077503d406 100644
+--- a/goals/file-processing-capability/ops/manifest.json
++++ b/goals/file-processing-capability/ops/manifest.json
+@@ -25,7 +25,7 @@
+       "command": "/goal follow the instructions in goals/file-processing-capability/GOAL.md"
+     }
+   ],
+-  "currentTargetPhase": "P2",
++  "currentTargetPhase": "P4",
+   "reportDirectory": "research",
+   "rawOutputDirectory": "history/outputs",
+   "phaseStatusMeaning": {
+@@ -273,8 +273,8 @@
+     {
+       "id": "P3",
+       "name": "libpff Driver Completion",
+-      "status": "pending",
+-      "exitCriteriaSummary": "@beep/libpff exports PST files into child EML artifacts and JSONL metadata, or records an explicit typed fixture/engine deferral."
++      "status": "complete",
++      "exitCriteriaSummary": "@beep/libpff exports PST archives through pffexport into derived message/rfc822 EML children (byte-preserving, MIME-structural headers rewritten to match the decoded body) and per-tree messages.jsonl relationship manifests (LibpffMessageRecord, including nested attached messages), reports the probed engine version on the descriptor, and applies existingExportPolicy across the .export/.orphans/.recovered target trees plus an opt-in BEEP_TEST_PST_PATH live lane; landed 2026-07-26 with synthetic-tree stub coverage and the documented EDRM public PST sample fallback."
+     },
+     {
+       "id": "P4",
+@@ -289,7 +289,7 @@
+       "exitCriteriaSummary": "Affected quality gates pass and implementation evidence is recorded."
+     }
+   ],
+-  "nextAction": "Advance P2-P5 as needed: broaden Tika extraction over filed documents, deepen libpff PST/email export, calibrate files process against generated or operator-local corpus inputs, and hand the verified capability to legal-document-intake P4.",
++  "nextAction": "Advance P4-P5: calibrate beep files process manifest-tree output against generated (and optional operator-local) corpus inputs, then record verification and handoff evidence for legal-document-intake P4, including the P2-deferred live doc/docx Tika calibration.",
+   "researchReports": ["research/SOURCES.md"],
+   "completionGate": {
+     "operator": "yeet",
+diff --git a/packages/drivers/libpff/src/Libpff.pffexport.ts b/packages/drivers/libpff/src/Libpff.pffexport.ts
+index 7caaa43dc5..199898bbb1 100644
+--- a/packages/drivers/libpff/src/Libpff.pffexport.ts
++++ b/packages/drivers/libpff/src/Libpff.pffexport.ts
+@@ -8,11 +8,13 @@
+ import { ArtifactReference, deriveArtifactId } from "@beep/file-processing/Artifact";
+ import { ArchiveExportResult } from "@beep/file-processing/Extraction";
+ import { FileProcessingOperationError } from "@beep/file-processing/Operation";
++import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
+ import { $LibpffId } from "@beep/identity";
+ import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+ import { PosixPath } from "@beep/schema/PosixPath";
+ import { A, O, Str } from "@beep/utils";
+-import { Effect, FileSystem, Match, Order, Path, Stream } from "effect";
++import { collectProcessOutput } from "@beep/utils/Stream";
++import { Effect, FileSystem, flow, Match, MutableHashMap, Order, Path, pipe, Stream } from "effect";
+ import * as S from "effect/Schema";
+ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+ import { makeLibpffError } from "./Libpff.errors.ts";
+@@ -26,8 +28,21 @@ const $I = $LibpffId.create("Libpff.pffexport");
+ 
+ const defaultPffexportPath = "pffexport";
+ const defaultForceKillAfterMillis = 10_000;
++const emlFileName = "message.eml";
++const emlMediaType = "message/rfc822";
++const internetHeadersFileName = "InternetHeaders.txt";
++const messagesJsonlFileName = "messages.jsonl";
++const outlookHeadersFileName = "OutlookHeaders.txt";
++const messageBodyFileNames = ["Message.txt", "Message.html", "Message.rtf"] as const;
++const messageMarkerFileNames = [...messageBodyFileNames, internetHeadersFileName, outlookHeadersFileName];
++const attachmentsDirName = "Attachments";
++const targetTreeSuffixes = [".export", ".orphans", ".recovered"] as const;
++const strippedEmlHeaderNames = ["content-transfer-encoding", "content-type", "mime-version"];
++const latin1Decoder = new TextDecoder("latin1");
++const pffexportVersionPattern = /pffexport\s+(\S+)/;
+ const PffexportModeBase = LiteralKit(["all", "items", "recovered"]);
+ const PffexportFormatBase = LiteralKit(["all", "html", "rtf", "text"]);
++const PffexportExistingExportPolicyBase = LiteralKit(["fail", "replace"]);
+ 
+ /**
+  * pffexport item export mode.
+@@ -99,6 +114,42 @@ export const PffexportFormat = PffexportFormatBase.pipe(
+  */
+ export type PffexportFormat = typeof PffexportFormat.Type;
+ 
++/**
++ * Policy applied when the export target directory already exists.
++ *
++ * @example
++ * ```ts
++ * import { PffexportExistingExportPolicy } from "@beep/libpff"
++ * console.log(PffexportExistingExportPolicy)
++ * ```
++ *
++ * @category schemas
++ * @since 0.0.0
++ */
++export const PffexportExistingExportPolicy = PffexportExistingExportPolicyBase.pipe(
++  $I.annoteSchema("PffexportExistingExportPolicy", {
++    description:
++      "Behavior when the per-archive export tree already exists: fail deterministically or replace the previous tree.",
++  }),
++  SchemaUtils.withLiteralKitStatics(PffexportExistingExportPolicyBase)
++);
++
++/**
++ * Type for {@link PffexportExistingExportPolicy}.
++ *
++ * @example
++ * ```ts
++ * import { PffexportExistingExportPolicy } from "@beep/libpff"
++ *
++ * const policy: PffexportExistingExportPolicy = "fail"
++ * console.log(PffexportExistingExportPolicy.is.fail(policy))
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export type PffexportExistingExportPolicy = typeof PffexportExistingExportPolicy.Type;
++
+ /**
+  * Configuration for the pffexport subprocess engine.
+  *
+@@ -115,6 +166,9 @@ export type PffexportFormat = typeof PffexportFormat.Type;
+  */
+ export class PffexportEngineConfig extends S.Class<PffexportEngineConfig>($I`PffexportEngineConfig`)(
+   {
++    existingExportPolicy: PffexportExistingExportPolicy.pipe(SchemaUtils.withKeyDefaults("fail")).annotateKey({
++      description: "Policy applied when the per-archive export tree already exists under the export root.",
++    }),
+     exportFormat: PffexportFormat.pipe(SchemaUtils.withKeyDefaults("text")).annotateKey({
+       description: "pffexport message body format passed to the `-f` flag.",
+     }),
+@@ -136,10 +190,121 @@ export class PffexportEngineConfig extends S.Class<PffexportEngineConfig>($I`Pff
+   },
+   $I.annote("PffexportEngineConfig", {
+     description:
+-      "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, and optional per-archive timeout.",
++      "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, existing-export policy, and optional per-archive timeout.",
++  })
++) {}
++
++/**
++ * JSONL metadata record for one message exported from a PST archive.
++ *
++ * One record is written per exported message directory into the export tree's
++ * `messages.jsonl`, preserving the folder/message/attachment relationships
++ * that pffexport exposes. All paths are POSIX-relative to the engine's export
++ * root and match the `relativePath` of the corresponding child
++ * `ArtifactReference` values.
++ *
++ * @example
++ * ```ts
++ * import { LibpffMessageRecord } from "@beep/libpff"
++ * import { Effect } from "effect"
++ * import * as S from "effect/Schema"
++ *
++ * const program = S.decodeUnknownEffect(LibpffMessageRecord)({
++ *   attachments: ["out.export/Inbox/Message00001/Attachments/report.pdf"],
++ *   bodyFile: "out.export/Inbox/Message00001/Message.txt",
++ *   folderPath: "out.export/Inbox",
++ *   messageDir: "out.export/Inbox/Message00001"
++ * })
++ *
++ * Effect.runPromise(program).then((record) => console.log(record.folderPath)) // "out.export/Inbox"
++ * ```
++ *
++ * @category models
++ * @since 0.0.0
++ */
++export class LibpffMessageRecord extends S.Class<LibpffMessageRecord>($I`LibpffMessageRecord`)(
++  {
++    attachments: S.Array(PosixPath).annotateKey({
++      description: "Attachment files exported under the message's Attachments directory, sorted by path.",
++    }),
++    bodyFile: S.OptionFromOptionalKey(PosixPath).pipe(
++      SchemaUtils.withNoneDefault,
++      S.annotateKey({
++        description: "Exported message body file when pffexport produced one.",
++      })
++    ),
++    emlFile: S.OptionFromOptionalKey(PosixPath).pipe(
++      SchemaUtils.withNoneDefault,
++      S.annotateKey({
++        description: "Derived RFC 5322 message file when internet headers and a body were both exported.",
++      })
++    ),
++    folderPath: PosixPath.annotateKey({
++      description: "PST folder directory containing the message, relative to the export root.",
++    }),
++    internetHeadersFile: S.OptionFromOptionalKey(PosixPath).pipe(
++      SchemaUtils.withNoneDefault,
++      S.annotateKey({
++        description: "Exported transport headers file when the message carried internet headers.",
++      })
++    ),
++    messageDir: PosixPath.annotateKey({
++      description: "Exported message directory, relative to the export root.",
++    }),
++    outlookHeadersFile: S.OptionFromOptionalKey(PosixPath).pipe(
++      SchemaUtils.withNoneDefault,
++      S.annotateKey({
++        description: "Exported Outlook header dump when pffexport produced one.",
++      })
++    ),
++  },
++  $I.annote("LibpffMessageRecord", {
++    description:
++      "JSONL-safe metadata record preserving folder/message/attachment relationships for one exported PST message.",
+   })
+ ) {}
+ 
++/**
++ * JSON encoder for one {@link LibpffMessageRecord} JSONL line.
++ *
++ * @example
++ * ```ts
++ * import { encodeLibpffMessageRecordJson, LibpffMessageRecord } from "@beep/libpff"
++ * import { Effect } from "effect"
++ * import * as S from "effect/Schema"
++ *
++ * const program = Effect.gen(function* () {
++ *   const record = yield* S.decodeUnknownEffect(LibpffMessageRecord)({
++ *     attachments: [],
++ *     folderPath: "out.export/Inbox",
++ *     messageDir: "out.export/Inbox/Message00001"
++ *   })
++ *   return yield* encodeLibpffMessageRecordJson(record)
++ * })
++ *
++ * Effect.runPromise(program).then((line) => console.log(line.includes("Message00001"))) // true
++ * ```
++ *
++ * @category codecs
++ * @since 0.0.0
++ */
++export const encodeLibpffMessageRecordJson = S.encodeUnknownEffect(S.fromJsonString(LibpffMessageRecord));
++
++const describePffexportEngine = (version: O.Option<string>): FileProcessingEngineDescriptor =>
++  FileProcessingEngineDescriptor.make({
++    capabilities: LibpffFileProcessingEngineDescriptor.capabilities,
++    engine: LibpffFileProcessingEngineDescriptor.engine,
++    name: LibpffFileProcessingEngineDescriptor.name,
++    supportedFormats: LibpffFileProcessingEngineDescriptor.supportedFormats,
++    ...O.getSomesStruct({ version }),
++  });
++
++const parsePffexportVersion: (output: string) => O.Option<string> = flow(
++  Str.match(pffexportVersionPattern),
++  O.flatMap(A.get(1)),
++  O.filter(Str.isNonEmpty)
++);
++
+ const operationFailure = (operation: ExportArchiveOperation, error: LibpffError): FileProcessingOperationError =>
+   Match.value(error.reason).pipe(
+     Match.when("engine-unavailable", () =>
+@@ -160,6 +325,18 @@ const operationFailure = (operation: ExportArchiveOperation, error: LibpffError)
+         operationId: operation.operationId,
+       })
+     ),
++    Match.when("config", () =>
++      FileProcessingOperationError.fromReason("archive-export-failed", {
++        artifactId: operation.source.id,
++        engine: LibpffFileProcessingEngineDescriptor.name,
++        format: operation.format,
++        message: "pffexport could not prepare the export target.",
++        operationId: operation.operationId,
++        ...O.getSomesStruct({
++          details: O.map(error.cause, (cause) => ({ cause })),
++        }),
++      })
++    ),
+     Match.orElse(() =>
+       FileProcessingOperationError.fromReason("archive-export-failed", {
+         artifactId: operation.source.id,
+@@ -180,17 +357,96 @@ interface WalkedFile {
+   readonly sizeBytes: number;
+ }
+ 
++interface DerivedMessages {
++  readonly records: ReadonlyArray<LibpffMessageRecord>;
++  readonly warnings: ReadonlyArray<string>;
++}
++
+ const drainStream = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<void, E> => Stream.runDrain(stream);
+ 
+ const byRelativePath = Order.mapInput(Str.Order, (file: WalkedFile) => file.relativePath);
+ 
++const parentDirOf = (relativePath: string): string =>
++  O.match(Str.lastIndexOf("/")(relativePath), {
++    onNone: () => "",
++    onSome: (separatorIndex) => Str.slice(0, separatorIndex)(relativePath),
++  });
++
++const baseNameOf = (relativePath: string): string =>
++  O.match(Str.lastIndexOf("/")(relativePath), {
++    onNone: () => relativePath,
++    onSome: (separatorIndex) => Str.slice(separatorIndex + 1)(relativePath),
++  });
++
++// Every "/Attachments/" ancestor of a file owns it as an attachment; the file
++// stays owned by outer messages even when it belongs to a nested attached
++// message exported under its own MessageNNNNN directory.
++const attachmentOwners = (relativePath: string): Array<string> => {
++  const segments = Str.split(relativePath, "/");
++  const owners: Array<string> = [];
++  for (let index = 1; index < A.length(segments) - 1; index++) {
++    if (segments[index] === attachmentsDirName) {
++      owners.push(A.join(A.take(segments, index), "/"));
++    }
++  }
++  return owners;
++};
++
++// Strips the MIME-structural fields (with their folded continuations) whose
++// original values describe the raw transport body, not the decoded body
++// pffexport exported; the caller re-appends fields matching the actual body.
++const sanitizeEmlHeaders = (headers: string): string => {
++  const kept: Array<string> = [];
++  let dropping = false;
++  for (const line of Str.split(headers, "\n")) {
++    if (Str.startsWith(line, " ") || Str.startsWith(line, "\t")) {
++      if (!dropping) {
++        kept.push(line);
++      }
++      continue;
++    }
++    dropping = pipe(
++      Str.split(line, ":"),
++      A.head,
++      O.map((name) => A.contains(strippedEmlHeaderNames, Str.toLowerCase(Str.trim(name)))),
++      O.getOrElse(() => false)
++    );
++    if (!dropping) {
++      kept.push(line);
++    }
++  }
++  return Str.trimEnd(A.join(kept, "\n"));
++};
++
++const emlBodyContentType = (bodyFileName: string): string =>
++  Match.value(bodyFileName).pipe(
++    Match.when("Message.html", () => "text/html; charset=unknown-8bit"),
++    Match.when("Message.rtf", () => "application/rtf"),
++    Match.orElse(() => "text/plain; charset=unknown-8bit")
++  );
++
++// Latin-1 decode/encode round-trips bytes losslessly, so header sanitization
++// never corrupts non-UTF-8 header bytes the way a UTF-8 round-trip would.
++const encodeLatin1 = (value: string): Uint8Array => Uint8Array.from(value, (char) => char.charCodeAt(0) & 0xff);
++
+ /**
+  * Create the real pffexport-backed file-processing engine.
+  *
+  * Captures the file system, path, and process-spawner services at
+- * construction. The returned engine's `exportArchive` method still requires
+- * `effect/Crypto` so child artifact ids can be derived through the shared
+- * SHA-backed artifact id schema.
++ * construction and probes `pffexport -V` once to populate
++ * `descriptor.version`; a failed probe leaves the version unset rather than
++ * failing construction. The returned engine's `exportArchive` method still
++ * requires `effect/Crypto` so child artifact ids can be derived through the
++ * shared SHA-backed artifact id schema.
++ *
++ * Archive export materializes the pffexport target trees (`.export`, plus
++ * `.orphans`/`.recovered` when the export mode produces them), derives one
++ * `message.eml` child per exported message whose internet headers and body
++ * are both present — MIME-structural header fields are replaced so the
++ * derived headers describe the decoded body actually attached — and writes a
++ * per-tree `messages.jsonl` metadata file preserving
++ * folder/message/attachment relationships through
++ * {@link LibpffMessageRecord} rows.
+  *
+  * @example
+  * ```ts
+@@ -223,6 +479,29 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
+   const path = yield* Path.Path;
+   const { exportFormat, exportMode, pffexportPath } = config;
+ 
++  const version = yield* Effect.scoped(
++    Effect.gen(function* () {
++      const handle = yield* spawner.spawn(
++        ChildProcess.make(pffexportPath, ["-V"], {
++          forceKillAfter: `${defaultForceKillAfterMillis} millis`,
++          stderr: "pipe",
++          stdin: "ignore",
++          stdout: "pipe",
++        })
++      );
++      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
++      return exitCode === 0 ? parsePffexportVersion(`${stdout}\n${stderr}`) : O.none<string>();
++    })
++  ).pipe(
++    Effect.timeoutOrElse({
++      duration: `${defaultForceKillAfterMillis} millis`,
++      orElse: () => Effect.succeed(O.none<string>()),
++    }),
++    Effect.orElseSucceed(O.none<string>)
++  );
++
++  const descriptor = describePffexportEngine(version);
++
+   const walkFiles = Effect.fn("Libpff.pffexport.walkFiles")(function* (
+     root: string,
+     directory: string
+@@ -285,16 +564,228 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
+     }
+   });
+ 
++  const existingTargetRoots = Effect.fn("Libpff.pffexport.existingTargetRoots")(function* (
++    targetBase: string
++  ): Effect.fn.Return<Array<string>, LibpffError> {
++    const existing: Array<string> = [];
++    for (const suffix of targetTreeSuffixes) {
++      const root = `${targetBase}${suffix}`;
++      const exists = yield* fs
++        .exists(root)
++        .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export tree check failed" })));
++      if (exists) {
++        existing.push(root);
++      }
++    }
++    return existing;
++  });
++
++  // pffexport aborts when any of its mode-dependent target directories
++  // (.export/.orphans/.recovered) already exists, so the policy must cover
++  // all three, not just the .export tree.
++  const prepareExportTarget = Effect.fn("Libpff.pffexport.prepareExportTarget")(function* (
++    targetBase: string
++  ): Effect.fn.Return<void, LibpffError> {
++    yield* fs
++      .makeDirectory(config.exportRoot, { recursive: true })
++      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
++
++    const existingRoots = yield* existingTargetRoots(targetBase);
++
++    if (!A.isArrayNonEmpty(existingRoots)) {
++      return;
++    }
++
++    yield* Match.value(config.existingExportPolicy).pipe(
++      Match.when("fail", () =>
++        Effect.fail(makeLibpffError("config", { cause: "export target already exists for this archive" }))
++      ),
++      Match.when("replace", () =>
++        Effect.forEach(existingRoots, (root) =>
++          fs
++            .remove(root, { recursive: true })
++            .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "previous export tree removal failed" })))
++        )
++      ),
++      Match.exhaustive
++    );
++  });
++
++  const decodeRecordPath = (value: string): Effect.Effect<O.Option<PosixPath>> =>
++    S.decodeUnknownEffect(PosixPath)(value).pipe(Effect.option);
++
++  const decodeOptionalRecordPath = (value: O.Option<string>): Effect.Effect<O.Option<O.Option<PosixPath>>> =>
++    O.match(value, {
++      onNone: () => Effect.succeed(O.some(O.none<PosixPath>())),
++      onSome: (recordPath) => decodeRecordPath(recordPath).pipe(Effect.map(O.map(O.some))),
++    });
++
++  // Bytes in, bytes out: the body is spliced verbatim and only the header
++  // block round-trips through lossless latin-1, so non-UTF-8 exports are
++  // never corrupted. The stripped MIME-structural fields are replaced with
++  // fields describing the decoded body pffexport actually produced.
++  const writeEmlArtifact = Effect.fn("Libpff.pffexport.writeEmlArtifact")(function* (
++    messageDir: string,
++    headersFile: WalkedFile,
++    body: WalkedFile
++  ): Effect.fn.Return<O.Option<string>, LibpffError> {
++    const headerBytes = yield* fs
++      .readFile(headersFile.absolutePath)
++      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "internet headers read failed" })));
++    const bodyBytes = yield* fs
++      .readFile(body.absolutePath)
++      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "message body read failed" })));
++
++    const sanitizedHeaders = sanitizeEmlHeaders(latin1Decoder.decode(headerBytes));
++    const mimeHeaders = A.join(
++      [
++        "MIME-Version: 1.0",
++        `Content-Type: ${emlBodyContentType(baseNameOf(body.relativePath))}`,
++        "Content-Transfer-Encoding: 8bit",
++      ],
++      "\n"
++    );
++    const headerBlock = Str.isEmpty(sanitizedHeaders) ? mimeHeaders : `${sanitizedHeaders}\n${mimeHeaders}`;
++    const prefixBytes = encodeLatin1(`${headerBlock}\n\n`);
++    const emlBytes = new Uint8Array(prefixBytes.length + bodyBytes.length);
++    emlBytes.set(prefixBytes, 0);
++    emlBytes.set(bodyBytes, prefixBytes.length);
++
++    const emlAbsolutePath = path.join(path.dirname(headersFile.absolutePath), emlFileName);
++    yield* fs
++      .writeFile(emlAbsolutePath, emlBytes)
++      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "eml artifact write failed" })));
++    return O.some(`${messageDir}/${emlFileName}`);
++  });
++
++  const deriveMessages = Effect.fn("Libpff.pffexport.deriveMessages")(function* (
++    exportedRoot: string,
++    files: ReadonlyArray<WalkedFile>
++  ): Effect.fn.Return<DerivedMessages, LibpffError> {
++    // One O(files) grouping pass replaces per-message rescans of the whole
++    // tree. Marker files directly inside an Attachments directory are plain
++    // attachments, not message markers — pffexport gives nested attached
++    // messages their own MessageNNNNN subdirectory.
++    const filesByDir = MutableHashMap.empty<string, Array<WalkedFile>>();
++    const attachmentsByDir = MutableHashMap.empty<string, Array<string>>();
++    for (const file of files) {
++      const dir = parentDirOf(file.relativePath);
++      const dirBucket = O.getOrElse(MutableHashMap.get(filesByDir, dir), () => A.empty<WalkedFile>());
++      dirBucket.push(file);
++      MutableHashMap.set(filesByDir, dir, dirBucket);
++      for (const owner of attachmentOwners(file.relativePath)) {
++        const attachmentBucket = O.getOrElse(MutableHashMap.get(attachmentsByDir, owner), () => A.empty<string>());
++        attachmentBucket.push(file.relativePath);
++        MutableHashMap.set(attachmentsByDir, owner, attachmentBucket);
++      }
++    }
++
++    const messageDirs = A.dedupe(
++      A.map(
++        A.filter(
++          files,
++          (file) =>
++            A.contains(messageMarkerFileNames, baseNameOf(file.relativePath)) &&
++            baseNameOf(parentDirOf(file.relativePath)) !== attachmentsDirName
++        ),
++        (file) => parentDirOf(file.relativePath)
++      )
++    );
++
++    const records: Array<LibpffMessageRecord> = [];
++    const warnings: Array<string> = [];
++    let headerlessMessages = 0;
++    let skippedRecords = 0;
++
++    for (const messageDir of A.sort(messageDirs, Str.Order)) {
++      const inDir = O.getOrElse(MutableHashMap.get(filesByDir, messageDir), () => A.empty<WalkedFile>());
++      const fileNamed = (name: string): O.Option<WalkedFile> =>
++        A.findFirst(inDir, (file) => baseNameOf(file.relativePath) === name);
++
++      const bodyFile = A.head(A.getSomes(A.map([...messageBodyFileNames], fileNamed)));
++      const internetHeaders = fileNamed(internetHeadersFileName);
++      const outlookHeaders = fileNamed(outlookHeadersFileName);
++      const attachments = A.sort(
++        O.getOrElse(MutableHashMap.get(attachmentsByDir, messageDir), () => A.empty<string>()),
++        Str.Order
++      );
++
++      const emlRelativePath = yield* O.match(O.product(internetHeaders, bodyFile), {
++        onNone: () => {
++          headerlessMessages = headerlessMessages + 1;
++          return Effect.succeedNone;
++        },
++        onSome: ([headersFile, body]) => writeEmlArtifact(messageDir, headersFile, body),
++      });
++
++      const decodedPaths = yield* Effect.all({
++        attachments: Effect.forEach(attachments, decodeRecordPath),
++        bodyFile: decodeOptionalRecordPath(O.map(bodyFile, (file) => file.relativePath)),
++        emlFile: decodeOptionalRecordPath(emlRelativePath),
++        folderPath: decodeRecordPath(parentDirOf(messageDir)),
++        internetHeadersFile: decodeOptionalRecordPath(O.map(internetHeaders, (file) => file.relativePath)),
++        messageDir: decodeRecordPath(messageDir),
++        outlookHeadersFile: decodeOptionalRecordPath(O.map(outlookHeaders, (file) => file.relativePath)),
++      });
++
++      const attachmentPaths = A.getSomes(decodedPaths.attachments);
++      const portable =
++        O.isSome(decodedPaths.folderPath) &&
++        O.isSome(decodedPaths.messageDir) &&
++        O.isSome(decodedPaths.bodyFile) &&
++        O.isSome(decodedPaths.emlFile) &&
++        O.isSome(decodedPaths.internetHeadersFile) &&
++        O.isSome(decodedPaths.outlookHeadersFile) &&
++        A.length(attachmentPaths) === A.length(decodedPaths.attachments);
++
++      if (!portable) {
++        skippedRecords = skippedRecords + 1;
++        continue;
++      }
++
++      records.push(
++        LibpffMessageRecord.make({
++          attachments: attachmentPaths,
++          bodyFile: O.flatten(decodedPaths.bodyFile),
++          emlFile: O.flatten(decodedPaths.emlFile),
++          folderPath: O.getOrThrow(decodedPaths.folderPath),
++          internetHeadersFile: O.flatten(decodedPaths.internetHeadersFile),
++          messageDir: O.getOrThrow(decodedPaths.messageDir),
++          outlookHeadersFile: O.flatten(decodedPaths.outlookHeadersFile),
++        })
++      );
++    }
++
++    if (headerlessMessages > 0) {
++      warnings.push(
++        `${headerlessMessages} exported message(s) had no internet headers and body pair; EML derivation was skipped for them.`
++      );
++    }
++    if (skippedRecords > 0) {
++      warnings.push(
++        `${skippedRecords} exported message(s) had non-portable paths and were omitted from ${messagesJsonlFileName}.`
++      );
++    }
++
++    if (A.isArrayNonEmpty(records)) {
++      const lines = yield* Effect.forEach(records, (record) => encodeLibpffMessageRecordJson(record)).pipe(
++        Effect.mapError(() => makeLibpffError("process", { cause: "message record encoding failed" }))
++      );
++      yield* fs
++        .writeFileString(path.join(exportedRoot, messagesJsonlFileName), `${A.join(lines, "\n")}\n`)
++        .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "messages.jsonl write failed" })));
++    }
++
++    return { records, warnings };
++  });
++
+   const exportArchiveImpl = Effect.fn("LibpffPffexportEngine.exportArchiveImpl")(function* (
+     operation: ExportArchiveOperation
+   ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
+     const sourcePath = operation.source.locator.value;
+     const targetBase = path.join(config.exportRoot, operation.source.id);
+-    const exportedRoot = `${targetBase}.export`;
+ 
+-    yield* fs
+-      .makeDirectory(config.exportRoot, { recursive: true })
+-      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
++    yield* prepareExportTarget(targetBase);
+ 
+     const run = runPffexport(sourcePath, targetBase);
+     yield* O.match(config.timeoutMillis, {
+@@ -308,12 +799,23 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
+         ),
+     });
+ 
+-    const exportedExists = yield* fs
+-      .exists(exportedRoot)
+-      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export tree check failed" })));
+-    const files = exportedExists ? yield* walkFiles(config.exportRoot, exportedRoot) : [];
+-
++    const existingRoots = yield* existingTargetRoots(targetBase);
+     const warnings: Array<string> = [];
++
++    for (const root of existingRoots) {
++      const initialFiles = yield* walkFiles(config.exportRoot, root);
++      const derived = yield* deriveMessages(root, initialFiles);
++      for (const warning of derived.warnings) {
++        warnings.push(warning);
++      }
++    }
++
++    const files: Array<WalkedFile> = [];
++    for (const root of existingRoots) {
++      for (const file of yield* walkFiles(config.exportRoot, root)) {
++        files.push(file);
++      }
++    }
+     const children: Array<ArtifactReference> = [];
+ 
+     for (const file of A.sort(files, byRelativePath)) {
+@@ -330,6 +832,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
+           id: childId,
+           relativePath: decoded.value,
+           sizeBytes: NonNegativeInt.make(file.sizeBytes),
++          ...(baseNameOf(file.relativePath) === emlFileName ? { mediaType: emlMediaType } : {}),
+         })
+       );
+     }
+@@ -348,7 +851,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
+   });
+ 
+   const engine: FileProcessingEngineShape = {
+-    descriptor: LibpffFileProcessingEngineDescriptor,
++    descriptor,
+     detect: LibpffFileProcessingEngine.detect,
+     exportArchive: Effect.fn("LibpffPffexportEngine.exportArchive")(function* (operation) {
+       if (operation.format !== "pst") {
+diff --git a/packages/drivers/libpff/test/Libpff.pffexport.test.ts b/packages/drivers/libpff/test/Libpff.pffexport.test.ts
+index fb8f5f15d0..33a22f639c 100644
+--- a/packages/drivers/libpff/test/Libpff.pffexport.test.ts
++++ b/packages/drivers/libpff/test/Libpff.pffexport.test.ts
+@@ -1,32 +1,73 @@
+ import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
+ import { ExportArchiveOperation } from "@beep/file-processing/Operation";
+ import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
+-import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
++import { LibpffMessageRecord, makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
+ import { NonNegativeInt } from "@beep/schema";
+ import { PosixPath } from "@beep/schema/PosixPath";
+ import { provideScopedLayer } from "@beep/test-utils";
+ import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+ import { describe, expect, it } from "@effect/vitest";
+-import { Effect, FileSystem, Layer, Path } from "effect";
++import { Effect, FileSystem, Layer, Option as O, Path } from "effect";
+ import * as S from "effect/Schema";
++import * as Str from "effect/String";
+ 
+ const testLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer));
+ 
+ const provideTestLayer = provideScopedLayer(testLayer);
+ 
++const stubVersion = "20231205";
++const latin1Decoder = new TextDecoder("latin1");
++
+ const stubPffexport = `#!/usr/bin/env bash
++if [ "$1" = "-V" ]; then
++  echo "pffexport ${stubVersion}"
++  exit 0
++fi
+ target=""
++mode="items"
+ prev=""
+ for arg in "$@"; do
+   if [ "$prev" = "-t" ]; then target="$arg"; fi
++  if [ "$prev" = "-m" ]; then mode="$arg"; fi
+   prev="$arg"
+ done
+ source="\${@: -1}"
+ [ -f "$source" ] || exit 2
+-mkdir -p "$target.export/Top of Personal Folders/Inbox/Message00001/Attachments"
+-printf 'hello body' > "$target.export/Top of Personal Folders/Inbox/Message00001/Message.txt"
+-printf 'headers' > "$target.export/Top of Personal Folders/Inbox/Message00001/OutlookHeaders.txt"
+-printf 'pdfbytes' > "$target.export/Top of Personal Folders/Inbox/Message00001/Attachments/report.pdf"
++root="$target.export/Top of Personal Folders"
++mkdir -p "$root/Inbox/Message00001/Attachments/Message00001"
++printf 'Subject: Hello\\nContent-Type: multipart/mixed;\\n boundary="abc"\\nFrom: sender@example.com\\n' > "$root/Inbox/Message00001/InternetHeaders.txt"
++printf 'hello caf\\xe9 body' > "$root/Inbox/Message00001/Message.txt"
++printf 'outlook headers' > "$root/Inbox/Message00001/OutlookHeaders.txt"
++printf 'pdfbytes' > "$root/Inbox/Message00001/Attachments/report.pdf"
++printf 'Subject: Nested\\n' > "$root/Inbox/Message00001/Attachments/Message00001/InternetHeaders.txt"
++printf 'nested body' > "$root/Inbox/Message00001/Attachments/Message00001/Message.txt"
++mkdir -p "$root/Sent Items/Message00001"
++printf 'sent body' > "$root/Sent Items/Message00001/Message.txt"
++printf 'outlook only' > "$root/Sent Items/Message00001/OutlookHeaders.txt"
++mkdir -p "$root/Drafts/Message00001"
++printf 'Subject: Draft only\\n' > "$root/Drafts/Message00001/InternetHeaders.txt"
++if [ "$mode" = "all" ]; then
++  mkdir -p "$target.orphans/Orphan00001"
++  printf 'orphan body' > "$target.orphans/Orphan00001/Message.txt"
++fi
++exit 0
++`;
++
++const zeroMessageStub = `#!/usr/bin/env bash
++if [ "$1" = "-V" ]; then
++  echo "pffexport ${stubVersion}"
++  exit 0
++fi
++target=""
++prev=""
++for arg in "$@"; do
++  if [ "$prev" = "-t" ]; then target="$arg"; fi
++  prev="$arg"
++done
++source="\${@: -1}"
++[ -f "$source" ] || exit 2
++mkdir -p "$target.export/Calendar"
++printf 'no messages here' > "$target.export/Calendar/readme.txt"
+ exit 0
+ `;
+ 
+@@ -34,6 +75,18 @@ const failingStub = `#!/usr/bin/env bash
+ exit 2
+ `;
+ 
++const expectedInboxEml = [
++  "Subject: Hello",
++  "From: sender@example.com",
++  "MIME-Version: 1.0",
++  "Content-Type: text/plain; charset=unknown-8bit",
++  "Content-Transfer-Encoding: 8bit",
++  "",
++  "hello café body",
++].join("\n");
++
++const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(LibpffMessageRecord));
++
+ const makeMissingBinaryEngine = (exportRoot: string) =>
+   makePffexportFileProcessingEngine(
+     PffexportEngineConfig.make({ exportRoot, pffexportPath: "/nonexistent/pffexport-missing" })
+@@ -73,11 +126,23 @@ const fixture = Effect.fn(function* (stubScript: string) {
+   return { exportRoot, operation, stubPath };
+ });
+ 
++const readMessageRecords = Effect.fn(function* (exportRoot: string, treeRoot: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const content = yield* fs.readFileString(path.join(exportRoot, treeRoot, "messages.jsonl"));
++  return yield* Effect.forEach(
++    content.split("\n").filter((line) => Str.isNonEmpty(Str.trim(line))),
++    (line) => decodeMessageRecord(line)
++  );
++});
++
+ describe("makePffexportFileProcessingEngine", () => {
+   it.effect(
+-    "exports children through the pffexport subprocess",
++    "exports children, derives sanitized EML artifacts, and writes messages.jsonl through the pffexport subprocess",
+     Effect.fnUntraced(
+       function* () {
++        const fs = yield* FileSystem.FileSystem;
++        const path = yield* Path.Path;
+         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+         const engine = yield* makePffexportFileProcessingEngine(
+           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+@@ -87,13 +152,212 @@ describe("makePffexportFileProcessingEngine", () => {
+ 
+         expect(result.engine).toBe("libpff");
+         expect(result.sourceArtifactId).toBe(operation.source.id);
+-        expect(result.children).toHaveLength(3);
++
+         const relativePaths = result.children.map((child) => child.relativePath);
+         expect(relativePaths).toStrictEqual([...relativePaths].sort());
+         expect(relativePaths.every((value) => value.includes(".export/"))).toBe(true);
+         expect(relativePaths.some((value) => value.endsWith("Attachments/report.pdf"))).toBe(true);
+         expect(result.children.every((child) => child.id.startsWith("artifact:"))).toBe(true);
+-        expect(result.children.some((child) => child.sizeBytes === 10)).toBe(true);
++
++        const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/message.eml"));
++        expect(emlChildren).toHaveLength(2);
++        expect(emlChildren.every((child) => child.mediaType === "message/rfc822")).toBe(true);
++
++        const emlBytes = yield* fs.readFile(
++          path.join(
++            exportRoot,
++            `${operation.source.id}.export`,
++            "Top of Personal Folders/Inbox/Message00001/message.eml"
++          )
++        );
++        expect(latin1Decoder.decode(emlBytes)).toBe(expectedInboxEml);
++        expect(emlBytes.includes(0xe9)).toBe(true);
++
++        const records = yield* readMessageRecords(exportRoot, `${operation.source.id}.export`);
++        expect(records).toHaveLength(4);
++
++        const [drafts, inbox, embedded, sent] = records;
++        expect(drafts?.messageDir.endsWith("Drafts/Message00001")).toBe(true);
++        expect(O.isSome(drafts?.internetHeadersFile ?? O.none())).toBe(true);
++        expect(O.isNone(drafts?.bodyFile ?? O.some(""))).toBe(true);
++        expect(O.isNone(drafts?.emlFile ?? O.some(""))).toBe(true);
++        expect(O.isNone(drafts?.outlookHeadersFile ?? O.some(""))).toBe(true);
++
++        expect(inbox?.folderPath.endsWith("Top of Personal Folders/Inbox")).toBe(true);
++        expect(O.isSome(inbox?.emlFile ?? O.none())).toBe(true);
++        expect(O.isSome(inbox?.internetHeadersFile ?? O.none())).toBe(true);
++        expect(O.isSome(inbox?.bodyFile ?? O.none())).toBe(true);
++        expect(inbox?.attachments).toHaveLength(3);
++        expect(inbox?.attachments.some((value) => value.endsWith("Attachments/report.pdf"))).toBe(true);
++        expect(inbox?.attachments.some((value) => value.endsWith("Attachments/Message00001/Message.txt"))).toBe(true);
++
++        expect(embedded?.messageDir.endsWith("Inbox/Message00001/Attachments/Message00001")).toBe(true);
++        expect(embedded?.folderPath.endsWith("Inbox/Message00001/Attachments")).toBe(true);
++        expect(O.isSome(embedded?.emlFile ?? O.none())).toBe(true);
++        expect(embedded?.attachments).toHaveLength(0);
++
++        expect(sent?.folderPath.endsWith("Top of Personal Folders/Sent Items")).toBe(true);
++        expect(O.isNone(sent?.emlFile ?? O.some(""))).toBe(true);
++        expect(O.isNone(sent?.internetHeadersFile ?? O.some(""))).toBe(true);
++        expect(O.isSome(sent?.outlookHeadersFile ?? O.none())).toBe(true);
++        expect(sent?.attachments).toHaveLength(0);
++
++        expect(result.warnings.some((warning) => warning.startsWith("2 exported message(s)"))).toBe(true);
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "writes no messages.jsonl for an export tree without messages",
++    Effect.fnUntraced(
++      function* () {
++        const fs = yield* FileSystem.FileSystem;
++        const path = yield* Path.Path;
++        const { exportRoot, operation, stubPath } = yield* fixture(zeroMessageStub);
++        const engine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
++        );
++
++        const result = yield* engine.exportArchive(operation);
++
++        expect(result.children).toHaveLength(1);
++        expect(result.children[0]?.relativePath.endsWith("Calendar/readme.txt")).toBe(true);
++        expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`, "messages.jsonl"))).toBe(false);
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "collects orphan trees produced by exportMode all",
++    Effect.fnUntraced(
++      function* () {
++        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
++        const engine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ exportMode: "all", exportRoot, pffexportPath: stubPath })
++        );
++
++        const result = yield* engine.exportArchive(operation);
++
++        expect(result.children.some((child) => child.relativePath.includes(".orphans/"))).toBe(true);
++
++        const orphanRecords = yield* readMessageRecords(exportRoot, `${operation.source.id}.orphans`);
++        expect(orphanRecords).toHaveLength(1);
++        expect(orphanRecords[0]?.messageDir.endsWith("Orphan00001")).toBe(true);
++        expect(O.isSome(orphanRecords[0]?.bodyFile ?? O.none())).toBe(true);
++        expect(O.isNone(orphanRecords[0]?.emlFile ?? O.some(""))).toBe(true);
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "reports the probed pffexport version on the engine descriptor",
++    Effect.fnUntraced(
++      function* () {
++        const { exportRoot, stubPath } = yield* fixture(stubPffexport);
++        const engine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
++        );
++
++        expect(engine.descriptor.name).toBe("libpff");
++        expect(engine.descriptor.version).toBe(stubVersion);
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "leaves the descriptor version unset when the version probe fails",
++    Effect.fnUntraced(
++      function* () {
++        const { exportRoot } = yield* fixture(stubPffexport);
++        const engine = yield* makeMissingBinaryEngine(exportRoot);
++
++        expect(engine.descriptor.version).toBeUndefined();
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "fails deterministically when the export target already exists under the fail policy",
++    Effect.fnUntraced(
++      function* () {
++        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
++        const engine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
++        );
++
++        yield* engine.exportArchive(operation);
++        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
++
++        expect(error.reason).toBe("archive-export-failed");
++        expect(error.details).toStrictEqual({ cause: "export target already exists for this archive" });
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "applies the existing-export policy across orphan trees",
++    Effect.fnUntraced(
++      function* () {
++        const fs = yield* FileSystem.FileSystem;
++        const path = yield* Path.Path;
++        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
++        const orphansRoot = path.join(exportRoot, `${operation.source.id}.orphans`);
++        yield* fs.makeDirectory(orphansRoot, { recursive: true });
++
++        const failEngine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
++        );
++        const error = yield* failEngine.exportArchive(operation).pipe(Effect.flip);
++        expect(error.reason).toBe("archive-export-failed");
++        expect(error.details).toStrictEqual({ cause: "export target already exists for this archive" });
++
++        const replaceEngine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ existingExportPolicy: "replace", exportRoot, pffexportPath: stubPath })
++        );
++        const result = yield* replaceEngine.exportArchive(operation);
++
++        expect(yield* fs.exists(orphansRoot)).toBe(false);
++        expect(result.children.length).toBeGreaterThan(0);
++      },
++      Effect.scoped,
++      provideTestLayer
++    )
++  );
++
++  it.effect(
++    "replaces a previous export tree under the replace policy",
++    Effect.fnUntraced(
++      function* () {
++        const fs = yield* FileSystem.FileSystem;
++        const path = yield* Path.Path;
++        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
++        const engine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({ existingExportPolicy: "replace", exportRoot, pffexportPath: stubPath })
++        );
++
++        yield* engine.exportArchive(operation);
++        const stalePath = path.join(exportRoot, `${operation.source.id}.export`, "stale-marker.txt");
++        yield* fs.writeFileString(stalePath, "stale");
++
++        const result = yield* engine.exportArchive(operation);
++
++        expect(yield* fs.exists(stalePath)).toBe(false);
++        expect(result.children.some((child) => child.relativePath.endsWith("stale-marker.txt"))).toBe(false);
++
++        const records = yield* readMessageRecords(exportRoot, `${operation.source.id}.export`);
++        expect(records).toHaveLength(4);
+       },
+       Effect.scoped,
+       provideTestLayer
+diff --git a/packages/drivers/libpff/test/Libpff.service.test.ts b/packages/drivers/libpff/test/Libpff.service.test.ts
+index 642ffe14a2..dcd338b076 100644
+--- a/packages/drivers/libpff/test/Libpff.service.test.ts
++++ b/packages/drivers/libpff/test/Libpff.service.test.ts
+@@ -132,6 +132,7 @@ describe("@beep/libpff", () => {
+     });
+ 
+     expect(Effect.runSync(encodePffexportEngineConfig(config))).toStrictEqual({
++      existingExportPolicy: "fail",
+       exportFormat: "text",
+       exportMode: "items",
+       exportRoot: "/tmp/pst-out",
+diff --git a/packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts b/packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts
+new file mode 100644
+index 0000000000..84f0c538e5
+--- /dev/null
++++ b/packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts
+@@ -0,0 +1,114 @@
++// Live pffexport lane against an operator-provided PST archive.
++//
++// Opt in by setting BEEP_TEST_PST_PATH to a readable .pst file; the real
++// pffexport binary is resolved from BEEP_TEST_PFFEXPORT_PATH or PATH. No PST
++// fixture is committed because the PST container cannot be synthesized
++// without proprietary tooling; the documented public sample fallback is the
++// EDRM Enron Email Data Set v2 PST distribution
++// (https://edrm.net/resources/data-sets/edrm-enron-email-data-set/), which is
++// public and free to use.
++import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
++import { ExportArchiveOperation } from "@beep/file-processing/Operation";
++import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
++import { LibpffMessageRecord, makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
++import { NonNegativeInt } from "@beep/schema";
++import { PosixPath } from "@beep/schema/PosixPath";
++import { provideScopedLayer } from "@beep/test-utils";
++import { O } from "@beep/utils";
++import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
++import { describe, expect, it } from "@effect/vitest";
++import { Config, Effect, FileSystem, Layer, Path } from "effect";
++import * as S from "effect/Schema";
++import * as Str from "effect/String";
++
++const BEEP_TEST_PST_PATH_ENV = "BEEP_TEST_PST_PATH";
++const BEEP_TEST_PFFEXPORT_PATH_ENV = "BEEP_TEST_PFFEXPORT_PATH";
++
++// Snapshot the opt-in lane keys once, treating absent and blank values as
++// "not configured" so the lane no-ops instead of dialing a phantom binary.
++const livePstPath = Config.string(BEEP_TEST_PST_PATH_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
++const livePffexportPath = Config.string(BEEP_TEST_PFFEXPORT_PATH_ENV).pipe(
++  Config.option,
++  Effect.map(O.filter(Str.isNonEmpty))
++);
++
++const provideLive = provideScopedLayer(NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)));
++
++const skipNotice = Effect.logInfo(
++  `Skipping the live pffexport lane because ${BEEP_TEST_PST_PATH_ENV} is not configured.`
++);
++
++const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(LibpffMessageRecord));
++
++const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  const stat = yield* fs.stat(pstPath);
++  const name = path.basename(pstPath);
++
++  const { artifactId, digest, operationId } = yield* decodeTestOperationIdentifiers();
++  const locatorValue = yield* S.decodeUnknownEffect(PosixPath)(pstPath.split(path.sep).join("/"));
++  const relativePath = yield* S.decodeUnknownEffect(PosixPath)(name);
++
++  return ExportArchiveOperation.make({
++    format: "pst",
++    operationId,
++    operationKind: "export-archive",
++    preference: { engine: "libpff" },
++    source: SourceArtifact.make({
++      digest,
++      extension: "pst",
++      id: artifactId,
++      locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
++      name,
++      relativePath,
++      sizeBytes: NonNegativeInt.make(Number(stat.size)),
++    }),
++  });
++});
++
++describe("pffexport live lane", () => {
++  it.effect(
++    "exports a real PST through the host pffexport binary",
++    Effect.fnUntraced(
++      function* () {
++        const pstPath = yield* livePstPath;
++        if (O.isNone(pstPath)) {
++          yield* skipNotice;
++          return;
++        }
++
++        const fs = yield* FileSystem.FileSystem;
++        const path = yield* Path.Path;
++        const exportRoot = yield* fs.makeTempDirectoryScoped({ prefix: "libpff-pffexport-live-" });
++        const pffexportPath = yield* livePffexportPath;
++
++        const engine = yield* makePffexportFileProcessingEngine(
++          PffexportEngineConfig.make({
++            exportRoot,
++            ...O.getSomesStruct({ pffexportPath }),
++          })
++        );
++
++        expect(engine.descriptor.version).toBeDefined();
++
++        const operation = yield* liveOperation(pstPath.value);
++        const result = yield* engine.exportArchive(operation);
++
++        expect(result.engine).toBe("libpff");
++        expect(result.children.length).toBeGreaterThan(0);
++
++        const jsonlChild = result.children.find((child) => child.relativePath.endsWith("messages.jsonl"));
++        if (jsonlChild !== undefined) {
++          const content = yield* fs.readFileString(path.join(exportRoot, jsonlChild.relativePath));
++          const lines = content.split("\n").filter((line) => Str.isNonEmpty(Str.trim(line)));
++          expect(lines.length).toBeGreaterThan(0);
++          const records = yield* Effect.forEach(lines, (line) => decodeMessageRecord(line));
++          expect(records.length).toBe(lines.length);
++        }
++      },
++      Effect.scoped,
++      provideLive
++    )
++  );
++});
