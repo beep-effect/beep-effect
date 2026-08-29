@@ -6,12 +6,13 @@ Lifecycle: `completed-retained` — P0–P4 complete; implementation retained as
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-Latest evidence (2026-07-13): PR
-[#392](https://github.com/beep-effect/beep-effect/pull/392) carries the full
-vertical (driver probe/shadow-home isolation, agents domain/use-cases/tables/
-server/client) rebased onto current `main`; final local
-`bun run beep yeet verify` is green, with hosted readiness driven through
-Yeet. Closeout reflection:
+Latest evidence (2026-07-14): PR
+[#392](https://github.com/beep-effect/beep-effect/pull/392) merged the completed
+vertical into `main` at
+[`cebaeddf`](https://github.com/beep-effect/beep-effect/commit/cebaeddf22dfa4514863ef10aa9104ace2fdb295)
+after local `bun run beep yeet verify` passed. All 24 non-skipped hosted PR
+checks passed, Greptile reported 5/5, and no review threads remained
+unresolved. Closeout reflection:
 [`history/reflections/2026-07-12-claude.md`](./history/reflections/2026-07-12-claude.md).
 
 ## Mission
@@ -52,7 +53,8 @@ client state. App-local UI composition remains a separately scoped follow-up.
 
 ## Latest Evidence
 
-See the 2026-07-13 evidence above and the closeout reflection in `history/`.
+See the 2026-07-14 merge evidence above and the closeout reflection in
+`history/`.
 
 ## Notes
 
