@@ -1,0 +1,26 @@
+diff --git a/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts b/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts
+index 41b396d6f4..10a2f2a94c 100644
+--- a/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts
++++ b/packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts
+@@ -1,6 +1,8 @@
+ /**
+  * Lab-app lifecycle inspection commands (`beep labs`).
+  *
++ * **Details**
++ *
+  * `beep labs list` is the D9 truth surface for `apps/labs/*`: it enumerates
+  * every lab workspace, decodes each `lab.manifest.json` through the
+  * {@link LabManifest} schema, and renders one row per lab. A missing or
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts b/packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts
+index 958081a285..98d09ff3be 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts
+@@ -1,6 +1,8 @@
+ /**
+  * Path-aware changeset status wrapper (lab-apps-lifecycle P2, ratified row 8).
+  *
++ * **Details**
++ *
+  * Lab apps under `apps/labs/**` are changeset-ceremony exempt: a lab-only
+  * change set succeeds without consulting changesets, a change set with zero
+  * lab paths runs stock `changeset status --since` for byte-parity, and a
