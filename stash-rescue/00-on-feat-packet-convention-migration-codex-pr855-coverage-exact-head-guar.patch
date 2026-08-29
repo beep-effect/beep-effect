@@ -1,0 +1,34 @@
+diff --git a/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts b/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts
+index 12251d3cd9..9754604c2d 100644
+--- a/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts
++++ b/packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts
+@@ -1151,6 +1151,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
+       const promotionEvents = `${promotionLocator.packetPath}/ops/events`;
+       const promotionApplier = yield* makeApplier({
+         ...fs,
++        exists: (target) =>
++          target === promotionEvents ? Effect.fail(injectedFileSystemError("exists", target)) : fs.exists(target),
+         rename: (source, target) =>
+           target === promotionEvents && source !== promotionEvents
+             ? Effect.fail(injectedFileSystemError("rename", source))
+@@ -1282,6 +1284,20 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
+         planned.value.eventText
+       );
+ 
++      const tracePath = planned.value.tracePath;
++      const inspectionFailure = yield* Effect.exit(
++        planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z").pipe(
++          Effect.provideService(FileSystem.FileSystem, {
++            ...fs,
++            exists: (target) =>
++              target === tracePath ? Effect.fail(injectedFileSystemError("exists", target)) : fs.exists(target),
++          })
++        )
++      );
++      expect(Exit.isFailure(inspectionFailure) ? inspectionFailure.cause.toString() : "").toContain(
++        "genesis trace inspection failed"
++      );
++
+       const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
+       expect(O.isSome(recovery)).toBe(true);
+       if (O.isNone(recovery)) return;
