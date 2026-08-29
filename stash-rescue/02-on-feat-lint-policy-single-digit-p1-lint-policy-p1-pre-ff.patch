@@ -1,0 +1,1933 @@
+diff --git a/goals/lint-policy-single-digit/GOAL.md b/goals/lint-policy-single-digit/GOAL.md
+new file mode 100644
+index 0000000000..c899f468a1
+--- /dev/null
++++ b/goals/lint-policy-single-digit/GOAL.md
+@@ -0,0 +1,61 @@
++# GOAL: make the hosted Lint Policy check single-digit minutes at full scope
++
++Repo root: the current working directory — the `beep-effect` checkout you are
++running in. All paths below are repo-relative.
++
++Outcome: the required `Lint Policy` CI check completes in single-digit minutes
++while remaining a full-scope proof. Current executable phase: **P1** below.
++
++This is a compact `/goal` launcher. The packet files are the contract:
++
++- `goals/lint-policy-single-digit/SPEC.md` (normative)
++- `goals/lint-policy-single-digit/PLAN.md`
++- `goals/lint-policy-single-digit/ops/manifest.json` (locked decisions,
++  killed ideas, stop conditions)
++- `goals/lint-policy-single-digit/research/` (evidence + implementation
++  sketches with file:line citations)
++
++Read those first, then `AGENTS.md` / `CLAUDE.md`. Repo standards outrank
++packet prose.
++
++P1 scope (one focused PR, CLI-only):
++
++1. `packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts` —
++   deprecated-apis shards run via bounded `Effect.forEach(..., { concurrency:
++   4 })` instead of the sequential loop; each shard gets a stable per-shard
++   cache file under `node_modules/.cache/eslint-deprecated-apis/`; add
++   `--cache-strategy content`. Preserve failure propagation and interruption.
++   Sketch: `research/02-inplace-optimization.md` §3.
++2. `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` — order
++   `rootRepoLintPolicySteps` longest-first (static LPT using the measured
++   durations in `research/00-evidence-brief.md`; cite them in a comment).
++   Keep `LINT_POLICY_STEP_CONCURRENCY = 2`.
++3. Same file — a scoped step whose filtered changed set is empty is OMITTED
++   from the plan; never construct `--include ""`. Full scope
++   (`files === undefined`) still emits every step. Design:
++   `research/04-pr-scoping-deferred.md` §3.
++4. Focused tests in `packages/tooling/tool/cli/test/`: shard command
++   construction (unique cache paths, content strategy, concurrency 4,
++   aggregate failure) and empty-set plan (docs-only set emits no scoped
++   steps, no empty include values); update the 25-step inventory test only
++   where behavior legitimately changed.
++
++Out of scope for P1: outer concurrency raise, oxlint/tsgolint, docgen step
++changes, any `.github/workflows/**` edit, PR changed-scope, dependency or
++lockfile changes.
++
++Workflow:
++
++1. Inspect referenced files and current repo state before editing.
++2. Make the smallest change satisfying SPEC P1; follow Effect v4 repo laws.
++3. Preserve unrelated user/worktree changes; never stage or commit.
++4. Verify: focused CLI tests green, then `bun run beep lint policy --full`
++   exits 0 locally.
++5. Write implementation notes (what changed, test evidence, deviations) to
++   `goals/lint-policy-single-digit/history/p1-implementation-notes.md`.
++
++Acceptance:
++
++- [ ] SPEC.md P1 acceptance criteria satisfied.
++- [ ] No unrelated refactors or formatting churn.
++- [ ] Stop conditions in `ops/manifest.json` respected throughout.
+diff --git a/goals/lint-policy-single-digit/PLAN.md b/goals/lint-policy-single-digit/PLAN.md
+new file mode 100644
+index 0000000000..b28e2d87df
+--- /dev/null
++++ b/goals/lint-policy-single-digit/PLAN.md
+@@ -0,0 +1,39 @@
++# Lint Policy Single Digit Plan
++
++## Status
++
++Status: `active` — P0 complete, P1 ready to execute.
++
++## Phases
++
++| Phase | Status | Goal | Exit criteria |
++| --- | --- | --- | --- |
++| P0 Baseline & Packet Bootstrap | complete | Capture the hosted timing profile and lock the lever combination. | Baseline block in `ops/manifest.json`; five exploration reports under `research/`; grill decisions recorded as `keyDecisions`. |
++| P1 Phase-1 CLI speedup PR | pending | Inner 4-way deprecated-apis shards + per-shard caches, LPT step ordering, empty-set step omission; outer concurrency stays 2. | SPEC P1 acceptance criteria met; PR yeeted to mergeable; hosted Lint Policy <= 9 min observed. |
++| P2 Spike: oxlint-tsgolint behind gates | pending | Prove or refute the engine swap on a branch without touching main's gate. | Three gates measured (<=150s cold scan; parity corpus; shadow week via temp standalone workflow); verdict in `history/`. |
++| P3 Cutover PR (conditional) | pending | Swap to one `oxlint --type-aware` invocation, raise outer concurrency to 4, delete shard runner + shadow workflow. | Only on all-gates-pass: hosted lane <= 5 min observed. On gate failure: flip to `superseded`, shards stay endgame. |
++| P4 Close | pending | Flip lifecycle and record the closeout reflection in the same PR as the final work. | Reflection at `history/reflections/<date>-<agent>.md`; backlog levers (docgen move, scoping revisit) recorded as open. |
++
++## Execution notes
++
++- P1 implementation sketches live in `research/02-inplace-optimization.md` §3 (shards,
++  caches, tests) and `research/03-lane-orchestration.md` §3 (ordering). The empty-set fix
++  design is `research/04-pr-scoping-deferred.md` §3 "Empty-set bug: confirmed fix" —
++  only that fix is in P1 scope; the rest of research/04 is deferred.
++- P2 gates and canary-fixture inventory: `research/01-engine-swap.md` §3–§5.
++- Stop conditions in `ops/manifest.json` bind every phase; the check.yml stop condition
++  has one exception: the P2 temporary standalone shadow workflow file.
++
++## P4 Closeout Checklist
++
++Before marking the packet closed (`status` → `completed-retained`):
++
++1. Write a closeout reflection via the `/reflect` skill to
++   `history/reflections/<YYYY-MM-DD>-<agent>.md`;
++   `bun run beep lint reflection-artifacts` must pass.
++2. Flip `ops/manifest.json` lifecycle/status and land it in the same PR as the final
++   work (same-PR packet-state flip law).
++3. Record final hosted wall-time evidence (run ids) in the manifest or `history/`.
++4. Confirm the backlog levers are written down where the next operator will find them:
++   docgen ownership move and PR changed-scope revisit both point at this packet's
++   `research/` designs.
+diff --git a/goals/lint-policy-single-digit/README.md b/goals/lint-policy-single-digit/README.md
+new file mode 100644
+index 0000000000..c9fa83d01c
+--- /dev/null
++++ b/goals/lint-policy-single-digit/README.md
+@@ -0,0 +1,45 @@
++# Lint Policy Single Digit
++
++## Status
++
++Lifecycle: `active`
++
++Source: [`ops/manifest.json`](./ops/manifest.json)
++
++## Mission
++
++Drive the hosted `Lint Policy` required check from ~20 minutes to single-digit minutes
++with the full-scope proof intact: parallel deprecated-apis shards + LPT ordering now, an
++oxlint-tsgolint engine swap behind hard parity/timing gates, and PR changed-scope
++explicitly deferred.
++
++## Launch
++
++Use this command for execution-capable sessions:
++
++```text
++/goal follow the instructions in goals/lint-policy-single-digit/GOAL.md
++```
++
++`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
++
++## Read This First
++
++1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher (current phase: P1).
++2. [`SPEC.md`](./SPEC.md) - normative source of truth.
++3. [`PLAN.md`](./PLAN.md) - phase table and closeout checklist.
++4. [`ops/manifest.json`](./ops/manifest.json) - locked decisions, killed ideas,
++   baseline, stop conditions.
++5. [`research/`](./research/) - evidence brief + five exploration reports
++   (2026-08-13, Codex Sol medium fan-out).
++
++## Current Phase
++
++P1 — Phase-1 CLI speedup PR: inner 4-way deprecated-apis shards with per-shard caches,
++LPT step ordering, empty-set step omission; outer concurrency stays 2.
++
++## Latest Evidence
++
++Baseline: hosted run `31683014887` (PR #673, 2026-08-13) — job ~20 min,
++`lint:deprecated-apis` 975s of the 1124s lane at step concurrency 2. Full per-step table:
++[`research/00-evidence-brief.md`](./research/00-evidence-brief.md).
+diff --git a/goals/lint-policy-single-digit/SPEC.md b/goals/lint-policy-single-digit/SPEC.md
+new file mode 100644
+index 0000000000..99426b1bc6
+--- /dev/null
++++ b/goals/lint-policy-single-digit/SPEC.md
+@@ -0,0 +1,82 @@
++# Lint Policy Single Digit Spec
++
++## Objective
++
++The hosted `Lint Policy` required check completes in single-digit minutes on every event
++(pull request, escalated run, push to `main`, rerun) while remaining a FULL-SCOPE proof.
++Measured baseline (2026-08-13, run 31683014887): ~20 min job wall, of which
++`lint:deprecated-apis` is 975s (87% of the 1124s lane).
++
++## Non-Goals
++
++- PR changed-scope execution of the lane (deferred by decision
++  `pr-changed-scope-deferred`; design preserved in `research/04-pr-scoping-deferred.md`).
++- The docgen ownership move (backlogged by decision `docgen-ownership-move-backlogged`).
++- Any edit to `.github/workflows/check.yml` (the temporary standalone shadow workflow is a
++  separate new file).
++- Changing which checks are required in the `main` ruleset.
++- Raising outer step concurrency in P1 (rises to 4 only in the P3 cutover PR).
++
++## Source Hierarchy
++
++1. The 2026-08-13 grill-session decisions recorded in `ops/manifest.json` `keyDecisions`.
++2. `AGENTS.md`, `CLAUDE.md`, and required skills.
++3. `goals/one-round-loop/history/p0-parity-evidence.md` (parity invariant).
++4. This `SPEC.md`.
++5. `PLAN.md`, `GOAL.md`.
++6. `research/` reports (evidence, file:line citations, implementation sketches).
++
++## Target Surfaces
++
++- `packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts` (deprecated-apis runner).
++- `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` (step plan, ordering,
++  empty-set omission).
++- `packages/tooling/tool/cli/test/**` (focused tests).
++- P2/P3 only: `packages/tooling/policy-pack/repo-configs/**` (new oxlint profile), root
++  `package.json`/`bun.lock` (oxlint-tsgolint dep, cutover PR only), one temporary
++  standalone workflow file.
++
++## Constraints
++
++- Lane bodies stay in the beep CLI; hosted and local `beep ci lane lint-policy` must run
++  command-identical bodies (parity invariant, decision `parity-invariant-binding`).
++- Memory discipline on the 64 GiB runner: outer concurrency 2 + inner shard concurrency 4
++  in P1; never overlap two typed-heavy processes by construction (LPT ordering keeps
++  deprecated-apis and docgen from co-starting late; see `research/03`).
++- Effect v4 repo laws apply (effect helper modules, `Effect.fn`/`fnUntraced`, no native
++  Set/Map, tersest helper forms).
++- Killed ideas in `ops/manifest.json` `killedIdeas` must not be re-attempted.
++
++## Acceptance Criteria
++
++- [ ] P1: `lint:deprecated-apis` shards execute with bounded concurrency 4, each shard
++      writing its own cache file under `node_modules/.cache/eslint-deprecated-apis/`,
++      with `--cache-strategy content`; failure propagation and child interruption
++      preserved.
++- [ ] P1: `rootRepoLintPolicySteps` launches steps longest-first (static LPT order using
++      the measured durations from `research/00-evidence-brief.md` as weights, recorded in
++      a comment).
++- [ ] P1: a scoped step whose filtered changed set is empty is omitted from the plan
++      (no `--include ""` invocation is ever constructed); full scope
++      (`files === undefined`) still emits every step.
++- [ ] P1: focused tests assert shard command construction (unique cache paths, content
++      strategy, concurrency 4, aggregate failure on nonzero exit) and the empty-set plan
++      (docs-only changed set emits no law/scoped steps and no empty include values).
++- [ ] P1: hosted `Lint Policy` job wall <= 9 min observed on the phase-1 PR.
++- [ ] P2: go/no-go verdict for all three gates recorded in `history/` with wall/RSS
++      evidence and the parity-corpus result.
++- [ ] P3 (conditional): hosted lane <= 5 min observed after cutover, or phase flipped to
++      `superseded` with the failing gate named.
++- [ ] No unrelated refactors or formatting churn; user worktree changes preserved.
++
++## Verification Matrix
++
++| Check | Command or evidence | Required result |
++| --- | --- | --- |
++| Local full-scope lane runs | `bun run beep lint policy --full` | exit 0 |
++| Focused CLI tests | `bun run test --cwd packages/tooling/tool/cli` (or repo-standard invocation) | green, includes new shard + empty-set tests |
++| Repo proof | `bun run beep yeet verify` | green |
++| Hosted P1 evidence | `gh run view <run-id> --json jobs` on the phase-1 PR | Lint Policy job wall <= 9 min |
++| Parity invariant | hosted log echoes `bun run beep lint policy`; local `beep ci lane lint-policy` echoes same body | identical command |
++| P2 timing gate | `/usr/bin/time -v` cold oxlint full scan on heavy runner | wall <= 150s, RSS recorded |
++| P2 parity gate | normalized `(file,line,symbol)` diff, both engines, parity corpus + full repo | empty diff or reviewed-only differences |
+diff --git a/goals/lint-policy-single-digit/history/p1-implementation-notes.md b/goals/lint-policy-single-digit/history/p1-implementation-notes.md
+new file mode 100644
+index 0000000000..426f842a6a
+--- /dev/null
++++ b/goals/lint-policy-single-digit/history/p1-implementation-notes.md
+@@ -0,0 +1,68 @@
++# P1 implementation notes
++
++Date: 2026-08-13
++
++## Changes
++
++- `lint deprecated-apis` now runs its 24 existing shards with bounded inner
++  concurrency 4. Every shard receives a stable cache file derived from its
++  shard path under `node_modules/.cache/eslint-deprecated-apis/`, plus
++  `--cache-strategy content`. The runner remains an `Effect.forEach` workflow,
++  so a nonzero child exit fails the aggregate and interrupts sibling work.
++- `rootRepoLintPolicySteps` is statically ordered longest-first using the
++  measured durations from `research/00-evidence-brief.md`. The outer
++  `LINT_POLICY_STEP_CONCURRENCY` remains 2.
++- Changed-scope planning now filters each naturally scoped step before
++  constructing it. Empty law, ecosystem-polarity, and package-test-import
++  subsets emit no step, so the planner cannot construct `--include ""`.
++  Full scope still emits all 25 policy steps.
++
++## Test and check evidence
++
++- `node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/lint-command.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism`
++  - Exit 0; 2 files passed, 120 tests passed in 12.16s.
++  - Covers 24 unique cache locations, content strategy, concurrency 4, aggregate
++    failure on a shard exit 7, LPT inventory, changed-scope filtering, and no
++    empty include values.
++- `zsh -ic 'bun run --cwd packages/tooling/tool/cli check'`
++  - Exit 0; the CLI `tsgo -b tsconfig.json` check passed in 7.31s.
++- Focused Biome check of the four touched CLI source/test files
++  - Exit 0; no diagnostics.
++- Focused `effect-fn`, `native-runtime`, and advisory `terse-effect` law checks
++  on the touched files
++  - Exit 0; no violations or blocking findings.
++- `zsh -ic 'bun run beep lint schema-first'`
++  - Exit 0 in about 30.4s; 83 live/tracked entries, zero missing, stale, or
++    advisory findings.
++- `zsh -ic 'bun run beep lint policy --full'`
++  - Exit 0; all 25 full-scope steps passed at outer concurrency 2 in
++    approximately 179s observed wall time.
++  - `lint:deprecated-apis` completed in 172562.91ms and was the long pole. Its
++    captured output showed all 24 unique cache locations, content strategy, and
++    the declared inner concurrency 4.
++
++## Timing observations
++
++- The focused Vitest suite itself completed in 12.16s under Node.
++- The final local full-scope lane completed in approximately 2m59s;
++  deprecated-apis accounted for approximately 2m53s of that critical path.
++- Bun-backed Vitest worker startup was unhealthy in this shell: fork workers
++  timed out before test collection at 120s, and the threads pool failed during
++  worker initialization. The same configured Vitest suite passed under the
++  direct Node launcher, so these attempts are recorded as environment-only
++  runner startup failures rather than test failures.
++- No hosted P1 wall-time observation is available in this no-commit/no-push
++  phase. The packet's hosted `<= 9 min` acceptance remains a PR-stage proof.
++
++## Deviations from sketches
++
++- The P1 contract and locked decisions explicitly kill persistent cross-run
++  ESLint caching, so only unique per-shard local cache files were implemented;
++  no workflow or cache-action changes were made.
++- The empty-set sketch was generalized to one scoped CLI-step helper so all
++  seven existing naturally scoped steps share the omission invariant. The two
++  non-law predicates mirror their command handlers' existing input scopes.
++- Focused tests use the real CLI command with temporary shard directories and a
++  fake local ESLint executable instead of exporting production internals solely
++  for tests. This proves the rendered child commands and aggregate exit behavior
++  at the runtime boundary without widening the public API.
+diff --git a/goals/lint-policy-single-digit/history/reflections/_TEMPLATE.md b/goals/lint-policy-single-digit/history/reflections/_TEMPLATE.md
+new file mode 100644
+index 0000000000..8effb877f9
+--- /dev/null
++++ b/goals/lint-policy-single-digit/history/reflections/_TEMPLATE.md
+@@ -0,0 +1,60 @@
++---
++goal: <goal-slug>
++agent: claude
++date: YYYY-MM-DD
++trigger: closeout
++confidence: medium
++findings:
++  - category: tooling-friction
++    confidence: high
++    instruction: What to change.
++    explanation: Why — the friction observed and the evidence for it.
++todos:
++  - Concrete item worth codifying as a standard, skill, or tracked issue.
++---
++
++# Reflection — <goal-slug> (<date>, <agent>)
++
++> Copy this file to `<YYYY-MM-DD>-<agent>.md` and fill it in. The YAML frontmatter
++> above is the machine-validated block (schema: `ReflectionFrontmatter`, enforced by
++> `bun run beep lint reflection-artifacts`); the body below is the human narrative.
++>
++> Frontmatter field domains:
++> - `trigger`: `closeout` | `on-demand` | `todo-codify`
++> - `confidence` (overall and per finding): `high` | `medium` | `low`
++> - `findings[].category`: `tooling-friction` | `implementation-improvement` |
++>   `goal-critique` | `prompt-critique` | `codification-todo`
++> - each finding carries an `instruction` (what to change) and an `explanation`
++>   (why) — information-rich reflections measurably outperform terse advice.
++
++## Summary
++
++<1–3 sentences: what this goal accomplished and the overall verdict.>
++
++## Tooling experience
++
++- **Worked:** <which tools/skills/commands moved the work forward.>
++- **Didn't:** <what got in the way or behaved unexpectedly.>
++- **Frustrating:** <friction, papercuts, confusing surfaces.>
++- **Wished existed:** <capabilities you reached for that weren't there.>
++
++## Implementation improvement opportunities
++
++- <Concrete improvements to what was built in this packet.>
++
++## Goal & prompt critique
++
++Would you revise the `GOAL.md` / prompt you were given to be clearer, easier, more
++efficient, or less confusing? Be specific — propose the actual edit.
++
++- <…>
++
++## TODOs worth codifying
++
++- <Agent-detected items that ought to become a standard, skill, lint rule, or issue.>
++
++## Lessons (confidence-tiered)
++
++- **HIGH — Critical:** <instruction> — <explanation>
++- **MEDIUM — Best practice:** <instruction> — <explanation>
++- **LOW — Consideration:** <instruction> — <explanation>
+diff --git a/goals/lint-policy-single-digit/ops/manifest.json b/goals/lint-policy-single-digit/ops/manifest.json
+new file mode 100644
+index 0000000000..3a0d5dc18c
+--- /dev/null
++++ b/goals/lint-policy-single-digit/ops/manifest.json
+@@ -0,0 +1,168 @@
++{
++  "schemaVersion": "initiative-manifest/v2",
++  "initiative": {
++    "id": "lint-policy-single-digit",
++    "title": "Lint Policy Single Digit",
++    "status": "active",
++    "created": "2026-08-13",
++    "updated": "2026-08-13",
++    "packetAnchorDocument": "SPEC.md"
++  },
++  "packetPath": "goals/lint-policy-single-digit",
++  "lifecycle": "active",
++  "mission": "Drive the hosted Lint Policy required check from ~20 min to single-digit minutes with the full-scope proof intact: parallel deprecated-apis shards + LPT ordering now, oxlint-tsgolint engine swap behind hard parity/timing gates, PR changed-scope explicitly deferred.",
++  "executionCapable": true,
++  "reflectionRequired": true,
++  "completionGate": {
++    "operator": "yeet",
++    "requiresPullRequest": true,
++    "requiresMergeable": true,
++    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
++    "grandfathered": false
++  },
++  "currentSourceOfTruth": [
++    "AGENTS.md",
++    "CLAUDE.md",
++    "goals/lint-policy-single-digit/README.md",
++    "goals/lint-policy-single-digit/SPEC.md",
++    "goals/lint-policy-single-digit/PLAN.md",
++    "goals/lint-policy-single-digit/GOAL.md",
++    "goals/lint-policy-single-digit/research/SOURCES.md",
++    "goals/one-round-loop/history/p0-parity-evidence.md",
++    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
++    "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
++    "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts"
++  ],
++  "researchReports": [
++    "research/SOURCES.md",
++    "research/00-evidence-brief.md",
++    "research/01-engine-swap.md",
++    "research/02-inplace-optimization.md",
++    "research/03-lane-orchestration.md",
++    "research/04-pr-scoping-deferred.md",
++    "research/05-long-tail.md"
++  ],
++  "agentLaunchers": [
++    {
++      "kind": "codex-goal",
++      "path": "GOAL.md",
++      "targetChars": 3500,
++      "maxChars": 4000,
++      "command": "/goal follow the instructions in goals/lint-policy-single-digit/GOAL.md"
++    }
++  ],
++  "baseline": {
++    "measuredOn": "2026-08-13",
++    "run": "31683014887",
++    "job": "94392586624",
++    "pr": 673,
++    "jobWallSeconds": 1195,
++    "setupSeconds": 66,
++    "lintPolicyCommandMs": 1124084,
++    "deprecatedApisMs": 975199,
++    "docgenMs": 197298,
++    "semanticDeltaMs": 78127,
++    "schemaFirstMs": 51162,
++    "stepCount": 25,
++    "stepConcurrency": 2,
++    "scope": "full",
++    "runner": "beep-ec2-heavy (r7a/r7i/r6i.2xlarge 8vCPU/64GiB or m7a.4xlarge 16vCPU/64GiB)",
++    "measurementMethod": "gh run job log [beep-cli] step timing lines; per-step table reproduced in research/00-evidence-brief.md"
++  },
++  "keyDecisions": [
++    {
++      "id": "target-full-scope-single-digit",
++      "decision": "The target is the FULL-SCOPE Lint Policy run under 10 minutes on every event (PR, escalation, main push, rerun). PR changed-scope is not required to meet it.",
++      "rationale": "Predictable gate: no PR-vs-push semantic split, no trigger-maintenance burden, and the proven one-round-loop local/hosted parity property stays closed. Locked in the 2026-08-13 grill session."
++    },
++    {
++      "id": "pr-changed-scope-deferred",
++      "decision": "PR changed-scope (research/04) is DEFERRED, not adopted. Revisit only if post-cutover timings still hurt; adoption then requires a durable gate-semantics record.",
++      "rationale": "It changes what a green PR proves. With the full-scope run at ~4 min after cutover, the ~2 min saved does not pay for the semantic risk and trigger maintenance. The empty-include fix (emit no step when the filtered changed set is empty) ships anyway because a step over zero files proves nothing."
++    },
++    {
++      "id": "engine-swap-behind-hard-gates",
++      "decision": "lint:deprecated-apis moves to one repo-wide `oxlint --type-aware` invocation (typescript/no-deprecated via oxlint-tsgolint) ONLY after three gates pass: (1) cold full scan <= 150s on the heavy runner, (2) parity corpus green including every allowDefaultProject script/fixture, (3) a shadow week comparing both engines on main pushes. ESLint stays the gate until then; gate failure means shards remain the endgame.",
++      "rationale": "tsgolint bundles upstream TS-go, not the repo's Effect tsgo fork; Effect-heavy inference drift and silent non-coverage of default-project files are the two failure modes that must be disproven with evidence, not assumed away."
++    },
++    {
++      "id": "outer-concurrency-2-until-cutover",
++      "decision": "Phase-1 keeps LINT_POLICY_STEP_CONCURRENCY at 2 and adds LPT (longest-first) step ordering; inner deprecated-apis shard concurrency is 4. Outer concurrency rises to 4 only in the cutover PR, when deprecated-apis is a single bounded process.",
++      "rationale": "Local probes measured schema-first ~14GiB and terse-effect ~10GiB peak RSS; outer 4 x heavy steps plus 4 inner ESLint processes risks recreating the exit-137 OOM flake class on the 64GiB runner. A flaky required check costs more than the last ~90s."
++    },
++    {
++      "id": "docgen-ownership-move-backlogged",
++      "decision": "Folding the lint:docgen analyzer (@category normalization, re-exports, file overviews) into the required Docgen lane and deleting the 197s step is BACKLOG, not scheduled. It is the designated next lever if the lane creeps toward 10 minutes.",
++      "rationale": "Only lever colliding with the in-flight CI-infra work (it touches check.yml and the Docgen lane), and the target is met without its ~1 minute. The two checkers are NOT proven identical; parity fixtures are prerequisite work recorded in research/05."
++    },
++    {
++      "id": "shadow-via-temp-standalone-workflow",
++      "decision": "The engine-swap shadow comparison runs in a temporary standalone workflow (schedule/workflow_dispatch on main), never as a step in check.yml. Deleted after cutover.",
++      "rationale": "Matches the ci-lane-shadow.yml precedent from goals/one-round-loop and avoids touching the CI surface currently under active work elsewhere."
++    },
++    {
++      "id": "parity-invariant-binding",
++      "decision": "Every change keeps the lane body in the beep CLI so hosted `bun run beep ci lane lint-policy` and local replay stay command-identical (one-round-loop P0 inversion).",
++      "rationale": "goals/one-round-loop/history/p0-parity-evidence.md proved same-SHA local/hosted parity; re-opening it is a regression, not a tradeoff."
++    },
++    {
++      "id": "no-architecture-decisions-entry",
++      "decision": "No standards/architecture/DECISIONS.md entry; decisions are recorded here.",
++      "rationale": "Reversible tooling/quality-gate work, not architecture-wide doctrine."
++    }
++  ],
++  "killedIdeas": [
++    "Pointing typescript-eslint projectService at tsconfig.check.json (projectService only honors the nearest literal tsconfig.json; research/01).",
++    "Persisting the ESLint cache across CI runs for no-deprecated (per-file cache validity never sees cross-package type changes; the only sound key is an exact type-universe hash that misses on every real TS PR; research/02).",
++    "One full-repo ESLint invocation (commit 4cd02e6962 split packages/epistemic to bound memory; a 10-file two-root probe already reached 4.07GiB RSS; research/02).",
++    "tsgo as deprecation scanner (no deprecation/suggestion CLI surface; research/01).",
++    "Biome noDeprecatedImports as replacement (imports only, not member/call/type uses; research/01).",
++    "Lowering maximumDefaultProjectFileMatchCount (a failure threshold, not a work bound; saves ~0s; research/02)."
++  ],
++  "phases": [
++    {
++      "id": "P0",
++      "name": "Baseline & Packet Bootstrap",
++      "status": "complete",
++      "exit": "Hosted per-step timing profile captured (baseline block); five exploration reports and the locked grill decisions recorded under research/."
++    },
++    {
++      "id": "P1",
++      "name": "Phase-1 CLI speedup PR",
++      "status": "pending",
++      "exit": "Deprecated-apis shards run 4-wide with per-shard cache files and --cache-strategy content; lint-policy steps launch longest-first; scoped steps are omitted (not emitted with --include \"\") when their filtered changed set is empty; outer concurrency unchanged at 2; focused tests cover shard command construction and the empty-set plan; PR yeeted to mergeable; hosted Lint Policy job wall <= 9 min observed on the PR."
++    },
++    {
++      "id": "P2",
++      "name": "Spike: oxlint-tsgolint behind gates",
++      "status": "pending",
++      "exit": "On a branch: oxlint-tsgolint installed, dedicated .oxlintrc profile, parity corpus (aliases/overloads/JSX/computed members/allowDefaultProject canaries) built and green or failures catalogued; cold full-scan wall + RSS measured on the heavy runner; temp standalone shadow workflow comparing normalized findings on main for one week. Go/no-go verdict recorded in history/."
++    },
++    {
++      "id": "P3",
++      "name": "Cutover PR (conditional on P2 gates)",
++      "status": "pending",
++      "exit": "Only if all three P2 gates pass: deprecated-apis becomes one oxlint --type-aware invocation, shard runner and ESLint deprecated profile removed, outer step concurrency raised to 4, shadow workflow deleted, dependency lands here; hosted lane <= 5 min observed. If any gate fails: record the verdict, keep shards as endgame, flip this phase to superseded."
++    },
++    {
++      "id": "P4",
++      "name": "Close",
++      "status": "pending",
++      "exit": "Packet lifecycle flipped and closeout reflection landed in the same PR as the final work; backlog items (docgen ownership move, PR changed-scope revisit) explicitly recorded as open levers."
++    }
++  ],
++  "verificationCommands": [
++    "test \"$(wc -m < goals/lint-policy-single-digit/GOAL.md)\" -le 4000",
++    "jq . goals/lint-policy-single-digit/ops/manifest.json",
++    "bun run beep lint policy --full",
++    "bun run beep yeet verify",
++    "gh run view <run-id> --json jobs (hosted Lint Policy wall-time evidence per phase exit)"
++  ],
++  "stopConditions": [
++    "Hosted lane shows OOM/exit-137 or RSS regression after phase-1 lands: revert inner concurrency to sequential before any other tuning.",
++    "Any P2 gate fails: do NOT cut over; record the verdict and keep the shard architecture as the endgame.",
++    "Any change would touch .github/workflows/check.yml other than the temporary standalone shadow workflow file: stop and coordinate with the in-flight CI work first.",
++    "Any change would make hosted and local `beep ci lane lint-policy` run different commands: stop; the parity invariant binds.",
++    "Preserve unrelated user/worktree changes; never stage or commit files outside this packet and the named target surfaces."
++  ]
++}
+diff --git a/goals/lint-policy-single-digit/research/00-evidence-brief.md b/goals/lint-policy-single-digit/research/00-evidence-brief.md
+new file mode 100644
+index 0000000000..b2f68d54ec
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/00-evidence-brief.md
+@@ -0,0 +1,91 @@
++# Lint Policy CI speedup — shared evidence brief
++
++Goal: get the hosted `Lint Policy` check (PR-blocking, required) from ~19-31 min to single-digit
++minutes. CI-infra changes are already underway elsewhere; prefer levers OUTSIDE direct CI
++infrastructure changes (i.e., changes to the lane's own commands, scoping, engines, caching,
++orchestration inside the beep CLI).
++
++## Measured ground truth (run 31683014887, job 94392586624, PR #673, 2026-08-13)
++
++Job wall: 08:41:43 -> 09:01:38 (~20 min). Setup ~66s. Everything else is one step:
++`bun run beep lint policy` = 1124s (18m44s). It runs 25 subprocess steps with concurrency 2
++(`LINT_POLICY_STEP_CONCURRENCY = 2`, packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:124).
++
++Per-step wall times (concurrency 2, full scope):
++
++| step | ms |
++|---|---|
++| lint:deprecated-apis | 975199 (16m15s — THE long pole; lane ends when it ends) |
++| lint:docgen (`docgen check --reuse-proof-manifest`) | 197298 |
++| knowledge:semantic-delta | 78127 |
++| lint:schema-first | 51162 |
++| lint:terse-effect | 33275 |
++| lint:jsdoc (`bunx eslint . --max-warnings=0`, docs profile) | 28860 |
++| lint:native-runtime | 27395 |
++| lint:identity-registry | 22499 |
++| lint:frozen-grant-set | 18910 |
++| lint:circular (madge, 2 dirs) | 18305 |
++| lint:effect-fn | 15631 |
++| lint:package-test-imports | 13639 |
++| lint:effect-imports | 12250 |
++| lint:package-test-typecheck | 5726 |
++| lint:tsgo-rules | 5310 |
++| lint:oxlint (`bunx oxlint --quiet`) | 4543 |
++| lint:allowlist | 4176 |
++| lint:ecosystem-polarity | 4199 |
++| goals:doctor | 3809 |
++| lint:jsdoc-module-tags | 3917 |
++| lint:reflection-artifacts | 3632 |
++| goals:index-check | 3636 |
++| lint:roadmap-refs | 3535 |
++| lint:judge-rubric | 3439 |
++| lint:typos | 998 |
++
++Sum of everything except deprecated-apis ≈ 564s; at concurrency 2 the lane time ≈
++deprecated-apis (975s) + ramp. Fix deprecated-apis and the lane becomes docgen-bound (~197s),
++then concurrency becomes the next lever.
++
++## Key facts
++
++- Workflow: .github/workflows/check.yml, matrix id `lint-policy`, runner `beep-ec2-heavy`,
++  timeout 50, uses_turbo "false". Runs `bun run beep ci lane lint-policy` with NO shape args —
++  hosted is always `scope=full` (unlike lint/check/test-unit/test-integration/coverage lanes,
++  which get `--affected --base origin/main` on PRs).
++- Lane body: CiLane.ts:887 -> `beep lint policy` -> Quality/Tasks.ts ~1460-1512
++  (`rootRepoLintPolicySteps`), runStepGroup at Tasks.ts:1577 with LINT_POLICY_STEP_CONCURRENCY=2.
++  The comment justifying 2 predates the move to the heavy EC2 runner.
++- deprecated-apis implementation: packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
++  (~lines 46-540): sequential for-loop over ~30 DEPRECATED_API_LINT_SHARDS, each
++  `node_modules/.bin/eslint --cache --cache-location node_modules/.cache/eslint-deprecated-apis/.eslintcache
++  --config eslint.config.mjs <shard>` with BEEP_ESLINT_PROFILE=deprecated-apis,
++  NODE_OPTIONS=--max-old-space-size=8192.
++- ESLint profile: packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts —
++  single rule `@typescript-eslint/no-deprecated: error`, typescript-eslint projectService,
++  defaultProject tsconfig.json, allowDefaultProject list,
++  maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 160.
++- CI caches ONLY `~/.bun/install/cache` and `.turbo/cache`
++  (.github/actions/setup-monorepo-ci/action.yml). node_modules/.cache/** — including the
++  deprecated-apis .eslintcache — is cold every run.
++- Runner hardware: fleet instance types r7a.2xlarge / r7i.2xlarge / r6i.2xlarge (8 vCPU, 64 GiB)
++  or m7a.4xlarge (16 vCPU, 64 GiB) — infra/src/CiFleetController.ts:35, infra/src/CiRunners.ts:72.
++- Toolchain already in repo: typescript 6.0.3, tsgo (@typescript/native-preview) used by `check`,
++  oxlint 1.78.0, eslint 10.8.1, typescript-eslint 8.67.
++- Recent prior art: PR #668 made CI typecheck cheap via FLAT source-mode tsconfig
++  (tsconfig.check.json pattern) instead of d.ts/project-reference mode — d.ts mode measured ~6x
++  cost. The same trick may apply to the ESLint projectService.
++- Known bug (separate but related): on changed-scope local runs, law steps get `--include ""`
++  when the filtered changed set is empty and exit 1 printing help (Tasks.ts ~1467). Any
++  changed-scope work must fix this (skip step when empty).
++- Separate `Docgen` matrix lane already exists in check.yml (affected mode on PRs) — the
++  in-lane `lint:docgen` step may be partially redundant with it.
++
++## Report contract
++
++Write your report to the absolute path given in your prompt. Markdown. Structure:
++1. TL;DR — recommended action(s) + projected time saved (be numeric; show your model).
++2. Evidence — file:line citations from the live checkout for every claim.
++3. Implementation sketch — concrete enough to hand to an implementer.
++4. Risks / correctness tradeoffs.
++5. Open questions.
++Be skeptical: verify claims against the actual checkout (rg/ls/read files). Do not modify the
++repo. Keep the report under ~200 lines.
+diff --git a/goals/lint-policy-single-digit/research/01-engine-swap.md b/goals/lint-policy-single-digit/research/01-engine-swap.md
+new file mode 100644
+index 0000000000..72a6b1704f
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/01-engine-swap.md
+@@ -0,0 +1,190 @@
++# Deprecated-API engine swap report
++
++## 1. TL;DR
++
++**Primary recommendation: replace the 24-process ESLint shard loop with one dedicated
++repo-wide
++Oxlint 1.78 type-aware invocation backed by `oxlint-tsgolint`, enabling only
++`typescript/no-deprecated`.** Do not first spend a cycle trying to point
++`typescript-eslint` project service at `tsconfig.check.json`: project service cannot select a
++nonstandard config for ordinary in-project files, so that idea is not a small config change.
++
++Projected hosted `Lint Policy` job wall: **~9.0 min**, down from ~19.8 min, saving
++**~10.8 min (54%)**. This is a budgeted projection, not a measured Oxlint full-repo result:
++
++- measured job: 66 s setup + 1,124 s policy = 1,190 s;
++- measured non-deprecation step work: 564 s; target Oxlint scan: 90 s;
++- two-worker compute model: `(564 + 90) / 2 = 327 s`;
++- conservatively retain the observed `1,124 - 975 = 149 s` scheduling/orchestration tail;
++- projected job: `66 + 327 + 149 = 542 s = 9.0 min`.
++
++Sensitivity: a 30-150 s Oxlint scan projects **8.5-9.5 min** by the same model. Make
++**150 s cold full-repo wall** the go/no-go threshold. The engine swap should not land until a
++shadow parity corpus proves coverage of out-of-project scripts/fixtures and the intentional
++deprecation suppressions.
++
++## 2. Evidence
++
++### Current cost and architecture
++
++- The shared hosted measurement is 1,124 s for `beep lint policy`, including 975.199 s for
++  `lint:deprecated-apis`; all other step work sums to about 564 s
++  (`BRIEF.md:8-45`). The live lane uses two concurrent policy steps
++  (`packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:119-124,1573-1577`).
++- The hosted matrix puts `lint-policy` on `beep-ec2-heavy`, disables Turbo, and gives it 50
++  minutes (`.github/workflows/check.yml:63-68`). The separate Docgen lane exists at
++  `.github/workflows/check.yml:105-110`.
++- The deprecated gate has 24 path shards
++  (`packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:49-74`). Each shard launches
++  ESLint with one shared cache path, then the command waits for every shard sequentially
++  (`packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:461-503`).
++- The selected ESLint profile is exactly one typed rule,
++  `@typescript-eslint/no-deprecated`, over app/package/infra TypeScript sources
++  (`packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts:18-44,90-132`).
++  Its project-service escape hatch allows up to 160 default-project files and literally warns
++  that this slows linting (`DeprecatedApisESLintConfig.ts:103-125`).
++- CI restores the Bun package cache and optionally `.turbo/cache`, not the ESLint cache path
++  (`.github/actions/setup-monorepo-ci/action.yml:43-59,73-87`).
++
++### Baseline shard
++
++Read-only cold-style reference (cache explicitly disabled):
++
++```text
++env BEEP_ESLINT_PROFILE=deprecated-apis NODE_OPTIONS=--max-old-space-size=8192 \
++  ./node_modules/.bin/eslint --no-cache --config eslint.config.mjs apps/architecture-lab-proof
++exit 0; wall 13.56 s; max RSS 2,882,260 KiB
++```
++
++`apps/architecture-lab-proof` is the first configured shard
++(`packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:49-52`) and currently contains
++three non-generated `.ts`/`.tsx` files. Even this tiny shard pays a 13.56 s typed-program
++startup, so 24 sequential ESLint processes have a startup-only lower-bound signal of about
++`24 * 13.56 = 325 s`; this is a reference, not a linear estimate of the 975 s full gate.
++
++### Oxlint / tsgolint feasibility
++
++- Oxlint **is installed** at 1.78.0 (`package.json:229`,
++  `node_modules/oxlint/package.json:1-4`). Its CLI exposes `--type-aware`, `--type-check`,
++  `--tsconfig`, and `--threads` (`./node_modules/.bin/oxlint --help`, observed 2026-08-13).
++- The type-aware backend is **not installed**: `node_modules/oxlint-tsgolint` and
++  `node_modules/.bin/tsgolint` are absent. Running the direct binary with
++  `--type-aware -D typescript/no-deprecated` exits with “Failed to find tsgolint executable.”
++  Oxlint declares `oxlint-tsgolint >=7.0.2001` as its optional peer
++  (`node_modules/oxlint/package.json:48-57`), so it is installable as an ordinary dev
++  dependency rather than requiring a repository-built tool.
++- The installed 1.78 schema contains `typescript/no-deprecated`, including its `allow`
++  option (`node_modules/oxlint/configuration_schema.json:7842-7860,13979-13992`), and says
++  type-aware mode requires `oxlint-tsgolint`
++  (`node_modules/oxlint/configuration_schema.json:17019-17027`). Upstream documents the rule
++  as type-aware and added in v1.26.0: [Oxlint `typescript/no-deprecated`](https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-deprecated.html).
++- Upstream documents a split architecture: Oxlint discovers files/config and tsgolint builds
++  TypeScript programs and runs typed rules, with monorepo workers and per-program debug output:
++  [Oxlint type-aware linting](https://oxc.rs/docs/guide/usage/linter/type-aware.html).
++- The repo already executes the TS 7.0.2 Effect tsgo shim (`./node_modules/.bin/tsgo
++  --version`, observed 2026-08-13), so tsgolint's TS-7 basis is directionally aligned. It is
++  still a distinct compiler build and needs parity proof.
++- The existing root Oxlint config cannot be reused unchanged: it disables native categories,
++  loads the custom Beep JS plugin, and globally ignores `**/scripts/**`
++  (`.oxlintrc.json:1-21,22-35`). The deprecated ESLint profile intentionally includes several
++  scripts and fixtures through `allowDefaultProject`
++  (`DeprecatedApisESLintConfig.ts:103-122`). Use a dedicated config.
++
++### Flat source-mode typescript-eslint
++
++- PR #668's live pattern is real: `tsconfig.check.json` extends the package config, removes
++  references, disables composite/declaration/incremental output, and sets `noEmit`
++  (`packages/epistemic/server/tsconfig.check.json:1-12`). The package invokes it with
++  `tsgo -p`, not build mode (`packages/epistemic/server/package.json:15-19`).
++- Its measured representative win was 23.28 GiB / 22.8 s to 4.21 GiB / 3.3 s; the document
++  attributes the delta to source resolution instead of serialized declaration types
++  (`goals/ci-fleet-endgame/research/ci-graph-check-baseline.md:134-176`).
++- That exact technique does **not** plug into the current project service. Upstream says
++  project service uses the nearest file literally named `tsconfig.json`; `defaultProject`
++  affects only exceptional `allowDefaultProject` files. Nonstandard lint configs require
++  switching to `parserOptions.project`: [typescript-eslint typed-linting FAQ](https://typescript-eslint.io/troubleshooting/typed-linting/),
++  [parser options](https://typescript-eslint.io/packages/parser/).
++- Therefore the feasible ESLint variant is a different design: generate/maintain flat
++  source-mode lint configs and use `parserOptions.project` (or pre-created `Program`s), then
++  benchmark one ESLint process over selected projects. It may reduce declaration inflation,
++  but it retains ESLint/ESTree overhead and loses project-service/editor parity. Estimate:
++  **1-2 implementation days plus config maintenance**, with an uncertain **5-10 min gate**;
++  keep it as fallback evidence, not the primary path.
++
++### Custom scanner and other engines
++
++- The CLI already has a small semantic ts-morph factory accepting a tsconfig and source globs
++  (`packages/tooling/tool/cli/src/internal/tsmorph/ProjectFactory.ts:8-41`), and repo-utils has
++  a read-only project service, but its current diagnostics method collects pre-emit diagnostics,
++  not suggestion diagnostics (`packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:1160-1172`).
++- The installed ts-morph surface exposes `getSuggestionDiagnostics`
++  (`node_modules/ts-morph/lib/ts-morph.d.ts:9301`). A temporary in-memory probe returned TS
++  suggestion codes 6385/6387 for a deprecated import and call, proving the compiler can supply
++  raw signals. Turning those into ESLint parity still requires project discovery, filtering
++  duplicate import/call reports, alias/overload/JSX/computed-property behavior, ignores,
++  suppressions, stable diagnostics, and fixtures. The current upstream rule visibly contains
++  those cases (`node_modules/@typescript-eslint/eslint-plugin/dist/rules/no-deprecated.js:79-108,220-268,275-393`).
++  Estimate: **3-5 days**, then likely **2-8 min** until measured. It duplicates functionality
++  already delivered by tsgolint, so the payoff/risk ratio is worse.
++- Plain `tsgo` is not a scanner option today: its CLI exposes compiler diagnostics but no
++  deprecation/suggestion flag (`./node_modules/.bin/tsgo --help --all`, observed 2026-08-13).
++- Biome 2.5.6 is the only other credible fast engine already present. Its
++  `noDeprecatedImports` rule is already an error (`biome.jsonc:163-169`), but it guards
++  deprecated **imports**, not arbitrary member/call/type uses. The corpus itself demonstrates
++  the distinction by separately suppressing the Biome import and ESLint type-use findings
++  (`packages/foundation/modeling/identity/test/shape-stable.test.ts:6-23`). It is useful
++  defense-in-depth, not semantic replacement.
++
++## 3. Implementation sketch
++
++1. Add `oxlint-tsgolint` at a version satisfying Oxlint's `>=7.0.2001` peer and lock it. Keep
++   `oxlint` pinned at 1.78.0 for the first migration so only one variable changes.
++2. Add a dedicated JSONC config, e.g. `.oxlintrc.deprecated-apis.jsonc`: all categories off;
++   TypeScript plugin enabled; `options.typeAware: true`;
++   `typescript/no-deprecated: error`; copy the current source scope and ignores exactly.
++3. Replace `DEPRECATED_API_LINT_SHARDS` and `runDeprecatedApiLintShard` with one direct local
++   invocation over `apps packages infra`. Do not use `bunx`; invoke
++   `./node_modules/.bin/oxlint -c .oxlintrc.deprecated-apis.jsonc --type-aware` and retain a
++   clear success/failure message.
++4. Before cutover, add canary fixtures for direct calls, member access, computed members,
++   overload-specific deprecation, aliases/re-exports, JSX, type-only usage, and an
++   out-of-project script. Run old and new engines over the same fixture/corpus and require the
++   same normalized `(file,line,symbol)` set, allowing only reviewed diagnostic-text differences.
++5. Migrate the intentional `@typescript-eslint/no-deprecated` directives (examples at
++   `packages/foundation/modeling/md/test/Md.test.ts:91-96`) to Oxlint directives or a narrowly
++   equivalent `allow` policy. Verify that every currently `allowDefaultProject` path is assigned
++   to a tsgolint program; unmatched typed files are a hard failure, not a warning.
++6. Capture cold `/usr/bin/time -v` evidence on the heavy runner. Land only if full scan is
++   <=150 s, max RSS fits concurrent policy work, parity is green, and full `beep lint policy`
++   is below 10 min. Remove the ESLint deprecated profile after the shadow period.
++
++## 4. Risks / correctness tradeoffs
++
++- **Unmatched files are the largest risk.** Oxlint type-aware mode auto-discovers normal
++  tsconfigs; the current ESLint config explicitly forces scripts/fixtures through a default
++  project. Silent typed-rule noncoverage would be worse than the current slow gate.
++- **Rule parity is plausible, not assumed.** Both rules target `@deprecated`, and Oxlint claims
++  option compatibility, but aliases, overload signatures, JSX, computed keys, and re-exports
++  need corpus tests.
++- **Suppression syntax/name changes.** Existing ESLint directives name
++  `@typescript-eslint/no-deprecated`; Oxlint's rule is `typescript/no-deprecated`. Review each
++  intentional exception rather than globally accepting old directives.
++- **Compiler drift.** tsgolint uses its bundled TypeScript-go; ESLint currently uses the
++  installed TypeScript API. The repo's tsgo version reduces, but does not eliminate, semantic
++  drift.
++- **Projection uncertainty.** No candidate full scan was possible read-only because the peer is
++  absent. The 90 s estimate is an acceptance budget supported by single-process architecture,
++  not a benchmark. The <=150 s gate protects the single-digit objective.
++
++## 5. Open questions
++
++1. How many of the current 3,779 non-generated TypeScript files does tsgolint report as
++   unmatched, and can all required exceptions be covered without broadening canonical tsconfigs?
++2. Does Oxlint 1.78 exactly honor the needed ESLint disable comments, or should all intentional
++   exceptions become native Oxlint directives/config `allow` entries?
++3. What are cold wall/RSS and normalized findings for old vs new engines on the heavy runner?
++4. Does the Effect tsgo fork's language-service behavior materially differ from tsgolint's
++   bundled upstream TS-go on Effect-heavy inferred types?
++5. If the scan exceeds 150 s, does one carefully designed root/source-mode config reduce
++   tsgolint program duplication, or does auto-discovery intentionally ignore `--tsconfig` for
++   typed rules? Upstream currently cautions that typed mode always auto-discovers projects.
+diff --git a/goals/lint-policy-single-digit/research/02-inplace-optimization.md b/goals/lint-policy-single-digit/research/02-inplace-optimization.md
+new file mode 100644
+index 0000000000..9edc7b681d
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/02-inplace-optimization.md
+@@ -0,0 +1,93 @@
++# `lint:deprecated-apis` in-place speed investigation
++
++## 1. TL;DR
++
++Recommend two changes, in this order:
++
++1. Keep the current 24 shards, but execute **4 shards concurrently** and use one ESLint cache file per shard. On the measured 8-vCPU/64-GiB runner, four lint processes consume about 6 vCPU from the local samples and should normally occupy 12-20 GiB RSS; even the four 8-GiB V8 heap ceilings total 32 GiB before process overhead. Projected cold step: **975s -> 270-360s (model midpoint 305s, 5.1 min)**.
++2. Persist the per-shard cache directory with `actions/cache`, add `--cache-strategy content`, and accept only an **exact type-universe key** (no `restore-keys`). Projected exact-hit step with four-way fan-out: **20-45s**; a source/type-input change deliberately causes a cold **4.5-6 min** run.
++
++Do **not** replace the shards with one full-repo process yet. Combining two tiny roots reduced local cold wall from 31.64s to 18.68s (0.59x), suggesting **~575s / 9.6 min** if that ratio scaled, but the process already reached 4.07 GiB RSS for only 10 lint targets and Git history shows that a large `packages/epistemic` shard had to be split specifically to bound memory. One invocation is likely to hit the current 8-GiB heap ceiling, and raising it enough would weaken runner headroom.
++
++`allowDefaultProject` cleanup is worthwhile hygiene, not the primary speed lever. The 160 setting is only a failure threshold; lowering it alone saves approximately **0s**. Only 23 checked-in files match the 14 allow globs, so moving those files into real TSConfig projects is projected to save **0-45s** until measured.
++
++### Numeric model
++
++| Scenario | Deprecated step | Whole `lint-policy` command | Model |
++| --- | ---: | ---: | --- |
++| Current cold | 975s | 1,124s measured | shared brief |
++| 4-way shards, cold | 270-360s (305s midpoint) | ~390-480s | `975 / 4 / 0.80 = 305`; outer two-worker pool must still drain ~564s of other work |
++| Exact cache hit, sequential | 80-150s | ~300-360s | 24 starts; measured warm small-shard start was 3.28s |
++| Exact cache hit + 4-way shards | 20-45s | ~280-330s | six waves at ~3.3s plus discovery/cache restore variance |
++| One full invocation, cold, if it fits | 480-720s | ~650-800s | midpoint applies measured two-root factor: `975 * 18.68 / 31.64 = 575s` |
++| Default-project cleanup alone | 930-975s | ~1,080-1,124s | only <=23 candidate files; cap change itself does no work |
++
++The whole-command projections use the brief's ~564s of non-deprecated work and the existing outer concurrency of 2. They are scheduling estimates, not hosted measurements. A cold combined run should bring the command itself into single digits; the ~66s setup remains outside it.
++
++## 2. Evidence
++
++### Live implementation and CI
++
++- There are **24**, not ~30, current roots. The constants define one shared cache path, an 8-GiB heap ceiling, and roots spanning apps/infra/package groups: `packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:46-74`.
++- Every shard launches a fresh local ESLint process with `--cache`, the shared cache location, the root config, and the deprecated profile: `Lint.command.ts:461-493`. The plain `for...of` awaits every process before starting the next: `Lint.command.ts:500-503`.
++- The policy command runs 25 independent steps with outer concurrency 2: `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:119-124,1470-1512,1573-1577`. Thus four internal ESLint processes overlap one other policy subprocess.
++- Hosted `lint-policy` is on `beep-ec2-heavy`, does not enable Turbo, and receives no affected-scope arguments: `.github/workflows/check.yml:63-68,217-231`.
++- The runner fleet is fixed at 64 GiB because other lanes have measured 24.77-47.59-GiB peaks: `infra/src/CiFleetController.ts:30-35`. Those build lanes are not nested inside this policy step.
++- Setup restores only Bun and optional Turbo caches; it has no ESLint cache: `.github/actions/setup-monorepo-ci/action.yml:43-62`. The matrix explicitly passes `cache-write: "false"`: `.github/workflows/check.yml:195-200`.
++
++### Why the shards exist / memory evidence
++
++- Read-only Git inspection found the shard list in its introduction (`491893715f`, 2026-06-04). More importantly, `git show 4cd02e6962` (`fix(tooling): bound deprecated API lint memory`, 2026-07-31) replaces one `packages/epistemic` root with its seven present subroots. This is direct OOM/heap-pressure intent even though the commit body does not preserve a crash log.
++- A cold local run of the 3-file `apps/architecture-lab-proof` root took **13.91s**, **2,914,300 KiB (2.78 GiB) max RSS**, and 147% CPU. A cold 7-file `packages/epistemic/client` run took **17.73s**, **4,156,348 KiB (3.96 GiB) RSS**, and 151% CPU. Commands used the checked-in `./node_modules/.bin/eslint`, current profile/config, 8-GiB heap limit, and isolated `/tmp` caches.
++- Combining those roots in one ESLint invocation took **18.68s**, **4,264,568 KiB (4.07 GiB) RSS**, and 150% CPU, versus **31.64s** sequential. This proves material project-service re-creation overhead, but also shows memory approaching half the heap cap for tiny target sets.
++- There are 3,803 checked-in TS/TSX paths under apps/packages/infra. Target counts are highly skewed (3 in the smallest sample; 771 under `packages/tooling`), so the parallel projection includes a 20% scheduling/contention penalty instead of assuming perfect `975/4` scaling.
++
++### Cache correctness for a type-aware rule
++
++- The only enabled rule is `@typescript-eslint/no-deprecated`, and parsing uses `projectService`: `packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts:90-132`. Its result depends on types and declarations outside the target file.
++- ESLint considers a cached result valid iff the target file is present, that target is unchanged, and its resolved ESLint config hash is unchanged: `node_modules/eslint/lib/cli-engine/lint-result-cache.js:135-169`. It does **not** include imported source, declarations, TSConfigs, or package resolution metadata in that per-file validity test.
++- The config hash includes ESLint version, Node version, and serialized resolved config: `node_modules/eslint/lib/cli-engine/lint-result-cache.js:30-60`. That still does not capture the TypeScript program's dependency graph.
++- Default `metadata` compares only target mtime and size: `node_modules/file-entry-cache/cache.js:93-133`; `content` compares only target content hash: `cache.js:136-162`. Therefore neither strategy alone makes cross-package typed lint caching sound.
++- `content` is nevertheless required for a restored cache because checkout/restoration mtimes need not match. ESLint confirms `metadata` is the default: `node_modules/eslint/lib/options.js:283-294`.
++- Unsound example: package A changes an exported symbol from non-deprecated to `@deprecated`; unchanged package B imports it. With a coarse cache key, B's cached clean result is reused under either strategy even though `no-deprecated` should now fail.
++- Sound vanilla-ESLint policy: invalidate **all shard caches** whenever any type-semantic input changes. The action key must exactly hash Node/toolchain inputs, `bun.lock`, root/workspace `package.json` files, ESLint config/profile source, all TSConfigs, and all lint-universe `.ts/.tsx/.d.ts` files. Use `--cache-strategy content` and **no prefix restore key**. This preserves correctness but only hits for same-input reruns or changes outside the type universe.
++- Parallel processes must not share today's cache file. Each process loads and reconciles a whole flat-cache snapshot (`node_modules/file-entry-cache/cache.js:252-287`), so concurrent writers can overwrite one another's additions. Stable per-shard filenames remove that race and enable partial cache files to be archived together.
++
++### One process and project-service tuning
++
++- The lint config already narrows targets to app/package TS/TSX and infra TS and ignores generated, build, vendored, declaration, and type-test outputs: `DeprecatedApisESLintConfig.ts:18-44`.
++- `allowDefaultProject` has 14 globs and a maximum of 160: `DeprecatedApisESLintConfig.ts:103-125`. A targeted live `rg --files` found only 23 candidate files matching those globs.
++- TypeScript-eslint documents that every actual default-project match slows lint and defaults the guard to 8: `node_modules/@typescript-eslint/types/dist/parser-options.d.ts:12-34`. The implementation adds actual fallback files to a set and only then checks the maximum: `node_modules/@typescript-eslint/typescript-estree/dist/useProgramFromProjectService.js:103-119`. Therefore 160 is not a preallocation or scan target.
++- Every linted file does run the allow-glob `some(minimatch)` check: `useProgramFromProjectService.js:174-204`; 14 patterns over 3,803 paths is cheap relative to TypeScript program construction.
++- Debugging `packages/_internal` showed two files actually entering the default project; the rest resolved to package/root TSConfigs. The root config covers broad test/root inputs but excludes fixtures: `tsconfig.json:9-28`, explaining why exceptional scripts/fixtures need explicit treatment.
++
++## 3. Implementation sketch
++
++1. In `Lint.command.ts`, derive a stable cache filename from each shard, for example `.eslintcache-packages__tooling`, under the existing cache directory.
++2. Add `--cache-strategy content` to every ESLint call.
++3. Replace the sequential loop with bounded `Effect.forEach(DEPRECATED_API_LINT_SHARDS, runDeprecatedApiLintShard, { concurrency: 4 })`. Preserve failure propagation and child interruption/cleanup. Do not use unbounded concurrency.
++4. Add a focused test that inspects constructed shard commands: 24 unique cache paths, content strategy present, concurrency fixed at 4, and nonzero exit still fails the aggregate.
++5. Add lint-policy-only cache restore/save around the verification lane (or a narrowly named input in the composite action). Archive `node_modules/.cache/eslint-deprecated-apis/`.
++6. Use a versioned exact key such as `eslint-deprecated-v2-${runner.os}-${runner.arch}-${hashFiles(...)}` over `.nvmrc`, `bun.lock`, all relevant `package.json`, `eslint.config.mjs`, policy-config `.ts`, all TSConfigs, and the explicit `apps/**/*.{ts,tsx}`, `packages/**/*.{ts,tsx}`, and `infra/**/*.ts` universes (which include `.d.ts`). Do not configure `restore-keys`. Save only after a completed lint-policy execution.
++7. Emit shard duration and max concurrency in logs. Validate on the 8-vCPU fleet member, then compare cold wall/RSS with concurrency 3 and 4; retain 4 only if peak job RSS stays below ~48 GiB and no swap/OOM occurs.
++8. Separately ratchet `maximumDefaultProjectFileMatchCount...` from 160 to a measured near-current ceiling (for example actual count + 2). Move exceptional files into appropriate package TSConfigs or a deliberately small scripts/fixtures config before deleting allow globs. This is correctness/anti-creep work, not part of the primary timing promise.
++
++For the one-process experiment only: run all 24 existing roots as arguments in an isolated CI diagnostic with `/usr/bin/time -v` and no concurrent outer policy work. Try the current 8-GiB cap first. Adopt it only if it completes below ~6 GiB RSS and beats four-way shards; current evidence makes that unlikely.
++
++## 4. Risks / correctness tradeoffs
++
++- **Cache false negatives are the largest correctness risk.** Any fallback restore key or key omitting cross-package source/declarations/TSConfigs/package resolution is unacceptable for `no-deprecated`.
++- The exact broad key sacrifices incremental hits on normal source-changing PRs. That is intentional; dependency-aware per-shard keys would require a proven transitive type graph, not hand-written package guesses.
++- Four-way fan-out competes with one outer policy subprocess. CPU should fit the measured ~1.5 CPU/process profile, but large shards may have different behavior; hosted RSS and CPU telemetry are the acceptance evidence.
++- An 8-GiB V8 heap setting is not an 8-GiB RSS hard cap. Four pathological processes can exceed the simple 32-GiB heap sum after native/TypeScript overhead.
++- One process maximizes reuse but retains every opened project longer. The 2026-07-31 split is strong evidence against assuming a full invocation fits.
++- Lowering the default-project maximum before counting actual fallback files can turn current coverage into parser failures. First inventory, then ratchet.
++- Per-shard cache filenames change cache semantics but not lint scope. One global cache file is safe only while calls remain sequential.
++
++## 5. Open questions
++
++1. What are hosted per-shard durations and max RSS, especially `packages/tooling`, `packages/drivers`, `packages/foundation/modeling`, and `packages/epistemic/*`? Instrumentation is needed to replace the 20% scheduling allowance.
++2. How many of the 23 allow-glob candidates truly fall back to the default project across the full run, and which TSConfig should own each one?
++3. Does a four-way cold run keep total job RSS below ~48 GiB while docgen or semantic-delta occupies the second outer slot?
++4. Is exact-input cache reuse frequent enough (reruns, main-to-doc-only PRs) to justify the cache action, or should caching remain local-only after parallelism lands?
++5. Can the repo's project/reference graph produce a tested transitive dependency hash per shard? If yes, that could unlock sound incremental cache reuse; until then, use the broad exact key.
+diff --git a/goals/lint-policy-single-digit/research/03-lane-orchestration.md b/goals/lint-policy-single-digit/research/03-lane-orchestration.md
+new file mode 100644
+index 0000000000..a50f79545c
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/03-lane-orchestration.md
+@@ -0,0 +1,91 @@
++# Lint Policy lane orchestration report
++
++## 1. TL;DR
++
++Recommendation, in order:
++
++1. **Do not expect a concurrency-only change to fix today's lane.** An ideal LPT (longest-processing-time-first) schedule built from the 25 measured isolated step times is still **975.2s at concurrency 2, 4, 6, or 8** while `lint:deprecated-apis` remains 975.2s. The observed lane was 1124s, so scheduling alone can recover at most the non-modelled ~149s tail/contention; it cannot make the required suite single-digit minutes. Timing source: `BRIEF.md:8-46`.
++2. **After deprecated APIs reaches ~120s, raise the ordinary-step capacity to 4, with resource classes.** The ideal LPT lane falls from **342.2s at c=2 to 197.3s at c=4**; c=6 and c=8 remain 197.3s because `lint:docgen` becomes the long pole. That is a modelled **144.9s (42%) lane saving**. Do not use an unweighted global `concurrency=8` yet.
++3. **Move deprecated APIs to a separate required matrix job only for ownership and fast feedback, not critical-path speed.** It lets the other 24 checks report in **197.3s modelled at c=4**, versus waiting 16+ minutes, but merge readiness still waits on the 975s job. Keep the existing `Lint Policy` context name for the core job and add `Deprecated APIs`; atomically add the latter to the ruleset. Splitting without requiring the new context weakens the gate.
++4. **Consolidate the 197s metadata check into the already-required Docgen lane, but do not simply delete its contract.** Full/scoped Docgen generation validates descriptions/examples/version, while `docgen check` additionally requires normalized `@category` and inspects re-exports/file overviews. Make the Docgen lane run the same metadata analyzer on its selected packages (or teach generation's checker the missing category rules), then remove `lint:docgen` from Lint Policy. With deprecated APIs separate and docgen removed, the remaining core LPT is **92.3s at c=4**, **78.1s at c=6/8**.
++5. **Batch pure-TypeScript policy effects in-process as a second-stage optimization.** One local `bun run beep --help` cold boot measured **1.79s elapsed, 2.53s user, 651,728 KiB max RSS**. Twenty-two of 25 policy steps re-enter `bun run beep`, so a rough ceiling is **~39s** of repeated CLI wall overhead (not 25 × 1.79s, because ESLint/typos/oxlint are direct `bunx` steps and concurrent boots overlap). This is material for 3–5s checks, but secondary to deprecated APIs and docgen.
++
++### LPT model
++
++Model: sort measured durations descending and repeatedly assign the next task to the least-loaded worker. Durations are treated as invariant; process startup is already inside each measured step. This is an optimistic scheduling bound and does **not** model CPU/I/O contention, memory pressure, the current FIFO order, or the ~149s gap between the 975s ideal bound and observed 1124s lane.
++
++| deprecated-apis assumption | c=2 | c=4 | c=6 | c=8 |
++|---|---:|---:|---:|---:|
++| current 975.199s | 975.199s | 975.199s | 975.199s | 975.199s |
++| improved 120s | 342.245s | 197.298s | 197.298s | 197.298s |
++
++For context, adding the measured ~66s job setup gives optimistic job walls of ~17m21s with the current long pole, ~6m48s at improved/c=2, and ~4m23s at improved/c>=4. Those are projections, not SLA claims.
++
++## 2. Evidence
++
++### Orchestrator and scheduling
++
++- Lint Policy's cap is a constant `2`; its comment describes constrained-runner overlap, while the nearby Turbo comment already recognizes the heavy fleet. `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:105-124`.
++- `runStepGroup` resolves all steps, then calls `Effect.forEach(..., { concurrency })`; it preserves array order, so today's launcher is bounded FIFO, not LPT. It times and buffers each child result. `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1138-1163`.
++- The 25-entry array puts deprecated APIs 19th and docgen 22nd, so both long jobs start late under FIFO. `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1470-1511`.
++- The hosted lane is one `bun run beep lint policy` child. `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:885-888`. CI runs `lint-policy` without affected/shape flags. `.github/workflows/check.yml:215-231`.
++- The matrix assigns Lint Policy to `beep-ec2-heavy`. `.github/workflows/check.yml:63-68`. Fleet candidates are 64 GiB r7a/r7i/r6i or m7a instances. `infra/src/CiFleetController.ts:30-35`.
++
++### Resource conflicts
++
++- Deprecated APIs runs 24 shards sequentially, spawning ESLint once per shard with an **8 GiB V8 heap ceiling**. `packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:46-74,461-503`.
++- Its typed parser uses TypeScript project service plus a root default project and permits up to 160 default-project files, making it the clearest CPU/RSS-heavy step. `packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts:90-132`.
++- `lint:docgen` analyzes packages four at a time by default. `packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts:221-225,582-606`. Each package constructs a ts-morph `Project` and loads source files. `packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts:528-547`.
++- Several law/lint steps also construct repo-scale ts-morph projects: effect imports, terse effect, native runtime, identity registry, and package-test imports. `packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts:117-140`; `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:579-594`; `packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts:565-586`; `packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts:206`; `packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts:300`.
++- Semantic delta materializes and extracts both base and head Git archives, so it is disk/I/O heavy even though it is not a TypeScript project-service consumer. `packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts:1092-1127`.
++- Therefore use a **weighted/resource-class scheduler**, not just a counting semaphore: `typed-heavy` capacity 1 (deprecated APIs or docgen), `ast-heavy` capacity 2, total process capacity 4. On a verified 16-vCPU m7a runner, total capacity may rise independently, but keep typed-heavy at 1 until hosted RSS/CPU telemetry proves overlap safe.
++
++### Matrix split and required checks
++
++- Workflow check names come from `matrix.name`; the current entries are `Lint Policy` and `Docgen`. `.github/workflows/check.yml:47-56,63-68,105-110`.
++- The CLI's check registry marks both contexts required: Lint Policy at `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:349-355`, Docgen at `:398-404`. Live GitHub ruleset lookup was unavailable in this read-only session, so the repository registry is evidence of intent, not proof of current server configuration.
++- Safe migration: preserve the core job's name `Lint Policy`; introduce `Deprecated APIs`; add the new context to the GitHub ruleset in the same rollout. If instead the old context is renamed, the old required context can remain permanently expected. A new matrix job also incurs its own ~66s setup and another heavy-runner allocation.
++
++### Docgen overlap: partial, not exact redundancy
++
++- PR Docgen is affected by default, skipped for irrelevant changes, and escalated to full for tool/global inputs. `.github/workflows/check.yml:145-169`. Its lane runs `docgen:local --parallel=3` when affected and root `docgen` when full. `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:670-683`.
++- Root `docgen` runs Turbo package generation and aggregation. `package.json:386-389`. Generation parses modules, checks them, validates/runs examples, writes Markdown, and emits proof manifests. `packages/tooling/tool/docgen/src/Core.ts:768-801`.
++- Generation's checker enforces configured descriptions, examples, and `@since`. `packages/tooling/tool/docgen/src/Checker.ts:43-74,312-359`.
++- The Lint Policy check is broader/different: it resolves every configured package, verifies current manifests, and analyzes stale/missing targets at package concurrency 4. `packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts:582-607`; `packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts:78-86,189-199`.
++- Its analyzer always requires `@category`, conditionally requires example/version tags, normalizes category values, and separately inspects re-exports and module file overviews. `packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts:28-29,104-119,276-349,351-400`.
++- A proof-manifest hit is not free: verification re-fingerprints inputs and outputs. `packages/tooling/tool/docgen/src/ProofManifest.ts:503-578`. The separate affected lane already verifies selected manifests and falls back to metadata analysis before generation. `packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts:626-660,687-716`.
++- Conclusion: **partially redundant execution, non-identical policy**. Moving the analyzer into the required Docgen lane preserves ownership and avoids a second repo-wide pass; dropping it outright risks losing category/re-export/file-overview enforcement.
++
++### CLI boot and in-process feasibility
++
++- All 22 repo-CLI policy entries become `bun run beep ...`; only jsdoc, typos, and oxlint are direct `bunx` children. `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1192-1209,1470-1511`.
++- The lightweight bin still imports `bin-main`; lint subcommands deliberately bypass the quality-task fast path, then load the full root command tree and derived services. `packages/tooling/tool/cli/src/bin.ts:46-47`; `packages/tooling/tool/cli/src/bin-main.ts:75-89,219-235`; `packages/tooling/tool/cli/src/commands/Root.ts:63-95`.
++- In-process execution is feasible for pure TS checks because many handlers are already exported Effects (examples: law runners and schema-first), while external tools must remain children. `packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts:117`; `packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts:393`; `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts:461-491`.
++- It is not a mechanical argv shortcut: some surfaces export only `Command` values, handlers have distinct option/service requirements, and subprocess isolation currently provides independent exit codes, buffered output, heap reclamation, and failure aggregation.
++
++## 3. Implementation sketch
++
++1. Add `weight`/`resourceClass` and optional in-process `run` to `QualityTaskStep` (or a lint-policy-specific step schema). Sort ready policy steps by estimated duration before launch. Configure total capacity 4, `typed-heavy=1`, `ast-heavy=2`; classify deprecated APIs/docgen as typed-heavy and semantic delta as I/O-heavy.
++2. Add schedule tests using the measured fixture: assert c=2/4/6/8 makespans and assert typed-heavy steps never overlap. Emit start/end/RSS (where available) so weights can be tuned from hosted evidence.
++3. Split `rootRepoLintPolicySteps` into `coreLintPolicySteps` and `deprecatedApiSteps`. Add a CI lane descriptor/runner for `deprecated-apis`; add a matrix entry named `Deprecated APIs`; leave the core context named `Lint Policy`.
++4. Update the GitHub ruleset atomically to require both contexts. Verify PR check-runs and the repository's CI-lane registry agree before deleting deprecated APIs from core.
++5. Move `docgen check` semantics into the Docgen lane: for affected PRs analyze exactly the Turbo-expanded packages when manifests are stale; for full mode analyze all configured packages. Ensure category normalization, re-export, and file-overview cases remain covered. Then delete only the `lint:docgen` policy step.
++6. Introduce direct policy adapters around exported Effect handlers. Start with sub-10s pure checks, compare results/output against subprocess invocations, then migrate AST-heavy handlers. Keep ESLint, oxlint, typos, madge, Git, Turbo, and any handler needing process-level heap isolation as children.
++7. Separately fix changed-scope law planning so an empty TypeScript subset skips the law step instead of producing `--include ""`; the current builder unconditionally appends it when `files` is defined. `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1455-1468`.
++
++## 4. Risks / correctness tradeoffs
++
++- LPT assumes durations remain stable. More parallelism can lengthen every AST/type-aware job through CPU, page-cache, and GC contention; c=8 has no modelled benefit once docgen is the pole.
++- A weighted scheduler is warranted now because the code proves qualitatively different resource profiles, but exact weights need hosted peak-RSS/CPU data. Avoid pretending the 8 GiB heap cap equals actual RSS.
++- Matrix splitting improves time-to-signal but can increase fleet queueing, setup cost, and total compute. It does not shorten the required critical path until deprecated APIs itself is fixed.
++- Affected Docgen cannot replace a full-state metadata gate unless target expansion and global-input escalation are proven complete. Keep full mode on push and tooling/global changes.
++- In-process batching shares globals (`process.cwd`, environment, module caches), memory, and cancellation. Require handlers to accept explicit context/options; serialize any mutating-global handler; preserve deterministic per-step output and aggregate failures.
++- Current worktree has unrelated modified files; none were touched. This investigation wrote only this report.
++
++## 5. Open questions
++
++1. What are hosted peak RSS, CPU utilization, and per-shard times for deprecated APIs, docgen, schema-first, and the law scans? These decide whether `typed-heavy=1` is conservative or necessary.
++2. Is `beep-ec2-heavy` pinned per job to 8 vCPU or may it land on 16-vCPU m7a? The source lists a heterogeneous pool, so scheduling should detect capacity or target the 8-vCPU floor.
++3. What contexts are actually required by GitHub ruleset 10240248 today? Live API verification failed due unavailable network; verify before changing matrix names.
++4. Should deprecated APIs remain full-state on every PR, become affected plus a full push/nightly gate, or use a flat source-mode project? That correctness decision dominates its own 975s runtime but is outside this orchestration-only report.
++5. Can the Docgen generation checker become the single source of metadata truth, including normalized categories and re-export/file-overview semantics, so proof-manifest generation certifies the exact policy now rechecked separately?
+diff --git a/goals/lint-policy-single-digit/research/04-pr-scoping-deferred.md b/goals/lint-policy-single-digit/research/04-pr-scoping-deferred.md
+new file mode 100644
+index 0000000000..254d10d77b
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/04-pr-scoping-deferred.md
+@@ -0,0 +1,93 @@
++# PR changed-scope design for the hosted Lint Policy lane
++
++## 1. TL;DR
++
++Recommend making `lint-policy` explicitly affected on pull requests and explicitly full on `main` pushes:
++
++1. Pass the workflow's existing `--affected --base origin/<base>` shape to `ci lane lint-policy`.
++2. Forward that shape through `CiLane.ts` to new `beep lint policy --affected --base ...` flags; remove the current rule that `CI=true` always means full.
++3. Build the 25-step plan from changed files: retain the 7 naturally scoped checks, conditionally run the 17 logged full-state checks only when their input surface changed, and retain/condition the branch-delta check.
++4. For `deprecated-apis`, scan changed TypeScript files in one ESLint invocation, but escalate to the existing 24-shard full scan when the diff adds/removes `@deprecated`, changes dependencies/type resolution, or changes the rule/config. Do **not** rely on the post-merge `main` run as the only reverse-impact detector.
++5. Omit the in-policy `lint:docgen` step on PRs once parity with the separate required affected `Docgen` lane is asserted; keep it in full/main policy runs.
++
++Projected typical 10-file TypeScript PR: **2.2-4.1 minutes job wall**, versus the measured **19.8 minutes** (`66s` setup + `1,124s` policy), saving **15.7-17.6 minutes (79-89%)**. Conservative additive model: `66s setup + 20-45s scoped laws/structural checks + 20-90s one-shot typed deprecated scan + 25-45s triggered small full-state checks`; concurrency 2 may overlap some of that work. A PR that changes a deprecation/type-resolution trigger intentionally falls back to roughly today's 19.8-minute proof.
++
++## 2. Evidence
++
++### Shape and plumbing
++
++- The workflow runs on PRs and pushes to `main` (`.github/workflows/check.yml:3-7`). It creates `shape_args`, adds `--affected --base origin/${GITHUB_BASE_REF:-main}` only for PRs, and adds `--summarize` (`.github/workflows/check.yml:217-223`). Today only `lint|check|test-unit|test-integration|coverage` receive those args; `lint-policy` is grouped with unshaped lanes (`.github/workflows/check.yml:225-231`).
++- `CiLaneRunOptions` already carries `affected` and `base` (`packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:563-581`); `ci lane` already parses both flags (`CiLane.ts:1101-1110`) and constructs the options (`CiLane.ts:1142-1171`). Turbo lanes turn `affected` into `--affected` plus `TURBO_SCM_BASE=base` (`CiLane.ts:590-593,655-668`).
++- `lint-policy` discards the shape and always emits `beep lint policy` (`CiLane.ts:885-887`). Its descriptor advertises no flags (`CiLane.ts:349-355`), and local CI replay also suppresses affected flags for it (`CiLane.ts:1289-1306`). These three surfaces and their tests must change together.
++- `beep lint policy` currently exposes only `--full` (`packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:552-558`). The task computes `runFull = full || isCi()`, hard-codes `origin/main...HEAD` only when not full, then forwards the resulting files (`packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1556-1577`). `collectChangedFiles` already implements the desired three-dot range plus dirty files and returns sorted repo-relative paths (`packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts:148-162`).
++
++### All 25 steps and safe PR triggers
++
++The plan contains exactly 25 steps (`Tasks.ts:1470-1512`); its focused test asserts the same inventory (`packages/tooling/tool/cli/test/quality-tasks.test.ts:1103-1132`). “Trigger” below is in addition to a shared escape hatch: changes to the step's implementation, CLI wiring, relevant policy config, or dependency/lock inputs must run that step full.
++
++| # | Step | Class | PR behavior / trigger |
++|---:|---|---|---|
++| 1 | `lint:effect-imports` | natural file | Run only changed `apps|packages|infra/**/*.{ts,tsx}`. |
++| 2 | `lint:terse-effect` | natural file | Same; preserve `--advisory`. |
++| 3 | `lint:effect-fn` | natural file | Same. |
++| 4 | `lint:frozen-grant-set` | natural file | Same. |
++| 5 | `lint:native-runtime` | natural file | Same. The shared filter is explicit at `Tasks.ts:1455-1467`. |
++| 6 | `lint:allowlist` | full-state | Skip unless the allowlist, generated snapshot, or a file named by an allowlist entry changed. The checker reads/validates precisely those surfaces (`Laws/AllowlistCheck.ts:38-41,176-195,260-279,294-344`). |
++| 7 | `lint:tsgo-rules` | full-state | Run on `tsconfig.base.json`, any `packages/**/tsconfig*.json`, relevant package/lock changes, or changed `apps|packages|tooling|infra/**/*.{ts,tsx,mts,cts}` (suppression scan). Its inputs/scans are explicit (`Quality/Quality.command.ts:287-290,1581-1587,1654-1704`). |
++| 8 | `lint:ecosystem-polarity` | natural member | If a changed path maps to an ecosystem member, check that member's whole manifest+`src`; otherwise skip. That expansion is already implemented (`Lint/EcosystemPolarity.ts:392-415,457-471`). |
++| 9 | `lint:identity-registry` | full-state | Run on workspace/package manifest topology, the identity registry, or package source TS/TSX. Current implementation discovers all workspace identities then scans every package source (`Lint/IdentityRegistry.ts:175-229`); a follow-up split could file-scope only the local-composer half. |
++| 10 | `lint:judge-rubric` | full-state | Skip unless the judge prompt or `QaLens` schema changed. The two bound surfaces are `.claude/skills/browser-qa-loop/resources/judge-prompt.md` (`Qa/JudgePack.ts:71-79`) and `QaLens` (`Qa/Inventory.schemas.ts:87-108`), consumed together at `Lint/JudgeRubric.ts:116-146`. |
++| 11 | `lint:package-test-imports` | natural file | Run only changed package test TS/TSX files; it already filters provided includes and reads only those files (`Lint/PackageTestImports.ts:283-314,344-352`). |
++| 12 | `lint:package-test-typecheck` | full-state | Run on `apps|infra|packages/**/package.json`, `**/tsconfig*.json`, non-fixture `**/test/**/*.{ts,tsx,mts,cts}`, or its baseline. Those roots/types and baseline are explicit (`Lint/PackageTestTypecheck.ts:54-64,593-655,658-714,881-919`). |
++| 13 | `lint:reflection-artifacts` | full-state | Skip unless `goals/*/ops/manifest.json` or `goals/*/history/reflections/*.md` changed; those are the only packet data read (`Lint/ReflectionArtifact.ts:31-38,268-339`). |
++| 14 | `lint:roadmap-refs` | full-state | Run on `docs/ROADMAP.md`, a linked goal/exploration target add/delete/rename, or a referenced goal manifest phase change (`Lint/RoadmapRefs.ts:29-31,132-159,210-237`). |
++| 15 | `knowledge:semantic-delta` | branch-delta | Already compares merge-base and HEAD, not individual files (`Tasks.ts:1497-1499`; `Knowledge/Knowledge.service.ts:1092-1135`). Skip only if no path under its ten scanner roots changed (`Knowledge/Knowledge.refs.ts:1157-1168`) and no scanner/probe producer changed; otherwise run unchanged. |
++| 16 | `goals:doctor` | full-state | Skip unless `goals/**` changed. Inventory reads each packet's manifest, README, and `GOAL.md` (`Goals/Inventory.ts:129-165`); doctor also reads reflections and its baseline (`Goals/Doctor.ts:299-316,774-815`). |
++| 17 | `goals:index-check` | full-state | Run on `goals/INDEX.md`, `goals/*/ops/manifest.json`, or packet README fallback metadata; generation uses the shared inventory (`Goals/PortfolioIndex.ts:193-228,274-286`). |
++| 18 | `lint:schema-first` | full-state | Skip unless `packages/tooling/tool/cli/src/**/*.ts` changed. The present checker scopes itself to that root and named focus files within it (`Lint/Lint.command.ts:36-44,232-256`). |
++| 19 | `lint:deprecated-apis` | full-state with scoped fast path | Ordinary PR: one ESLint call over changed existing in-scope TS/TSX. Full trigger: deprecation annotation delta, `bun.lock`/dependency manifest, tsconfig/type-resolution, ESLint profile/rule/config, or scanner implementation. Current full runner is 24 sequential shard calls (`Lint/Lint.command.ts:46-74,461-505`); the typed rule/profile covers apps/packages/infra (`policy-pack/.../DeprecatedApisESLintConfig.ts:18-44,90-132`). |
++| 20 | `lint:jsdoc` | full-state, safely file-scopeable | Skip if no lintable TS/TSX changed; preferably invoke ESLint once with changed files. The docs profile's tooling and general source globs/ignores are explicit (`policy-pack/.../DocsESLintConfig.ts:65-92,248-280`). Config/plugin/dependency changes force full. |
++| 21 | `lint:jsdoc-module-tags` | full-state, safely file-scopeable | Skip if no changed `.hbs|.md|.ts|.tsx` under `.patterns|apps|packages|tooling`; otherwise scan changed files. Current full corpus is exactly those roots/extensions (`Quality/Quality.command.ts:287-288,1944-1993`). |
++| 22 | `lint:docgen` | full-state/redundant on PR | Omit from PR policy if the separate required `Docgen` check remains. Otherwise reuse docgen-local selection: package `src|docs`, `docgen.json`, package/README/tsconfigs; global inputs force full (`Docgen/internal/Local.ts:40-61,406-439`). Keep in full/main policy. |
++| 23 | `lint:circular` | full-state | Run on either analyzed root, `tsconfig.json`/path-resolution/dependency changes, or changes in their resolved import closure; it invokes madge on only the CLI and repo-utils roots (`Lint/Lint.command.ts:411-458`). A prefix-only trigger is not formally safe if madge follows an external workspace import; compute/over-approximate the closure. |
++| 24 | `lint:typos` | full-state, safely file-scopeable | Skip if no changed existing non-excluded text file; otherwise pass changed paths to `typos`. `_typos.toml` changes force full; its exclusion surface begins at `_typos.toml:85-126`. |
++| 25 | `lint:oxlint` | full-state, safely file-scopeable | Skip if no changed lintable file; otherwise pass changed paths. `.oxlintrc.json`, its JS plugin (`packages/tooling/policy-pack/lint-rules/**`), or dependency changes force full (`.oxlintrc.json:1-44`). |
++
++The task's own log names the 17 full-state checks (`Tasks.ts:1573-1576`). The seven natural checks are the five law checks plus ecosystem polarity and package-test-imports; semantic-delta is the remaining branch-delta check.
++
++### Deprecated-API correctness quantification
++
++- Reproducible live census: `git ls-files` over the 24 shard roots filtered to `.(ts|tsx|mts|cts)` returns **3,568** files. A 10-file scan covers **0.28%** and leaves **3,558 files / 99.72%** unexamined. The shard roots are source-controlled at `Lint/Lint.command.ts:49-74`; ESLint actually targets TS/TSX in apps/packages/infra and ignores generated/output surfaces (`DeprecatedApisESLintConfig.ts:18-44`).
++- If a PR adds `@deprecated` to an exported symbol, every caller may be unchanged. A changed-files-only scan can therefore miss **100% of the newly invalid callers**; the missed count is the symbol's unchanged reverse-reference fan-out (bounded only by the 3,558 unscanned files in this 10-file example). The current rule is `@typescript-eslint/no-deprecated: error` with typed project service (`DeprecatedApisESLintConfig.ts:95-132`).
++- A full `main` push run would catch that only after merge. Because the same workflow runs after pushes to `main` (`check.yml:3-7`), it is a useful defense-in-depth signal but an unacceptable sole backstop under a main-must-stay-green policy. The PR escalation trigger prevents the known reverse-impact class before merge.
++
++## 3. Implementation sketch
++
++1. Workflow: move `lint-policy` into a case that calls `bun run beep ci lane lint-policy "${shape_args[@]}"` on PRs; on push it receives only `--summarize` or no shaping flags. `summarize` can remain accepted/no-op, or pass only affected/base.
++2. `CiLane.ts`: advertise `--affected`/`--base` for the descriptor; make the lint-policy step append `--affected --base <base>` to `beep lint policy` when `options.affected`; make `ciLocalLaneFlags` forward the same shape. Add step-plan tests for affected and full.
++3. `Lint.command.ts`: add `affected` and `base` flags to `policy`; reject/define precedence for `--full && --affected` (prefer a typed configuration error). Change `runRootLintPolicyTask` to accept a schema-backed options object `{ mode: full|affected|local-default, base, head }`; preserve local changed default, but let explicit affected override `CI=true`.
++4. `Tasks.ts`: collect changed files with the supplied base/head, derive typed scope facts once (law TS files, test files, ecosystem members, full-state trigger booleans), then build the step array with `optionalQualityTaskStep`. Log every skipped step and its reason so hosted evidence shows what was proved.
++5. Deprecated fast path: add `lint deprecated-apis --include <comma-list>` (or repeated file args); filter to existing config-covered TS/TSX and make **one** ESLint process, not one process per file. If the escalation predicate fires, use the existing shard runner unchanged.
++6. Add planner tests for: ordinary 10-file scope; each full-state trigger family; deleted paths; config/dependency escalation; deprecation-annotation escalation; workflow/CI affected override; push/full parity; and zero relevant files.
++
++### Empty-set bug: confirmed fix
++
++`scopedLawArgs` always emits `--include <joined-filter>`, so a Markdown-only change becomes `--include ""` (`Tasks.ts:1455-1467`). Ecosystem polarity does the same with the unfiltered list (`Tasks.ts:1478-1484`), and package-test-imports has the same construction (`Tasks.ts:1487-1493`). The existing test proves non-empty forwarding but has no empty case (`quality-tasks.test.ts:1137-1168`).
++
++Fix at plan construction, not in each downstream parser: compute each relevant subset first and append **no step** when it is empty. Sketch: `scopedStep(label, relevantFiles, makeArgs) => A.match(relevantFiles, { onEmpty: A.empty, onNonEmpty: files => [repoCliStep(...makeArgs(files))] })`. Full scope (`files === undefined`) still emits the original step. Add a test asserting a docs-only changed set contains none of the seven natural steps and never contains an empty `--include` value.
++
++## 4. Risks / correctness tradeoffs
++
++- Trigger drift is the main risk. Centralize declarative input predicates beside the plan, test every step, and force full on unknown/global tooling changes rather than silently skipping.
++- Changed-file ESLint is unsafe for reverse impacts unless the deprecation escalation is present. Dependency, lockfile, tsconfig/path-alias, ambient declaration, and added/changed `@deprecated` surfaces must force full.
++- Git name-only scope includes deletions. File scanners should filter to existing files, while structural/full-state predicates must still observe deleted paths.
++- `lint:circular` needs a conservative import-closure trigger; simple directory prefixes may under-approximate madge's graph.
++- Removing PR `lint:docgen` duplication is safe only while the separate required Docgen lane has equal-or-stronger affected selection and remains a merge gate (`check.yml:105-109,239-244`). Assert this invariant in the CI lane inventory/tests.
++- More concurrency is not required for the projected win. Keep concurrency 2 initially (`Tasks.ts:119-124`) and remeasure after scoping; raising it before measuring could recreate memory contention.
++
++## 5. Open questions
++
++1. Should a deprecation-annotation diff use a conservative textual `git diff -G '@deprecated'` trigger, or a TypeScript/JSDoc declaration-aware detector? Textual is cheap and safely over-triggers.
++2. Can the affected Docgen lane be made the single owner and `lint:docgen` removed from PR policy permanently, with an automated parity assertion?
++3. Should `tsgo-rules`, identity-registry, JSDoc, module-tags, typos, and oxlint be split into global-integrity plus changed-file subchecks? That would reduce ordinary PR time further and make their triggers easier to reason about.
++4. What p50/p95 does the one-process 10-file deprecated scan achieve on `beep-ec2-heavy`? The first implementation PR should emit per-step timing and compare at least 20 PR runs before tightening the estimate.
+diff --git a/goals/lint-policy-single-digit/research/05-long-tail.md b/goals/lint-policy-single-digit/research/05-long-tail.md
+new file mode 100644
+index 0000000000..ed4a664f8f
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/05-long-tail.md
+@@ -0,0 +1,96 @@
++# Lint Policy long-tail reduction report
++
++## 1. TL;DR
++
++Recommended order:
++
++1. **Remove `lint:docgen` from Lint Policy after making the required `Docgen` matrix lane the sole owner of the same metadata guarantee.** This removes **197 s** of work and the future long pole from Lint Policy. The current PR Docgen lane already selects affected packages and runs the same `analyzePackageDocumentation` check before generation when proof reuse misses; full generation also runs docgen's own module checker. Do a rule-parity test before deletion because the two checkers are not literally the same implementation.
++2. **Make hosted PR Lint Policy use changed scope, with explicit full-scope invalidators.** Terse Effect and Native Runtime already accept changed-file includes; extend the same contract to JSDoc, Schema First, Identity Registry, Circular, and a sound Semantic Delta fast-path. Fix the empty-law-selection bug by omitting the step, not by passing `--include ""`.
++3. **Amortize syntax construction in full runs.** One CLI process and one syntax project should feed Terse Effect + Native Runtime (and ideally the other syntax-only laws). Schema First should reuse one semantic project for its inventory and LiteralKit passes. This attacks parsing and also removes repeated ~1.8 s `beep` CLI boots.
++4. **Replace Semantic Delta's two whole-repository archives with Git-object reads for Markdown/tree checks; materialize only the probe runtime, and cache the base result by merge-base SHA.** This is the largest remaining full-run architectural win.
++
++Numeric model, using the hosted measurements in `BRIEF.md:10-45`:
++
++- Current non-deprecated work is **564 s**. At concurrency 2, its ideal floor is `564 / 2 = 282 s`, plus ~66 s setup: **~5.8 min**.
++- Removing in-policy Docgen gives `(564 - 197) / 2 + 66 = 249.5 s`: **~4.2 min**, before any other change.
++- Conservative full-run targets for these seven remaining steps are Semantic 39, Schema 25, Terse+Native combined 20, JSDoc 29, Identity 10, Circular 9 = **132 s**, versus 258 s now. Then `(367 - 126) / 2 + 66 = 186.5 s`: **~3.1 min**. This is a work-conservation estimate, not a scheduler benchmark.
++- On ordinary changed-scope PRs (few TS files, no knowledge documents/deletions, no policy/config changes), all eight steps should total **about 10-20 s**: Docgen 0 in this lane; Semantic 0; Circular 0; one shared law parse ~3-5 s; changed-file JSDoc/Schema/Identity ~7-15 s. The remaining policy steps then dominate.
++
++## 2. Evidence
++
++### Lane shape and changed-scope defect
++
++- CI invokes `beep lint policy` without shape arguments (`packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:887`), and `runRootLintPolicyTask` forces full scope whenever `isCi()` is true (`packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1560-1566`). The workflow likewise passes no shape arguments for `lint-policy` (`.github/workflows/check.yml:225-231`).
++- The eight commands are registered independently at `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:1470-1507` and run with concurrency 2 (`Tasks.ts:119-124,1573-1577`). Every repo-CLI command therefore pays a separate process/module-graph boot.
++- Changed law arguments filter to app/package/infra TS/TSX, but an empty result becomes `--include ""` (`Tasks.ts:1455-1468`). The step builder must return no step when this filtered list is empty.
++
++### Per-step findings
++
++| Step | What it actually executes; why slow | Cheapest credible 2x+ lever | Changed-scope result |
++|---|---|---|---|
++| **`lint:docgen` 197 s** | Resolves every configured workspace package, verifies proof manifests, then creates one ts-morph `Project` per non-current package and walks exported declarations (`Docgen.command.ts:582-607`; `Docgen/internal/JsDocAnalysis.ts:528-557`). Verification itself globs, reads, and SHA-256 hashes every package input and generated-doc output (`tool/docgen/src/ProofManifest.ts:309-318,339-413,530-578`). Proof files live at `.beep/docgen/proof.json`, while `.gitignore:107` ignores `**/.beep/*`; a fresh CI checkout therefore cannot reuse them. | **Delete this step from Lint Policy after transferring/proving parity in the Docgen lane: 197 -> 0 s (>2x).** The separate required lane is affected on PRs (`check.yml:153-168,239-244`); affected mode checks package metadata before generation (`Docgen/internal/Local.ts:626-660,687-716`). Full mode runs root `docgen` (`CiLane.ts:670-683`), whose generator parses/checks modules and examples (`tool/docgen/src/Core.ts:768-801`). | **Trivial/removed.** Let the separately scheduled Docgen lane own affected/full selection. |
++| **`knowledge:semantic-delta` 78 s** | Builds and extracts **two full Git archives**, reads both full trees, and only then scans the pair (`Knowledge.service.ts:1092-1153`). It scans live Markdown in 10 governed roots (`Knowledge.refs.ts:1157-1172`; `Knowledge.service.ts:244-247,488-505`) and boots archive-local Bun command/index probes for base then HEAD (`Knowledge.service.ts:521-595,855-969`). This is archive I/O + Markdown scanning + four runtime boots, not typecheck. | **Sound diff fast-path:** skip when the diff has no governed Markdown/goal-manifest/producer change and no deletion/rename of any tracked target; typical source-only PRs go 78 -> 0. For full runs, read trees/blobs with `git cat-file --batch`, cache base findings by SHA, and materialize only probe-required files. | **Trivial for additive/modified source-only PRs.** Deletions/renames, governed docs, goal manifests/index producer, command tree, or scanner changes force the real delta. |
++| **`lint:schema-first` 51 s** | Loads all app/package/infra TS/TSX through a semantic ts-morph project (`Lint.schemas.ts:50-84`; `SchemaFirstProject.ts:57-63`). Inventory detectors request symbols/types (`SchemaFirstDetectors.ts:79-96,254-304`). Worse, the command constructs that repo-wide project once for inventory and again for the LiteralKit pass (`SchemaFirstScan.ts:54-96,461-464`). This is semantic parse/type resolution + AST walks; not process startup. | **Pass one `Project` into both passes** and fold the LiteralKit visitor into the main source loop. For PRs, add `--include` and reconcile only changed/deleted files against the committed inventory; policy/scanner/tsconfig changes force full. The incremental form is comfortably >2x. | **Near-trivial for a few changed files** once inventory reconciliation is file-keyed; currently it is always full (`Tasks.ts:1502`). |
++| **`lint:terse-effect` 33 s** | Creates a ts-morph project, globs all app/package/infra TS/TSX, then performs multiple descendant collections/passes per file (`Laws/TerseEffect.ts:127-128,579-625,683-705`). No explicit checker diagnostics are requested; cost is parse + repeated syntax traversal. | It already supports `includePaths` (`TerseEffect.ts:33-48,592-594`): **use changed scope in hosted PRs and skip an empty set**. For full runs, run all syntax laws in one process/project. | **Already structurally trivial:** a one-file local probe was ~3.2 s versus 33 s hosted full. Empty selection should be 0, not a failed CLI invocation. |
++| **`lint:jsdoc` 29 s** | `bunxStep` literally invokes `bunx eslint . --max-warnings=0` (`Tasks.ts:1200-1206,1504`). The default profile is docs (`eslint.config.mjs:5-17`): TypeScript parsing plus JSDoc/custom rules for tooling source and TSDoc syntax across app/package/infra production TS (`DocsESLintConfig.ts:65-102,130-212,248-280`). It is parse/file-scan work, not typed lint. | **Pass only changed applicable files to the installed binary**; config/plugin/tsconfig changes force full. `./node_modules/.bin/eslint` avoids ambiguity/network resolution, but is not itself the 2x lever: local `--version` probes were 0.06 s for both it and `bunx`. | **Near-trivial for a few TS files.** Currently `.` makes it full even in local changed mode. |
++| **`lint:native-runtime` 27 s** | Independently creates another repo-wide ts-morph project over the same globs and walks every descendant, matching imports/new/calls/binary/switch nodes (`Laws/NoNativeRuntime.ts:40-43,502-523,565-600,665-699`). A local full probe reported 2,899 scanned files; this is syntax parse/traversal plus allowlist reconciliation, not typecheck. | **Use its existing `includePaths` in PRs** and share one project/process with Terse and other syntax laws for full runs. | **Already near-trivial:** a one-file local probe was ~3.2 s; empty selection should be skipped. |
++| **`lint:identity-registry` 22 s** | Enumerates 133 workspaces, recursively `stat`/`readDirectory`s each tree, reads every TS/TSX sequentially, string-filters on `@beep/identity`, and ts-morph parses candidates (`Lint/IdentityRegistry.ts:56-110,175-229`). It is filesystem traversal/read + syntax parse; no typecheck. | Keep the cheap full registry-completeness check, but scope local-composer detection to changed files. For full runs replace recursive per-entry stats with one `FsUtils.globFiles` and bounded-concurrent reads (or an `rg -l -F` prefilter), then parse only matches. | **Near-trivial** after the split: completeness stays full; composer scan touches only changed TS. Currently always full (`Tasks.ts:1485`). |
++| **`lint:circular` 18 s** | Lazily imports Madge, then runs **two serial Madge analyses**, each with root tsconfig resolution (`Lint/Lint.command.ts:411-452`). The source has 484 `.ts` files under the two named roots, but a local instrumented run resolved 900 files for CLI, 294 for repo-utils, and 931 combined: Madge follows reachable imports, so “two dirs” understates the graph. Local split was import 0.2 s + 4.35 s + 1.92 s; one combined call was 4.11 s, only ~1.5x. | **Skip on PRs with no relevant import-bearing TS changes** (>2x for most PRs). Immediate full-run cleanup: call Madge once with both roots. Longer-term, there is **no drop-in existing repo command** for file-import cycles: `TsconfigSync` checks workspace-package cycles (`TsconfigSync.service.ts:99-110`). Reuse `TSMorphService` for syntax/resolution and existing `detectCycles` SCC logic (`repo-utils/src/Graph.ts:132-174`) to replace Madge, but that needs a tested import-graph adapter. | **0 s for PRs outside the intended tooling graph.** Changes inside/reachable from those roots still need graph analysis; define the boundary explicitly because Madge currently follows external reachable files. |
++
++### Local bounded probes (supporting diagnosis, not replacements for hosted timings)
++
++- `bun run beep --help`: 1.76 s / ~658 MB peak RSS. Thus process boot matters for 3-5 s steps, but cannot explain 18-197 s steps.
++- `./node_modules/.bin/eslint . --max-warnings=0`: 15.66 s locally; `eslint --version` was 0.06 s through both local binary and `bunx`.
++- Full concurrent probes: Schema First 33.0 s / ~14.0 GB peak RSS, Terse 21.7 s / ~10.2 GB, Native 12.6 s / ~5.3 GB, Identity 7.5 s. Contention magnifies hosted wall time; repeated ts-morph projects are also a memory-concurrency problem.
++- Semantic Delta: 34.3 s locally; forcing the safe “untrusted PR/no probes” policy still took 28.6 s. Therefore archive/materialization/tree/Markdown work dominates locally; probes were only ~5.7 s.
++- Circular: exact command 8.62 s locally; the per-root/combined figures above show duplicated reachable-graph parsing, not lazy-import startup, as the main cost.
++
++## 3. Implementation sketch
++
++1. **Scope model in `Quality/Tasks.ts`**
++   - Replace `files?: string[]` with a decoded `LintPolicyScope = Full | Changed { files, changes }` carrying status (`A/M/D/R`), not names alone.
++   - Make each step factory return `ReadonlyArray<QualityTaskStep>` so an empty applicable set emits no process.
++   - Add full invalidators: the step implementation/config, root `package.json`/lockfile/tsconfig, relevant inventory/allowlist, and shared scanner substrate.
++   - Teach `ci lane lint-policy` to accept `--affected --base`; do not rely on `isCi()` to force full.
++
++2. **Docgen ownership**
++   - Add parity fixtures asserting that affected `docgen:local`/full generator catches every condition currently caught by `beep docgen check` (especially category and re-export metadata).
++   - If parity is missing, fold the metadata visitor into repo-docgen's existing parse/check pass rather than running a second ts-morph analyzer.
++   - Then remove `lint:docgen` from `rootRepoLintPolicySteps`; keep `Docgen` required.
++
++3. **Shared syntax-law runner**
++   - Add an internal `laws policy --include ...` composite. Build one syntax-mode `TSMorphService.inspectProject` request and run Terse/Native visitors (then Effect Imports/Fn/Frozen as feasible) over the same ordered `SourceFile[]`.
++   - Preserve individual labels in structured output even though execution is one process.
++   - Reconcile global allowlists separately so a changed-file scan does not report unrelated entries as unused.
++
++4. **Schema First incremental/reuse**
++   - Change both collectors to accept a supplied `Project`; construct it once.
++   - Add include globs/files. Merge live results for changed files with baseline entries for unchanged files; remove entries for deleted files; detect new/stale findings only in the affected keys.
++
++5. **Semantic Delta fast path**
++   - Classify the name-status diff before archive work. Skip only when modifications cannot change scanner documents, command/index producers, or target existence.
++   - Replace archive extraction for document scanning with `ls-tree` + `cat-file --batch`; run base/head reads concurrently.
++   - Store/cache normalized base findings keyed by merge-base SHA + scanner version. Preserve fork safety and fail-closed behavior.
++
++6. **JSDoc / Identity / Circular**
++   - JSDoc: invoke `./node_modules/.bin/eslint --max-warnings=0 -- <applicable changed files>`; no files means no step.
++   - Identity: always check workspace slugs; glob/prefilter only changed files for local composer use, full with bounded concurrency.
++   - Circular: first combine roots in one Madge call; add a conservative changed-scope skip. Prototype the repo-native import graph separately and compare cycle fixtures before removing Madge.
++
++## 4. Risks / correctness tradeoffs
++
++- **Changed scope is only sound with invalidators and deletion/rename awareness.** Name-only diffs miss the most important Semantic Delta and inventory cases.
++- **Semantic Delta cannot blindly skip all source-only changes:** deleting a source file can make an existing Markdown reference newly broken; changing the CLI command tree can invalidate documented commands.
++- **Schema inventory is global state.** Incremental reconciliation must retain untouched baseline rows and handle deleted/renamed files deterministically.
++- **Native Runtime allowlist accounting is global.** A scoped scan cannot call untouched allowlist rows “unused.” Split integrity from usage or preserve a cached full usage index.
++- **Docgen's two checkers overlap but are not proven identical.** Do not delete the policy step merely because both say “docgen”; prove/fold category, re-export, description, example, and `@since` behavior first.
++- **Madge replacement can silently change resolution semantics** (path aliases, extension/index resolution, dynamic imports, type-only imports). Golden graph fixtures are required.
++- **One shared syntax process raises failure-blast-radius concerns.** Keep per-law result boundaries and ensure one collector error is attributed to its law.
++
++## 5. Open questions
++
++1. Is the `Docgen` matrix check required on every protected-branch path, including any merge queue path? If not, ownership cannot move until it is.
++2. Which exact metadata rules are unique to `Docgen.command.ts` analysis versus `repo-docgen/Checker.ts`? A fixture matrix should answer this before removal.
++3. What percentage of PRs contain deletes/renames or governed Markdown? That determines the real Semantic Delta fast-path hit rate.
++4. Should Circular mean cycles strictly inside the two tooling roots, or any cycle reachable from them? Current Madge behavior is the latter; its label/comment imply the former.
++5. Can the policy runner expose per-phase CPU/RSS and selected-file counts? That would validate the 132 s target and catch scope regressions in hosted runs.
+diff --git a/goals/lint-policy-single-digit/research/SOURCES.md b/goals/lint-policy-single-digit/research/SOURCES.md
+new file mode 100644
+index 0000000000..de36c42c27
+--- /dev/null
++++ b/goals/lint-policy-single-digit/research/SOURCES.md
+@@ -0,0 +1,43 @@
++# Lint Policy Single Digit — Sources & Provenance
++
++- **Source exploration:** none — authored directly from a 2026-08-13 profiling +
++  grill-with-docs session (no `explorations/` packet). The evidence corpus was produced
++  in-session by a five-lane Codex (GPT-5.6 Sol, effort medium) fan-out and copied here
++  verbatim as `00`–`05`.
++- **Provenance:** hosted CI logs (run `31683014887`, job `94392586624`, PR #673) for the
++  baseline timing table; live-checkout `file:line` citations inside each report.
++
++## 1. In-packet evidence corpus
++
++| Source | What it is | Disposition |
++|--------|------------|-------------|
++| `research/00-evidence-brief.md` | Shared measured baseline: per-step timing table, lane mechanics, runner hardware, report contract given to all five lanes | binding baseline |
++| `research/01-engine-swap.md` | oxlint-tsgolint feasibility, killed alternatives (flat-tsconfig projectService, tsgo scanner, Biome, ts-morph scanner), cutover sketch + parity-corpus inventory | P2/P3 contract |
++| `research/02-inplace-optimization.md` | Shard parallelism + per-shard caches + cache-correctness analysis (why CI-persisted ESLint cache is unsound for no-deprecated) | P1 contract (§3) |
++| `research/03-lane-orchestration.md` | LPT schedule model (c=2/4/6/8), resource classes, docgen redundancy analysis, CLI boot overhead | P1 ordering (§3.1) + backlog rationale |
++| `research/04-pr-scoping-deferred.md` | Full 25-step scoping trigger table + escalation predicate design — DEFERRED except the §3 empty-set fix | deferred design (P1 takes §3 only) |
++| `research/05-long-tail.md` | Post-deprecated long-pole analysis (docgen 197s, semantic-delta 78s, schema-first 51s, circular/madge) | backlog levers |
++
++**How these inform implementation:** P1 executes `02` §3 + `03` §3.1 + `04` §3; P2/P3
++execute `01` §3 behind its §1 gates; everything else is recorded backlog, with killed
++ideas listed in `ops/manifest.json` so they are not re-explored.
++
++## 2. Upstream repositories & licenses
++
++| Repo | License | Port discipline | What we take |
++|------|---------|-----------------|--------------|
++| oxc-project/oxc (oxlint 1.78.0, installed) | MIT | dependency use | `typescript/no-deprecated` type-aware rule via `--type-aware` |
++| oxc-project/tsgolint (`oxlint-tsgolint` peer, not yet installed) | MIT | dependency use (P3 cutover PR only) | typed-rule backend on TS-go |
++| typescript-eslint (installed) | MIT | dependency use (current engine) | `@typescript-eslint/no-deprecated` reference semantics for the parity corpus |
++
++External documentation cited inside `01`: oxc.rs type-aware linting guide and rule page;
++typescript-eslint typed-linting FAQ (projectService `tsconfig.json` discovery rule).
++
++## 3. Prior repo evidence
++
++- `goals/one-round-loop/history/p0-parity-evidence.md` — local/hosted lane parity proof;
++  binding invariant for every change here.
++- `goals/ci-fleet-endgame/research/ci-graph-check-baseline.md` — flat source-mode
++  tsconfig measurements (PR #668) referenced and ruled out for projectService in `01`.
++- Commit `4cd02e6962` — deprecated-apis shard split for memory bounding (why one big
++  ESLint invocation is a killed idea).
+diff --git a/packages/ecosystem/effect-drizzle/test/bundle-size.probe.ts b/packages/ecosystem/effect-drizzle/test/bundle-size.probe.ts
+index a638937373..d085a7add4 100644
+--- a/packages/ecosystem/effect-drizzle/test/bundle-size.probe.ts
++++ b/packages/ecosystem/effect-drizzle/test/bundle-size.probe.ts
+@@ -122,7 +122,7 @@ const program = gen(function* () {
+   return yield* reportComparison(artifact.rawBytes, baselineRawBytes);
+ });
+ 
+-const main = scoped(buildLayer(bunServicesLayer).pipe(flatMap((context) => program.pipe(provide(context)))));
++const main = bunServicesLayer.pipe(buildLayer, flatMap(context => program.pipe(provide(context))), scoped);
+ 
+ if (import.meta.main) {
+   BunRuntime.runMain(main);
+diff --git a/packages/ecosystem/effect-drizzle/test/fixtures.ts b/packages/ecosystem/effect-drizzle/test/fixtures.ts
+index 2f333e9294..b6e9399424 100644
+--- a/packages/ecosystem/effect-drizzle/test/fixtures.ts
++++ b/packages/ecosystem/effect-drizzle/test/fixtures.ts
+@@ -877,7 +877,7 @@ export const _pgParameterizedCheck = () => {
+   class ParameterizedCheck extends Model<ParameterizedCheck>("ParameterizedCheck")({ value: WaveEString }, () => [
+     Table.check("parameterized_check")(sql<boolean>`${1} > 0`),
+   ]) {}
+-  return getPgTableConfig(toPgTable(ParameterizedCheck));
++  return ParameterizedCheck.pipe(toPgTable, getPgTableConfig);
+ };
+ export const _pgParameterizedPartialIndex = () => {
+   class ParameterizedPartialIndex extends Model<ParameterizedPartialIndex>("ParameterizedPartialIndex")(
+@@ -888,7 +888,7 @@ export const _pgParameterizedPartialIndex = () => {
+       }),
+     ]
+   ) {}
+-  return getPgTableConfig(toPgTable(ParameterizedPartialIndex));
++  return ParameterizedPartialIndex.pipe(toPgTable, getPgTableConfig);
+ };
+ 
+ export const _pgDuplicateCompositeRuntime = () => {
+@@ -899,7 +899,7 @@ export const _pgDuplicateCompositeRuntime = () => {
+       Table.compositeUnique("duplicate_composite", [columns.one, columns.one]),
+     ]
+   ) {}
+-  return getPgTableConfig(toPgTable(DuplicateComposite));
++  return DuplicateComposite.pipe(toPgTable, getPgTableConfig);
+ };
+ export const _pgNullableCompositePrimaryRuntime = () => {
+   class NullableCompositePrimary extends Model<NullableCompositePrimary>("NullableCompositePrimary")(
+@@ -909,14 +909,14 @@ export const _pgNullableCompositePrimaryRuntime = () => {
+       Table.compositePrimaryKey("nullable_composite_pk", [columns.one, columns.two]),
+     ]
+   ) {}
+-  return getPgTableConfig(toPgTable(NullableCompositePrimary));
++  return NullableCompositePrimary.pipe(toPgTable, getPgTableConfig);
+ };
+ export const _pgMultiplePrimaryKeys = () => {
+   class MultiplePrimaryKeys extends Model<MultiplePrimaryKeys>("MultiplePrimaryKeys")(
+     { id: Int.pipe(pg.integer(), pg.primaryKey()), one: Int, two: Int },
+     (columns) => [Table.compositePrimaryKey("second_pk", [columns.one, columns.two])]
+   ) {}
+-  return getPgTableConfig(toPgTable(MultiplePrimaryKeys));
++  return MultiplePrimaryKeys.pipe(toPgTable, getPgTableConfig);
+ };
+ export const _pgDuplicateExtrasNames = () => {
+   class DuplicateExtrasNames extends Model<DuplicateExtrasNames>("DuplicateExtrasNames")(
+@@ -926,7 +926,7 @@ export const _pgDuplicateExtrasNames = () => {
+       Table.check("same_extra")(sql<boolean>`true`),
+     ]
+   ) {}
+-  return getPgTableConfig(toPgTable(DuplicateExtrasNames));
++  return DuplicateExtrasNames.pipe(toPgTable, getPgTableConfig);
+ };
+ export const _pgSetNullNonNullable = () => {
+   class SetNullSource extends Model<SetNullSource>("SetNullSource")({
+@@ -975,5 +975,5 @@ export const _pgTooManyIndexColumns = () => {
+       return [Table.index("too_many_index_columns", [getOrThrow(head(values)), ...values.slice(1)])];
+     }
+   ) {}
+-  return getPgTableConfig(toPgTable(TooManyIndexColumns));
++  return TooManyIndexColumns.pipe(toPgTable, getPgTableConfig);
+ };
+diff --git a/packages/ecosystem/effect-drizzle/test/unit.test.ts b/packages/ecosystem/effect-drizzle/test/unit.test.ts
+index 665e9bf385..6f7f6c87a4 100644
+--- a/packages/ecosystem/effect-drizzle/test/unit.test.ts
++++ b/packages/ecosystem/effect-drizzle/test/unit.test.ts
+@@ -567,7 +567,7 @@ describe("schema corroboration and invariants", () => {
+       body: StringSchema,
+       summary: StringSchema.pipe(pg.varchar(80)),
+     }) {}
+-    const columns = getTableConfig(pg.toPgTable(ColumnProjection)).columns;
++    const columns = ColumnProjection.pipe(pg.toPgTable, getTableConfig).columns;
+     expect(columnFrom(columns, "body").getSQLType()).toBe("text");
+     expect(columnFrom(columns, "summary").getSQLType()).toBe("varchar(80)");
+   });
+@@ -587,7 +587,7 @@ describe("schema corroboration and invariants", () => {
+       a: ArraySchema(StringSchema),
+       lazy: suspend(() => NullOr(StringSchema)),
+     }) {}
+-    const columns = getTableConfig(pg.toPgTable(CarrierProjection)).columns;
++    const columns = CarrierProjection.pipe(pg.toPgTable, getTableConfig).columns;
+     expect(CarrierProjection.sql.columns.s.column.ident).toBe("text");
+     expect(CarrierProjection.sql.columns.b.column.ident).toBe("boolean");
+     expect(columnFrom(columns, "n").notNull).toBe(false);
+@@ -731,7 +731,7 @@ describe("Option paved road", () => {
+       opt: OptionFromNullOr(StringSchema),
+       opt2: EffectModel.FieldOption(StringSchema),
+     }) {}
+-    const columns = getTableConfig(pg.toPgTable(OptionProjection)).columns;
++    const columns = OptionProjection.pipe(pg.toPgTable, getTableConfig).columns;
+     expect(columnFrom(columns, "opt").notNull).toBe(false);
+     expect(columnFrom(columns, "opt_2").notNull).toBe(false);
+   });
+diff --git a/packages/epistemic/client/src/Protocol.ts b/packages/epistemic/client/src/Protocol.ts
+index 1776d9b3c4..8071df0447 100644
+--- a/packages/epistemic/client/src/Protocol.ts
++++ b/packages/epistemic/client/src/Protocol.ts
+@@ -8,6 +8,7 @@
+ import { $EpistemicClientId } from "@beep/identity/packages";
+ import { O, pipe, Str } from "@beep/utils";
+ import { Layer, Result } from "effect";
++import * as P from "effect/Predicate";
+ import * as S from "effect/Schema";
+ import { FetchHttpClient } from "effect/unstable/http";
+ import { Atom } from "effect/unstable/reactivity";
+@@ -64,7 +65,7 @@ export const resolveEpistemicRpcHttpUrl = (runtime: BrowserHttpRuntime | undefin
+ 
+   return pipe(
+     O.fromUndefinedOr(origin),
+-    O.filter((value) => Str.startsWith(value, "http://") || Str.startsWith(value, "https://")),
++    O.filter(P.or(Str.startsWith("http://"), Str.startsWith( "https://"))),
+     O.flatMap((value) =>
+       pipe(
+         Result.try(() => new URL("/rpc", value).href),
+diff --git a/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts b/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+index 13b72665a4..530ad92b68 100644
+--- a/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
++++ b/packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts
+@@ -43,7 +43,8 @@ const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
+   "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+ ]);
+ const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
+-const DEPRECATED_API_LINT_CACHE_LOCATION = "node_modules/.cache/eslint-deprecated-apis/.eslintcache";
++const DEPRECATED_API_LINT_CACHE_DIRECTORY = "node_modules/.cache/eslint-deprecated-apis";
++const DEPRECATED_API_LINT_CONCURRENCY = 4;
+ const DEPRECATED_API_LINT_ESLINT_BIN = "node_modules/.bin/eslint";
+ const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=8192";
+ const DEPRECATED_API_LINT_SHARDS = [
+@@ -72,6 +73,8 @@ const DEPRECATED_API_LINT_SHARDS = [
+   "packages/tooling",
+   "packages/workspace",
+ ] as const;
++const deprecatedApiLintCacheLocation = (shard: string): string =>
++  `${DEPRECATED_API_LINT_CACHE_DIRECTORY}/.eslintcache-${Str.replaceAll("/", "__")(shard)}`;
+ const REQUIRED_TAGGED_UNIONS = [
+   "GenerationAction",
+   "TsMorphMutation",
+@@ -472,7 +475,9 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
+   const eslintArgs = [
+     "--cache",
+     "--cache-location",
+-    DEPRECATED_API_LINT_CACHE_LOCATION,
++    deprecatedApiLintCacheLocation(shard),
++    "--cache-strategy",
++    "content",
+     "--config",
+     "eslint.config.mjs",
+     shard,
+@@ -498,9 +503,14 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
+ });
+ 
+ const runDeprecatedApiLint = Effect.fn("runDeprecatedApiLint")(function* () {
+-  for (const shard of DEPRECATED_API_LINT_SHARDS) {
+-    yield* runDeprecatedApiLintShard(shard);
+-  }
++  const fs = yield* FileSystem.FileSystem;
++  yield* fs.makeDirectory(DEPRECATED_API_LINT_CACHE_DIRECTORY, { recursive: true });
++  yield* Console.log(
++    `[lint:deprecated-apis] running ${A.length(DEPRECATED_API_LINT_SHARDS)} shards with concurrency ${DEPRECATED_API_LINT_CONCURRENCY}`
++  );
++  yield* Effect.forEach(DEPRECATED_API_LINT_SHARDS, runDeprecatedApiLintShard, {
++    concurrency: DEPRECATED_API_LINT_CONCURRENCY,
++  });
+ 
+   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
+ });
+diff --git a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+index f2791aba5d..6182a0def6 100644
+--- a/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
++++ b/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
+@@ -1456,59 +1456,99 @@ const isLawSourcePath = (filePath: string): boolean =>
+   (Str.startsWith("apps/")(filePath) || Str.startsWith("packages/")(filePath) || Str.startsWith("infra/")(filePath)) &&
+   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
+ 
+-const scopedLawArgs = (
++const isEcosystemPolarityPath = (filePath: string): boolean => {
++  const segments = Str.split(filePath, "/");
++  const memberPathHead = A.get(segments, 3);
++
++  return (
++    O.exists(A.get(segments, 0), Str.equivalence("packages")) &&
++    O.exists(A.get(segments, 1), Str.equivalence("ecosystem")) &&
++    O.exists(A.get(segments, 2), Str.isNonEmpty) &&
++    O.exists(memberPathHead, (segment) => Str.equivalence("package.json")(segment) || Str.equivalence("src")(segment))
++  );
++};
++
++const isPackageTestImportPath = (filePath: string): boolean =>
++  Str.startsWith("packages/")(filePath) &&
++  (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)) &&
++  pipe(
++    Str.split(filePath, "/test/"),
++    A.head,
++    O.exists((prefix) => !Str.equivalence(filePath)(prefix) && !Str.includes("/src/")(prefix))
++  );
++
++const scopedRepoCliStep = (
++  repoRoot: string,
++  label: string,
++  args: ReadonlyArray<string>,
++  isRelevant: (filePath: string) => boolean,
++  files?: ReadonlyArray<string>
++): ReadonlyArray<QualityTaskStep> => {
++  if (P.isUndefined(files)) {
++    return A.of(repoCliStep(repoRoot, label, args));
++  }
++
++  return A.match(A.filter(files, isRelevant), {
++    onEmpty: A.empty,
++    onNonEmpty: (relevantFiles) =>
++      A.of(repoCliStep(repoRoot, label, [...args, "--include", A.join(relevantFiles, ",")])),
++  });
++};
++
++const scopedLawStep = (
++  repoRoot: string,
++  label: string,
+   command: string,
+   args: ReadonlyArray<string>,
+   files?: ReadonlyArray<string>
+-): ReadonlyArray<string> => [
+-  "laws",
+-  command,
+-  ...args,
+-  ...(files === undefined ? A.empty<string>() : ["--include", A.join(A.filter(files, isLawSourcePath), ",")]),
+-];
++): ReadonlyArray<QualityTaskStep> =>
++  scopedRepoCliStep(repoRoot, label, ["laws", command, ...args], isLawSourcePath, files);
+ 
+ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>): ReadonlyArray<QualityTaskStep> => [
+-  repoCliStep(repoRoot, "lint:effect-imports", scopedLawArgs("effect-imports", ["--check"], files)),
+-  repoCliStep(repoRoot, "lint:terse-effect", scopedLawArgs("terse-effect", ["--check", "--advisory"], files)),
+-  repoCliStep(repoRoot, "lint:effect-fn", scopedLawArgs("effect-fn", ["--check"], files)),
+-  repoCliStep(repoRoot, "lint:frozen-grant-set", scopedLawArgs("frozen-grant-set", ["--check"], files)),
+-  repoCliStep(repoRoot, "lint:native-runtime", scopedLawArgs("native-runtime", ["--check"], files)),
+-  repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
+-  repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
+-  repoCliStep(
+-    repoRoot,
+-    "lint:ecosystem-polarity",
+-    files === undefined
+-      ? ["lint", "ecosystem-polarity"]
+-      : ["lint", "ecosystem-polarity", "--include", A.join(files, ",")]
+-  ),
+-  repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
+-  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
+-  repoCliStep(
+-    repoRoot,
+-    "lint:package-test-imports",
+-    files === undefined
+-      ? ["lint", "package-test-imports"]
+-      : ["lint", "package-test-imports", "--include", A.join(files, ",")]
+-  ),
+-  repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
+-  repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
+-  repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
++  // Static LPT order from research/00-evidence-brief.md (run 31683014887):
++  // deprecated-apis 975199ms, docgen 197298ms, semantic-delta 78127ms,
++  // schema-first 51162ms, then every remaining step in descending measured duration.
++  repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
++  repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
+   // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
+   // introduced by this branch and lets the corpus keep its inherited ones.
+   repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
+-  repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
+-  repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
+   repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
+-  repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
++  ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
+   bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
+-  repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
+-  repoCliStep(repoRoot, "lint:docgen", ["docgen", "check", "--reuse-proof-manifest"]),
++  ...scopedLawStep(repoRoot, "lint:native-runtime", "native-runtime", ["--check"], files),
++  repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
++  ...scopedLawStep(repoRoot, "lint:frozen-grant-set", "frozen-grant-set", ["--check"], files),
+   repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
+-  bunxStep(repoRoot, "lint:typos", ["typos"]),
++  ...scopedLawStep(repoRoot, "lint:effect-fn", "effect-fn", ["--check"], files),
++  ...scopedRepoCliStep(
++    repoRoot,
++    "lint:package-test-imports",
++    ["lint", "package-test-imports"],
++    isPackageTestImportPath,
++    files
++  ),
++  ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
++  repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
++  repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
+   // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
+   // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
+   bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet"]),
++  ...scopedRepoCliStep(
++    repoRoot,
++    "lint:ecosystem-polarity",
++    ["lint", "ecosystem-polarity"],
++    isEcosystemPolarityPath,
++    files
++  ),
++  repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),
++  repoCliStep(repoRoot, "lint:jsdoc-module-tags", ["quality", "jsdoc-module-tags"]),
++  repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
++  repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
++  repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
++  repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
++  repoCliStep(repoRoot, "lint:judge-rubric", ["lint", "judge-rubric"]),
++  bunxStep(repoRoot, "lint:typos", ["typos"]),
+ ];
+ 
+ /**
+diff --git a/packages/tooling/tool/cli/test/lint-command.test.ts b/packages/tooling/tool/cli/test/lint-command.test.ts
+index 5e56804d68..457568ee6a 100644
+--- a/packages/tooling/tool/cli/test/lint-command.test.ts
++++ b/packages/tooling/tool/cli/test/lint-command.test.ts
+@@ -2,9 +2,11 @@ import { lintCommand } from "@beep/repo-cli";
+ import { TSMorphServiceLive } from "@beep/repo-utils";
+ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+ import { provideScopedLayer } from "@beep/test-utils";
+-import { A } from "@beep/utils";
++import { A, Str } from "@beep/utils";
+ import { NodeServices } from "@effect/platform-node";
+-import { Effect, FileSystem, Layer, Path } from "effect";
++import { Effect, FileSystem, Layer, Path, pipe } from "effect";
++import * as O from "effect/Option";
++import * as P from "effect/Predicate";
+ import * as S from "effect/Schema";
+ import * as TestConsole from "effect/testing/TestConsole";
+ import { Command } from "effect/unstable/cli";
+@@ -13,6 +15,32 @@ import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandT
+ 
+ const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+ const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
++const deprecatedApiLintShards = [
++  "apps/architecture-lab-proof",
++  "apps/oip-web",
++  "apps/professional-desktop",
++  "infra",
++  "packages/_internal",
++  "packages/agents",
++  "packages/architecture-lab",
++  "packages/drivers",
++  "packages/ecosystem",
++  "packages/epistemic/client",
++  "packages/epistemic/config",
++  "packages/epistemic/domain",
++  "packages/epistemic/server",
++  "packages/epistemic/tables",
++  "packages/epistemic/ui",
++  "packages/epistemic/use-cases",
++  "packages/foundation/capability",
++  "packages/foundation/modeling",
++  "packages/foundation/primitive",
++  "packages/foundation/ui-system",
++  "packages/law-practice",
++  "packages/shared",
++  "packages/tooling",
++  "packages/workspace",
++];
+ 
+ const testLayer = Layer.mergeAll(
+   NodeServices.layer,
+@@ -63,6 +91,94 @@ const writeSchemaFirstSourceFixture = Effect.fn("writeSchemaFirstSourceFixture")
+   yield* writeSchemaFirstFileFixture("packages/example/src/Example.ts", sourceLines);
+ });
+ 
++const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")(function* (failingShard?: string) {
++  const fs = yield* FileSystem.FileSystem;
++  const path = yield* Path.Path;
++  yield* Effect.forEach(deprecatedApiLintShards, (shard) => fs.makeDirectory(shard, { recursive: true }), {
++    concurrency: 4,
++  });
++
++  const eslintPath = path.join("node_modules", ".bin", "eslint");
++  yield* fs.makeDirectory(path.dirname(eslintPath), { recursive: true });
++  yield* fs.writeFileString(
++    eslintPath,
++    A.join(
++      [
++        "#!/usr/bin/env sh",
++        ...(P.isUndefined(failingShard)
++          ? A.empty<string>()
++          : ['case "$*" in', `  *${failingShard}*) exit 7 ;;`, "esac"]),
++        "exit 0",
++        "",
++      ],
++      "\n"
++    )
++  );
++  yield* fs.chmod(eslintPath, 0o755);
++});
++
++const argumentAfter = (line: string, argument: string): O.Option<string> => {
++  const parts = Str.split(line, " ");
++  return pipe(
++    A.findFirstIndex(parts, Str.equivalence(argument)),
++    O.flatMap((index) => A.get(parts, index + 1))
++  );
++};
++
++describe("deprecated-apis lint command", { concurrent: false }, () => {
++  it(
++    "constructs unique content-cache shard commands at concurrency four",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* writeDeprecatedApiLintFixture();
++            yield* runLintCommand(["deprecated-apis"]);
++
++            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
++            const invocationLines = A.filter(
++              logLines,
++              (line) =>
++                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
++            );
++            const cacheLocations = A.getSomes(
++              A.map(invocationLines, (line) => argumentAfter(line, "--cache-location"))
++            );
++
++            expect(logLines).toContain("[lint:deprecated-apis] running 24 shards with concurrency 4");
++            expect(invocationLines).toHaveLength(24);
++            expect(A.dedupe(cacheLocations)).toHaveLength(24);
++            expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
++            expect(
++              A.every(cacheLocations, Str.startsWith("node_modules/.cache/eslint-deprecated-apis/.eslintcache-"))
++            ).toBe(true);
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    10_000
++  );
++
++  it(
++    "fails the aggregate when any shard exits nonzero",
++    () =>
++      Effect.runPromise(
++        withTempWorkingDirectory(
++          Effect.gen(function* () {
++            yield* writeDeprecatedApiLintFixture("packages/agents");
++
++            const exit = yield* Effect.exit(runLintCommand(["deprecated-apis"]));
++
++            expectReportedExit(exit, 7);
++            expect(A.filter(yield* TestConsole.logLines, P.isString)).not.toContain(
++              "[lint:deprecated-apis] OK: no deprecated vendor API usage found."
++            );
++          })
++        ).pipe(provideScopedLayer(testLayer))
++      ),
++    10_000
++  );
++});
++
+ const writePrecisionAuditInventory = Effect.fn("writePrecisionAuditInventory")(function* (
+   status: "advisory" | "exception",
+   reason: string
+diff --git a/packages/tooling/tool/cli/test/quality-tasks.test.ts b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+index 98c02672bf..4b00c76aca 100644
+--- a/packages/tooling/tool/cli/test/quality-tasks.test.ts
++++ b/packages/tooling/tool/cli/test/quality-tasks.test.ts
+@@ -1071,31 +1071,31 @@ describe("quality task adapter", () => {
+ 
+     expect(A.map(steps, (step) => step.label)).toEqual([
+       "lint",
+-      "lint:effect-imports",
++      "lint:deprecated-apis",
++      "lint:docgen",
++      "knowledge:semantic-delta",
++      "lint:schema-first",
+       "lint:terse-effect",
+-      "lint:effect-fn",
+-      "lint:frozen-grant-set",
++      "lint:jsdoc",
+       "lint:native-runtime",
+-      "lint:allowlist",
+-      "lint:tsgo-rules",
+-      "lint:ecosystem-polarity",
+       "lint:identity-registry",
+-      "lint:judge-rubric",
++      "lint:frozen-grant-set",
++      "lint:circular",
++      "lint:effect-fn",
+       "lint:package-test-imports",
++      "lint:effect-imports",
+       "lint:package-test-typecheck",
+-      "lint:reflection-artifacts",
+-      "lint:roadmap-refs",
+-      "knowledge:semantic-delta",
++      "lint:tsgo-rules",
++      "lint:oxlint",
++      "lint:ecosystem-polarity",
++      "lint:allowlist",
++      "lint:jsdoc-module-tags",
+       "goals:doctor",
+       "goals:index-check",
+-      "lint:schema-first",
+-      "lint:deprecated-apis",
+-      "lint:jsdoc",
+-      "lint:jsdoc-module-tags",
+-      "lint:docgen",
+-      "lint:circular",
++      "lint:reflection-artifacts",
++      "lint:roadmap-refs",
++      "lint:judge-rubric",
+       "lint:typos",
+-      "lint:oxlint",
+     ]);
+     expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", []));
+   });
+@@ -1104,38 +1104,43 @@ describe("quality task adapter", () => {
+     const steps = rootLintPolicyStepsForTesting("/repo");
+ 
+     expect(A.map(steps, (step) => step.label)).toEqual([
+-      "lint:effect-imports",
++      "lint:deprecated-apis",
++      "lint:docgen",
++      "knowledge:semantic-delta",
++      "lint:schema-first",
+       "lint:terse-effect",
+-      "lint:effect-fn",
+-      "lint:frozen-grant-set",
++      "lint:jsdoc",
+       "lint:native-runtime",
+-      "lint:allowlist",
+-      "lint:tsgo-rules",
+-      "lint:ecosystem-polarity",
+       "lint:identity-registry",
+-      "lint:judge-rubric",
++      "lint:frozen-grant-set",
++      "lint:circular",
++      "lint:effect-fn",
+       "lint:package-test-imports",
++      "lint:effect-imports",
+       "lint:package-test-typecheck",
+-      "lint:reflection-artifacts",
+-      "lint:roadmap-refs",
+-      "knowledge:semantic-delta",
++      "lint:tsgo-rules",
++      "lint:oxlint",
++      "lint:ecosystem-polarity",
++      "lint:allowlist",
++      "lint:jsdoc-module-tags",
+       "goals:doctor",
+       "goals:index-check",
+-      "lint:schema-first",
+-      "lint:deprecated-apis",
+-      "lint:jsdoc",
+-      "lint:jsdoc-module-tags",
+-      "lint:docgen",
+-      "lint:circular",
++      "lint:reflection-artifacts",
++      "lint:roadmap-refs",
++      "lint:judge-rubric",
+       "lint:typos",
+-      "lint:oxlint",
+     ]);
+     expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
+     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
+   });
+ 
+   it("passes changed TypeScript files to file-oriented policy laws", () => {
+-    const files = ["packages/demo/src/index.ts", "README.md"];
++    const files = [
++      "packages/demo/src/index.ts",
++      "packages/demo/test/Example.test.ts",
++      "packages/ecosystem/demo/src/index.ts",
++      "README.md",
++    ];
+     const steps = rootLintPolicyStepsForTesting("/repo", files);
+ 
+     expect(steps.find((step) => step.label === "lint:effect-fn")?.args).toEqual([
+@@ -1145,7 +1150,7 @@ describe("quality task adapter", () => {
+       "effect-fn",
+       "--check",
+       "--include",
+-      "packages/demo/src/index.ts",
++      "packages/demo/src/index.ts,packages/demo/test/Example.test.ts,packages/ecosystem/demo/src/index.ts",
+     ]);
+     expect(steps.find((step) => step.label === "lint:terse-effect")?.args).toContain("--advisory");
+     expect(steps.find((step) => step.label === "lint:allowlist")?.args).toEqual([
+@@ -1155,7 +1160,7 @@ describe("quality task adapter", () => {
+       "allowlist-check",
+     ]);
+     expect(steps.find((step) => step.label === "lint:package-test-imports")?.args).toContain(
+-      "packages/demo/src/index.ts,README.md"
++      "packages/demo/test/Example.test.ts"
+     );
+     expect(steps.find((step) => step.label === "lint:ecosystem-polarity")?.args).toEqual([
+       "run",
+@@ -1163,10 +1168,24 @@ describe("quality task adapter", () => {
+       "lint",
+       "ecosystem-polarity",
+       "--include",
+-      "packages/demo/src/index.ts,README.md",
++      "packages/ecosystem/demo/src/index.ts",
+     ]);
+   });
+ 
++  it("omits empty changed-scope policy steps instead of constructing empty includes", () => {
++    const steps = rootLintPolicyStepsForTesting("/repo", ["docs/README.md"]);
++    const labels = A.map(steps, (step) => step.label);
++
++    expect(labels).not.toContain("lint:effect-imports");
++    expect(labels).not.toContain("lint:terse-effect");
++    expect(labels).not.toContain("lint:effect-fn");
++    expect(labels).not.toContain("lint:frozen-grant-set");
++    expect(labels).not.toContain("lint:native-runtime");
++    expect(labels).not.toContain("lint:ecosystem-polarity");
++    expect(labels).not.toContain("lint:package-test-imports");
++    expect(A.some(steps, (step) => A.some(step.args, Str.equivalence("")))).toBe(false);
++  });
++
+   it("runs repo-wide root lint policy with hosted-stable concurrency", () =>
+     Effect.runPromise(
+       withTempRepo(
