@@ -15,8 +15,7 @@ import { execFileSync } from "node:child_process";
  *   - setup:     PRODUCT.md / DESIGN.md presence and whether code exists
  *   - critique:  the latest cached critique score (.impeccable/critique)
  *   - git:       branch + files changed vs the default branch (a scope hint)
- *   - devServer: whether this project's local dev server is registered with
- *                Portless, or answers on a common port when Portless is unused
+ *   - devServer: whether a local dev server answers on a common port (gates live)
  */
 import fs from "node:fs";
 import net from "node:net";
@@ -209,55 +208,6 @@ function gitSignals(cwd) {
 
 const COMMON_DEV_PORTS = [4321, 3000, 5173, 5174, 8080, 8000, 4200];
 
-function configuredPortlessNames(cwd) {
-  let packagePaths = ["package.json"];
-  try {
-    packagePaths = execFileSync("git", ["ls-files", "package.json", "**/package.json"], {
-      cwd,
-      encoding: "utf-8",
-      stdio: ["ignore", "pipe", "ignore"],
-    })
-      .split("\n")
-      .filter(Boolean);
-  } catch {
-    // A non-git project can still have a root Portless script.
-  }
-
-  const names = new Set();
-  for (const packagePath of packagePaths) {
-    try {
-      const manifest = JSON.parse(fs.readFileSync(path.join(cwd, packagePath), "utf-8"));
-      for (const script of Object.values(manifest.scripts || {})) {
-        if (typeof script !== "string") continue;
-        const match = script.match(/(?:^|&&|\|\||;)\s*(?:bunx\s+|npx\s+)?portless\s+(?!run\b)([a-z0-9][a-z0-9.-]*)\b/i);
-        if (match) names.add(match[1].toLowerCase());
-      }
-    } catch {
-      // Ignore malformed or concurrently removed manifests.
-    }
-  }
-  return [...names];
-}
-
-function activePortlessUrls(cwd, names) {
-  try {
-    const output = execFileSync("portless", ["list"], {
-      cwd,
-      encoding: "utf-8",
-      stdio: ["ignore", "pipe", "ignore"],
-      timeout: 1000,
-    });
-    const urls = [...output.matchAll(/https?:\/\/([a-z0-9.-]+)(?::\d+)?\s+->/gi)];
-    return urls
-      .filter(([, hostname]) =>
-        names.some((name) => hostname === `${name}.localhost` || hostname.endsWith(`.${name}.localhost`))
-      )
-      .map(([url]) => url.split(/\s+/)[0]);
-  } catch {
-    return [];
-  }
-}
-
 function probePort(port, timeout = 250) {
   return new Promise((resolve) => {
     const sock = new net.Socket();
@@ -280,13 +230,7 @@ function probePort(port, timeout = 250) {
   });
 }
 
-async function devServerSignals(cwd) {
-  const portlessNames = configuredPortlessNames(cwd);
-  if (portlessNames.length > 0) {
-    const urls = activePortlessUrls(cwd, portlessNames);
-    return { running: urls.length > 0, ports: [], urls, via: "portless" };
-  }
-
+async function devServerSignals() {
   const open = [];
   await Promise.all(
     COMMON_DEV_PORTS.map(async (p) => {
@@ -294,7 +238,7 @@ async function devServerSignals(cwd) {
     })
   );
   open.sort((a, b) => a - b);
-  return { running: open.length > 0, ports: open, urls: [], via: "common-ports" };
+  return { running: open.length > 0, ports: open };
 }
 
 // Extensions the detector scans (mirrors the engine's walkDir set + HTML).
@@ -374,7 +318,7 @@ export async function gatherSignals(cwd = process.cwd()) {
     },
     critique: { latest: latestCritique(cwd) },
     git,
-    devServer: await devServerSignals(cwd),
+    devServer: await devServerSignals(),
     scan: scanTargets(cwd, git),
   };
 }
