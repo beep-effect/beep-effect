@@ -1,0 +1,553 @@
+diff --git a/.changeset/todox-init.md b/.changeset/todox-init.md
+new file mode 100644
+index 0000000000..db4588f8b5
+--- /dev/null
++++ b/.changeset/todox-init.md
+@@ -0,0 +1,5 @@
++---
++"@beep/todox": patch
++---
++
++Scaffold the minimal Todox Next.js app and its Vercel deployment configuration.
+diff --git a/apps/todox/AGENTS.md b/apps/todox/AGENTS.md
+new file mode 100644
+index 0000000000..e009ca8838
+--- /dev/null
++++ b/apps/todox/AGENTS.md
+@@ -0,0 +1,12 @@
++# @beep/todox
++
++Minimal Next.js app
++
++## Surface
++
++- Next.js app router entry points live in `src/app`; keep app internals app-local through `@/*`.
++- This app publishes no `@beep/todox` source exports — do not add package root exports or docgen unless it is intentionally converted to a runtime proof package.
++
++## Laws
++
++- Root `AGENTS.md` and `standards/ARCHITECTURE.md` govern this app; record only genuinely app-specific deltas here.
+diff --git a/apps/todox/CLAUDE.md b/apps/todox/CLAUDE.md
+new file mode 120000
+index 0000000000..47dc3e3d86
+--- /dev/null
++++ b/apps/todox/CLAUDE.md
+@@ -0,0 +1 @@
++AGENTS.md
+\ No newline at end of file
+diff --git a/apps/todox/LICENSE b/apps/todox/LICENSE
+new file mode 100644
+index 0000000000..32e9053973
+--- /dev/null
++++ b/apps/todox/LICENSE
+@@ -0,0 +1,21 @@
++MIT License
++
++Copyright (c) 2026 beep-effect
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
+diff --git a/apps/todox/README.md b/apps/todox/README.md
+new file mode 100644
+index 0000000000..9975c815ed
+--- /dev/null
++++ b/apps/todox/README.md
+@@ -0,0 +1,18 @@
++# @beep/todox
++
++Minimal Next.js app
++
++## Development
++
++```bash
++bun run dev
++bun run check
++bun run test
++bun run lint
++```
++
++This workspace is a runtime app, not a public TypeScript package. Keep app internals behind `@/*`; promote reusable contracts and domain code to slice or shared packages.
++
++## License
++
++MIT
+diff --git a/apps/todox/next.config.ts b/apps/todox/next.config.ts
+new file mode 100644
+index 0000000000..cb651cdc00
+--- /dev/null
++++ b/apps/todox/next.config.ts
+@@ -0,0 +1,5 @@
++import type { NextConfig } from "next";
++
++const nextConfig: NextConfig = {};
++
++export default nextConfig;
+diff --git a/apps/todox/package.json b/apps/todox/package.json
+new file mode 100644
+index 0000000000..400bbf702f
+--- /dev/null
++++ b/apps/todox/package.json
+@@ -0,0 +1,46 @@
++{
++  "name": "@beep/todox",
++  "version": "0.0.0",
++  "description": "Minimal Next.js app",
++  "license": "MIT",
++  "private": true,
++  "type": "module",
++  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/apps/todox",
++  "repository": {
++    "type": "git",
++    "url": "git@github.com:beep-effect/beep-effect.git",
++    "directory": "apps/todox"
++  },
++  "scripts": {
++    "audit": "bun run --if-present beep:audit",
++    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
++    "beep:build": "next build --turbopack",
++    "beep:check": "tsgo -p tsconfig.check.json",
++    "beep:lint": "biome check .",
++    "beep:lint:fix": "biome check . --write",
++    "beep:test": "bunx --bun vitest run",
++    "build": "bun run beep:build",
++    "check": "bun run beep:check",
++    "codegen": "echo 'no codegen needed'",
++    "coverage": "bunx vitest run --coverage",
++    "dev": "portless todox.beep next dev --turbopack",
++    "lint": "bun run beep:lint",
++    "lint:fix": "bun run beep:lint:fix",
++    "start": "next start",
++    "test": "bun run beep:test"
++  },
++  "dependencies": {
++    "next": "catalog:",
++    "react": "catalog:",
++    "react-dom": "catalog:"
++  },
++  "devDependencies": {
++    "@testing-library/dom": "catalog:",
++    "@testing-library/react": "catalog:",
++    "@types/node": "catalog:",
++    "@types/react": "catalog:",
++    "@types/react-dom": "catalog:",
++    "jsdom": "catalog:",
++    "typescript": "catalog:"
++  }
++}
+diff --git a/apps/todox/src/app/globals.css b/apps/todox/src/app/globals.css
+new file mode 100644
+index 0000000000..cc9a3fd963
+--- /dev/null
++++ b/apps/todox/src/app/globals.css
+@@ -0,0 +1,9 @@
++:root {
++  color: #171717;
++  background: #f7f7f3;
++  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
++}
++
++body {
++  margin: 0;
++}
+diff --git a/apps/todox/src/app/layout.tsx b/apps/todox/src/app/layout.tsx
+new file mode 100644
+index 0000000000..b0699d694e
+--- /dev/null
++++ b/apps/todox/src/app/layout.tsx
+@@ -0,0 +1,16 @@
++import type { Metadata } from "next";
++import type { ReactNode } from "react";
++import "./globals.css";
++
++export const metadata: Metadata = {
++  title: "@beep/todox",
++  description: "Minimal Next.js app",
++};
++
++export default function RootLayout({ children }: { readonly children: ReactNode }) {
++  return (
++    <html lang="en">
++      <body>{children}</body>
++    </html>
++  );
++}
+diff --git a/apps/todox/src/app/page.tsx b/apps/todox/src/app/page.tsx
+new file mode 100644
+index 0000000000..2050b49285
+--- /dev/null
++++ b/apps/todox/src/app/page.tsx
+@@ -0,0 +1,7 @@
++export default function Home() {
++  return (
++    <main>
++      <h1>@beep/todox</h1>
++    </main>
++  );
++}
+diff --git a/apps/todox/test/app.test.tsx b/apps/todox/test/app.test.tsx
+new file mode 100644
+index 0000000000..218e9f10d2
+--- /dev/null
++++ b/apps/todox/test/app.test.tsx
+@@ -0,0 +1,11 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it } from "vitest";
++import Home from "@/app/page";
++
++describe("@beep/todox", () => {
++  it("renders the starter page", () => {
++    render(<Home />);
++
++    expect(screen.getByRole("heading", { name: "@beep/todox" })).toBeDefined();
++  });
++});
+diff --git a/apps/todox/tsconfig.check.json b/apps/todox/tsconfig.check.json
+new file mode 100644
+index 0000000000..7be20c8e8f
+--- /dev/null
++++ b/apps/todox/tsconfig.check.json
+@@ -0,0 +1,15 @@
++{
++  "$schema": "https://json.schemastore.org/tsconfig",
++  "extends": "./tsconfig.json",
++  "references": [],
++  "compilerOptions": {
++    "composite": false,
++    "declaration": false,
++    "declarationMap": false,
++    "incremental": false,
++    "noEmit": true,
++    "module": "ESNext",
++    "moduleResolution": "Bundler",
++    "rootDir": "../../."
++  }
++}
+diff --git a/apps/todox/tsconfig.json b/apps/todox/tsconfig.json
+new file mode 100644
+index 0000000000..cfafb0c9d2
+--- /dev/null
++++ b/apps/todox/tsconfig.json
+@@ -0,0 +1,153 @@
++{
++  "$schema": "https://json.schemastore.org/tsconfig",
++  "extends": "../../tsconfig.base.json",
++  "include": [
++    "next-env.d.ts",
++    "src",
++    "test",
++    ".next/types/**/*.ts",
++    ".next/dev/types/**/*.ts",
++    "next.config.ts",
++    "vitest.config.ts",
++    "../../vitest.shared.ts",
++    "../../vitest.aliases.generated.json"
++  ],
++  "compilerOptions": {
++    "lib": ["dom", "dom.iterable", "esnext"],
++    "types": ["node"],
++    "allowJs": false,
++    "noEmit": true,
++    "esModuleInterop": true,
++    "module": "esnext",
++    "moduleResolution": "bundler",
++    "resolveJsonModule": true,
++    "isolatedModules": true,
++    "incremental": true,
++    "jsx": "react-jsx",
++    "plugins": [
++      {
++        "name": "@effect/language-service",
++        "namespaceImportPackages": ["effect", "@effect/*", "@beep/*"],
++        "ignoreEffectSuggestionsInTscExitCode": false,
++        "ignoreEffectWarningsInTscExitCode": false,
++        "ignoreEffectErrorsInTscExitCode": false,
++        "includeSuggestionsInTsc": true,
++        "skipDisabledOptimization": false,
++        "effectFn": ["span", "inferred-span", "suggested-span"],
++        "importAliases": {
++          "Array": "A",
++          "Option": "O",
++          "Predicate": "P",
++          "Record": "R",
++          "Schema": "S",
++          "Equal": "Eq"
++        },
++        "diagnosticSeverity": {
++          "abortControllerInEffect": "error",
++          "anyUnknownInErrorContext": "error",
++          "asyncFunction": "error",
++          "catchAllToMapError": "error",
++          "catchChainToFirstSuccessOf": "error",
++          "catchTagToCatchReason": "error",
++          "catchToIgnore": "error",
++          "catchToOrElseSucceed": "error",
++          "catchUnfailableEffect": "error",
++          "classSelfMismatch": "error",
++          "cryptoRandomUUID": "error",
++          "cryptoRandomUUIDInEffect": "error",
++          "deterministicKeys": "error",
++          "duplicatePackage": "error",
++          "effectDoNotation": "error",
++          "effectFnIife": "error",
++          "effectFnImplicitAny": "error",
++          "effectFnOpportunity": "error",
++          "effectGenUsesAdapter": "error",
++          "effectInFailure": "error",
++          "effectInVoidSuccess": "error",
++          "effectMapFlatten": "error",
++          "effectMapVoid": "error",
++          "effectSucceedWithVoid": "error",
++          "extendsNativeError": "error",
++          "flatMapToMap": "error",
++          "floatingEffect": "error",
++          "floatingEffectInVitest": "error",
++          "genericEffectServices": "error",
++          "globalConsole": "error",
++          "globalConsoleInEffect": "error",
++          "globalDate": "error",
++          "globalDateInEffect": "error",
++          "globalErrorInEffectCatch": "error",
++          "globalErrorInEffectFailure": "error",
++          "globalFetch": "error",
++          "globalFetchInEffect": "error",
++          "globalRandom": "error",
++          "globalRandomInEffect": "error",
++          "globalTimers": "error",
++          "globalTimersInEffect": "error",
++          "instanceOfSchema": "error",
++          "layerMergeAllWithDependencies": "error",
++          "lazyEffect": "error",
++          "lazyPromiseInEffectSync": "error",
++          "leakingRequirements": "error",
++          "missedPipeableOpportunity": "error",
++          "missingEffectContext": "error",
++          "missingEffectError": "error",
++          "missingEffectServiceDependency": "error",
++          "missingLayerContext": "error",
++          "missingPipeableSignature": "error",
++          "missingReturnYieldStar": "error",
++          "missingStarInYieldEffectGen": "error",
++          "multipleCatchTag": "error",
++          "multipleEffectProvide": "error",
++          "nestedEffectGenYield": "error",
++          "newPromise": "error",
++          "newSchemaClass": "error",
++          "nodeBuiltinImport": "error",
++          "nonObjectEffectServiceType": "error",
++          "outdatedApi": "error",
++          "overriddenSchemaConstructor": "error",
++          "preferSchemaOverJson": "error",
++          "preferSchemaTypeProperty": "error",
++          "preferTypedSchemaDecoder": "error",
++          "preferUnsafeConstructor": "error",
++          "processEnv": "error",
++          "processEnvInEffect": "error",
++          "promiseInEffectSuccess": "error",
++          "redundantOrDie": "error",
++          "redundantMapError": "error",
++          "redundantSchemaTagIdentifier": "error",
++          "returnEffectInGen": "error",
++          "runEffectInsideEffect": "error",
++          "schemaLiteralNonFinite": "error",
++          "schemaNumber": "error",
++          "schemaOpaqueInstanceMember": "error",
++          "schemaStructWithTag": "error",
++          "schemaSyncInEffect": "error",
++          "schemaUnionOfLiterals": "error",
++          "scopeInLayerEffect": "error",
++          "serviceNotAsClass": "error",
++          "strictBooleanExpressions": "error",
++          "strictEffectProvide": "error",
++          "syncToSucceed": "error",
++          "tryCatchInEffectGen": "error",
++          "unknownInEffectCatch": "error",
++          "unnecessaryArrowBlock": "error",
++          "unnecessaryEffectGen": "error",
++          "unnecessaryFailYieldableError": "error",
++          "unnecessaryPipe": "error",
++          "unnecessaryPipeChain": "error",
++          "unnecessaryTypeofType": "error",
++          "unsafeEffectTypeAssertion": "error"
++        }
++      },
++      {
++        "name": "next"
++      }
++    ],
++    "paths": {
++      "@/*": ["./src/*"]
++    },
++    "outDir": "dist",
++    "rootDir": "../.."
++  }
++}
+diff --git a/apps/todox/vercel.json b/apps/todox/vercel.json
+new file mode 100644
+index 0000000000..c8bc9945b3
+--- /dev/null
++++ b/apps/todox/vercel.json
+@@ -0,0 +1,5 @@
++{
++  "$schema": "https://openapi.vercel.sh/vercel.json",
++  "installCommand": "cd ../.. && rm -rf node_modules && npx --yes bun@1.4.0 install --frozen-lockfile",
++  "buildCommand": "cd ../.. && npx --yes bun@1.4.0 run --cwd apps/todox build"
++}
+diff --git a/apps/todox/vitest.config.ts b/apps/todox/vitest.config.ts
+new file mode 100644
+index 0000000000..9ed5cef1ee
+--- /dev/null
++++ b/apps/todox/vitest.config.ts
+@@ -0,0 +1,18 @@
++import { fileURLToPath } from "node:url";
++import { defineConfig, mergeConfig } from "vitest/config";
++import shared from "../../vitest.shared.ts";
++
++export default mergeConfig(
++  shared,
++  defineConfig({
++    resolve: {
++      alias: {
++        "@": fileURLToPath(new URL("./src", import.meta.url)),
++      },
++    },
++    test: {
++      environment: "jsdom",
++      include: ["test/**/*.test.{ts,tsx}"],
++    },
++  })
++);
+diff --git a/bun.lock b/bun.lock
+index fdff45417a..8d8f6bc92f 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -329,6 +329,24 @@
+         "vitest": "catalog:",
+       },
+     },
++    "apps/todox": {
++      "name": "@beep/todox",
++      "version": "0.0.0",
++      "dependencies": {
++        "next": "catalog:",
++        "react": "catalog:",
++        "react-dom": "catalog:",
++      },
++      "devDependencies": {
++        "@testing-library/dom": "catalog:",
++        "@testing-library/react": "catalog:",
++        "@types/node": "catalog:",
++        "@types/react": "catalog:",
++        "@types/react-dom": "catalog:",
++        "jsdom": "catalog:",
++        "typescript": "catalog:",
++      },
++    },
+     "infra": {
+       "name": "@beep/infra",
+       "version": "0.0.4",
+@@ -3496,6 +3514,8 @@
+ 
+     "@beep/tika": ["@beep/tika@workspace:packages/drivers/tika"],
+ 
++    "@beep/todox": ["@beep/todox@workspace:apps/todox"],
++
+     "@beep/trustgraph-workbench": ["@beep/trustgraph-workbench@workspace:apps/labs/trustgraph-workbench"],
+ 
+     "@beep/tsgo-shim": ["@beep/tsgo-shim@workspace:tools/tsgo-shim"],
+diff --git a/package.json b/package.json
+index f035ed3d49..91b31a7eca 100644
+--- a/package.json
++++ b/package.json
+@@ -480,7 +480,8 @@
+     "packages/drivers/obs",
+     "packages/drivers/exiftool",
+     "packages/drivers/gov-legal-mcp",
+-    "packages/drivers/openai"
++    "packages/drivers/openai",
++    "apps/todox"
+   ],
+   "dependencies": {
+     "brace-expansion": "^5.0.9",
+diff --git a/packages/foundation/modeling/identity/src/packages.ts b/packages/foundation/modeling/identity/src/packages.ts
+index db95573984..3db004aa1a 100644
+--- a/packages/foundation/modeling/identity/src/packages.ts
++++ b/packages/foundation/modeling/identity/src/packages.ts
+@@ -191,7 +191,7 @@ const generatedComposers = $I.compose(
+   "skill-contract",
+   "codegen-kit",
+   "brand",
+-  "openai"
++  "openai", "todox"
+ );
+ 
+ // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+@@ -2549,3 +2549,20 @@ export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = composers.$Bra
+  * @since 0.0.0
+  */
+ export const $OpenaiId: Identity.IdentityComposer<"@beep/openai"> = composers.$OpenaiId;
++
++/**
++ * Identity composer for `@beep/todox`.
++ *
++ * **Example** (Make package ID)
++ *
++ * ```ts import.meta.vitest name="Make package ID"
++ * import { $TodoxId } from "@beep/identity"
++ *
++ * const id = $TodoxId.make("Todox")
++ * void id
++ * ```
++ *
++ * @category configuration
++ * @since 0.0.0
++ */
++export const $TodoxId: Identity.IdentityComposer<"@beep/todox"> = composers.$TodoxId;
+diff --git a/scratchpad/partners/1740162647975.jpeg b/scratchpad/partners/1740162647975.jpeg
+new file mode 100644
+index 0000000000..cad4772a97
+Binary files /dev/null and b/scratchpad/partners/1740162647975.jpeg differ
+diff --git a/scratchpad/partners/BENJAMIN.jpeg b/scratchpad/partners/BENJAMIN.jpeg
+new file mode 100644
+index 0000000000..44805e462e
+Binary files /dev/null and b/scratchpad/partners/BENJAMIN.jpeg differ
+diff --git a/syncpack.config.ts b/syncpack.config.ts
+index 8631aad598..88c02b79d7 100644
+--- a/syncpack.config.ts
++++ b/syncpack.config.ts
+@@ -107,6 +107,7 @@ const config = {
+     "packages/drivers/exiftool/package.json",
+     "packages/drivers/gov-legal-mcp/package.json",
+     "packages/drivers/openai/package.json",
++    "apps/todox/package.json",
+   ],
+   customTypes: {
+     catalog: {
+diff --git a/tsconfig.packages.json b/tsconfig.packages.json
+index e486f9213d..7f9c346cf0 100644
+--- a/tsconfig.packages.json
++++ b/tsconfig.packages.json
+@@ -21,6 +21,9 @@
+     {
+       "path": "apps/storybook"
+     },
++    {
++      "path": "apps/todox"
++    },
+     {
+       "path": "infra"
+     },
