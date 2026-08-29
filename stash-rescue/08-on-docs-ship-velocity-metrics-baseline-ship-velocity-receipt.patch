@@ -1,0 +1,14 @@
+diff --git a/goals/ship-velocity/research/OPPORTUNITIES.md b/goals/ship-velocity/research/OPPORTUNITIES.md
+index db02cbd40d..08f574ddef 100644
+--- a/goals/ship-velocity/research/OPPORTUNITIES.md
++++ b/goals/ship-velocity/research/OPPORTUNITIES.md
+@@ -36,3 +36,9 @@ session/machine ids.
+   packages (@beep/ui, @beep/box, @beep/xai) in one run — the environmental native-compiler flake
+   class, live receipt for the SPEC's TS2589 class-aware arbitration item; the verdict again
+   surfaced the misattributed OSV hint alongside it.
++- `yeet status` on the metrics-baseline PR flagged `goals-doctor (baseline)` stale because
++  `goals/ship-velocity/PLAN.md` had a newer mtime than `goals/goals-doctor.baseline.jsonc`;
++  running the prescribed `beep goals doctor --write-baseline` produced zero content change —
++  the gate compares timestamps, not content, so any packet-doc edit forces a no-op regen step.
++  Prevention candidate: staleness gates on derived baselines should compare content hashes
++  (or the doctor's finding-key set) before prescribing a regen.
