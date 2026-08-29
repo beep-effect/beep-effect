@@ -73,6 +73,9 @@
   "files": [
     "src/**/*.ts",
     "!src/test/**/*.ts",
+    "python/photo-face/**",
+    "!python/photo-face/.venv/**",
+    "!python/photo-face/**/__pycache__/**",
     "src/commands/CreatePackage/templates/**/*.hbs",
     "src/commands/CreatePackage/templates/assets/**",
     "dist/**/*.js",

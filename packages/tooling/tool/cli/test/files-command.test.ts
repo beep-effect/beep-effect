@@ -20,6 +20,7 @@ import {
   ImageCurationDecisionDocument,
   ImageCurationManifest,
   NormalizeManifest,
+  PersonMatchReport,
   ProcessFilesOptions,
   processFiles,
   renderFilesProgressBar,
@@ -54,6 +55,7 @@ const decodeChildArtifactRecord = S.decodeUnknownEffect(S.fromJsonString(ChildAr
 const decodeFileProcessingCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary));
 const decodeFileProcessingFailureRecord = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
 const decodeNormalizeManifest = S.decodeUnknownSync(S.fromJsonString(NormalizeManifest));
+const decodePersonMatchReport = S.decodeUnknownEffect(S.fromJsonString(PersonMatchReport));
 const decodeProcessRunManifest = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const decodeSourceProcessingRecord = S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
 const encodeDetectBordersReport = S.encodeUnknownEffect(S.fromJsonString(DetectBordersReport));
@@ -269,6 +271,12 @@ const readDetectFacesManifest = Effect.fn("FilesTest.readDetectFacesManifest")(f
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(filePath);
   return yield* decodeDetectFacesReport(content).pipe(Effect.mapError(filesTestError));
+});
+
+const readPersonMatchManifest = Effect.fn("FilesTest.readPersonMatchManifest")(function* (filePath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const content = yield* fs.readFileString(filePath);
+  return yield* decodePersonMatchReport(content).pipe(Effect.mapError(filesTestError));
 });
 
 const writeInsetCanvasImage = Effect.fn("FilesTest.writeInsetCanvasImage")(function* (
@@ -1352,6 +1360,154 @@ describe("files command", { concurrent: false }, () => {
           expect(report.manifestWritten).toBe(true);
           expect(manifest.schemaVersion).toBe("beep.files.detect-faces.v1");
           expect(manifest.manifestWritten).toBe(true);
+        })
+      )
+    ));
+
+  it("matches a person through the local worker boundary and copies only accepted review lanes", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          const outDir = path.join(tmpDir, "matched");
+          const uvPath = path.join(tmpDir, "uv");
+          const soloPath = path.join(candidateDir, "solo.jpg");
+          const groupPath = path.join(candidateDir, "group.jpg");
+          const otherPath = path.join(candidateDir, "other.jpg");
+          const referencePath = path.join(referenceDir, "reference.jpg");
+
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* fs.writeFileString(soloPath, "solo source");
+          yield* fs.writeFileString(groupPath, "group source");
+          yield* fs.writeFileString(otherPath, "other source");
+          yield* fs.writeFileString(referencePath, "reference source");
+
+          const face = (matchScore: number) => ({
+            box: { x1: 10, y1: 20, x2: 110, y2: 140 },
+            detectionScore: 0.99,
+            faceAreaPct: 15,
+            matchScore,
+            centroidScore: matchScore,
+            top3MedianScore: matchScore,
+            bestReferenceScore: matchScore,
+            bestReferenceName: "reference.jpg",
+            qualityFlags: [],
+          });
+          const workerReport = {
+            schemaVersion: "beep.files.match-person.worker.v1",
+            ok: true,
+            model: {
+              name: "buffalo_l",
+              packageVersion: "1.0.1",
+              providers: ["CPUExecutionProvider"],
+              allowedModules: ["detection", "recognition"],
+              root: path.join(cacheDir, "insightface"),
+              artifacts: [
+                {
+                  name: "det_10g.onnx",
+                  path: path.join(cacheDir, "insightface", "models", "buffalo_l", "det_10g.onnx"),
+                  sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                },
+              ],
+            },
+            parameters: {
+              detectionThreshold: 0.6,
+              matchThreshold: 0.5,
+              reviewThreshold: 0.35,
+              minFaceAreaPct: 1,
+              recursive: false,
+            },
+            references: [
+              {
+                sourceName: "reference.jpg",
+                sourcePath: referencePath,
+                accepted: true,
+                faceCount: 1,
+                detectionScore: 0.99,
+              },
+            ],
+            entries: [
+              {
+                sourceName: "group.jpg",
+                sourcePath: groupPath,
+                relativePath: "group.jpg",
+                disposition: "group-match",
+                faceCount: 2,
+                bestScore: 0.72,
+                faces: [face(0.72), face(0.1)],
+              },
+              {
+                sourceName: "other.jpg",
+                sourcePath: otherPath,
+                relativePath: "other.jpg",
+                disposition: "no-match",
+                faceCount: 1,
+                bestScore: 0.1,
+                faces: [face(0.1)],
+              },
+              {
+                sourceName: "solo.jpg",
+                sourcePath: soloPath,
+                relativePath: "solo.jpg",
+                disposition: "solo-match",
+                faceCount: 1,
+                bestScore: 0.81,
+                faces: [face(0.81)],
+              },
+            ],
+            summary: {
+              totalCount: 3,
+              soloMatchCount: 1,
+              groupMatchCount: 1,
+              lowQualityMatchCount: 0,
+              reviewCount: 0,
+              noMatchCount: 1,
+              noFaceCount: 0,
+              acceptedReferenceCount: 1,
+              rejectedReferenceCount: 0,
+            },
+            elapsedSeconds: 0.25,
+          };
+
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${JSON.stringify(workerReport)}'\n`);
+          yield* fs.chmod(uvPath, 0o755);
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              manifestPath,
+              "--out-dir",
+              outDir,
+              "--accept-model-license",
+              "--json",
+            ])
+          );
+
+          const report = yield* readPersonMatchManifest(manifestPath);
+          expect(report.schemaVersion).toBe("beep.files.match-person.v1");
+          expect(report.summary).toMatchObject({ groupMatchCount: 1, noMatchCount: 1, soloMatchCount: 1 });
+          expect(report.model.providers).toEqual(["CPUExecutionProvider"]);
+          expect(report.outputDirectory).toBe(outDir);
+          expect(yield* fs.readFileString(path.join(outDir, "accepted", "solo.jpg"))).toBe("solo source");
+          expect(yield* fs.readFileString(path.join(outDir, "group-review", "group.jpg"))).toBe("group source");
+          expect(yield* fs.exists(path.join(outDir, "accepted", "other.jpg"))).toBe(false);
+          expect(yield* fs.readFileString(soloPath)).toBe("solo source");
+          expect(yield* fs.readFileString(groupPath)).toBe("group source");
+          expect(yield* fs.readFileString(otherPath)).toBe("other source");
         })
       )
     ));

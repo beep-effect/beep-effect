@@ -100,6 +100,7 @@ import {
 } from "./internal/Apply.ts";
 import { runFlattenMediaFiles } from "./internal/FlattenMedia.ts";
 import { auditImagesImpl, curateImagesImpl } from "./internal/ImageCuration.ts";
+import { runMatchPerson } from "./internal/MatchPerson.ts";
 import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
 import { processFilesImpl } from "./internal/Process.ts";
 import {
@@ -138,10 +139,12 @@ import type {
   ImageAuditOptions,
   ImageCurationOptions,
   ImageCurationSummary,
+  MatchPersonOptions,
   MediaDimensions,
   MediaKind,
   NormalizeImageFormat,
   NormalizeSkippedReason,
+  PersonMatchReport,
   PositiveMediaDimension,
   ProcessFilesOptions,
   ProcessFilesSummary,
@@ -252,6 +255,13 @@ export interface FilesCommandServiceShape {
    * @since 0.0.0
    */
   readonly flattenMediaFiles: (options: FlattenMediaOptions) => Effect.Effect<FlattenMediaSummary, FilesCommandError>;
+
+  /**
+   * Match a trusted target person across a local photo collection.
+   *
+   * @since 0.0.0
+   */
+  readonly matchPerson: (options: MatchPersonOptions) => Effect.Effect<PersonMatchReport, FilesCommandError>;
 
   /**
    * Normalize direct image files into a reversible output directory.
@@ -1741,6 +1751,7 @@ export const printFilesIndex = printLines([
   "- bun run files archive-poor-candidates --dir ./dataset/images --archive-dir ./dataset/rejected",
   "- bun run files detect-borders --dir ./tmp",
   "- bun run files detect-faces --dir ./dataset/images --model ./face_detection_yunet.onnx",
+  "- bun run files match-person --references ./known-person --dir ./mixed --manifest ./person-match.json --accept-model-license",
   "- bun run files crop-borders --dir ./tmp --dry-run",
 ]);
 
@@ -2490,6 +2501,9 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
     flattenMediaFiles: Effect.fn("FilesCommandService.flattenMediaFiles")((options) =>
       flattenMediaFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
+    matchPerson: Effect.fn("FilesCommandService.matchPerson")((options) =>
+      runMatchPerson(options).pipe(Effect.provide(runtimeContext))
+    ),
     normalizeFiles: Effect.fn("FilesCommandService.normalizeFiles")((options) =>
       normalizeFilesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -2710,6 +2724,35 @@ export const flattenMediaFiles = Effect.fn("Files.flattenMediaFiles")(function* 
 ): Effect.fn.Return<FlattenMediaSummary, FilesCommandError, FilesCommandService> {
   const files = yield* FilesCommandService;
   return yield* files.flattenMediaFiles(options);
+});
+
+/**
+ * Match a trusted target person across a local photo collection.
+ *
+ * **Details**
+ *
+ * The operation runs the pinned InsightFace worker locally, writes a
+ * schema-versioned manifest without embeddings, and optionally copies
+ * accepted or review candidates without mutating source photos.
+ *
+ * **Example** (Match one person)
+ *
+ * ```ts
+ * import { matchPerson } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof matchPerson = matchPerson
+ * ```
+ *
+ * @param options - Reference, candidate, threshold, cache, and output options.
+ * @returns The completed person-match report.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const matchPerson = Effect.fn("Files.matchPerson")(function* (
+  options: MatchPersonOptions
+): Effect.fn.Return<PersonMatchReport, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.matchPerson(options);
 });
 
 /**

@@ -235,8 +235,63 @@ The package binary works the same way:
 bunx @beep/repo-cli files <subcommand> [options]
 ```
 
-Except for `flatten-media`, `files` subcommands work on direct children of
-`--dir`; they do not recurse into nested directories.
+Except for `flatten-media` and an explicitly recursive `match-person` run,
+`files` subcommands work on direct children of `--dir`; they do not recurse
+into nested directories.
+
+#### `files match-person`
+
+Find photos containing one target person using a trusted directory of
+single-person reference photos. Matching is fully local: the command runs the
+InsightFace `buffalo_l` SCRFD detector and ArcFace recognizer through a pinned
+Python 3.12/ONNX Runtime CPU environment, never uploads photos, and never writes
+raw face embeddings to disk.
+
+```bash
+bun run files match-person \
+  --references ./known-person \
+  --dir ./mixed-photos \
+  --manifest ./person-match.json \
+  --out-dir ./person-match-output \
+  --accept-model-license
+```
+
+The InsightFace source code is MIT-licensed, but its published model weights
+are restricted to non-commercial research use. The command refuses to acquire
+or run `buffalo_l` unless `--accept-model-license` is present. The first run
+creates an isolated `uv` environment and downloads the hash-verified model into
+`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`; neither is stored in the
+repository. Set `BEEP_UV_PATH` to an absolute trusted `uv` executable when it
+is not installed in a standard system location or `$HOME/.local/bin`.
+
+References must contain exactly one detected face. Use several clear photos
+covering different ages, expressions, lighting, eyewear, and hair styles. A
+candidate image is scored against a robust aggregate of all accepted reference
+faces; cosine similarity scores are model-specific measurements, not
+probabilities. The precision-first defaults are `0.50` for a match and `0.35`
+for the lower review boundary. Calibrate those thresholds against a labeled
+sample from the actual library before relying on a large scan.
+
+The source library is immutable. `--out-dir` only copies useful candidates into
+reviewable buckets while preserving their relative paths:
+
+| Bucket | Meaning |
+| --- | --- |
+| `accepted/` | One confident target face and no quality warning |
+| `group-review/` | The target appears with one or more other faces |
+| `quality-review/` | The target matches, but its face is small, blurry, dark, bright, or strongly turned |
+| `identity-review/` | Similarity falls between the review and match thresholds |
+
+No-match and no-face images remain only in the manifest. Existing manifest or
+copied files are preserved unless `--overwrite` is supplied. Add `--recursive`
+to scan nested candidate and reference directories, and `--json` to print the
+schema-versioned report after writing it.
+
+This is target-person verification, not a claim of Google Photos parity.
+Google can combine proprietary models and contextual album signals that are
+not available to a face-only open pipeline. For personal dataset curation,
+multiple trusted references plus a human-review band is the safer operating
+model.
 
 #### `files flatten-media`
 
