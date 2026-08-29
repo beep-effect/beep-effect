@@ -53,6 +53,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   readonly output: string;
   readonly killEndsStream: boolean;
   readonly pid?: number;
+  readonly isRunning?: boolean;
 }) {
   const closed = yield* Deferred.make<void>();
   const killCount = yield* Ref.make(0);
@@ -64,7 +65,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
     exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
     getInputFd: () => Sink.drain,
     getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
+    isRunning: Effect.succeed(options.isRunning ?? false),
     kill: () =>
       Ref.update(killCount, (count) => count + 1).pipe(
         Effect.andThen(options.killEndsStream ? Deferred.succeed(closed, void 0) : Effect.void),
@@ -179,7 +180,12 @@ describe("StepExec capture pipe lifecycle", () => {
 
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectory({ prefix: "step-exec-missing-proc-" });
-      const missing = yield* makeStuckSpawner({ output: "", killEndsStream: false, pid: 2_000_000_000 });
+      const missing = yield* makeStuckSpawner({
+        output: "",
+        killEndsStream: false,
+        pid: 2_000_000_000,
+        isRunning: true,
+      });
       yield* Deferred.succeed(missing.closed, void 0);
       const registrationFailure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
         withAdmissionWorkloadBinding(`${root}/workload`, "lease-proc"),
@@ -188,6 +194,23 @@ describe("StepExec capture pipe lifecycle", () => {
         Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
       );
       expect(registrationFailure.message).toContain("Failed to read process generation");
+    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+  );
+
+  it.live("preserves the exit result when a short-lived child is reaped before generation registration", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectory({ prefix: "step-exec-reaped-proc-" });
+      const reaped = yield* makeStuckSpawner({ output: "done", killEndsStream: false, pid: 2_000_000_000 });
+      yield* Deferred.succeed(reaped.closed, void 0);
+
+      const result = yield* runCaptured({ command: "fast-step", args: [] }).pipe(
+        withAdmissionWorkloadBinding(`${root}/workload`, "lease-reaped"),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, reaped.spawner),
+        Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
+      );
+
+      expect(result).toMatchObject({ exitCode: 0, output: "done" });
     }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
   );
 

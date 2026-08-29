@@ -653,17 +653,29 @@ const procStartFromStat = (text: string): string | undefined => {
 
 const registerAdmissionWorkload = Effect.fn("StepExec.registerAdmissionWorkload")(function* (
   configured: O.Option<ResolvedAdmissionWorkload>,
-  pid: ChildProcessSpawner.ProcessId
+  handle: ChildProcessSpawner.ChildProcessHandle
 ): Effect.fn.Return<void, AdmissionWorkloadRegistrationError> {
   if (O.isNone(configured) || configured.value.ownership === "inherited") return;
-  const processGroupId = PosInt.make(Number(pid));
+  const processGroupId = PosInt.make(Number(handle.pid));
   const stat = yield* Effect.tryPromise({
     try: () => Bun.file(`/proc/${processGroupId}/stat`).text(),
     catch: (cause) =>
       AdmissionWorkloadRegistrationError.make({
         message: `Failed to read process generation for ${processGroupId}: ${causeMessage(cause)}`,
       }),
-  });
+  }).pipe(
+    Effect.catch((error) =>
+      handle.isRunning.pipe(
+        Effect.mapError((cause) =>
+          AdmissionWorkloadRegistrationError.make({
+            message: `Failed to confirm process exit for ${processGroupId}: ${causeMessage(cause)}`,
+          })
+        ),
+        Effect.flatMap((isRunning) => (isRunning ? Effect.fail(error) : Effect.void))
+      )
+    )
+  );
+  if (stat === undefined) return;
   const procStart = procStartFromStat(stat);
   if (procStart === undefined) {
     return yield* AdmissionWorkloadRegistrationError.make({
@@ -713,7 +725,7 @@ const makeAdmittedChild = Effect.fn("StepExec.makeAdmittedChild")(function* (
     ...spawnFields(options, admission),
     ...stdio,
   });
-  yield* registerAdmissionWorkload(admission, handle.pid);
+  yield* registerAdmissionWorkload(admission, handle);
   return handle;
 });
 
@@ -936,7 +948,7 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
         stdout: "pipe",
         stderr: source === "stdout" ? "ignore" : "pipe",
       });
-      yield* registerAdmissionWorkload(admission, handle.pid);
+      yield* registerAdmissionWorkload(admission, handle);
       const deadline = capturePipeDeadline(handle, commandLine);
       const forceKillAfter = options.forceKillAfter ?? "1 second";
       const capture = Effect.all(
