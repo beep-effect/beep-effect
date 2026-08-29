@@ -677,6 +677,26 @@ export interface RunCaptured {
   >;
 }
 
+/**
+ * Runs a subprocess and captures its bounded output and exit status.
+ *
+ * **Example** (Capture a command result)
+ *
+ * ```ts
+ * import { runCaptured } from "@beep/repo-cli/internal/process"
+ *
+ * const result = runCaptured({
+ *   args: ["--version"],
+ *   command: "git",
+ *   source: "all",
+ *   trim: true
+ * })
+ * console.log(result)
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
 export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(function* <E, R>(
   options: RunCapturedOptions | RunCapturedWatchedOptions<E, R>
 ): Effect.fn.Return<

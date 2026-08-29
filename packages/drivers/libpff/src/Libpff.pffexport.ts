@@ -513,6 +513,49 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     stdout: "pipe",
   };
 
+  const resolvePffexportExecutable = Effect.fn("Libpff.pffexport.resolveExecutable")(function* () {
+    const candidate = path.isAbsolute(pffexportPath)
+      ? pffexportPath
+      : yield* Effect.scoped(
+          Effect.gen(function* () {
+            const handle = yield* spawner
+              .spawn(
+                ChildProcess.make(
+                  "/bin/sh",
+                  ["-c", 'command -v -- "$1"', "pffexport-resolver", pffexportPath],
+                  spawnOptions
+                )
+              )
+              .pipe(
+                Effect.mapError(() => makeLibpffError("engine-unavailable", { cause: "pffexport resolution failed" }))
+              );
+            const [stdout, , exitCode] = yield* Effect.all(
+              [captureBoundedProcessText(handle.stdout), drainStream(handle.stderr), handle.exitCode],
+              { concurrency: "unbounded" }
+            );
+            const resolved = Str.trim(stdout);
+            if (exitCode !== 0 || Str.isEmpty(resolved) || Str.includes("\n")(resolved)) {
+              return yield* makeLibpffError("engine-unavailable", { cause: "pffexport resolution failed" });
+            }
+            return resolved;
+          })
+        );
+    const absoluteCandidate = path.isAbsolute(candidate) ? candidate : path.resolve(candidate);
+    const canonical = yield* fs
+      .realPath(absoluteCandidate)
+      .pipe(Effect.mapError(() => makeLibpffError("engine-unavailable", { cause: "pffexport resolution failed" })));
+    const info = yield* fs
+      .stat(canonical)
+      .pipe(Effect.mapError(() => makeLibpffError("engine-unavailable", { cause: "pffexport resolution failed" })));
+    if (info.type !== "File") {
+      return yield* makeLibpffError("engine-unavailable", { cause: "pffexport is not a regular file" });
+    }
+    return canonical;
+  });
+
+  const resolvedPffexportPath = yield* resolvePffexportExecutable().pipe(Effect.option);
+  const hostPffexportPath = O.getOrElse(resolvedPffexportPath, () => pffexportPath);
+
   const sandboxRuntimeBinds = Effect.fn("Libpff.pffexport.sandboxRuntimeBinds")(function* () {
     const binds: Array<string> = [];
     for (const root of sandboxRuntimeRoots) {
@@ -533,21 +576,22 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       return yield* makeLibpffError("config", { cause: "sandbox target escaped export root" });
     }
     const sandboxTarget = `/output/${A.join(Str.split(path.sep)(relativeTarget), "/")}`;
-    const pffexportIsAbsolute = path.isAbsolute(pffexportPath);
-    const runtimeCoversPffexport =
-      pffexportIsAbsolute &&
-      A.some(sandboxRuntimeRoots, (root) => {
-        const relative = path.relative(root, pffexportPath);
-        return (
-          relative === "" ||
-          (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
-        );
+    if (!path.isAbsolute(hostPffexportPath)) {
+      return yield* makeLibpffError("engine-unavailable", {
+        cause: "sandboxed pffexport executable could not be resolved",
       });
-    const sandboxExecutable = pffexportIsAbsolute && !runtimeCoversPffexport ? "/tool/pffexport" : pffexportPath;
-    const executableBind =
-      pffexportIsAbsolute && !runtimeCoversPffexport
-        ? ["--dir", "/tool", "--ro-bind", pffexportPath, sandboxExecutable]
-        : [];
+    }
+    const runtimeCoversPffexport = A.some(sandboxRuntimeRoots, (root) => {
+      const relative = path.relative(root, hostPffexportPath);
+      return (
+        relative === "" ||
+        (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
+      );
+    });
+    const sandboxExecutable = runtimeCoversPffexport ? hostPffexportPath : "/tool/pffexport";
+    const executableBind = runtimeCoversPffexport
+      ? []
+      : ["--dir", "/tool", "--ro-bind", hostPffexportPath, sandboxExecutable];
     return ChildProcess.make(
       bwrapPath,
       [
@@ -605,7 +649,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       onNone: () =>
         Effect.succeed(
           ChildProcess.make(
-            pffexportPath,
+            hostPffexportPath,
             ["-f", exportFormat, "-m", exportMode, "-q", "-t", targetBase, sourcePath],
             spawnOptions
           )
@@ -616,7 +660,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
 
   const version = yield* Effect.scoped(
     Effect.gen(function* () {
-      const handle = yield* spawner.spawn(ChildProcess.make(pffexportPath, ["-V"], spawnOptions));
+      const handle = yield* spawner.spawn(ChildProcess.make(hostPffexportPath, ["-V"], spawnOptions));
       const [stdout, , exitCode] = yield* Effect.all(
         [handle.stdout.pipe(Stream.decodeText(), Stream.mkString), drainStream(handle.stderr), handle.exitCode],
         { concurrency: "unbounded" }

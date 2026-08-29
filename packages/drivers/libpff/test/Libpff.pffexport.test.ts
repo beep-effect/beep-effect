@@ -162,6 +162,51 @@ printf 'input archive is corrupt\n' >&2
 exit 2
 `;
 
+const bwrapStub = `#!/usr/bin/env bash
+set -eu
+mount_hosts=()
+mount_targets=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --ro-bind|--bind)
+      mount_hosts+=("$2")
+      mount_targets+=("$3")
+      shift 3
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+command="$1"
+shift
+mapped_command="$command"
+for index in "\${!mount_targets[@]}"; do
+  target="\${mount_targets[$index]}"
+  host="\${mount_hosts[$index]}"
+  if [ "$command" = "$target" ]; then mapped_command="$host"; fi
+done
+mapped=()
+for argument in "$@"; do
+  mapped_argument="$argument"
+  for index in "\${!mount_targets[@]}"; do
+    target="\${mount_targets[$index]}"
+    host="\${mount_hosts[$index]}"
+    if [ "$argument" = "$target" ]; then
+      mapped_argument="$host"
+    elif [[ "$argument" = "$target/"* ]]; then
+      mapped_argument="$host\${argument#$target}"
+    fi
+  done
+  mapped+=("$mapped_argument")
+done
+exec "$mapped_command" "\${mapped[@]}"
+`;
+
 const makeMissingBinaryEngine = (exportRoot: string) =>
   makePffexportFileProcessingEngine(
     PffexportEngineConfig.make({ exportRoot, pffexportPath: "/nonexistent/pffexport-missing" })
@@ -271,6 +316,44 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         expect(result.warnings).toStrictEqual([]);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "resolves and binds a bare pffexport executable outside sandbox runtime roots",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const bwrapPath = path.join(path.dirname(stubPath), "bwrap-stub");
+        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        yield* fs.chmod(bwrapPath, 0o755);
+        const commandName = path.basename(path.dirname(stubPath));
+        const commandPath = path.resolve(import.meta.dirname, "../../../..", "node_modules", ".bin", commandName);
+        yield* Effect.acquireRelease(fs.symlink(stubPath, commandPath), () =>
+          fs.remove(commandPath).pipe(Effect.ignore)
+        );
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            pffexportPath: commandName,
+          })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({
+            ...operation,
+            source: SourceArtifact.make(sourceWithoutBytes),
+          })
+        );
+
+        expect(result.children.length).toBeGreaterThan(0);
       },
       Effect.scoped,
       provideTestLayer

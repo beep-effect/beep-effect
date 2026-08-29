@@ -87,3 +87,32 @@ Receipts recorded while executing this packet, per `AGENTS.md`.
   decode those exact shapes in the pre-mutation test suite; model the ledger as
   a status-tagged union so fields required only by successful rows cannot leak
   into inherited-loss variants.
+
+## 2026-08-28 — Hosted coverage surfaced only after the first publish
+
+- **Doing:** closing hosted CI on the first coherent restoration PR while
+  keeping the local proof and coverage authority separate.
+- **Evidence:** `Heavy / Coverage Regression` reported that the new restoration
+  implementation paths lowered the CLI package's historical line, branch,
+  function, and statement baselines. The local targeted suite was green, but
+  the hosted report was the first gate to expose the package-level deficit and
+  recommended rewriting the baseline rather than identifying the missing
+  behavioral cases.
+- **Prevented by:** add a scheduler-admitted, changed-file coverage preview to
+  Yeet before publication, with uncovered source locations and an explicit
+  operator-authorization gate for any baseline rewrite.
+
+## 2026-08-28 — Yeet rejected the residue-safe repair flag
+
+- **Doing:** running the canonical repair pass against an explicitly staged
+  review-fix slice.
+- **Evidence:** `bun run beep yeet repair --staged-only` exited before repair
+  with `Unrecognized flag: --staged-only`, although the publish workflow uses
+  staged-path isolation to protect unrelated workspace residue. The supported
+  `--tier review-fix` fallback then crossed from 12/12 passing cheap gates into
+  full docgen across 137 packages, so it had to be interrupted before running
+  outside the scheduler lane.
+- **Prevented by:** either support `--staged-only` consistently across repair
+  and publish or have Yeet print the residue-safe replacement command and its
+  proof expansion when a workflow flag is unavailable; heavyweight repair
+  phases should acquire the same scheduler admission as publish.

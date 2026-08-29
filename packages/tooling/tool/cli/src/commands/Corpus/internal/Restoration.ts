@@ -2461,6 +2461,59 @@ const validateArchiveTerminalIndex = Effect.fn("CorpusRestoration.validateTermin
   return index.terminals;
 });
 
+const requireArchivePayloadOwned = Effect.fn("CorpusRestoration.requireArchivePayloadOwned")(function* (
+  archiveRoot: string,
+  terminals: HashMap.HashMap<string, ArchiveTerminalRecord>
+): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const payloadRoot = path.join(archiveRoot, "payload");
+  const expected = HashSet.fromIterable(
+    A.getSomes(
+      A.map(A.fromIterable(terminals), ([, terminal]) =>
+        terminal.recordType === "archive-failure" ? O.none<string>() : O.some(terminal.destinationRelativePath)
+      )
+    )
+  );
+  const actual: Array<string> = [];
+  const walkAt: (directory: string) => Effect.Effect<void, CorpusCommandError, RestorationRequirements> = Effect.fn(
+    "CorpusRestoration.requireArchivePayloadOwned.walkAt"
+  )(function* (directory) {
+    const names = yield* fs
+      .readDirectory(directory)
+      .pipe(CorpusCommandError.mapError("Failed walking the sealed preservation payload tree."));
+    for (const name of A.sort(names, Order.String)) {
+      const absolutePath = path.join(directory, name);
+      const canonical = yield* fs
+        .realPath(absolutePath)
+        .pipe(CorpusCommandError.mapError("Failed canonicalizing a sealed preservation payload entry."));
+      const info = yield* fs
+        .stat(absolutePath)
+        .pipe(CorpusCommandError.mapError("Failed inspecting a sealed preservation payload entry."));
+      if (canonical !== path.resolve(absolutePath) || (info.type !== "Directory" && info.type !== "File")) {
+        return yield* failArchiveVerification(
+          archiveRoot,
+          "manifest-corrupt",
+          "The physical preservation payload contains a noncanonical or unsupported entry."
+        );
+      }
+      actual.push(path.relative(archiveRoot, absolutePath));
+      if (info.type === "Directory") yield* walkAt(absolutePath);
+    }
+  });
+  yield* walkAt(payloadRoot);
+  if (
+    actual.length !== HashSet.size(expected) ||
+    A.some(actual, (relativePath) => !HashSet.has(expected, relativePath))
+  ) {
+    return yield* failArchiveVerification(
+      archiveRoot,
+      "manifest-corrupt",
+      "The physical preservation payload does not exactly match sealed terminal ownership."
+    );
+  }
+});
+
 const verificationPass = (
   objectId: string,
   destinationRelativePath: string,
@@ -2603,6 +2656,7 @@ export const verifyRestorationArchiveImpl = Effect.fn("CorpusRestoration.verifyA
   const seal = yield* validateArchiveManifestSeal(archiveRoot, lines, records);
   const { currentPreflight, currentRecords } = yield* validateCurrentArchiveRun(archiveRoot, records, seal);
   const terminals = yield* validateArchiveTerminalIndex(archiveRoot, currentRecords, currentPreflight);
+  yield* requireArchivePayloadOwned(archiveRoot, terminals);
   const outcomes = yield* Effect.forEach(A.fromIterable(terminals), ([objectId, terminal]) =>
     verifyArchiveTerminal(archiveRoot, objectId, terminal)
   );

@@ -1595,6 +1595,32 @@ describe("corpus restoration preservation", () => {
   );
 
   it.effect(
+    "rejects physical payload entries that have no sealed terminal owner",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRestorationFixture();
+        yield* preserveRestorationArchive(restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 }));
+        const foreignDirectory = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "payload", "foreign");
+        yield* fs.makeDirectory(foreignDirectory, { recursive: true });
+        yield* fs.writeFileString(path.join(foreignDirectory, "untracked.bin"), "untracked");
+
+        const error = yield* verifyRestorationArchive(
+          RestorationVerifyOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            runLabel: "synthetic-restoration",
+          })
+        ).pipe(Effect.flip);
+
+        expect(error.message).toContain("physical preservation payload");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
     "recovers across payload sync, atomic promotion, and pre-PASS interruptions without a false PASS",
     Effect.fnUntraced(
       function* () {
@@ -1794,6 +1820,26 @@ mkdir -p "$item/Attachment00001"
 printf 'Subject:\\tSynthetic\\n' > "$item/OutlookHeaders.txt"
 printf 'synthetic mail body' > "$item/Message.txt"
 printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
+exit 0
+`;
+
+const duplicateAttachmentPffexportStub = `#!/usr/bin/env bash
+if [ "$1" = "-V" ]; then
+  printf 'pffexport 20260608\n'
+  exit 0
+fi
+target=""
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = "-t" ]; then target="$argument"; fi
+  previous="$argument"
+done
+item="$target.export/Top of Personal Folders/Inbox/Message00001"
+mkdir -p "$item/Attachment00001" "$item/Attachment00002"
+printf 'Subject:\tSynthetic\n' > "$item/OutlookHeaders.txt"
+printf 'synthetic mail body' > "$item/Message.txt"
+printf '%%PDF-1.4 duplicate attachment' > "$item/Attachment00001/report.bin"
+printf '%%PDF-1.4 duplicate attachment' > "$item/Attachment00002/report.bin"
 exit 0
 `;
 
@@ -2051,6 +2097,39 @@ describe("corpus restoration mail", () => {
           true
         );
         expect(O.isSome(repair)).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "reuses identical content-addressed attachment derivatives",
+    Effect.fnUntraced(
+      function* () {
+        const path = yield* Path.Path;
+        const fixture = yield* makeMailRestorationFixture(duplicateAttachmentPffexportStub);
+        const summary = yield* restoreMail(mailRestorationOptions(fixture));
+        const ledgerPath = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-mail-restoration",
+          "ledgers",
+          "mail",
+          "slice.jsonl"
+        );
+        const { records } = yield* readTransformationLedgerFixture(ledgerPath);
+        const repairs = A.filter(
+          records,
+          (record) => record.recordType === "attachment-type-repair" && record.repairStatus === "repaired"
+        );
+        const derivativePaths = A.map(repairs, (record) => record.derivedRelativePath);
+
+        expect(summary.unapprovedCount).toBe(0);
+        expect(repairs).toHaveLength(2);
+        expect(new Set(derivativePaths).size).toBe(1);
       },
       Effect.scoped,
       provideTestLayer
@@ -2507,6 +2586,8 @@ describe("corpus restoration recycle", () => {
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const joins = A.filter(records, (record) => record.recordType === "recycle-join");
         const mappings = A.filter(records, (record) => record.recordType === "recycle-mapping");
+        const start = A.findFirst(records, (record) => record.recordType === "family-run-start");
+        const familySummary = A.findFirst(records, (record) => record.recordType === "family-run-summary");
         const totals = new Map<string, number>();
         for (const join of joins) {
           if (join.recordType === "recycle-join") {
@@ -2523,6 +2604,13 @@ describe("corpus restoration recycle", () => {
         expect(summary.passCount).toBe(5);
         expect(summary.exceptionCount).toBe(3);
         expect(summary.unapprovedCount).toBe(0);
+        expect(
+          O.zipWith(start, familySummary, (left, right) =>
+            left.recordType === "family-run-start" && right.recordType === "family-run-summary"
+              ? left.expectedCount === right.sourceCount
+              : false
+          )
+        ).toStrictEqual(O.some(true));
         expect(joins).toHaveLength(12);
         expect(totals).toEqual(
           new Map([
@@ -2585,6 +2673,46 @@ describe("corpus restoration recycle", () => {
               : Effect.succeed(false),
         });
         expect(emptyDirectoryExists).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects recycle output that is not owned by mapping or interruption evidence",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeRecycleRestorationFixture();
+        const unownedRoot = path.join(
+          fixture.corpusRoot,
+          "staging",
+          "restoration",
+          "runs",
+          "synthetic-recycle-restoration",
+          "output",
+          "recycle",
+          "full",
+          "restored",
+          "unowned"
+        );
+        yield* fs.makeDirectory(unownedRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(unownedRoot, "stale.bin"), "stale");
+
+        const error = yield* restoreRecycle(
+          RestorationRecycleOptions.make({
+            corpusRoot: fixture.corpusRoot,
+            expectedMissingContentCount: NonNegativeInt.make(1),
+            expectedSurfaceCount: NonNegativeInt.make(3),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+            runLabel: "synthetic-recycle-restoration",
+          })
+        ).pipe(Effect.flip);
+
+        expect(error.message).toContain("physical entry not owned");
       },
       Effect.scoped,
       provideTestLayer

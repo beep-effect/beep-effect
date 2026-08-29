@@ -81,6 +81,10 @@ type WalkedTransformationFile = {
   readonly relativePath: string;
 };
 
+type WalkedTransformationEntry = WalkedTransformationFile & {
+  readonly kind: "directory" | "file";
+};
+
 type TransformationTreeDigest = {
   readonly sha256: Sha256Hex;
   readonly sizeBytes: number;
@@ -171,6 +175,27 @@ const sandboxBaseArgs = (runtimeBinds: ReadonlyArray<string>): ReadonlyArray<str
   "HOME",
   "/tmp/home",
 ];
+
+type SandboxedTool = {
+  readonly bindArgs: ReadonlyArray<string>;
+  readonly executable: string;
+};
+
+const sandboxedTool = (path: Path.Path, executable: string, name: string): SandboxedTool => {
+  if (!path.isAbsolute(executable)) return { bindArgs: [], executable };
+  const covered = A.some(sandboxRuntimeRoots, (root) => {
+    const relative = path.relative(root, executable);
+    return (
+      relative === "" || (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
+    );
+  });
+  if (covered) return { bindArgs: [], executable };
+  const sandboxExecutable = `/tool/${name}`;
+  return {
+    bindArgs: ["--dir", "/tool", "--ro-bind", executable, sandboxExecutable],
+    executable: sandboxExecutable,
+  };
+};
 
 const quarantineDisposition = (): { readonly disposition: "quarantine" } => ({ disposition: "quarantine" });
 
@@ -355,15 +380,15 @@ const deterministicPreservationElapsed = (
   );
 };
 
-const walkFiles = Effect.fn("CorpusRestoration.walkTransformationFiles")(function* (
+const walkTransformationEntries = Effect.fn("CorpusRestoration.walkTransformationEntries")(function* (
   root: string
-): Effect.fn.Return<ReadonlyArray<WalkedTransformationFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReadonlyArray<WalkedTransformationEntry>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* requireCanonicalContainedPath(root, root);
-  const files: Array<WalkedTransformationFile> = [];
+  const entries: Array<WalkedTransformationEntry> = [];
   const walkAt: (directory: string) => Effect.Effect<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
-    Effect.fn("CorpusRestoration.walkTransformationFiles.walkAt")(function* (directory) {
+    Effect.fn("CorpusRestoration.walkTransformationEntries.walkAt")(function* (directory) {
       const names = yield* fs
         .readDirectory(directory)
         .pipe(CorpusCommandError.mapError("Failed walking transformation output."));
@@ -374,17 +399,27 @@ const walkFiles = Effect.fn("CorpusRestoration.walkTransformationFiles")(functio
           .stat(absolutePath)
           .pipe(CorpusCommandError.mapError("Failed inspecting transformation output."));
         if (info.type === "Directory") {
+          entries.push({ absolutePath, kind: "directory", relativePath: path.relative(root, absolutePath) });
           yield* walkAt(absolutePath);
           continue;
         }
         if (info.type !== "File") {
           return yield* transformationError("Transformation output contains an unsupported non-file object.");
         }
-        files.push({ absolutePath, relativePath: path.relative(root, absolutePath) });
+        entries.push({ absolutePath, kind: "file", relativePath: path.relative(root, absolutePath) });
       }
     });
   yield* walkAt(root);
-  return files;
+  return entries;
+});
+
+const walkFiles = Effect.fn("CorpusRestoration.walkTransformationFiles")(function* (
+  root: string
+): Effect.fn.Return<ReadonlyArray<WalkedTransformationFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  return A.map(
+    A.filter(yield* walkTransformationEntries(root), (entry) => entry.kind === "file"),
+    ({ absolutePath, relativePath }) => ({ absolutePath, relativePath })
+  );
 });
 
 const hashTransformationTree = Effect.fn("CorpusRestoration.hashTransformationTree")(function* (
@@ -725,10 +760,31 @@ const requireAttachmentCapacity = Effect.fn("CorpusRestoration.requireAttachment
 const materializeAttachmentRepair = Effect.fn("CorpusRestoration.materializeAttachmentRepair")(function* (
   sourcePath: string,
   derivedPath: string,
-  attemptRoot: string
+  attemptRoot: string,
+  expected: TransformationTreeDigest,
+  context: TransformationRunContext,
+  attemptOutputCeiling: number
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const exists = yield* fs
+    .exists(derivedPath)
+    .pipe(CorpusCommandError.mapError("Failed checking content-addressed attachment-repair output."));
+  if (exists) {
+    yield* requireCanonicalContainedPath(attemptRoot, derivedPath);
+    const retained = yield* hashRestorationFileStreaming(derivedPath, 1024 * 1024);
+    if (retained.sha256 !== expected.sha256 || retained.sizeBytes !== expected.sizeBytes) {
+      return yield* transformationError("Content-addressed attachment repair conflicts with retained bytes.");
+    }
+    return;
+  }
+  yield* requireAttachmentCapacity(
+    context,
+    attemptRoot,
+    expected.sizeBytes,
+    attemptOutputCeiling,
+    "Attachment repair has no remaining retained-output budget."
+  );
   yield* fs
     .makeDirectory(path.dirname(derivedPath), { recursive: true })
     .pipe(CorpusCommandError.mapError("Failed creating attachment-repair output directory."));
@@ -742,6 +798,7 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
   context: TransformationRunContext,
   attemptStartedAt: number
 ): Effect.fn.Return<string, CorpusCommandError, TransformationRequirements> {
+  const path = yield* Path.Path;
   const now = DateTime.toEpochMillis(yield* DateTime.now);
   const remainingProbeMillis = Math.min(
     options.maxElapsedMillis - (now - attemptStartedAt),
@@ -750,9 +807,11 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
   if (remainingProbeMillis <= 0) {
     return yield* transformationError(`Attachment repair exhausted the elapsed-time budget for ${attemptId}.`);
   }
+  const java = sandboxedTool(path, options.javaPath, "java");
   const probe = yield* runCaptured({
     args: [
       ...sandboxBaseArgs(yield* sandboxRuntimeBinds()),
+      ...java.bindArgs,
       "--ro-bind",
       options.tikaJarPath,
       "/input/tika.jar",
@@ -760,7 +819,7 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
       derivedPath,
       "/input/source",
       "--",
-      options.javaPath,
+      java.executable,
       "-jar",
       "/input/tika.jar",
       "-J",
@@ -783,11 +842,33 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
 const persistAttachmentText = Effect.fn("CorpusRestoration.persistAttachmentText")(function* (
   attemptRoot: string,
   tikaRelativePath: string,
-  tikaText: string
+  tikaText: string,
+  context: TransformationRunContext,
+  attemptOutputCeiling: number
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tikaPath = path.join(attemptRoot, tikaRelativePath);
+  const tikaSizeBytes = utf8ToBytes(tikaText).length;
+  const tikaSha256 = digestString(tikaText);
+  const exists = yield* fs
+    .exists(tikaPath)
+    .pipe(CorpusCommandError.mapError("Failed checking content-addressed attachment Tika output."));
+  if (exists) {
+    yield* requireCanonicalContainedPath(attemptRoot, tikaPath);
+    const retained = yield* hashRestorationFileStreaming(tikaPath, 1024 * 1024);
+    if (retained.sha256 !== tikaSha256 || retained.sizeBytes !== tikaSizeBytes) {
+      return yield* transformationError("Content-addressed attachment Tika output conflicts with retained bytes.");
+    }
+    return;
+  }
+  yield* requireAttachmentCapacity(
+    context,
+    attemptRoot,
+    tikaSizeBytes,
+    attemptOutputCeiling,
+    "Attachment Tika evidence has no remaining output budget."
+  );
   const tikaPartialPath = `${tikaPath}.partial`;
   yield* appendRestorationTextDurably(tikaPartialPath, tikaText);
   yield* fs
@@ -811,25 +892,17 @@ const repairDetectedAttachment = Effect.fn("CorpusRestoration.repairDetectedAtta
   const digest = yield* hashRestorationFileStreaming(file.absolutePath, 1024 * 1024);
   const derivedRelativePath = path.join("derived", "attachment-repairs", `${digest.sha256}.${detectedExtension}`);
   const derivedPath = path.join(attemptRoot, derivedRelativePath);
-  yield* requireAttachmentCapacity(
-    context,
+  yield* materializeAttachmentRepair(
+    file.absolutePath,
+    derivedPath,
     attemptRoot,
-    digest.sizeBytes,
-    attemptOutputCeiling,
-    `Attachment repair has no remaining retained-output budget for ${attemptId}.`
+    digest,
+    context,
+    attemptOutputCeiling
   );
-  yield* materializeAttachmentRepair(file.absolutePath, derivedPath, attemptRoot);
   const tikaText = yield* extractAttachmentText(derivedPath, attemptId, options, context, attemptStartedAt);
   const tikaRelativePath = path.join("derived", "attachment-repairs", `${digest.sha256}.tika.txt`);
-  const tikaSizeBytes = utf8ToBytes(tikaText).length;
-  yield* requireAttachmentCapacity(
-    context,
-    attemptRoot,
-    tikaSizeBytes,
-    attemptOutputCeiling,
-    `Attachment Tika evidence has no remaining output budget for ${attemptId}.`
-  );
-  yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText);
+  yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText, context, attemptOutputCeiling);
   const derivedDigest = yield* hashRestorationFileStreaming(derivedPath, 1024 * 1024);
   if (derivedDigest.sizeBytes <= 0) {
     return yield* transformationError(`Attachment repair produced an empty derived file for attempt ${attemptId}.`);
@@ -2980,6 +3053,11 @@ const recycleResumeState = Effect.fn("CorpusRestoration.recycleResumeState")(fun
     return yield* transformationError("Prior recycle checkpoints do not form a complete deterministic mapping prefix.");
   }
   const prefix = yield* validateRecycleMappingPrefix(context, outputRoot, mappings, allPairs);
+  yield* requireRecyclePhysicalEntriesOwned(
+    context,
+    mappings,
+    A.filter(records, isRecordType("family-attempt-interrupted"))
+  );
   return {
     joins,
     pairs: A.drop(allPairs, mappings.length),
@@ -3110,9 +3188,10 @@ export const restoreRecycleImpl = Effect.fn("CorpusRestoration.restoreRecycle")(
   return yield* withTransformationFamilyWriter(
     prepared,
     Effect.gen(function* () {
+      const entries = recycleEntries(path, prepared.archiveRoot, prepared.preservationRecords);
       const run = yield* beginOrResumeFamilyRun(
         prepared,
-        options.expectedSurfaceCount,
+        entries.length,
         options.maxTotalElapsedMillis,
         options.maxTotalOutputBytes,
         transformationPolicySha256([
@@ -3124,7 +3203,6 @@ export const restoreRecycleImpl = Effect.fn("CorpusRestoration.restoreRecycle")(
       );
       const pendingSummary = yield* familyHasPendingSummary(run);
       const outputRoot = path.join(run.outputRoot, "restored");
-      const entries = recycleEntries(path, run.archiveRoot, run.preservationRecords);
       const groups = groupRecycleEntries(entries);
       const surfaces = recycleSurfaceCounts(groups);
       const missingContentCount = recycleMissingContentCount(surfaces);
@@ -3328,10 +3406,12 @@ const runSandboxedConversion = Effect.fn("CorpusRestoration.runSandboxedConversi
     .makeDirectory(outputDirectory, { recursive: true })
     .pipe(CorpusCommandError.mapError("Failed creating a legacy-Word sandbox output directory."));
   const sandboxInput = `/input/source.${inputExtension}`;
+  const converter = sandboxedTool(path, options.converterPath, "converter");
   const result = yield* runLegacyStep(
     options.bwrapPath,
     [
       ...sandboxBaseArgs(yield* sandboxRuntimeBinds()),
+      ...converter.bindArgs,
       "--ro-bind",
       inputPath,
       sandboxInput,
@@ -3345,7 +3425,7 @@ const runSandboxedConversion = Effect.fn("CorpusRestoration.runSandboxedConversi
       "SAL_USE_VCLPLUGIN",
       "svp",
       "--",
-      options.converterPath,
+      converter.executable,
       "--headless",
       "--convert-to",
       outputFormat,
@@ -3376,10 +3456,13 @@ const normalizedTikaText = Effect.fn("CorpusRestoration.normalizedTikaText")(fun
   CorpusCommandError,
   TransformationRequirements
 > {
+  const path = yield* Path.Path;
+  const java = sandboxedTool(path, options.javaPath, "java");
   const result = yield* runLegacyStep(
     options.bwrapPath,
     [
       ...sandboxBaseArgs(yield* sandboxRuntimeBinds()),
+      ...java.bindArgs,
       "--ro-bind",
       options.tikaJarPath,
       "/input/tika.jar",
@@ -3387,7 +3470,7 @@ const normalizedTikaText = Effect.fn("CorpusRestoration.normalizedTikaText")(fun
       filePath,
       "/input/source",
       "--",
-      options.javaPath,
+      java.executable,
       "-jar",
       "/input/tika.jar",
       "-t",
@@ -3411,15 +3494,18 @@ const pdfPageCount = Effect.fn("CorpusRestoration.pdfPageCount")(function* (
   options: RestorationLegacyWordOptions,
   budget: LegacyTimeBudget
 ): Effect.fn.Return<number, CorpusCommandError, TransformationRequirements> {
+  const path = yield* Path.Path;
+  const pdfinfo = sandboxedTool(path, options.pdfinfoPath, "pdfinfo");
   const result = yield* runLegacyStep(
     options.bwrapPath,
     [
       ...sandboxBaseArgs(yield* sandboxRuntimeBinds()),
+      ...pdfinfo.bindArgs,
       "--ro-bind",
       pdfPath,
       "/input/source.pdf",
       "--",
-      options.pdfinfoPath,
+      pdfinfo.executable,
       "/input/source.pdf",
     ],
     yield* remainingLegacyMillis(budget, options),
@@ -3450,10 +3536,12 @@ const renderPdfPages = Effect.fn("CorpusRestoration.renderPdfPages")(function* (
   yield* fs
     .makeDirectory(outputDirectory, { recursive: true })
     .pipe(CorpusCommandError.mapError("Failed creating a legacy-Word page-render directory."));
+  const pdftoppm = sandboxedTool(path, options.pdftoppmPath, "pdftoppm");
   const result = yield* runLegacyStep(
     options.bwrapPath,
     [
       ...sandboxBaseArgs(yield* sandboxRuntimeBinds()),
+      ...pdftoppm.bindArgs,
       "--ro-bind",
       pdfPath,
       "/input/source.pdf",
@@ -3461,7 +3549,7 @@ const renderPdfPages = Effect.fn("CorpusRestoration.renderPdfPages")(function* (
       outputDirectory,
       "/output",
       "--",
-      options.pdftoppmPath,
+      pdftoppm.executable,
       "-png",
       "-r",
       "96",
@@ -3497,10 +3585,13 @@ const comparePageRmse = Effect.fn("CorpusRestoration.comparePageRmse")(function*
   options: RestorationLegacyWordOptions,
   budget: LegacyTimeBudget
 ): Effect.fn.Return<number, CorpusCommandError, TransformationRequirements> {
+  const path = yield* Path.Path;
+  const compare = sandboxedTool(path, options.comparePath, "compare");
   const result = yield* runLegacyStep(
     options.bwrapPath,
     [
       ...sandboxBaseArgs(yield* sandboxRuntimeBinds()),
+      ...compare.bindArgs,
       "--ro-bind",
       original,
       "/input/original.png",
@@ -3508,7 +3599,7 @@ const comparePageRmse = Effect.fn("CorpusRestoration.comparePageRmse")(function*
       converted,
       "/input/converted.png",
       "--",
-      options.comparePath,
+      compare.executable,
       "-metric",
       "RMSE",
       "/input/original.png",
@@ -4531,6 +4622,35 @@ const rehashMailExceptionOutputs = Effect.fn("CorpusRestoration.rehashMailExcept
 const relativePathIsUnder = (path: Path.Path, relativePath: string, roots: ReadonlyArray<string>): boolean =>
   A.some(roots, (root) => relativePath === root || Str.startsWith(`${root}${path.sep}`)(relativePath));
 
+const recycleEntryTouchesOwnedRoot = (
+  path: Path.Path,
+  entry: WalkedTransformationEntry,
+  roots: ReadonlyArray<string>
+): boolean =>
+  relativePathIsUnder(path, entry.relativePath, roots) ||
+  (entry.kind === "directory" && A.some(roots, (root) => relativePathIsUnder(path, root, [entry.relativePath])));
+
+const requireRecyclePhysicalEntriesOwned = Effect.fn("CorpusRestoration.requireRecyclePhysicalEntriesOwned")(function* (
+  context: TransformationRunContext,
+  mappings: ReadonlyArray<RecycleMapping>,
+  interruptions: ReadonlyArray<FamilyAttemptInterrupted>
+): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const ownedRoots = A.appendAll(
+    A.map(mappings, (mapping) => path.join("restored", mapping.restoredRelativePath)),
+    A.map(interruptions, (record) => record.retainedOutputRelativePath)
+  );
+  const unowned = A.filter(
+    yield* walkTransformationEntries(context.outputRoot),
+    (entry) => entry.relativePath !== "restored" && !recycleEntryTouchesOwnedRoot(path, entry, ownedRoots)
+  );
+  if (unowned.length > 0) {
+    return yield* transformationError(
+      "Retained recycle output contains a physical entry not owned by terminal evidence."
+    );
+  }
+});
+
 const requireMailPhysicalFilesOwned = Effect.fn("CorpusRestoration.requireMailPhysicalFilesOwned")(function* (
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>,
@@ -4619,7 +4739,13 @@ const rehashRecycleOutputs = Effect.fn("CorpusRestoration.rehashRecycleOutputs")
   records: ReadonlyArray<TransformationLedgerRecord>
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
-  for (const mapping of A.filter(records, isRecordType("recycle-mapping"))) {
+  const mappings = A.filter(records, isRecordType("recycle-mapping"));
+  yield* requireRecyclePhysicalEntriesOwned(
+    context,
+    mappings,
+    A.filter(records, isRecordType("family-attempt-interrupted"))
+  );
+  for (const mapping of mappings) {
     const outputPath = yield* containedEvidencePath(path, context.outputRoot, [
       "restored",
       mapping.restoredRelativePath,
