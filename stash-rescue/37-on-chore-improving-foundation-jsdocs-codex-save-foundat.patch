@@ -1,0 +1,3891 @@
+diff --git a/packages/foundation/modeling/utils/src/Array.ts b/packages/foundation/modeling/utils/src/Array.ts
+index 606774ee1e..06b6c2831c 100644
+--- a/packages/foundation/modeling/utils/src/Array.ts
++++ b/packages/foundation/modeling/utils/src/Array.ts
+@@ -26,6 +26,9 @@ import { thunkFalse, thunkTrue } from "./thunk.ts";
+  *
+  * const empty = A.matchToBoolean([])
+  * // false
++ *
++ * console.log(hasItems)
++ * console.log(empty)
+  * ```
+  *
+  * @category predicates
+@@ -52,7 +55,7 @@ const NonEmptyArraySchema = NonEmptyReadonlyArraySchema.pipe(S.mutable);
+  *
+  * const items: unknown = [1, 2, 3]
+  * A.assertNonEmptyArray(items)
+- * // items is now typed as NonEmptyArray<unknown>
++ * // items is now narrowed to NonEmptyArray<unknown>
+  * ```
+  *
+  * @category guards
+@@ -72,7 +75,7 @@ export const assertNonEmptyArray: (input: unknown) => asserts input is A.NonEmpt
+  *
+  * const items: unknown = ["a", "b"]
+  * A.assertNonEmptyReadonlyArray(items)
+- * // items is now typed as NonEmptyReadonlyArray<unknown>
++ * // items is now narrowed to NonEmptyReadonlyArray<unknown>
+  * ```
+  *
+  * @category guards
+@@ -110,8 +113,8 @@ function asNonEmptyReadonlyArray<T>(out: ReadonlyArray<T>): A.NonEmptyReadonlyAr
+  * // Data-last (pipeable)
+  * const tripled = pipe(items, A.mapNonEmpty((n) => n * 3))
+  *
+- * void doubled
+- * void tripled
++ * console.log(doubled)
++ * console.log(tripled)
+  * ```
+  *
+  * @category combinators
+@@ -146,8 +149,8 @@ export const mapNonEmpty: {
+  * // Data-last (pipeable)
+  * const doubled = pipe(items, A.flatMapNonEmpty((n): A.NonEmptyReadonlyArray<number> => [n, n]))
+  *
+- * void expanded
+- * void doubled
++ * console.log(expanded)
++ * console.log(doubled)
+  * ```
+  *
+  * @category combinators
+@@ -184,8 +187,8 @@ export const flatMapNonEmpty: {
+  * // Data-last (pipeable)
+  * const prefixed = pipe(items, A.mapNonEmptyReadonly((s) => `item-${s}`))
+  *
+- * void upper
+- * void prefixed
++ * console.log(upper)
++ * console.log(prefixed)
+  * ```
+  *
+  * @category combinators
+@@ -226,8 +229,8 @@ export const mapNonEmptyReadonly: {
+  *   A.flatMapNonEmptyReadonly((item): A.NonEmptyReadonlyArray<string> => [item, item])
+  * )
+  *
+- * void expanded
+- * void doubled
++ * console.log(expanded)
++ * console.log(doubled)
+  * ```
+  *
+  * @category combinators
+@@ -252,6 +255,14 @@ export const flatMapNonEmptyReadonly: {
+ /**
+  * Re-export of all helpers from `effect/Array`.
+  *
++ * @example
++ * ```ts
++ * import * as A from "@beep/utils/Array"
++ *
++ * const values = A.map([1, 2, 3], (value) => value * 2)
++ * console.log(values)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -273,8 +284,8 @@ export * from "effect/Array";
+  * const multi = A.makeReadonly(["a", "b"])
+  * // ["a", "b"]
+  *
+- * void single
+- * void multi
++ * console.log(single)
++ * console.log(multi)
+  * ```
+  *
+  * @category constructors
+@@ -292,9 +303,9 @@ export const makeReadonly = <T>(a: T | Array<T>): ReadonlyArray<T> => A.ensure(a
+  * import { A } from "@beep/utils"
+  *
+  * const fromSet = A.fromIterableNonEmpty(new Set([1, 2, 3]))
+- * // [1, 2, 3] typed as NonEmptyReadonlyArray<number>
++ * // [1, 2, 3] narrowed to NonEmptyReadonlyArray<number>
+  *
+- * void fromSet
++ * console.log(fromSet)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Bool.ts b/packages/foundation/modeling/utils/src/Bool.ts
+index 5fa7bdd938..9fed8db7d9 100644
+--- a/packages/foundation/modeling/utils/src/Bool.ts
++++ b/packages/foundation/modeling/utils/src/Bool.ts
+@@ -8,7 +8,7 @@
+  * const toggled = Bool.not(true)
+  * // false
+  *
+- * void toggled
++ * console.log(toggled)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/DateTime.ts b/packages/foundation/modeling/utils/src/DateTime.ts
+index 717897b538..b3b45256b3 100644
+--- a/packages/foundation/modeling/utils/src/DateTime.ts
++++ b/packages/foundation/modeling/utils/src/DateTime.ts
+@@ -17,7 +17,7 @@ import { Clock, Context, DateTime, Effect, Layer } from "effect";
+  * import { makeUnsafeUtc } from "@beep/utils/DateTime"
+  *
+  * const value = makeUnsafeUtc("2026-01-01T00:00:00.000Z")
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -29,6 +29,13 @@ export const makeUnsafeUtc = <A extends Parameters<typeof DateTime.make>[0]>(inp
+ /**
+  * Re-export of all helpers from `effect/DateTime`.
+  *
++ * @example
++ * ```ts
++ * import * as DateTime from "@beep/utils/DateTime"
++ *
++ * console.log(DateTime)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -41,7 +48,7 @@ export * from "effect/DateTime";
+  * ```ts
+  * import { DateTimes } from "@beep/utils/DateTime"
+  *
+- * void DateTimes.Default
++ * console.log(DateTimes.Default)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Event.ts b/packages/foundation/modeling/utils/src/Event.ts
+index f4a8151bb4..a7d5ba4072 100644
+--- a/packages/foundation/modeling/utils/src/Event.ts
++++ b/packages/foundation/modeling/utils/src/Event.ts
+@@ -12,6 +12,13 @@ import { dual } from "effect/Function";
+ /**
+  * Re-export of the Effect SSE encoder/decoder primitives.
+  *
++ * @example
++ * ```ts
++ * import * as Sse from "@beep/utils/Event"
++ *
++ * console.log(Sse)
++ * ```
++ *
+  * @category codecs
+  * @since 0.0.0
+  */
+@@ -41,7 +48,7 @@ type EventShape<TTag extends TString.NonEmpty, TFields extends S.Struct.Fields>
+  *   _tag: "Progress",
+  *   payload: { percent: 50 },
+  * })
+- * void decoded
++ * console.log(decoded)
+  * ```
+  *
+  * @category models
+@@ -66,6 +73,21 @@ type MakeEventSchema<TTag extends TString.NonEmpty, TFields extends S.Struct.Fie
+ /**
+  * Creates a typed server-sent event schema.
+  *
++ * @example
++ * ```ts
++ * import * as S from "effect/Schema"
++ * import { makeEvent } from "@beep/utils/Event"
++ *
++ * const Progress = makeEvent({ percent: S.Number }, "Progress")
++ * const decoded = S.decodeUnknownSync(Progress)({
++ *   kind: "Event",
++ *   _tag: "Progress",
++ *   payload: { percent: 75 },
++ * })
++ *
++ * console.log(decoded)
++ * ```
++ *
+  * @category constructors
+  * @since 0.0.0
+  */
+diff --git a/packages/foundation/modeling/utils/src/FileSystem.ts b/packages/foundation/modeling/utils/src/FileSystem.ts
+index d5a03f4aae..fa1ae88c2a 100644
+--- a/packages/foundation/modeling/utils/src/FileSystem.ts
++++ b/packages/foundation/modeling/utils/src/FileSystem.ts
+@@ -29,13 +29,15 @@ import { dual } from "effect/Function";
+  * import { makeWaitForFile } from "@beep/utils/FileSystem"
+  *
+  * const program = Effect.gen(function* () {
+- *
+- *
+- *
++ *   const waitForFile = yield* makeWaitForFile
++ *   return yield* waitForFile("/tmp", "ready.txt")
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
++ *
++ * @effects Requires `FileSystem` and `Path` services, subscribes to a directory
++ * watch stream, and resolves with the first matching event.
+  */
+ export const makeWaitForFile = Effect.gen(function* () {
+   const fs = yield* FileSystem.FileSystem;
+diff --git a/packages/foundation/modeling/utils/src/Function.ts b/packages/foundation/modeling/utils/src/Function.ts
+index 48c6c910f3..b43438b764 100644
+--- a/packages/foundation/modeling/utils/src/Function.ts
++++ b/packages/foundation/modeling/utils/src/Function.ts
+@@ -11,8 +11,8 @@
+  * const render = (right: number) => (left: string) => `${left}:${right}`
+  * const rendered = reverseCurry(render)("beep")(5)
+  *
+- * void pair
+- * void rendered
++ * console.log(pair)
++ * console.log(rendered)
+  * ```
+  *
+  * @packageDocumentation
+@@ -28,7 +28,7 @@
+  *
+  * const doubled = pipe(2, (value) => value * 2)
+  *
+- * void doubled
++ * console.log(doubled)
+  * ```
+  *
+  * @category interop
+@@ -47,11 +47,11 @@ export * from "effect/Function";
+  * const first = pair[0]
+  * const second = pair[1]
+  *
+- * void first
+- * void second
++ * console.log(first)
++ * console.log(second)
+  * ```
+  *
+- * @template T - The tuple element list captured from the argument list.
++ * @typeParam T - The tuple element list captured from the argument list.
+  * @param elements - The values to preserve in tuple order.
+  * @returns The provided elements typed as a readonly tuple.
+  * @category constructors
+@@ -72,12 +72,12 @@ export function tuple<const T extends ReadonlyArray<unknown>>(...elements: T): R
+  * const joinTuple = tupledCurry(join)
+  * const result = joinTuple(["beep", "effect"])
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+- * @template A - The first argument type.
+- * @template B - The second argument type.
+- * @template C - The return type.
++ * @typeParam A - The first argument type.
++ * @typeParam B - The second argument type.
++ * @typeParam C - The return type.
+  * @param fn - The curried function to call with tuple elements.
+  * @returns A function that applies `[a, b]` as `fn(a)(b)`.
+  * @category combinators
+@@ -98,12 +98,12 @@ export function tupledCurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: [A, B])
+  * const appendTo = reverseCurry(append)
+  * const result = appendTo("beep")("-effect")
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+- * @template A - The first argument type after reversal.
+- * @template B - The second argument type after reversal.
+- * @template C - The return type.
++ * @typeParam A - The first argument type after reversal.
++ * @typeParam B - The second argument type after reversal.
++ * @typeParam C - The return type.
+  * @param fn - The curried function whose argument order should be reversed.
+  * @returns A curried function that applies arguments as `fn(b)(a)`.
+  * @category combinators
+@@ -123,12 +123,12 @@ export function reverseCurry<A, B, C>(fn: (b: B) => (a: A) => C) {
+  * const join = (left: string, right: string) => `${left}:${right}`
+  * const result = curry(join)("beep")("effect")
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+- * @template A - The first argument type.
+- * @template B - The second argument type.
+- * @template C - The return type.
++ * @typeParam A - The first argument type.
++ * @typeParam B - The second argument type.
++ * @typeParam C - The return type.
+  * @param fn - The two-argument function to curry.
+  * @returns A curried function that applies arguments as `fn(a, b)`.
+  * @category combinators
+@@ -148,12 +148,12 @@ export function curry<A, B, C>(fn: (a: A, b: B) => C) {
+  * const join = (left: string) => (right: string) => `${left}:${right}`
+  * const result = uncurry(join)("beep", "effect")
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+- * @template A - The first argument type.
+- * @template B - The second argument type.
+- * @template C - The return type.
++ * @typeParam A - The first argument type.
++ * @typeParam B - The second argument type.
++ * @typeParam C - The return type.
+  * @param fn - The curried function to call with two arguments.
+  * @returns An uncurried function that applies arguments as `fn(a)(b)`.
+  * @category combinators
+@@ -179,11 +179,11 @@ export function uncurry<A, B, C>(fn: (a: A) => (b: B) => C): (arg0: A, arg1: B)
+  * const first = readOnce()
+  * const second = readOnce()
+  *
+- * void first
+- * void second
++ * console.log(first)
++ * console.log(second)
+  * ```
+  *
+- * @template A - The value produced by the thunk.
++ * @typeParam A - The value produced by the thunk.
+  * @param fn - The nullary function to evaluate at most once.
+  * @returns A nullary function that returns the cached value after the first successful call.
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Glob.ts b/packages/foundation/modeling/utils/src/Glob.ts
+index ca72a9af58..f5c0bba660 100644
+--- a/packages/foundation/modeling/utils/src/Glob.ts
++++ b/packages/foundation/modeling/utils/src/Glob.ts
+@@ -25,13 +25,17 @@ const $I = $UtilsId.create("Glob");
+  * import { Pattern } from "@beep/utils/Glob"
+  *
+  * const schema = Pattern
+- * void schema
++ * console.log(schema)
+  * ```
+  *
+  * @category utilities
+  * @since 0.0.0
+  */
+-export const Pattern = S.Union([S.String, S.Array(S.String)]);
++export const Pattern = S.Union([S.String, S.Array(S.String)]).pipe(
++  $I.annoteSchema("Pattern", {
++    description: "A glob pattern accepted as a single string or an array of strings.",
++  })
++);
+ 
+ /**
+  * A glob pattern: either a single string or an array of strings.
+@@ -41,7 +45,7 @@ export const Pattern = S.Union([S.String, S.Array(S.String)]);
+  * import type { Pattern } from "@beep/utils/Glob"
+  *
+  * const pattern: Pattern = ["src/*.ts", "test/*.ts"]
+- * void pattern
++ * console.log(pattern)
+  * ```
+  *
+  * @category models
+@@ -57,7 +61,7 @@ export type Pattern = typeof Pattern.Type;
+  * import { GlobOptions } from "@beep/utils/Glob"
+  *
+  * const opts = new GlobOptions({ absolute: true, dot: true })
+- * void opts
++ * console.log(opts)
+  * ```
+  *
+  * @category models
+@@ -84,7 +88,7 @@ export class GlobOptions extends S.Class<GlobOptions>($I`GlobOptions`)(
+  * import { GlobError } from "@beep/utils/Glob"
+  *
+  * const pattern = (value: GlobError.Encoded) => value.pattern
+- * void pattern
++ * console.log(pattern)
+  * ```
+  *
+  * @category models
+@@ -99,7 +103,7 @@ export declare namespace GlobError {
+    * import { GlobError } from "@beep/utils/Glob"
+    *
+    * const pattern = (value: GlobError.Encoded) => value.pattern
+-   * void pattern
++   * console.log(pattern)
+    * ```
+    *
+    * @category models
+@@ -118,7 +122,7 @@ export declare namespace GlobError {
+  * import { GlobError } from "@beep/utils/Glob"
+  *
+  * const error = GlobError.new("src/*.ts", undefined)
+- * void error
++ * console.log(error)
+  * ```
+  *
+  * @category models
+@@ -165,7 +169,7 @@ export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
+  *   return yield* service.glob("src/*.ts")
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @category services
+@@ -183,7 +187,7 @@ export interface Glob {
+  * import { Glob } from "@beep/utils/Glob"
+  *
+  * const tag = Glob
+- * void tag
++ * console.log(tag)
+  * ```
+  *
+  * @category services
+@@ -460,7 +464,7 @@ const makeGlob = (pattern: Pattern, options?: undefined | GlobOptions) => {
+  *   layer
+  * )
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/Html.ts b/packages/foundation/modeling/utils/src/Html.ts
+index a4efca237b..ab29c1082c 100644
+--- a/packages/foundation/modeling/utils/src/Html.ts
++++ b/packages/foundation/modeling/utils/src/Html.ts
+@@ -21,7 +21,7 @@ import * as Str from "effect/String";
+  * import { escapeHtml } from "@beep/utils/Html"
+  *
+  * const value = escapeHtml(`<div class="note">it's fine</div>`)
+- * void value
++ * console.log(value)
+  * ```
+  */
+ export const escapeHtml = flow(
+@@ -45,7 +45,7 @@ export const escapeHtml = flow(
+  * import { escapeHtmlMultiline } from "@beep/utils/Html"
+  *
+  * const value = escapeHtmlMultiline("hello\n<script>alert('x')</script>")
+- * void value
++ * console.log(value)
+  * ```
+  */
+ export const escapeHtmlMultiline = flow(escapeHtml, Str.replaceAll("\n", "<br />"));
+diff --git a/packages/foundation/modeling/utils/src/NodeUrl.ts b/packages/foundation/modeling/utils/src/NodeUrl.ts
+index 09f967a8ed..91d9f4e06e 100644
+--- a/packages/foundation/modeling/utils/src/NodeUrl.ts
++++ b/packages/foundation/modeling/utils/src/NodeUrl.ts
+@@ -26,7 +26,7 @@ import { Effect, PlatformError } from "effect";
+  *   return path
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @example
+@@ -40,11 +40,13 @@ import { Effect, PlatformError } from "effect";
+  *   Effect.succeed("/tmp/fallback.txt")
+  * )
+  *
+- * void recovered
++ * console.log(recovered)
+  * ```
+  *
+  * @param url - The `file:` URL to convert.
+  * @returns An effect that succeeds with the platform path string.
++ * @effects Runs Node's file URL conversion inside `Effect.try`; no services are
++ * required and invalid input fails with `PlatformError.BadArgument`.
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -75,7 +77,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
+  *   return url.href
+  * })
+  *
+- * void program
++ * console.log(program)
+  * ```
+  *
+  * @example
+@@ -87,11 +89,13 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
+  *   Effect.succeed(new URL("file:///tmp/fallback.txt"))
+  * )
+  *
+- * void recovered
++ * console.log(recovered)
+  * ```
+  *
+  * @param path - The platform path string to convert.
+  * @returns An effect that succeeds with a `file:` URL.
++ * @effects Runs Node's path conversion inside `Effect.try`; no services are
++ * required and invalid input fails with `PlatformError.BadArgument`.
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -114,7 +118,7 @@ export const toFileUrl = (path: string): Effect.Effect<URL, PlatformError.BadArg
+  * import { fileURLToPath } from "@beep/utils/NodeUrl"
+  *
+  * const path = fileURLToPath(new URL("file:///tmp/beep.txt"))
+- * void path
++ * console.log(path)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/Number.ts b/packages/foundation/modeling/utils/src/Number.ts
+index 167e1d92c0..09b205a8db 100644
+--- a/packages/foundation/modeling/utils/src/Number.ts
++++ b/packages/foundation/modeling/utils/src/Number.ts
+@@ -27,29 +27,16 @@ import { Number as Num } from "effect";
+  * // Type guard usage to refine unknown input types
+  * const value: unknown = 5;
+  * if (isPositive(value)) {
+- *
++ *   const doubled = value * 2;
++ *   console.log(doubled);
+  * }
+  * ```
+  *
+- * @see Num.isGreaterThanOrEqualTo for comparison implementation details.
+- *
+- * @example
+- * ```typescript
+- * import { Console } from "effect";
+- * import { isPositive } from "@beep/utils/Number";
+- *
+- * const processNumber = (n: unknown) =>
+- *
+- *
+- *
+- *
+- * void processNumber(10);
+- * ```
+- *
+- * @since 0.0.0
+- * @category validation
+  * @param u - The value to check.
+  * @returns True if the value is a number and is positive, false otherwise.
++ * @see Num.isGreaterThanOrEqualTo for comparison implementation details.
++ * @category validation
++ * @since 0.0.0
+  */
+ export const isPositive: (u: unknown) => u is number = (u: unknown): u is number =>
+   Num.isNumber(u) && Num.isGreaterThanOrEqualTo(0)(u);
+@@ -57,6 +44,13 @@ export const isPositive: (u: unknown) => u is number = (u: unknown): u is number
+ /**
+  * Re-export of all helpers from `effect/Number`.
+  *
++ * @example
++ * ```ts
++ * import * as Num from "@beep/utils/Number"
++ *
++ * console.log(Num)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -78,9 +72,9 @@ export * from "effect/Number";
+  * const notNum = Num.isInteger("42")
+  * // false
+  *
+- * void whole
+- * void fractional
+- * void notNum
++ * console.log(whole)
++ * console.log(fractional)
++ * console.log(notNum)
+  * ```
+  *
+  * @category predicates
+diff --git a/packages/foundation/modeling/utils/src/Option.ts b/packages/foundation/modeling/utils/src/Option.ts
+index ea458f69ac..d6a23fca6b 100644
+--- a/packages/foundation/modeling/utils/src/Option.ts
++++ b/packages/foundation/modeling/utils/src/Option.ts
+@@ -28,7 +28,7 @@ import { unsafeDotGet } from "./internal/StructPath.ts";
+  * import { pipe } from "effect"
+  * import { O } from "@beep/utils"
+  *
+- * const user = { name: "Alice", age: null as number | null }
++ * const user: { readonly name: string; readonly age: number | null } = { name: "Alice", age: null }
+  *
+  * // Data-first -- nullish becomes none
+  * const age = O.propFromNullishOr(user, "age")
+@@ -38,8 +38,8 @@ import { unsafeDotGet } from "./internal/StructPath.ts";
+  * const name = pipe(user, O.propFromNullishOr("name"))
+  * // Option.some("Alice")
+  *
+- * void age
+- * void name
++ * console.log(age)
++ * console.log(name)
+  * ```
+  *
+  * @category getters
+@@ -67,6 +67,14 @@ export const propFromNullishOr: {
+ /**
+  * Re-export of all helpers from `effect/Option`.
+  *
++ * @example
++ * ```ts
++ * import * as O from "@beep/utils/Option"
++ *
++ * const value = O.some("beep")
++ * console.log(value)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+diff --git a/packages/foundation/modeling/utils/src/Predicate.ts b/packages/foundation/modeling/utils/src/Predicate.ts
+index a88ba65ca3..c821126456 100644
+--- a/packages/foundation/modeling/utils/src/Predicate.ts
++++ b/packages/foundation/modeling/utils/src/Predicate.ts
+@@ -1,4 +1,6 @@
+ /**
++ * Predicate helpers and re-exports for structural runtime checks.
++ *
+  * @packageDocumentation
+  * @since 0.0.0
+  */
+@@ -10,6 +12,14 @@ import * as P from "effect/Predicate";
+ /**
+  * Re-export of all helpers from `effect/Predicate`.
+  *
++ * @example
++ * ```ts
++ * import * as P from "@beep/utils/Predicate"
++ *
++ * const isObject = P.isObject({ ok: true })
++ * console.log(isObject)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -33,11 +43,12 @@ export * from "effect/Predicate";
+  * // true
+  *
+  * // Data-first style
+- * const result2 = hasProperties({ foo: 1, bar: 2 }, ["foo", "bar"] as const)
++ * const required: readonly ["foo", "bar"] = ["foo", "bar"]
++ * const result2 = hasProperties({ foo: 1, bar: 2 }, required)
+  * // true
+  *
+- * void result1
+- * void result2
++ * console.log(result1)
++ * console.log(result2)
+  * ```
+  */
+ export const hasProperties: {
+diff --git a/packages/foundation/modeling/utils/src/Random.ts b/packages/foundation/modeling/utils/src/Random.ts
+index ece3c28ef3..67d622a50c 100644
+--- a/packages/foundation/modeling/utils/src/Random.ts
++++ b/packages/foundation/modeling/utils/src/Random.ts
+@@ -17,7 +17,7 @@ const $I = $RepoUtilsId.create("Random");
+  * ```ts
+  * import { RandomValues } from "@beep/utils/Random"
+  *
+- * void RandomValues.Default
++ * console.log(RandomValues.Default)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/modeling/utils/src/Str.ts b/packages/foundation/modeling/utils/src/Str.ts
+index 893783920d..ed6820ac64 100644
+--- a/packages/foundation/modeling/utils/src/Str.ts
++++ b/packages/foundation/modeling/utils/src/Str.ts
+@@ -1,4 +1,7 @@
+ /**
++ * String helpers for type-preserving prefixes, suffixes, case conversion, and
++ * predicates.
++ *
+  * @packageDocumentation
+  * @since 0.0.0
+  */
+@@ -25,8 +28,8 @@ import * as A from "./Array.ts";
+  * const piped = pipe("bar", Str.prefix("foo-"))
+  * // "foo-bar"
+  *
+- * void prefixed
+- * void piped
++ * console.log(prefixed)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -61,8 +64,8 @@ export const prefix: {
+  * const result = piped()
+  * // "foo-bar"
+  *
+- * void value
+- * void result
++ * console.log(value)
++ * console.log(result)
+  * ```
+  *
+  * @category combinators
+@@ -96,8 +99,8 @@ export const prefixThunk: {
+  * const piped = pipe("foo", Str.postfix("-bar"))
+  * // "foo-bar"
+  *
+- * void suffixed
+- * void piped
++ * console.log(suffixed)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -133,8 +136,8 @@ export const postfix: {
+  * const result = piped()
+  * // "foo-bar"
+  *
+- * void value
+- * void result
++ * console.log(value)
++ * console.log(result)
+  * ```
+  *
+  * @category combinators
+@@ -160,7 +163,7 @@ export const postfixThunk: {
+  * ```ts
+  * import { pipe } from "effect"
+  * import { Str } from "@beep/utils"
+- * import type * as A from "effect/Array"
++ * import * as A from "effect/Array"
+  *
+  * const routes: A.NonEmptyReadonlyArray<string> = ["users", "posts"]
+  *
+@@ -170,8 +173,8 @@ export const postfixThunk: {
+  * // Data-last (pipeable)
+  * const piped = pipe(routes, Str.mapPrefix("/api/"))
+  *
+- * void prefixed
+- * void piped
++ * console.log(prefixed)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -206,7 +209,7 @@ export const mapPrefix: {
+  * ```ts
+  * import { pipe } from "effect"
+  * import { Str } from "@beep/utils"
+- * import type * as A from "effect/Array"
++ * import * as A from "effect/Array"
+  *
+  * const files: A.NonEmptyReadonlyArray<string> = ["index", "main"]
+  *
+@@ -216,8 +219,8 @@ export const mapPrefix: {
+  * // Data-last (pipeable)
+  * const piped = pipe(files, Str.mapPostfix(".ts"))
+  *
+- * void withExt
+- * void piped
++ * console.log(withExt)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -251,7 +254,7 @@ export const mapPostfix: {
+  *
+  * const value = Str.camelCase("my_cool_name")
+  * // "myCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -268,7 +271,7 @@ export const camelCase = <TStr extends string>(str: TStr): TF.CamelCase<TStr> =>
+  *
+  * const value = Str.snakeCase("myCoolName")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -285,7 +288,7 @@ export const snakeCase = <const TStr extends string>(str: TStr): TF.SnakeCase<TS
+  *
+  * const value = Str.kebabCase("myCoolName")
+  * // "my-cool-name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -303,7 +306,7 @@ export const kebabCase = <const TStr extends string>(str: TStr): TF.KebabCase<TS
+  *
+  * const value = Str.screamingSnake("myCoolName")
+  * // "MY_COOL_NAME"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -321,7 +324,7 @@ export const screamingSnake = <const TStr extends string>(str: TStr): TF.Screami
+  *
+  * const value = Str.pascalCase("my_cool_name")
+  * // "MyCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -338,7 +341,7 @@ export const pascalCase = <const TStr extends string>(str: TStr): TF.PascalCase<
+  *
+  * const value = Str.pascalToSnake("MyCoolName")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -356,7 +359,7 @@ export const pascalToSnake = <const TStr extends string>(str: TF.PascalCase<TStr
+  *
+  * const value = Str.snakeToCamel("my_cool_name")
+  * // "myCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -374,7 +377,7 @@ export const snakeToCamel = <const TStr extends string>(str: TF.SnakeCase<TStr>)
+  *
+  * const value = Str.snakeToKebab("my_cool_name")
+  * // "my-cool-name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -392,7 +395,7 @@ export const snakeToKebab = <const TStr extends string>(str: TF.SnakeCase<TStr>)
+  *
+  * const value = Str.camelToSnake("myCoolName")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -410,7 +413,7 @@ export const camelToSnake = <const TStr extends string>(str: TF.CamelCase<TStr>)
+  *
+  * const value = Str.snakeToPascal("my_cool_name")
+  * // "MyCoolName"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -428,7 +431,7 @@ export const snakeToPascal = <const TStr extends string>(str: TF.SnakeCase<TStr>
+  *
+  * const value = Str.kebabToSnake("my-cool-name")
+  * // "my_cool_name"
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -451,8 +454,8 @@ export const kebabToSnake = <const TStr extends string>(str: TF.KebabCase<TStr>)
+  * const direct = Str.startsWith("hello-world", "hello")
+  * const piped = pipe("hello-world", Str.startsWith("hello"))
+  *
+- * void direct
+- * void piped
++ * console.log(direct)
++ * console.log(piped)
+  * ```
+  *
+  * @category predicates
+@@ -488,8 +491,8 @@ export const startsWith: {
+  * const direct = Str.endsWith("hello-world", "world")
+  * const piped = pipe("hello-world", Str.endsWith("world"))
+  *
+- * void direct
+- * void piped
++ * console.log(direct)
++ * console.log(piped)
+  * ```
+  *
+  * @category predicates
+@@ -530,8 +533,8 @@ export const endsWith: {
+  * const piped = pipe("hello world", Str.contains("xyz"))
+  * // false
+  *
+- * void result
+- * void piped
++ * console.log(result)
++ * console.log(piped)
+  * ```
+  *
+  * @category predicates
+@@ -571,8 +574,8 @@ export const contains: {
+  * const piped = pipe("na", Str.repeat(2))
+  * // "nana"
+  *
+- * void result
+- * void piped
++ * console.log(result)
++ * console.log(piped)
+  * ```
+  *
+  * @category combinators
+@@ -591,6 +594,14 @@ export const repeat: {
+ /**
+  * Re-export of all helpers from `effect/String`.
+  *
++ * @example
++ * ```ts
++ * import * as Str from "@beep/utils/Str"
++ *
++ * const lower = Str.toLowerCase("BEEP")
++ * console.log(lower)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -607,7 +618,7 @@ export * from "effect/String";
+  * const value = lazy()
+  * // "hello"
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -623,12 +634,12 @@ export const trimThunk = (s: string) => () => Str.trim(s);
+  * import { Str } from "@beep/utils"
+  *
+  * const value = Str.fromNumber(42)
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+  * @since 0.0.0
+- * @template T - Numeric literal to convert.
++ * @typeParam T - Numeric literal to convert.
+  * @param num - The number to convert to a string literal type.
+  * @returns The number as a string literal type.
+  */
+@@ -642,7 +653,7 @@ export const fromNumber = <const T extends number>(num: T): `${T}` => `${num}` a
+  * import { Str } from "@beep/utils"
+  *
+  * const value = Str.toSlug("Hello, Beep Effect!")
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -673,8 +684,8 @@ export const toSlug = flow(
+  * const piped = pipe("  beep effect  ", Str.truncate(4))
+  * // "beep..."
+  *
+- * void direct
+- * void piped
++ * console.log(direct)
++ * console.log(piped)
+  * ```
+  *
+  * @param text - The text to trim and truncate.
+diff --git a/packages/foundation/modeling/utils/src/Stream.ts b/packages/foundation/modeling/utils/src/Stream.ts
+index 840e1e52d8..c50b2c0cdc 100644
+--- a/packages/foundation/modeling/utils/src/Stream.ts
++++ b/packages/foundation/modeling/utils/src/Stream.ts
+@@ -31,7 +31,7 @@ import * as S from "effect/Schema";
+  *   Stream.runCollect
+  * )
+  *
+- * void Effect.runPromise(program)
++ * console.log(Effect.runPromise(program))
+  * ```
+  *
+  * @param self - The stream of JSON lines to decode.
+diff --git a/packages/foundation/modeling/utils/src/Struct.ts b/packages/foundation/modeling/utils/src/Struct.ts
+index 330097c422..96e4bac3fb 100644
+--- a/packages/foundation/modeling/utils/src/Struct.ts
++++ b/packages/foundation/modeling/utils/src/Struct.ts
+@@ -32,7 +32,7 @@ const NonEmptyStringKeys = S.NonEmptyArray(S.String);
+  * import { EmptyStructError } from "@beep/utils/Struct"
+  *
+  * const error = EmptyStructError
+- * void error
++ * console.log(error)
+  * ```
+  *
+  * @category error-handling
+@@ -90,7 +90,7 @@ const pathFromOptions = (options: { readonly path: PathInput }): PathInput =>
+  * import type { PathLookup } from "@beep/utils/Struct"
+  *
+  * const isFound = (lookup: PathLookup) => lookup.found
+- * void isFound
++ * console.log(isFound)
+  * ```
+  *
+  * @category models
+@@ -121,8 +121,8 @@ export type PathLookup = InternalPathLookup;
+  * // Data-last (pipeable)
+  * const age = pipe(user, Struct.dotGet("profile.age"))
+  *
+- * void name
+- * void age
++ * console.log(name)
++ * console.log(age)
+  * ```
+  *
+  * @category getters
+@@ -163,8 +163,8 @@ export const dotGet: {
+  * const missing = Struct.dotGetOption(user, ["profile", "age"])
+  * // Option.none()
+  *
+- * void name
+- * void missing
++ * console.log(name)
++ * console.log(missing)
+  * ```
+  *
+  * @category getters
+@@ -213,7 +213,7 @@ export const dotGetOption: {
+  * const upper = Struct.mapPath(user, (s: string) => s.toUpperCase(), { path: "profile.name" })
+  * // "ALICE"
+  *
+- * void upper
++ * console.log(upper)
+  * ```
+  *
+  * @category combinators
+@@ -288,7 +288,7 @@ export const mapPath: {
+  * const value = lazy()
+  * // "ALICE"
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category combinators
+@@ -366,8 +366,8 @@ export const mapPathLazy: {
+  * const port = getPort()
+  * // 3000
+  *
+- * void host
+- * void port
++ * console.log(host)
++ * console.log(port)
+  * ```
+  *
+  * @category getters
+@@ -400,7 +400,7 @@ export const getLazy: {
+  * const paths = Struct.pathsOf(config)
+  * // ["db", "db.host", "db.port", "debug"]
+  *
+- * void paths
++ * console.log(paths)
+  * ```
+  *
+  * @category getters
+@@ -434,7 +434,7 @@ export const pathsOf = <const S extends Record<string, unknown>>(
+  *
+  * type Entry = StringKeyEntry<{ readonly host: string; readonly port: number }>
+  * const useEntry = (entry: Entry) => entry[0]
+- * void useEntry
++ * console.log(useEntry)
+  * ```
+  *
+  * @category models
+@@ -455,7 +455,7 @@ export type StringKeyEntry<T> = { [K in keyof T & string]: [K, T[K]] }[keyof T &
+  *
+  * type Entries = StringKeyEntries<{ readonly host: string; readonly port: number }>
+  * const entries: Entries = [["host", "localhost"], ["port", 3000]]
+- * void entries
++ * console.log(entries)
+  * ```
+  *
+  * @category models
+@@ -479,7 +479,7 @@ export type StringKeyEntries<T> = Array<StringKeyEntry<T>>;
+  * const value = { a: "foo", b: 1, [c]: true }
+  *
+  * const entries: Array<["a", string] | ["b", number]> = Struct.entries(value)
+- * void entries
++ * console.log(entries)
+  * ```
+  *
+  * @category getters
+@@ -508,7 +508,7 @@ export const entries = <const R extends object>(obj: R): StringKeyEntries<R> =>
+  * const result = Struct.entriesNonEmpty(config)
+  * // [["host", "localhost"], ["port", 3000]]
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @category getters
+@@ -536,7 +536,7 @@ export const entriesNonEmpty = <const R extends object>(
+  * const result = Struct.keys(config)
+  * // ["host", "port"]
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @category getters
+@@ -557,9 +557,9 @@ export const keys = <const R extends object>(obj: R): Array<keyof R & string> =>
+  * const config = { host: "localhost", port: 3000 }
+  *
+  * const result = Struct.keysNonEmpty(config)
+- * // ["host", "port"] typed as NonEmptyReadonlyArray
++ * // ["host", "port"] narrowed to NonEmptyReadonlyArray
+  *
+- * void result
++ * console.log(result)
+  * ```
+  *
+  * @category getters
+@@ -591,7 +591,7 @@ export const keysNonEmpty = <const R extends object>(
+  * const obj = Struct.fromEntries(entries)
+  * // { host: "localhost", port: 3000 }
+  *
+- * void obj
++ * console.log(obj)
+  * ```
+  *
+  * @category constructors
+@@ -617,6 +617,13 @@ export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(
+ /**
+  * Re-export of all helpers from `effect/Struct`.
+  *
++ * @example
++ * ```ts
++ * import * as Struct from "@beep/utils/Struct"
++ *
++ * console.log(Struct)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -630,7 +637,7 @@ export * from "effect/Struct";
+  * import type { ReverseableStruct } from "@beep/utils/Struct"
+  *
+  * const mapping: ReverseableStruct = { active: "A", inactive: "I" }
+- * void mapping
++ * console.log(mapping)
+  * ```
+  *
+  * @category models
+@@ -653,7 +660,7 @@ export type ReverseableStruct = Readonly<{
+  *
+  * type Direction = ReverseStruct<{ readonly up: "north"; readonly down: "south" }>
+  * const getNorth = (direction: Direction) => direction.north
+- * void getNorth
++ * console.log(getNorth)
+  * ```
+  *
+  * @category models
+@@ -686,7 +693,7 @@ export type ReverseStruct<T extends ReverseableStruct> = {
+  *
+  * const reversed = Struct.reverse(errorCode)
+  *
+- * void reversed
++ * console.log(reversed)
+  * ```
+  *
+  * @category combinators
+diff --git a/packages/foundation/modeling/utils/src/Text.ts b/packages/foundation/modeling/utils/src/Text.ts
+index eb02e65d4b..b3459f3087 100644
+--- a/packages/foundation/modeling/utils/src/Text.ts
++++ b/packages/foundation/modeling/utils/src/Text.ts
+@@ -24,7 +24,7 @@ const descriptionFromOptions = (options: { readonly description: string }): stri
+  * const tags = Text.splitCommaSeparatedTrimmed(" foo , bar , , baz ")
+  * // ["foo", "bar", "baz"]
+  *
+- * void tags
++ * console.log(tags)
+  * ```
+  *
+  * @category utilities
+@@ -48,8 +48,8 @@ export const splitCommaSeparatedTrimmed = flow(Str.split(","), A.map(Str.trim),
+  * const noAlias = Text.formatNameWithAliases("rm", [], { description: "Remove files" })
+  * // "rm: Remove files"
+  *
+- * void row
+- * void noAlias
++ * console.log(row)
++ * console.log(noAlias)
+  * ```
+  *
+  * @category utilities
+@@ -80,7 +80,7 @@ export const formatNameWithAliases: {
+  * const block = Text.joinLines(["hello", "world"])
+  * // "hello\nworld"
+  *
+- * void block
++ * console.log(block)
+  * ```
+  *
+  * @category utilities
+diff --git a/packages/foundation/modeling/utils/src/index.ts b/packages/foundation/modeling/utils/src/index.ts
+index fa7e252918..dce15b8139 100644
+--- a/packages/foundation/modeling/utils/src/index.ts
++++ b/packages/foundation/modeling/utils/src/index.ts
+@@ -8,6 +8,14 @@
+ /**
+  * Array utilities extending `effect/Array` with non-empty variants.
+  *
++ * @example
++ * ```ts
++ * import { A } from "@beep/utils"
++ *
++ * const values = A.makeReadonly("beep")
++ * console.log(values)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -16,6 +24,13 @@ export * as A from "./Array.ts";
+ /**
+  * Boolean utilities re-exported from `effect/Boolean`.
+  *
++ * @example
++ * ```ts
++ * import { Bool } from "@beep/utils"
++ *
++ * console.log(Bool)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -24,6 +39,13 @@ export * as Bool from "./Bool.ts";
+ /**
+  * DateTime utilities extending `effect/DateTime`.
+  *
++ * @example
++ * ```ts
++ * import { DateTime } from "@beep/utils"
++ *
++ * console.log(DateTime)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -32,6 +54,13 @@ export * as DateTime from "./DateTime.ts";
+ /**
+  * File-system watch helpers built on `effect/FileSystem`.
+  *
++ * @example
++ * ```ts
++ * import { FileSystem } from "@beep/utils"
++ *
++ * console.log(FileSystem)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -40,6 +69,14 @@ export * as FileSystem from "./FileSystem.ts";
+ /**
+  * HTML escaping helpers.
+  *
++ * @example
++ * ```ts
++ * import { Html } from "@beep/utils"
++ *
++ * const escaped = Html.escapeHtml("<strong>beep</strong>")
++ * console.log(escaped)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -48,6 +85,14 @@ export * as Html from "./Html.ts";
+ /**
+  * Prototype-pollution guard.
+  *
++ * @example
++ * ```ts
++ * import { isBlockedObjectKey } from "@beep/utils"
++ *
++ * const blocked = isBlockedObjectKey("__proto__")
++ * console.log(blocked)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -55,6 +100,14 @@ export * from "./isBlockedObjectKey.ts";
+ /**
+  * Number utilities extending `effect/Number`.
+  *
++ * @example
++ * ```ts
++ * import { Num } from "@beep/utils"
++ *
++ * const whole = Num.isInteger(42)
++ * console.log(whole)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -62,6 +115,14 @@ export * as Num from "./Number.ts";
+ /**
+  * Option utilities extending `effect/Option`.
+  *
++ * @example
++ * ```ts
++ * import { O } from "@beep/utils"
++ *
++ * const value = O.some("beep")
++ * console.log(value)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -69,12 +130,27 @@ export * as O from "./Option.ts";
+ /**
+  * Predicate utilities extending `effect/Predicate`.
+  *
++ * @example
++ * ```ts
++ * import { P } from "@beep/utils"
++ *
++ * const object = P.isObject({ ok: true })
++ * console.log(object)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+ export * as P from "./Predicate.ts";
+ /**
++ * Random value service helpers.
++ *
++ * @example
++ * ```ts
++ * import { RandomValues } from "@beep/utils"
+  *
++ * console.log(RandomValues.Default)
++ * ```
+  *
+  * @category utilities
+  * @since 0.0.0
+@@ -84,6 +160,14 @@ export * from "./Random.ts";
+ /**
+  * String utilities extending `effect/String` with typed case conversions.
+  *
++ * @example
++ * ```ts
++ * import { Str } from "@beep/utils"
++ *
++ * const slug = Str.toSlug("Hello, Beep Effect!")
++ * console.log(slug)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -91,6 +175,13 @@ export * as Str from "./Str.ts";
+ /**
+  * Stream utilities extending `effect/Stream`.
+  *
++ * @example
++ * ```ts
++ * import { Stream } from "@beep/utils"
++ *
++ * console.log(Stream)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -98,6 +189,14 @@ export * as Stream from "./Stream.ts";
+ /**
+  * Struct utilities extending `effect/Struct` with dot-path access.
+  *
++ * @example
++ * ```ts
++ * import { Struct } from "@beep/utils"
++ *
++ * const keys = Struct.keys({ id: 1, name: "Ada" })
++ * console.log(keys)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -105,6 +204,14 @@ export * as Struct from "./Struct.ts";
+ /**
+  * Plain-text formatting helpers.
+  *
++ * @example
++ * ```ts
++ * import { Text } from "@beep/utils"
++ *
++ * const block = Text.joinLines(["alpha", "beta"])
++ * console.log(block)
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -112,6 +219,13 @@ export * as Text from "./Text.ts";
+ /**
+  * thunk constants (`thunkTrue`, `thunkNull`, etc.).
+  *
++ * @example
++ * ```ts
++ * import { thunkTrue } from "@beep/utils"
++ *
++ * console.log(thunkTrue())
++ * ```
++ *
+  * @category utilities
+  * @since 0.0.0
+  */
+diff --git a/packages/foundation/modeling/utils/src/internal/StructPath.ts b/packages/foundation/modeling/utils/src/internal/StructPath.ts
+index 9c7fe45432..53b71345a7 100644
+--- a/packages/foundation/modeling/utils/src/internal/StructPath.ts
++++ b/packages/foundation/modeling/utils/src/internal/StructPath.ts
+@@ -22,7 +22,7 @@ import * as A from "../Array.ts";
+  * import { PathInput } from "@beep/utils/internal/StructPath"
+  *
+  * const schema = PathInput
+- * void schema
++ * console.log(schema)
+  * ```
+  *
+  * @category models
+@@ -38,7 +38,7 @@ export const PathInput = S.Union([S.String, S.Array(S.String)]);
+  * import type { PathInput } from "@beep/utils/internal/StructPath"
+  *
+  * const path: PathInput = ["profile", "name"]
+- * void path
++ * console.log(path)
+  * ```
+  *
+  * @category models
+@@ -62,7 +62,7 @@ const PathLookupSchema = S.TaggedUnion({
+  * import type { PathLookup } from "@beep/utils/internal/StructPath"
+  *
+  * const describe = (lookup: PathLookup) => lookup.found
+- * void describe
++ * console.log(describe)
+  * ```
+  *
+  * @category models
+@@ -130,7 +130,7 @@ const lookupParts = (self: unknown, parts: A.NonEmptyReadonlyArray<string>): Pat
+  * import { lookupAtPath } from "@beep/utils/internal/StructPath"
+  *
+  * const lookup = lookupAtPath({ profile: { name: "Ada" } }, "profile.name")
+- * void lookup
++ * console.log(lookup)
+  * ```
+  *
+  * @category getters
+@@ -156,7 +156,7 @@ export const lookupAtPath: {
+  * import { unsafeDotGet } from "@beep/utils/internal/StructPath"
+  *
+  * const value = unsafeDotGet({ profile: { name: "Ada" } }, "profile.name")
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category getters
+diff --git a/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts b/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts
+index 7cba7a4bb8..4e5f3bb380 100644
+--- a/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts
++++ b/packages/foundation/modeling/utils/src/isBlockedObjectKey.ts
+@@ -26,8 +26,8 @@ const BlockedObjectKeys = HashSet.make("__proto__", "prototype", "constructor");
+  * const blocked = isBlockedObjectKey("__proto__")
+  * // true
+  *
+- * void safe
+- * void blocked
++ * console.log(safe)
++ * console.log(blocked)
+  * ```
+  *
+  * @category predicates
+diff --git a/packages/foundation/modeling/utils/src/thunk.ts b/packages/foundation/modeling/utils/src/thunk.ts
+index 1a61ecf4eb..77e678c036 100644
+--- a/packages/foundation/modeling/utils/src/thunk.ts
++++ b/packages/foundation/modeling/utils/src/thunk.ts
+@@ -22,7 +22,7 @@ type LazyArg<A> = () => A;
+  * const value = getFortyTwo()
+  * // 42
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category constructors
+@@ -43,7 +43,7 @@ export const thunk =
+  * const value = thunkNull()
+  * // null
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -61,7 +61,7 @@ export const thunkNull = thunk(null);
+  * const value = thunkUndefined()
+  * // undefined
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -79,7 +79,7 @@ export const thunkUndefined = thunk(undefined);
+  * const value = thunkVoid()
+  * // undefined
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -97,7 +97,7 @@ export const thunkVoid = thunk(void 0);
+  * const value = thunkTrue()
+  * // true
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -115,7 +115,7 @@ export const thunkTrue = thunk(true as const);
+  * const value = thunkFalse()
+  * // false
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -133,7 +133,7 @@ export const thunkFalse = thunk(false as const);
+  * const value = thunkEmptyStr()
+  * // ""
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -151,7 +151,7 @@ export const thunkEmptyStr = thunk("");
+  * const value = thunk0()
+  * // 0
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -169,7 +169,7 @@ export const thunk0 = thunk(0);
+  * const value = thunk1()
+  * // 1
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -188,7 +188,7 @@ export const thunk1 = thunk(1);
+  * const arr = getArr()
+  * // []
+  *
+- * void arr
++ * console.log(arr)
+  * ```
+  *
+  * @category constructors
+@@ -207,7 +207,7 @@ export const thunkEmptyArray = <A = never>(): LazyArg<Array<A>> => A.empty<A>;
+  * const arr = getArr()
+  * // []
+  *
+- * void arr
++ * console.log(arr)
+  * ```
+  *
+  * @category constructors
+@@ -226,7 +226,7 @@ export const thunkEmptyReadonlyArray = <A = never>(): LazyArg<ReadonlyArray<A>>
+  * const getEffect = thunkEffect(Effect.succeed(42))
+  * const eff = getEffect()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category constructors
+@@ -243,9 +243,11 @@ export const thunkEffect = <T>(effect: T) => thunk(effect);
+  *
+  * const eff = thunkEffectVoid()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
++ * @effects Creates a pure `Effect.void` value for callers to execute later; no
++ * services are required while constructing the thunk.
+  * @category utilities
+  * @since 0.0.0
+  */
+@@ -261,9 +263,11 @@ export const thunkEffectVoid = thunkEffect(Effect.void);
+  * const getEffect = thunkEffectSucceed("hello")
+  * const eff = getEffect()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
++ * @effects Creates a pure `Effect.succeed` value for callers to execute later;
++ * no services are required while constructing the thunk.
+  * @category constructors
+  * @since 0.0.0
+  */
+@@ -278,7 +282,7 @@ export const thunkEffectSucceed = <A>(a: A) => thunkEffect(Effect.succeed(a));
+  *
+  * const eff = thunkEffectSucceedNull()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
+  * @category utilities
+@@ -287,7 +291,7 @@ export const thunkEffectSucceed = <A>(a: A) => thunkEffect(Effect.succeed(a));
+ export const thunkEffectSucceedNull = thunkEffectSucceed(null);
+ 
+ /**
+- * Returns a thunk for `Effect.succeed(Option.none())`.
++ * Returns `Effect.succeed(Option.none())`.
+  *
+  * @example
+  * ```ts
+@@ -295,9 +299,11 @@ export const thunkEffectSucceedNull = thunkEffectSucceed(null);
+  *
+  * const eff = thunkEffectSucceedNone<string>()
+  *
+- * void eff
++ * console.log(eff)
+  * ```
+  *
++ * @effects Creates a pure `Effect` that succeeds with `Option.none`; no
++ * services are required and execution is left to the caller.
+  * @category constructors
+  * @since 0.0.0
+  */
+@@ -312,7 +318,7 @@ export const thunkEffectSucceedNone = <A = never>() => Effect.succeed(O.none<A>(
+  *
+  * const rec = thunkEmptyRecord<string, number>()
+  *
+- * void rec
++ * console.log(rec)
+  * ```
+  *
+  * @category constructors
+@@ -331,7 +337,7 @@ export const thunkEmptyRecord = <K extends string | symbol = never, V = never>()
+  * const opt = getSome()
+  * // Option.some(42)
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+@@ -352,7 +358,7 @@ export const thunkSome =
+  * const opt = thunkSomeEmptyStr()
+  * // Option.some("")
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category utilities
+@@ -370,7 +376,7 @@ export const thunkSomeEmptyStr = thunkSome("");
+  * const value = thunkNegative1()
+  * // -1
+  *
+- * void value
++ * console.log(value)
+  * ```
+  *
+  * @category utilities
+@@ -388,7 +394,7 @@ export const thunkNegative1 = thunk(-1);
+  * const opt = thunkSomeFalse()
+  * // Option.some(false)
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category utilities
+@@ -406,7 +412,7 @@ export const thunkSomeFalse = thunkSome(false);
+  * const opt = thunkSomeTrue()
+  * // Option.some(true)
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category utilities
+@@ -424,7 +430,7 @@ export const thunkSomeTrue = thunkSome(true as const);
+  * const opt = thunkSomeEmptyArray<number>()
+  * // Option.some([])
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+@@ -442,7 +448,7 @@ export const thunkSomeEmptyArray = <A = never>() => O.some(A.empty<A>());
+  * const opt = thunkSomeEmptyRecord<string, number>()
+  * // Option.some({})
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+@@ -463,7 +469,7 @@ export const thunkSomeEmptyRecord = <K extends string | symbol = never, V = neve
+  * const opt = thunkSomeNone<string>()
+  * // Option.some(Option.none())
+  *
+- * void opt
++ * console.log(opt)
+  * ```
+  *
+  * @category constructors
+diff --git a/packages/foundation/primitive/types/src/TArray.types.ts b/packages/foundation/primitive/types/src/TArray.types.ts
+index 0618d57843..057d17938d 100644
+--- a/packages/foundation/primitive/types/src/TArray.types.ts
++++ b/packages/foundation/primitive/types/src/TArray.types.ts
+@@ -18,12 +18,12 @@
+  * type StringElement = TArray.Elem<string[]>
+  * // string
+  *
+- * declare const elements: readonly [NumberElement, StringElement]
+- * void elements
++ * const elements: readonly [NumberElement, StringElement] = [1, "name"]
++ * console.log(elements)
+  * ```
+  *
+  * @since 0.0.0
+  * @category utilities
+- * @template T - The type from which the element type will be inferred.
++ * @typeParam T - The type from which the element type will be inferred.
+  */
+ export type Elem<T> = T extends readonly (infer U)[] ? U : never;
+diff --git a/packages/foundation/primitive/types/src/TString.types.ts b/packages/foundation/primitive/types/src/TString.types.ts
+index 6ed3ae4825..39b7d88f07 100644
+--- a/packages/foundation/primitive/types/src/TString.types.ts
++++ b/packages/foundation/primitive/types/src/TString.types.ts
+@@ -21,8 +21,7 @@
+  * type Empty = TString.NonEmpty<"">
+  * // never
+  *
+- * declare const nonEmptyExamples: readonly [Hello, Empty]
+- * void nonEmptyExamples
++ * type NonEmptyExamples = readonly [Hello, Empty]
+  * ```
+  *
+  * @category utilities
+@@ -43,8 +42,7 @@ export type NonEmpty<T extends string = string> = T extends "" ? never : T;
+  * type Digits = TString.Chars<"0123456789">
+  * // "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+  *
+- * declare const charsExamples: readonly [ABC, Digits]
+- * void charsExamples
++ * type CharsExamples = readonly [ABC, Digits]
+  * ```
+  *
+  * @category utilities
+diff --git a/standards/jsdoc-documentation.inventory.jsonc b/standards/jsdoc-documentation.inventory.jsonc
+index 9154ef463a..75801ca362 100644
+--- a/standards/jsdoc-documentation.inventory.jsonc
++++ b/standards/jsdoc-documentation.inventory.jsonc
+@@ -1,7 +1,7 @@
+ {
+   "standard": "jsdoc-documentation",
+   "version": 1,
+-  "generatedAt": "2026-05-09T09:51:57.516Z",
++  "generatedAt": "2026-05-12T02:11:34.223Z",
+   "source": {
+     "packageUniverseCommand": "bun run topo-sort",
+     "generator": "bun run beep quality jsdoc-inventory",
+@@ -62,21 +62,21 @@
+   },
+   "totals": {
+     "packages": 55,
+-    "cleanPackages": 24,
++    "cleanPackages": 26,
+     "packagesWithoutPublicSrcSurface": 1,
+-    "packagesNeedingRemediation": 30,
++    "packagesNeedingRemediation": 28,
+     "publicModules": 837,
+     "publicExports": 5852,
+-    "openModules": 123,
+-    "openExports": 2457,
+-    "missingExportExamples": 2251,
++    "openModules": 121,
++    "openExports": 2414,
++    "missingExportExamples": 2227,
+     "missingExportCategories": 50,
+     "missingExportSince": 48,
+-    "forbiddenTagFindings": 15,
++    "forbiddenTagFindings": 7,
+     "malformedConditionalTagFindings": 0,
+-    "exampleImportFindings": 22,
+-    "unsafeExampleFindings": 88,
+-    "schemaAnnotationFindings": 128,
++    "exampleImportFindings": 20,
++    "unsafeExampleFindings": 79,
++    "schemaAnnotationFindings": 127,
+     "rootPolicyOpen": 0
+   },
+   "packages": [
+@@ -84,7 +84,7 @@
+       "packageName": "@beep/types",
+       "packagePath": "packages/foundation/primitive/types",
+       "topoOrder": 1,
+-      "status": "needs-remediation",
++      "status": "clean",
+       "sourceCoverage": {
+         "srcDir": "src",
+         "sourceFileCount": 5,
+@@ -99,15 +99,15 @@
+       },
+       "counts": {
+         "openModules": 0,
+-        "openExports": 3,
++        "openExports": 0,
+         "missingExportExamples": 0,
+         "missingExportCategories": 0,
+         "missingExportSince": 0,
+         "missingExportSummaries": 0,
+-        "forbiddenTagFindings": 1,
++        "forbiddenTagFindings": 0,
+         "malformedConditionalTagFindings": 0,
+         "exampleImportFindings": 0,
+-        "unsafeExampleFindings": 3,
++        "unsafeExampleFindings": 0,
+         "schemaAnnotationFindings": 0
+       },
+       "modules": [
+@@ -215,32 +215,24 @@
+             "@example",
+             "@since",
+             "@category",
+-            "@template"
++            "@typeParam"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-declare-statements",
+-              "detail": "Examples must be executable snippets, not declaration stubs."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "NonEmpty",
+           "exportKind": "type",
+           "filePath": "src/TString.types.ts",
+           "repoPath": "packages/foundation/primitive/types/src/TString.types.ts",
+-          "line": 31,
+-          "anchor": "packages-foundation-primitive-types-src-tstring-types-ts-31-nonempty",
++          "line": 30,
++          "anchor": "packages-foundation-primitive-types-src-tstring-types-ts-30-nonempty",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -251,23 +243,17 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-declare-statements",
+-              "detail": "Examples must be executable snippets, not declaration stubs."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "Chars",
+           "exportKind": "type",
+           "filePath": "src/TString.types.ts",
+           "repoPath": "packages/foundation/primitive/types/src/TString.types.ts",
+-          "line": 53,
+-          "anchor": "packages-foundation-primitive-types-src-tstring-types-ts-53-chars",
++          "line": 51,
++          "anchor": "packages-foundation-primitive-types-src-tstring-types-ts-51-chars",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -278,15 +264,9 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-declare-statements",
+-              "detail": "Examples must be executable snippets, not declaration stubs."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "Any",
+@@ -2227,7 +2207,7 @@
+       "packageName": "@beep/utils",
+       "packagePath": "packages/foundation/modeling/utils",
+       "topoOrder": 3,
+-      "status": "needs-remediation",
++      "status": "clean",
+       "sourceCoverage": {
+         "srcDir": "src",
+         "sourceFileCount": 20,
+@@ -2241,17 +2221,17 @@
+         "enforceVersion": true
+       },
+       "counts": {
+-        "openModules": 2,
+-        "openExports": 40,
+-        "missingExportExamples": 24,
++        "openModules": 0,
++        "openExports": 0,
++        "missingExportExamples": 0,
+         "missingExportCategories": 0,
+         "missingExportSince": 0,
+         "missingExportSummaries": 0,
+-        "forbiddenTagFindings": 7,
++        "forbiddenTagFindings": 0,
+         "malformedConditionalTagFindings": 0,
+-        "exampleImportFindings": 2,
+-        "unsafeExampleFindings": 6,
+-        "schemaAnnotationFindings": 1
++        "exampleImportFindings": 0,
++        "unsafeExampleFindings": 0,
++        "schemaAnnotationFindings": 0
+       },
+       "modules": [
+         {
+@@ -2466,11 +2446,11 @@
+           ],
+           "missingRequiredTags": [],
+           "forbiddenTags": [],
+-          "missingSummary": true,
++          "missingSummary": false,
+           "malformedConditionalTags": [],
+           "categoryViolations": [],
+           "exportCount": 2,
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "docKind": "packageDocumentation",
+@@ -2502,11 +2482,11 @@
+           ],
+           "missingRequiredTags": [],
+           "forbiddenTags": [],
+-          "missingSummary": true,
++          "missingSummary": false,
+           "malformedConditionalTags": [],
+           "categoryViolations": [],
+           "exportCount": 26,
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "docKind": "packageDocumentation",
+@@ -2623,30 +2603,29 @@
+           "exportKind": "re-export",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 258,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-258-export-from-effect-array",
++          "line": 269,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-269-export-from-effect-array",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "matchToBoolean",
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 34,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-34-matchtoboolean",
++          "line": 37,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-37-matchtoboolean",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2666,8 +2645,8 @@
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 61,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-61-assertnonemptyarray",
++          "line": 64,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-64-assertnonemptyarray",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2678,23 +2657,17 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-type-assertions-in-examples",
+-              "detail": "Examples must construct values through public APIs instead of type assertions."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "assertNonEmptyReadonlyArray",
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 81,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-81-assertnonemptyreadonlyarray",
++          "line": 84,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-84-assertnonemptyreadonlyarray",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2705,23 +2678,17 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-type-assertions-in-examples",
+-              "detail": "Examples must construct values through public APIs instead of type assertions."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "mapNonEmpty",
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 120,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-120-mapnonempty",
++          "line": 123,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-123-mapnonempty",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2741,8 +2708,8 @@
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 156,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-156-flatmapnonempty",
++          "line": 159,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-159-flatmapnonempty",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2762,8 +2729,8 @@
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 194,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-194-mapnonemptyreadonly",
++          "line": 197,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-197-mapnonemptyreadonly",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2783,8 +2750,8 @@
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 236,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-236-flatmapnonemptyreadonly",
++          "line": 239,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-239-flatmapnonemptyreadonly",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2804,8 +2771,8 @@
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 283,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-283-makereadonly",
++          "line": 294,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-294-makereadonly",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2825,8 +2792,8 @@
+           "exportKind": "const",
+           "filePath": "src/Array.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
+-          "line": 303,
+-          "anchor": "packages-foundation-modeling-utils-src-array-ts-303-fromiterablenonempty",
++          "line": 314,
++          "anchor": "packages-foundation-modeling-utils-src-array-ts-314-fromiterablenonempty",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2837,15 +2804,9 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-type-assertions-in-examples",
+-              "detail": "Examples must construct values through public APIs instead of type assertions."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * from \"effect/Boolean\";",
+@@ -2873,22 +2834,21 @@
+           "exportKind": "re-export",
+           "filePath": "src/DateTime.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/DateTime.ts",
+-          "line": 35,
+-          "anchor": "packages-foundation-modeling-utils-src-datetime-ts-35-export-from-effect-datetime",
++          "line": 42,
++          "anchor": "packages-foundation-modeling-utils-src-datetime-ts-42-export-from-effect-datetime",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "makeUnsafeUtc",
+@@ -2916,8 +2876,8 @@
+           "exportKind": "class",
+           "filePath": "src/DateTime.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/DateTime.ts",
+-          "line": 50,
+-          "anchor": "packages-foundation-modeling-utils-src-datetime-ts-50-datetimes",
++          "line": 57,
++          "anchor": "packages-foundation-modeling-utils-src-datetime-ts-57-datetimes",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -2937,56 +2897,55 @@
+           "exportKind": "re-export",
+           "filePath": "src/Event.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Event.ts",
+-          "line": 18,
+-          "anchor": "packages-foundation-modeling-utils-src-event-ts-18-export-from-effect-unstable-encoding-sse",
++          "line": 25,
++          "anchor": "packages-foundation-modeling-utils-src-event-ts-25-export-from-effect-unstable-encoding-sse",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "makeEvent",
+           "exportKind": "const",
+           "filePath": "src/Event.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Event.ts",
+-          "line": 72,
+-          "anchor": "packages-foundation-modeling-utils-src-event-ts-72-makeevent",
++          "line": 94,
++          "anchor": "packages-foundation-modeling-utils-src-event-ts-94-makeevent",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "makeWaitForFile",
+           "exportKind": "const",
+           "filePath": "src/FileSystem.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
+-          "line": 40,
+-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-40-makewaitforfile",
++          "line": 42,
++          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-42-makewaitforfile",
+           "currentTags": [
+             "@since",
+             "@category",
+-            "@example"
++            "@example",
++            "@effects"
+           ],
+           "missingRequiredTags": [],
+           "forbiddenTags": [],
+@@ -3027,22 +2986,20 @@
+           "anchor": "packages-foundation-modeling-utils-src-function-ts-60-tuple",
+           "currentTags": [
+             "@example",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns",
+             "@category",
+             "@since"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "tupledCurry",
+@@ -3053,22 +3010,20 @@
+           "anchor": "packages-foundation-modeling-utils-src-function-ts-86-tupledcurry",
+           "currentTags": [
+             "@example",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns",
+             "@category",
+             "@since"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "reverseCurry",
+@@ -3079,22 +3034,20 @@
+           "anchor": "packages-foundation-modeling-utils-src-function-ts-112-reversecurry",
+           "currentTags": [
+             "@example",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns",
+             "@category",
+             "@since"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "curry",
+@@ -3105,22 +3058,20 @@
+           "anchor": "packages-foundation-modeling-utils-src-function-ts-137-curry",
+           "currentTags": [
+             "@example",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns",
+             "@category",
+             "@since"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "uncurry",
+@@ -3131,22 +3082,20 @@
+           "anchor": "packages-foundation-modeling-utils-src-function-ts-162-uncurry",
+           "currentTags": [
+             "@example",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns",
+             "@category",
+             "@since"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "lazy",
+@@ -3157,22 +3106,20 @@
+           "anchor": "packages-foundation-modeling-utils-src-function-ts-192-lazy",
+           "currentTags": [
+             "@example",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns",
+             "@category",
+             "@since"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "Pattern",
+@@ -3192,21 +3139,16 @@
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+-          "schemaAnnotationGaps": [
+-            {
+-              "rule": "missing-schema-annotation",
+-              "detail": "Exported schemas should carry $I.annote or $I.annoteSchema metadata."
+-            }
+-          ],
+-          "remediationStatus": "open"
++          "schemaAnnotationGaps": [],
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "Pattern",
+           "exportKind": "type",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 50,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-50-pattern",
++          "line": 54,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-54-pattern",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3226,8 +3168,8 @@
+           "exportKind": "class",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 66,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-66-globoptions",
++          "line": 70,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-70-globoptions",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3247,8 +3189,8 @@
+           "exportKind": "namespace",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 93,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-93-globerror",
++          "line": 97,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-97-globerror",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3268,8 +3210,8 @@
+           "exportKind": "class",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 127,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-127-globerror",
++          "line": 131,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-131-globerror",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3289,8 +3231,8 @@
+           "exportKind": "interface",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 174,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-174-glob",
++          "line": 178,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-178-glob",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3310,8 +3252,8 @@
+           "exportKind": "const",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 192,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-192-glob",
++          "line": 196,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-196-glob",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3331,8 +3273,8 @@
+           "exportKind": "const",
+           "filePath": "src/Glob.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
+-          "line": 469,
+-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-469-layer",
++          "line": 473,
++          "anchor": "packages-foundation-modeling-utils-src-glob-ts-473-layer",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3394,12 +3336,13 @@
+           "exportKind": "const",
+           "filePath": "src/NodeUrl.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/NodeUrl.ts",
+-          "line": 51,
+-          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-51-fromfileurl",
++          "line": 53,
++          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-53-fromfileurl",
+           "currentTags": [
+             "@example",
+             "@param",
+             "@returns",
++            "@effects",
+             "@category",
+             "@since"
+           ],
+@@ -3417,12 +3360,13 @@
+           "exportKind": "const",
+           "filePath": "src/NodeUrl.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/NodeUrl.ts",
+-          "line": 98,
+-          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-98-tofileurl",
++          "line": 102,
++          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-102-tofileurl",
+           "currentTags": [
+             "@example",
+             "@param",
+             "@returns",
++            "@effects",
+             "@category",
+             "@since"
+           ],
+@@ -3440,8 +3384,8 @@
+           "exportKind": "const",
+           "filePath": "src/NodeUrl.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/NodeUrl.ts",
+-          "line": 123,
+-          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-123-fileurltopath",
++          "line": 127,
++          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-127-fileurltopath",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3461,37 +3405,36 @@
+           "exportKind": "re-export",
+           "filePath": "src/Number.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Number.ts",
+-          "line": 63,
+-          "anchor": "packages-foundation-modeling-utils-src-number-ts-63-export-from-effect-number",
++          "line": 57,
++          "anchor": "packages-foundation-modeling-utils-src-number-ts-57-export-from-effect-number",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "isPositive",
+           "exportKind": "const",
+           "filePath": "src/Number.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Number.ts",
+-          "line": 54,
+-          "anchor": "packages-foundation-modeling-utils-src-number-ts-54-ispositive",
++          "line": 41,
++          "anchor": "packages-foundation-modeling-utils-src-number-ts-41-ispositive",
+           "currentTags": [
+             "@example",
++            "@param",
++            "@returns",
+             "@see",
+-            "@since",
+             "@category",
+-            "@param",
+-            "@returns"
++            "@since"
+           ],
+           "missingRequiredTags": [],
+           "forbiddenTags": [],
+@@ -3507,8 +3450,8 @@
+           "exportKind": "const",
+           "filePath": "src/Number.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Number.ts",
+-          "line": 89,
+-          "anchor": "packages-foundation-modeling-utils-src-number-ts-89-isinteger",
++          "line": 83,
++          "anchor": "packages-foundation-modeling-utils-src-number-ts-83-isinteger",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3528,22 +3471,21 @@
+           "exportKind": "re-export",
+           "filePath": "src/Option.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Option.ts",
+-          "line": 73,
+-          "anchor": "packages-foundation-modeling-utils-src-option-ts-73-export-from-effect-option",
++          "line": 81,
++          "anchor": "packages-foundation-modeling-utils-src-option-ts-81-export-from-effect-option",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "propFromNullishOr",
+@@ -3562,45 +3504,38 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-type-assertions-in-examples",
+-              "detail": "Examples must construct values through public APIs instead of type assertions."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * from \"effect/Predicate\";",
+           "exportKind": "re-export",
+           "filePath": "src/Predicate.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Predicate.ts",
+-          "line": 16,
+-          "anchor": "packages-foundation-modeling-utils-src-predicate-ts-16-export-from-effect-predicate",
++          "line": 26,
++          "anchor": "packages-foundation-modeling-utils-src-predicate-ts-26-export-from-effect-predicate",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "hasProperties",
+           "exportKind": "const",
+           "filePath": "src/Predicate.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Predicate.ts",
+-          "line": 43,
+-          "anchor": "packages-foundation-modeling-utils-src-predicate-ts-43-hasproperties",
++          "line": 54,
++          "anchor": "packages-foundation-modeling-utils-src-predicate-ts-54-hasproperties",
+           "currentTags": [
+             "@since",
+             "@category",
+@@ -3611,15 +3546,9 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-type-assertions-in-examples",
+-              "detail": "Examples must construct values through public APIs instead of type assertions."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "RandomValues",
+@@ -3647,30 +3576,29 @@
+           "exportKind": "re-export",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 597,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-597-export-from-effect-string",
++          "line": 608,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-608-export-from-effect-string",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "prefix",
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 35,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-35-prefix",
++          "line": 38,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-38-prefix",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3690,8 +3618,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 71,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-71-prefixthunk",
++          "line": 74,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-74-prefixthunk",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3711,8 +3639,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 106,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-106-postfix",
++          "line": 109,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-109-postfix",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3732,8 +3660,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 143,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-143-postfixthunk",
++          "line": 146,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-146-postfixthunk",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3753,8 +3681,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 180,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-180-mapprefix",
++          "line": 183,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-183-mapprefix",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3764,24 +3692,18 @@
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+-          "exampleImportViolations": [
+-            {
+-              "example": 1,
+-              "rule": "wrong-required-namespace-alias",
+-              "detail": "Examples importing effect/Array must use the A namespace alias."
+-            }
+-          ],
++          "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "mapPostfix",
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 226,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-226-mappostfix",
++          "line": 229,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-229-mappostfix",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3791,24 +3713,18 @@
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+-          "exampleImportViolations": [
+-            {
+-              "example": 1,
+-              "rule": "wrong-required-namespace-alias",
+-              "detail": "Examples importing effect/Array must use the A namespace alias."
+-            }
+-          ],
++          "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "camelCase",
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 260,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-260-camelcase",
++          "line": 263,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-263-camelcase",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3828,8 +3744,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 277,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-277-snakecase",
++          "line": 280,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-280-snakecase",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3849,8 +3765,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 294,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-294-kebabcase",
++          "line": 297,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-297-kebabcase",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3870,8 +3786,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 312,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-312-screamingsnake",
++          "line": 315,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-315-screamingsnake",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3891,8 +3807,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 330,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-330-pascalcase",
++          "line": 333,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-333-pascalcase",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3912,8 +3828,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 347,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-347-pascaltosnake",
++          "line": 350,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-350-pascaltosnake",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3933,8 +3849,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 365,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-365-snaketocamel",
++          "line": 368,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-368-snaketocamel",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3954,8 +3870,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 383,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-383-snaketokebab",
++          "line": 386,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-386-snaketokebab",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3975,8 +3891,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 401,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-401-cameltosnake",
++          "line": 404,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-404-cameltosnake",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -3996,8 +3912,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 419,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-419-snaketopascal",
++          "line": 422,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-422-snaketopascal",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4017,8 +3933,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 437,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-437-kebabtosnake",
++          "line": 440,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-440-kebabtosnake",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4038,8 +3954,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 461,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-461-startswith",
++          "line": 464,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-464-startswith",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4059,8 +3975,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 498,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-498-endswith",
++          "line": 501,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-501-endswith",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4080,8 +3996,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 540,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-540-contains",
++          "line": 543,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-543-contains",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4101,8 +4017,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 581,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-581-repeat",
++          "line": 584,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-584-repeat",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4122,8 +4038,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 616,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-616-trimthunk",
++          "line": 627,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-627-trimthunk",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4143,34 +4059,32 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 635,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-635-fromnumber",
++          "line": 646,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-646-fromnumber",
+           "currentTags": [
+             "@example",
+             "@category",
+             "@since",
+-            "@template",
++            "@typeParam",
+             "@param",
+             "@returns"
+           ],
+           "missingRequiredTags": [],
+-          "forbiddenTags": [
+-            "@template"
+-          ],
++          "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "toSlug",
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 651,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-651-toslug",
++          "line": 662,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-662-toslug",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4190,8 +4104,8 @@
+           "exportKind": "const",
+           "filePath": "src/Str.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
+-          "line": 686,
+-          "anchor": "packages-foundation-modeling-utils-src-str-ts-686-truncate",
++          "line": 697,
++          "anchor": "packages-foundation-modeling-utils-src-str-ts-697-truncate",
+           "currentTags": [
+             "@example",
+             "@param",
+@@ -4236,22 +4150,21 @@
+           "exportKind": "re-export",
+           "filePath": "src/Struct.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Struct.ts",
+-          "line": 623,
+-          "anchor": "packages-foundation-modeling-utils-src-struct-ts-623-export-from-effect-struct",
++          "line": 630,
++          "anchor": "packages-foundation-modeling-utils-src-struct-ts-630-export-from-effect-struct",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "EmptyStructError",
+@@ -4543,15 +4456,9 @@
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+-          "unsafeExampleViolations": [
+-            {
+-              "example": 1,
+-              "rule": "no-type-assertions-in-examples",
+-              "detail": "Examples must construct values through public APIs instead of type assertions."
+-            }
+-          ],
++          "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "fromEntries",
+@@ -4579,8 +4486,8 @@
+           "exportKind": "type",
+           "filePath": "src/Struct.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Struct.ts",
+-          "line": 639,
+-          "anchor": "packages-foundation-modeling-utils-src-struct-ts-639-reverseablestruct",
++          "line": 646,
++          "anchor": "packages-foundation-modeling-utils-src-struct-ts-646-reverseablestruct",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4600,8 +4507,8 @@
+           "exportKind": "type",
+           "filePath": "src/Struct.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Struct.ts",
+-          "line": 662,
+-          "anchor": "packages-foundation-modeling-utils-src-struct-ts-662-reversestruct",
++          "line": 669,
++          "anchor": "packages-foundation-modeling-utils-src-struct-ts-669-reversestruct",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4621,8 +4528,8 @@
+           "exportKind": "const",
+           "filePath": "src/Struct.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/Struct.ts",
+-          "line": 695,
+-          "anchor": "packages-foundation-modeling-utils-src-struct-ts-695-reverse",
++          "line": 702,
++          "anchor": "packages-foundation-modeling-utils-src-struct-ts-702-reverse",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -4705,330 +4612,315 @@
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 14,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-14-export-as-a-from-array-ts",
++          "line": 22,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-22-export-as-a-from-array-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Bool from \"./Bool.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 22,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-22-export-as-bool-from-bool-ts",
++          "line": 37,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-37-export-as-bool-from-bool-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as DateTime from \"./DateTime.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 30,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-30-export-as-datetime-from-datetime-ts",
++          "line": 52,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-52-export-as-datetime-from-datetime-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as FileSystem from \"./FileSystem.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 38,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-38-export-as-filesystem-from-filesystem-ts",
++          "line": 67,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-67-export-as-filesystem-from-filesystem-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Html from \"./Html.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 46,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-46-export-as-html-from-html-ts",
++          "line": 83,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-83-export-as-html-from-html-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * from \"./isBlockedObjectKey.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 54,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-54-export-from-isblockedobjectkey-ts",
++          "line": 99,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-99-export-from-isblockedobjectkey-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Num from \"./Number.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 61,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-61-export-as-num-from-number-ts",
++          "line": 114,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-114-export-as-num-from-number-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as O from \"./Option.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 68,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-68-export-as-o-from-option-ts",
++          "line": 129,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-129-export-as-o-from-option-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as P from \"./Predicate.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 75,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-75-export-as-p-from-predicate-ts",
++          "line": 144,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-144-export-as-p-from-predicate-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * from \"./Random.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 82,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-82-export-from-random-ts",
++          "line": 158,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-158-export-from-random-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Str from \"./Str.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 90,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-90-export-as-str-from-str-ts",
++          "line": 174,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-174-export-as-str-from-str-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Stream from \"./Stream.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 97,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-97-export-as-stream-from-stream-ts",
++          "line": 188,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-188-export-as-stream-from-stream-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Struct from \"./Struct.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 104,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-104-export-as-struct-from-struct-ts",
++          "line": 203,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-203-export-as-struct-from-struct-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * as Text from \"./Text.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 111,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-111-export-as-text-from-text-ts",
++          "line": 218,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-218-export-as-text-from-text-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "export * from \"./thunk.ts\";",
+           "exportKind": "re-export",
+           "filePath": "src/index.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/index.ts",
+-          "line": 118,
+-          "anchor": "packages-foundation-modeling-utils-src-index-ts-118-export-from-thunk-ts",
++          "line": 232,
++          "anchor": "packages-foundation-modeling-utils-src-index-ts-232-export-from-thunk-ts",
+           "currentTags": [
++            "@example",
+             "@category",
+             "@since"
+           ],
+-          "missingRequiredTags": [
+-            "@example"
+-          ],
++          "missingRequiredTags": [],
+           "forbiddenTags": [],
+           "missingSummary": false,
+           "malformedConditionalTags": [],
+           "exampleImportViolations": [],
+           "unsafeExampleViolations": [],
+           "schemaAnnotationGaps": [],
+-          "remediationStatus": "open"
++          "remediationStatus": "resolved"
+         },
+         {
+           "symbolName": "isBlockedObjectKey",
+@@ -5308,10 +5200,11 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 252,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-252-thunkeffectvoid",
++          "line": 254,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-254-thunkeffectvoid",
+           "currentTags": [
+             "@example",
++            "@effects",
+             "@category",
+             "@since"
+           ],
+@@ -5329,10 +5222,11 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 270,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-270-thunkeffectsucceed",
++          "line": 274,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-274-thunkeffectsucceed",
+           "currentTags": [
+             "@example",
++            "@effects",
+             "@category",
+             "@since"
+           ],
+@@ -5350,8 +5244,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 287,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-287-thunkeffectsucceednull",
++          "line": 291,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-291-thunkeffectsucceednull",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5371,10 +5265,11 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 304,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-304-thunkeffectsucceednone",
++          "line": 310,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-310-thunkeffectsucceednone",
+           "currentTags": [
+             "@example",
++            "@effects",
+             "@category",
+             "@since"
+           ],
+@@ -5392,8 +5287,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 321,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-321-thunkemptyrecord",
++          "line": 327,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-327-thunkemptyrecord",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5413,8 +5308,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 340,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-340-thunksome",
++          "line": 346,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-346-thunksome",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5434,8 +5329,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 361,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-361-thunksomeemptystr",
++          "line": 367,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-367-thunksomeemptystr",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5455,8 +5350,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 379,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-379-thunknegative1",
++          "line": 385,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-385-thunknegative1",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5476,8 +5371,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 397,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-397-thunksomefalse",
++          "line": 403,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-403-thunksomefalse",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5497,8 +5392,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 415,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-415-thunksometrue",
++          "line": 421,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-421-thunksometrue",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5518,8 +5413,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 433,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-433-thunksomeemptyarray",
++          "line": 439,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-439-thunksomeemptyarray",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5539,8 +5434,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 451,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-451-thunksomeemptyrecord",
++          "line": 457,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-457-thunksomeemptyrecord",
+           "currentTags": [
+             "@example",
+             "@category",
+@@ -5560,8 +5455,8 @@
+           "exportKind": "const",
+           "filePath": "src/thunk.ts",
+           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
+-          "line": 472,
+-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-472-thunksomenone",
++          "line": 478,
++          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-478-thunksomenone",
+           "currentTags": [
+             "@example",
+             "@category",
+diff --git a/standards/jsdoc-documentation.inventory.md b/standards/jsdoc-documentation.inventory.md
+index 122dd8f2aa..e02ae96296 100644
+--- a/standards/jsdoc-documentation.inventory.md
++++ b/standards/jsdoc-documentation.inventory.md
+@@ -1,6 +1,6 @@
+ # JSDoc Documentation Compliance Inventory
+ 
+-Generated: 2026-05-09T09:51:57.516Z
++Generated: 2026-05-12T02:11:34.223Z
+ 
+ ## Scope
+ 
+@@ -11,21 +11,21 @@ The package universe is the current `bun run topo-sort` output. This inventory c
+ | Metric | Count |
+ |---|---:|
+ | packages | 55 |
+-| cleanPackages | 24 |
++| cleanPackages | 26 |
+ | packagesWithoutPublicSrcSurface | 1 |
+-| packagesNeedingRemediation | 30 |
++| packagesNeedingRemediation | 28 |
+ | publicModules | 837 |
+ | publicExports | 5852 |
+-| openModules | 123 |
+-| openExports | 2457 |
+-| missingExportExamples | 2251 |
++| openModules | 121 |
++| openExports | 2414 |
++| missingExportExamples | 2227 |
+ | missingExportCategories | 50 |
+ | missingExportSince | 48 |
+-| forbiddenTagFindings | 15 |
++| forbiddenTagFindings | 7 |
+ | malformedConditionalTagFindings | 0 |
+-| exampleImportFindings | 22 |
+-| unsafeExampleFindings | 88 |
+-| schemaAnnotationFindings | 128 |
++| exampleImportFindings | 20 |
++| unsafeExampleFindings | 79 |
++| schemaAnnotationFindings | 127 |
+ | rootPolicyOpen | 0 |
+ 
+ ## Root Policy
+@@ -41,9 +41,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
+ 
+ | Order | Package | Path | Status | Modules | Exports | Open Modules | Open Exports |
+ |---:|---|---|---|---:|---:|---:|---:|
+-| 1 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 10 | 0 | 3 |
++| 1 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
+ | 2 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 3 | 79 | 0 | 15 |
+-| 3 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 20 | 135 | 2 | 40 |
++| 3 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 20 | 135 | 0 | 0 |
+ | 4 | `@beep/data` | `packages/foundation/primitive/data` | clean | 7 | 39 | 0 | 0 |
+ | 5 | `@beep/messages` | `packages/foundation/modeling/messages` | needs-remediation | 2 | 6 | 0 | 1 |
+ | 6 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 132 | 1283 | 7 | 1044 |
+@@ -99,15 +99,6 @@ The package universe is the current `bun run topo-sort` output. This inventory c
+ 
+ ## Open Findings
+ 
+-### @beep/types
+-
+-Path: `packages/foundation/primitive/types`
+-
+-Export findings:
+-- `src/TArray.types.ts:29` `Elem` (type) - forbidden @template; 1 unsafe example violation(s)
+-- `src/TString.types.ts:31` `NonEmpty` (type) - 1 unsafe example violation(s)
+-- `src/TString.types.ts:53` `Chars` (type) - 1 unsafe example violation(s)
+-
+ ### @beep/identity
+ 
+ Path: `packages/foundation/modeling/identity`
+@@ -129,56 +120,6 @@ Export findings:
+ - `src/packages.ts:861` `$VeniceAiId` (const) - missing summary; missing @example
+ - `src/packages.ts:867` `$XaiId` (const) - missing summary; missing @example
+ 
+-### @beep/utils
+-
+-Path: `packages/foundation/modeling/utils`
+-
+-Module findings:
+-- `src/Predicate.ts:1` (packageDocumentation) - missing summary
+-- `src/Str.ts:1` (packageDocumentation) - missing summary
+-
+-Export findings:
+-- `src/Array.ts:258` `export * from "effect/Array";` (re-export) - missing @example
+-- `src/Array.ts:61` `assertNonEmptyArray` (const) - 1 unsafe example violation(s)
+-- `src/Array.ts:81` `assertNonEmptyReadonlyArray` (const) - 1 unsafe example violation(s)
+-- `src/Array.ts:303` `fromIterableNonEmpty` (const) - 1 unsafe example violation(s)
+-- `src/DateTime.ts:35` `export * from "effect/DateTime";` (re-export) - missing @example
+-- `src/Event.ts:18` `export * from "effect/unstable/encoding/Sse";` (re-export) - missing @example
+-- `src/Event.ts:72` `makeEvent` (const) - missing @example
+-- `src/Function.ts:60` `tuple` (function) - forbidden @template
+-- `src/Function.ts:86` `tupledCurry` (function) - forbidden @template
+-- `src/Function.ts:112` `reverseCurry` (function) - forbidden @template
+-- `src/Function.ts:137` `curry` (function) - forbidden @template
+-- `src/Function.ts:162` `uncurry` (function) - forbidden @template
+-- `src/Function.ts:192` `lazy` (function) - forbidden @template
+-- `src/Glob.ts:34` `Pattern` (const) - 1 schema annotation/type-alias gap(s)
+-- `src/Number.ts:63` `export * from "effect/Number";` (re-export) - missing @example
+-- `src/Option.ts:73` `export * from "effect/Option";` (re-export) - missing @example
+-- `src/Option.ts:48` `propFromNullishOr` (const) - 1 unsafe example violation(s)
+-- `src/Predicate.ts:16` `export * from "effect/Predicate";` (re-export) - missing @example
+-- `src/Predicate.ts:43` `hasProperties` (const) - 1 unsafe example violation(s)
+-- `src/Str.ts:597` `export * from "effect/String";` (re-export) - missing @example
+-- `src/Str.ts:180` `mapPrefix` (const) - 1 example import violation(s)
+-- `src/Str.ts:226` `mapPostfix` (const) - 1 example import violation(s)
+-- `src/Str.ts:635` `fromNumber` (const) - forbidden @template
+-- `src/Struct.ts:623` `export * from "effect/Struct";` (re-export) - missing @example
+-- `src/Struct.ts:568` `keysNonEmpty` (const) - 1 unsafe example violation(s)
+-- `src/index.ts:14` `export * as A from "./Array.ts";` (re-export) - missing @example
+-- `src/index.ts:22` `export * as Bool from "./Bool.ts";` (re-export) - missing @example
+-- `src/index.ts:30` `export * as DateTime from "./DateTime.ts";` (re-export) - missing @example
+-- `src/index.ts:38` `export * as FileSystem from "./FileSystem.ts";` (re-export) - missing @example
+-- `src/index.ts:46` `export * as Html from "./Html.ts";` (re-export) - missing @example
+-- `src/index.ts:54` `export * from "./isBlockedObjectKey.ts";` (re-export) - missing @example
+-- `src/index.ts:61` `export * as Num from "./Number.ts";` (re-export) - missing @example
+-- `src/index.ts:68` `export * as O from "./Option.ts";` (re-export) - missing @example
+-- `src/index.ts:75` `export * as P from "./Predicate.ts";` (re-export) - missing @example
+-- `src/index.ts:82` `export * from "./Random.ts";` (re-export) - missing @example
+-- `src/index.ts:90` `export * as Str from "./Str.ts";` (re-export) - missing @example
+-- `src/index.ts:97` `export * as Stream from "./Stream.ts";` (re-export) - missing @example
+-- `src/index.ts:104` `export * as Struct from "./Struct.ts";` (re-export) - missing @example
+-- `src/index.ts:111` `export * as Text from "./Text.ts";` (re-export) - missing @example
+-- `src/index.ts:118` `export * from "./thunk.ts";` (re-export) - missing @example
+-
+ ### @beep/messages
+ 
+ Path: `packages/foundation/modeling/messages`
