@@ -1,0 +1,378 @@
+diff --git a/.agents/skills/grill-me/SKILL.md b/.agents/skills/grill-me/SKILL.md
+new file mode 100644
+index 0000000000..bd04394c67
+--- /dev/null
++++ b/.agents/skills/grill-me/SKILL.md
+@@ -0,0 +1,10 @@
++---
++name: grill-me
++description: Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their design, or mentions "grill me".
++---
++
++Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
++
++Ask the questions one at a time.
++
++If a question can be answered by exploring the codebase, explore the codebase instead.
+diff --git a/apps/clawhole/src/channels/ChatType.ts b/apps/clawhole/src/channels/ChatType.ts
+deleted file mode 100644
+index 3ec0177278..0000000000
+--- a/apps/clawhole/src/channels/ChatType.ts
++++ /dev/null
+@@ -1,118 +0,0 @@
+-/**
+- * Chat conversation type schemas and compatibility helpers for `@beep/clawhole`.
+- *
+- * This module ports the legacy OpenClaw `normalizeChatType` helper to the
+- * repository's schema-first conventions while preserving its compatibility
+- * behavior for channel-facing inputs.
+- *
+- * @module @beep/clawhole/channels/ChatType
+- * @since 0.0.0
+- */
+-
+-import { $ClawholeId } from "@beep/identity";
+-import { LiteralKit, SchemaUtils } from "@beep/schema";
+-import { Effect, Match, pipe, SchemaIssue, SchemaTransformation } from "effect";
+-import * as O from "effect/Option";
+-import * as S from "effect/Schema";
+-
+-const $I = $ClawholeId.create("channels/ChatType");
+-
+-const ChatTypeBase = LiteralKit(["direct", "group", "channel"] as const);
+-
+-/**
+- * Canonical chat conversation classification used by channel-facing metadata.
+- *
+- * @example
+- * ```typescript
+- * import { ChatType } from "@beep/clawhole/channels/ChatType"
+- * import * as S from "effect/Schema"
+- *
+- * const decodeChatType = S.decodeUnknownSync(ChatType)
+- *
+- * console.log(decodeChatType("group")) // "group"
+- * ```
+- *
+- * @category Validation
+- * @since 0.0.0
+- */
+-export const ChatType = ChatTypeBase.pipe(
+-  $I.annoteSchema("ChatType", {
+-    description: "Canonical chat conversation classification used by channel-facing metadata.",
+-  }),
+-  SchemaUtils.withLiteralKitStatics(ChatTypeBase)
+-);
+-
+-/**
+- * Type of {@link ChatType}.
+- *
+- * @category Validation
+- * @since 0.0.0
+- */
+-export type ChatType = typeof ChatType.Type;
+-
+-const noChatType = O.none<ChatType>;
+-
+-const normalizeChatTypeOption = Match.type<string>().pipe(
+-  Match.when("direct", () => O.some<ChatType>("direct")),
+-  Match.when("dm", () => O.some<ChatType>("direct")),
+-  Match.when("group", () => O.some<ChatType>("group")),
+-  Match.when("channel", () => O.some<ChatType>("channel")),
+-  Match.orElse(noChatType)
+-);
+-
+-const invalidChatTypeIssue = (value: string) =>
+-  new SchemaIssue.InvalidValue(O.some(value), {
+-    message: "Chat type must be one of direct, dm, group, or channel.",
+-  });
+-
+-const decodeChatTypeValue = (value: string): Effect.Effect<ChatType, SchemaIssue.InvalidValue> =>
+-  pipe(
+-    value,
+-    normalizeChatTypeOption,
+-    O.match({
+-      onNone: () => Effect.fail(invalidChatTypeIssue(value)),
+-      onSome: Effect.succeed,
+-    })
+-  );
+-
+-const encodeChatTypeValue = (value: ChatType): Effect.Effect<string> => Effect.succeed(value);
+-
+-const ChatTypeFromInput = S.String.pipe(
+-  S.decode(SchemaTransformation.trim()),
+-  S.decode(SchemaTransformation.toLowerCase()),
+-  S.decodeTo(
+-    ChatType,
+-    SchemaTransformation.transformOrFail({
+-      decode: decodeChatTypeValue,
+-      encode: encodeChatTypeValue,
+-    })
+-  ),
+-  $I.annoteSchema("ChatTypeFromInput", {
+-    description:
+-      "Permissive chat type input schema that trims, lowercases, normalizes the legacy `dm` alias, and decodes to canonical chat types.",
+-  })
+-);
+-
+-const decodeChatTypeOption = S.decodeUnknownOption(ChatTypeFromInput);
+-
+-/**
+- * Normalize a raw chat type string to the canonical chat type domain.
+- *
+- * Empty strings, whitespace-only values, and unsupported values are treated as
+- * unset. The legacy `"dm"` alias continues to normalize to `"direct"`.
+- *
+- * @example
+- * ```typescript
+- * import { normalizeChatType } from "@beep/clawhole/channels/ChatType"
+- *
+- * console.log(normalizeChatType(" dm ")) // "direct"
+- * console.log(normalizeChatType("room")) // undefined
+- * ```
+- *
+- * @param raw {string | undefined} - The raw chat type input to normalize.
+- * @returns {ChatType | undefined} - The canonical chat type when the input is supported, otherwise `undefined`.
+- * @category Utility
+- * @since 0.0.0
+- */
+-export const normalizeChatType = (raw?: string): ChatType | undefined =>
+-  pipe(raw, decodeChatTypeOption, O.getOrUndefined);
+diff --git a/apps/clawhole/src/config/Approvals.ts b/apps/clawhole/src/config/Approvals.ts
+deleted file mode 100644
+index e08c3ec4f6..0000000000
+--- a/apps/clawhole/src/config/Approvals.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Approvals
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Approvals.ts";
+diff --git a/apps/clawhole/src/config/Auth.ts b/apps/clawhole/src/config/Auth.ts
+deleted file mode 100644
+index 21df2de479..0000000000
+--- a/apps/clawhole/src/config/Auth.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Auth
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Auth.ts";
+diff --git a/apps/clawhole/src/config/Base.ts b/apps/clawhole/src/config/Base.ts
+deleted file mode 100644
+index fcad8da1f5..0000000000
+--- a/apps/clawhole/src/config/Base.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Base
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Base.ts";
+diff --git a/apps/clawhole/src/config/Browser.ts b/apps/clawhole/src/config/Browser.ts
+deleted file mode 100644
+index d052cec9dd..0000000000
+--- a/apps/clawhole/src/config/Browser.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Browser
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Browser.ts";
+diff --git a/apps/clawhole/src/config/Cron.ts b/apps/clawhole/src/config/Cron.ts
+deleted file mode 100644
+index ea3cd3b4ce..0000000000
+--- a/apps/clawhole/src/config/Cron.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Cron
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Cron.ts";
+diff --git a/apps/clawhole/src/config/Gateway.ts b/apps/clawhole/src/config/Gateway.ts
+deleted file mode 100644
+index e9dcc83da7..0000000000
+--- a/apps/clawhole/src/config/Gateway.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Gateway
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Gateway.ts";
+diff --git a/apps/clawhole/src/config/Memory.ts b/apps/clawhole/src/config/Memory.ts
+deleted file mode 100644
+index e01cbb4b7b..0000000000
+--- a/apps/clawhole/src/config/Memory.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Memory
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Memory.ts";
+diff --git a/apps/clawhole/src/config/Plugins.ts b/apps/clawhole/src/config/Plugins.ts
+deleted file mode 100644
+index 4cbccad301..0000000000
+--- a/apps/clawhole/src/config/Plugins.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Plugins
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Plugins.ts";
+diff --git a/apps/clawhole/src/config/ProviderRequest.ts b/apps/clawhole/src/config/ProviderRequest.ts
+deleted file mode 100644
+index e3efb56fb1..0000000000
+--- a/apps/clawhole/src/config/ProviderRequest.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/ProviderRequest
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/ProviderRequest.ts";
+diff --git a/apps/clawhole/src/config/Queue.ts b/apps/clawhole/src/config/Queue.ts
+deleted file mode 100644
+index 6d71061c5e..0000000000
+--- a/apps/clawhole/src/config/Queue.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Queue
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Queue.ts";
+diff --git a/apps/clawhole/src/config/Sandbox.ts b/apps/clawhole/src/config/Sandbox.ts
+deleted file mode 100644
+index bf6e2c289c..0000000000
+--- a/apps/clawhole/src/config/Sandbox.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Sandbox
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Sandbox.ts";
+diff --git a/apps/clawhole/src/config/Secrets.ts b/apps/clawhole/src/config/Secrets.ts
+deleted file mode 100644
+index 9c72d5405c..0000000000
+--- a/apps/clawhole/src/config/Secrets.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Secrets
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Secrets.ts";
+diff --git a/apps/clawhole/src/config/Skills.ts b/apps/clawhole/src/config/Skills.ts
+deleted file mode 100644
+index 9c4f0986d8..0000000000
+--- a/apps/clawhole/src/config/Skills.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/Skills
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Skills.ts";
+diff --git a/apps/clawhole/src/config/TextToSpeech.ts b/apps/clawhole/src/config/TextToSpeech.ts
+deleted file mode 100644
+index 4b895a04ab..0000000000
+--- a/apps/clawhole/src/config/TextToSpeech.ts
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/**
+- * Compatibility re-export for legacy `config/*` imports.
+- *
+- * @module @beep/clawhole/config/TextToSpeech
+- * @since 0.0.0
+- */
+-/**
+- * @since 0.0.0
+- * @category Re-exports
+- */
+-export * from "../domain/Tts.ts";
