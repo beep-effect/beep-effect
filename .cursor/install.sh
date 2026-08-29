@@ -52,7 +52,29 @@ if command -v sudo >/dev/null 2>&1 && [ -x "${BUN_INSTALL}/bin/portless" ]; then
   sudo ln -sf "${BUN_INSTALL}/bin/portless" /usr/local/bin/portless
 fi
 
-# 4. Install workspace dependencies.
+# 4. Install the 1Password CLI (op) for secret-backed runs. Secrets are provided
+#    to the VM via the OP_SERVICE_ACCOUNT_TOKEN environment secret; the repo
+#    resolves op:// references in a gitignored .env with `op run --env-file=.env`.
+#    Best-effort and non-fatal: the core toolchain does not depend on it.
+if ! command -v op >/dev/null 2>&1; then
+  set +e
+  OP_LATEST="$(curl -fsSL https://app-updates.agilebits.com/check/1/0/CLI2/en/2.0.0/N 2>/dev/null | grep -oE '"version":"[0-9.]+"' | head -1 | grep -oE '[0-9.]+')"
+  OP_VER="v${OP_LATEST:-2.39.0}"
+  if curl -fsSLo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/pkg/${OP_VER}/op_linux_amd64_${OP_VER}.zip" \
+    && unzip -o /tmp/op.zip op -d /tmp/opbin >/dev/null; then
+    if command -v sudo >/dev/null 2>&1; then
+      sudo mv /tmp/opbin/op /usr/local/bin/op && sudo chmod +x /usr/local/bin/op
+    else
+      mv /tmp/opbin/op "${BUN_INSTALL}/bin/op" && chmod +x "${BUN_INSTALL}/bin/op"
+    fi
+  else
+    echo "WARN: 1Password CLI download failed; skipping (op-backed secret runs unavailable)."
+  fi
+  rm -f /tmp/op.zip
+  set -e
+fi
+
+# 5. Install workspace dependencies.
 #
 # --ignore-scripts skips the repo root lifecycle scripts only. Bun does not run
 # dependency lifecycle scripts without a trustedDependencies allowlist (none is
@@ -62,7 +84,7 @@ fi
 # does), and neither step is needed to build or run the apps.
 bun install --ignore-scripts
 
-# 5. Apply the Effect tsgo TypeScript patch that the root `prepare` script would
+# 6. Apply the Effect tsgo TypeScript patch that the root `prepare` script would
 #    normally run (skipped above alongside the other lifecycle scripts).
 bun run prepare
 
